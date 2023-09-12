@@ -49,15 +49,17 @@ def create_template(
 
 @template_router.get('/all', status_code=200)
 def get_all_templates(
-        order_by: Literal['id', 'name'] = 'name',
+        order: Literal['id', 'name'] = 'name',
         db: Session = Depends(get_database),
     ) -> Page[Template]:
     """
     Get all defined Templates.
+
+    - order: How to order the returned Templates.
     """
 
     query = db.query(models.template.Template)
-    if order_by == 'id':
+    if order == 'id':
         return paginate(query.all())
 
     return paginate(query.order_by(models.template.Template.name).all())

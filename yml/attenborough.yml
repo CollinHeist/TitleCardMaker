@@ -1,0 +1,123 @@
+libraries:
+  TV Shows:
+    path: ./title_cards/
+
+templates:
+  planet:
+    library: TV Shows
+    card_type: landscape
+    unwatched_style: blur
+    media_directory: ./title_cards/<<title>> (<<year>>)/
+    extras:
+      add_bounding_box: true
+      darken: box
+    sync_specials: false
+    tmdb_skip_localized_images: true
+    archive_variations:
+    - card_type: standard
+      seasons:
+        hide: <<seasonless>>
+    - archive_name: Generic Season Titles, Generic Font - Landscape Style (No Bounding Box)
+      extras:
+        add_bounding_box: false
+        darken: false
+    - card_type: tinted frame
+      seasons: {hide: <<seasonless>>}
+    defaults:
+      seasonless: true
+
+series:
+  # Adventure (1963): {template: planet}
+  Africa (2013): {template: planet}
+  "Attenborough: 60 Years in the Wild (2012)": {template: planet}
+  Attenborough's Life in Colour (2021): {template: planet}
+  Attenborough in Paradise and Other Personal Voyages (1971): {template: planet}
+  Attenborough's Passion Projects (2016): {}
+  The Blue Planet (2001): {template: planet}
+  Blue Planet II (2017): {template: planet}
+  David Attenborough's Ant Mountain (2017): {template: planet}
+  David Attenborough's Conquest of the Skies (2015): {template: planet}
+  David Attenborough's Global Adventure (2021): {template: planet}
+
+  David Attenborough's Natural Curiosities (2013):
+    template: {name: planet, seasonless: false}
+
+  "David Attenborough's Rise of Animals: Triumph of the Vertebrates (2013)": {template: planet}
+  David Attenborough's Wild City (2016): {template: planet}
+  Deep Ocean (2015): {card_type: textless} #{template: planet}
+  Dynasties (2018): {template: planet}
+  The First Eden (1987): {template: planet}
+  First Life with David Attenborough (2010): {template: planet}
+  Frozen Planet (2011): {template: planet}
+  Frozen Planet II (2022): {template: planet}
+  Galapagos with David Attenborough (2013): {template: planet}
+  Great Barrier Reef with David Attenborough (2015): {template: planet}
+  The Green Planet (2022): {template: planet}
+  Human Planet (2011): {template: planet}
+  The Hunt (2015): {template: planet}
+  Kingdom of Plants 3D (2012): {template: planet}
+  Life (2009): {template: planet}
+  The Life of Birds (1998): {template: planet}
+  Life in Cold Blood (2008): {template: planet}
+  Life on Earth (1979): {template: planet}
+  Life in the Freezer (1993): {template: planet}
+  The Life of Mammals (2002): {template: planet}
+  Life Story (2014): {template: planet}
+  Life in the Undergrowth (2005): {template: planet}
+
+  The Living Planet (1984):
+    template: planet
+    archive_variations:
+    - card_type: standard
+      seasons: {hide: true}
+    - archive_name: Generic Season Titles, Generic Font (4x3 Correction)
+      card_type: standard
+      seasons:
+        0: {source: "s0e{episode_number}-uncorrected.jpg"}
+        1: {source: "s1e{episode_number}-uncorrected.jpg"}
+        2: {source: "s2e{episode_number}-uncorrected.jpg"}
+        3: {source: "s3e{episode_number}-uncorrected.jpg"}
+        4: {source: "s4e{episode_number}-uncorrected.jpg"}
+    - archive_name: No Season Titles, Generic Font (4x3 Correction)
+      card_type: standard
+      seasons:
+        hide: true
+        0: {source: "s0e{episode_number}-uncorrected.jpg"}
+        1: {source: "s1e{episode_number}-uncorrected.jpg"}
+        2: {source: "s2e{episode_number}-uncorrected.jpg"}
+        3: {source: "s3e{episode_number}-uncorrected.jpg"}
+        4: {source: "s4e{episode_number}-uncorrected.jpg"}
+    - archive_name: Generic Season Titles, Generic Font - Landscape Style (No Bounding Box)
+      extras: {add_bounding_box: false, darken: false}
+    - archive_name: Generic Season Titles, Generic Font - Landscape Style (4x3 Correction, No Bounding Box)
+      seasons:
+        0: {source: "s0e{episode_number}-uncorrected.jpg"}
+        1: {source: "s1e{episode_number}-uncorrected.jpg"}
+        2: {source: "s2e{episode_number}-uncorrected.jpg"}
+        3: {source: "s3e{episode_number}-uncorrected.jpg"}
+        4: {source: "s4e{episode_number}-uncorrected.jpg"}
+      extras: {add_bounding_box: false, darken: false}
+
+  Lost Worlds, Vanished Lives (1989): {template: planet}
+  Madagascar (2011): {template: planet}
+  The Mating Game (2021): {template: planet}
+  # Micro Monsters with David Attenborough (2013): {template: planet}
+  The Miracle of Bali (1969): {template: planet}
+  Nature's Great Events (2009): {template: planet}
+  Our Planet (2019): {template: planet}
+  A Perfect Planet (2021): {template: planet}
+  The People of Paradise (1960): {template: planet}
+  Planet Earth (2006): {template: planet}
+  Planet Earth II (2016): {template: planet}
+  # Plants Behaving Badly (2017): {template: planet}
+  The Private Life of Plants (1995): {template: planet}
+  Prehistoric Planet (2022): {template: planet}
+  Secrets of Wild India (2012): {template: planet}
+  Seven Worlds, One Planet (2019): {template: planet}
+  State of the Planet (2000): {template: planet}
+  Super+Natural (2022): {template: planet}
+  "Tiger: Spy in the Jungle (2008)": {template: planet}
+  # The Trials of Life (1990): {template: planet}
+  # The Tribal Eye (1975): {template: planet}
+  # The Truth About Climate Change (2006): {template: planet}
+  # Zoo Quest (1954): {template: planet}

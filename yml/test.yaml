@@ -1,0 +1,78 @@
+libraries:
+  TV:
+    path: ./test/
+    library_name: TV Shows
+    media_server: plex
+  Anime:
+    path: ./test/
+    media_server: plex
+  YouTube:
+    path: ./test/
+    media_server: plex
+
+templates:
+  test:
+    archive: false
+    media_directory: ./test/
+    card_type: ./modules/cards/DividerTitleCard.py
+    # font: {color: yellow}
+    # episode_data_source: tmdb
+    # extras:
+    #   episode_text_color: crimson
+
+  logo:
+    extras:
+      logo: ./source/<<clean_title>> (<<year>>)/logo.png
+
+fonts:
+  Law and Order:
+    file: ./fonts/Friz Quadrata Std Medium.otf
+
+series:
+
+  Tower of God (2020):
+    media_directory: ./test/
+    archive: false
+    card_type: overline
+    seasons: {hide: true}
+    extras:
+      # hide_episode_text: true
+      # hide_line: true
+      # line_position: bottom
+      line_color: crimson
+
+  # The Good Place (2016):
+  #   media_directory: ./test/
+  #   archive: false
+  #   card_type: ./modules/.objects/SciFiTitleCard.py #overline
+
+
+  # Over the Garden Wall (2014):
+  #   episode_text_format: Chapter {episode_number}
+  #   seasons:
+  #     hide: true
+  #   sync_specials: false
+  #   font:
+  #     case: source
+  #     color: rgb(216,190,142)
+  #     file: ./fonts/TomeOfTheUnknown.ttf
+  #     size: 115%
+  #   archive_variations:
+  #   - card_type: frame
+  #     font:
+  #       size: 100%
+  #   - archive_name: Generic Season Titles, Custom Font - Frame Style (Custom Episode Text Color)
+  #     card_type: frame
+  #     seasons: {hide: false}
+  #     font:
+  #       color: rgb(80, 80, 80)
+  #     extras:
+  #       episode_text_color: rgb(216,190,142)
+  #   - card_type: tinted frame
+  #     font:
+  #       vertical_shift: -20
+  #   - archive_name: Official Title Cards
+  #     card_type: textless
+  #     seasons:
+  #       1:
+  #         source: "s{season_number}e{episode_number}-art.jpg"

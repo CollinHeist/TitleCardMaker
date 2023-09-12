@@ -1,0 +1,2273 @@
+libraries:
+  Anime:
+    path: ./title_cards/
+    card_type: anime
+    media_server: plex
+
+fonts:
+  pokemon:
+    case: source
+    color: "#F7CD47"
+    file: ./fonts/Pokemon Solid.ttf
+
+templates:
+  anime-kanji:
+    # library: Anime
+    # media_directory: ./title_cards/<<title>> (<<year>>)/
+    translation:
+      language: ja
+      key: kanji
+    seasons:
+      hide: <<seasonless>>
+    extras:
+      require_kanji: true
+    defaults:
+      seasonless: auto
+    archive_variations:
+    - card_type: standard
+
+  anime-no-kanji:
+    # library: Anime
+    # media_directory: ./title_cards/<<title>> (<<year>>)/
+    seasons:
+      hide: <<seasonless>>
+    defaults:
+      seasonless: auto
+    archive_variations:
+    - card_type: standard
+
+  gundam:
+    # library: Anime
+    card_type: anime
+    # media_directory: ./title_cards/<<title>> (<<year>>)/
+    translation:
+    - language: ja
+      key: kanji
+    seasons:
+      hide: auto
+    extras:
+      require_kanji: <<require_kanji>>
+    archive_variations:
+    - card_type: standard
+    - card_type: poster
+      seasons:
+        0:
+          source: season0.jpg
+        1:
+          source: season1.jpg
+        2:
+          source: season2.jpg
+      extras:
+        logo: ./source/<<clean_title>> (<<year>>)/logo.png
+    defaults:
+      require_kanji: true
+
+  naruto:
+    # library: Anime
+    card_type: anime
+    episode_text_format: Episode {abs_number}
+    font:
+      color: rgb(209,88,37)
+      file: ./fonts/naruto.ttf
+      interline_spacing: 20
+      replacements:
+        ū: u
+        Ū: U
+        …: ...
+        ō: o
+        Ō: O
+    translation:
+    - language: ja
+      key: kanji
+    extras:
+      require_kanji: false
+      kanji_vertical_shift: -30
+    archive_variations:
+    - card_type: standard
+
+series:
+  "86: Eighty Six (2021)":
+    template: anime-kanji
+    archive_variations:
+    - card_type: standard
+    - card_type: tinted glass
+      episode_text_format: "{series_name} | E{episode_number}"
+      font:
+        color: rgb(255, 255, 255)
+      extras:
+        episode_text_color: crimson
+
+  # 91 Days (2016):
+  #   template: anime-kanji
+
+  # Ace Attorney (2016):
+  #   template: anime-no-kanji
+
+  # Aesthetica of a Rogue Hero (2012):
+  #   template: anime-kanji
+
+  # Afro Samurai (2007):
+  #   template: anime-no-kanji
+  #   card_type: roman
+  #   unwatched_style: blur
+  #   episode_text_format: "{abs_number}"
+  #   archive_variations:
+  #   - card_type: standard
+  #     episode_text_format: "Episode {episode_number}"
+  #   - card_type: anime
+  #     episode_text_format: "Episode {episode_number}"
+
+  Aharen-san wa Hakarenai (2022):
+    template: anime-kanji
+
+  # Akashic Records of Bastard Magic Instructor (2017):
+  #   template: anime-kanji
+  #   episode_text_format: Lecture {episode_number}
+
+  # Akebi's Sailor Uniform (2022):
+  #   template: anime-kanji
+
+  # Akiba Maid War (2022):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+
+  # Akudama Drive (2020):
+  #   template: anime-no-kanji
+  #   sync_specials: false
+  #   font:
+  #     case: upper
+
+  The Ancient Magus' Bride (2017):
+    template: anime-no-kanji
+
+  # Angel Beats! (2010):
+  #   library: Anime
+  #   card_type: roman
+  #   media_directory: ./title_cards/Angel Beats! (2010)/
+
+  "Arifureta: From Commonplace to World's Strongest (2019)":
+    template: anime-kanji
+    unwatched_style: blur
+
+  "The Aristocrat's Otherworldly Adventure: Serving Gods Who Go Too Far (2023)":
+    template: anime-kanji
+
+  # Armed Girl's Machiavellism (2017):
+  #   template: anime-kanji
+
+  # Ascendance of a Bookworm (2019):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+  #   sync_specials: false
+
+  # "The Asterisk War: The Academy City on the Water (2015)":
+  #   template: anime-no-kanji
+
+  # Assassination Classroom (2015):
+  #   template: anime-kanji
+  #   sync_specials: false
+  #   seasons:
+  #     1: First Semester
+  #     2: Second Semester
+
+  # "Assault Lily: BOUQUET (2020)":
+  #   template: anime-kanji
+
+  "Atelier Ryza: Ever Darkness & the Secret Hideout The Animation (2023)":
+    template: anime-kanji
+
+  Attack on Titan (2013):
+    template: anime-kanji
+    episode_text_format: Episode {abs_number}
+    refresh_titles: false
+    unwatched_style: art
+    episode_ranges:
+      s0e2-s0e6: Chibi Theatre
+      s0e8-s0e11: Chibi Theatre
+      s0e24-s0e30: Chibi Theatre
+      s1e1-s1e2: The Fall of Shiganshina
+      s1e3-s1e4: Humanity's Comeback
+      s1e5-s1e13: The Struggle for Trost
+      s1e14-s1e16: Eve of the Counterattack
+      s1e17-s1e22: The 57th Exterior Scouting Mission
+      s1e23-s1e25: Assault on Stohess
+      s2e1-s2e12: Season 2
+      s3e1-s3e22: Season 3
+      s4e1-s4e16: The Final Season, Part 1
+      s4e17-s4e28: The Final Season, Part 2
+      s4e29-s4e30: The Final Season, Part 3
+
+  Ayakashi Triangle (2023):
+    template: anime-kanji
+
+  Azur Lane (2019):
+    template: anime-no-kanji
+
+  Babylon (2019):
+    template: anime-kanji
+
+  # Baccano! (2007):
+  #   template: anime-kanji
+
+  Banished from the Hero's Party, I Decided to Live a Quiet Life in the Countryside (2021):
+    template: anime-kanji
+
+  Battle Game in 5 Seconds (2021):
+    template: anime-kanji
+    unwatched_style: blur
+
+  Beast Tamer (2022):
+    template: anime-kanji
+    unwatched_style: blur
+  
+  BEASTARS (2019):
+    template: anime-kanji
+    unwatched_style: blur
+
+  # Berserk (1997):
+  #   template: anime-no-kanji
+  #   font:
+  #     color: rgb(171, 39, 28)
+
+  # Berserk (2016):
+  #   template: anime-kanji
+  #   sync_specials: false
+  #   font: 
+  #     color: rgb(171, 39, 28)
+
+  # Beyond the Boundary (2013):
+  #   template: anime-kanji
+
+  Bibliophile Princess (2022):
+    template: anime-kanji
+
+  # Bikini Warriors (2015):
+  #   template: anime-no-kanji
+
+  Birdie Wing -Golf Girls' Story- (2022):
+    template: anime-kanji
+
+  Black Bullet (2014):
+    template: anime-kanji
+    font:
+      replacements:
+        "＊": ""
+
+  Black Clover (2017):
+    template: {name: anime-kanji, seasonless: false}
+    sync_specials: false
+    episode_ranges:
+      1-13: Magic Knights Entrance
+      14-19: Dungeon Exploration
+      20-27: Royal Capital Assault
+      28-39: Eye of the Midnight Sun Encounter
+      40-50: Seabed Temple
+      51-65: Witches' Forest
+      66-93: Royal Knights
+      94-157: Elf Reincarnation
+      158-167: Heart Kingdom Joint Struggle
+      168-170: Spade Kingdom Raid
+    archive_variations:
+    - card_type: anime
+      seasons: {hide: true}
+    - card_type: standard
+      seasons: {hide: true}
+
+  Black Summoner (2022):
+    template: anime-kanji
+
+  Blades of the Guardians (2023):
+    template: anime-kanji
+
+  "Blade Runner: Black Lotus (2021)":
+    template: anime-no-kanji
+
+  Blast of Tempest (2012):
+    template: anime-kanji
+
+  Bleach (2004):
+    # library: Anime
+    archive_name: Official Title Cards
+    card_type: textless
+    episode_ranges:
+      000-366: {source: "s{season_number}e{episode_number}-official.jpg"}
+
+  Blood Blockade Battlefront (2015):
+    template: anime-kanji
+    seasons:
+      1: Blood Blockade Battlefront
+      2: Blood Blockade Battlefront & Beyond
+
+  Blue Lock (2022):
+    template: anime-kanji
+
+  Blue Period (2021):
+    template: anime-kanji
+
+  "BOFURI: I Don't Want to Get Hurt, so I'll Max Out My Defense. (2020)":
+    template: anime-kanji
+
+  Boogiepop and Others (2019):
+    template: anime-kanji
+
+  # "Boruto: Naruto Next Generations (2017)":
+  #   template: naruto
+  #   episode_ranges:
+  #     1-15: Academy Entrance Arc
+  #     16-18: Filler 
+  #     19-24: Sarada Uchiha Arc
+  #     25-32: School Trip Arc
+  #     33-34: Filler
+  #     35-37: Graduation Exam Arc
+  #     38-39: Filler
+  #     40-42: Genin Mission Arc
+  #     43-47: Byakuya Gang Arc
+  #     48-49: Filler
+  #     50-66: Chūnin Exam Arc
+  #     67-69: Chocho Arc
+  #     70-70: Filler
+  #     71-92: Mitsuki Disappearance
+  #     93-95: Parent & Child Day Arc
+  #     96-97: Filler
+  #     98-103: Curse Mark Arc
+  #     104-105: Filler
+  #     106-111: Steam Ninja Scrolls Arc
+  #     112-115: Filler
+  #     116-119: Konohamaru's Love Arc
+  #     120-126: One-Tails Escort Mission Arc
+  #     128-136: Time Slip Arc
+  #     137-140: Filler
+  #     141-151: Mujina Bandits Arc
+  #     152-156: Filler
+  #     157-177: Kara Actuation Arc
+  #     178-191: Vessel Arc
+  #     192-220: "Kawaki Arc: Kara Clash"
+  #     221-227: Chunin Re-Examination Arc
+  #     228-300: Kawaki Arc
+
+  Bungo Stray Dogs (2016):
+    template: anime-kanji
+
+  Bunny Drop (2011):
+    template: anime-no-kanji
+
+  The Café Terrace and Its Goddesses (2023):
+    template: anime-kanji
+
+  Call of the Night (2022):
+    template: anime-kanji
+    unwatched_style: blur
+
+  Campfire Cooking in Another World With My Absurd Skills (2023):
+    template: anime-kanji
+
+  # Carnival Phantasm (2011):
+  #   template: anime-kanji
+  #   sync_specials: false
+
+  # Carole & Tuesday (2019):
+  #   template: anime-no-kanji
+
+  # The Case Study of Vanitas (2021):
+  #   template: anime-no-kanji
+  #   sync_specials: false
+  #   episode_text_format: Mémoire {episode_number}
+
+  # Casshern Sins (2008):
+  #   template: anime-no-kanji
+
+  Castlevania (2017):
+    template: anime-kanji
+    font:
+      color: "#D62F20"
+      file: ./fonts/Trajan Bold.ttf
+      replacements:
+        "'": ""
+
+  "Cautious Hero: The Hero Is Overpowered but Overly Cautious (2019)":
+    template: anime-kanji
+    unwatched_style: blur
+
+  # A Certain Magical Index (2008):
+  #   template: anime-kanji
+
+  # A Certain Scientific Railgun (2009):
+  #   template: anime-kanji
+  #   seasons:
+  #     2: A Certain Scientific Railgun S
+  #     3: A Certain Scientific Railgun T
+  #   font:
+  #     replacements:
+  #       "✕": "x"
+
+  Chainsaw Man (2022):
+    template: anime-kanji
+    unwatched_style: blur
+
+  Chillin' in My 30s after Getting Fired from the Demon King's Army (2023):
+    template: anime-kanji
+    tmdb_skip_localized_images: true
+
+  # Chivalry of a Failed Knight (2015):
+  #   template: anime-kanji
+
+  # Citrus (2018):
+  #   template: anime-no-kanji
+  #   font:
+  #     case: source
+
+  # Clannad (2007):
+  #   template: anime-kanji
+  #   seasons:
+  #     2: After Story
+
+  # Classroom of the Elite (2017):
+  #   template: anime-no-kanji
+  #   unwatched_style: blur
+
+  Classroom for Heroes (2023):
+    template: anime-kanji
+
+  # Claymore (2007):
+  #   template: anime-kanji
+
+  # "Code Geass: Lelouch of the Rebellion (2006)":
+  #   template: anime-kanji
+  #   seasons:
+  #     1: R1
+  #     2: R2
+
+  Combatants Will Be Dispatched! (2021):
+    template: anime-kanji
+
+  A Couple of Cuckoos (2022):
+    template: anime-kanji
+
+  Cowboy Bebop (1998):
+    template: anime-kanji
+    unwatched_style: blur
+    sync_specials: false
+
+  CUE! (2022):
+    template: anime-kanji
+
+  "Cyberpunk: Edgerunners (2022)":
+    template: anime-kanji
+    unwatched_style: blur
+    font:
+      case: source
+      color: rgb(250,239,80)
+      file: ./fonts/Cyberpunk.ttf
+      kerning: -1000%
+      stroke_width: 50%
+      vertical_shift: 10
+    extras:
+      kanji_vertical_shift: -50
+    archive_variations:
+    - card_type: standard
+      font:
+        size: 120%
+        kerning: 3000%
+        vertical_shift: 0
+      extras: {}
+      archive_all_variations: true
+    - archive_name: No Season Titles, Custom Font (Alternate Font)
+      card_type: standard
+      font:
+        case: upper
+        color: rgb(250,239,80)
+        file: ./fonts/Conduit ITC Regular.otf
+        kerning: 0%
+        size: 120%
+        stroke_width: 100%
+        vertical_shift: 0
+      seasons: {hide: true}
+    - archive_name: Generic Season Titles, Custom Font (Alternate Font)
+      card_type: standard
+      font:
+        case: upper
+        color: rgb(250,239,80)
+        file: ./fonts/Conduit ITC Regular.otf
+        kerning: 0%
+        size: 120%
+        stroke_width: 100%
+        vertical_shift: 0
+      seasons: {hide: false}
+    - archive_name: No Season Titles, Custom Font - Anime Style (Alternate Font)
+      card_type: anime
+      font:
+        case: upper
+        color: rgb(250,239,80)
+        file: ./fonts/Conduit ITC Regular.otf
+        kerning: 0%
+        size: 125%
+        stroke_width: 100%
+        vertical_shift: 0
+      seasons: {hide: true}
+      extras: {kanji_vertical_shift: -50}
+    - archive_name: Generic Season Titles, Custom Font - Anime Style (Alternate Font)
+      card_type: anime
+      font:
+        case: upper
+        color: rgb(250,239,80)
+        file: ./fonts/Conduit ITC Regular.otf
+        kerning: 0%
+        size: 125%
+        stroke_width: 100%
+        vertical_shift: 0
+      seasons: {hide: false}
+      extras: {kanji_vertical_shift: -50}
+
+  # "Danganronpa: The Animation (2013)":
+  #   template: anime-no-kanji
+  #   seasons:
+  #     1: The Animation
+  #     2: The End of Hope's Peak High School 
+
+  The Dangers in My Heart (2023):
+    template: anime-kanji
+
+  # A Dark Rabbit Has Seven Lives (2011):
+  #   template: anime-kanji
+  #   match_titles: false
+
+  # Darker than Black (2007):
+  #   template: anime-kanji
+  #   seasons:
+  #     1: The Black Contractor
+  #     2: Gemini of the Meteor
+
+  # DARLING in the FRANXX (2018):
+  #   template: anime-kanji
+
+  # Date a Live (2013):
+  #   template: anime-kanji
+
+  The Dawn of the Witch (2022):
+    template: anime-kanji
+
+  Dead Mount Death Play (2023):
+    template: anime-kanji
+
+  # Deadman Wonderland (2011):
+  #   template: anime-kanji
+
+  # Death Note (2006):
+  #   template: anime-kanji
+  #   font:
+  #     file: ./fonts/death_note_font.ttf
+  #   sync_specials: false
+  #   archive_variations:
+  #   - card_type: roman
+  #   - card_type: standard
+
+  # Death Parade (2015):
+  #   template: anime-kanji
+
+  "Demon Slayer: Kimetsu no Yaiba (2019)":
+    template: anime-kanji
+    seasons:
+      1: Finding my Life's Purpose
+      2: Mugen Train
+      3: Entertainment District
+      4: Swordsmith Village
+
+  The Detective Is Already Dead (2021):
+    template: anime-kanji
+
+  The Devil Is a Part-Timer! (2013):
+    template: anime-kanji
+
+  # Devilman Crybaby (2018):
+  #   template: anime-kanji
+  #   archive_variations:
+  #   - card_type: standard
+  #   - card_type: roman
+  #   - card_type: blurred edge
+  #     font:
+  #       color: rgb(174,35,23)
+  #     extras:
+  #       box_color: rgb(174,35,23)
+  #       episode_text_color: rgb(174,35,23)
+  #     episode_text_format: "{episode_number_cardinal}"
+  #     seasons:
+  #       hide: true
+
+  # Didn't I Say to Make My Abilities Average in the Next Life?! (2019):
+  #   template: anime-kanji
+
+  Do It Yourself!! (2022):
+    template: anime-no-kanji
+
+  # Do You Love Your Mom and Her Two-Hit Multi-Target Attacks? (2019):
+  #   template: anime-no-kanji
+  #   font:
+  #     size: 80%
+
+  Don't Hurt Me, My Healer! (2022):
+    template: anime-kanji
+
+  Don't Toy With Me, Miss Nagatoro (2021):
+    template: anime-no-kanji
+    episode_text_format: EPISODE {abs_number_cardinal}
+    font:
+      size: 70%
+      replacements:
+        "♥": ""
+    seasons:
+      1: 1st Attack
+      2: 2nd Attack
+
+  Dr. Stone (2019):
+    template: anime-no-kanji
+    tmdb_skip_localized_images: true
+    seasons:
+      2: Stone Wars
+      3: New World
+
+  # https://dragonball.fandom.com/wiki/List_of_Sagas
+  # Dragon Ball (1986):
+  #   template: anime-kanji
+  #   tmdb_skip_localized_images: true
+  #   font:
+  #     color: rgb(239,142,52)
+  #   episode_ranges:
+  #     s1e1-s1e13: Emperor Pilaf Saga # Season 1 / 1-13
+  #     s2e1-s2e15: Tournament Saga # Season 2 / 14-28
+  #     s3e1-s3e17: Red Ribbon Army Saga # 29-45
+  #     s3e18-s3e29: General Blue Saga # 46-57
+  #     s3e30-s3e39: Commander Red Saga # 58-67
+  #     s3e40-s3e40: Fortuneteller Baba Saga # 68-83
+  #     s4e1-s4e15: Fortuneteller Baba Saga # 68-83
+  #     s4e16-s4e33: Tien Shinhan # 84-101
+  #     s5e1-s5e21: King Piccolo # 102-122
+  #     s5e22-s5e31: Piccolo Jr. # 123-153
+  #     s6e1-s6e21: Piccolo Jr. # 123-153
+  #   archive_variations:
+  #   - archive_name: Official English Title Cards
+  #     card_type: textless
+  #     episode_ranges:
+  #       s1e1-s1e13:  {source: "official-english/s1e{abs_number}.jpg"}
+  #       s2e1-s2e15:  {source: "official-english/s1e{abs_number}.jpg"}
+  #       s3e1-s3e17:  {source: "official-english/s1e{abs_number}.jpg"}
+  #       s3e18-s3e29: {source: "official-english/s1e{abs_number}.jpg"}
+  #       s3e30-s3e39: {source: "official-english/s1e{abs_number}.jpg"}
+  #       s3e40-s3e40: {source: "official-english/s1e{abs_number}.jpg"}
+  #       s4e1-s4e15:  {source: "official-english/s1e{abs_number}.jpg"}
+  #       s4e16-s4e33: {source: "official-english/s1e{abs_number}.jpg"}
+  #       s5e1-s5e21:  {source: "official-english/s1e{abs_number}.jpg"}
+  #       s5e22-s5e31: {source: "official-english/s1e{abs_number}.jpg"}
+  #       s6e1-s6e21:  {source: "official-english/s1e{abs_number}.jpg"}
+  #   - archive_name: Official Japanese Title Cards
+  #     card_type: textless
+  #     episode_ranges:
+  #       s1e1-s1e13:  {source: "official-japanese/s{season_number}e{episode_number}.jpg"}
+  #       s2e1-s2e15:  {source: "official-japanese/s{season_number}e{episode_number}.jpg"}
+  #       s3e1-s3e17:  {source: "official-japanese/s{season_number}e{episode_number}.jpg"}
+  #       s3e18-s3e29: {source: "official-japanese/s{season_number}e{episode_number}.jpg"}
+  #       s3e30-s3e39: {source: "official-japanese/s{season_number}e{episode_number}.jpg"}
+  #       s3e40-s3e40: {source: "official-japanese/s{season_number}e{episode_number}.jpg"}
+  #       s4e1-s4e15:  {source: "official-japanese/s{season_number}e{episode_number}.jpg"}
+  #       s4e16-s4e33: {source: "official-japanese/s{season_number}e{episode_number}.jpg"}
+  #       s5e1-s5e21:  {source: "official-japanese/s{season_number}e{episode_number}.jpg"}
+  #       s5e22-s5e31: {source: "official-japanese/s{season_number}e{episode_number}.jpg"}
+  #       s6e1-s6e21:  {source: "official-japanese/s{season_number}e{episode_number}.jpg"}
+  #   - card_type: 4x3
+  #     extras: {logo: logo.png}
+  
+  # Dragon Ball Z Kai (2009):
+  #   template: anime-kanji
+  #   sonarr_id: 1215
+  #   episode_text_format: EPISODE {abs_number}
+  #   refresh_titles: false
+  #   episode_ranges:
+  #     1-3: Raditz Saga
+  #     4-31: Vegeta Saga
+  #     32-54: Captain Ginyu Saga
+  #     55-58: Trunks Saga
+  #     59-67: Androids Saga
+  #     68-75: Imperfect Cell Saga
+  #     76-82: Perfect Cell Saga
+  #     83-98: Cell Games Saga
+  #     99-105: Great Saiyaman Saga
+  #     106-114: World Tournament Saga
+  #     115-122: Babidi Saga
+  #     123-140: Majin Buu Saga
+  #     141-155: Fusion Saga
+  #     156-165: Kid Buu Saga
+  #     166-167: Peaceful World Saga
+
+  # Dragon Ball Z (1989):
+  #   episode_ranges:
+  #     s1e1-s1e6: Raditz # 1-6
+  #     s1e7-s1e35: Vegeta # 7-35
+  #     s1e36-s1e39: Namek # 36-67
+  #     s2e1-s2e28: Namek # 36-67
+  #     s2e29-s2e35: Captain Ginyu # 68-74
+  #     s3e1-s3e33: Frieza # 75-107
+  #     s4e1-s4e10: Garlic Jr. # Filler, 108-117
+  #     s4e11-s4e18: Trunks # 118-125
+  #     s4e19-s4e32: Androids # 126-139
+  #     s5e1-s5e13: Imperfect Cell # 140-152
+  #     s5e14-s5e26: Perfect Cell # 153-165
+  #     s6e1-s6e29: Cell Games # 166-194
+  #     s7e1-s7e5: Other World # Filler, 195-199
+  #     s7e6-s7e15: Great Saiyaman # 200-209
+  #     s7e16-s7e25: World Tournament # 210-219
+  #     s8e1-s8e12: Babidi # 220-231
+  #     s8e13-s8e34: Majin Buu # 232-253
+  #     s9e1-s9e22: Fusion # 254-275
+  #     s9e23-s9e34: Kid Buu # 276-287
+  #     s9e35-s9e38: Peaceful World # 288-291
+
+  # Dragon Ball Super (2015):
+  #   template: anime-kanji
+  #   episode_ranges:
+  #     s1e1-s1e14: God of Destruction Beerus # 1-15
+  #     s2e1-s2e1: God of Destruction Beerus # 1-15
+  #     s2e2-s2e13: Golden Frieza # 16-27
+  #     s3e1-s3e14: Universe 6 # 28-41
+  #     s3e15-s3e19: Copy-Vegeta # 42-46
+  #     s4e1-s4e30: Future Trunks Saga # 47-76
+  #     s5e1-s5e55: Universe Survival Saga # 77-131
+
+  # Dragon Ball GT (1996):
+  #   template: anime-kanji
+  #   episode_ranges:
+  #     s1e1-s1e16: Black Star Dragon Ball Saga # 1-16
+  #     s2e1-s2e24: Baby Saga # 17-40
+  #     s3e1-s3e7: Super Android 17 # 41-47
+  #     s3e8-s3e24: The Shadow Dragons Saga # 48-64
+
+  # Super Dragon Ball Heroes (2018):
+  #   template: anime-no-kanji
+  #   seasons:
+  #     1: Prison Planet Arc
+  #     2: Universal Conflict Arc
+  #     3: Universe Creation Arc
+  #     4: New Space-Time War Arc
+  #     5: Supreme Kai of Time Arc
+
+  # The Duke of Death and His Maid (2021):
+  #   template: anime-kanji
+
+  # The Dungeon of Black Company (2021):
+  #   template: anime-no-kanji
+
+  # Eden of the East (2009):
+  #   template: anime-kanji
+
+  The Eminence in Shadow (2022):
+    template: anime-kanji
+    unwatched_style: blur
+    seasons:
+      0: Kage-Jitsu! 
+
+  # Encouragement of Climb (2013):
+  #   template: anime-kanji
+
+  Engage Kiss (2022):
+    template: anime-kanji
+
+  # ERASED (2016):
+  #   template: anime-kanji
+
+  # Ergo Proxy (2006):
+  #   template: anime-kanji
+
+  # The Executioner and Her Way of Life (2022):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+
+  # Fate/Apocrypha (2017):
+  #   template: anime-kanji
+  #   sync_specials: false
+
+  # "Fate/Extra: Last Encore (2018)":
+  #   template: anime-kanji
+
+  # "Fate/Grand Order - Absolute Demonic Front: Babylonia (2019)":
+  #   template: anime-kanji
+
+  # Fate/kaleid liner Prisma Illya (2013):
+  #   template: anime-kanji
+
+  # Fate/Stay Night (2006):
+  #   template: anime-kanji
+
+  # "Fate/Stay Night: Unlimited Blade Works (2014)":
+  #   template: anime-kanji
+
+  # Fate/Zero (2011):
+  #   template: anime-kanji
+  #   extras:
+  #     require_kanji: false
+
+  # Fairy Tail (2009): 
+  #   template: anime-kanji
+  #   episode_text_format: Episode {abs_number}
+  #   episode_ranges:
+  #     1-2: Macao
+  #     3-4: Daybreak
+  #     5-10: Eisenwald
+  #     11-20: Sub-Zero Emperor Lyon
+  #     21-29: Phantom Lor
+  #     30-32: Loke
+  #     33-40: Tower of Heaven
+  #     41-51: Battle of Fairy Tail
+  #     52-68: Oración Seis
+  #     69-75: Daphne
+  #     76-95: Edolas
+  #     96-122: Tenrou Island
+  #     123-124: X791
+  #     125-150: Key of the Starry Sky
+  #     151-203: Grand Magic Games
+  #     204-226: Eclipse Celestial Spirits
+  #     227-233: Sun Village
+  #     234-265: Tartaros
+  #     266-275: Zerø
+  #     276-284: Avatar
+  #     285-328: Alvarez Empire
+
+  The Faraway Paladin (2021):
+    template: anime-kanji
+
+  Farming Life in Another World (2023):
+    template: anime-kanji
+
+  "Fena: Pirate Princess (2021)":
+    template: anime-kanji
+
+  # Fire Force (2019):
+  #   template: anime-kanji
+  #   sync_specials: false
+
+  The Fire Hunter (2023):
+    template: anime-kanji
+
+  # Freezing (2011):
+  #   template: anime-no-kanji
+
+  "Frieren: Beyond Journey's End (2023)":
+    template: anime-kanji
+
+  "The Fruit of Evolution: Before I Knew It, My Life Had It Made (2021)":
+    template: anime-kanji
+
+  Fruits Basket (2019):
+    template: anime-kanji
+    sync_specials: false
+    seasons:
+      3: The Final
+
+  # Fullmetal Alchemist (2003):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+  #   sync_specials: false
+
+  # "Fullmetal Alchemist: Brotherhood (2009)":
+  #   template: anime-kanji
+  #   sync_specials: false
+  #   unwatched_style: blur
+
+  # The Future Diary (2011):
+  #   template: anime-kanji
+
+  # Gabriel DropOut (2017):
+  #   template: anime-kanji
+
+  # The Garden of Sinners (2007):
+  #   template: anime-no-kanji
+  #   episode_text_format: EPISODE {abs_number}
+
+  # Ghost Stories (2000):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+
+  Giant Beasts of Ars (2023):
+    template: anime-kanji
+    tmdb_skip_localized_images: true
+
+  # Gintama (2006):
+  #   template: anime-kanji
+  #   font:
+  #     size: 80%
+  #   seasons:
+  #     5: Gintama'
+  #     6: Gintama' Enchousen
+  #     7: Gintama°
+  #     8: Gintama.
+  #     9: Gintama. - Slip Arc
+  #     10: Gintama. - Silver Soul Arc
+
+  Girlfriend, Girlfriend (2021):
+    template: anime-kanji
+
+  Girls' Last Tour (2017):
+    template: anime-kanji
+
+  Goblin Slayer (2018):
+    template: anime-kanji
+    unwatched_style: blur
+
+  # The God of High School (2020):
+  #   template: anime-no-kanji
+  #   sync_specials: false
+
+  # Godzilla Singular Point (2021):
+  #   template: anime-kanji
+
+  # Golden Time (2013):
+  #   template: anime-kanji
+
+  # Gonna be the Twin-Tail!! (2014):
+  #   template: anime-kanji
+
+  I Got a Cheat Skill in Another World and Became Unrivaled in the Real World, Too (2023):
+    template: anime-kanji
+    unwatched_style: blur
+
+  # Grand Blue Dreaming (2018):
+  #   template: anime-kanji
+
+  # Great Pretender (2020):
+  #   template: anime-no-kanji
+
+  # Great Teacher Onizuka (1999):
+  #   template: anime-no-kanji
+  #   episode_text_format: Lesson {abs_number}
+  #   sync_specials: false
+
+  The Greatest Demon Lord Is Reborn as a Typical Nobody (2022):
+    template: anime-kanji
+
+  # Grimgar of Fantasy and Ash (2016):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+  #   archive_variations:
+  #   - card_type: standard
+  #   - card_type: roman
+
+  # Grimoire of Zero (2017):
+  #   template: anime-kanji
+
+  # Guilty Crown (2011):
+  #   template: anime-kanji
+
+  # Gurren Lagann (2007):
+  #   template: anime-kanji
+  #   sync_specials: false
+
+  Handyman Saitou in Another World (2023):
+    template: anime-kanji
+
+  Harem in the Labyrinth of Another World (2022):
+    template: anime-kanji
+    unwatched_style: blur
+    sync_specials: false
+
+  # Heaven's Lost Property (2009):
+  #   template: anime-kanji
+  #   seasons:
+  #     1: Misplaced by Heaven
+  #     2: Forte
+
+  Heavenly Delusion (2023):
+    template: anime-kanji
+
+  Helck (2023):
+    template: anime-kanji
+
+  Hell's Paradise (2023):
+    template: anime-kanji
+
+  # Hellsing Ultimate (2006):
+  #   template: anime-no-kanji
+  #   sync_specials: false
+
+  # "Hensuki: Are you willing to fall in love with a pervert, as long as she's a cutie? (2019)":
+  #   template: anime-kanji
+
+  The Hidden Dungeon Only I Can Enter (2021):
+    template: anime-kanji
+    sync_specials: false
+
+  High Card (2023):
+    template: anime-no-kanji
+    unwatched_style: blur
+
+  # High School DxD (2012):
+  #   template: anime-kanji
+  #   seasons:
+  #     1: DxD
+  #     2: NEW
+  #     3: BorN
+  #     4: HERO
+
+  # High School Fleet (2016):
+  #   template: anime-kanji
+
+  # Hinamatsuri (2018):
+  #   template: anime-kanji
+
+  Horimiya (2021):
+    template: anime-kanji
+    sync_specials: false
+
+  How Not to Summon a Demon Lord (2018):
+    template: anime-kanji
+    seasons:
+      2: Ω
+
+  How a Realist Hero Rebuilt the Kingdom (2021):
+    template: anime-kanji
+
+  # Hunter x Hunter (1999):
+  #   template: anime-no-kanji
+  #   refresh_titles: false
+  #   sync_specials: false
+  #   episode_text_format: Episode {abs_number}
+  #   unwatched_style: blur
+  #   seasons:
+  #     2: OVA
+  #     3: Greed Island
+  #     4: Greed Island Finale
+  #   archive_variations:
+  #   - archive_name: Custom Season Titles, Generic Font
+  #     font: {replacements: {"✕": "x"}}
+  #   - archive_name: Generic Season Titles, Generic Font
+  #     card_type: standard
+  #     font: {replacements: {"✕": "x"}}
+  #     seasons:
+  #       1: Season 1
+  #       2: Season 2
+  #       3: Season 3
+  #       4: Season 4
+
+  # Hunter x Hunter (2011):
+  #   template: anime-kanji
+  #   episode_text_format: Episode {abs_number}
+  #   refresh_titles: false
+  #   episode_ranges:
+  #     s0e1-s0e2: MOVIES
+  #     s1e1-s1e21: Hunter Exam
+  #     s1e22-s1e26: Zoldyk Family
+  #     s1e27-s1e36: Heavens Arena
+  #     s1e37-s1e58: Yorknew City
+  #     s2e1-s2e17: Greed Island
+  #     s2e18-s2e78: Chimera Ant
+  #     s3e1-s3e12: Hunter Chairman Election
+  #   archive_variations:
+  #   - archive_name: Custom Season Titles, Generic Font
+  #     font: {replacements: {"✕": "x"}}
+  #   - archive_name: Generic Season Titles, Generic Font
+  #     card_type: standard
+  #     font: {replacements: {"✕": "x"}}
+  #     episode_ranges:
+  #       s0e1-s0e2: Specials
+  #       s1e1-s1e100: Season 1
+  #       s2e1-s2e100: Season 2
+  #       s3e1-s3e100: Season 3
+
+  # Hybrid x Heart Magias Academy Ataraxia (2016):
+  #   template: anime-kanji
+
+  # I Couldn't Become a Hero, So I Reluctantly Decided to Get a Job (2013):
+  #   template: anime-kanji
+
+  I'm Now Your Sister! (2023):
+    template: anime-kanji
+
+  "I'm Quitting Heroing: Next Gig Is at the Demon Queen's Castle (2022)":
+    template: anime-kanji
+    sonarr_id: 652
+
+  I'm Standing on a Million Lives (2020):
+    template: anime-no-kanji
+    sync_specials: false
+
+  I'm the Villainess, So I'm Taming the Final Boss (2022):
+    template: anime-kanji
+    sync_specials: false
+
+  I've Been Killing Slimes for 300 Years and Maxed Out My Level (2021):
+    template: anime-kanji
+
+  I've Somehow Gotten Stronger When I Improved My Farm-Related Skills (2022):
+    template: anime-kanji
+
+  The Iceblade Sorcerer Shall Rule the World (2023):
+    template: anime-kanji
+
+  Immoral Guild (2022):
+    template: anime-kanji
+
+  In/Spectre (2020):
+    template: anime-kanji
+
+  In Another World with My Smartphone (2017):
+    template: anime-kanji
+
+  In the Land of Leadale (2022):
+    template: anime-no-kanji
+
+  Insomniacs After School (2023):
+    template: anime-kanji
+
+  # Inuyashiki Last Hero (2017):
+  #   template: anime-kanji
+
+  # The Irregular at Magic High School (2014):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+  #   episode_ranges:
+  #     1-7: Enrollment
+  #     8-18: Nine Schools Competition
+  #     19-26: Yokohama Disturbance
+  #     27-39: Visitor Arc
+
+  Is It Wrong to Try to Pick Up Girls in a Dungeon? (2015):
+    template: anime-kanji
+    unwatched_style: blur
+
+  JoJo's Bizarre Adventure (2012):
+    template: anime-kanji
+    episode_ranges:
+      1-9: Phantom Blood
+      10-26: Battle Tendency
+      27-74: Stardust Crusaders
+      75-113: Diamond is Unbreakable
+      114-152: Golden Wind
+      153-176: Stone Ocean
+  
+  Jujutsu Kaisen (2020):
+    template: anime-kanji
+    unwatched_style: blur
+
+  Kabaneri of the Iron Fortress (2016):
+    template: anime-kanji
+    sync_specials: false
+
+  "Kaguya-sama: Love Is War (2019)":
+    template: anime-no-kanji
+    unwatched_style: blur
+    font:
+      size: 60%
+    seasons:
+      2: Love is War?
+      3: Ultra Romantic
+    archive_variations:
+    - card_type: standard
+      font:
+        size: 80%
+        replacements:
+          "☆": ""
+          "♡": ""
+    - card_type: tinted frame
+      font:
+        size: 50%
+      extras:
+        frame_color: rgb(219,55,47)
+
+  Kaina of the Great Snow Sea (2023):
+    template: anime-kanji
+
+  Kakegurui (2017):
+    template: anime-kanji
+
+  Kakegurui Twin (2022):
+    template: anime-kanji
+
+  "KamiKatsu: Working for God in a Godless World (2023)":
+    template: anime-no-kanji
+    font:
+      size: 60%
+
+  # Keijo!!!!!!!! (2016):
+  #   template: anime-kanji
+  #   sync_specials: false
+
+  Kids on the Slope (2012):
+    template: anime-kanji
+
+  # Kino's Journey (2003):
+  #   template: anime-kanji
+
+  # KissXsis (2010):
+  #   template: anime-kanji
+  #   episode_text_format: Episode {abs_number}
+  #   archive: false
+  #   archive_variations: []
+
+  # Knights of Sidonia (2014):
+  #   template: anime-kanji
+  #   sync_specials: false
+  #   seasons:
+  #     2: Battle for Planet Nine
+
+  # Kokoro Connect (2012):
+  #   template: anime-kanji
+
+  Komi Can't Communicate (2021):
+    template: anime-kanji
+
+  KonoSuba – An Explosion on This Wonderful World! (2023):
+    template: anime-kanji
+
+  "KONOSUBA: God's blessing on this wonderful world! (2016)":
+    template: anime-no-kanji
+
+  Kotaro Lives Alone (2022):
+    template: anime-no-kanji
+
+  # Ladies Versus Butlers! (2010):
+  #   template: anime-kanji
+
+  Laid-Back Camp (2018):
+    template: anime-kanji
+
+  # Land of the Lustrous (2017):
+  #   template: anime-kanji
+
+  # Legend of the Galactic Heroes (1988):
+  #   template: anime-no-kanji
+  #   unwatched_style: blur
+
+  "Legend of the Galactic Heroes: Die Neue These (2018)":
+    template: anime-no-kanji
+    unwatched_style: blur
+    seasons:
+      1: Kaikou
+      2: Seiran
+      3: Collision
+      4: Sakubou
+
+  "Legend of Mana: The Teardrop Crystal (2022)":
+    template: anime-kanji
+
+  The Legendary Hero Is Dead! (2023):
+    template: anime-kanji
+
+  Level 1 Demon Lord and One Room Hero (2023):
+    template: anime-kanji
+
+  Life With an Ordinary Guy Who Reincarnated Into a Total Fantasy Knockout (2022):
+    template: anime-kanji
+
+  LINK CLICK (2021):
+    template: anime-no-kanji
+    sync_specials: false
+
+  # Log Horizon (2013):
+  #   template: anime-kanji
+  #   sync_specials: false
+  #   seasons:
+  #     3: Destruction of the Round Table
+
+  # Lord El-Melloi II Case Files Rail Zeppelin Grace Note (2019):
+  #   template: anime-kanji
+
+  Love After World Domination (2022):
+    template: anime-kanji
+
+  Love Flops (2022):
+    template: anime-kanji
+
+  Love of Kill (2022):
+    template: anime-no-kanji
+
+  Lupin III (1971):
+    template: anime-no-kanji
+    sync_specials: false
+    seasons:
+      1: Part I
+      2: Part II
+      3: Part III
+      4: "Part IV: The Italian Adventure"
+      5: "Part V: Misadventures in France"
+      6: Part VI
+
+  Lycoris Recoil (2022):
+    template: anime-no-kanji
+    unwatched_style: blur
+
+  # Macross (1982):
+  #   template: gundam
+
+  Made in Abyss (2017):
+    template: anime-kanji
+    card_type: roman
+    unwatched_style: blur
+    seasons:
+      2: The Golden City of the Scorching Sun
+    font:
+      color: rgb(255, 255, 255)
+    extras:
+      roman_numeral_color: "#E37837"
+    archive_variations:
+    - card_type: anime
+    - card_type: standard
+
+  # "Magia Record: Puella Magi Madoka Magica Side Story (2020)":
+  #   template: anime-kanji
+  #   sync_specials: false
+  #   seasons:
+  #     2: The Eve of Awakening
+  #     3: The Dawn of the Ephemeral Dream
+
+  Magical Destroyers (2023):
+    template: anime-kanji
+
+  The Magical Revolution of the Reincarnated Princess and the Genius Young Lady (2023):
+    template: anime-kanji
+
+  # Magical Sempai (2019):
+  #   template: anime-kanji
+
+  The Maid I Hired Recently Is Mysterious (2022):
+    template: anime-kanji
+  
+  Management of a Novice Alchemist (2022):
+    template: anime-kanji
+    sync_specials: false
+
+  # Mars Red (2021):
+  #   template: anime-kanji
+
+  "Mashle: Magic and Muscles (2023)":
+    template: anime-kanji
+
+  # The Melancholy of Haruhi Suzumiya (2006):
+  #   template: anime-kanji
+
+  # Mieruko-chan (2021):
+  #   template: anime-kanji
+
+  The Misfit of Demon King Academy (2020):
+    template: anime-kanji
+
+  Miss Kobayashi's Dragon Maid (2017):
+    template: anime-no-kanji
+
+  # Mob Psycho 100 (2016):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+  #   seasons:
+  #     1: I
+  #     2: II
+  #     3: III
+
+  # Mobile Suit Gundam (1979):
+  #   template: gundam
+
+  # Mobile Suit Gundam 00 (2007):
+  #   template: gundam
+
+  # "Mobile Suit Gundam: The 08th MS Team (1996)":
+  #   template: gundam
+
+  # Mobile Suit Gundam AGE (2011):
+  #   template: gundam
+  #   sync_specials: false
+
+  # "Mobile Suit Gundam: Iron-Blooded Orphans (2015)":
+  #   template: gundam
+
+  # Mobile Suit Gundam SEED (2002):
+  #   template: gundam
+
+  # Mobile Suit Gundam Thunderbolt (2015):
+  #   template: {name: gundam, require_kanji: false}
+  #   translation: []
+
+  # "Mobile Suit Gundam: Twilight Axis (2017)":
+  #   template: {name: gundam, require_kanji: false}
+  #   translation: []
+
+  "Mobile Suit Gundam: The Witch From Mercury (2022)":
+    template: gundam
+
+  # Mobile Suit Gundam ZZ (1986):
+  #   template: gundam
+
+  # Mobile Suit Zeta Gundam (1985):
+  #   template: gundam
+
+  # Monster (2004):
+  #   template: anime-kanji
+  #   sync_specials: false
+
+  # "Monster Musume: Everyday Life with Monster Girls (2015)":
+  #   template: anime-kanji
+  #   sync_specials: false
+
+  More Than a Married Couple, But Not Lovers (2022):
+    template: anime-kanji
+    card_type: frame
+    archive_variations:
+    - card_type: standard
+      seasons: {hide: true}
+    - card_type: anime
+      seasons: {hide: true}
+
+  # Mother of the Goddess' Dormitory (2021):
+  #   template: anime-kanji
+  #   archive: false
+  #   sync_specials: false
+
+  "Mushoku Tensei: Jobless Reincarnation (2021)":
+    template: anime-kanji
+    unwatched_style: blur
+
+  My Dress-Up Darling (2022):
+    template: anime-kanji
+    unwatched_style: blur
+
+  My Hero Academia (2016):
+    template: anime-kanji
+    unwatched_style: blur
+    episode_text_format: Episode {abs_number}
+    episode_ranges:
+      s0e1-s0e14: Specials
+      s0e4-s0e4: Movie
+      s0e7-s0e7: Movie
+      s0e11-s0e11: Movie
+      s1e1-s1e4: Enterance Exam
+      s1e5-s1e6: Quirk Apprehension Test
+      s1e7-s1e8: Battle Trial
+      s1e9-s1e13: U.S.J.
+      s2e1-s2e12: U.A. Sports Festival
+      s2e13-s2e20: Vs. Hero Killer
+      s2e21-s2e25: Final Exams
+      s3e1-s3e7: Forest Training Camp
+      s3e8-s3e12: Hideout Raid
+      s3e13-s3e24: Provisional Hero License Exam
+      s3e25-s3e25: Shie Hissaikai
+      s4e1-s4e15: Shie Hissaikai
+      s4e16-s4e17: Remedial Course
+      s4e18-s4e23: U.A. School Festival
+      s4e24-s4e25: Pro Hero
+      s5e1-s5e2: Pro Hero
+      s5e3-s5e11: Joint Training
+      s5e12-s5e12: Meta Liberation Army
+      s5e13-s5e18: Endeavor Agency
+      s5e19-s5e19: Paranormal Liberation Army
+      s5e20-s5e24: Meta Liberation Army
+      s5e25-s5e25: Paranormal Liberation War
+      s6e1-s6e13: Paranormal Liberation War
+    archive_variations:
+    - card_type: standard
+    - archive_name: Custom Season Titles, Generic Font (Season Numbering)
+      episode_text_format: Episode {episode_number}
+
+  My Home Hero (2023):
+    template: anime-kanji
+
+  My Isekai Life (2022):
+    template: anime-kanji
+    unwatched_style: blur
+
+  # My Life as Inukai-san's Dog (2023):
+  #   # library: Anime
+  #   unwatched_style: blur
+  #   card_type: frame
+  #   archive: false
+
+  My Love Story With Yamada-kun at Lv999 (2023):
+    template: anime-kanji
+    card_type: frame
+    archive_variations:
+    - card_type: anime
+      seasons: {hide: true}
+    - card_type: standard
+      seasons: {hide: true}
+
+  "My Next Life as a Villainess: All Routes Lead to Doom! (2020)":
+    template: anime-kanji
+
+  My Stepmom's Daughter Is My Ex (2022):
+    template: anime-kanji
+
+  My Tiny Senpai (2023):
+    template: anime-kanji
+
+  # Myriad Colors Phantom World (2016):
+  #   template: anime-kanji
+
+  # Naruto (2002):
+  #   template: naruto
+  #   episode_ranges:
+  #     1-19: Land of Waves
+  #     20-67: Chūnin Exams
+  #     68-80: Konoha Crash
+  #     81-100: Search For Tsunade
+  #     101-106: Land of Tea Escort Mission
+  #     107-135: Sasuke Recovery Mission
+  #     136-141: Land of Rice Fields Investigation Mission
+  #     142-147: Mizuki Tracking Mission
+  #     148-151: Bikochu Search Mission
+  #     152-158: Kurosuki Family Removal Mission
+  #     159-161: Gosunkugi Capture Mission
+  #     162-168: Cursed Warrior Extermination Mission
+  #     169-174: Kaima Capture Mission
+  #     175-177: Buried Gold Excavation Mission
+  #     178-186: Star Guard Mission
+  #     187-194: Peddlers Escort Mission
+  #     195-196: Third Great Beast
+  #     197-202: Konoha Plans Recapture Mission
+  #     203-208: Yakumo Kurama Rescue Mission
+  #     209-212: Gantetsu Escort Mission
+  #     213-215: Menma Memory Search Mission
+  #     216-220: Sunagakure Support Mission
+
+  # Naruto Shippuden (2007):
+  #   template: naruto
+  #   episode_ranges:
+  #     1-32: Kazekage Rescue Mission
+  #     33-53: Tenchi Bridge Reconnaissance Mission
+  #     54-71: Twelve Guardian Ninja
+  #     72-88: Akatsuki Suppression Mission
+  #     89-112: Three-Tails’ Appearance
+  #     113-118: Itachi Pursuit Mission
+  #     119-120: "Chronicals: A Boy’s life on the Battlefield"
+  #     121-126: Itachi Pursuit Mission
+  #     127-133: Tale of Jiraiya the Gallant
+  #     134-143: Fated Battle Between Brothers
+  #     144-151: Six-Tails Unleashed
+  #     152-169: Pain’s Assault
+  #     170-171: Big Adventure!
+  #     172-175: Pain’s Assault
+  #     176-196: "Past Arc: The Locus Of Konoha"
+  #     197-214: Five Kage Summit
+  #     215-222: "Fourth Shinobi World War: Countdown"
+  #     223-242: Paradise Life On A Boat
+  #     243-256: "Fourth Shinobi World War: Countdown"
+  #     257-260: Sasuke/Naruto Flashbacks
+  #     261-270: "Fourth Shinobi World War: Confrontation"
+  #     271-271: Road to Sakura
+  #     272-289: "Fourth Shinobi World War: Confrontation"
+  #     290-295: Power
+  #     296-310: "Fourth Shinobi World War: Confrontation"
+  #     311-311: Prologue of Road to Ninja
+  #     312-321: "Fourth Shinobi World War: Confrontation"
+  #     322-348: "Fourth Shinobi World War: Climax"
+  #     349-361: Kakashi's Anbu Arc
+  #     362-375: "Fourth Shinobi World War: Climax"
+  #     376-377: Mecha Naruto
+  #     378-388: Birth of the Ten-Tails' Jinchūriki
+  #     389-390: Hanabi
+  #     391-393: Birth of the Ten-Tails' Jinchūriki
+  #     394-413: In Naruto's Footsteps
+  #     414-427: Birth of the Ten-Tails' Jinchūriki
+  #     428-431: Kaguya Otsutsuki Strikes
+  #     432-450: "Jiraiya Shinobi Handbook: The Tale Of Naruto The Hero"
+  #     451-458: "Itachi Shinden Book: Light And Darkness"
+  #     458-468: Kaguya Otsutsuki Strikes
+  #     469-469: A Special Mission
+  #     470-479: Kaguya Otsutsuki Strikes
+  #     480-483: Childhood
+  #     484-488: "Sasuke Shinden: Book Of Sunrise"
+  #     489-493: "Shikamaru Hiden: A Cloud Drifting In Silent Darkness"
+  #     494-500: "Konoha Hiden: The Perfect Day For A Wedding"
+  
+  # Neon Genesis Evangelion (1995):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+  #   sonarr_sync: false
+  #   archive_variations:
+  #   - card_type: standard
+  #   - card_type: gundam
+  #     seasons:
+  #       0: {source: movie-poster.jpg}
+  #       1: {source: poster.jpg}
+  #     extras:
+  #       logo: ./source/Neon Genesis Evangelion (1995)/logo.png
+
+  "NieR:Automata Ver1.1a (2023)":
+    template: anime-no-kanji
+    episode_text_format: ver1.{episode_number}
+
+  "Ningen Fushin: Adventurers Who Don't Believe in Humanity Will Save the World (2023)":
+    template: anime-kanji
+
+  # No Game, No Life (2014):
+  #   template: anime-kanji
+
+  # Now and Then, Here and There (1999):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+
+  # Occultic;Nine (2016):
+  #   template: anime-kanji
+
+  ODDTAXI (2021):
+    template: anime-kanji
+    sync_specials: false
+
+  # One Piece (1999):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+  #   episode_text_format: EPISODE {abs_number}
+  #   font:
+  #     size: 80%
+  #   episode_ranges: # https://onepiece.fandom.com/wiki/Story_Arcs
+  #     1-3: Romance Dawn
+  #     4-8: Orange Town
+  #     9-18: Syrup Village
+  #     19-30: Baratie
+  #     31-44: Arlong Park
+  #     45-45: Loguetown
+  #     46-47: Buggy's Crew Adventure Chronicles
+  #     48-53: Loguetown
+  #     54-61: Warship Island
+  #     62-63: Reverse Mountain
+  #     64-67: Whisky Peak
+  #     68-69: Diary of Koby-Meppo
+  #     70-77: Little Garden
+  #     78-91: Drum Island
+  #     92-130: Arabasta
+  #     131-135: Post-Arabasta
+  #     136-138: Goat Island
+  #     139-143: Ruluka Island
+  #     144-152: Jaya
+  #     143-195: Skypiea
+  #     196-206: G-8
+  #     207-219: Long Ring Long Land
+  #     220-224: Ocean's Dream
+  #     225-228: Foxy's Return
+  #     229-263: Water 7
+  #     264-290: Enies Lobby
+  #     291-292: Boss Luffy Historical Special
+  #     293-302: Enies Lobby
+  #     303-303: Boss Luffy Historical Special
+  #     304-312: Enies Lobby
+  #     313-325: Post-Enies Lobby
+  #     326-335: Ice Hunter
+  #     336-336: Chopper Man Special
+  #     337-381: Thriller Bark
+  #     382-384: Spa Island
+  #     385-405: Sabaody Archipelago
+  #     406-407: Boss Luffy Historical Special
+  #     408-417: Amazon Lily
+  #     418-421: Straw Hat's Separation Serial
+  #     422-425: Impel Down
+  #     426-429: Little East Blue
+  #     430-452: Impel Down
+  #     453-456: Straw Hat's Separation Serial
+  #     457-489: Marineford
+  #     490-491: Post-War
+  #     492-492: Toriko Crossover
+  #     493-516: Post-War
+  #     517-522: Return to Sabaody
+  #     523-541: Fish-Man Island
+  #     542-542: Toriko Crossover
+  #     543-574: Fish-Man Island
+  #     575-578: Z's Ambition
+  #     579-589: Punk Hazard
+  #     590-590: Toriko & Dragon Ball Crossover
+  #     591-625: Punk Hazard
+  #     626-628: Caesar Retrieval
+  #     629-746: Dressrosa
+  #     747-750: Silver Mine
+  #     751-779: Zou
+  #     780-782: Marine Rookie
+  #     783-877: Whole Cake Island
+  #     878-889: Levely
+  #     890-894: Wano Country
+  #     895-896: Cidre Guild
+  #     897-906: Wano Country
+  #     907-907: 20th Anniversary Special
+  #     908-1028: Wano Country
+  #     1029-1030: Uta's Past
+  #     1031-1100: Wano Country
+
+  # One Piece:
+  #   year: 1999
+  #   card_type: roman
+  #   episode_text_format: "{abs_number}"
+  #   archive: false
+  #   archive_variations:
+  #   - archive_name: Generic Season Titles, Generic Font - Roman Numeral Style      
+  #   - archive_name: Generic Season Titles, Custom Font - Roman Numeral Style
+  #     extras: {roman_numeral_color: "rgb(45,106,177)"}
+
+  # One-Punch Man (2015):
+  #   template: anime-kanji
+
+  # Outbreak Company (2013):
+  #   template: anime-no-kanji
+
+  # Overlord (2015):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+  #   archive_variations:
+  #   - card_type: standard
+  #   - card_type: divider
+
+  # Parallel World Pharmacy (2022):
+  #   template: anime-kanji
+
+  # Parasyte -the maxim- (2014):
+  #   template: anime-kanji
+
+  # Peter Grill and the Philosopher's Time (2020):
+  #   template: anime-kanji
+  #   seasons:
+  #     2: Super Extra
+
+  # Ping Pong The Animation (2014): 
+  #   template: anime-kanji
+
+  # A Place Further Than the Universe (2018):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+
+  # Planetes (2003):
+  #   template: anime-kanji
+  #   sync_specials: false
+
+  # Platinum End (2021):
+  #   template: anime-kanji
+
+  # Pokémon (1997):
+  #   template: anime-no-kanji
+  #   episode_text_format: EPISODE {abs_number}
+  #   tmdb_skip_localized_images: true
+  #   font:
+  #     case: source
+  #     color: rgb(247,205,70)
+  #     file: ./fonts/Pokemon Solid.ttf
+  #     kerning: 50%
+  #     size: 110%
+  #     stroke_width: 500%
+  #   extras:
+  #     stroke_color: rgb(64,107,175)
+  #   episode_ranges:
+  #     # https://bulbapedia.bulbagarden.net/wiki/Pok%C3%A9mon_anime
+  #     s1e1-s1e82: Indigo League
+  #     s2e1-s2e36: Orange Islands
+  #     s3e1-s3e41: The Johto Journeys
+  #     s4e1-s4e52: Johto League Champions
+  #     s5e1-s5e65: Master Quest                                 # 215-279
+  #     s5e41-s5e41: Banned                                      # Part of Master Quest, https://bulbapedia.bulbagarden.net/wiki/EP250
+  #     s6e1-s6e40: Advanced                                     # 280-319
+  #     s7e1-s7e52: Advanced Challenge                           # 320-371
+  #     s8e1-s8e52: Advanced Battle                              # 372-425
+  #     s0e75-s0e75: Unaired                                     # Part of Advanced Battle, https://bulbapedia.bulbagarden.net/wiki/AG101_(unaired)
+  #     s0e76-s0e76: Unaired                                     # Part of Advanced Battle, https://bulbapedia.bulbagarden.net/wiki/AG120
+  #     s9e1-s9e47: Battle Frontier                              # 426-472
+  #     s10e1-s10e51: Diamond and Pearl                          # 473-523
+  #     s11e1-s11e52: "Diamond and Pearl: Battle Dimension"      # 524-575
+  #     s12e1-s12e52: "Diamond and Pearl: Galactic Battles"      # 576-628
+  #     s0e73-s0e73: Unaired                                     # Part of Diamond and Pearl: Galactic Battles, https://bulbapedia.bulbagarden.net/wiki/DP120
+  #     s13e1-s13e34: "Diamond and Pearl: Sinnoh League Victors" # 629-662
+  #     s14e1-s14e48: Black & White                              # 663-710
+  #     s14e49-s14e84: "Black & White: Rival Destinies"          # 711-746
+  #     s15e1-s15e13: "Black & White: Rival Destinies"           # 747-759
+  #     s15e14-s15e58: "Black & White: Adventures in Unova"      # Also called "Black & White: Adventures in Unova and Beyond" 760-804
+  #     s16e1-s16e48: XY                                         # 805-851
+  #     s16e49-s16e93: "XY: Kalos Quest"                         # 852-896
+  #     s17e1-s17e47: XYZ                                        # 897-943
+  #     s0e62-s0e62: XYZ                                         # The finale of XYZ but broadcasted as a special
+  #     s0e63-s0e63: Unaired                                     # Part of XYZ, but never aired in the US
+  #     s18e1-s18e43: Sun & Moon                                 # 944-986
+  #     s18e44-s18e92: "Sun & Moon: Ultra Adventures"            # 987-1035
+  #     s18e93-s18e146: "Sun & Moon: Ultra Legends"              # 1036-1086
+  #     s19e1-s19e48: Journeys                                   # 1087-1134
+  #     s19e49-s19e90: Master Journeys                           # 1135-1176
+  #     s19e91-s19e136: Ultimate Journeys                        # 1177-1222 (ongoing)
+  #     s19e119-s19e119: Unaired                                 # Part of Ultimate Journeys https://bulbapedia.bulbagarden.net/wiki/JN119
+  #     s20e1-s20e50: Horizons
+  #   archive_variations:
+  #   - card_type: standard
+  #     font:
+  #       stroke_width: 250%
+
+  # "Pokémon: Origins (2013)":
+  #   template: anime-no-kanji
+  #   font: pokemon
+  #   episode_text_format: File {episode_number}
+
+  "Pokémon: Twilight Wings (2020)":
+    template: anime-no-kanji
+    font: pokemon
+
+  Princess Connect! Re:Dive (2020):
+    template: anime-kanji
+
+  Prison School (2015):
+    template: anime-no-kanji
+    archive: false
+
+  Problem Children Are Coming from Another World, Aren't They? (2013):
+    template: anime-kanji
+
+  The Promised Neverland (2019):
+    template: anime-no-kanji
+
+  Psycho-Pass (2012):
+    template: anime-kanji
+
+  Puella Magi Madoka Magica (2011):
+    template: anime-kanji
+    seasons:
+      0: Movies
+
+  Qualidea Code (2016):
+    template: anime-kanji
+
+  Queen's Blade (2009):
+    template: anime-kanji
+    seasons:
+      1: The Exiled Virgin
+      2: Inheritor of the Throne
+      3: Rebellion
+
+  "Queen's Blade: Grimoire (2016)":
+    template: anime-kanji
+
+  Queen's Blade - Vanquished Queens (2018):
+    template: anime-no-kanji
+
+  The Quintessential Quintuplets (2019):
+    template: anime-kanji
+
+  The Qwaser of Stigmata (2010):
+    template: anime-kanji
+    seasons:
+      1: The Qwaser of Stigmata
+      2: The Qwaser of Stigmata II
+
+  Ranking of Kings (2021):
+    template: anime-kanji
+    unwatched_style: blur
+
+  # Rascal Does Not Dream of Bunny Girl Senpai (2018):
+  #   template: anime-kanji
+
+  # Re:CREATORS (2017):
+  #   template: anime-no-kanji
+  #   sync_specials: false
+
+  # ReLIFE (2016):
+  #   template: anime-kanji
+
+  # Re-ZERO -Starting Life in Another World- (2016):
+  #   template: anime-kanji
+  #   episode_ranges:
+  #     1-3: The Capital City's First Day
+  #     4-11: The Tumultuous Week
+  #     12-25: Return to the Capital City
+  #     26-50: The Everlasting Contract
+
+  "Reborn to Master the Blade: From Hero-King to Extraordinary Squire (2023)":
+    template: anime-kanji
+
+  Reborn as a Vending Machine, I Now Wander the Dungeon (2023):
+    template: anime-kanji
+
+  # Redo of Healer (2021):
+  #   template: anime-kanji
+  #   archive: false
+
+  Reign of the Seven Spellblades (2023):
+    template: anime-kanji
+
+  # Reincarnated as a Sword (2022):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+
+  The Reincarnation of the Strongest Exorcist in Another World (2023):
+    template: anime-kanji
+
+  # Remake Our Life! (2021):
+  #   template: anime-kanji
+
+  # Restaurant to Another World (2017):
+  #   template: anime-kanji
+  #   sync_specials: false
+
+  Revenger (2023):
+    template: anime-no-kanji
+
+  # The Rising of the Shield Hero (2019):
+  #   template: anime-kanji
+  #   sync_specials: false
+  #   unwatched_style: blur
+
+  # Rosario + Vampire (2008):
+  #   template: anime-kanji
+  #   seasons:
+  #     1: Rosario + Vampire
+  #     2: "Rosario + Vampire: Capu2"
+
+  RPG Real Estate (2022):
+    template: anime-no-kanji
+
+  # The Ryuo's Work is Never Done! (2018):
+  #   template: anime-kanji
+  #   sync_specials: false
+
+  # "Saekano: How to Raise a Boring Girlfriend (2015)":
+  #   template: anime-kanji
+
+  Sabikui Bisco (2022):
+    template: anime-kanji
+
+  # Saga of Tanya the Evil (2017):
+  #   template: anime-kanji
+
+  # The Saint's Magic Power Is Omnipotent (2021):
+  #   template: anime-kanji
+
+  # SAKUGAN (2021):
+  #   template: anime-no-kanji
+
+  Saving 80,000 Gold in Another World for My Retirement (2023):
+    template: anime-kanji
+
+  School Days (2007):
+    template: anime-kanji
+
+  Science Fell in Love, So I Tried to Prove It (2020):
+    template: anime-no-kanji
+    seasons:
+      2: "r=1-sinØ"
+
+  # Scum's Wish (2017):
+  #   template: anime-no-kanji
+
+  # Serial Experiments Lain (1998):
+  #   template: anime-no-kanji
+  #   sync_specials: false
+  #   episode_text_format: LAYER:{episode_number:02}
+
+  Shadows House (2021):
+    template: anime-kanji
+
+  She Professed Herself Pupil of the Wise Man (2022):
+    template: anime-no-kanji
+
+  Shikimori's Not Just a Cutie (2022):
+    template: anime-kanji
+    archive_variations:
+    - card_type: standard
+    - card_type: frame
+      seasons: {hide: false}
+
+  "SHIMONETA: A Boring World Where the Concept of 'Dirty Jokes' Doesn’t Exist (2015)":
+    template: anime-kanji
+
+  Shinobi no Ittoki (2022):
+    template: anime-kanji
+
+  "Seirei Gensouki: Spirit Chronicles (2021)":
+    template: anime-kanji
+
+  # "Senran Kagura: Ninja Flash (2013)":
+  #   template: anime-no-kanji
+  #   sync_specials: false
+  #   sonarr_id: 410
+  #   seasons:
+  #     1: Ninja Flash
+  #     2: Shinovi Master
+
+  # The Seven Deadly Sins (2014):
+  #   template: anime-kanji
+  #   seasons:
+  #     1: The Seven Deadly Sins
+  #     2: Revival of the Commandments
+  #     3: Wrath of the Gods
+  #     4: Dragon's Judgement
+
+  # Shaman King (2001):
+  #   template: anime-kanji
+  #   sync_specials: false
+
+  # Shaman King (2021):
+  #   template: anime-kanji
+  #   sync_specials: false
+
+  # Shomin Sample (2015):
+  #   template: anime-kanji
+
+  Skeleton Knight in Another World (2022):
+    template: anime-kanji
+
+  Skip and Loafer (2023):
+    template: anime-kanji
+    font:
+      color: rgb(229,147,176)
+
+  # So, I Can't Play H! (2012):
+  #   template: anime-kanji
+
+  So I'm a Spider, So What? (2021):
+    template: anime-kanji
+
+  # Sonny Boy (2021):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+
+  # Soul Eater (2008):
+  #   template: anime-no-kanji
+  #   sync_specials: false
+  #   archive_variations:
+  #   - card_type: standard
+  #     font:
+  #       replacements:
+  #         "☆": ""
+
+  # Spice and Wolf (2008):
+  #   template: anime-kanji
+
+  Spy Classroom (2023):
+    template: anime-kanji
+    episode_text_format: Mission {abs_number}
+
+  SPY x FAMILY (2022):
+    template: anime-kanji
+    unwatched_style: blur
+    episode_text_format: Mission {abs_number}
+    font:
+      size: 80%
+    archive_variations:
+    - card_type: standard
+      font: {size: 100%}
+
+  # SSSS.Gridman (2018):
+  #   template: gundam
+  #   sync_specials: false
+
+  # Steins;Gate (2011):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+
+  # Strike the Blood (2013):
+  #   template: anime-kanji
+  #   seasons:
+  #     1: Strike the Blood
+  #     2: Strike the Blood II
+  #     3: Strike the Blood III
+  #     4: Strike the Blood IV
+  #     5: Strike the Blood Final
+
+  The Strongest Sage With the Weakest Crest (2022):
+    template: anime-no-kanji
+    unwatched_style: blur
+
+  Super Crooks (2021):
+    template: anime-no-kanji
+
+  # SUPER HXEROS (2020):
+  #   template: anime-kanji
+
+  Summer Time Rendering (2022):
+    template: anime-kanji
+    unwatched_style: blur
+
+  Summoned to Another World for a Second Time (2023):
+    template: anime-kanji
+
+  Suppose a Kid From the Last Dungeon Boonies Moved to a Starter Town? (2021):
+    template: anime-kanji
+
+  # Sword Art Online (2012):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+  #   episode_ranges:
+  #     1-14: Aincrad
+  #     15-25: Fairy Dance
+  #     26-39: Phantom Bullet
+  #     40-42: Calibur
+  #     43-50: Mother's Rosario
+  #     51-74: Alicization
+  #     75-97: War of Underworld
+
+  # "Sword Art Online Alternative: Gun Gale Online (2018)":
+  #   template: anime-kanji
+
+  # takt op.Destiny (2021):
+  #   template: anime-kanji
+
+  # Talentless Nana (2020):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+
+  # The Tatami Galaxy (2010):
+  #   template: anime-kanji
+
+  Tengoku Daimakyo (2023):
+    template: anime-kanji
+
+  # Terror in Resonance (2014):
+  #   template: anime-no-kanji
+
+  # The Testament of Sister New Devil (2015):
+  #   template: anime-kanji
+  #   seasons:
+  #     2: Burst
+  #   archive: false
+
+  That Time I Got Reincarnated as a Slime (2018):
+    template: anime-kanji
+
+  Those Snow White Notes (2021):
+    template: anime-kanji
+
+  To LOVE-Ru (2008):
+    template: anime-no-kanji
+    seasons:
+      2: Motto
+      3: Darkness
+      4: Darkness 2nd
+
+  To Your Eternity (2021):
+    template: anime-kanji
+    archive_variations:
+    - card_type: standard
+    - card_type: frame
+    - card_type: roman
+
+  # Today’s Menu for the Emiya Family (2017):
+  #   template: anime-kanji
+
+  # Tokyo 24th Ward (2022):
+  #   template: anime-kanji
+
+  # Tokyo Ghoul (2014):
+  #   template: anime-kanji
+  #   sync_specials: false
+  #   seasons:
+  #     2: "√A"
+  #     3: ":re"
+
+  # Tokyo Magnitude 8.0 (2009):
+  #   template: anime-kanji
+  #   sync_specials: false
+
+  # Tokyo Revengers (2021):
+  #   template: anime-no-kanji
+  #   sync_specials: false
+
+  Tomo-chan Is a Girl! (2023):
+    template: anime-no-kanji
+
+  # Tomodachi Game (2022):
+  #   template: anime-kanji
+
+  # Tower of God (2020):
+  #   template: anime-kanji
+  #   card_type: roman
+  #   font:
+  #     color: rgb(255, 255, 255)
+  #   extras:
+  #     roman_numeral_color: "#4489C2"
+  #   archive_variations:
+  #   - card_type: anime
+  #   - card_type: standard
+
+  # "Trapped in a Dating Sim: The World of Otome Games Is Tough for Mobs (2022)":
+  #   template: anime-kanji
+
+  Trigun Stampede (2023):
+    template: anime-no-kanji
+
+  # Trinity Seven (2014):
+  #   template: anime-no-kanji
+
+  # Tsukimichi -Moonlit Fantasy- (2021):
+  #   template: anime-kanji
+
+  # Uncle From Another World (2022):
+  #   template: anime-kanji
+
+  # Urusei Yatsura (2022):
+  #   template: anime-no-kanji
+  #   sync_specials: false
+
+  # Utawarerumono (2006):
+  #   template: anime-no-kanji
+  #   sync_specials: false
+  #   seasons:
+  #     2: The False Faces
+  #     3: Mask of Truth
+
+  Uzaki-chan Wants to Hang Out! (2020):
+    template: anime-kanji
+
+  # "Valkyrie Drive: Mermaid (2015)":
+  #   template: anime-kanji
+
+  # Vermeil in Gold (2022):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+
+  Vinland Saga (2019):
+    template: {name: anime-no-kanji, seasonless: false}
+    unwatched_style: blur
+
+  # Vision of Escaflowne (1996):
+  #   template: anime-kanji
+  #   sync_specials: false
+
+  # Vivy - Fluorite Eye's Song (2021):
+  #   template: anime-no-kanji
+  #   unwatched_style: blur
+
+  # I Want You To Make a Disgusted Face and Show Me Your Underwear (2018):
+  #   library: Anime
+  #   card_type: frame
+  #   archive: false
+
+  # Welcome to Demon School! Iruma-kun (2019):
+  #   template: anime-kanji
+  #   tmdb_skip_localized_images: true
+
+  # Wonder Egg Priority (2021):
+  #   template: anime-kanji
+
+  # World Trigger (2014):
+  #   template: anime-kanji
+
+  # Working with Voice! (2010):
+  #   template: anime-kanji
+  #   tmdb_id: 38605
+  #   archive: false
+  #   archive_variations: []
+
+  # World's End Harem (2021):
+  #   template: anime-kanji
+  #   sync_specials: false
+
+  # The World's Finest Assassin Gets Reincarnated in Another World as an Aristocrat (2021):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+
+  # Ya Boy Kongming! (2022):
+  #   template: anime-kanji
+
+  # Yosuga no Sora (2010):
+  #   sync_specials: false
+  #   template: anime-kanji
+
+  # Your Lie in April (2014):
+  #   template: anime-kanji
+  #   unwatched_style: blur
+
+  # Yu Yu Hakusho (1992):
+  #   template: anime-no-kanji
+  #   seasons:
+  #     1: Spirit Detective Saga
+  #     2: Dark Tournament Saga
+  #     3: Chapter Black Saga
+  #     4: Three Kings Saga
+
+  Yuri Is My Job! (2023):
+    template: anime-kanji
+
+  # Yuuna and the Haunted Hot Springs (2018):
+  #   template: anime-kanji
+
+  "Zom 100: Bucket List of the Dead (2023)":
+    template: anime-kanji

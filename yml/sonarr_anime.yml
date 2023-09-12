@@ -1,0 +1,233 @@
+libraries:
+  Anime:
+    path: /mnt/user/Media/TitleCardMaker/cards
+  TV Shows:
+    path: /mnt/user/Media/TitleCardMaker/cards
+series:
+  +Tic Elder Sister (2011): {library: Anime}
+  Aki-Sora (2009): {library: Anime}
+  'Anohana: The Flower We Saw That Day (2011)': {library: Anime}
+  Another (2012): {library: Anime}
+  Asobi Asobase - workshop of fun - (2018): {library: Anime}
+  Ben-To (2011): {library: Anime}
+  ChäoS;Head (2008): {library: Anime}
+  "Danganronpa 3: The End of Hope's Peak Academy Side: Despair (2016)": {library: Anime}
+  Durarara!! (2010): {library: Anime}
+  Electromagnetic Girlfriend (2009): {library: Anime}
+  Flowers of Evil (2013): {library: Anime}
+  Girls Bravo (2004): {library: Anime}
+  Hajime no Ippo (2000): {library: Anime}
+  'Higehiro: After Being Rejected, I Shaved and Took in a High School Runaway (2021)': {library: Anime}
+  'IS: Infinite Stratos (2011)': {library: Anime}
+  Jormungand (2012): {library: Anime}
+  Junji Ito Collection (2018): {library: Anime}
+  Lunar Legend Tsukihime (2003): {library: Anime}
+  Manyuu Hiken-chou (2011): {library: Anime}
+  Monogatari (2009): {library: Anime}
+  'Nichijou: My Ordinary Life (2011)': {library: Anime}
+  'Phantom: Requiem for the Phantom (2009)': {library: Anime}
+  'Rin: Daughters of Mnemosyne (2008)': {library: Anime}
+  Robotics;Notes (2012): {library: Anime}
+  Saikano (2002): {library: Anime}
+  'Sankarea: Undying Love (2012)': {library: Anime}
+  Sekirei (2008): {library: Anime}
+  Shirobako (2014): {library: Anime}
+  Sound! Euphonium (2015): {library: Anime}
+  The Boondocks (2005): {library: Anime}
+  The Fruit of Grisaia (2014): {library: Anime}
+  Tokyo Ravens (2013): {library: Anime}
+  Toradora! (2008): {library: Anime}
+  Trigun (1998): {library: Anime}
+  'Umineko: When They Cry (2009)': {library: Anime}
+  When They Cry - Higurashi (2006): {library: Anime}
+  Yozakura Quartet (2013): {library: Anime}
+  Dragon Ball Z (1989): {library: Anime}
+  Dragon Ball (1986): {library: Anime}
+  Dragon Ball Kai (2009): {library: Anime}
+  Dragon Ball Super (2015): {library: Anime}
+  Dragon Ball GT (1996): {library: Anime}
+  Super Dragon Ball Heroes (2018): {library: Anime}
+  Oshi no Ko (2023): {library: Anime, media_directory: /mnt/user/Media/TitleCardMaker/cards/Oshi no Ko}
+  My One-Hit Kill Sister (2023): {library: Anime}
+  Wise Man's Grandchild (2019): {library: Anime}
+  GATE (2015): {library: Anime}
+  Black Lagoon (2006): {library: Anime}
+  'Higurashi: When They Cry (2020)': {library: Anime}
+  A Sister's All You Need (2017): {library: Anime}
+  Great Pretender (2020): {library: Anime}
+  One-Punch Man (2015): {library: Anime}
+  Sword Art Online (2012): {library: Anime}
+  The God of High School (2020): {library: Anime}
+  Death Note (2006): {library: Anime}
+  'Fullmetal Alchemist: Brotherhood (2009)': {library: Anime}
+  Hunter x Hunter (2011): {library: Anime}
+  Mob Psycho 100 (2016): {library: Anime}
+  Monster (2004): {library: Anime}
+  Naruto (2002): {library: Anime}
+  Naruto Shippuden (2007): {library: Anime}
+  Steins;Gate (2011): {library: Anime}
+  Neon Genesis Evangelion (1995): {library: Anime}
+  Fullmetal Alchemist (2003): {library: Anime}
+  'Code Geass: Lelouch of the Rebellion (2006)': {library: Anime}
+  Hellsing Ultimate (2006): {library: Anime}
+  Afro Samurai (2007): {library: Anime}
+  Casshern Sins (2008): {library: Anime}
+  Deadman Wonderland (2011): {library: Anime}
+  The Seven Deadly Sins (2014): {library: Anime}
+  Legend of the Galactic Heroes (1988): {library: Anime}
+  Devilman Crybaby (2018): {library: Anime}
+  Shaman King (2001): {library: Anime}
+  Your Lie in April (2014): {library: Anime}
+  Talentless Nana (2020): {library: Anime}
+  Hunter x Hunter (1999): {library: Anime}
+  Assassination Classroom (2015): {library: Anime}
+  Gurren Lagann (2007): {library: Anime}
+  Now and Then, Here and There (1999): {library: Anime}
+  Baccano! (2007): {library: Anime}
+  Godzilla Singular Point (2021): {library: Anime}
+  Sonny Boy (2021): {library: Anime}
+  Grand Blue Dreaming (2018): {library: Anime}
+  Classroom of the Elite (2017): {library: Anime}
+  Chivalry of a Failed Knight (2015): {library: Anime}
+  The Irregular at Magic High School (2014): {library: Anime}
+  Mother of the Goddess' Dormitory (2021): {library: Anime}
+  The Duke of Death and His Maid (2021): {library: Anime}
+  Grimgar of Fantasy and Ash (2016): {library: Anime}
+  Inuyashiki Last Hero (2017): {library: Anime}
+  ReLIFE (2016): {library: Anime}
+  'Magia Record: Puella Magi Madoka Magica Side Story (2020)': {library: Anime}
+  SAKUGAN (2021): {library: Anime}
+  Berserk (1997): {library: Anime}
+  Berserk (2016): {library: Anime}
+  Takt op.Destiny (2021): {library: Anime, media_directory: /mnt/user/Media/TitleCardMaker/cards/takt op.Destiny (2021)}
+  Platinum End (2021): {library: Anime}
+  Mars Red (2021): {library: Anime}
+  Tokyo Ghoul (2014): {library: Anime}
+  Fairy Tail (2009): {library: Anime}
+  No Game, No Life (2014): {library: Anime, media_directory: /mnt/user/Media/TitleCardMaker/cards/No Game No Life (2014)}
+  Trinity Seven (2014): {library: Anime}
+  The Future Diary (2011): {library: Anime}
+  'Monster Musume: Everyday Life with Monster Girls (2015)': {library: Anime}
+  Soul Eater (2008): {library: Anime}
+  Akashic Records of Bastard Magic Instructor (2017): {library: Anime}
+  'Sword Art Online Alternative: Gun Gale Online (2018)': {library: Anime}
+  Beyond the Boundary (2013): {library: Anime}
+  Armed Girl's Machiavellism (2017): {library: Anime}
+  Angel Beats! (2010): {library: Anime}
+  SSSS.Gridman (2018): {library: Anime}
+  Shomin Sample (2015): {library: Anime}
+  'Assault Lily: BOUQUET (2020)': {library: Anime}
+  Heaven's Lost Property (2009): {library: Anime}
+  Gonna Be the Twin-Tail!! (2014): {library: Anime, media_directory: /mnt/user/Media/TitleCardMaker/cards/Gonna be the Twin-Tail!! (2014)}
+  Keijo!!!!!!!! (2016): {library: Anime}
+  High School Fleet (2016): {library: Anime}
+  'The Asterisk War: The Academy City on the Water (2015)': {library: Anime}
+  Occultic;Nine (2016): {library: Anime}
+  A Certain Magical Index (2008): {library: Anime}
+  'Danganronpa: The Animation (2013)': {library: Anime}
+  Gabriel DropOut (2017): {library: Anime}
+  A Dark Rabbit Has Seven Lives (2011): {library: Anime}
+  The Ryuo's Work is Never Done! (2018): {library: Anime}
+  DARLING in the FRANXX (2018): {library: Anime}
+  Myriad Colors Phantom World (2016): {library: Anime}
+  'Saekano: How to Raise a Boring Girlfriend (2015)': {library: Anime}
+  Bikini Warriors (2015): {library: Anime}
+  Guilty Crown (2011): {library: Anime}
+  'Fate/Grand Order - Absolute Demonic Front: Babylonia (2019)': {library: Anime}
+  Saga of Tanya the Evil (2017): {library: Anime}
+  Fate/Zero (2011): {library: Anime}
+  Fate/Apocrypha (2017): {library: Anime}
+  Fate/Stay Night (2006): {library: Anime}
+  'Fate/Stay Night: Unlimited Blade Works (2014)': {library: Anime}
+  Planetes (2003): {library: Anime}
+  Log Horizon (2013): {library: Anime}
+  Restaurant to Another World (2017): {library: Anime}
+  Didn't I Say to Make My Abilities Average in the Next Life?! (2019): {library: Anime}
+  Vision of Escaflowne (1996): {library: Anime}
+  Do You Love Your Mom and Her Two-Hit Multi-Target Attacks? (2019): {library: Anime}
+  The Saint's Magic Power Is Omnipotent (2021): {library: Anime}
+  The Dungeon of Black Company (2021): {library: Anime}
+  Outbreak Company (2013): {library: Anime}
+  Eden of the East (2009): {library: Anime}
+  Death Parade (2015): {library: Anime}
+  Terror in Resonance (2014): {library: Anime}
+  Claymore (2007): {library: Anime}
+  Utawarerumono (2006): {library: Anime}
+  Ergo Proxy (2006): {library: Anime}
+  Knights of Sidonia (2014): {library: Anime}
+  Serial Experiments Lain (1998): {library: Anime}
+  Ascendance of a Bookworm (2019): {library: Anime}
+  Grimoire of Zero (2017): {library: Anime}
+  The Executioner and Her Way of Life (2022): {library: Anime}
+  Yu Yu Hakusho (1992): {library: Anime}
+  Akudama Drive (2020): {library: Anime}
+  Carole & Tuesday (2019): {library: Anime}
+  Shaman King (2021): {library: Anime}
+  'Valkyrie Drive: Mermaid (2015)': {library: Anime}
+  Hybrid x Heart Magias Academy Ataraxia (2016): {library: Anime}
+  The Testament of Sister New Devil (2015): {library: Anime}
+  Land of the Lustrous (2017): {library: Anime}
+  Tokyo Magnitude 8.0 (2009): {library: Anime}
+  Clannad (2007): {library: Anime}
+  Mieruko-chan (2021): {library: Anime}
+  Golden Time (2013): {library: Anime}
+  The Garden of Sinners (2007): {library: Anime}
+  Hell's Paradise (2023): {library: Anime, media_directory: /mnt/user/Media/TitleCardMaker/cards/Hell's Paradise - Jigokuraku}
+  91 Days (2016): {library: Anime}
+  A Place Further Than the Universe (2018): {library: Anime}
+  Spice and Wolf (2008): {library: Anime}
+  A Certain Scientific Railgun (2009): {library: Anime}
+  Kino's Journey (2003): {library: Anime}
+  The Melancholy of Haruhi Suzumiya (2006): {library: Anime}
+  Fate/kaleid liner Prisma Illya (2013): {library: Anime}
+  'Fate/Extra: Last Encore (2018)': {library: Anime}
+  Carnival Phantasm (2011): {library: Anime}
+  Today’s Menu for the Emiya Family (2017): {library: Anime}
+  Lord El-Melloi II Case Files Rail Zeppelin Grace Note (2019): {library: Anime}
+  Strike the Blood (2013): {library: Anime}
+  Vermeil in Gold (2022): {library: Anime}
+  Kokoro Connect (2012): {library: Anime}
+  Citrus (2018): {library: Anime}
+  Rascal Does Not Dream of Bunny Girl Senpai (2018): {library: Anime}
+  Great Teacher Onizuka (1999): {library: Anime}
+  Gintama (2006): {library: Anime}
+  Mobile Suit Gundam (1979): {library: Anime}
+  'Mobile Suit Gundam: Twilight Axis (2017)': {library: Anime}
+  'Mobile Suit Gundam: Iron-Blooded Orphans (2015)': {library: Anime}
+  Mobile Suit Gundam 00 (2007): {library: Anime}
+  Mobile Suit Zeta Gundam (1985): {library: Anime}
+  Mobile Suit Gundam ZZ (1986): {library: Anime}
+  Redo of Healer (2021): {library: Anime}
+  Ghost Stories (2000): {library: Anime}
+  Hinamatsuri (2018): {library: Anime}
+  'Mobile Suit Gundam: The 08th MS Team (1996)': {library: Anime, media_directory: /mnt/user/Media/TitleCardMaker/cards/Mobile Suit Gundam The 08th MS Team (1996)}
+  Mobile Suit Gundam Thunderbolt (2015): {library: Anime}
+  Mobile Suit Gundam SEED (2002): {library: Anime}
+  Mobile Suit Gundam AGE (2011): {library: Anime}
+  Re:CREATORS (2017): {library: Anime, media_directory: /mnt/user/Media/TitleCardMaker/cards/Re-CREATORS (2017)}
+  Encouragement of Climb (2013): {library: Anime}
+  World Trigger (2014): {library: Anime}
+  "Hensuki: Are you willing to fall in love with a pervert, as long as she's a cutie? (2019)": {library: Anime}
+  Ace Attorney (2016): {library: Anime}
+  The Tatami Galaxy (2010): {library: Anime}
+  Freezing (2011): {library: Anime}
+  Yuuna and the Haunted Hot Springs (2018): {library: Anime}
+  So, I Can't Play H! (2012): {library: Anime}
+  KissXsis (2010): {library: Anime}
+  SUPER HXEROS (2020): {library: Anime}
+  Ladies Versus Butlers! (2010): {library: Anime}
+  Magical Sempai (2019): {library: Anime}
+  Rosario + Vampire (2008): {library: Anime}
+  Aesthetica of a Rogue Hero (2012): {library: Anime}
+  Ping Pong The Animation (2014): {library: Anime}
+  Scum's Wish (2017): {library: Anime}
+  Yosuga no Sora (2010): {library: Anime}
+  I Want You To Make a Disgusted Face and Show Me Your Underwear (2018): {library: Anime}
+  I Couldn't Become a Hero, So I Reluctantly Decided to Get a Job (2013): {library: Anime}
+  Working with Voice! (2010): {library: Anime}
+  Macross (1982): {library: Anime}
+  Pokémon (1997): {library: Anime}
+  'Pokémon: Origins (2013)': {library: Anime}
+  'Boruto: Naruto Next Generations (2017)': {library: Anime}
+  One Piece (1999): {library: Anime}
+  'Parasyte: The Maxim (2014)': {library: Anime, media_directory: /mnt/user/Media/TitleCardMaker/cards/Parasyte -the maxim- (2014)}

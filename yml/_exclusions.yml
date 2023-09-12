@@ -1,0 +1,53 @@
+libraries:
+  TV Shows:
+    path:
+      path: /mnt/user/Media/TV Shows/
+  Anime:
+    path:
+      path: /mnt/user/Media/Anime/
+series:
+  Adventure (1963): {}
+  Beastars (2019): {}
+  Blue's Clues (1996): {}
+  Clifford the Big Red Dog (2000): {}
+  CoComelon (2022): {}
+  Curious George (1980): {}
+  Dark (2017): {}
+  Date a Live (2013): {}
+  I'm Quitting Heroing (2022): {}
+  M*A*S*H (1972): {}
+  Nathan for You (2013): {}
+  Violet Evergarden (2018): {}
+  8 Out of 10 Cats Does Countdown (2013): {library: TV Shows}
+  Tawawa on Monday (2016): {library: Anime}
+  The Falcon and The Winter Soldier (2021): {}
+  Megalobox (2018): {}
+  Link Click (2021): {}
+  Dante's Cove (2005): {}
+  "Vivy: Fluorite Eye's Song (2021)": {}
+  Uncle from Another World (2022): {}
+  Darker Than Black (2007): {}
+  New Battle Vixens (2022): {library: Anime}
+  Inhumans (2017): {}
+  Interspecies Reviewers (2020): {}
+  Aharen Is Indecipherable (2022): {}
+  Senran Kagura (2013): {}
+  KonoSuba – God's blessing on this wonderful world!! (2016): {}
+  Date A Live (2013): {}
+  High School D×D (2012): {}
+  'Re: ZERO, Starting Life in Another World (2016)': {}
+  'The Lord of the Rings: The Rings of Power (2022)': {}
+  Erased (2016): {}
+  RuPaul's Drag Race (2009): {library: TV Shows}
+  Tom and Jerry in New York (2021): {}
+  'The Mighty Ducks: Game Changers (2021)': {}
+  What If…? (2021): {}
+  Zoo Quest (1954): {template: planet}
+  Scissor Seven (2018): {}
+  The Truth About Climate Change (2006): {}
+  'Dahmer - Monster: The Jeffrey Dahmer Story (2022)': {}
+  Legend of Mana -The Teardrop Crystal- (2022): {}
+  BLUELOCK (2022): {}
+  Miss Kuroitsu From the Monster Development Department (2022): {}
+  The Disastrous Life of Saiki K. (2016): {}
+  What's New Scooby-Doo? (2002): {}

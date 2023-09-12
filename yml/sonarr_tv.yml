@@ -1,0 +1,278 @@
+libraries:
+  Anime:
+    path: /mnt/user/Media/TitleCardMaker/cards
+  TV Shows:
+    path: /mnt/user/Media/TitleCardMaker/cards
+series:
+  Angel (1999): {library: TV Shows}
+  Banshee (2013): {library: TV Shows}
+  'Batman: The Brave and the Bold (2008)': {library: TV Shows}
+  Courage the Cowardly Dog (1999): {library: TV Shows}
+  Danger 5 (2012): {library: TV Shows}
+  Dear White People (2017): {library: TV Shows}
+  Halt and Catch Fire (2014): {library: TV Shows}
+  Kingdom Hospital (2004): {library: TV Shows}
+  'Marvel Studios: Legends (2021)': {library: TV Shows}
+  New Looney Tunes (2015): {library: TV Shows}
+  Patriot (2015): {library: TV Shows, media_directory: /mnt/user/Media/TitleCardMaker/cards/Patriot (2017)}
+  Pushing Daisies (2007): {library: TV Shows}
+  Super/Natural (2022): {library: TV Shows}
+  'Superman: The Animated Series (1996)': {library: TV Shows}
+  'Taskmaster: Champion of Champions (2017)': {library: TV Shows}
+  The Dresden Files (2007): {library: TV Shows}
+  The Office (2001): {library: TV Shows}
+  The Tick (2016) (2017): {library: TV Shows, media_directory: /mnt/user/Media/TitleCardMaker/cards/The Tick (2016)}
+  WHIH News Front (2015): {library: TV Shows, media_directory: /mnt/user/Media/TitleCardMaker/cards/WHIH Newsfront (2015)}
+  Wilfred (2007): {library: TV Shows}
+  'Star Wars: Young Jedi Adventures (2023)': {library: TV Shows, media_directory: /mnt/user/Media/TitleCardMaker/cards/Star Wars - Young Jedi Adventures}
+  Taskmaster (AU) (2023): {library: TV Shows}
+  The Leftovers (2014): {library: TV Shows}
+  Top Chef (2006): {library: TV Shows}
+  The Vampire Diaries (2009): {library: TV Shows}
+  Police Squad! (1982): {library: TV Shows}
+  Revolution (2012): {library: TV Shows}
+  Agent X (2015): {library: TV Shows}
+  Angels in America (2003): {library: TV Shows}
+  Up All Night (2011): {library: TV Shows}
+  Prison Break (2005): {library: TV Shows}
+  Poker Face (2023): {library: TV Shows}
+  Party Down (2009): {library: TV Shows}
+  BEEF (2023): {library: TV Shows}
+  Dead Ringers (2023): {library: TV Shows}
+  Money Heist (2017): {library: TV Shows}
+  Atlanta (2016): {library: TV Shows}
+  The Americans (2013): {library: TV Shows}
+  'Avatar: The Last Airbender (2005)': {library: TV Shows, media_directory: /mnt/user/Media/TitleCardMaker/cards/Avatar The Last Airbender (2005)}
+  The Big Bang Theory (2007): {library: TV Shows}
+  Band of Brothers (2001): {library: TV Shows}
+  American Vandal (2017): {library: TV Shows}
+  BoJack Horseman (2014): {library: TV Shows}
+  American Gods (2017): {library: TV Shows}
+  'Batman: The Animated Series (1992)': {library: TV Shows}
+  11.22.63 (2016): {library: TV Shows}
+  30 Rock (2006): {library: TV Shows}
+  That '70s Show (1998): {library: TV Shows}
+  Bodyguard (2018): {library: TV Shows}
+  Boardwalk Empire (2010): {library: TV Shows}
+  Arcane (2021): {library: TV Shows}
+  Bates Motel (2013): {library: TV Shows}
+  The Book of Boba Fett (2021): {library: TV Shows}
+  1883 (2021): {library: TV Shows}
+  Archer (2009): {library: TV Shows}
+  The 100 (2014): {library: TV Shows}
+  Better Off Ted (2009): {library: TV Shows}
+  'Bad Vegan: Fame. Fraud. Fugitives. (2022)': {library: TV Shows}
+  Better Things (2016): {library: TV Shows}
+  12 Monkeys (2015): {library: TV Shows}
+  Adventure Time (2010): {library: TV Shows}
+  Blockbuster (2022): {library: TV Shows}
+  Andor (2022): {library: TV Shows}
+  Alphas (2011): {library: TV Shows}
+  1899 (2022): {library: TV Shows}
+  Blood of Zeus (2020): {library: TV Shows}
+  Fargo (2014): {library: TV Shows}
+  Marvel's Agents of S.H.I.E.L.D. (2013): {library: TV Shows}
+  Marvel's Daredevil (2015): {library: TV Shows}
+  Mr. Robot (2015): {library: TV Shows}
+  Peaky Blinders (2013): {library: TV Shows}
+  See (2019): {library: TV Shows}
+  The Expanse (2015): {library: TV Shows}
+  Burn Notice (2007): {library: TV Shows}
+  Chernobyl (2019): {library: TV Shows}
+  Chuck (2007): {library: TV Shows}
+  Community (2009): {library: TV Shows}
+  Dekalog (1989): {library: TV Shows}
+  Dexter (2006): {library: TV Shows}
+  Friends (1994): {library: TV Shows}
+  Futurama (1999): {library: TV Shows}
+  Garth Marenghi's Darkplace (2004): {library: TV Shows}
+  Gravity Falls (2012): {library: TV Shows}
+  How I Met Your Mother (2005): {library: TV Shows}
+  Leverage (2008): {library: TV Shows}
+  Louie (2010): {library: TV Shows}
+  Mad Men (2007): {library: TV Shows}
+  Marvel's Agent Carter (2015): {library: TV Shows}
+  Moral Orel (2005): {library: TV Shows}
+  Over the Garden Wall (2014): {library: TV Shows}
+  Psych (2006): {library: TV Shows}
+  Scrubs (2001): {library: TV Shows}
+  The IT Crowd (2006): {library: TV Shows}
+  The Legend of Korra (2012): {library: TV Shows}
+  The Office (US) (2005): {library: TV Shows}
+  The Queen's Gambit (2020): {library: TV Shows}
+  The Sopranos (1999): {library: TV Shows}
+  The Wire (2002): {library: TV Shows}
+  True Detective (2014): {library: TV Shows}
+  Veep (2012): {library: TV Shows}
+  'Xavier: Renegade Angel (2007)': {library: TV Shows}
+  MINDHUNTER (2017): {library: TV Shows}
+  Persona (2018): {library: TV Shows, media_directory: /mnt/user/Media/TitleCardMaker/cards/Sahsiyet (2018)}
+  Numb3rs (2005): {library: TV Shows}
+  The Venture Bros. (2004): {library: TV Shows}
+  Lost (2004): {library: TV Shows}
+  Lucifer (2016): {library: TV Shows}
+  Cosmos (2014): {library: TV Shows}
+  Fringe (2008): {library: TV Shows}
+  Hannibal (2013): {library: TV Shows}
+  Legion (2017): {library: TV Shows}
+  Peep Show (2003): {library: TV Shows}
+  Santa Clarita Diet (2017): {library: TV Shows}
+  Suits (2011): {library: TV Shows}
+  This Is Us (2016): {library: TV Shows}
+  Smallville (2001): {library: TV Shows}
+  Firefly (2002): {library: TV Shows}
+  Narcos (2015): {library: TV Shows}
+  The Mentalist (2008): {library: TV Shows}
+  MythBusters (2003): {library: TV Shows}
+  Cobra Kai (2018): {library: TV Shows}
+  'Marvel Studios: Assembled (2021)': {library: TV Shows}
+  Marvel's Jessica Jones (2015): {library: TV Shows}
+  Marvel's Iron Fist (2017): {library: TV Shows}
+  Marvel's Luke Cage (2016): {library: TV Shows}
+  Marvel's The Defenders (2017): {library: TV Shows}
+  Marvel's The Punisher (2017): {library: TV Shows}
+  Marvel's Inhumans (2017): {library: TV Shows}
+  Marvel's Runaways (2017): {library: TV Shows}
+  Marvel's Cloak & Dagger (2018): {library: TV Shows}
+  Helstrom (2020): {library: TV Shows}
+  Fleabag (2016): {library: TV Shows}
+  Disenchantment (2018): {library: TV Shows}
+  The New Batman Adventures (1997): {library: TV Shows}
+  The Dragon Prince (2018): {library: TV Shows}
+  Infinity Train (2019): {library: TV Shows}
+  Inside No. 9 (2014): {library: TV Shows}
+  Marvel's M.O.D.O.K. (2021): {library: TV Shows, media_directory: /mnt/user/Media/TitleCardMaker/cards/Marvel’s M.O.D.O.K. (2021)}
+  Master of None (2015): {library: TV Shows}
+  Cruel Summer (2021): {library: TV Shows}
+  iCarly (2007): {library: TV Shows}
+  The Case Against Adnan Syed (2019): {library: TV Shows}
+  'The Jinx: The Life and Deaths of Robert Durst (2015)': {library: TV Shows}
+  Sherlock (2010): {library: TV Shows}
+  Seinfeld (1989): {library: TV Shows}
+  Samurai Jack (2001): {library: TV Shows}
+  The Powerpuff Girls (1998): {library: TV Shows}
+  Buffy the Vampire Slayer (1997): {library: TV Shows}
+  Heist (2021): {library: TV Shows}
+  The X-Files (1993): {library: TV Shows}
+  Utopia (2020): {library: TV Shows}
+  Superstore (2015): {library: TV Shows}
+  Designated Survivor (2016): {library: TV Shows}
+  Sex Education (2019): {library: TV Shows}
+  The Twilight Zone (2019): {library: TV Shows}
+  The Twilight Zone (1959): {library: TV Shows}
+  Cowboy Bebop (2021): {library: TV Shows}
+  Silicon Valley (2014): {library: TV Shows}
+  'Dexter: New Blood (2021)': {library: TV Shows}
+  Inside Job (2021): {library: TV Shows}
+  The Morning Show (2019): {library: TV Shows}
+  Game of Thrones (2011): {library: TV Shows}
+  The Silent Sea (2021): {library: TV Shows}
+  Vikings (2013): {library: TV Shows}
+  House of Cards (US) (2013): {library: TV Shows}
+  The Cleaning Lady (US) (2022): {library: TV Shows}
+  His Dark Materials (2019): {library: TV Shows}
+  Person of Interest (2011): {library: TV Shows}
+  'Million Dollar Extreme Presents: World Peace (2016)': {library: TV Shows}
+  Power (2014): {library: TV Shows}
+  Snowpiercer (2020): {library: TV Shows}
+  House (2004): {library: TV Shows}
+  Charmed (1998): {library: TV Shows}
+  Once Upon a Time (2011): {library: TV Shows}
+  Elementary (2012): {library: TV Shows}
+  Pretty Little Liars (2010): {library: TV Shows}
+  Eureka (2006): {library: TV Shows}
+  Curb Your Enthusiasm (2000): {library: TV Shows}
+  Ray Donovan (2013): {library: TV Shows}
+  Godless (2017): {library: TV Shows}
+  Manifest (2018): {library: TV Shows}
+  Killing Eve (2018): {library: TV Shows}
+  Friday Night Lights (2006): {library: TV Shows}
+  Friends from College (2017): {library: TV Shows}
+  Jackass (2000): {library: TV Shows}
+  New Girl (2011): {library: TV Shows}
+  Nikita (2010): {library: TV Shows}
+  Rizzoli & Isles (2010): {library: TV Shows}
+  The Dropout (2022): {library: TV Shows}
+  Ugly Betty (2006): {library: TV Shows}
+  Kim's Convenience (2016): {library: TV Shows}
+  Sweet Home (2020): {library: TV Shows}
+  Moon Knight (2022): {library: TV Shows}
+  Slow Horses (2022): {library: TV Shows}
+  Kyle XY (2006): {library: TV Shows}
+  Law & Order (1990): {library: TV Shows}
+  'Law & Order: Criminal Intent (2001)': {library: TV Shows}
+  Law & Order True Crime (2017): {library: TV Shows}
+  Invasion (2021): {library: TV Shows}
+  Obi-Wan Kenobi (2022): {library: TV Shows}
+  Echo (2023): {library: TV Shows, media_directory: /mnt/user/Media/TitleCardMaker/cards/Echo}
+  Ahsoka (2023): {library: TV Shows, media_directory: /mnt/user/Media/TitleCardMaker/cards/Ahsoka}
+  I Am Groot (2022): {library: TV Shows}
+  Dr. Brain (2021): {library: TV Shows}
+  Scenes from a Marriage (US) (2021): {library: TV Shows}
+  My Brilliant Friend (2018): {library: TV Shows}
+  Don't Trust the B---- in Apartment 23 (2012): {library: TV Shows, media_directory: /mnt/user/Media/TitleCardMaker/cards/Don't Trust the B- in Apartment 23 (2012)}
+  Sneaky Pete (2015): {library: TV Shows}
+  Snowfall (2017): {library: TV Shows}
+  Upload (2020): {library: TV Shows}
+  'Fate: The Winx Saga (2021)': {library: TV Shows}
+  Heartstopper (2022): {library: TV Shows}
+  Tokyo Vice (2022): {library: TV Shows}
+  Scandal (2012): {library: TV Shows}
+  Six Feet Under (2001): {library: TV Shows}
+  Merlin (2008): {library: TV Shows}
+  Chilling Adventures of Sabrina (2018): {library: TV Shows}
+  Under the Dome (2013): {library: TV Shows}
+  Castle Rock (2018): {library: TV Shows}
+  The Mist (2017): {library: TV Shows}
+  Mr. Mercedes (2017): {library: TV Shows}
+  The Outsider (2020): {library: TV Shows}
+  Monk (2002): {library: TV Shows}
+  Smiling Friends (2020): {library: TV Shows}
+  Bored to Death (2009): {library: TV Shows}
+  Homeland (2011): {library: TV Shows}
+  Key & Peele (2012): {library: TV Shows}
+  'Narcos: Mexico (2018)': {library: TV Shows}
+  The Newsroom (2012): {library: TV Shows}
+  Wrecked (2016): {library: TV Shows}
+  Franklin & Bash (2011): {library: TV Shows}
+  Sex Actually with Alice Levine (2021): {library: TV Shows}
+  Travelers (2016): {library: TV Shows}
+  Nancy Drew (2019): {library: TV Shows}
+  Candy (2022): {library: TV Shows}
+  Chicago Med (2015): {library: TV Shows}
+  The Umbrella Academy (2019): {library: TV Shows}
+  Suspicion (2022): {library: TV Shows}
+  For All Mankind (2019): {library: TV Shows}
+  Evil (2019): {library: TV Shows}
+  Misfits (2009): {library: TV Shows}
+  Fear the Walking Dead (2015): {library: TV Shows}
+  Carmen Sandiego (2019): {library: TV Shows}
+  The Looney Tunes Show (2011): {library: TV Shows}
+  Midnight Mass (2021): {library: TV Shows}
+  On Cinema (2012): {library: TV Shows}
+  Decker (2014): {library: TV Shows}
+  A Friend of the Family (2022): {library: TV Shows}
+  Dirk Gently's Holistic Detective Agency (2016): {library: TV Shows}
+  Final Space (2018): {library: TV Shows}
+  The Kingdom (1994): {library: TV Shows}
+  LEGO Star Wars (2013): {library: TV Shows}
+  'Lego Star Wars: All-Stars (2018)': {library: TV Shows, media_directory: /mnt/user/Media/TitleCardMaker/cards/Lego Star Wars - All-Stars}
+  'LEGO Star Wars: The Yoda Chronicles (2013)': {library: TV Shows}
+  Lost Ollie (2022): {library: TV Shows}
+  Kidding (2018): {library: TV Shows}
+  Solar Opposites (2020): {library: TV Shows}
+  Guillermo del Toro's Cabinet of Curiosities (2022): {library: TV Shows}
+  Interview with the Vampire (2022): {library: TV Shows}
+  The Santa Clauses (2022): {library: TV Shows}
+  Charmed (2018): {library: TV Shows}
+  Kaleidoscope (2023): {library: TV Shows}
+  Jane the Virgin (2014): {library: TV Shows}
+  Undone (2019): {library: TV Shows}
+  The Librarians (2014): {library: TV Shows}
+  Solos (2021): {library: TV Shows}
+  Hit-Monkey (2021): {library: TV Shows, media_directory: /mnt/user/Media/TitleCardMaker/cards/Marvel's Hit-Monkey (2021)}
+  The Eric Andre Show (2012): {library: TV Shows, media_directory: /mnt/user/Media/TitleCardMaker/cards/The Eric André Show (2012)}
+  Monster (2022): {library: TV Shows, media_directory: /mnt/user/Media/TitleCardMaker/cards/Monster - The Jeffrey Dahmer Story (2022)}
+  Swarm (2023): {library: TV Shows}
+  From (2022): {library: TV Shows}
+  Stargate SG-1 (1997): {library: TV Shows, template: star-wars}

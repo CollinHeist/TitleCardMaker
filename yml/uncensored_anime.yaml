@@ -1,0 +1,8 @@
+libraries:
+  Anime:
+    path: /mnt/user/Media/Anime/
+  TV Shows:
+    path: /mnt/user/Media/TV Shows/
+series:
+  Immoral Guild (2022): {library: Anime, media_directory: /mnt/user/Media/Anime/Guild
+      of Depravity}

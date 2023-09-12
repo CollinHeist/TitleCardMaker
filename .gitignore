@@ -11,14 +11,11 @@ __pypackages__/
 
 app/assets/preview/card*.png
 backups/
-source/
-logs/
+config/
 fonts/
-yml/
 modules/.objects/
 *._*
 *.prof
 .DS_Store
-db.sqlite
 missing.yml
 preferences.yml
