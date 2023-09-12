@@ -443,7 +443,7 @@ def import_blueprint(
             log.info(f'{new_font.log_str} Downloaded File "{font.file}"')
 
             # Update object and database
-            new_font.file = str(file_path)
+            new_font.file_name = file_path.name
 
     # Commit Fonts to database so Fonts have IDs
     if font_map:
