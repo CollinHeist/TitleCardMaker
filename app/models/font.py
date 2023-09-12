@@ -8,6 +8,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
 from app.database.session import Base
+from app.dependencies import get_preferences
 
 
 def regex_replace(pattern, replacement, string):
@@ -34,7 +35,7 @@ class Font(Base):
     name = Column(String, nullable=False)
     color = Column(String, default=None)
     delete_missing = Column(Boolean, default=True)
-    file = Column(String, default=None)
+    file_name = Column(String, default=None)
     interline_spacing = Column(Integer, default=0, nullable=False)
     interword_spacing = Column(Integer, default=0, nullable=False)
     kerning = Column(Float, default=1.0, nullable=False)
@@ -46,19 +47,23 @@ class Font(Base):
 
 
     @hybrid_property
-    def file_name(self) -> Optional[str]:
+    def file(self) -> Optional[Path]:
         """
         Get the name of this Font's file, if indicated.
 
         Returns:
-            Name of the file, None if this Font has no file, or that
-            file does not exist.
+            Full path to the Font file, None if this Font has no file,
+            or if the file does not exist.
         """
 
-        if self.file is None or not (file := Path(self.file)).exists():
+        if self.file_name is None:
             return None
 
-        return file.name
+        font_directory = get_preferences().asset_directory / 'fonts'
+        if not (file := font_directory / str(self.id)/ self.file_name).exists():
+            return None
+
+        return file
 
 
     @hybrid_property

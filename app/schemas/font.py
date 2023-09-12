@@ -1,4 +1,5 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
+from pathlib import Path
 from typing import Literal, Optional
 
 from pydantic import (
@@ -115,6 +116,6 @@ class SeriesFont(BaseFont):
 class NamedFont(BaseNamedFont):
     id: int
     sort_name: str
-    file: Optional[str]
+    file: Optional[Path]
     file_name: Optional[str]
     replacements: dict[str, str]
