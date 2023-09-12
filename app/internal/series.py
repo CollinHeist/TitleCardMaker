@@ -15,7 +15,9 @@ from app import models
 from app.internal.cards import refresh_remote_card_types
 from app.internal.episodes import refresh_episode_data
 from app.internal.sources import download_series_logo
+from app.models.card import Card
 from app.models.episode import Episode
+from app.models.loaded import Loaded
 from app.schemas.preferences import MediaServer, Preferences
 from app.schemas.series import NewSeries, Series
 
@@ -350,7 +352,7 @@ def load_series_title_cards(
         log: Logger for all log messages.
 
     Raises:
-        HTTPException (409) if the specified Media Server cannot be
+        HTTPException (409): The specified Media Server cannot be
             communciated with, or if the given Series does not have an
             associated library.
     """
@@ -417,7 +419,7 @@ def load_series_title_cards(
     # Update database with loaded entries
     for loaded_episode, loaded_card in loaded_assets:
         try:
-            db.add(models.loaded.Loaded(
+            db.add(Loaded(
                 media_server=media_server,
                 series=series,
                 episode=loaded_episode,
@@ -444,7 +446,7 @@ def load_episode_title_card(
         plex_interface: Optional[PlexInterface] = None,
         *,
         log: Logger = log,
-    ) -> None:
+    ) -> Optional[bool]:
     """
     Load the Title Card for the given Episode into the indicated media
     server. This is a forced reload, and any existing Loaded assets are
@@ -456,18 +458,30 @@ def load_episode_title_card(
         media_server: Which media server to load Title Cards into.
         *_interface: Interface to load Title Cards into.
         log: Logger for all log messages.
+
+    Returns:
+        Whether the Episode's Card was loaded or not. None if there is
+        no Card, or no connection to the indicated media server.
     """
 
     # Only load if Episode has a Card
     if not episode.card:
         log.debug(f'{episode.series.log_str} {episode.log_str} - no associated Card')
         return None
-    card = episode.card[-1]
+    card: Card = episode.card[-1]
 
-    # Delete any existing Loaded asset for this Episode in the given server
-    db.query(models.loaded.Loaded)\
+    # Get previously loaded asset for comparison
+    previously_loaded = db.query(Loaded)\
         .filter_by(episode_id=episode.id, media_server=media_server)\
-        .delete()
+        .first()
+
+    # If this asset's filesize has not changed, no need to reload
+    if (previously_loaded is not None
+        and previously_loaded.filesize == card.filesize):
+        return True
+
+    # New Card is different, delete Loaded entry
+    db.delete(previously_loaded)
 
     # Load into the given server
     interface: Union[EmbyInterface, JellyfinInterface, PlexInterface] = {
@@ -488,10 +502,10 @@ def load_episode_title_card(
 
     # Episode was not loaded, exit
     if not loaded_assets:
-        return None
+        return False
 
     # Episode loaded, create Loaded asset and commit to database
-    db.add(models.loaded.Loaded(
+    db.add(Loaded(
         media_server=media_server,
         series=episode.series,
         episode=episode,
@@ -501,7 +515,7 @@ def load_episode_title_card(
     log.debug(f'{episode.series.log_str} {episode.log_str} Loaded {card.log_str}')
     db.commit()
 
-    return None
+    return True
 
 
 def add_series(
