@@ -481,7 +481,8 @@ def load_episode_title_card(
         return True
 
     # New Card is different, delete Loaded entry
-    db.delete(previously_loaded)
+    if previously_loaded is not None:
+        db.delete(previously_loaded)
 
     # Load into the given server
     interface: Union[EmbyInterface, JellyfinInterface, PlexInterface] = {
