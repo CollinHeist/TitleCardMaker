@@ -169,7 +169,7 @@ class SeriesYamlWriter:
                 return True, key
             # If present in lowercase
             for yaml_key in yaml.get('series', {}).keys():
-                if key.lower() == yaml_key.lower():
+                if str(key).lower() == yaml_key.lower():
                     return True, yaml_key
             # Not present at all
             return False, key
