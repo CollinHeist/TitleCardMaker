@@ -101,36 +101,35 @@ will now be downloaded into that directory.
             1. Replace `~/Your/Install/Directory` with the path to the directory
             from the above Step 2.
 
-2. Within the main installation directory, create the required folders for
-TCM - these are the `assets`, `cards`, `logs`, and `source` directories - by
-executing the following command(s):
+2. Within the main installation directory, create the required folder for 
+TCM - this is `config` - by executing the following command:
 
     === ":material-linux: Linux"
 
         ```bash
-        mkdir assets cards logs source
+        mkdir config
         ```
 
     === ":material-apple: MacOS"
 
         ```bash
-        mkdir assets cards logs source
+        mkdir config
         ```
 
     === ":material-powershell: Windows (Powershell)"
 
         ```bash
-        mkdir assets; mkdir cards; mkdir logs; mkdir source;
+        mkdir config
         ```
 
     === ":material-microsoft-windows: Windows (Non-Powershell)"
 
         ```bash
-        mkdir assets; mkdir cards; mkdir logs; mkdir source;
+        mkdir config
         ```
 
-3. We now need to make sure these directories have the correct permissions
-assigned to them. 
+3. We now need to make sure this directory has the correct permissions assigned
+to them.
 
     === ":material-linux: Linux"
 
@@ -138,7 +137,7 @@ assigned to them.
         the following command:
 
         ```bash
-        sudo chown -R {group}:{user} ./assets ./cards ./logs ./source # (1)!
+        sudo chown -R {group}:{user} ./config # (1)!
         ```
 
         1. Replace `{group}` and `{user}` with the actual group and user (or
@@ -150,7 +149,7 @@ assigned to them.
         the following command:
 
         ```bash
-        sudo chown -R {group}:{user} ./assets ./cards ./logs ./source # (1)!
+        sudo chown -R {group}:{user} ./config # (1)!
         ```
 
         1. Replace `{group}` and `{user}` with the actual group and user (or
@@ -237,10 +236,7 @@ assigned to them.
             ```bash
             docker run -itd \
                 --net="bridge" \
-                -v "$(pwd)/logs/":"/maker/logs/" \
-                -v "$(pwd)/assets/":"/config/assets/" \
-                -v "$(pwd)/source/":"/config/source/" \
-                -v "$(pwd)/cards/":"/config/cards/" \
+                -v "$(pwd)/config/":"/config/" \
                 -e TZ="$TZ" \
                 -p 4242:4242 \
                 titlecardmaker
@@ -251,10 +247,7 @@ assigned to them.
             ```bash
             docker run -itd \
                 --net="bridge" \
-                -v "$(pwd)/logs/":"/maker/logs/" \
-                -v "$(pwd)/assets/":"/config/assets/" \
-                -v "$(pwd)/source/":"/config/source/" \
-                -v "$(pwd)/cards/":"/config/cards/" \
+                -v "$(pwd)/config/":"/config/" \
                 -e TZ="$TZ" \
                 -p 4242:4242 \
                 titlecardmaker
@@ -265,10 +258,7 @@ assigned to them.
             ```bash
             docker run -itd `
                 --net="bridge" `
-                -v "$(pwd)\logs":"/maker/logs/" `
-                -v "$(pwd)\assets":"/config/assets/" `
-                -v "$(pwd)\source":"/config/source/" `
-                -v "$(pwd)\cards":"/config/cards/" `
+                -v "$(pwd)\config":"/config/" `
                 -e TZ="$env:TZ" `
                 -p 4242:4242 `
                 titlecardmaker
@@ -279,10 +269,7 @@ assigned to them.
             ```bash
             docker run -itd ^
                 --net="bridge" ^
-                -v "%cd%\logs":"/maker/logs/" ^
-                -v "%cd%\assets":"/config/assets/" ^
-                -v "%cd%\source":"/config/source/" ^
-                -v "%cd%\cards":"/config/cards/" ^
+                -v "%cd%\config":"/config/" ^
                 -e TZ=%TZ% ^
                 -p 4242:4242 ^
                 titlecardmaker
