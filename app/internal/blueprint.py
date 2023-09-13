@@ -90,12 +90,12 @@ def get_blueprint_folders(series_name: str) -> tuple[str, str]:
     """
 
     # Remove illegal path characters
-    clean_name = CleanPath.sanitize_name(series_name)
+    clean_name = CleanPath.sanitize_name(series_name).lower()
 
     # Remove prefix words like A/An/The
     sort_name = re_sub(r'^(a|an|the)(\s)', '', clean_name, flags=IGNORECASE)
 
-    return sort_name[0].upper(), clean_name
+    return sort_name[0], clean_name
 
 
 def generate_series_blueprint(
@@ -453,11 +453,12 @@ def import_blueprint(
     template_map: dict[int, Template] = {}
     for template_id, template in enumerate(blueprint.templates):
         # See if this Template already exists (match by name)
-        if ((exist_template := db.query(Template).filter_by(name=template.name))
-            is not None):
-            template_map[template_id] = exist_template
+        existing_template = db.query(Template).filter_by(name=template.name)\
+            .first()
+        if existing_template is not None:
+            template_map[template_id] = existing_template
             log.info(f'Matched Blueprint Template[{template_id}] to existing '
-                     f'Template {exist_template.log_str}')
+                     f'Template {existing_template.log_str}')
             break
 
         # Update Font ID from Font map if indicated
