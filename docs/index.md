@@ -1,7 +1,7 @@
 # Welcome to TitleCardMaker
 TitleCardMaker is a program and Docker container written in Python that
-automates the creation of customized title cards for use in personal
-media server services like Plex, Jellyfin, or Emby.
+automates the creation of customized title cards for use in personal media
+server services like Plex, Jellyfin, or Emby.
 
 ??? question "What is a Title Card?"
 
@@ -158,11 +158,11 @@ assigned to them.
 
     === ":material-powershell: Windows (Powershell)"
 
-        Changing the permissions is not necessary on Windows.
+        Changing the permissions is (generally) not necessary on Windows.
 
     === ":material-microsoft-windows: Windows (Non-Powershell)"
 
-        Changing the permissions is not necessary on Windows.
+        Changing the permissions is (generally) not necessary on Windows.
 
 !!! info "Choice of Installation"
 
@@ -313,46 +313,30 @@ assigned to them.
         === ":material-linux: Linux"
 
             ```bash
-            pipenv install; # (1)!
-            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 # (2)!
+            pipenv install;
+            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
             ```
-
-            1. This installs the required Python dependencies
-            2. This launches a webserver at your `{your IP}:4242` which the TCM
-            Web UI is accessible at.
 
         === ":material-apple: MacOS"
 
             ```bash
-            pipenv install; # (1)!
-            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 # (2)!
+            pipenv install;
+            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
             ```
-
-            1. This installs the required Python dependencies
-            2. This launches a webserver at your `{your IP}:4242` which the TCM
-            Web UI is accessible at.
 
         === ":material-powershell: Windows (Powershell)"
 
             ```bash
-            pipenv install; <#(1)#>
-            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 <#(2)#>
+            pipenv install;
+            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
             ```
-
-            1. This installs the required Python dependencies
-            2. This launches a webserver at your `{your IP}:4242` which the TCM
-            Web UI is accessible at.
 
         === ":material-microsoft-windows: Windows (Non-Powershell)"
 
             ```bash
-            pipenv install; # (1)!
-            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 --workers 4 # (2)!
+            pipenv install;
+            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
             ```
-
-            1. This installs the required Python dependencies
-            2. This launches a webserver at your `{your IP}:4242` which the TCM
-            Web UI is accessible at.
 
     !!! success "Success"
 
