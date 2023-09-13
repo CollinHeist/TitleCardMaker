@@ -56,7 +56,7 @@ def backup_database(*, log: Logger = log) -> Path:
         backup_file = Path(f'/config/backups/db.sqlite.{now}')
     else:
         database = Path('./config/db.sqlite')
-        backup_file = Path(f'./backups/db.sqlite.{now}')
+        backup_file = Path(f'./config/backups/db.sqlite.{now}')
 
     # Remove databases older than 4 weeks
     for prior_backup in backup_file.parent.glob('db.sqlite.*'):
