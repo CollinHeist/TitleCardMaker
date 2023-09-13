@@ -127,7 +127,9 @@ def refresh_all_remote_card_types(*, log: Logger = log) -> None:
     """
 
     try:
-        # Get the Database
+        # Refresh the local cards
+        get_preferences().parse_local_card_types(log=log)
+        # Refresh the remote cards
         with next(get_database()) as db:
             refresh_remote_card_types(db, reset=True, log=log)
     except Exception as e:
