@@ -1,7 +1,7 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from typing import Literal, Optional
 
-from pydantic import Field, validator, root_validator
+from pydantic import Field, PositiveInt, validator, root_validator
 
 from app.schemas.base import (
     Base, DictKey, UpdateBase, validate_argument_lists_to_dict
@@ -12,6 +12,11 @@ from app.schemas.preferences import Style
 """
 Models of card types and series extras.
 """
+class TitleCharacteristics(Base):
+    max_line_width: PositiveInt
+    max_line_count: PositiveInt
+    top_heavy: bool
+
 class Extra(Base):
     name: str
     identifier: DictKey

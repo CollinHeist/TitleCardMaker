@@ -1,13 +1,14 @@
+from importlib.util import spec_from_file_location, module_from_spec
 from logging import Logger
 import sys
-from importlib.util import spec_from_file_location, module_from_spec
+from typing import Literal, Optional, Union
 
 from pathlib import Path
-from typing import Literal, Optional, Union
+from pydantic import parse_obj_as
 from requests import get
 
 from app.schemas.base import Base
-from app.schemas.card import CardTypeDescription
+from app.schemas.card import CardTypeDescription, TitleCharacteristics
 from modules.BaseCardType import BaseCardType
 from modules.CleanPath import CleanPath
 from modules.Debug import log
@@ -133,20 +134,14 @@ class RemoteCardType:
         """
 
         # Validate the API implementation details are there
-        if not hasattr(self.card_class, 'API_DETAILS'):
-            log.error(f'CardType "{identifier}" is missing the required '
-                        f'API_DETAILS object')
+        if not issubclass(self.card_class, BaseCardType):
+            log.error(f'CardType "{identifier}" must be is a subclass of '
+                      f'modules.BaseCardType.BaseCardType')
             self.valid = False
 
         if not hasattr(self.card_class, 'CardModel'):
             log.error(f'CardType "{identifier}" is missing the required '
                       f'CardModel object')
-            self.valid = False
-
-        if (hasattr(self.card_class, 'API_DETAILS') and
-            not isinstance(self.card_class.API_DETAILS, CardTypeDescription)):
-            log.error(f'CardType "{identifier}" API details are invalid - must be '
-                        f'an app.schemas.card.CardTypeDescription object.')
             self.valid = False
 
         if (hasattr(self.card_class, 'CardModel')

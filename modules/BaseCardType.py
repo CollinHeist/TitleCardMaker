@@ -1,9 +1,10 @@
 from abc import abstractmethod
-from typing import Literal, Optional, Union
+from typing import Optional, Union
+from pydantic import ValidationError
 
 from titlecase import titlecase
 
-from app.schemas.card import CardTypeDescription, Extra
+from app.schemas.card import CardTypeDescription, Extra, TitleCharacteristics
 from modules.ImageMaker import ImageMaker
 
 
@@ -55,6 +56,12 @@ class BaseCardType(ImageMaker):
 
     """Standard blur effect to apply to spoiler-free images"""
     BLUR_PROFILE = '0x60'
+
+    @property
+    @abstractmethod
+    def API_DETAILS(self) -> CardDescription:
+        raise NotImplementedError(f'All CardType objects must implement this')
+
 
     @property
     @abstractmethod
@@ -130,6 +137,40 @@ class BaseCardType(ImageMaker):
         # Store style attributes
         self.blur = blur
         self.grayscale = grayscale
+
+
+    def __init_subclass__(cls, **kwargs) -> None:
+        """
+        
+        """
+
+        super().__init_subclass__(**kwargs)
+
+        if not isinstance(cls.API_DETAILS, CardTypeDescription):
+            raise TypeError(f'{cls.__name__}.API_DETAILS must be a CardTypeDescription object')
+
+        TitleCharacteristics(**cls.TITLE_CHARACTERISTICS)
+
+        if not isinstance(cls.ARCHIVE_NAME, str):
+            raise TypeError(f'{cls.__name__}.ARCHIVE_NAME must be a string')
+        if len(cls.ARCHIVE_NAME) == 0:
+            raise ValueError(f'{cls.__name__}.ARCHIVE_NAME must be at least 1 characters long')
+
+        if not isinstance(cls.DEFAULT_FONT_CASE, str):
+            raise TypeError(f'{cls.__name__}.DEFAULT_FONT_CASE must be a string')
+        if cls.DEFAULT_FONT_CASE not in ('blank', 'lower', 'source', 'title', 'upper'):
+            raise TypeError(f'{cls.__name__}.DEFAULT_FONT_CASE must be "blank",'
+                            f' "lower", "source", "title", or "upper"')
+
+        if not isinstance(cls.TITLE_COLOR, str):
+            raise TypeError(f'{cls.__name__}.TITLE_COLOR must be a string')
+
+        if not isinstance(cls.FONT_REPLACEMENTS, dict):
+            raise TypeError(f'{cls.__name__}.FONT_REPLACEMENTS must be a dictionary')
+
+        if not all(isinstance(k, str) and isinstance(v, str)
+                   for k, v in cls.FONT_REPLACEMENTS.items()):
+            raise TypeError(f'All keys and values of {cls.__name__}.FONT_REPLACEMENTS must strings')
 
 
     def __repr__(self) -> str:
