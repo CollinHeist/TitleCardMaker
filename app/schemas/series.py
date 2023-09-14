@@ -7,9 +7,10 @@ from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.base import (
     Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
 )
+from app.schemas.connection import TMDbLanguageCode
 from app.schemas.font import TitleCase
 from app.schemas.ids import * # pylint: disable=wildcard-import,unused-wildcard-import
-from app.schemas.preferences import EpisodeDataSource, Style, LanguageCode
+from app.schemas.preferences import EpisodeDataSource, Style
 
 # Match absolute ranges (1-10), season numbers (1), episode ranges (s1e1-s1e10)
 SeasonTitleRange = constr(regex=r'^(\d+-\d+)|^(\d+)|^(s\d+e\d+-s\d+e\d+)$')
@@ -27,7 +28,7 @@ class Condition(Base):
     reference: Optional[str] = None
 
 class Translation(Base):
-    language_code: LanguageCode
+    language_code: TMDbLanguageCode
     data_key: DictKey
 
 class MediaServerLibrary(Base):
@@ -40,7 +41,7 @@ class BaseConfig(Base):
     sync_specials: Optional[bool] = None
     skip_localized_images: Optional[bool] = None
     card_filename_format: Optional[str] = None
-    episode_data_source: Optional[EpisodeDataSource] = None
+    data_source: Optional[EpisodeDataSource] = None
     card_type: Optional[str] = None
     unwatched_style: Optional[Style] = None
     watched_style: Optional[Style] = None
@@ -87,7 +88,7 @@ class BaseUpdate(UpdateBase):
     sync_specials: Optional[bool] = UNSPECIFIED
     skip_localized_images: Optional[bool] = UNSPECIFIED
     card_filename_format: Optional[str] = UNSPECIFIED
-    episode_data_source: Optional[EpisodeDataSource] = UNSPECIFIED
+    data_source: Optional[EpisodeDataSource] = UNSPECIFIED
     translations: Optional[list[Translation]] = UNSPECIFIED
     card_type: Optional[str] = UNSPECIFIED
     hide_season_text: Optional[bool] = UNSPECIFIED
@@ -211,7 +212,6 @@ class UpdateSeries(BaseUpdate):
     sync_specials: Optional[bool] = UNSPECIFIED
     skip_localized_images: Optional[bool] = UNSPECIFIED
     card_filename_format: Optional[str] = UNSPECIFIED
-    episode_data_source: Optional[EpisodeDataSource] = UNSPECIFIED
     match_titles: bool = UNSPECIFIED
     translations: Optional[list[Translation]] = UNSPECIFIED
     libraries: list[MediaServerLibrary] = UNSPECIFIED
