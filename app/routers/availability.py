@@ -252,49 +252,36 @@ def get_server_libraries(
 
 @availablility_router.get('/usernames/emby', status_code=200, tags=['Emby'])
 def get_emby_usernames(
-        preferences: Preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
+        emby_interface: EmbyInterface = Depends(require_emby_interface),
     ) -> list[str]:
     """
     Get all the public usernames in Emby. Returns an empty list if
     Emby is disabled.
     """
 
-    if preferences.use_emby and emby_interface:
-        return emby_interface.get_usernames()
-
-    return []
+    return emby_interface.get_usernames()
 
 
 @availablility_router.get('/usernames/jellyfin', status_code=200, tags=['Jellyfin'])
 def get_jellyfin_usernames(
-        preferences: Preferences = Depends(get_preferences),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
+        jellyfin_interface: JellyfinInterface = Depends(require_jellyfin_interface),
     ) -> list[str]:
     """
-    Get all the public usernames in Jellyfin. Returns an empty list if
-    Jellyfin is disabled.
+    Get all the public usernames in the specified Jellyfin interface.
     """
 
-    if preferences.use_jellyfin and jellyfin_interface:
-        return jellyfin_interface.get_usernames()
-
-    return []
+    return jellyfin_interface.get_usernames()
 
 
 @availablility_router.get('/tags/sonarr', status_code=200, tags=['Sonarr'])
 def get_sonarr_tags(
-        preferences: Preferences = Depends(get_preferences),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface)
+        sonarr_interface: SonarrInterface = Depends(require_sonarr_interface)
     ) -> list[Tag]:
     """
-    Get all tags defined in Sonarr.
+    Get all tags defined in the specified Sonarr interface.
     """
 
-    if preferences.use_sonarr and sonarr_interface:
-        return sonarr_interface.get_all_tags()
-
-    return []
+    return sonarr_interface.get_all_tags()
 
 
 @availablility_router.get('/fonts', status_code=200, tags=['Fonts'])
