@@ -59,3 +59,5 @@ TitleCardMaker currently has the following built-in card types:
 ...
 
 ## Local Cards
+
+The details of developing local card types is described [here](./local.md).
