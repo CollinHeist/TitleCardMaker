@@ -10,6 +10,9 @@ UNSPECIFIED = '__unspecified_'
 # String that can be used as key in a dictionary
 DictKey = constr(regex=r'^[a-zA-Z]+[^ -]*$', min_length=1)
 
+ImageSource = Literal['Emby', 'Jellyfin', 'Plex', 'TMDb']
+MediaServer = Literal['Emby', 'Jellyfin', 'Plex']
+
 # Pydantic base class
 class Base(BaseModel):
     class Config:

@@ -63,9 +63,7 @@ class Series(Base):
 
     # Series config arguments
     directory = Column(String, default=None)
-    emby_library_name = Column(String, default=None)
-    jellyfin_library_name = Column(String, default=None)
-    plex_library_name = Column(String, default=None)
+    libraries = Column(MutableList.as_mutable(JSON), default=[], nullable=False)
     card_filename_format = Column(String, default=None)
     episode_data_source = Column(String, default=None)
     sync_specials = Column(Boolean, default=None)
