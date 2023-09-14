@@ -212,7 +212,7 @@ def _parse_episode_data_source(
 
 def _parse_filesize_limit(
         yaml_dict: dict[str, Any]
-    ) -> Union[tuple[int, str], tuple[UNSPECIFIED, UNSPECIFIED]]:
+    ) -> tuple[Union[int, str], str]:
     """
     Parse the filesize limit unit and number from the given YAML.
 
@@ -224,7 +224,7 @@ def _parse_filesize_limit(
         the specified YAML, then a tuple of UNSPECIFIED is returned.
 
     Raises:
-        HTTPException (422) if the limit values cannot be parsed.
+        HTTPException (422): The limit values cannot be parsed.
     """
 
     if (not isinstance(yaml_dict, dict)
@@ -234,11 +234,11 @@ def _parse_filesize_limit(
     try:
         number, unit = limit.split(' ')
         return int(number), unit
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=422,
             detail=f'Invalid filesize limit',
-        ) from e
+        ) from exc
 
 
 def _parse_filename_format(yaml_dict: dict[str, Any]) -> str:
@@ -285,7 +285,7 @@ def _remove_unspecifed_args(**dict_kwargs: dict) -> dict:
     Remove unspecified arguments.
 
     Args:
-        dict_kwargs: (Keyword) Any number of keyword arguments to parse.
+        dict_kwargs: Any number of keyword arguments to parse.
 
     Returns:
         `dict_kwargs` where any keys whose corresponding value was equal
@@ -310,7 +310,7 @@ def parse_preferences(
     Args:
         preferences: Preferences to modify.
         yaml_dict: Dictionary of YAML attributes to parse.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         Modified Preferences.
@@ -388,6 +388,7 @@ def parse_preferences(
 def parse_emby(
         preferences: Preferences,
         yaml_dict: dict,
+        interface_group: InterfaceGroup[int, EmbyInterface],
         *,
         log: Logger = log,
     ) -> Preferences:
@@ -398,16 +399,18 @@ def parse_emby(
         preferences: Preferences whose connection details are being
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
-        log: (Keyword) Logger for all log messages.
+        interface_group: InterfaceGroup of Emby interfaces to modify
+            or append the parsed connections from.
+        log: Logger for all log messages.
 
     Returns:
         Modified Preferences object. If no changes are made, the object
         is returned unmodified.
 
     Raises:
-        HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if an UpdateEmby object cannot be
-            created from the given YAML.
+        HTTPException (422): There are any YAML formatting errors.
+        ValidationError: The UpdateEmby object cannot be created from
+            the given YAML.
     """
 
     # Skip if no section
@@ -417,21 +420,43 @@ def parse_emby(
     # Get emby options
     emby = _get(yaml_dict, 'emby', default={})
 
-    # Get filesize limit
+    # Get filesize limit(s)
     limit_number, limit_unit = _parse_filesize_limit(emby)
 
-    update_emby = UpdateEmby(**_remove_unspecifed_args(
-        url=_get(emby, 'url', type_=str, default=UNSPECIFIED),
-        api_key=_get(emby, 'api_key', default=UNSPECIFIED),
-        username=_get(emby, 'username', type_=str, default=UNSPECIFIED),
-        use_ssl=_get(emby, 'verify_ssl', type_=bool, default=UNSPECIFIED),
+    # If there is an existing Emby interface, update instead of create
+    if preferences.emby_args:
+        # Create Update object from these arguments
+        update_obj = UpdateEmby(**_remove_unspecifed_args(
+            url=_get(emby, 'url', type_=str, default=UNSPECIFIED),
+            api_key=_get(emby, 'api_key', default=UNSPECIFIED),
+            username=_get(emby, 'username', type_=str, default=UNSPECIFIED),
+            use_ssl=_get(emby, 'verify_ssl', type_=bool, default=UNSPECIFIED),
+            filesize_limit_number=limit_number,
+            filesize_limit_unit=limit_unit,
+        ))
+
+        return update_connection(
+            preferences, list(preferences.emby_args)[0], update_obj, 'emby',
+            log=log,
+        )
+
+    # New connection
+    new_obj = NewEmbyConnection(
+        url=_get(emby, 'url', type_=str),
+        api_key=_get(emby, 'api_key', type_=str),
+        use_ssl=_get(emby, 'verify_ssl', type_=bool, default=True),
         filesize_limit_number=limit_number,
         filesize_limit_unit=limit_unit,
-    ))
-    preferences.use_emby = True
+        username=_get(emby, 'username', type_=str, default=None),
+    )
+    kwargs = new_obj.dict()
+
+    # Add new connection to InterfaceGroup
+    interface_id, _ = interface_group.append_interface(log=log, **kwargs)
+    preferences.emby_args[interface_id] = kwargs
     preferences.commit(log=log)
 
-    return update_connection(preferences, update_emby, 'emby', log=log)
+    return preferences
 
 
 def parse_jellyfin(
