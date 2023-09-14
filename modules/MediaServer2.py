@@ -94,6 +94,8 @@ class MediaServer(ABC):
             library_name: str,
             series_info: SeriesInfo,
             episodes: list['Episode'], # type: ignore
+            *,
+            log: Logger = log,
         ) -> None:
         """Abstract method to update watched statuses of Episode objects."""
         raise NotImplementedError
