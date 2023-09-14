@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from logging import Logger
-from typing import Literal, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from requests import get as req_get
@@ -10,15 +10,15 @@ from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard
 from app.internal.auth import get_current_user
 from app.internal.availability import get_latest_version
 from app import models
+from app.models.preferences import Preferences
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.availability import (
     AvailableFont, AvailableSeries, AvailableTemplate
 )
 from app.schemas.card import CardType, LocalCardType, RemoteCardType
 from app.schemas.card_type import Extra
-from app.schemas.preferences import (
-    EpisodeDataSourceToggle, Preferences, StyleOption
-)
+from app.schemas.preferences import EpisodeDataSourceToggle, StyleOption
+from app.schemas.series import MediaServerLibrary
 from app.schemas.sync import Tag
 
 from modules.cards.available import LocalCards
@@ -189,11 +189,12 @@ def get_available_episode_data_sources(
     Get all available (enabled) Episode data sources.
     """
 
-    return [
-        {'name': source,
-         'value': source,
-         'selected': source == preferences.episode_data_source}
-        for source in preferences.valid_episode_data_sources
+    return [ # TODO update
+        {
+            'name': source,
+            'value': source,
+            'selected': source == preferences.episode_data_source
+        } for source in preferences.valid_episode_data_sources
     ]
 
 
@@ -205,7 +206,7 @@ def get_image_source_priority(
     Get the global image source priority.
     """
 
-    return [
+    return [ # TODO update
         {
             'name': source,
             'value': source,
