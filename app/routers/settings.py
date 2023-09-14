@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Body, Depends, Request
 
-from app.dependencies import *
+from app.dependencies import get_preferences
 from app.internal.auth import get_current_user
 from app.models.preferences import Preferences as PreferencesModel
 from app.schemas.preferences import (
-    EpisodeDataSourceToggle, LanguageToggle, Preferences, SonarrLibrary, UpdatePreferences
+    LanguageToggle, Preferences, ToggleOption, UpdatePreferences
 )
 
 from modules.TMDbInterface2 import TMDbInterface
@@ -46,21 +46,10 @@ def update_global_settings(
     return preferences
 
 
-@settings_router.get('/sonarr-libraries', tags=['Sonarr'])
-def get_sonarr_libraries(
-        preferences: PreferencesModel = Depends(get_preferences),
-    ) -> list[SonarrLibrary]:
-    """
-    Get the global Sonarr library mappings.
-    """
-
-    return preferences.sonarr_libraries
-
-
 @settings_router.get('/image-source-priority')
 def get_image_source_priority(
         preferences: PreferencesModel = Depends(get_preferences),
-    ) -> list[EpisodeDataSourceToggle]:
+    ) -> list[ToggleOption]:
     """
     Get the global image source priority.
     """
