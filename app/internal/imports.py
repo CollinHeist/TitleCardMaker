@@ -9,25 +9,31 @@ from sqlalchemy.orm import Session
 
 from app.dependencies import refresh_imagemagick_interface
 from app.internal.cards import add_card_to_database, resolve_card_settings
-from app.internal.connection import update_connection
+from app.internal.connection import update_connection, update_tmdb
 from app import models
 from app.models.preferences import Preferences
 from app.schemas.base import UNSPECIFIED
 from app.schemas.card import NewTitleCard
-from app.schemas.font import NewNamedFont
-from app.schemas.preferences import (
-    CardExtension, EpisodeDataSource, UpdateEmby, UpdateJellyfin,
-    UpdatePlex, UpdatePreferences, UpdateSonarr, UpdateTMDb
+from app.schemas.connection import (
+    NewEmbyConnection, NewJellyfinConnection, NewPlexConnection, NewSonarrConnection,
+    UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb
 )
+from app.schemas.font import NewNamedFont
+from app.schemas.preferences import CardExtension, EpisodeDataSource
 from app.schemas.series import NewSeries, NewTemplate, Series, Translation
 from app.schemas.sync import (
     NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync
 )
 
 from modules.Debug import log
+from modules.EmbyInterface2 import EmbyInterface
 from modules.EpisodeMap import EpisodeMap
+from modules.InterfaceGroup import InterfaceGroup
+from modules.JellyfinInterface2 import JellyfinInterface
+from modules.PlexInterface2 import PlexInterface
 from modules.PreferenceParser import PreferenceParser
 from modules.SeriesInfo import SeriesInfo
+from modules.SonarrInterface2 import SonarrInterface
 from modules.Template import Template as YamlTemplate
 from modules.TieredSettings import TieredSettings
 
@@ -462,6 +468,7 @@ def parse_emby(
 def parse_jellyfin(
         preferences: Preferences,
         yaml_dict: dict,
+        interface_group: InterfaceGroup[int, JellyfinInterface],
         *,
         log: Logger = log,
     ) -> Preferences:
@@ -472,16 +479,18 @@ def parse_jellyfin(
         preferences: Preferences whose connection details are being
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
-        log: (Keyword) Logger for all log messages.
+        interface_group: InterfaceGroup of Jellyfin interfaces to modify
+            or append the parsed connections from.
+        log: Logger for all log messages.
 
     Returns:
         Modified Preferences object. If no changes are made, the object
         is returned unmodified.
 
     Raises:
-        HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if an UpdateJellyfin object cannot be
-            created from the given YAML.
+        HTTPException (422): There are any YAML formatting errors.
+        ValidationError: The UpdateJellyfin object cannot be created
+            from the given YAML.
     """
 
     # Skip if no section
@@ -491,21 +500,43 @@ def parse_jellyfin(
     # Get jellyfin options
     jellyfin = _get(yaml_dict, 'jellyfin', default={})
 
-    # Get filesize limit
+    # Get filesize limit(s)
     limit_number, limit_unit = _parse_filesize_limit(jellyfin)
 
-    update_jellyfin = UpdateJellyfin(
-        url=_get(jellyfin, 'url', type_=str, default=UNSPECIFIED),
-        api_key=_get(jellyfin, 'api_key', default=UNSPECIFIED),
-        username=_get(jellyfin, 'username', type_=str, default=UNSPECIFIED),
-        use_ssl=_get(jellyfin, 'verify_ssl', type_=bool, default=UNSPECIFIED),
+    # If there is an existing Jellyfin interface, update instead of create
+    if preferences.jellyfin_args:
+        # Create Update object from these arguments
+        update_obj = UpdateJellyfin(**_remove_unspecifed_args(
+            url=_get(jellyfin, 'url', type_=str, default=UNSPECIFIED),
+            api_key=_get(jellyfin, 'api_key', default=UNSPECIFIED),
+            username=_get(jellyfin, 'username', type_=str, default=UNSPECIFIED),
+            use_ssl=_get(jellyfin, 'verify_ssl', type_=bool, default=UNSPECIFIED),
+            filesize_limit_number=limit_number,
+            filesize_limit_unit=limit_unit,
+        ))
+
+        return update_connection(
+            preferences, list(preferences.jellyfin_args)[0], update_obj, 'jellyfin',
+            log=log,
+        )
+
+    # New connection
+    new_obj = NewJellyfinConnection(
+        url=_get(jellyfin, 'url', type_=str),
+        api_key=_get(jellyfin, 'api_key', type_=str),
+        use_ssl=_get(jellyfin, 'verify_ssl', type_=bool, default=True),
         filesize_limit_number=limit_number,
         filesize_limit_unit=limit_unit,
+        username=_get(jellyfin, 'username', type_=str, default=None),
     )
-    preferences.use_jellyfin = True
+    kwargs = new_obj.dict()
+
+    # Add new connection to InterfaceGroup
+    interface_id, _ = interface_group.append_interface(log=log, **kwargs)
+    preferences.jellyfin_args[interface_id] = kwargs
     preferences.commit(log=log)
 
-    return update_connection(preferences, update_jellyfin, 'jellyfin', log=log)
+    return preferences
 
 
 def parse_plex(
