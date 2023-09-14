@@ -134,11 +134,11 @@ def add_new_series(
         new_series: NewSeries = Body(...),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_all_emby_interfaces),
+        imagemagick_interface: ImageMagickInterface = Depends(get_imagemagick_interface),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_all_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_all_plex_interfaces),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_all_sonarr_interfaces),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Series:
     """
@@ -149,9 +149,9 @@ def add_new_series(
     """
 
     return add_series(
-        new_series, background_tasks, db, preferences, emby_interface,
-        imagemagick_interface, jellyfin_interface, plex_interface,
-        sonarr_interface, tmdb_interface, log=request.state.log,
+        new_series, background_tasks, db, preferences, emby_interfaces,
+        imagemagick_interface, jellyfin_interfaces, plex_interfaces,
+        sonarr_interfaces, tmdb_interface, log=request.state.log,
     )
 
 
@@ -424,10 +424,10 @@ def process_series(
         series_id: int,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_all_emby_interfaces),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_all_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_all_plex_interfaces),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_all_sonarr_interfaces),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> None:
     """
@@ -453,9 +453,8 @@ def process_series(
     # Refresh episode data, use BackgroundTasks for ID assignment
     log.debug(f'{series.log_str} Started refreshing Episode data')
     refresh_episode_data(
-        db, preferences, series, emby_interface, jellyfin_interface,
-        plex_interface, sonarr_interface, tmdb_interface,
-        log=log,
+        db, preferences, series, emby_interfaces, jellyfin_interfaces,
+        plex_interfaces, sonarr_interfaces, tmdb_interface, log=log,
     )
 
     # Begin downloading Source images - use BackgroundTasks
@@ -465,8 +464,8 @@ def process_series(
             # Function
             download_episode_source_image,
             # Arguments
-            db, preferences, emby_interface, jellyfin_interface, plex_interface,
-            tmdb_interface, episode, raise_exc=False, log=log,
+            db, preferences, emby_interfaces, jellyfin_interfaces,
+            plex_interfaces, tmdb_interface, episode, raise_exc=False, log=log,
         )
 
     # Begin Episode translation - use BackgroundTasks
@@ -481,7 +480,7 @@ def process_series(
 
     # Update watch statuses
     update_episode_watch_statuses(
-        emby_interface, jellyfin_interface, plex_interface,
+        emby_interfaces, jellyfin_interfaces, plex_interfaces,
         series, series.episodes, log=log,
     )
     db.commit()
@@ -502,7 +501,7 @@ def remove_series_labels(
         series_id: int,
         labels: list[str] = Query(default=['TCM', 'Overlay']),
         db: Session = Depends(get_database),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_all_plex_interfaces),
     ) -> None:
     """
     Remove the given labels from the given Series' Episodes within Plex.
@@ -516,22 +515,15 @@ def remove_series_labels(
     series = get_series(db, series_id, raise_exc=True)
 
     # Raise 409 if no library, or the server's interface is invalid
-    if series.plex_library_name is None:
-        raise HTTPException(
-            status_code=409,
-            detail=f'{series.log_str} has no Plex Library',
-        )
-    if not plex_interface:
-        raise HTTPException(
-            status_code=409,
-            detail=f'Unable to communicate with Plex',
-        )
+    for interface_id, library in series.get_libraries('Plex'):
+        if (interface := plex_interfaces[interface_id]):
+            interface.remove_series_labels(
+                library, series.as_series_info, labels, log=request.state.log,
+            )
+        else:
+            log.warning(f'Unable to communicate with Plex[{interface_id}]')
 
-    # Remove labels
-    plex_interface.remove_series_labels(
-        series.plex_library_name, series.as_series_info, labels,
-        log=request.state.log,
-    )
+    return None
 
 
 @series_router.get('/{series_id}/poster', status_code=200)
@@ -540,7 +532,10 @@ def download_series_poster_(
         request: Request,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_all_emby_interfaces),
+        imagemagick_interface: ImageMagickInterface = Depends(get_imagemagick_interface),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_all_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_all_plex_interfaces),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
     ) -> None:
     """
@@ -552,8 +547,9 @@ def download_series_poster_(
     # Find Series with this ID, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    return download_series_poster(
-        db, preferences, series, imagemagick_interface, tmdb_interface,
+    download_series_poster(
+        db, preferences, series, emby_interfaces, imagemagick_interface,
+        jellyfin_interfaces, plex_interfaces, tmdb_interface,
         log=request.state.log,
     )
 
@@ -562,7 +558,7 @@ def download_series_poster_(
 def query_series_poster(
         series_id: int,
         db: Session = Depends(get_database),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+        tmdb_interface: TMDbInterface = Depends(require_tmdb_interface)
     ) -> Optional[str]:
     """
     Query for a poster of the given Series.
