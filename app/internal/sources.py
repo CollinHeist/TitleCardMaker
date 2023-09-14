@@ -7,11 +7,11 @@ from sqlalchemy.orm import Session
 
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.templates import get_effective_templates
-from app import models
+from app.models.episode import Episode
+from app.models.preferences import Preferences
+from app.models.series import Series
 from app.schemas.card import SourceImage
-from app.schemas.episode import Episode
-from app.schemas.preferences import Preferences, Style
-from app.schemas.series import Series
+from app.schemas.preferences import Style
 
 from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
@@ -33,7 +33,7 @@ def download_all_source_images(*, log: Logger = log) -> None:
         # Get the Database
         with next(get_database()) as db:
             # Get all Series
-            for series in db.query(models.series.Series).all():
+            for series in db.query(Series).all():
                 # Skip if Series is unmonitored
                 if not series.monitored:
                     log.debug(f'{series.log_str} is not monitored, skipping')
@@ -65,7 +65,7 @@ def download_all_series_logos(*, log: Logger = log) -> None:
         # Get the Database
         with next(get_database()) as db:
             # Get all Series
-            all_series = db.query(models.series.Series).all()
+            all_series = db.query(Series).all()
             for series in all_series:
                 # If Series is unmonitored, skip
                 if not series.monitored:
@@ -74,9 +74,12 @@ def download_all_series_logos(*, log: Logger = log) -> None:
 
                 try:
                     download_series_logo(
-                        get_preferences(), get_emby_interface(),
-                        get_imagemagick_interface(), get_jellyfin_interface(),
-                        get_tmdb_interface(), series, log=log,
+                        get_preferences(),
+                        get_all_emby_interfaces(),
+                        get_imagemagick_interface(),
+                        get_all_jellyfin_interfaces(),
+                        get_tmdb_interface(),
+                        series, log=log,
                     )
                 except HTTPException:
                     log.warning(f'{series.log_str} Skipping logo selection')
@@ -151,7 +154,7 @@ def process_svg_logo(
         url: str,
         series: Series,
         logo_file: Path,
-        imagemagick_interface: Optional[ImageMagickInterface],
+        imagemagick_interface: ImageMagickInterface,
         *,
         log: Logger = log,
     ) -> str:
@@ -165,23 +168,16 @@ def process_svg_logo(
         logo_file: Path to the directory where the logo will be written.
         imagemagick_interface: Interface to use for SVG -> PNG
             conversion.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         String of the asset path for the processed logo.
 
     Raises:
-        HTTPException (409) if an SVG image was returned but cannot be
+        HTTPException (409): SVG image was returned but cannot be
             converted into PNG.
-        HTTPException (400) if the logo cannot be downloaded.
+        HTTPException (400): The logo cannot be downloaded.
     """
-
-    # If no ImageMagick, raise 409
-    if not imagemagick_interface:
-        raise HTTPException(
-            status_code=409,
-            detail=f'Cannot convert SVG logo, no valid ImageMagick interface'
-        )
 
     # Download to temporary location pre-conversion
     success = WebInterface.download_image(
@@ -213,9 +209,9 @@ def process_svg_logo(
 
 def download_series_logo(
         preferences: Preferences,
-        emby_interface: Optional[EmbyInterface],
-        imagemagick_interface: Optional[ImageMagickInterface],
-        jellyfin_interface: Optional[JellyfinInterface],
+        emby_interfaces: InterfaceGroup[int, EmbyInterface],
+        imagemagick_interface: ImageMagickInterface,
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface],
         tmdb_interface: Optional[TMDbInterface],
         series: Series,
         *,
@@ -228,16 +224,16 @@ def download_series_logo(
         preferences: Preferences to use for global settings
         *_interface: Interface to query for any logos.
         series: Series whose logo to download.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         The URI to the Series logo. If one cannot be downloaded, None is
         returned instead.
 
     Raises:
-        HTTPException (409) if an SVG image was returned but cannot be
+        HTTPException (409): An SVG image was returned but cannot be
             converted into PNG.
-        HTTPException (400) if the logo cannot be downloaded.
+        HTTPException (400): The logo cannot be downloaded.
     """
 
     # Get the Series logo, return if already exists
@@ -247,18 +243,22 @@ def download_series_logo(
 
     # Go through all image sources
     for image_source in preferences.image_source_priority:
-        if (image_source == 'Emby'
-            and emby_interface is not None
-            and series.emby_library_name is not None):
-            logo = emby_interface.get_series_logo(
-                series.emby_library_name, series.as_series_info, log=log,
-            )
-        elif (image_source == 'Jellyfin'
-            and jellyfin_interface is not None
-            and series.jellyfin_library_name is not None):
-            logo = jellyfin_interface.get_series_logo(
-                series.jellyfin_library_name, series.as_series_info, log=log
-            )
+        if image_source == 'Emby':
+            for interface_id, library in series.get_libraries('Emby'):
+                if (interface := emby_interfaces[interface_id]):
+                    logo = interface.get_series_logo(
+                        library, series.as_series_info, log=log,
+                    )
+                    if logo:
+                        break
+        elif image_source == 'Jellyfin':
+            for interface_id, library in series.get_libraries('Jellyfin'):
+                if (interface := jellyfin_interfaces[interface_id]):
+                    logo = interface.get_series_logo(
+                        library, series.as_series_info, log=log,
+                    )
+                    if logo:
+                        break
         elif image_source == 'TMDb' and tmdb_interface:
             logo = tmdb_interface.get_series_logo(series.as_series_info)
         else:
@@ -292,9 +292,9 @@ def download_series_logo(
 def download_episode_source_image(
         db: Session,
         preferences: Preferences,
-        emby_interface: Optional[EmbyInterface],
-        jellyfin_interface: Optional[JellyfinInterface],
-        plex_interface: Optional[PlexInterface],
+        emby_interfaces: Optional[InterfaceGroup[int, EmbyInterface]],
+        jellyfin_interfaces: Optional[InterfaceGroup[int, JellyfinInterface]],
+        plex_interfaces: Optional[InterfaceGroup[int, PlexInterface]],
         tmdb_interface: Optional[TMDbInterface],
         episode: Episode,
         raise_exc: bool = False,
@@ -310,14 +310,14 @@ def download_episode_source_image(
         *_interface: Interface to query for each source image.
         episode: Episode whose source image is being downloaded.
         raise_exc: Whether to raise any HTTPExceptions.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         The URI to the Episode source image. If one cannot be
         downloaded, None is returned instead.
 
     Raises:
-        HTTPException (400) if the image cannot be downloaded.
+        HTTPException (400): The image cannot be downloaded.
     """
 
     # Determine Episode style and source file
@@ -341,44 +341,53 @@ def download_episode_source_image(
 
     # Go through all image sources
     for image_source in preferences.image_source_priority:
-        # Skip and do not warn if this interface is outright disabled
-        if not getattr(preferences, f'use_{image_source.lower()}', False):
-            continue
-
-        # Verify Series has a library, skip if not
-        library_attribute = f'{image_source.lower()}_library_name'
-        if (image_source in ('Emby', 'Jellyfin', 'Plex')
-            and getattr(series, library_attribute, None) is None):
-            log.warning(f'{series.log_str} Has no {image_source} library')
+        # Skip if this image source is outright disabled
+        if ((image_source == 'Emby' and not emby_interfaces)
+            or (image_source == 'Jellyfin' and not jellyfin_interfaces)
+            or (image_source == 'Plex' and not plex_interfaces)
+            or (image_source == 'TMDb' and not tmdb_interface)):
             continue
 
         # Skip if sourcing art from a media server
-        if (image_source in ('Emby', 'Jellyfin', 'Plex')
-            and 'art' in style):
+        if image_source in ('Emby', 'Jellyfin', 'Plex') and 'art' in style:
             log.debug(f'Cannot source Art images from {image_source} - skipping')
             continue
 
-        if image_source == 'Emby' and emby_interface:
-            source_image = emby_interface.get_source_image(
-                series.emby_library_name,
-                series.as_series_info,
-                episode.as_episode_info,
-                log=log,
-            )
-        elif image_source == 'Jellyfin' and jellyfin_interface:
-            source_image = jellyfin_interface.get_source_image(
-                series.jellyfin_library_name,
-                series.as_series_info,
-                episode.as_episode_info,
-            )
-        elif image_source == 'Plex' and plex_interface:
-            source_image = plex_interface.get_source_image(
-                series.plex_library_name,
-                series.as_series_info,
-                episode.as_episode_info,
-                log=log,
-            )
-        elif image_source == 'TMDb' and tmdb_interface:
+        # Try each library of each media server
+        if image_source == 'Emby':
+            for interface_id, library in series.get_libraries('Emby'):
+                if (interface := emby_interfaces[interface_id]):
+                    source_image = interface.get_source_image(
+                        library,
+                        series.as_series_info,
+                        episode.as_episode_info,
+                        log=log,
+                    )
+                    if source_image:
+                        break
+        elif image_source == 'Jellyfin':
+            for interface_id, library in series.get_libraries('Jellyfin'):
+                if (interface := jellyfin_interfaces[interface_id]):
+                    source_image = interface.get_source_image(
+                        library,
+                        series.as_series_info,
+                        episode.as_episode_info,
+                        log=log,
+                    )
+                    if source_image:
+                        break
+        elif image_source == 'Plex':
+            for interface_id, library in series.get_libraries('Plex'):
+                if (interface := plex_interfaces[interface_id]):
+                    source_image = interface.get_source_image(
+                        library,
+                        series.as_series_info,
+                        episode.as_episode_info,
+                        log=log,
+                    )
+                    if source_image:
+                        break
+        elif image_source == 'TMDb':
             # TODO implement blacklist bypassing
             # Get art backdrop
             if 'art' in style:
@@ -396,10 +405,6 @@ def download_episode_source_image(
                     raise_exc=raise_exc,
                     log=log,
                 )
-        else:
-            log.warning(f'{series.log_str} {episode.log_str} Cannot source '
-                        f'images from {image_source}')
-            continue
 
         # If no source image was returned, increment attempts counter
         if source_image is None:
@@ -426,7 +431,7 @@ def download_episode_source_image(
 
 def get_source_image(
         preferences: Preferences,
-        imagemagick_interface: Optional[ImageMagickInterface],
+        imagemagick_interface: ImageMagickInterface,
         episode: Episode,
     ) -> SourceImage:
     """
@@ -459,12 +464,10 @@ def get_source_image(
 
     # If the source file exists, add the filesize and dimensions
     if source['exists']:
-        # Get image dimensions if ImageMagickInterface is provided
-        width, height = None, None
-        if imagemagick_interface is not None:
-            width, height = imagemagick_interface.get_image_dimensions(
-                source_file
-            )
+        # Get image dimensions
+        width, height = imagemagick_interface.get_image_dimensions(
+            source_file
+        )
 
         source |= {
             'filesize': source_file.stat().st_size,
