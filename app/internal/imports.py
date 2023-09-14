@@ -542,6 +542,7 @@ def parse_jellyfin(
 def parse_plex(
         preferences: Preferences,
         yaml_dict: dict,
+        interface_group: InterfaceGroup[int, PlexInterface],
         *,
         log: Logger = log,
     ) -> Preferences:
@@ -552,48 +553,74 @@ def parse_plex(
         preferences: Preferences whose connection details are being
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
-        log: (Keyword) Logger for all log messages.
+        interface_group: InterfaceGroup of Plex interfaces to modify
+            or append the parsed connections from.
+        log: Logger for all log messages.
 
     Returns:
         Modified Preferences object. If no changes are made, the object
         is returned unmodified.
 
     Raises:
-        HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if an UpdatePlex object cannot be
-            created from the given YAML.
+        HTTPException (422): There are any YAML formatting errors.
+        ValidationError: The UpdatePlex object cannot be created from
+            the given YAML.
     """
 
     # Skip if no section
     if not isinstance(yaml_dict, dict) or 'plex' not in yaml_dict:
         return preferences
 
-    # Get plex options
+    # Get jellyfin options
     plex = _get(yaml_dict, 'plex', default={})
 
-    # Get filesize limit
+    # Get filesize limit(s)
     limit_number, limit_unit = _parse_filesize_limit(plex)
 
-    update_plex = UpdatePlex(**_remove_unspecifed_args(
-        url=_get(plex, 'url', type_=str, default=UNSPECIFIED),
-        token=_get(plex, 'token', default=UNSPECIFIED),
-        use_ssl=_get(plex, 'verify_ssl', type_=bool, default=UNSPECIFIED),
-        integrate_with_pmm=_get(
-            plex,
-            'integrate_with_pmm_overlays',
-            type_=bool, default=UNSPECIFIED,
-        ), filesize_limit_number=limit_number,
+    # If there is an existing Plex interface, update instead of create
+    if preferences.plex_args:
+        # Create Update object from these arguments
+        update_obj = UpdatePlex(**_remove_unspecifed_args(
+            url=_get(plex, 'url', type_=str, default=UNSPECIFIED),
+            api_key=_get(plex, 'token', default=UNSPECIFIED),
+            use_ssl=_get(plex, 'verify_ssl', type_=bool, default=UNSPECIFIED),
+            filesize_limit_number=limit_number,
+            filesize_limit_unit=limit_unit,
+            integrate_with_pmm=_get(
+                plex, 'integrate_with_pmm_overlays',
+                type_=bool,
+                default=UNSPECIFIED
+            ),
+        ))
+
+        return update_connection(
+            preferences, list(preferences.plex_args)[0], update_obj, 'plex',
+            log=log,
+        )
+
+    # New connection
+    new_obj = NewPlexConnection(
+        url=_get(plex, 'url', type_=str),
+        api_key=_get(plex, 'api_key', type_=str),
+        use_ssl=_get(plex, 'verify_ssl', type_=bool, default=True),
+        filesize_limit_number=limit_number,
         filesize_limit_unit=limit_unit,
-    ))
-    preferences.use_plex = True
+        integrate_with_pmm=_get(plex, 'integrate_with_pmm_overlays', type_=bool)
+    )
+    kwargs = new_obj.dict()
+
+    # Add new connection to InterfaceGroup
+    interface_id, _ = interface_group.append_interface(log=log, **kwargs)
+    preferences.plex_args[interface_id] = kwargs
     preferences.commit(log=log)
 
-    return update_connection(preferences, update_plex, 'plex', log=log)
+    return preferences
 
 
 def parse_sonarr(
         preferences: Preferences,
         yaml_dict: dict,
+        interface_group: InterfaceGroup[int, SonarrInterface],
         *,
         log: Logger = log,
     ) -> Preferences:
@@ -604,16 +631,18 @@ def parse_sonarr(
         preferences: Preferences whose connection details are being
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
-        log: (Keyword) Logger for all log messages.
+        interface_group: InterfaceGroup of Sonarr interfaces to modify
+            or append the parsed connections from.
+        log: Logger for all log messages.
 
     Returns:
         Modified Preferences object. If no changes are made, the object
         is returned unmodified.
 
     Raises:
-        HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if an UpdateSonarr object cannot be
-            created from the given YAML.
+        HTTPException (422): There are any YAML formatting errors.
+        ValidationError: An UpdateSonarr object cannot be created from
+            the given YAML.
     """
 
     # Skip if no section
@@ -622,16 +651,40 @@ def parse_sonarr(
 
     # Get sonarr options
     sonarr = _get(yaml_dict, 'sonarr', default={})
+    # TODO evaluate how to handle list of servers
 
-    update_sonarr = UpdateSonarr(**_remove_unspecifed_args(
-        url=_get(sonarr, 'url', default=UNSPECIFIED),
-        api_key=_get(sonarr, 'api_key', default=UNSPECIFIED),
-        use_ssl=_get(sonarr, 'verify_ssl', default=UNSPECIFIED),
-    ))
-    preferences.use_sonarr = True
+    # If there is an existing Sonarr interface, update instead of create
+    if preferences.sonarr_args:
+        # Create Update object from these arguments
+        update_obj = UpdateSonarr(**_remove_unspecifed_args(
+            url=_get(sonarr, 'url', type_=str, default=UNSPECIFIED),
+            api_key=_get(sonarr, 'token', default=UNSPECIFIED),
+            use_ssl=_get(sonarr, 'verify_ssl', type_=bool, default=UNSPECIFIED),
+            downloaded_only=_get(
+                sonarr, 'downloaded_only', type_=bool, default=UNSPECIFIED
+            ),
+        ))
+
+        return update_connection(
+            preferences, list(preferences.sonarr_args)[0], update_obj, 'sonarr',
+            log=log,
+        )
+
+    # New connection
+    new_obj = NewSonarrConnection(
+        url=_get(sonarr, 'url', type_=str),
+        api_key=_get(sonarr, 'api_key', type_=str),
+        use_ssl=_get(sonarr, 'verify_ssl', type_=bool, default=True),
+        downloaded_only=_get(sonarr, 'downloaded_only', type_=bool, default=True),
+    )
+    kwargs = new_obj.dict()
+
+    # Add new connection to InterfaceGroup
+    interface_id, _ = interface_group.append_interface(log=log, **kwargs)
+    preferences.sonarr_args[interface_id] = kwargs
     preferences.commit(log=log)
 
-    return update_connection(preferences, update_sonarr, 'sonarr', log=log)
+    return preferences
 
 
 def parse_tmdb(
@@ -647,16 +700,16 @@ def parse_tmdb(
         preferences: Preferences whose connection details are being
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         Modified Preferences object. If no changes are made, the object
         is returned unmodified.
 
     Raises:
-        HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if an UpdateTMDb object cannot be
-            created from the given YAML.
+        HTTPException (422): YAML formatting errors.
+        ValidationError: An UpdateTMDb object cannot be created from the
+            given YAML.
     """
 
     # Skip if no section
@@ -668,7 +721,7 @@ def parse_tmdb(
 
     SplitList = lambda s: str(s).lower().replace(' ', '').split(',')
 
-    update_tmdb = UpdateTMDb(**_remove_unspecifed_args(
+    update_obj = UpdateTMDb(**_remove_unspecifed_args(
         api_key=_get(tmdb, 'api_key', default=UNSPECIFIED),
         minimum_width=_get(
             tmdb,
@@ -691,7 +744,7 @@ def parse_tmdb(
     preferences.use_tmdb = True
     preferences.commit(log=log)
 
-    return update_connection(preferences, update_tmdb, 'tmdb', log=log)
+    return update_tmdb(preferences, update_obj, log=log)
 
 
 def parse_syncs(
@@ -711,11 +764,11 @@ def parse_syncs(
         defined in the YAML.
 
     Raises:
-        HTTPException (404) if an indicated Template cannot be found in
+        HTTPException (404): An indicated Template cannot be found in
             the database.
-        HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if a New*Sync object cannot be created
-            from the given YAML.
+        HTTPException (422): YAML formatting errors.
+        ValidationError: An New*Sync object cannot be created from the
+            given YAML.
     """
 
     def _get_templates(sync: dict[str, Any]) -> list[int]:
@@ -1025,7 +1078,7 @@ def parse_series(
         yaml_dict: Dictionary of YAML attributes to parse.
         default_library: Optional default Library name to apply to the
             Series if one is not manually specified within YAML.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         List of NewSeries that match any defined YAML series.
@@ -1244,7 +1297,7 @@ def import_cards(
         image_extension: Extension of images to search for.
         force_reload: Whether to replace any existing Card entries for
             Episodes identified while importing.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     # If explicit directory was not provided, use Series default
