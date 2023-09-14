@@ -216,38 +216,44 @@ def get_image_source_priority(
     ]
 
 
-@availablility_router.get('/libraries/{media_server}', status_code=200,
+@availablility_router.get('/libraries', status_code=200,
                           tags=['Emby', 'Jellyfin', 'Plex'])
 def get_server_libraries(
-        media_server: Literal['emby', 'jellyfin', 'plex'],
-        preferences: Preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-    ) -> list[str]:
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_all_emby_interfaces),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_all_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_all_plex_interfaces),
+    ) -> list[MediaServerLibrary]:
     """
-    Get all available TV library names on the given media server.
-
-    - media_server: Which media server to get the library names of.
+    Get all available TV libraries for all enabled interfaces.
     """
 
-    if media_server == 'emby':
-        if preferences.use_emby and emby_interface:
-            return emby_interface.get_libraries()
-        return []
-    if media_server == 'jellyfin':
-        if preferences.use_jellyfin and jellyfin_interface:
-            return jellyfin_interface.get_libraries()
-        return []
-    if media_server == 'plex':
-        if preferences.use_plex and plex_interface:
-            return plex_interface.get_libraries()
-        return []
+    libraries = []
+    for interface_id, interface in emby_interfaces:
+        libraries += [
+            MediaServerLibrary(
+                media_server='Emby',
+                interface_id=interface_id,
+                name=library
+            ) for library in interface.get_libraries()
+        ]
+    for interface_id, interface in jellyfin_interfaces:
+        libraries += [
+            MediaServerLibrary(
+                media_server='Jellyfin',
+                interface_id=interface_id,
+                name=library
+            ) for library in interface.get_libraries()
+        ]
+    for interface_id, interface in plex_interfaces:
+        libraries += [
+            MediaServerLibrary(
+                media_server='Plex',
+                interface_id=interface_id,
+                name=library
+            ) for library in interface.get_libraries()
+        ]
 
-    raise HTTPException(
-        status_code=400,
-        detail=f'Cannot get libraries for the "{media_server}" media server'
-    )
+    return libraries
 
 
 @availablility_router.get('/usernames/emby', status_code=200, tags=['Emby'])

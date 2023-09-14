@@ -5,7 +5,7 @@ from pydantic import conint, constr, Field, root_validator, validator  # pylint:
 
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.base import (
-    Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
+    Base, MediaServer, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
 )
 from app.schemas.connection import TMDbLanguageCode
 from app.schemas.font import TitleCase
@@ -32,7 +32,7 @@ class Translation(Base):
     data_key: DictKey
 
 class MediaServerLibrary(Base):
-    media_server: Literal['Emby', 'Jellyfin', 'Plex']
+    media_server: MediaServer
     interface_id: int
     name: str
 
