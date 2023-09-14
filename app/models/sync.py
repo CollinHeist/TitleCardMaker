@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship
 from app.database.session import Base
 from app.models.template import SyncTemplates
 
+
 class Sync(Base):
     """
     SQL Table that defines a Sync. This contains Sync requirements and
@@ -25,6 +26,7 @@ class Sync(Base):
 
     name = Column(String, nullable=False)
     interface = Column(String, nullable=False)
+    interface_id = Column(Integer, nullable=False)
 
     required_tags = Column(JSON, default=[], nullable=False)
     required_libraries = Column(JSON, default=[], nullable=False)

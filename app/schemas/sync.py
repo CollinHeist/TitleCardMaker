@@ -1,19 +1,22 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring
 from typing import Literal, Optional
 
-from pydantic import Field, validator
+from pydantic import Field, constr, validator
 
 from app.schemas.base import Base, UpdateBase, UNSPECIFIED
 
+
 SonarrSeriesType = Literal['anime', 'daily', 'standard']
 Interface = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr']
+
 
 class Tag(Base):
     id: int
     label: str
 
 class NewBaseSync(Base):
-    name: str = Field(..., min_length=1, title='Sync name')
+    name: constr(min_length=1)
+    interface_id: int
     template_ids: list[int] = []
     required_tags: list[str] = []
     excluded_tags: list[str] = []
@@ -44,8 +47,8 @@ class NewSonarrSync(NewBaseSync):
     excluded_series_type: Optional[SonarrSeriesType] = None
 
 class ExistingBaseSync(NewBaseSync):
-    id: int = Field(..., title='Sync ID')
-    interface: Interface = Field(..., title='Sync interface')
+    id: int
+    interface: Interface
 
 class EmbySync(ExistingBaseSync, NewMediaServerSync):
     interface: Interface = 'Emby'
@@ -63,7 +66,8 @@ class Sync(ExistingBaseSync, NewSonarrSync):
     ...
 
 class UpdateSync(UpdateBase):
-    name: Optional[str] = Field(default=UNSPECIFIED, min_length=1)
+    name: constr(min_length=1) = UNSPECIFIED
+    interface_id: int = UNSPECIFIED
     template_ids: list[int] = UNSPECIFIED
     required_tags: list[str] = UNSPECIFIED
     excluded_tags: list[str] = UNSPECIFIED
