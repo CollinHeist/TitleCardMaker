@@ -103,11 +103,18 @@ class Font(Base):
             Dictionary of properties.
         """
 
+        if (file := self.file) is None:
+            return {
+                f'font_{key}': value
+                for key, value in self.__dict__.items()
+                if not key.startswith('_')
+            }
+        
         return {
             f'font_{key}': value
             for key, value in self.__dict__.items()
             if not key.startswith('_')
-        }
+        } | {'font_file': str(file)}
 
 
     @hybrid_property
