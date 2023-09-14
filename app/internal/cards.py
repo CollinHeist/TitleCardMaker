@@ -14,10 +14,10 @@ from app import models
 from app.models.card import Card
 from app.models.episode import Episode
 from app.models.preferences import Preferences
+from app.models.series import Series
 from app.schemas.font import DefaultFont
-from app.schemas.card import NewTitleCard, TitleCard
+from app.schemas.card import NewTitleCard
 from app.schemas.card_type import LocalCardTypeModels
-from app.schemas.series import Series
 from modules.BaseCardType import BaseCardType
 
 from modules.CleanPath import CleanPath
@@ -39,14 +39,14 @@ def create_all_title_cards(*, log: Logger = log) -> None:
     and Episodes in the Database.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     try:
         # Get the Database
         with next(get_database()) as db:
             # Get all Series
-            all_series = db.query(models.series.Series).all()
+            all_series = db.query(Series).all()
             for series in all_series:
                 # Set watch statuses of all Episodes
                 update_episode_watch_statuses(
@@ -78,7 +78,7 @@ def remove_duplicate_cards(*, log: Logger = log) -> None:
     from the database.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     try:
@@ -119,7 +119,7 @@ def refresh_all_remote_card_types(*, log: Logger = log) -> None:
     Schedule-able function to refresh all specified RemoteCardTypes.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     try:
@@ -143,7 +143,7 @@ def refresh_remote_card_types(
     Args:
         db: Database to query for remote card type identifiers.
         reset: Whether to reset the existing RemoteFile database.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     # Function to get all unique card types for the table model
@@ -154,7 +154,7 @@ def refresh_remote_card_types(
     preferences = get_preferences()
     card_identifiers = {preferences.default_card_type} \
         | _get_unique_card_types(models.template.Template) \
-        | _get_unique_card_types(models.series.Series) \
+        | _get_unique_card_types(Series) \
         | _get_unique_card_types(models.episode.Episode)
 
     # Reset loaded remote file(s)
@@ -217,11 +217,14 @@ def validate_card_type_model(
     Args:
         preferences: Preferences to query the BaseCardType class from.
         card_settings: Dictionary of Card settings.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         Tuple of the `BaseCardType` class (which can be used to create
         the card) and the Pydantic model of that card.
+
+    Raises:
+        HTTPException (400): The indicated card settings are invalid.
     """
 
     # Initialize class of the card type being created
@@ -268,7 +271,7 @@ def create_card(
         CardClass: Class to initialize for Card creation.
         CardTypeModel: Pydantic model for this Card to pass the
             attributes of to the CardClass.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     # Create card
@@ -298,7 +301,7 @@ def resolve_card_settings(
     Args:
         preferences: Preferences with the default global settings.
         episode: Episode whose Card settings are being resolved.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         List of CardAction strings if some error occured in setting
@@ -554,18 +557,21 @@ def create_episode_card(
         background_tasks: Optional BackgroundTasks to queue card
             creation within.
         episode: Episode whose Card is being created.
-        raise_exc: (Keyword) Whether to raise or ignore any
-            HTTPExceptions.
-        log: (Keyword) Logger for all log messages.
+        raise_exc: Whether to raise or ignore any HTTPExceptions.
+        log: Logger for all log messages.
+
+    Raises:
+        HTTPException: If the card settings are invalid and `raise_exc`
+            is True.
     """
 
     # Resolve Card settings
     series = episode.series
     try:
         card_settings = resolve_card_settings(preferences, episode, log=log)
-    except HTTPException as e:
+    except HTTPException as exc:
         if raise_exc:
-            raise e
+            raise exc
         return None
 
     # Create NewTitleCard object for these settings
@@ -630,54 +636,46 @@ def create_episode_card(
 
 
 def update_episode_watch_statuses(
-        emby_interface: Optional[EmbyInterface],
-        jellyfin_interface: Optional[JellyfinInterface],
-        plex_interface: Optional[PlexInterface],
+        emby_interfaces: InterfaceGroup[int, EmbyInterface],
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface],
+        plex_interfaces: InterfaceGroup[int, PlexInterface],
         series: Series,
         episodes: list[Episode],
         *,
         log: Logger = log,
     ) -> None:
     """
-    Update the watch statuses of all Episodes for the given Series.
+    Update the watch statuses of all Episodes for the given Series. Only
+    the first library provided for each media server is queried.
 
     Args:
-        *_interface: Interface to the media server to query for updated
-            watch statuses.
+        *_interfaces: Interfaces to the media server to query for
+            updated watch statuses.
         series: Series whose Episodes are being updated.
         episodes: List of Episodes to update the statuses of.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
-    if series.emby_library_name is not None:
-        if emby_interface is None:
-            log.warning(f'{series.log_str} Cannot query watch statuses - no Emby connection')
-        else:
-            emby_interface.update_watched_statuses(
-                series.emby_library_name,
-                series.as_series_info,
-                episodes,
+    for interface_id, library in series.get_libraries('Emby'):
+        if (interface := emby_interfaces[interface_id]):
+            interface.update_watched_statuses(
+                library, series.as_series_info, episodes, log=log,
             )
-    elif series.jellyfin_library_name is not None:
-        if jellyfin_interface is None:
-            log.warning(f'{series.log_str} Cannot query watch statuses - no Jellyfin connection')
-        else:
-            jellyfin_interface.update_watched_statuses(
-                series.jellyfin_library_name,
-                series.as_series_info,
-                episodes,
-                log=log,
+            break
+    for interface_id, library in series.get_libraries('Jellyfin'):
+        if (interface := jellyfin_interfaces[interface_id]):
+            interface.update_watched_statuses(
+                library, series.as_series_info, episodes, log=log,
             )
-    elif series.plex_library_name is not None:
-        if plex_interface is None:
-            log.warning(f'{series.log_str} Cannot query watch statuses - no Plex connection')
-        else:
-            plex_interface.update_watched_statuses(
-                series.plex_library_name,
-                series.as_series_info,
-                episodes,
-                log=log,
+            break
+    for interface_id, library in series.get_libraries('Plex'):
+        if (interface := plex_interfaces[interface_id]):
+            interface.update_watched_statuses(
+                library, series.as_series_info, episodes, log=log,
             )
+            break
+
+    return None
 
 
 def delete_cards(
@@ -696,7 +694,7 @@ def delete_cards(
         card_query: SQL query for Cards whose card files to delete.
             Query contents itself are also deleted.
         loaded_query: SQL query for loaded assets to delete.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         List of file names of the deleted cards.
