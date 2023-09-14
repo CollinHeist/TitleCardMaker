@@ -1,6 +1,6 @@
 from pathlib import Path
 from re import sub as re_sub, IGNORECASE
-from typing import Any
+from typing import Any, Iterator, Literal, Optional
 
 from sqlalchemy import (
     Boolean, Column, Float, ForeignKey, Integer, String, JSON, func
@@ -65,7 +65,7 @@ class Series(Base):
     directory = Column(String, default=None)
     libraries = Column(MutableList.as_mutable(JSON), default=[], nullable=False)
     card_filename_format = Column(String, default=None)
-    episode_data_source = Column(String, default=None)
+    data_source = Column(MutableDict.as_mutable(JSON), default=None)
     sync_specials = Column(Boolean, default=None)
     skip_localized_images = Column(Boolean, default=None)
     translations = Column(MutableList.as_mutable(JSON), default=None)

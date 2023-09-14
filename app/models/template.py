@@ -116,7 +116,7 @@ class Template(Base):
     filters = Column(MutableList.as_mutable(JSON), default=[], nullable=False)
 
     card_filename_format = Column(String, default=None)
-    episode_data_source = Column(String, default=None)
+    data_source = Column(MutableDict.as_mutable(JSON), default=None)
     sync_specials = Column(Boolean, default=None)
     skip_localized_images = Column(Boolean, default=None)
     translations = Column(
