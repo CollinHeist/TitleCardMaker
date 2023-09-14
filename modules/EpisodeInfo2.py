@@ -123,7 +123,6 @@ class EpisodeInfo(DatabaseInfoContainer):
         self.tmdb_id = None
         self.tvdb_id = None
         self.tvrage_id = None
-        self.airdate = None
 
         # Update each ID
         self.set_imdb_id(imdb_id)
