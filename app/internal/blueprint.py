@@ -250,14 +250,14 @@ def query_all_blueprints(
     cached for up to 3 hours.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         List of RemoteMasterBlueprints for all Series.
 
     Raises:
-        HTTPException (500) if the mater Blueprint file cannot be
-            decoded as JSON.
+        HTTPException (500): The mater Blueprint file cannot be decoded
+            as JSON.
     """
 
     # If cached content has expired, re-request and update cache
@@ -303,13 +303,13 @@ def query_series_blueprints(
     Args:
         series_full_name: Full name of the Series whose Blueprints are
             being queried.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         List of RemoteBlueprints found for the given Series.
 
     Raises:
-        HTTPException (500) if the Blueprint file cannot be decoded as
+        HTTPException (500): The Blueprint file cannot be decoded as
             JSON.
     """
 
@@ -364,7 +364,7 @@ def get_blueprint_by_id(
     Args:
         series: Series whose Blueprints to query.
         blueprint_id: ID of the Blueprint to return.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     # Get all available Blueprints, return only one with matching ID
@@ -396,7 +396,7 @@ def import_blueprint(
         preferences: Preferences to use for the asset directory.
         series: Series the imported Blueprint is affecting.
         blueprint: Blueprint to parse for imported settings.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     # Get subfolder for this Series
