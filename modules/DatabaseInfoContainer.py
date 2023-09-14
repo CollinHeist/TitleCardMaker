@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 from modules.Debug import log
 
@@ -27,6 +27,16 @@ class InterfaceID:
     >>> print(iid[2])
     999
 
+    IDs can also be compared with `<` and `>` for evaluating which
+    contains more or less information. For example:
+
+    >>> id0 = InterfaceID('0:123,1:234')
+    >>> id1 = InterfaceID('0:123')
+    >>> id0 > id1
+    True
+    >>> id0 > '0:123,1:999'
+    False
+
     The intention is to be able to represent a collection of interface
     ID's with a single string that can be stored in a DB, while also
     providing ID-related functionality.
@@ -40,7 +50,7 @@ class InterfaceID:
             id_: Optional[str] = None,
             /,
             *,
-            type_: Optional[Callable] = None,
+            type_: Callable = str,
         ) -> None:
         """
         Construct a new InterfaceID object from the given ID string.
@@ -55,19 +65,6 @@ class InterfaceID:
         # No ID provided
         if id_ is None:
             self._ids = {}
-        # No type provided, parse directly
-        elif type_ is None:
-            if '-' in id_:
-                self._ids = {
-                    int(substr.split('-')[0]): substr.split('-')[1]
-                    for substr in id_.split(self.INTER_INTERFACE_KEY)
-                }
-            else:
-                self._ids = {
-                    int(substr.split(self.INTER_ID_KEY)[0]):
-                        substr.split(self.INTER_ID_KEY)[1]
-                    for substr in id_.split(self.INTER_INTERFACE_KEY)
-                }
         else:
             if '-' in id_:
                 self._ids = {
@@ -135,6 +132,52 @@ class InterfaceID:
         )
 
 
+    def __gt__(self, other: Union[str, 'InterfaceID']) -> bool:
+        """
+        Evaluate whether this object contains more information than is
+        available in the comparison ID.
+
+        >>> id0 = InterfaceID('0:123,1:234,2:345')
+        >>> id1 = InterfaceID('0:123')
+        >>> id0 > id1
+        True
+        >>> id0 > '0:123,1:234,2:999'
+        False
+
+        Returns:
+            True if this object defines an ID for an interface which is
+            not defined in `other`. False otherwise.
+        """
+
+        if isinstance(other, str):
+            return self >= InterfaceID(other)
+
+        return set(self._ids) >= set(other._ids)
+
+
+    def __lt__(self, other: Union[str, 'InterfaceID']) -> bool:
+        """
+        Evaluate whether this object contains less information than is
+        available in the comparison ID.
+
+        >>> id0 = InterfaceID('0:123,1:234,2:345')
+        >>> id1 = InterfaceID('0:123')
+        >>> id1 < id0
+        True
+        >>> id0 > '0:123,1:234,2:999'
+        False
+
+        Returns:
+            True if this object is missing an ID for an interface which
+            is defined in `other`. False otherwise.
+        """
+
+        if isinstance(other, str):
+            return self <= InterfaceID(other)
+
+        return set(self._ids) <= set(other._ids)
+
+
     def __bool__(self) -> bool:
         """
         Get the boolean value of this ID.
@@ -149,7 +192,7 @@ class InterfaceID:
     def __repr__(self) -> str:
         """Get an unambigious representation of this object."""
 
-        return f'<InterfaceId {self._ids}>'
+        return f'<InterfaceID {self._ids}>'
 
 
     def __str__(self) -> str:
@@ -162,6 +205,30 @@ class InterfaceID:
             f'{key}{self.INTER_ID_KEY}{value}'
             for key, value in self._ids.items()
         )
+
+
+    def __add__(self, other: Union[str, 'InterfaceID']) -> None:
+        """
+        Add this object to the given object, returning the combination
+        of their IDs.
+
+        >>> id0 = InterfaceID('0:123,1:234')
+        >>> (str(id0 + InterfaceID('1:999,2:987'))
+        '0:123,1:234,2:987'
+        """
+        
+        if not isinstance(other, (str, InterfaceID)):
+            raise TypeError('Can only add IDs from a str or InterfaceID')
+
+        if isinstance(other, str):
+            other = InterfaceID(other, type_=self._type)
+
+        return_id = InterfaceID(str(self), type_=self._type)
+        for interface_id, id_ in other._ids.items():
+            if id_.get(interface_id) is None:
+                return_id[interface_id] = id_
+
+        return return_id
 
 
 class DatabaseInfoContainer(ABC):
