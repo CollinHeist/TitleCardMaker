@@ -235,26 +235,26 @@ def run_sync_(
         sync_id: int,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_all_emby_interfaces),
+        imagemagick_interface: ImageMagickInterface = Depends(get_imagemagick_interface),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_all_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_all_plex_interfaces),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_all_sonarr_interfaces),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
     ) -> list[Series]:
     """
     Run the given Sync by querying the assigned interface, adding any
     new series to the database. Return a list of any new Series.
 
-    - sync_id: ID of the sync to run.
+    - sync_id: ID of the Sync to run.
     """
 
     # Get existing Sync, raise 404 if DNE
     sync = get_sync(db, sync_id, raise_exc=True)
 
     return run_sync(
-        db, preferences, sync, emby_interface, imagemagick_interface,
-        jellyfin_interface, plex_interface, sonarr_interface,
-        tmdb_interface,
-        background_tasks=background_tasks, log=request.state.log,
+        db, preferences, sync, emby_interfaces, imagemagick_interface,
+        jellyfin_interfaces, plex_interfaces, sonarr_interfaces,
+        tmdb_interface, background_tasks=background_tasks,
+        log=request.state.log,
     )
