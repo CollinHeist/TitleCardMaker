@@ -63,7 +63,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
             use_magick_prefix: Whether to use 'magick' command prefix.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Raises:
             SystemExit: Invalid URL/API key provided.
@@ -173,7 +173,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         Args:
             library_name: Name of the library containing the series.
             series_info: The series being evaluated.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             None if the series is not found. The Jellyfin ID of the
@@ -256,7 +256,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         Args:
             library_name: The name of the library containing the series.
             series_info: Series to set the ID of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # If all possible ID's are defined
@@ -298,7 +298,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             library_name: Name of the library the series is under.
             series_info: Series to get the episodes of.
             infos: List of EpisodeInfo objects to set the ID's of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # Get all episodes for this series
@@ -323,7 +323,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         Args:
             query: Series name or substring to look up.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of SearchResults for the given query. Results are from
@@ -419,7 +419,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             excluded_tags: Optional list of tags to filter return by. If
                 provided, series with any of the given tags are not
                 returned.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of tuples whose elements are the SeriesInfo and its
@@ -504,7 +504,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         Args:
             library_name: The name of the library containing the series.
             series_info: Series to get the episodes of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of EpisodeInfo objects for this series.
@@ -568,6 +568,8 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             library_name: str,
             series_info: SeriesInfo,
             episodes: list['Episode'], # type: ignore
+            *,
+            log: Logger = log,
         ) -> None:
         """
         Modify the Episodes' watched attribute according to the watched
@@ -577,6 +579,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             library_name: The name of the library containing the series.
             series_info: The series to update.
             episodes: List of Episode objects to update.
+            log: Logger for all log messages.
         """
 
         # If no episodes, exit
@@ -620,7 +623,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             series_info: SeriesInfo whose cards are being loaded.
             episode_and_cards: List of tuple of Episode and their
                 corresponding Card objects to load.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # If series has no Emby ID, or no episodes, exit
@@ -677,7 +680,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             library_name: Name of the library the series is under.
             series_info: The series to get the source image of.
             episode_info: The episode to get the source image of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             Bytes of the source image for the given Episode. None if the
@@ -716,7 +719,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         Args:
             series_info: The series to get the poster of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             URL to the poster for the given series. None if the library,
@@ -755,7 +758,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         Args:
             library_name: Name of the library containing the series.
             series_info: The series to get the logo of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             Bytes of the logo for given series. None if the series does
