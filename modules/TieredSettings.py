@@ -1,4 +1,7 @@
-from typing import Any
+from typing import Any, Optional, TypeVar
+
+
+_Setting = TypeVar('_Setting')
 
 
 class TieredSettings:
@@ -19,7 +22,7 @@ class TieredSettings:
 
     def __init__(self,
             merge_base: dict,
-            *dicts: tuple[dict]
+            *dicts: tuple[dict[str, _Setting]],
         ) -> None:
         """
         Initialize a new TieredSettings object. This merges the given
@@ -94,7 +97,7 @@ class TieredSettings:
 
 
     @staticmethod
-    def resolve_singular_setting(*values: Any) -> Any:
+    def resolve_singular_setting(*values: tuple[_Setting]) -> Optional[_Setting]:
         """
         Get the highest priority (non-None) value of the given values.
 
