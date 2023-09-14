@@ -189,20 +189,13 @@ def get_all_episode_source_images_on_tmdb(
         request: Request,
         episode_id: int,
         db: Session = Depends(get_database),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
+        tmdb_interface: TMDbInterface = Depends(require_tmdb_interface),
     ) -> list[TMDbImage]:
     """
     Get all Source Images on TMDb for the given Episode.
 
     - episode_id: ID of the Episode to get the Source Images of.
     """
-
-    # If no TMDb connection, raise 409
-    if tmdb_interface is None:
-        raise HTTPException(
-            status_code=409,
-            detail=f'No connection to TMDb'
-        )
 
     # Get the Episode, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
@@ -229,7 +222,7 @@ def get_all_series_logos_on_tmdb(
         request: Request,
         series_id: int,
         db: Session = Depends(get_database),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
+        tmdb_interface: TMDbInterface = Depends(require_tmdb_interface),
     ) -> list[TMDbImage]:
     """
     Get a list of all the logos available for the specified Series on
@@ -237,13 +230,6 @@ def get_all_series_logos_on_tmdb(
 
     - series_id: ID of the Series whose logos are being requested.
     """
-
-    # If no TMDb connection, raise 409
-    if tmdb_interface is None:
-        raise HTTPException(
-            status_code=409,
-            detail=f'No connection to TMDb'
-        )
 
     # Get the Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
@@ -262,7 +248,7 @@ def get_all_series_backdrops_on_tmdb(
         request: Request,
         series_id: int,
         db: Session = Depends(get_database),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
+        tmdb_interface: TMDbInterface = Depends(require_tmdb_interface),
     ) -> list[TMDbImage]:
     """
     Get a list of all the backdrops available for the specified Series
@@ -270,13 +256,6 @@ def get_all_series_backdrops_on_tmdb(
 
     - series_id: ID of the Series whose backdrops are being requested.
     """
-
-    # If no TMDb connection, raise 409
-    if tmdb_interface is None:
-        raise HTTPException(
-            status_code=409,
-            detail=f'No connection to TMDb'
-        )
 
     # Get the Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
@@ -319,7 +298,7 @@ def get_existing_episode_source_images(
         episode_id: int,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
+        imagemagick_interface: ImageMagickInterface = Depends(get_imagemagick_interface),
     ) -> SourceImage:
     """
     Get the SourceImage details for the given Episode.
@@ -341,7 +320,7 @@ async def set_episode_source_image(
         file: Optional[UploadFile] = None,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
+        imagemagick_interface: ImageMagickInterface = Depends(get_imagemagick_interface),
     ) -> SourceImage:
     """
     Set the Source Image for the given Episode. If there is an existing
@@ -426,7 +405,7 @@ async def set_series_logo(
         file: Optional[UploadFile] = None,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
+        imagemagick_interface: ImageMagickInterface = Depends(get_imagemagick_interface),
     ) -> None:
     """
     Set the logo for the given Series. If there is an existing logo
@@ -502,7 +481,6 @@ async def set_series_backdrop(
         file: Optional[UploadFile] = None,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
     ) -> None:
     """
     Set the backdrop for the given Series. If there is an existing
