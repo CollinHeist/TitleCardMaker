@@ -170,7 +170,7 @@ nav:
     - Importer: user_guide/importer.md
   - Card Types:
     - card_types/index.md
-    # - Local:
+    - Local: card_types/local.md
     #   - Anime: card_types/local/anime.md
     #   - Cutout: card_types/local/cutout.md
     #   - Divider: card_types/local/divider.md
