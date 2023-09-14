@@ -31,10 +31,10 @@ def add_new_episode(
         request: Request,
         new_episode: NewEpisode = Body(...),
         db: Session = Depends(get_database),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_all_emby_interfaces),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_all_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_all_plex_interfaces),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_all_sonarr_interfaces),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Episode:
     """
@@ -61,8 +61,8 @@ def add_new_episode(
 
     # Add ID's for this Episode
     set_episode_ids(
-        db, series, [episode], emby_interface, jellyfin_interface,
-        plex_interface, sonarr_interface, tmdb_interface, log=request.state.log,
+        db, series, [episode], emby_interfaces, jellyfin_interfaces,
+        plex_interfaces, sonarr_interfaces, tmdb_interface, log=request.state.log,
     )
 
     return episode
@@ -78,8 +78,9 @@ def get_episode_by_id(
 
     - episode_id: ID of the Episode to retrieve.
     """
-
-    return get_episode(db, episode_id, raise_exc=True)
+    episode = get_episode(db, episode_id, raise_exc=True)
+    log.info(f'{episode.as_episode_info=!r}')
+    return episode
 
 
 @episodes_router.delete('/{episode_id}', status_code=204)
@@ -148,10 +149,10 @@ def refresh_episode_data_(
         series_id: int,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_all_emby_interfaces),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_all_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_all_plex_interfaces),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_all_sonarr_interfaces),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> None:
     """
@@ -167,10 +168,9 @@ def refresh_episode_data_(
 
     # Refresh episode data, use BackgroundTasks for ID assignment
     refresh_episode_data(
-        db, preferences,
-        series,
-        emby_interface, jellyfin_interface, plex_interface, sonarr_interface,
-        tmdb_interface, background_tasks, log=request.state.log,
+        db, preferences, series, emby_interfaces, jellyfin_interfaces,
+        plex_interfaces, sonarr_interfaces, tmdb_interface, background_tasks,
+        log=request.state.log,
     )
 
 
