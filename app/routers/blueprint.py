@@ -43,10 +43,10 @@ def export_series_blueprint(
         include_episode_overrides: bool = Query(default=True),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_all_emby_interfaces),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_all_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_all_plex_interfaces),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_all_sonarr_interfaces),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> BlankBlueprint:
     """
@@ -69,8 +69,8 @@ def export_series_blueprint(
     episode_data = []
     if include_episode_overrides:
         episode_data = get_all_episode_data(
-            preferences, series, emby_interface, jellyfin_interface,
-            plex_interface, sonarr_interface, tmdb_interface, raise_exc=False,
+            preferences, series, emby_interfaces, jellyfin_interfaces,
+            plex_interfaces, sonarr_interfaces, tmdb_interface, raise_exc=False,
             log=request.state.log,
         )
 
@@ -123,10 +123,10 @@ async def export_series_blueprint_as_zip(
         include_episode_overrides: bool = Query(default=True),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_all_emby_interfaces),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_all_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_all_plex_interfaces),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_all_sonarr_interfaces),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> FileResponse:
     """
@@ -151,8 +151,8 @@ async def export_series_blueprint_as_zip(
     episode_data = []
     if include_episode_overrides:
         episode_data = get_all_episode_data(
-            preferences, series, emby_interface, jellyfin_interface,
-            plex_interface, sonarr_interface, tmdb_interface, raise_exc=False,
+            preferences, series, emby_interfaces, jellyfin_interfaces,
+            plex_interfaces, sonarr_interfaces, tmdb_interface, raise_exc=False,
             log=request.state.log,
         )
         # Get just the EpisodeInfo objects
@@ -355,11 +355,11 @@ def import_blueprint_and_series(
         blueprint: RemoteMasterBlueprint = Body(...),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interface),
+        imagemagick_interface: ImageMagickInterface = Depends(get_imagemagick_interface),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interface),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interface),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_all_sonarr_interfaces),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Series:
     """
@@ -390,9 +390,9 @@ def import_blueprint_and_series(
         log.debug(f'Blueprint Series {series_info} not found - adding to database')
         series = add_series(
             NewSeries(name=series_info.name, year=series_info.year),
-            background_tasks, db, preferences, emby_interface,
-            imagemagick_interface, jellyfin_interface, plex_interface,
-            sonarr_interface, tmdb_interface, log=log,
+            background_tasks, db, preferences, emby_interfaces,
+            imagemagick_interface, jellyfin_interfaces, plex_interfaces,
+            sonarr_interfaces, tmdb_interface, log=log,
         )
 
     # Import Blueprint
