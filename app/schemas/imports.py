@@ -1,4 +1,4 @@
-# pylint: disable=missing-class-docstring,missing-function-docstring
+# pylint: disable=missing-class-docstring,missing-function-docstring,no-name-in-module
 from typing import Optional
 
 from pydantic import DirectoryPath, Field

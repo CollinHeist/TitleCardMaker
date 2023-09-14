@@ -1,3 +1,4 @@
+# pylint: disable=missing-class-docstring
 from typing import Optional
 
 from app.schemas.base import Base
@@ -16,4 +17,3 @@ class AvailableSeries(Base):
 class AvailableTemplate(Base):
     id: int
     name: str
-

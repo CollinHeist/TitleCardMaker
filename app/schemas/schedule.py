@@ -1,4 +1,4 @@
-# pylint: disable=missing-class-docstring,missing-function-docstring
+# pylint: disable=missing-class-docstring,missing-function-docstring,no-name-in-module
 from datetime import datetime, timedelta
 from typing import Callable, Optional
 

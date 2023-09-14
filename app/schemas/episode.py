@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Any, Optional
 
-from pydantic import PositiveFloat, root_validator, validator
+from pydantic import PositiveFloat, root_validator, validator # pylint: disable=no-name-in-module
 
 from app.schemas.base import (
     Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
