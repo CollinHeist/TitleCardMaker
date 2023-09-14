@@ -402,3 +402,56 @@ class Series(Base):
         """
 
         return Path(source_base) / self.path_safe_name / 'backdrop.jpg'
+
+
+    @hybrid_method
+    def get_libraries(self,
+            media_server: Literal['Emby', 'Jellyfin', 'Plex'],
+        ) -> Iterator[tuple[int, str]]:
+        """
+        Iterate over this Series' libraries of the given server type.
+        >>> s = Series(...)
+        >>> s.libraries = [
+            {'media_server': 'Emby', 'interface_id': 0, 'name': 'TV'},
+            {'media_server': 'Plex', 'interface_id': 0, 'name': 'TV'},
+            {'media_server': 'Plex', 'interface_id': 1, 'name': 'Anime'},
+        ]
+        >>> list(s.get_libraries('Plex'))
+        [(0, 'TV'), (1, 'Anime')]
+
+        Args:
+            media_server: Media server whose libraries to yield.
+
+        Yields:
+            Tuple of the interface ID and library name.
+        """
+
+        for library in self.libraries:
+            if library['media_server'] == media_server:
+                yield library['interface_id'], library['name']
+
+
+    @hybrid_method
+    def get_library(self,
+            media_server: Literal['Emby', 'Jellyfin', 'Plex'],
+            interface_id: int,
+        ) -> Optional[str]:
+        """
+        Get this Series' library name with the given server type and
+        interface ID.
+
+        Args:
+            media_server: Media server of the library.
+            interface_id: Interface ID of the library.
+
+        Returns:
+            Name of the library with the given server + ID match; None
+            if there is no matching library.
+        """
+
+        for library in self.libraries:
+            if (library['media_server'] == media_server
+                and library['interface_id'] == interface_id):
+                return library['name']
+
+        return None
