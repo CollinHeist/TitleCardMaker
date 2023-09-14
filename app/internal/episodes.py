@@ -217,10 +217,10 @@ def refresh_episode_data(
         db: Session,
         preferences: Preferences,
         series: Series,
-        emby_interface: Optional[EmbyInterface],
-        jellyfin_interface: Optional[JellyfinInterface],
-        plex_interface: Optional[PlexInterface],
-        sonarr_interface: Optional[SonarrInterface],
+        emby_interfaces: InterfaceGroup[int, EmbyInterface],
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface],
+        plex_interfaces: InterfaceGroup[int, PlexInterface],
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface],
         tmdb_interface: Optional[TMDbInterface],
         background_tasks: Optional[BackgroundTasks] = None,
         *,
@@ -236,22 +236,23 @@ def refresh_episode_data(
         db: Database to read/update/modify.
         preferences: Preferences to reference global settings.
         series: Series whose episodes are being refreshed.
-        *_interface: Interface(s) to set ID's from.
+        *_interface(s): Interface(s) to set ID's from.
         background_tasks: Optional BackgroundTasks queue to add the
             Episode ID assignment task to, if provided. If omitted then
             the assignment is done in a blocking manner.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Raises:
-        HTTPException (404) if the Series Template DNE.
-        HTTPException (409) if the indicted Episode data source cannot
+        HTTPException (404): A Series Template does not exist.
+        HTTPException (409): The indicted Episode data source cannot
             be communicated with.
     """
 
     # Get all Episodes for this Series from the Episode data source
     all_episodes = get_all_episode_data(
-        preferences, series, emby_interface, jellyfin_interface, plex_interface,
-        sonarr_interface, tmdb_interface, raise_exc=True, log=log,
+        preferences, series, emby_interfaces, jellyfin_interfaces,
+        plex_interfaces, sonarr_interfaces, tmdb_interface, raise_exc=True,
+        log=log,
     )
 
     # Get effective episode data source and sync specials toggle
@@ -271,14 +272,14 @@ def refresh_episode_data(
             continue
 
         # Check if this Episode exists in the database already
-        existing = db.query(models.episode.Episode)\
-            .filter(episode_info.filter_conditions(models.episode.Episode))\
+        existing = db.query(Episode)\
+            .filter(episode_info.filter_conditions(Episode))\
             .first()
 
         # Episode does not exist, add
         if existing is None:
             log.info(f'{series.log_str} New Episode "{episode_info.title.full_title}"')
-            episode = models.episode.Episode(
+            episode = Episode(
                 series=series,
                 title=episode_info.title.full_title,
                 **episode_info.indices,
@@ -315,16 +316,15 @@ def refresh_episode_data(
     # Set Episode ID's for all new Episodes as background task or directly
     if background_tasks is None:
         set_episode_ids(
-            db, series, episodes,
-            emby_interface, jellyfin_interface, plex_interface,
-            sonarr_interface, tmdb_interface, log=log,
+            db, series, episodes, emby_interfaces, jellyfin_interfaces,
+            plex_interfaces, sonarr_interfaces, tmdb_interface, log=log,
         )
     else:
         background_tasks.add_task(
             set_episode_ids,
-            db, series, episodes,
-            emby_interface, jellyfin_interface, plex_interface, sonarr_interface,
-            tmdb_interface, log=log
+            # Arguments
+            db, series, episodes, emby_interfaces, jellyfin_interfaces,
+            plex_interfaces, sonarr_interfaces, tmdb_interface, log=log
         )
 
     # Commit to database if changed
