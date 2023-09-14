@@ -4,8 +4,8 @@ from typing import Literal, Union
 from fastapi import HTTPException
 
 from app.dependencies import (
-    refresh_emby_interface, refresh_jellyfin_interface, refresh_plex_interface,
-    refresh_sonarr_interface, refresh_sonarr_interfaces, refresh_tmdb_interface,
+    refresh_emby_interfaces, refresh_jellyfin_interfaces, refresh_plex_interfaces,
+    refresh_sonarr_interfaces, refresh_tmdb_interface,
 )
 from app.models.preferences import Preferences
 from app.schemas.base import UNSPECIFIED
@@ -15,27 +15,22 @@ from app.schemas.preferences import (
 from modules.Debug import log
 
 
-UpdateConnection = Union[
-    UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb
-]
+UpdateConnection = Union[UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr]
 
 
-def update_connection(
+def update_tmdb(
         preferences: Preferences,
-        update_object: UpdateConnection,
-        connection: Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
+        update_object: UpdateTMDb,
         *,
         log: Logger = log,
     ) -> Preferences:
     """
-    Update the connection details for the given connection, refreshing
-    the interface if any attributes were changed.
+    Update the connection details for TMDb, refreshing the interface if
+    any attributes were changed.
 
     Args:
         preferences: Preferences to update the connection attributes of.
         update_object: Update object with attributes to update.
-        connection: Name of the connection being updated. Used as the
-            prefix for the updated attributes, e.g. emby_*.
         log: (Keyword) Logger for all log messages.
 
     Returns:
@@ -46,39 +41,28 @@ def update_connection(
     changed = False
     for attribute, value in update_object.dict().items():
         if (value != UNSPECIFIED
-            and value != getattr(preferences, f'{connection}_{attribute}')):
-            setattr(preferences, f'{connection}_{attribute}', value)
-            if f'{connection}_{attribute}' in preferences.PRIVATE_ATTRIBUTES:
-                log.debug(f'Preferences.{connection}_{attribute} = *****')
+            and value != getattr(preferences, f'tmdb_{attribute}')):
+            setattr(preferences, f'tmdb_{attribute}', value)
+            if attribute.endswith(('_key', '_url')):
+                log.debug(f'Preferences.tmdb_{attribute} = *****')
             else:
-                log.debug(f'Preferences.{connection}_{attribute} = {value}')
+                log.debug(f'Preferences.tmdb_{attribute} = {value}')
             changed = True
 
-    # Refresh interface if changed
-    if changed and getattr(preferences, f'use_{connection}'):
-        if connection == 'emby':
-            refresh_emby_interface(log=log)
-        elif connection == 'jellyfin':
-            refresh_jellyfin_interface(log=log)
-        elif connection == 'plex':
-            refresh_plex_interface(log=log)
-        elif connection == 'sonarr':
-            refresh_sonarr_interface(log=log)
-        elif connection == 'tmdb':
-            refresh_tmdb_interface(log=log)
-
-    # Commit changes
+    # Refresh interface (if enabled), and write changes
     if changed:
+        if preferences.use_tmdb:
+            refresh_tmdb_interface(log=log)
         preferences.commit(log=log)
 
     return preferences
 
 
-def update_connection2(
+def update_connection(
         preferences: Preferences,
         interface_id: int,
         update_object: UpdateConnection,
-        connection: Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
+        connection: Literal['emby', 'jellyfin', 'plex', 'sonarr'],
         *,
         log: Logger = log,
     ) -> Preferences:
@@ -115,7 +99,7 @@ def update_connection2(
         if (value != UNSPECIFIED
             and value != interface_args[attribute]):
             interface_args[attribute] = value
-            if f'{connection}_{attribute}' in preferences.PRIVATE_ATTRIBUTES:
+            if attribute in ('url', 'api_key'):
                 log.debug(f'Preferences.{connection}[{interface_id}].{attribute} = *****')
             else:
                 log.debug(f'Preferences.{connection}[{interface_id}].{attribute} = {value}')
@@ -124,19 +108,13 @@ def update_connection2(
     # Refresh interface if changed
     if changed and interface_args['enabled']:
         if connection == 'emby':
-            # TODO populate
-            ...
+            refresh_emby_interfaces(interface_id, log=log)
         elif connection == 'jellyfin':
-            # TODO populate
-            ...
+            refresh_jellyfin_interfaces(interface_id, log=log)
         elif connection == 'plex':
-            # TODO populate
-            ...
+            refresh_plex_interfaces(interface_id, log=log)
         elif connection == 'sonarr':
             refresh_sonarr_interfaces(interface_id, log=log)
-        elif connection == 'tmdb':
-            # TODO populate
-            ...
 
     # Commit changes
     if changed:
