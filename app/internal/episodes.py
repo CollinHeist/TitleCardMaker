@@ -9,9 +9,10 @@ from sqlalchemy.orm import Session
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.templates import get_effective_series_template
 from app import models
+from app.models.episode import Episode
 from app.models.series import Series
 from app.models.preferences import Preferences
-from app.schemas.episode import Episode
+from app.schemas.preferences import EpisodeDataSource
 
 from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
@@ -29,7 +30,7 @@ def refresh_all_episode_data(*, log: Logger = log) -> None:
     the Database.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     try:
@@ -60,10 +61,10 @@ def set_episode_ids(
         db: Session,
         series: Series,
         episodes: list[Episode],
-        emby_interface: Optional[EmbyInterface],
-        jellyfin_interface: Optional[JellyfinInterface],
-        plex_interface: Optional[PlexInterface],
-        sonarr_interface: Optional[SonarrInterface],
+        emby_interfaces: InterfaceGroup[int, EmbyInterface],
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface],
+        plex_interfaces: InterfaceGroup[int, PlexInterface],
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface],
         tmdb_interface: Optional[TMDbInterface],
         *,
         log: Logger = log,
@@ -76,31 +77,31 @@ def set_episode_ids(
         db: Database to read/update/modify.
         series: Series of the Episodes whose ID's are being set.
         episodes: List of Episodes to set the ID's of.
-        *_interface: Interface(s) to set ID's from.
-        log: (Keyword) Logger for all log messages.
+        *_interface(s): Interface(s) to set ID's from.
+        log: Logger for all log messages.
     """
 
     # Get corresponding EpisodeInfo object for this Episode
     episode_infos = [episode.as_episode_info for episode in episodes]
 
     # Set ID's from all possible interfaces
-    if emby_interface and series.emby_library_name:
-        emby_interface.set_episode_ids(
-            series.emby_library_name, series.as_series_info, episode_infos,
-            log=log
-        )
-    if jellyfin_interface and series.jellyfin_library_name:
-        jellyfin_interface.set_episode_ids(
-            series.jellyfin_library_name, series.as_series_info, episode_infos,
-            log=log
-        )
-    if plex_interface and series.plex_library_name:
-        plex_interface.set_episode_ids(
-            series.plex_library_name, series.as_series_info, episode_infos,
-            log=log
-        )
-    if sonarr_interface:
-        sonarr_interface.set_episode_ids(
+    for interface_id, library in series.get_libraries('Emby'):
+        if (interface := emby_interfaces[interface_id]):
+            interface.set_episode_ids(
+                library, series.as_series_info, episode_infos, log=log
+            )
+    for interface_id, library in series.get_libraries('Jellyfin'):
+        if (interface := jellyfin_interfaces[interface_id]):
+            interface.set_episode_ids(
+                library, series.as_series_info, episode_infos, log=log
+            )
+    for interface_id, library in series.get_libraries('Plex'):
+        if (interface := plex_interfaces[interface_id]):
+            interface.set_episode_ids(
+                library, series.as_series_info, episode_infos, log=log
+            )
+    for _, interface in sonarr_interfaces:
+        interface.set_episode_ids(
             None, series.as_series_info, episode_infos, log=log
         )
     if tmdb_interface:
