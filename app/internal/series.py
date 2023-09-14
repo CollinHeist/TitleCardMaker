@@ -16,8 +16,9 @@ from app.internal.cards import refresh_remote_card_types
 from app.internal.episodes import refresh_episode_data
 from app.internal.sources import download_series_logo
 from app.models.episode import Episode
+from app.models.series import Series
 from app.schemas.preferences import MediaServer, Preferences
-from app.schemas.series import NewSeries, Series
+from app.schemas.series import NewSeries
 
 from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
@@ -34,7 +35,7 @@ def set_all_series_ids(*, log: Logger = log) -> None:
     in the Database.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     try:
@@ -42,12 +43,15 @@ def set_all_series_ids(*, log: Logger = log) -> None:
         with next(get_database()) as db:
             # Get all Series
             changed = False
-            for series in db.query(models.series.Series).all():
+            for series in db.query(Series).all():
                 try:
                     changed |= set_series_database_ids(
-                        series, db, get_emby_interface(),
-                        get_jellyfin_interface(), get_plex_interface(),
-                        get_sonarr_interface(), get_tmdb_interface(),
+                        series, db,
+                        get_all_emby_interfaces(),
+                        get_all_jellyfin_interfaces(),
+                        get_all_plex_interfaces(),
+                        get_all_sonarr_interfaces(),
+                        get_tmdb_interface(),
                         commit=False,
                     )
                 except HTTPException:
@@ -67,7 +71,7 @@ def load_all_media_servers(*, log: Logger = log) -> None:
     the media servers.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     try:
@@ -75,8 +79,9 @@ def load_all_media_servers(*, log: Logger = log) -> None:
         retries = 0
         with next(get_database()) as db:
             # Get all Series
-            for series in db.query(models.series.Series).all():
+            for series in db.query(Series).all():
                 # Get the primary Media Server to load cards into
+                # TODO update
                 if series.emby_library_name is not None:
                     media_server = 'Emby'
                 elif series.jellyfin_library_name is not None:
@@ -114,19 +119,23 @@ def download_all_series_posters(*, log: Logger = log) -> None:
     Series in the Database.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     try:
         # Get the Database
         with next(get_database()) as db:
             # Get all Series
-            for series in db.query(models.series.Series).all():
+            for series in db.query(Series).all():
                 try:
                     download_series_poster(
-                        db, get_preferences(), series, get_emby_interface(),
-                        get_imagemagick_interface(), get_jellyfin_interface(),
-                        get_plex_interface(), get_tmdb_interface(), log=log,
+                        db, get_preferences(), series,
+                        get_all_emby_interfaces(),
+                        get_imagemagick_interface(),
+                        get_all_jellyfin_interfaces(),
+                        get_all_plex_interfaces(),
+                        get_tmdb_interface(),
+                        log=log,
                     )
                 except HTTPException:
                     log.warning(f'{series.log_str} Skipping poster selection')
@@ -138,11 +147,11 @@ def download_all_series_posters(*, log: Logger = log) -> None:
 def set_series_database_ids(
         series: Series,
         db: Session,
-        emby_interface: Optional[EmbyInterface] = None,
-        jellyfin_interface: Optional[JellyfinInterface] = None,
-        plex_interface: Optional[PlexInterface] = None,
-        sonarr_interface: Optional[SonarrInterface] = None,
-        tmdb_interface: Optional[TMDbInterface] = None,
+        emby_interfaces: InterfaceGroup[int, EmbyInterface],
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface],
+        plex_interfaces: InterfaceGroup[int, PlexInterface],
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface],
+        tmdb_interface: Optional[TMDbInterface],
         *,
         commit: bool = True,
         log: Logger = log,
@@ -155,7 +164,7 @@ def set_series_database_ids(
         db: Database to commit changes to.
         *_interface: Interface to query for database ID's from.
         commit: Whether to commit changes after setting any ID's.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         Whether the Series was modified.
@@ -163,30 +172,44 @@ def set_series_database_ids(
 
     # Create SeriesInfo object for this entry, query all interfaces
     series_info = series.as_series_info
-    if emby_interface and series.emby_library_name:
-        emby_interface.set_series_ids(
-            series.emby_library_name, series_info, log=log
-        )
-    if jellyfin_interface and series.jellyfin_library_name:
-        jellyfin_interface.set_series_ids(
-            series.jellyfin_library_name, series_info, log=log
-        )
-    if plex_interface and series.plex_library_name:
-        plex_interface.set_series_ids(
-            series.plex_library_name, series_info, log=log,
-        )
-    if sonarr_interface:
-        sonarr_interface.set_series_ids(None, series_info, log=log)
+    for interface_id, library_name in series.get_libraries('Emby'):
+        if (interface := emby_interfaces[interface_id]):
+            interface.set_series_ids(library_name, series_info, log=log)
+    for interface_id, library_name in series.get_libraries('Jellyfin'):
+        if (interface := jellyfin_interfaces[interface_id]):
+            interface.set_series_ids(library_name, series_info, log=log)
+    for interface_id, library_name in series.get_libraries('Plex'):
+        if (interface := plex_interfaces[interface_id]):
+            interface.set_series_ids(library_name, series_info, log=log)
+    if series.primary_sonarr_interface_id is None:
+        for _, interface in sonarr_interfaces:
+            interface.set_series_ids(None, series_info, log=log)
+            break
+    elif (interface := sonarr_interfaces[series.primary_sonarr_interface_id]):
+        interface.set_series_ids(None, series_info, log=log)
     if tmdb_interface:
         tmdb_interface.set_series_ids(None, series_info, log=log)
 
-    # Update database if new ID's are available
+    # Update database if new ID's are available; first do basic IDs
     changed = False
-    for id_type in ('emby_id', 'imdb_id', 'jellyfin_id', 'sonarr_id', 'tmdb_id',
-                    'tvdb_id', 'tvrage_id'):
+    for id_type in ('imdb_id', 'tmdb_id', 'tvdb_id', 'tvrage_id'):
         if getattr(series, id_type) is None and series_info.has_id(id_type):
             setattr(series, id_type, getattr(series_info, id_type))
             changed = True
+
+    # Update interface IDs
+    for id_type in ('emby_id', 'jellyfin_id', 'sonarr_id'): # TODO add rating key
+        # If this InterfaceID contains more data than currently defined, add
+        if getattr(series, id_type) is None:
+            continue # TODO remove when DB migration is added for None -> ''
+        if getattr(series_info, id_type) > getattr(series, id_type):
+            setattr(
+                series,
+                id_type,
+                str(getattr(series_info, id_type) + getattr(series, id_type))
+            )
+            changed = True
+            log.info(f'series.{id_type} = {getattr(series, id_type)}') # TODO temporary logging
 
     if commit and changed:
         db.commit()
@@ -198,10 +221,10 @@ def download_series_poster(
         db: Session,
         preferences: Preferences,
         series: Series,
-        emby_interface: Optional[EmbyInterface] = None,
-        image_magick_interface: Optional[ImageMagickInterface] = None,
-        jellyfin_interface: Optional[JellyfinInterface] = None,
-        plex_interface: Optional[PlexInterface] = None,
+        emby_interfaces: InterfaceGroup[int, EmbyInterface],
+        image_magick_interface: ImageMagickInterface,
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface],
+        plex_interfaces: InterfaceGroup[int, PlexInterface],
         tmdb_interface: Optional[TMDbInterface] = None,
         *,
         log: Logger = log,
@@ -214,16 +237,10 @@ def download_series_poster(
         preferences: Base Preferences to get the global asset directory.
         series: Series to download the poster of.
         *_interface: Interface to TMDb to query for posters.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
-    # Exit if no interface
-    if not any((emby_interface, jellyfin_interface, plex_interface,
-                tmdb_interface)):
-        log.warning(f'{series.log_str} Cannot download poster')
-        return None
-
-    # If Series poster exists and is not a placeholder, return that
+    # If Series poster exists and is not a placeholder, return
     path = Path(series.poster_file)
     if path.name != 'placeholder.jpg' and path.exists():
         poster_url = f'/assets/{series.id}/poster.jpg'
@@ -234,20 +251,27 @@ def download_series_poster(
         return None
 
     # Download poster from Media Server if possible
-    series_info = series.as_series_info
-    poster = None
-    if series.emby_library_name and emby_interface:
-        poster = emby_interface.get_series_poster(
-            series.emby_library_name, series_info, log=log
-        )
-    elif series.jellyfin_library_name and jellyfin_interface:
-        poster = jellyfin_interface.get_series_poster(
-            series.jellyfin_library_name, series_info, log=log,
-        )
-    elif series.plex_library_name and plex_interface:
-        poster = plex_interface.get_series_poster(
-            series.plex_library_name, series_info, log=log,
-        )
+    series_info, poster = series.as_series_info, None
+    for library in series.libraries:
+        if (library['media_server'] == 'Emby'
+            and (interface := emby_interfaces[library['interface_id']])):
+            poster = interface.get_series_poster(
+                library['name'], series_info, log=log
+            )
+        elif (library['media_server'] == 'Jellyfin'
+            and (interface := jellyfin_interfaces[library['interface_id']])):
+            poster = interface.get_series_poster(
+                library['name'], series_info, log=log
+            )
+        elif (library['media_server'] == 'Plex'
+            and (interface := plex_interfaces[library['interface_id']])):
+            poster = interface.get_series_poster(
+                library['name'], series_info, log=log
+            )
+
+        # Stop if poster was found
+        if poster is not None:
+            break
 
     # If no poster was returned, download from TMDb
     if poster is None and tmdb_interface:
@@ -276,12 +300,9 @@ def download_series_poster(
 
     # Create resized small poster
     resized_path = path.parent / 'poster-750.jpg'
-    if image_magick_interface is None:
-        file_copy(series.poster_path, resized_path)
-    else:
-        image_magick_interface.resize_image(
-            path, resized_path, by='width', width=750,
-        )
+    image_magick_interface.resize_image(
+        path, resized_path, by='width', width=750,
+    )
 
     log.debug(f'Series[{series.id}] Downloaded poster {path.resolve()}')
     return None
@@ -301,7 +322,7 @@ def delete_series_and_episodes(
         db: Database to commit any deletion to.
         series: Series to delete.
         commit_changes: Whether to commit Database changes.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     # Delete poster if not the placeholder
@@ -347,7 +368,7 @@ def load_series_title_cards(
             Title Cards into.
         force_reload: Whether to reload Title Cards even if no changes
             are detected.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Raises:
         HTTPException (409) if the specified Media Server cannot be
@@ -356,6 +377,7 @@ def load_series_title_cards(
     """
 
     # Get associated library for the indicated media server
+    # TODO Update
     library = getattr(series, f'{media_server.lower()}_library_name', None)
     interface: Union[EmbyInterface, JellyfinInterface, PlexInterface] = {
         'Emby': emby_interface,
@@ -449,7 +471,7 @@ def load_episode_title_card(
         episode: Episode to load the Title Card of.
         db: Database to look for and add Loaded records from/to.
         plex_interface: Interface to load Title Cards into.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     # Only load if Episode has a Card
@@ -485,6 +507,7 @@ def load_episode_title_card(
     log.debug(f'{episode.series.log_str} {episode.log_str} Loaded {card.log_str}')
 
     db.commit()
+    return None
 
 
 def add_series(
@@ -492,12 +515,12 @@ def add_series(
         background_tasks: BackgroundTasks,
         db: Session,
         preferences: Preferences,
-        emby_interface: Optional[EmbyInterface] = None,
-        imagemagick_interface: Optional[ImageMagickInterface] = None,
-        jellyfin_interface: Optional[JellyfinInterface] = None,
-        plex_interface: Optional[PlexInterface] = None,
-        sonarr_interface: Optional[SonarrInterface] = None,
-        tmdb_interface: Optional[TMDbInterface] = None,
+        emby_interfaces: InterfaceGroup[int, EmbyInterface],
+        imagemagick_interface: ImageMagickInterface,
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface],
+        plex_interfaces: InterfaceGroup[int, PlexInterface],
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface],
+        tmdb_interface: Optional[TMDbInterface],
         *,
         log: Logger = log,
     ) -> Series:
@@ -513,13 +536,13 @@ def add_series(
         db: Database to add the Series to.
         preferences: Global Preferences for setting resolution.
         *_interface: Interface to query.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         The Created Series.
 
     Raises:
-        HTTPException (404) if any specified linked objects do not exist.
+        HTTPException (404): A linked object does not exist.
     """
 
     # Convert object to dictionary
@@ -530,7 +553,7 @@ def add_series(
     templates = get_all_templates(db, new_series_dict)
 
     # Add to database
-    series = models.series.Series(**new_series_dict, templates=templates)
+    series = Series(**new_series_dict, templates=templates)
     db.add(series)
     db.commit()
 
@@ -539,15 +562,15 @@ def add_series(
 
     # Set Series ID's, download poster and logo
     set_series_database_ids(
-        series, db, emby_interface, jellyfin_interface, plex_interface,
-        sonarr_interface, tmdb_interface, log=log,
+        series, db, emby_interfaces, jellyfin_interfaces, plex_interfaces,
+        sonarr_interfaces, tmdb_interface, log=log,
     )
     download_series_poster(
-        db, preferences, series, emby_interface, imagemagick_interface,
-        jellyfin_interface, plex_interface, tmdb_interface, log=log
+        db, preferences, series, emby_interfaces, imagemagick_interface,
+        jellyfin_interfaces, plex_interfaces, tmdb_interface, log=log
     )
     download_series_logo(
-        preferences, emby_interface, imagemagick_interface, jellyfin_interface,
+        preferences, emby_interfaces, imagemagick_interface, jellyfin_interfaces,
         tmdb_interface, series, log=log,
     )
 
@@ -559,8 +582,8 @@ def add_series(
         # Function
         refresh_episode_data,
         # Arguments
-        db, preferences, series, emby_interface, jellyfin_interface,
-        plex_interface, sonarr_interface, tmdb_interface, background_tasks,
+        db, preferences, series, emby_interfaces, jellyfin_interfaces,
+        plex_interfaces, sonarr_interfaces, tmdb_interface, background_tasks,
         log=log,
     )
 
