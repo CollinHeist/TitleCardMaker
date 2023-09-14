@@ -1,11 +1,16 @@
 from logging import Logger
-from typing import Iterable, Iterator, Mapping, Optional, Type
+from typing import Generic, Iterable, Iterator, Mapping, Optional, TypeVar
 
 from modules.Debug import log
 from modules.Interface import Interface
 
+_InterfaceID = TypeVar('_InterfaceID', bound=int)
+_Interface = TypeVar('_Interface', bound=Interface)
 
-class InterfaceGroup(Mapping[int, Interface]):
+
+# class InterfaceGroup(Mapping[int, type[Interface]]):
+class InterfaceGroup(Generic[_InterfaceID, _Interface],
+                     Mapping[_InterfaceID, _Interface]):
     """
     Class that defines a group of like-classed Interfaces. This class
     creates a mapping of interface IDs to Interface instances, and also
@@ -23,7 +28,7 @@ class InterfaceGroup(Mapping[int, Interface]):
     """
 
 
-    def __init__(self, cls: Type[Interface]) -> None:
+    def __init__(self, cls: type[_Interface]) -> None:
         """
         Initialize this object as a group containing interfaces of
         the given class.
@@ -34,7 +39,7 @@ class InterfaceGroup(Mapping[int, Interface]):
         """
 
         self.cls = cls
-        self.interfaces: dict[int, Interface] = {}
+        self.interfaces: dict[_InterfaceID, _Interface] = {}
 
 
     def __repr__(self) -> str:
@@ -52,7 +57,7 @@ class InterfaceGroup(Mapping[int, Interface]):
             False otherwise.
         """
 
-        return all(bool(interface) for interface in self.interfaces.values())
+        return any(bool(interface) for interface in self.interfaces.values())
 
 
     def __len__(self) -> int:
@@ -63,7 +68,7 @@ class InterfaceGroup(Mapping[int, Interface]):
         return len(self.interfaces)
 
 
-    def __getitem__(self, interface_id: int, /) -> Optional[Interface]:
+    def __getitem__(self, interface_id: _InterfaceID) -> Optional[_Interface]:
         """
         Get the Interface with the given ID.
 
@@ -78,7 +83,10 @@ class InterfaceGroup(Mapping[int, Interface]):
         return self.interfaces.get(interface_id)
 
 
-    def __setitem__(self, interface_id: int, interface: Interface, /) -> None:
+    def __setitem__(self,
+            interface_id: _InterfaceID,
+            interface: _Interface,
+        ) -> None:
         """
         Store the given Interface at the given ID.
 
@@ -90,7 +98,7 @@ class InterfaceGroup(Mapping[int, Interface]):
         self.interfaces[interface_id] = interface
 
 
-    def __contains__(self, interface_id: int, /) -> bool:
+    def __contains__(self, interface_id: _InterfaceID) -> bool:
         """
         Whether the given interface ID has an associated Interface.
         """
@@ -98,7 +106,7 @@ class InterfaceGroup(Mapping[int, Interface]):
         return interface_id in self.interfaces
 
 
-    def __iter__(self) -> Iterator[tuple[int, Interface]]:
+    def __iter__(self) -> Iterator[tuple[_InterfaceID, _Interface]]:
         """
         Iterate through this object. Practically identical to calling
         `dict.items()`.
@@ -113,8 +121,8 @@ class InterfaceGroup(Mapping[int, Interface]):
 
     @classmethod
     def from_argument_list(
-            cls: Type['InterfaceGroup'],
-            interface_cls: Type[Interface],
+            cls: type['InterfaceGroup'],
+            interface_cls: type[_Interface],
             interface_kwargs: Iterable[dict],
             *,
             log: Logger = log,
@@ -156,7 +164,7 @@ class InterfaceGroup(Mapping[int, Interface]):
             *args,
             log: Logger = log,
             **kwargs,
-        ) -> tuple[int, Interface]:
+        ) -> tuple[_InterfaceID, _Interface]:
         """
         Construct and add a new Interface object to this group. This
         assigns a sequential interface ID.
@@ -177,7 +185,7 @@ class InterfaceGroup(Mapping[int, Interface]):
             interface_id = 0
 
         # Construct Interface, store at ID
-        interface = self.cls(*args, **kwargs, log=log)
+        interface = self.cls(*args, **kwargs, interface_id=interface_id,log=log)
         self.interfaces[interface_id] = interface
 
         return interface_id, interface
@@ -205,11 +213,11 @@ class InterfaceGroup(Mapping[int, Interface]):
 
 
     def refresh(self,
-            interface_id: int,
+            interface_id: _InterfaceID,
             interface_kwargs: dict,
             *,
             log: Logger = log,
-        ) -> Interface:
+        ) -> _Interface:
         """
         Refresh the given interface.
 
