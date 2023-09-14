@@ -30,7 +30,7 @@ def catch_and_log(
 
     Args:
         message: Message to log upon uncaught exception.
-        default: (Keyword) Value to return if decorated function
+        default: Value to return if decorated function
             raises an uncaught exception.
 
     Returns:
@@ -157,7 +157,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 a request.
             logo_language_priority: Priority which logos should be
                 evaluated at.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Raises:
             HTTPException (401) if the API key is invalid.
@@ -346,7 +346,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         Args:
             library_name: Unused argument.
             series_info: SeriesInfo to update.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # If all possible ID's are defined
@@ -430,7 +430,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
         Args:
             query: Series name or substring to look up.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of SearchResults for the given query.
@@ -470,7 +470,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         Args:
             library_name: Unused argument.
             series_info: Series to get the episodes of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of EpisodeInfo objects and None (as watched statuses
@@ -549,7 +549,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             episode_info: The episode information.
             title_match: Whether to require the title within
                 episode_info to match the title on TMDb.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             Dictionary of the index for the given entry. This dictionary
@@ -711,7 +711,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             library_name: Unused argument.
             series_info: SeriesInfo for the entry.
             infos: List of EpisodeInfo objects to update.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # Get all episodes for this series
@@ -799,10 +799,10 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         Args:
             series_info: SeriesInfo for this entry.
             episode_info: EpisodeInfo for this entry.
-            match_title:  (Keyword) Whether to require the episode title
+            match_title:  Whether to require the episode title
                 to match when querying TMDb.
-            bypass_blacklist: (Keyword) Whether to bypass the blacklist.
-            log: (Keyword) Logger for all log messages.
+            bypass_blacklist: Whether to bypass the blacklist.
+            log: Logger for all log messages.
 
         Returns:
             List of tmdbapis.objs.image.Still objects. If the episode is
@@ -850,8 +850,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
         Args:
             series_info: SeriesInfo for this entry.
-            bypass_blacklist: (Keyword) Whether to bypass the blacklist.
-            log: (Keyword) Logger for all log messages.
+            bypass_blacklist: Whether to bypass the blacklist.
+            log: Logger for all log messages.
 
         Returns:
             List of `tmdbapis.objs.image.Still` objects. If the series
@@ -897,8 +897,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
         Args:
             series_info: SeriesInfo for this entry.
-            bypass_blacklist: (Keyword) Whether to bypass the blacklist.
-            log: (Keyword) Logger for all log messages.
+            bypass_blacklist: Whether to bypass the blacklist.
+            log: Logger for all log messages.
 
         Returns:
             List of `tmdbapis.objs.image.Still` objects. If the series
@@ -950,13 +950,13 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         Args:
             series_info: SeriesInfo for this entry.
             episode_info: EpisodeInfo for this entry.
-            match_title:  (Keyword) Whether to require the episode title
+            match_title:  Whether to require the episode title
                 to match when querying TMDb.
-            skip_localized_images: (Keyword) Whether to skip images with
+            skip_localized_images: Whether to skip images with
                 a non-null language code - i.e. skipping localized
                 images.
             raise_exc: Whether to raise any HTTPExceptions that arise.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             URL to the 'best' source image for the requested entry. None
@@ -1049,7 +1049,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             episode_info: EpisodeInfo for the entry.
             language_code: The language code for the desired title.
             bypass_blacklist: Whether to bypass the blacklist check.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Args:
             The episode title, None if it cannot be found.
@@ -1174,6 +1174,9 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         Returns:
             URL to the 'best' backdrop for the given series, and None if
             no  images are available.
+
+        Raises:
+            HTTPException (404): The Series is not found on TMDb.
         """
 
         # Don't query the database if this episode is in the blacklist
@@ -1222,7 +1225,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
         Args:
             series_info: Series to get the poster of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             URL to the 'best' poster for the given series, and None if
