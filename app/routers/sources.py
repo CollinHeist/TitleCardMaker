@@ -4,7 +4,6 @@ from fastapi import (
     APIRouter, BackgroundTasks, Depends, Form, HTTPException, Request,
     UploadFile,
 )
-from fastapi_pagination import paginate as paginate_sequence
 from fastapi_pagination.ext.sqlalchemy import paginate
 from requests import get
 from sqlalchemy.orm import Session
@@ -15,7 +14,8 @@ from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard
 from app.internal.auth import get_current_user
 from app.internal.cards import delete_cards
 from app.internal.sources import (
-    get_source_image, download_episode_source_image, download_series_logo, process_svg_logo
+    get_source_image, download_episode_source_image, download_series_logo,
+    process_svg_logo,
 )
 from app import models
 from app.schemas.card import SourceImage, TMDbImage
@@ -39,9 +39,9 @@ def download_series_source_images(
         # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_all_emby_interfaces),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_all_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_all_plex_interfaces),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> None:
     """
@@ -64,8 +64,9 @@ def download_series_source_images(
             # Function
             download_episode_source_image,
             # Arguments
-            db, preferences, emby_interface, jellyfin_interface, plex_interface,
-            tmdb_interface, episode, raise_exc=False, log=request.state.log,
+            db, preferences, emby_interfaces, jellyfin_interfaces,
+            plex_interfaces, tmdb_interface, episode, raise_exc=False,
+            log=request.state.log,
         )
 
 
@@ -105,8 +106,7 @@ def download_series_backdrop(
     # Download new backdrop
     if tmdb_interface:
         backdrop = tmdb_interface.get_series_backdrop(
-            series.as_series_info,
-            # TODO skip localized images
+            series.as_series_info, raise_exc=True,
         )
         if WebInterface.download_image(backdrop, backdrop_file, log=log):
             log.debug(f'{series.log_str} Downloaded {backdrop_file.resolve()} from TMDb')
@@ -128,9 +128,9 @@ def download_series_logo_(
         # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_all_emby_interfaces),
+        imagemagick_interface: ImageMagickInterface = Depends(get_imagemagick_interface),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_all_jellyfin_interfaces),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Optional[str]:
     """
@@ -147,8 +147,8 @@ def download_series_logo_(
     series = get_series(db, series_id, raise_exc=True)
 
     return download_series_logo(
-        preferences, emby_interface, imagemagick_interface,
-        jellyfin_interface, tmdb_interface, series, log=request.state.log,
+        preferences, emby_interfaces, imagemagick_interface,
+        jellyfin_interfaces, tmdb_interface, series, log=request.state.log,
     )
 
 
@@ -159,9 +159,9 @@ def download_episode_source_image_(
         # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_all_emby_interfaces),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_all_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_all_plex_interfaces),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Optional[str]:
     """
@@ -179,7 +179,7 @@ def download_episode_source_image_(
     episode = get_episode(db, episode_id, raise_exc=True)
 
     return download_episode_source_image(
-        db, preferences, emby_interface, jellyfin_interface, plex_interface,
+        db, preferences, emby_interfaces, jellyfin_interfaces, plex_interfaces,
         tmdb_interface, episode, raise_exc=True, log=request.state.log,
     )
 
@@ -287,9 +287,10 @@ def get_existing_series_source_images(
             .filter_by(series_id=series_id)\
             .order_by(models.episode.Episode.season_number,
                       models.episode.Episode.episode_number),
-        transformer=lambda episodes: [get_source_image(
-            preferences, imagemagick_interface, episode
-        ) for episode in episodes]
+        transformer=lambda episodes: [
+            get_source_image(preferences, imagemagick_interface, episode)
+            for episode in episodes
+        ]
     )
 
 
