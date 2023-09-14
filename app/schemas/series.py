@@ -30,6 +30,11 @@ class Translation(Base):
     language_code: LanguageCode
     data_key: DictKey
 
+class MediaServerLibrary(Base):
+    media_server: Literal['Emby', 'Jellyfin', 'Plex']
+    interface_id: int
+    name: str
+
 class BaseConfig(Base):
     font_id: Optional[int] = None
     sync_specials: Optional[bool] = None
@@ -55,6 +60,7 @@ class BaseSeries(BaseConfig):
     template_ids: Optional[list[int]] = None
     match_titles: bool = True
     translations: Optional[list[Translation]] = None
+    libraries: list[MediaServerLibrary] = []
 
     font_color: Optional[str] = None
     font_title_case: Optional[TitleCase] = None
@@ -65,9 +71,6 @@ class BaseSeries(BaseConfig):
     font_interword_spacing: Optional[int] = None
     font_vertical_shift: Optional[int] = None
 
-    emby_library_name: Optional[constr(min_length=1)] = None
-    jellyfin_library_name: Optional[constr(min_length=1)] = None
-    plex_library_name: Optional[constr(min_length=1)] = None
     emby_id: EmbyID = None
     imdb_id: IMDbID = None
     jellyfin_id: JellyfinID = None
@@ -211,6 +214,8 @@ class UpdateSeries(BaseUpdate):
     episode_data_source: Optional[EpisodeDataSource] = UNSPECIFIED
     match_titles: bool = UNSPECIFIED
     translations: Optional[list[Translation]] = UNSPECIFIED
+    libraries: list[MediaServerLibrary] = UNSPECIFIED
+
     card_type: Optional[str] = UNSPECIFIED
     hide_season_text: Optional[bool] = UNSPECIFIED
     season_title_ranges: Optional[list[SeasonTitleRange]] = UNSPECIFIED
@@ -231,9 +236,6 @@ class UpdateSeries(BaseUpdate):
     font_interword_spacing: Optional[int] = UNSPECIFIED
     font_vertical_shift: Optional[int] = UNSPECIFIED
 
-    emby_library_name: Optional[str] = UNSPECIFIED
-    jellyfin_library_name: Optional[str] = UNSPECIFIED
-    plex_library_name: Optional[str] = UNSPECIFIED
     emby_id: EmbyID = UNSPECIFIED
     imdb_id: IMDbID = UNSPECIFIED
     jellyfin_id: JellyfinID = UNSPECIFIED
