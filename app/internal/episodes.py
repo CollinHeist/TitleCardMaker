@@ -112,11 +112,20 @@ def set_episode_ids(
     # Update database if new ID's are available
     changed = False
     for episode, episode_info in zip(episodes, episode_infos):
-        for id_type in episode_info.ids.keys():
-            if (getattr(episode, id_type) is None
-                and episode_info.has_id(id_type)):
+        for id_type in ('imdb_id', 'tmdb_id', 'tvdb_id', 'tvrage_id'):
+            if getattr(episode, id_type) is None and episode_info.has_id(id_type):
                 setattr(episode, id_type, getattr(episode_info, id_type))
                 changed = True
+
+        for id_type in ('emby_id', 'jellyfin_id'): # TODO + rating keys
+            if getattr(episode_info, id_type) > getattr(series, id_type):
+                setattr(
+                    episode,
+                    id_type,
+                    str(getattr(episode_info, id_type) + getattr(series, id_type))
+                )
+                changed = True
+                log.info(f'episode.{id_type} = {getattr(series, id_type)}')
 
     # Write any changes to the DB
     if changed:
@@ -126,10 +135,10 @@ def set_episode_ids(
 def get_all_episode_data(
         preferences: Preferences,
         series: Series,
-        emby_interface: Optional[EmbyInterface],
-        jellyfin_interface: Optional[JellyfinInterface],
-        plex_interface: Optional[PlexInterface],
-        sonarr_interface: Optional[SonarrInterface],
+        emby_interfaces: InterfaceGroup[int, EmbyInterface],
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface],
+        plex_interfaces: InterfaceGroup[int, PlexInterface],
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface],
         tmdb_interface: Optional[TMDbInterface],
         *,
         raise_exc: bool = True,
@@ -143,38 +152,40 @@ def get_all_episode_data(
         preferences: Global Preferences to use for setting resolution.
         series: Series whose Episode data is being queried.
         *_interface: Interface to potentially query for Episode data.
-        raise_exc: (Keyword): Whether to raise any HTTPExceptions caused
-            by disabled interfaces or missing libraries.
-        log: (Keyword) Logger for all log messages.
+        raise_exc: Whether to raise any HTTPExceptions caused by
+            disabled interfaces or missing libraries.
+        log: Logger for all log messages.
 
     Returns:
-        List of tuples of the EpisodeInfo from the given Series' Episode
+        List of tuples of the EpisodeInfo from the given Series' episode
         data source and whether that Episode has been watched (or None
         of that cannot be determined). If the data cannot be queried and
         `raise_exc` is False, then an empty list is returned.
 
     Raises:
-        HTTPException (404) if the Series Template DNE.
-        HTTPException (409) if the indicted Episode data source cannot
-            be communicated with.
+        HTTPException (404): A Series Template does not exist.
+        HTTPException (409): The indicted episode data source cannot be
+            communicated with.
     """
 
-    # Get effective Series Episode data source
+    # Get Series' effective Episode data source
     series_template_dict = get_effective_series_template(series, as_dict=True)
-    episode_data_source = TieredSettings.resolve_singular_setting(
-        preferences.episode_data_source,
-        series_template_dict.get('episode_data_source', None),
-        series.episode_data_source,
+    episode_data_source = EpisodeDataSource(
+        **TieredSettings.resolve_singular_setting(
+            preferences.episode_data_source,
+            series_template_dict.get('data_source', None),
+            series.data_source,
+        )
     )
 
-    # Raise 409 if cannot communicate with the series episode data source
+    # Raise 409 if cannot communicate with the Series' Episode data source
     interface = {
-        'Emby': emby_interface,
-        'Jellyfin': jellyfin_interface,
-        'Plex': plex_interface,
-        'Sonarr': sonarr_interface,
-        'TMDb': tmdb_interface,
-    }.get(episode_data_source, None)
+        'Emby': emby_interfaces,
+        'Jellyfin': jellyfin_interfaces,
+        'Plex': plex_interfaces,
+        'Sonarr': sonarr_interfaces,
+        'TMDb': {0: tmdb_interface},
+    }[episode_data_source.media_server][episode_data_source.interface_id]
     if interface is None:
         if raise_exc:
             raise HTTPException(
@@ -183,13 +194,17 @@ def get_all_episode_data(
             )
         return []
 
-    # Verify Series has an associated Library
-    library = getattr(series,f'{episode_data_source.lower()}_library_name',None)
-    if episode_data_source in ('Emby', 'Jellyfin', 'Plex') and library is None:
+    # Verify Series has an associated Library (if EDS is a media server)
+    library = series.get_library(
+        episode_data_source.media_server, episode_data_source.interface_id,
+    )
+    if (episode_data_source.media_server in ('Emby', 'Jellyfin', 'Plex')
+        and library is None):
         if raise_exc:
+            eds_str = f'{episode_data_source.media_server}[{episode_data_source.interface_id}]'
             raise HTTPException(
                 status_code=409,
-                detail=f'Series does not have an associated {episode_data_source} library'
+                detail=f'Series does not have an associated {eds_str} Library'
             )
         return []
 
