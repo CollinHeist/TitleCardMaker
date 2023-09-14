@@ -70,7 +70,11 @@ def import_connection_yaml(
         request: Request,
         connection: Literal['all', 'emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
         import_yaml: ImportYaml = Body(...),
-        preferences: Preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_all_emby_interfaces),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_all_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_all_plex_interfaces),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_all_sonarr_interfaces),
     ) -> Preferences:
     """
     Import the connection preferences defined in the given YAML. This
@@ -88,32 +92,25 @@ def import_connection_yaml(
     if len(yaml_dict) == 0:
         return preferences
 
-    def _parse_all(*args, **kwargs):
-        parse_emby(*args, **kwargs)
-        parse_jellyfin(*args, **kwargs)
-        parse_plex(*args, **kwargs)
-        parse_sonarr(*args, **kwargs)
-        parse_tmdb(*args, **kwargs)
+    try:
+        if connection in ('all', 'emby'):
+            parse_emby(preferences, yaml_dict, emby_interfaces, log=log)
+        if connection in ('all', 'jellyfin'):
+            parse_jellyfin(preferences, yaml_dict, jellyfin_interfaces, log=log)
+        if connection in ('all', 'plex'):
+            parse_plex(preferences, yaml_dict, plex_interfaces, log=log)
+        if connection in ('all', 'sonarr'):
+            parse_sonarr(preferences, yaml_dict, sonarr_interfaces, log=log)
+        if connection in ('all', 'tmdb'):
+            parse_tmdb(preferences, yaml_dict, log=log)
 
         return preferences
-
-    parse_function = {
-        'all': _parse_all,
-        'emby': parse_emby,
-        'jellyfin': parse_jellyfin,
-        'plex': parse_plex,
-        'tmdb': parse_tmdb,
-        'sonarr': parse_sonarr,
-    }[connection]
-
-    try:
-        return parse_function(preferences, yaml_dict, log=log)
-    except ValidationError as e:
-        log.exception(f'Invalid YAML', e)
+    except ValidationError as exc:
+        log.exception(f'Invalid YAML', exc)
         raise HTTPException(
             status_code=422,
-            detail=f'YAML is invalid - {e}'
-        ) from e
+            detail=f'YAML is invalid - {exc}'
+        ) from exc
 
 
 @import_router.post('/preferences/sync', status_code=201)
@@ -254,11 +251,11 @@ def import_series_yaml(
         import_yaml: ImportSeriesYaml = Body(...),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_all_emby_interfaces),
+        imagemagick_interface: ImageMagickInterface = Depends(get_imagemagick_interface),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_all_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_all_plex_interfaces),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_all_sonarr_interfaces),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
     ) -> list[Series]:
     """
@@ -303,22 +300,22 @@ def import_series_yaml(
             # Function
             set_series_database_ids,
             # Arguments
-            series, db, emby_interface, jellyfin_interface, plex_interface,
-            sonarr_interface, tmdb_interface, log=log,
+            series, db, emby_interfaces, jellyfin_interfaces, plex_interfaces,
+            sonarr_interfaces, tmdb_interface, log=log,
         )
         background_tasks.add_task(
             # Function
             download_series_poster,
             # Arguments
-            db, preferences, series, emby_interface, imagemagick_interface,
-            jellyfin_interface, plex_interface, tmdb_interface, log=log,
+            db, preferences, series, emby_interfaces, imagemagick_interface,
+            jellyfin_interfaces, plex_interfaces, tmdb_interface, log=log,
         )
         background_tasks.add_task(
             # Function
             download_series_logo,
             # Arguments
-            preferences, emby_interface, imagemagick_interface,
-            jellyfin_interface, tmdb_interface, series, log=log,
+            preferences, emby_interfaces, imagemagick_interface,
+            jellyfin_interfaces, tmdb_interface, series, log=log,
         )
         all_series.append(series)
     db.commit()
