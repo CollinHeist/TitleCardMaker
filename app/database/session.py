@@ -96,7 +96,7 @@ def register_custom_functions(dbapi_connection, connection_record): # pylint: di
 
 
 SessionLocal = sessionmaker(
-    bind=engine, expire_on_commit=False, autocommit=False, autoflush=False, 
+    bind=engine, expire_on_commit=False, autocommit=False, autoflush=False,
 )
 Base = declarative_base()
 
@@ -130,48 +130,37 @@ try:
 except Exception as e:
     pass
 
-EmbyInterfaceLocal = None
-if PreferencesLocal.use_emby:
-    try:
-        EmbyInterfaceLocal = EmbyInterface(**PreferencesLocal.emby_arguments)
-    except Exception as e:
-        pass
+EmbyInterfaces: InterfaceGroup[int, EmbyInterface] = InterfaceGroup(EmbyInterface)
+try:
+    EmbyInterfaces = InterfaceGroup.from_argument_list(
+        EmbyInterface, PreferencesLocal.emby_args.values(),
+    )
+except Exception as exc:
+    log.exception(f'Error initializing Emby interfaces')
 
-JellyfinInterfaceLocal = None
-if PreferencesLocal.use_jellyfin:
-    try:
-        JellyfinInterfaceLocal = JellyfinInterface(
-            **PreferencesLocal.jellyfin_arguments
-        )
-    except Exception as e:
-        pass
+JellyfinInterfaces: InterfaceGroup[int, JellyfinInterface] = InterfaceGroup(JellyfinInterface)
+try:
+    JellyfinInterfaces = InterfaceGroup.from_argument_list(
+        JellyfinInterface, PreferencesLocal.jellyfin_args.values(),
+    )
+except Exception as exc:
+    log.exception(f'Error initializing Jellyfin interfaces')
 
-PlexInterfaceLocal = None
-if PreferencesLocal.use_plex:
-    try:
-        PlexInterfaceLocal = PlexInterface(**PreferencesLocal.plex_arguments)
-    except Exception as e:
-        pass
-
-SonarrInterfaceLocal = None
-if PreferencesLocal.use_sonarr:
-    try:
-        SonarrInterfaceLocal.REQUEST_TIMEOUT = 15
-        SonarrInterfaceLocal = SonarrInterface(
-            **PreferencesLocal.sonarr_arguments
-        )
-        SonarrInterfaceLocal.REQUEST_TIMEOUT = 600
-    except Exception as e:
-        pass
+PlexInterfaces: InterfaceGroup[int, PlexInterface] = InterfaceGroup(PlexInterface)
+try:
+    PlexInterfaces = InterfaceGroup.from_argument_list(
+        PlexInterface, PreferencesLocal.plex_args.values(),
+    )
+except Exception as exc:
+    log.exception(f'Error initializating Plex interfaces', exc)
 
 SonarrInterfaces: InterfaceGroup[int, SonarrInterface] = InterfaceGroup(SonarrInterface)
-if PreferencesLocal.use_sonarr:
-    try:
-        SonarrInterfaces = InterfaceGroup.from_argument_list(
-            SonarrInterface, PreferencesLocal.sonarr_args.values(),
-        )
-    except Exception as exc:
-        log.exception(f'Error initializating SonarrInterfaces', exc)
+try:
+    SonarrInterfaces = InterfaceGroup.from_argument_list(
+        SonarrInterface, PreferencesLocal.sonarr_args.values(),
+    )
+except Exception as exc:
+    log.exception(f'Error initializating Sonarr interfaces', exc)
 
 TMDbInterfaceLocal = None
 if PreferencesLocal.use_tmdb:
