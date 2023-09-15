@@ -301,11 +301,11 @@ class MarvelTitleCard(BaseCardType):
             return title_text_dimensions
 
         # Get dimensions of season and episode text
-        season_text_dimensions = self.image_magick.get_text_dimensions(
+        season_text_dimensions = self.get_text_dimensions(
             self.season_text_commands(title_text_dimensions),
             width='sum', height='sum',
         )
-        episode_text_dimensions = self.image_magick.get_text_dimensions(
+        episode_text_dimensions = self.get_text_dimensions(
             self.episode_text_commands(title_text_dimensions),
             width='sum', height='sum',
         )
@@ -329,7 +329,7 @@ class MarvelTitleCard(BaseCardType):
 
         # If font scalar was modified, recalculate+return text dimensions
         if self.font_size_modifier < 1.0:
-            return self.image_magick.get_text_dimensions(
+            return self.get_text_dimensions(
                 self.title_text_commands, width='max', height='sum',
             )
 
