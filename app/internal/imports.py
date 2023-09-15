@@ -285,7 +285,7 @@ def _remove_unspecifed_args(**dict_kwargs: dict) -> dict:
     Remove unspecified arguments.
 
     Args:
-        dict_kwargs: (Keyword) Any number of keyword arguments to parse.
+        dict_kwargs: Any number of keyword arguments to parse.
 
     Returns:
         `dict_kwargs` where any keys whose corresponding value was equal
@@ -310,7 +310,7 @@ def parse_preferences(
     Args:
         preferences: Preferences to modify.
         yaml_dict: Dictionary of YAML attributes to parse.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         Modified Preferences.
@@ -398,7 +398,7 @@ def parse_emby(
         preferences: Preferences whose connection details are being
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         Modified Preferences object. If no changes are made, the object
@@ -447,7 +447,7 @@ def parse_jellyfin(
         preferences: Preferences whose connection details are being
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         Modified Preferences object. If no changes are made, the object
@@ -496,7 +496,7 @@ def parse_plex(
         preferences: Preferences whose connection details are being
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         Modified Preferences object. If no changes are made, the object
@@ -548,7 +548,7 @@ def parse_sonarr(
         preferences: Preferences whose connection details are being
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         Modified Preferences object. If no changes are made, the object
@@ -591,7 +591,7 @@ def parse_tmdb(
         preferences: Preferences whose connection details are being
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         Modified Preferences object. If no changes are made, the object
@@ -972,17 +972,17 @@ def parse_series(
         yaml_dict: Dictionary of YAML attributes to parse.
         default_library: Optional default Library name to apply to the
             Series if one is not manually specified within YAML.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         List of NewSeries that match any defined YAML series.
 
     Raises:
-        HTTPException (404) if an indicated Font or Template name cannot
+        HTTPException (404): An indicated Font or Template name cannot
             be found in the database.
-        HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if a NewSeries object cannot be
-            created from the given YAML.
+        HTTPException (422): There are YAML formatting errors.
+        ValidationError: NewSeries object cannot be created from the
+            given YAML.
     """
 
     # Return empty list if no header
@@ -1064,7 +1064,7 @@ def parse_series(
 
         # Parse custom Font
         series_font = _get(series_dict, 'font', default={})
-        font = None
+        font_id = None
         if not isinstance(series_font, (str, dict)):
             raise HTTPException(
                 status_code=422,
@@ -1079,6 +1079,7 @@ def parse_series(
                     status_code=404,
                     detail=f'Font "{series_font}" not found',
                 )
+            font_id = font.id
 
         # Get season titles via episode_ranges or seasons
         episode_map = EpisodeMap(
@@ -1129,7 +1130,7 @@ def parse_series(
                 type_=preferences.standardize_style
             ),
             translations=_parse_translations(series_dict, default=None),
-            font=font,
+            font_id=font_id,
             font_color=_get(series_dict, 'font', 'color'),
             font_title_case=_get(series_dict, 'font', 'case'),
             font_size=_get(
@@ -1191,7 +1192,7 @@ def import_cards(
         image_extension: Extension of images to search for.
         force_reload: Whether to replace any existing Card entries for
             Episodes identified while importing.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     # If explicit directory was not provided, use Series default

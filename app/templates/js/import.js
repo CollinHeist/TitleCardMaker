@@ -249,25 +249,4 @@ async function submitYamlForm(args) {
   } finally {
     $(`${formId} button`).toggleClass('loading', false);
   }
-
-  // $.ajax({
-  //   type: 'POST',
-  //   url: url,
-  //   data: JSON.stringify(data),
-  //   contentType: 'application/json',
-  //   success: response => { 
-  //     if (successMessage === undefined) {
-  //       showInfoToast(`Imported ${name} YAML`);
-  //     } else {
-  //       const message = successMessage(response);
-  //       showInfoToast(`Imported ${name} YAML`, message: message);
-  //     }
-  //     $(`${formId} .error.message[data-value="${name}"]`)[0].innerHTML = '';
-  //   }, error: response => {
-  //     $(formId).toggleClass('error', true);
-  //     $.toast({class: 'error', title: `Unable to Import ${name} YAML`, displayTime: 5000});
-  //     const messageHtml = `<div class="header">${name} YAML Parsing Error</div><p>${response.responseJSON.detail}</p>`
-  //     $(`${formId} .error.message[data-value="${name}"]`)[0].innerHTML = messageHtml;
-  //   }, complete: () => $(`${formId} button`).toggleClass('loading', false),
-  // });
 }
