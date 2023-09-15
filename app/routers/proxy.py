@@ -22,6 +22,7 @@ proxy_router = APIRouter(
     )
 def redirect_plex_url(
         url: str = Query(...),
+        interface_id: int = Query(default=0),
         preferences: Preferences = Depends(get_preferences),
     ) -> Response:
     """
@@ -32,17 +33,12 @@ def redirect_plex_url(
     from the API. The actual contents (bytes) of the image are returned.
 
     - url: Plex-based URL to get the content of.
+    - interface_id: ID of the Plex Interface to redirect to.
     """
 
-    # If Plex is disabled, raise 409
-    if not preferences.use_plex:
-        raise HTTPException(
-            status_code=409,
-            detail=f'Cannot connect to Plex',
-        )
-
     redirected_url = (
-        f'{preferences.plex_url[:-1]}{url}?X-Plex-Token={preferences.plex_token}'
+        f'{preferences.plex_args[interface_id]["url"][:-1]}{url}?X-Plex-Token='
+        f'{preferences.plex_args[interface_id]["token"]}'
     )
 
     return Response(content=get(redirected_url, timeout=10).content)
@@ -55,6 +51,7 @@ def redirect_plex_url(
     )
 def redirect_sonarr_url(
         url: str = Query(...),
+        interface_id: int = Query(default=0),
         SonarrAuth: str = Cookie(default=''),
         preferences: Preferences = Depends(get_preferences),
     ) -> Response:
@@ -67,12 +64,11 @@ def redirect_sonarr_url(
     This uses the client's `SonarrAuth` cookies in the request.
 
     - url: Sonarr-based URL to get the content of.
+    - interface_id: ID of the Plex Interface to redirect to.
     """
 
-    redirected_url = (
-        f'{preferences.sonarr_url.scheme}://{preferences.sonarr_url.host}'
-        f':{preferences.sonarr_url.port}{url}'
-    )
+    base_url = preferences.sonarr_args[interface_id]["url"]
+    redirected_url = f'{base_url.scheme}://{base_url.host}:{base_url.port}{url}'
 
     # Query for content, ensure the local `SonarrAuth` cookies are
     # utilized in the request
@@ -80,7 +76,7 @@ def redirect_sonarr_url(
         content = get(
             redirected_url,
             cookies={'SonarrAuth': SonarrAuth},
-            timeout=10,
+            timeout=5,
         ).content
     except Timeout as exc:
         raise HTTPException(
