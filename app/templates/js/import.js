@@ -76,6 +76,37 @@ async function initSeriesImport() {
   });
 }
 
+async function importSeriesForm(form) {
+  // Determine which queries to submit
+  if ($('#series-form .checkbox[data-value="fonts"]').checkbox('is checked')) {
+    await submitYamlForm({
+      url: '/api/import/fonts',
+      data: Object.fromEntries(form),
+      formId: '#series-form',
+      name: 'Fonts',
+      successMessage: newFonts => `Created ${newFonts.length} Custom Fonts`,
+    });
+  }
+  if ($('#series-form .checkbox[data-value="templates"]').checkbox('is checked')) {
+    await submitYamlForm({
+      url: '/api/import/templates',
+      data: Object.fromEntries(form),
+      formId: '#series-form',
+      name: 'Templates',
+      successMessage: newTemplates => `Created ${newTemplates.length} Templates`,
+    });
+  }
+  if ($('#series-form .checkbox[data-value="series"]').checkbox('is checked')) {
+    await submitYamlForm({
+      url: '/api/import/series',
+      data: Object.fromEntries(form),
+      formId: '#series-form',
+      name: 'Series',
+      successMessage: newSeries => `Created ${newSeries.length} Series`,
+    });
+  }
+}
+
 async function initAll() {
   initSeriesImport();
 
@@ -128,34 +159,8 @@ async function initAll() {
     const form = new FormData(event.target);
     // Turn off error status of the form
     $('#series-form').toggleClass('error', false);
-    // Determine which queries to submit
-    if ($('#series-form .checkbox[data-value="fonts"]').checkbox('is checked')) {
-      submitYamlForm({
-        url: '/api/import/fonts',
-        data: Object.fromEntries(form),
-        formId: '#series-form',
-        name: 'Fonts',
-        successMessage: newFonts => `Created ${newFonts.length} Custom Fonts`,
-      });
-    }
-    if ($('#series-form .checkbox[data-value="templates"]').checkbox('is checked')) {
-      submitYamlForm({
-        url: '/api/import/templates',
-        data: Object.fromEntries(form),
-        formId: '#series-form',
-        name: 'Templates',
-        successMessage: newTemplates => `Created ${newTemplates.length} Templates`,
-      });
-    }
-    if ($('#series-form .checkbox[data-value="series"]').checkbox('is checked')) {
-      submitYamlForm({
-        url: '/api/import/series',
-        data: Object.fromEntries(form),
-        formId: '#series-form',
-        name: 'Series',
-        successMessage: newSeries => `Created ${newSeries.length} Series`,
-      });
-    }
+
+    importSeriesForm(form);
   })
 }
 
@@ -201,41 +206,68 @@ function importSeries() {
     data: JSON.stringify(data),
     contentType: 'application/json',
     success: () => {
-      $.toast({class: 'blue info',title: `Imported Title Cards`});
+      showInfoToast('Imported Title Cards');
       if ($('.checkbox[data-value="load_afterwards"]').checkbox('is checked')) {
         for (let series_id of seriesIds) { loadCards(series_id); }
       }
-    }, error: response => {
-      $.toast({class: 'error', title: 'Error importing Cards', message: response.responseJSON.detail});
-    }, complete: () => {
-      $('.segment .dimmer').toggleClass('active', false);
-    },
+    }, error: response => showErrorToast({title: 'Error importing Cards', response}),
+    complete: () => $('.segment .dimmer').toggleClass('active', false),
   });
 }
 
-function submitYamlForm(args) {
+async function submitYamlForm(args) {
   const {url, data, formId, name, successMessage} = args;
-  $(`${formId} button`).toggleClass('loading', true);
-  $.ajax({
-    type: 'POST',
-    url: url,
-    data: JSON.stringify(data),
-    contentType: 'application/json',
-    success: response => { 
-      if (successMessage === undefined) {
-        $.toast({class: 'blue info', title: `Imported ${name} YAML`});
-      } else {
-        const message = successMessage(response);
-        $.toast({class: 'blue info', title: `Imported ${name} YAML`, message: message});
-      }
-      $(`${formId} .error.message[data-value="${name}"]`)[0].innerHTML = '';
-    }, error: response => {
-      $(formId).toggleClass('error', true);
-      $.toast({class: 'error', title: `Unable to Import ${name} YAML`, displayTime: 5000});
-      const messageHtml = `<div class="header">${name} YAML Parsing Error</div><p>${response.responseJSON.detail}</p>`
-      $(`${formId} .error.message[data-value="${name}"]`)[0].innerHTML = messageHtml;
-    }, complete: () => {
-      $(`${formId} button`).toggleClass('loading', false);
-    },
-  });
+
+  try {
+    $(`${formId} button`).toggleClass('loading', true);
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data),
+    });
+
+    const responseData = await response.json();
+    if (!response.ok) {
+      throw new Error(JSON.stringify(responseData));
+    }
+
+    if (successMessage === undefined) {
+      showInfoToast(`Imported ${name} YAML`);
+    } else {
+      const message = successMessage(responseData);
+      showInfoToast(`Imported ${name} YAML`, { message });
+    }
+
+    $(`${formId} .error.message[data-value="${name}"]`)[0].innerHTML = '';
+  } catch (error) {
+    $(formId).toggleClass('error', true);
+    $.toast({ class: 'error', title: `Unable to Import ${name} YAML`, displayTime: 5000 });
+
+    const messageHtml = `<div class="header">${name} YAML Parsing Error</div><p>${error.message}</p>`;
+    $(`${formId} .error.message[data-value="${name}"]`)[0].innerHTML = messageHtml;
+  } finally {
+    $(`${formId} button`).toggleClass('loading', false);
+  }
+
+  // $.ajax({
+  //   type: 'POST',
+  //   url: url,
+  //   data: JSON.stringify(data),
+  //   contentType: 'application/json',
+  //   success: response => { 
+  //     if (successMessage === undefined) {
+  //       showInfoToast(`Imported ${name} YAML`);
+  //     } else {
+  //       const message = successMessage(response);
+  //       showInfoToast(`Imported ${name} YAML`, message: message);
+  //     }
+  //     $(`${formId} .error.message[data-value="${name}"]`)[0].innerHTML = '';
+  //   }, error: response => {
+  //     $(formId).toggleClass('error', true);
+  //     $.toast({class: 'error', title: `Unable to Import ${name} YAML`, displayTime: 5000});
+  //     const messageHtml = `<div class="header">${name} YAML Parsing Error</div><p>${response.responseJSON.detail}</p>`
+  //     $(`${formId} .error.message[data-value="${name}"]`)[0].innerHTML = messageHtml;
+  //   }, complete: () => $(`${formId} button`).toggleClass('loading', false),
+  // });
 }
