@@ -429,14 +429,14 @@ attributes defined. This information is what is displayed in the UI.
 
 12. And finally, the class must define an attribute `CardModel` class which
 is a subclass of either the `pydantic.BaseModel` or any of the
-`app.schemas.card_type.BaseCardType` subclasses - and performs any field
+`app.schemas.card_type.BaseCardModel` subclasses - and performs any field
 validation.
 
     ??? example "Example"
 
         ```python title="FancyTitleCard.py" linenums="1" hl_lines="2 26-27"
         from pathlib import Path
-        from app.schemas.card_type import BaseCardType
+        from app.schemas.card_type import BaseCardModel
         from modules.BaseCardType import BaseCardType, Extra, CardDescription
 
         class FancyTitleCard(BaseCardType):
@@ -460,7 +460,7 @@ validation.
                 ]
             )
 
-            class CardModel(BaseCardType):
+            class CardModel(BaseCardModel):
                 extra_val: str
 
             REF_DIRECTORY = Path(__file__).parent / 'fancy_files'
