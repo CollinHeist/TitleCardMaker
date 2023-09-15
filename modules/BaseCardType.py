@@ -1,6 +1,5 @@
 from abc import abstractmethod
 from typing import Optional, Union
-from pydantic import ValidationError
 
 from titlecase import titlecase
 
@@ -9,8 +8,85 @@ from modules.ImageMaker import ImageMaker
 
 
 CardDescription = CardTypeDescription
-Extra = Extra
+Extra = Extra # pylint: disable=self-assigning-variable
 ImageMagickCommands = list[str]
+
+
+class Coordinate:
+    """Class that defines a single Coordinate on an x/y plane."""
+
+    __slots__ = ('x', 'y')
+
+    def __init__(self, x: float, y: float) -> None:
+        """Initialize this Coordinate with the given x/y coordinates."""
+
+        self.x = x
+        self.y = y
+
+
+    def __iadd__(self, other: 'Coordinate') -> 'Coordinate':
+        """
+        Add the given Coordinate to this one. This adds the x/y
+        positions individually.
+
+        Args:
+            other: The Coordinate to add.
+
+        Returns:
+            This object.
+        """
+
+        self.x += other.x
+        self.y += other.y
+
+        return self
+
+
+    def __str__(self) -> str:
+        """
+        Represent this Coordinate as a string.
+
+        >>> str(Coordinate(1.2, 3.4))
+        '1,2'
+        """
+
+        return f'{self.x:.0f},{self.y:.0f}'
+
+    @property
+    def as_svg(self) -> str:
+        """SVG representation of this Coordinate."""
+
+        return f'{self.x:.1f} {self.y:.1f}'
+
+
+class Rectangle:
+    """Class that defines movable SVG rectangle."""
+
+    __slots__ = ('start', 'end')
+
+    def __init__(self, start: Coordinate, end: Coordinate) -> None:
+        """
+        Initialize this Rectangle that encompasses the two given start
+        and end Coordinates. These Coordinates are the opposite corners
+        of the rectangle.
+        """
+
+        self.start = start
+        self.end = end
+
+
+    def __str__(self) -> str:
+        """
+        Represent this Rectangle as a string. This is the joined string
+        representation of the start and end coordinate.
+        """
+
+        return f'{str(self.start)},{str(self.end)}'
+
+    def draw(self) -> str:
+        """Draw this Rectangle."""
+
+        return f'-draw "rectangle {str(self)}"'
 
 
 class BaseCardType(ImageMaker):
@@ -147,18 +223,21 @@ class BaseCardType(ImageMaker):
         super().__init_subclass__(**kwargs)
 
         if not isinstance(cls.API_DETAILS, CardTypeDescription):
-            raise TypeError(f'{cls.__name__}.API_DETAILS must be a CardTypeDescription object')
+            raise TypeError(f'{cls.__name__}.API_DETAILS must be a '
+                            f'CardTypeDescription object')
 
         TitleCharacteristics(**cls.TITLE_CHARACTERISTICS)
 
         if not isinstance(cls.ARCHIVE_NAME, str):
             raise TypeError(f'{cls.__name__}.ARCHIVE_NAME must be a string')
         if len(cls.ARCHIVE_NAME) == 0:
-            raise ValueError(f'{cls.__name__}.ARCHIVE_NAME must be at least 1 characters long')
+            raise ValueError(f'{cls.__name__}.ARCHIVE_NAME must be at least 1 '
+                             f'characters long')
 
         if not isinstance(cls.DEFAULT_FONT_CASE, str):
             raise TypeError(f'{cls.__name__}.DEFAULT_FONT_CASE must be a string')
-        if cls.DEFAULT_FONT_CASE not in ('blank', 'lower', 'source', 'title', 'upper'):
+        if cls.DEFAULT_FONT_CASE not in ('blank', 'lower', 'source', 'title',
+                                         'upper'):
             raise TypeError(f'{cls.__name__}.DEFAULT_FONT_CASE must be "blank",'
                             f' "lower", "source", "title", or "upper"')
 
@@ -166,11 +245,13 @@ class BaseCardType(ImageMaker):
             raise TypeError(f'{cls.__name__}.TITLE_COLOR must be a string')
 
         if not isinstance(cls.FONT_REPLACEMENTS, dict):
-            raise TypeError(f'{cls.__name__}.FONT_REPLACEMENTS must be a dictionary')
+            raise TypeError(f'{cls.__name__}.FONT_REPLACEMENTS must be a '
+                            f'dictionary')
 
         if not all(isinstance(k, str) and isinstance(v, str)
                    for k, v in cls.FONT_REPLACEMENTS.items()):
-            raise TypeError(f'All keys and values of {cls.__name__}.FONT_REPLACEMENTS must strings')
+            raise TypeError(f'All keys and values of '
+                            f'{cls.__name__}.FONT_REPLACEMENTS must strings')
 
 
     def __repr__(self) -> str:

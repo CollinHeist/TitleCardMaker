@@ -2,37 +2,10 @@ from pathlib import Path
 from typing import Literal, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, ImageMagickCommands, Extra, CardDescription
+    BaseCardType, CardDescription, Coordinate, Extra, ImageMagickCommands,
+    Rectangle,
 )
 from modules.ImageMagickInterface import Dimensions
-
-
-class Coordinate:
-    """Class that defines a single Coordinate on an x/y plane."""
-    __slots__ = ('x', 'y')
-
-    def __init__(self, x: float, y: float) -> None:
-        self.x = x
-        self.y = y
-
-    def __str__(self) -> str:
-        return f'{self.x:.0f},{self.y:.0f}'
-
-
-class Rectangle:
-    """Class that defines movable SVG rectangle."""
-    __slots__ = ('start', 'end')
-
-    def __init__(self, start: Coordinate, end: Coordinate) -> None:
-        self.start = start
-        self.end = end
-
-    def __str__(self) -> str:
-        return f'rectangle {str(self.start)},{str(self.end)}'
-
-    def draw(self) -> str:
-        """Draw this Rectangle"""
-        return f'-draw "{str(self)}"'
 
 
 class OverlineTitleCard(BaseCardType):

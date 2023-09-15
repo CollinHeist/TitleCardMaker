@@ -3,40 +3,12 @@ from pathlib import Path
 from typing import Literal, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, ImageMagickCommands, Extra, CardDescription
+    BaseCardType, Coordinate, ImageMagickCommands, Extra, CardDescription
 )
 
 
-class Coordinate:
-    """Class that defines a single Coordinate on an x/y plane."""
-
-    def __init__(self, x: float, y: float) -> None:
-        """
-        Create a object with the given X/Y coordinates.
-
-        Args:
-            x: X coordinate of this object.
-            y: Y coordinate of this object.
-        """
-
-        self.x = x
-        self.y = y
-
-    def __iadd__(self, other: 'Coordinate') -> 'Coordinate':
-        self.x += other.x
-        self.y += other.y
-
-        return self
-
-    @property
-    def as_svg(self) -> str:
-        """SVG representation of this Coordinate."""
-
-        return f'{self.x:.1f} {self.y:.1f}'
-
-
 class SvgRectangle:
-    """Class that defines movable SVG rectangle."""
+    """Class that defines a movable SVG rectangle."""
 
     def __init__(self, width: int, height: int) -> None:
         """

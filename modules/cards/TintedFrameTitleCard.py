@@ -1,37 +1,13 @@
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, ImageMagickCommands, Extra, CardDescription
+    BaseCardType, CardDescription, Coordinate, Extra, ImageMagickCommands,
+    Rectangle,
 )
 
 Element = Literal['index', 'logo', 'omit', 'title']
 MiddleElement = Literal['logo', 'omit']
-
-
-@dataclass(repr=False)
-class Coordinate:
-    """Class that defines a single Coordinate on an x/y plane."""
-    x: float
-    y: float
-
-    def __str__(self) -> str:
-        return f'{self.x:.0f},{self.y:.0f}'
-
-
-@dataclass(repr=False)
-class Rectangle:
-    """Class that defines movable SVG rectangle."""
-    start: Coordinate
-    end: Coordinate
-
-    def __str__(self) -> str:
-        return f'rectangle {str(self.start)},{str(self.end)}'
-
-    def draw(self) -> str:
-        """Draw this Rectangle"""
-        return f'-draw "{str(self)}"'
 
 
 class TintedFrameTitleCard(BaseCardType):

@@ -2,45 +2,19 @@ from pathlib import Path
 from typing import Literal, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, ImageMagickCommands, Extra, CardDescription
+    BaseCardType, CardDescription, Coordinate, Extra, ImageMagickCommands,
+    Rectangle,
 )
 from modules.ImageMagickInterface import Dimensions
 
 
-class Coordinate:
-    """Class that defines a single Coordinate on an x/y plane."""
-    __slots__ = ('x', 'y')
-
-    def __init__(self, x: float, y: float) -> None:
-        self.x = x
-        self.y = y
-
-    def __str__(self) -> str:
-        return f'{self.x:.0f},{self.y:.0f}'
-
-
-class Rectangle:
-    """Class that defines movable SVG rectangle."""
-    __slots__ = ('start', 'end')
-
-    def __init__(self, start: Coordinate, end: Coordinate) -> None:
-        self.start = start
-        self.end = end
-
-    def __str__(self) -> str:
-        return f'rectangle {str(self.start)},{str(self.end)}'
-
-    def draw(self) -> str:
-        """Draw this Rectangle"""
-        return f'-draw "{str(self)}"'
-
-
 class MarvelTitleCard(BaseCardType):
     """
-    This class describes a CardType that produces title cards intended to match
-    RedHeadJedi's style of Marvel Cinematic Universe posters. These cards
-    feature a white border on the left, top, and right edges, and a black box on
-    the bottom. All text is displayed in the bottom box.
+    This class describes a CardType that produces title cards intended
+    to match RedHeadJedi's style of Marvel Cinematic Universe posters.
+    These cards feature a white border on the left, top, and right
+    edges, and a black box on the bottom. All text is displayed in the
+    bottom box.
     """
 
     """API Parameters"""
@@ -119,9 +93,9 @@ class MarvelTitleCard(BaseCardType):
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
-        'max_line_width': 25,   # Character count to begin splitting titles
-        'max_line_count': 1,    # Maximum number of lines a title can take up
-        'top_heavy': False,      # This class uses top heavy titling
+        'max_line_width': 25,
+        'max_line_count': 1,
+        'top_heavy': False,
     }
 
     """Characteristics of the default title font"""
@@ -190,9 +164,7 @@ class MarvelTitleCard(BaseCardType):
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this Card.
-        """
+        """Construct a new instance of this Card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
