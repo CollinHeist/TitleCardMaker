@@ -131,12 +131,12 @@ class Preferences:
             pickleable attributes excluded.
         """
 
-        # Exclude the remote card types dictionary because the types
-        # might not be loaded at runtime; which could cause an error
-        # when unpickling
+        # Exclude the card types dictionaries because the types might
+        # not be loaded at runtime; which could cause an error when
+        # unpickling
         return {
             attr: getattr(self, attr) for attr in self.__slots__
-            if attr not in ('remote_card_types', )
+            if attr not in ('remote_card_types', 'local_card_types')
         }
 
 
