@@ -47,13 +47,13 @@ class Extra(Base):
     tooltip: Optional[str] = None
     card_type: str
 
-class BaseCardType(Base):
+class BaseCardModel(Base):
     source_file: FilePath
     card_file: Path
     blur: bool = False
     grayscale: bool = False
 
-class BaseCardTypeAllText(BaseCardType):
+class BaseCardTypeAllText(BaseCardModel):
     title_text: str
     season_text: constr(to_upper=True)
     episode_text: constr(to_upper=True)
@@ -67,7 +67,7 @@ class BaseCardTypeAllText(BaseCardType):
 
         return values
 
-class BaseCardTypeCustomFontNoText(BaseCardType):
+class BaseCardTypeCustomFontNoText(BaseCardModel):
     font_color: BetterColor
     font_file: FilePath
     font_interline_spacing: int = 0
@@ -148,7 +148,7 @@ class ComicBookCardType(BaseCardTypeCustomFontAllText):
 
         return values
 
-class CutoutCardType(BaseCardType):
+class CutoutCardType(BaseCardModel):
     title_text: str
     episode_text: constr(to_upper=True)
     font_color: BetterColor = CutoutTitleCard.TITLE_COLOR
@@ -196,7 +196,7 @@ class FrameCardType(BaseCardTypeCustomFontAllText):
 
 BoxAdjustmentRegex = r'^([-+]?\d+)\s+([-+]?\d+)\s+([-+]?\d+)\s+([-+]?\d+)$'
 BoxAdjustments = constr(regex=BoxAdjustmentRegex)
-class LandscapeCardType(BaseCardType):
+class LandscapeCardType(BaseCardModel):
     title_text: str
     font_color: BetterColor = LandscapeTitleCard.TITLE_COLOR
     font_file: FilePath = LandscapeTitleCard.TITLE_FONT
@@ -292,7 +292,7 @@ class OverlineCardType(BaseCardTypeCustomFontAllText):
 
         return values
 
-class PosterCardType(BaseCardType):
+class PosterCardType(BaseCardModel):
     title_text: str
     episode_text: constr(to_upper=True)
     font_color: BetterColor = PosterTitleCard.TITLE_COLOR
@@ -332,7 +332,7 @@ class StandardCardType(BaseCardTypeCustomFontAllText):
     stroke_color: BetterColor = 'black'
     episode_text_color: BetterColor = StandardTitleCard.SERIES_COUNT_TEXT_COLOR
 
-class StarWarsCardType(BaseCardType):
+class StarWarsCardType(BaseCardModel):
     title_text: str
     episode_text: constr(to_upper=True)
     hide_episode_text: bool = False
@@ -349,7 +349,7 @@ class StarWarsCardType(BaseCardType):
 
         return values
 
-class TextlessCardType(BaseCardType):
+class TextlessCardType(BaseCardModel):
     pass
 
 OuterElement = Literal['index', 'logo', 'omit', 'title']
