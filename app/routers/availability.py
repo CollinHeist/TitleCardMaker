@@ -12,7 +12,7 @@ from app.internal.availability import get_latest_version
 from app import models
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.availability import (
-    AvailableFont, AvailableSeries, AvailableTemplate
+    AvailableFont, AvailableSeries, AvailableTemplate, TranslationLanguage
 )
 from app.schemas.card import (
     BuiltinCardType, CardTypeDescription, LocalCardType, RemoteCardType
@@ -200,7 +200,7 @@ def get_available_template_filters() -> dict[str, list[str]]:
 
 
 @availablility_router.get('/translations', status_code=200)
-def get_available_tmdb_translations() -> list[dict[str, str]]:
+def get_available_tmdb_translations() -> list[TranslationLanguage]:
     """
     Get all supported translations from TMDb.
     """

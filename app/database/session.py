@@ -37,48 +37,62 @@ engine = create_engine(
 )
 
 
-def backup_database(*, log: Logger = log) -> Path:
+def backup_data(*, log: Logger = log) -> tuple[Path, Path]:
     """
-    Perform a backup of the SQL database.
+    Perform a backup of the SQL database and global preferences.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
-        Path to the newly created backup file.
+        Tuple of Paths to created preferences and database backup files.
     """
 
     # Determine file to back up database to
     BACKUP_DT_FORMAT = '%Y.%m.%d_%H.%M.%S'
     now = datetime.now().strftime(BACKUP_DT_FORMAT)
     if IS_DOCKER:
+        config = Path('/config/config.pickle')
+        config_backup = Path(f'/config/backups/config.pickle.{now}')
         database = Path('/config/db.sqlite')
-        backup_file = Path(f'/config/backups/db.sqlite.{now}')
+        database_backup = Path(f'/config/backups/db.sqlite.{now}')
     else:
+        config = Path('./config/config.pickle')
+        config_backup = Path(f'./config/backups/config.pickle.{now}')
         database = Path('./config/db.sqlite')
-        backup_file = Path(f'./config/backups/db.sqlite.{now}')
+        database_backup = Path(f'./config/backups/db.sqlite.{now}')
 
-    # Remove databases older than 4 weeks
-    for prior_backup in backup_file.parent.glob('db.sqlite.*'):
-        try:
-            date = datetime.strptime(
-                prior_backup.name, f'db.sqlite.{BACKUP_DT_FORMAT}'
-            )
-        except ValueError:
-            log.warning(f'Cannot identify date of backup file "{prior_backup}"')
-            continue
+    # Remove backups older than 3 weeks
+    def delete_old_backup(backup_file: Path, base_filename: str) -> None:
+        for prior in backup_file.parent.glob(f'{base_filename}.*'):
+            try:
+                date = datetime.strptime(
+                    prior.name, f'{base_filename}.{BACKUP_DT_FORMAT}'
+                )
+            except ValueError:
+                log.warning(f'Cannot identify date of backup file "{prior}"')
+                continue
 
-        if date < datetime.now() - timedelta(weeks=4):
-            prior_backup.unlink(missing_ok=True)
-            log.debug(f'Deleted old database backup file "{prior_backup}"')
+            if date < datetime.now() - timedelta(weeks=4):
+                prior.unlink(missing_ok=True)
+                log.debug(f'Deleted old backup "{prior}"')
+
+    delete_old_backup(config_backup, 'config.pickle')
+    delete_old_backup(database_backup, 'db.sqlite')
+
+    # Backup config
+    if config.exists():
+        config_backup.parent.mkdir(exist_ok=True, parents=True)
+        file_copy(config, config_backup)
+        log.info(f'Performed settings backup')
 
     # Backup database
     if database.exists():
-        backup_file.parent.mkdir(exist_ok=True, parents=True)
-        file_copy(database, backup_file)
+        database_backup.parent.mkdir(exist_ok=True, parents=True)
+        file_copy(database, database_backup)
         log.info(f'Performed database backup')
 
-    return backup_file
+    return config_backup, database_backup
 
 
 """
