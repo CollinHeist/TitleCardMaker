@@ -48,8 +48,9 @@ parser.add_argument(
     help='Omit the gradient from the created Collection/Genre/Season image')
 
 # Argument group for 'manual' title card creation
-title_card_group = parser.add_argument_group('Title Cards',
-                                             'Manual TitleCardMaker interaction')
+title_card_group = parser.add_argument_group(
+    'Title Cards', 'Manual TitleCardMaker interaction'
+)
 title_card_group.add_argument(
     '--title-card',
     type=Path,
@@ -91,6 +92,12 @@ title_card_group.add_argument(
     default='',
     metavar=('TITLE_LINE'),
     help="The title text for this card")
+title_card_group.add_argument(
+    '--logo',
+    type=Path,
+    default=None,
+    metavar='LOGO_FILE',
+    help='Logo file to add to the card (if supported)')
 title_card_group.add_argument(
     '--font-file', '--font',
     type=Path,
@@ -399,6 +406,7 @@ if hasattr(args, 'title_card'):
     card = CardClass(
         source_file=CleanPath(args.title_card[0]).sanitize(),
         card_file=output_file,
+        logo_file=args.logo,
         title_text='\n'.join(args.title),
         season_text=('' if not args.season else args.season),
         episode_text=args.episode,
