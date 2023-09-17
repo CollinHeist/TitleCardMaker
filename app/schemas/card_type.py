@@ -4,7 +4,7 @@ from random import uniform
 from re import match as re_match
 from typing import Literal, Optional, Union
 
-from pydantic import (
+from pydantic import ( # pylint: disable=no-name-in-module
     FilePath, PositiveFloat, PositiveInt, conint, constr, root_validator,
     validator
 )

@@ -362,7 +362,8 @@ class Show(YamlReader):
             jellyfin_interface: Optional[JellyfinInterface] = None,
             plex_interface: Optional[PlexInterface] = None,
             sonarr_interfaces: list[SonarrInterface] = [],
-            tmdb_interface: Optional[TMDbInterface] = None) -> None:
+            tmdb_interface: Optional[TMDbInterface] = None,
+        ) -> None:
         """
         Assign the given interfaces to attributes of this object for
         later use.
