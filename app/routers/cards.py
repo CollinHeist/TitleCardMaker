@@ -452,7 +452,8 @@ def create_cards_for_plex_rating_keys(
         # is committed; but this does not happen.
         db.refresh(episode)
         load_episode_title_card(
-            episode, db, 'Plex', plex_interface=plex_interface, log=log
+            episode, db, 'Plex', plex_interface=plex_interface,
+            attempts=6, log=log,
         )
 
 
@@ -561,25 +562,21 @@ def create_cards_for_sonarr_webhook(
         # is committed; but this does not happen.
         db.refresh(episode)
 
-        # Attempt to load card up to 5 times
-        loaded, attempts = False, 0
-        while loaded is False and attempts < 5:
-            # Wait to give time for media server to load the Episode
-            sleep(10)
-            attempts += 1
-
-            if series.emby_library_name and emby_interface:
-                loaded = load_episode_title_card(
-                    episode, db, 'Emby', emby_interface=emby_interface, log=log
-                )
-            if series.jellyfin_library_name and jellyfin_interface:
-                loaded = load_episode_title_card(
-                    episode, db, 'Jellyfin', jellyfin_interface=jellyfin_interface,
-                    log=log
-                )
-            if series.plex_library_name and plex_interface:
-                loaded = load_episode_title_card(
-                    episode, db, 'Plex', plex_interface=plex_interface, log=log
-                )
+        # Attempt to load card up to 6 times
+        if series.emby_library_name and emby_interface:
+            load_episode_title_card(
+                episode, db, 'Emby', emby_interface=emby_interface,
+                attempts=6, log=log
+            )
+        if series.jellyfin_library_name and jellyfin_interface:
+            load_episode_title_card(
+                episode, db, 'Jellyfin', jellyfin_interface=jellyfin_interface,
+                attempts=6, log=log
+            )
+        if series.plex_library_name and plex_interface:
+            load_episode_title_card(
+                episode, db, 'Plex', plex_interface=plex_interface,
+                attempts=6, log=log
+            )
 
     return None

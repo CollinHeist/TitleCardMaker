@@ -445,6 +445,7 @@ def load_episode_title_card(
         jellyfin_interface: Optional[JellyfinInterface] = None,
         plex_interface: Optional[PlexInterface] = None,
         *,
+        attempts: int = 1,
         log: Logger = log,
     ) -> Optional[bool]:
     """
@@ -457,6 +458,7 @@ def load_episode_title_card(
         db: Database to look for and add Loaded records from/to.
         media_server: Which media server to load Title Cards into.
         *_interface: Interface to load Title Cards into.
+        attempts: How many times to attempt loading the given Card.
         log: Logger for all log messages.
 
     Returns:
@@ -494,12 +496,20 @@ def load_episode_title_card(
         log.debug(f'No {media_server} connection - cannot load Card')
         return None
 
-    loaded_assets = interface.load_title_cards(
-        episode.series.plex_library_name,
-        episode.series.as_series_info,
-        [(episode, card)],
-        log=log,
-    )
+    loaded_assets = []
+    for _ in range(attempts):
+        # Load Episode's Card; exit loop if loaded
+        loaded_assets = interface.load_title_cards(
+            episode.series.plex_library_name,
+            episode.series.as_series_info,
+            [(episode, card)],
+            log=log,
+        )
+        if loaded_assets:
+            break
+
+        log.debug(f'{episode.series.log_str} {episode.log_str} not found - waiting')
+        sleep(10)
 
     # Episode was not loaded, exit
     if not loaded_assets:
