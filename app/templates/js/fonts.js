@@ -213,6 +213,12 @@ async function getAllFonts() {
     const fontForm = template.querySelector('form[data-value="font-form"]');
     const previewForm =  template.querySelector('form[data-value="preview-form"]');
     template.querySelector('.button[data-action="refresh"]').onclick = () => reloadPreview(fontObj.id, fontForm, previewForm, previewCard, previewImage);
+    // Update title text + preview when a-z icon is clicked
+    const titleInput = template.querySelector('form[data-value="preview-form"] input[name="title_text"]');
+    template.querySelector('form[data-value="preview-form"] .field label a').onclick = () => {
+      titleInput.value = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ\\nabcdefghijklmnopqrstuvwxyz';
+      reloadPreview(fontObj.id, fontForm, previewForm, previewCard, previewImage);
+    }
 
     fontElements.push(template);
     // return template;
