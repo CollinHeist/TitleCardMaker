@@ -429,6 +429,13 @@ def resolve_card_settings(
         case_func = CardClass.CASE_FUNCTIONS[card_settings['font_title_case']]
     card_settings['title_text'] = case_func(card_settings['title_text'])
 
+    # Apply Font replacements again
+    if card_settings.get('font_replacements', {}):
+        for repl_in, repl_out in card_settings['font_replacements'].items():
+            card_settings['title'] = card_settings['title'].replace(
+                repl_in, repl_out
+            )
+
     # Apply title text format if indicated
     if (title_format := card_settings.get('title_text_format')) is not None:
         try:
