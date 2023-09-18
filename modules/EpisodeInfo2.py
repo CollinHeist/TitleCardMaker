@@ -15,33 +15,32 @@ class WordSet(dict):
     """
     Dictionary subclass that contains keys for translated word-versions
     of numbers.
+
+    >>> word_set = WordSet()
+    >>> word_set.add_numeral('season_number', 4)
+    >>> print(word_set)
+    {'season_number_cardinal': 'four', 'season_number_ordinal': 'fourth'}
+    >>> word_set.add_numeral('absolute_number', 2, 'es')
+    {'season_number_cardinal': 'four',
+     'season_number_ordinal': 'fourth',
+     'absolute_number_cardinal_es': 'dos',
+     'absolute_number_ordinal_es': 'segundo'}
     """
 
     def add_numeral(self,
             label: str,
             number: Optional[int],
-            lang: Optional[str] = None
+            lang: Optional[str] = None,
         ) -> None:
         """
         Add the cardinal and ordinal versions of the given number under
-        the given label. For example:
-
-        >>> word_set = WordSet()
-        >>> word_set.add_numeral('season_number', 4)
-        >>> print(word_set)
-        {'season_number_cardinal': 'four',
-         'season_number_ordinal': 'fourth'}
-        >>> word_set.add_numeral('absolute_number', 2, 'es')
-        {'season_number_cardinal': 'four',
-         'season_number_ordinal': 'fourth',
-         'absolute_number_cardinal_es': 'dos',
-         'absolute_number_ordinal_es': 'segundo'}
+        the given label.
 
         Args:
             label: Label key to add the converted number under.
             number: Number to wordify and add into this object.
-            lang: Optional language to wordify the object into. Appended
-                to any added keys.
+            lang: Language to wordify the object into. Appended to any
+                added keys.
         """
 
         # If value is None, do nothing
@@ -71,6 +70,29 @@ class WordSet(dict):
         return None
 
 
+    def has_number(self, label: str, lang: Optional[str] = None) -> bool:
+        """
+        Whether this object has defined translations for the given label
+        and language combination.
+
+        Args:
+            label: Label key of the converted numbers.
+            lang: Language of the converted numbers.
+
+        Returns:
+            True if the cardinal and ordinal translations are defined
+            for this label and language; False otherwise.
+        """
+
+        if lang:
+            return (
+                f'{label}_cardinal_{lang}' in self
+                and f'{label}_ordinal_{lang}' in self
+            )
+
+        return f'{label}_cardinal' in self and f'{label}_ordinal' in self
+
+
 class EpisodeInfo(DatabaseInfoContainer):
     """
     This class describes static information about an Episode, such as
@@ -79,9 +101,9 @@ class EpisodeInfo(DatabaseInfoContainer):
     """
 
     __slots__ = (
-        'title', 'season_number', 'episode_number', 'absolute_number', 'emby_id',
-        'imdb_id', 'jellyfin_id', 'tmdb_id', 'tvdb_id', 'tvrage_id', 'airdate',
-        '__word_set',
+        'title', 'season_number', 'episode_number', 'absolute_number',
+        'emby_id', 'imdb_id', 'jellyfin_id', 'tmdb_id', 'tvdb_id', 'tvrage_id',
+        'airdate', '__languages', '__word_set',
     )
 
 
@@ -98,6 +120,7 @@ class EpisodeInfo(DatabaseInfoContainer):
             tvdb_id: Optional[int] = None,
             tvrage_id: Optional[int] = None,
             airdate: Optional[datetime] = None,
+            languages: list[str] = [],
         ) -> None:
         """
         Initialize this object with the given title, indices, database
@@ -134,21 +157,8 @@ class EpisodeInfo(DatabaseInfoContainer):
         self.set_tvrage_id(tvrage_id)
 
         # Add word variations for each of this episode's indices
+        self.__languages = languages + [None]
         self.__word_set = WordSet()
-        for label, number in (
-            ('season_number', self.season_number),
-            ('episode_number', self.episode_number),
-            ('absolute_number', self.absolute_number)):
-            self.__word_set.add_numeral(label, number)
-
-        # Add translated word variations for each globally enabled language
-        # if preferences is not None:
-        #     for lang in preferences.supported_language_codes:
-        #         for label, number in (
-        #             ('season_number', self.season_number),
-        #             ('episode_number', self.episode_number),
-        #             ('absolute_number', self.absolute_number)):
-        #             self.__word_set.add_numeral(label, number, lang)
 
 
     def __repr__(self) -> str:
@@ -208,6 +218,28 @@ class EpisodeInfo(DatabaseInfoContainer):
             and self.episode_number == info.episode_number
             and self.title.matches(info.title)
         )
+
+
+    @property
+    def word_set(self) -> WordSet[str, str]:
+        """
+        The WordSet for this object. This constructs the translations of
+        the season, episode, and absolute numbers if not already
+        present.
+        """
+
+        number_sets = (
+            ('season_number', self.season_number),
+            ('episode_number', self.episode_number),
+            ('absolute_number', self.absolute_number)
+        )
+
+        for lang in self.__languages:
+            for label, number in number_sets:
+                if not self.__word_set.has_number(label, lang):
+                    self.__word_set.add_numeral(label, number, lang=lang)
+
+        return self.__word_set
 
 
     @staticmethod
@@ -285,7 +317,7 @@ class EpisodeInfo(DatabaseInfoContainer):
             'episode_number': self.episode_number,
             'absolute_number': self.absolute_number,
             'airdate': self.airdate,
-            **self.__word_set,
+            **self.word_set,
         }
 
 
