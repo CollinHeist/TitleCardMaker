@@ -8,6 +8,7 @@ from modules.EmbyInterface import EmbyInterface
 from modules.Debug import log, TQDM_KWARGS
 from modules.JellyfinInterface import JellyfinInterface
 from modules.PlexInterface import PlexInterface
+from modules.Show import Show
 from modules.ShowArchive import ShowArchive
 from modules.SonarrInterface import SonarrInterface
 from modules.TautulliInterface import TautulliInterface
@@ -108,8 +109,8 @@ class Manager:
             )
 
         # Setup blank show and archive lists
-        self.shows = []
-        self.archives = []
+        self.shows: list[Show] = []
+        self.archives: list[ShowArchive] = []
 
 
     def sync_series_files(self) -> None:

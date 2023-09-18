@@ -59,7 +59,7 @@ class TintedGlassTitleCard(BaseCardType):
         'hide_episode_text', 'font_file', 'font_size', 'font_color',
         'font_interline_spacing', 'font_interword_spacing', 'font_kerning',
         'font_vertical_shift', 'episode_text_color', 'episode_text_position',
-        'box_adjustments',
+        'box_adjustments', 'glass_color',
     )
 
     def __init__(self,
@@ -77,10 +77,11 @@ class TintedGlassTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
-            episode_text_position: SeriesExtra[Position] = 'center',
-            box_adjustments: SeriesExtra[str] = None,
-            preferences: 'Preferences' = None,
+            episode_text_color: str = EPISODE_TEXT_COLOR,
+            episode_text_position: Position = 'center',
+            box_adjustments: Optional[str] = None,
+            glass_color: str = DARKEN_COLOR,
+            preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) -> None:
 
@@ -131,6 +132,7 @@ class TintedGlassTitleCard(BaseCardType):
                 log.error(f'Invalid box adjustments "{box_adjustments}" - {e}')
                 self.box_adjustments = (0, 0, 0, 0)
                 self.valid = False
+        self.glass_color = glass_color
 
 
     def blur_rectangle_command(self,
@@ -169,7 +171,7 @@ class TintedGlassTitleCard(BaseCardType):
             f'-blur {self.TEXT_BLUR_PROFILE}',
             f'+mask',
             # Darken area behind title text
-            f'-fill "{self.DARKEN_COLOR}"',
+            f'-fill "{self.glass_color}"',
             f'-draw "roundrectangle {draw_coords}"',
         ]
 
@@ -195,7 +197,7 @@ class TintedGlassTitleCard(BaseCardType):
             f'-font "{self.font_file}"',
             f'-pointsize {font_size}',
             f'-interline-spacing {interline_spacing}',
-            f'-interword-spacing 40',
+            f'-interword-spacing {interword_spacing}',
             f'-kerning {kerning}',
             f'-fill "{self.font_color}"',
             f'-annotate +0+{vertical_shift} "{self.title_text}"',
@@ -313,7 +315,7 @@ class TintedGlassTitleCard(BaseCardType):
     def modify_extras(
             extras: dict,
             custom_font: bool,
-            custom_season_titles: bool
+            custom_season_titles: bool,
         ) -> None:
         """
         Modify the given extras base on whether font or season titles

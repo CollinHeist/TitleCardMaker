@@ -4,9 +4,11 @@ from re import compile as re_compile, match, IGNORECASE
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
+from modules.EpisodeMap import EpisodeMap
 from modules.Font import Font
 from modules.MultiEpisode import MultiEpisode
 from modules.SeriesInfo import SeriesInfo
+
 
 class Profile:
     """
@@ -27,8 +29,9 @@ class Profile:
             series_info: SeriesInfo,
             font: Font,
             hide_seasons: bool,
-            episode_map: 'EpisodeMap',
-            episode_text_format: str) -> None:
+            episode_map: EpisodeMap,
+            episode_text_format: str,
+        ) -> None:
         """
         Construct a new instance of a Profile. All given arguments will
         be applied through this Profile (and whether it's generic or
@@ -140,9 +143,9 @@ class Profile:
         """
 
         # Update this object's data
-        self.__use_custom_seasons = (seasons in ('custom', 'hidden'))
-        self.hide_season_title = (seasons == 'hidden')
-        self.__use_custom_font = (font == 'custom')
+        self.__use_custom_seasons = seasons in ('custom', 'hidden')
+        self.hide_season_title = seasons == 'hidden'
+        self.__use_custom_font = font == 'custom'
 
         # If the new profile has a generic font, reset font attributes
         if not self.__use_custom_font:
@@ -220,8 +223,9 @@ class Profile:
             log.warning(f'Episode text formatting uses absolute episode number,'
                         f' but {episode} has no absolute number - using episode'
                         f' number instead')
-            format_string = self.episode_text_format.replace('{abs_',
-                                                             '{episode_')
+            format_string = self.episode_text_format.replace(
+                '{abs_', '{episode_'
+            )
 
         # Format MultiEpisode episode text
         if isinstance(episode, MultiEpisode):

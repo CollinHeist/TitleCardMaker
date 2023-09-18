@@ -1,5 +1,7 @@
+ARG PYVERSION=3.11
+
 # Create pipenv image to convert Pipfile to requirements.txt
-FROM python:3.11-slim as pipenv
+FROM python:${PYVERSION}-slim as pipenv
 
 # Copy Pipfile and Pipfile.lock
 COPY Pipfile Pipfile.lock ./
@@ -8,7 +10,7 @@ COPY Pipfile Pipfile.lock ./
 RUN pip3 install --no-cache-dir --upgrade pipenv; \
     pipenv requirements > requirements.txt
 
-FROM python:3.11-slim as python-reqs
+FROM python:${PYVERSION}-slim as python-reqs
 
 # Copy requirements.txt from pipenv stage
 COPY --from=pipenv /requirements.txt requirements.txt
@@ -19,7 +21,7 @@ RUN apt-get update; \
     pip3 install --no-cache-dir -r requirements.txt
 
 # Set base image for running TCM
-FROM python:3.11-slim
+FROM python:${PYVERSION}-slim
 LABEL maintainer="CollinHeist" \
       description="Automated title card maker for Plex"
 
@@ -28,6 +30,7 @@ WORKDIR /maker
 COPY . /maker
 
 # Copy python packages from python-reqs
+# update with python version
 COPY --from=python-reqs /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 
 # Script environment variables
@@ -47,6 +50,8 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends imagemagick libmagickcore-6.q16-6-extra; \
     rm -rf /var/lib/apt/lists/*; \
     cp modules/ref/policy.xml /etc/ImageMagick-6/policy.xml
+
+VOLUME [ "/config" ]
 
 # Entrypoint
 CMD ["python3", "main.py", "--run", "--no-color"]

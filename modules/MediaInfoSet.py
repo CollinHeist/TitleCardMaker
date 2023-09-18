@@ -140,7 +140,7 @@ class MediaInfoSet:
             self.series_info_db.insert({
                 'full_name': full_name, 'emby_id': emby_id, 'imdb_id': imdb_id,
                 'jellyfin_id': jellyfin_id, 'sonarr_id': sonarr_id,
-                'tmdb_id': tmdb_id, 'tvdb_id': tvdb_id, 'tvrage_id': tvrage_id, 
+                'tmdb_id': tmdb_id, 'tvdb_id': tvdb_id, 'tvrage_id': tvrage_id,
             })
 
             return series_info

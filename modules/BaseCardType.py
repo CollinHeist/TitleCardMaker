@@ -27,6 +27,9 @@ class BaseCardType(ImageMaker):
     """Default case string for all title text"""
     DEFAULT_FONT_CASE = 'upper'
 
+    """Default font replacements"""
+    FONT_REPLACEMENTS = {}
+
     """Mapping of 'case' strings to format functions"""
     CASE_FUNCTIONS = {
         'blank': lambda _: '',
@@ -87,13 +90,6 @@ class BaseCardType(ImageMaker):
 
     @property
     @abstractmethod
-    def FONT_REPLACEMENTS(self) -> dict:
-        """Standard font replacements for the episode title font"""
-        raise NotImplementedError(f'All CardType objects must implement this')
-
-
-    @property
-    @abstractmethod
     def USES_SEASON_TITLE(self) -> bool:
         """Whether this class uses season titles for archives"""
         raise NotImplementedError(f'All CardType objects must implement this')
@@ -136,10 +132,9 @@ class BaseCardType(ImageMaker):
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        attributes = ', '.join(
-            f'{attr}={getattr(self, attr)!r}' for attr in self.__slots__
-            if not attr.startswith('__')
-        )
+        attributes = ', '.join(f'{attr}={getattr(self, attr)!r}'
+                               for attr in self.__slots__
+                               if not attr.startswith('__'))
 
         return f'<{self.__class__.__name__} {attributes}>'
 
