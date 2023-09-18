@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 from typing import Callable, Optional
 
-from pydantic import Field, PositiveInt
+from pydantic import Field, PositiveInt # pylint: disable=no-name-in-module
 
 from app.schemas.base import Base
 

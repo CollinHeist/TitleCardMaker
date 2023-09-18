@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Body, Depends, Request
 
-from app.dependencies import *
+from app.dependencies import get_preferences
 from app.internal.auth import get_current_user
 from app.models.preferences import Preferences as PreferencesModel
 from app.schemas.preferences import (

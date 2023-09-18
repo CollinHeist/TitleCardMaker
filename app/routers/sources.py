@@ -4,7 +4,6 @@ from fastapi import (
     APIRouter, BackgroundTasks, Depends, Form, HTTPException, Request,
     UploadFile,
 )
-from fastapi_pagination import paginate as paginate_sequence
 from fastapi_pagination.ext.sqlalchemy import paginate
 from requests import get
 from sqlalchemy.orm import Session
@@ -502,7 +501,6 @@ async def set_series_backdrop(
         file: Optional[UploadFile] = None,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
     ) -> None:
     """
     Set the backdrop for the given Series. If there is an existing

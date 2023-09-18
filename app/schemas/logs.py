@@ -1,4 +1,4 @@
-# pylint: disable=missing-class-docstring,missing-function-docstring
+# pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from datetime import datetime
 from typing import Literal
 

@@ -1,7 +1,7 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from typing import Literal, Union
 
-from pydantic import BaseModel, constr, root_validator
+from pydantic import BaseModel, constr, root_validator # pylint: disable=no-name-in-module
 
 
 # Default value to use for arguments in Update objects that accept None

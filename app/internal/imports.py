@@ -921,7 +921,7 @@ def parse_templates(
                 status_code=422,
                 detail=f'Invalid extras in Template "{template_name}"',
             )
-        
+
         # Remove logo, as this is built-in
         extras.pop('logo', None)
 

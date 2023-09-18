@@ -109,7 +109,7 @@ class Font(Base):
                 for key, value in self.__dict__.items()
                 if not key.startswith('_')
             }
-        
+
         return {
             f'font_{key}': value
             for key, value in self.__dict__.items()
