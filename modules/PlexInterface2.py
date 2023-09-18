@@ -44,7 +44,7 @@ def catch_and_log(
 
     Args:
         message: Message to log upon uncaught exception.
-        default: (Keyword) Value to return if decorated function raises
+        default: Value to return if decorated function raises
             an uncaught exception.
 
     Returns:
@@ -108,7 +108,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
             use_magick_prefix: Whether to use 'magick' command prefix.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         super().__init__(filesize_limit, use_magick_prefix)
@@ -154,7 +154,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         Args:
             library_name: The name of the library to get.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             The Library object if found, None otherwise.
@@ -184,7 +184,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         Args:
             library: The Library object to search for within Plex.
             series_info: Series to get the episodes of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             The Series associated with this SeriesInfo object.
@@ -292,7 +292,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             excluded_tags: Optional list of tags to filter return by. If
                 provided, series with any of the given tags are not
                 returned.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of tuples whose elements are the SeriesInfo of the
@@ -356,7 +356,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         Args:
             library_name: The name of the library containing the series.
             series_info: Series to get the episodes of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of tuples of the EpisodeInfos and that episode's
@@ -414,7 +414,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             library_name: The name of the library containing the Series.
             series_info: The Series to update.
             episodes: List of Episode objects to update.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # If no episodes, exit
@@ -455,7 +455,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         Args:
             library_name: The name of the library containing the series.
             series_info: SeriesInfo to update.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # If all possible ID's are defined
@@ -499,7 +499,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             library_name: Name of the library the series is under.
             series_info: SeriesInfo for the entry.
             infos: List of EpisodeInfo objects to update.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # If the given library cannot be found, exit
@@ -550,7 +550,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         Args:
             query: Series name or substring to look up.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of SearchResults for the given query. Results are from
@@ -610,7 +610,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             library_name: Name of the library the series is under.
             series_info: The series to get the source image of.
             episode_info: The episode to get the source image of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             URL to the thumbnail of the given Episode. None if the
@@ -664,7 +664,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         Args:
             library_name: Name of the library the series is under.
             series_info: The series to get the poster of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             URL to the poster for the given series. None if the library,
@@ -734,7 +734,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             series_info: SeriesInfo whose cards are being loaded.
             episode_and_cards: List of tuple of Episode and their
                 corresponding Card objects to load.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # No episodes to load, exit
@@ -795,7 +795,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         Args:
             rating_key: Rating key used to fetch the item within Plex.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of tuples of the library name, SeriesInfo, EpisodeInfo,
@@ -872,7 +872,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             series_info: SeriesInfo whose Episodes' labels are being
                 removed.
             labels: List of labels to remove.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # Exit if no labels to remove
