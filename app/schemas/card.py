@@ -67,7 +67,7 @@ class PreviewTitleCard(UpdateBase):
     title_text: str = 'Example Title'
     season_text: str = 'Season 1'
     hide_season_text: bool = False
-    episode_text: str = 'Season 1'
+    episode_text: str = 'Episode 1'
     hide_episode_text: bool = False
     blur: bool = False
     grayscale: bool = False
