@@ -17,7 +17,9 @@ depends_on = ${repr(depends_on)}
 
 
 def upgrade() -> None:
+    print(f'Upgrading SQL to Revision[{revision}]..')
     ${upgrades if upgrades else "pass"}
+    print(f'Upgraded SQL to Revision[{revision}]')
 
 
 def downgrade() -> None:
