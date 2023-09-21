@@ -143,7 +143,7 @@ class InterfaceGroup(Generic[_InterfaceID, _Interface],
                 will map and initialize.
             interface_kwargs: Iterable of kwargs for initializing each
                 Interface object with.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             Initialized `InterfaceGroup` object containing initalized
@@ -191,19 +191,43 @@ class InterfaceGroup(Generic[_InterfaceID, _Interface],
         return interface_id, interface
 
 
+    def initialize_interface(self,
+            interface_id: _InterfaceID,
+            interface_kwargs: dict,
+            *,
+            log: Logger = log,
+        ) -> _Interface:
+        """
+        Construct and initialize the Interface with the given ID.
+
+        Args:
+            interface_id: ID of the Interface to initialize.
+            interface_kwargs: Kwargs to pass to the Interface
+                initialization.
+            log: Logger for all log messages.
+
+        Returns:
+            Initialized Interface.
+        """
+
+        self.interfaces[interface_id] = self.cls(**interface_kwargs, log=log)
+
+        return self.interfaces[interface_id]
+
+
     def refresh_all(self,
             interface_kwargs: list[dict],
             *,
             log: Logger = log,
         ) -> None:
         """
-        Reset and refresh all interfaces. Functionally equivalent to
+        Reset and refresh all interfaces.
 
         Args:
             interface_kwargs: List of kwargs to pass to each interface
                 initialization. `'interface_id'` must be an included
                 keyword.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         self.interfaces = {}
@@ -225,7 +249,7 @@ class InterfaceGroup(Generic[_InterfaceID, _Interface],
             interface_id: ID of the interface being refreshed.
             interface_kwargs: Keyword arguments to initialize the
                 Interface with.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             Interface initialized with the given arguments.
@@ -234,3 +258,14 @@ class InterfaceGroup(Generic[_InterfaceID, _Interface],
         self.interfaces[interface_id] = self.cls(**interface_kwargs, log=log)
 
         return self.interfaces[interface_id]
+
+
+    def disable(self, interface_id: _InterfaceID, /) -> None:
+        """
+        Disable (and delete) the Interface with the given ID.
+
+        Args:
+            interface_id: ID of the Interface to disable.
+        """
+
+        del self.interfaces[interface_id]
