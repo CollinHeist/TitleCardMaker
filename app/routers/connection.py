@@ -1,16 +1,20 @@
 from typing import Literal
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Request
+from fastapi import APIRouter, Body, Depends, Request
 
+from app.database.query import get_connection
 from app.dependencies import * # pylint: disable=W0401,W0614,W0621
 from app.internal.auth import get_current_user
-from app.internal.connection import update_connection, update_tmdb
+from app.internal.connection import (
+    add_connection, update_connection, update_tmdb
+)
+from app import models
 from app.schemas.connection import (
     EmbyConnection, JellyfinConnection, NewEmbyConnection,
     NewJellyfinConnection, NewPlexConnection, NewSonarrConnection,
-    NewTautulliConnection, PlexConnection, SonarrConnection, SonarrLibrary,
-    TMDbConnection, UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr,
-    UpdateTMDb,
+    NewTautulliConnection, PlexConnection, ServerConnection, SonarrConnection,
+    SonarrLibrary, TMDbConnection, UpdateEmby, UpdateJellyfin, UpdatePlex,
+    UpdateSonarr, UpdateTMDb,
 )
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TautulliInterface2 import TautulliInterface
@@ -28,100 +32,64 @@ connection_router = APIRouter(
 def add_emby_connection(
         request: Request,
         new_connection: NewEmbyConnection = Body(...),
-        preferences: Preferences = Depends(get_preferences),
-        interface_group: InterfaceGroup[int, EmbyInterface] = Depends(get_all_emby_interfaces),
+        db: Session = Depends(get_database),
+        interface_group: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
     ) -> EmbyConnection:
     """
     # TODO write
     """
 
-    # Get contextual logger
-    log = request.state.log
-
-    # Create interface, get generated ID
-    kwargs = new_connection.dict()
-    interface_id, _ = interface_group.append_interface(log=log, **kwargs)
-
-    # Store these interface kwargs, commit preference changes
-    preferences.emby_args[interface_id] = kwargs
-    preferences.commit(log=log)
-
-    return kwargs | {'interface_id': interface_id}
+    return add_connection(
+        db, new_connection, interface_group, log=request.state.log,
+    )
 
 
 @connection_router.post('/jellyfin/new', status_code=201)
 def add_jellyfin_connection(
         request: Request,
         new_connection: NewJellyfinConnection = Body(...),
-        preferences: Preferences = Depends(get_preferences),
-        interface_group: InterfaceGroup[int, EmbyInterface] = Depends(get_all_jellyfin_interfaces),
+        db: Session = Depends(get_database),
+        interface_group: InterfaceGroup[int, EmbyInterface] = Depends(get_jellyfin_interfaces),
     ) -> EmbyConnection:
     """
     # TODO write
     """
 
-    # Get contextual logger
-    log = request.state.log
-
-    # Create interface, get generated ID
-    kwargs = new_connection.dict()
-    interface_id, _ = interface_group.append_interface(log=log, **kwargs)
-
-    # Store these interface kwargs, commit preference changes
-    preferences.jellyfin_args[interface_id] = kwargs
-    preferences.commit(log=log)
-
-    return kwargs | {'interface_id': interface_id}
+    return add_connection(
+        db, new_connection, interface_group, log=request.state.log,
+    )
 
 
 @connection_router.post('/plex/new', status_code=201)
 def add_plex_connection(
         request: Request,
         new_connection: NewPlexConnection = Body(...),
-        preferences: Preferences = Depends(get_preferences),
-        interface_group: InterfaceGroup[int, EmbyInterface] = Depends(get_all_plex_interfaces),
+        db: Session = Depends(get_database),
+        interface_group: InterfaceGroup[int, EmbyInterface] = Depends(get_plex_interfaces),
     ) -> EmbyConnection:
     """
     # TODO write
     """
 
-    # Get contextual logger
-    log = request.state.log
-
-    # Create interface, get generated ID
-    kwargs = new_connection.dict()
-    interface_id, _ = interface_group.append_interface(log=log, **kwargs)
-
-    # Store these interface kwargs, commit preference changes
-    preferences.plex_args[interface_id] = kwargs
-    preferences.commit(log=log)
-
-    return kwargs | {'interface_id': interface_id}
+    return add_connection(
+        db, new_connection, interface_group, log=request.state.log,
+    )
 
 
 @connection_router.post('/sonarr/new', status_code=201)
 def add_sonarr_connection(
         request: Request,
         new_connection: NewSonarrConnection = Body(...),
-        preferences: Preferences = Depends(get_preferences),
-        interface_group: InterfaceGroup[int, SonarrInterface] = Depends(get_all_sonarr_interfaces),
+        db: Session = Depends(get_database),
+        interface_group: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
     ) -> SonarrConnection:
     """
     # TODO write
     """
 
-    # Get contextual logger
-    log = request.state.log
-
-    # Create interface, get generated ID
-    kwargs = new_connection.dict()
-    interface_id, _ = interface_group.append_interface(log=log, **kwargs)
-
-    # Store these interface kwargs, commit preference changes
-    preferences.sonarr_args[interface_id] = kwargs
-    preferences.commit(log=log)
-
-    return kwargs | {'interface_id': interface_id}
+    return add_connection(
+        db, new_connection, interface_group, log=request.state.log,
+    )
 
 
 @connection_router.put('/tmdb/{status}', status_code=204)
@@ -146,14 +114,18 @@ def enable_or_disable_tmdb(
     preferences.commit(log=log)
 
 
-@connection_router.put('/{connection}/{interface_id}/{status}', status_code=204)
+@connection_router.put('/{connection}/{interface_id}/{status}')
 def enable_or_disable_connection_by_id(
         request: Request,
         connection: Literal['emby', 'jellyfin', 'plex', 'sonarr'],
         interface_id: int,
         status: Literal['enable', 'disable'],
-        preferences: Preferences = Depends(get_preferences),
-    ) -> None:
+        db: Session = Depends(get_database),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
+    ) -> ServerConnection:
     """
     Set the enabled/disabled status of the given connection.
 
@@ -162,64 +134,56 @@ def enable_or_disable_connection_by_id(
     - status: Whether to enable or disable the given interface.
     """
 
-    # Get contextual logger
-    log = request.state.log
+    # Get Connection with this ID
+    connection = get_connection(db, interface_id, raise_exc=True)
 
+    # Update enabled status
+    connection.enabled = status == 'enable'
+    db.commit()
+
+    # If Interface was disabled, nothing else to do
+    if not connection.enabled:
+        emby_interfaces.disable(interface_id)
+        return connection
+
+    # Refresh interface
     if connection == 'emby':
-        if interface_id not in preferences.emby_args:
-            raise HTTPException(
-                status_code=409,
-                detail=f'No Emby connection with ID {interface_id}',
-            )
-        preferences.emby_args[interface_id]['enabled'] = status == 'enable'
-        if status == 'enable':
-            refresh_emby_interfaces(interface_id, log=log)
+        emby_interfaces.refresh(
+            interface_id, connection.emby_kwargs, log=request.state.log,
+        )
     elif connection == 'jellyfin':
-        if interface_id not in preferences.jellyfin_args:
-            raise HTTPException(
-                status_code=409,
-                detail=f'No Jellyfin connection with ID {interface_id}',
-            )
-        preferences.jellyfin_args[interface_id]['enabled'] = status == 'enable'
-        if status == 'enable':
-            refresh_jellyfin_interfaces(interface_id, log=log)
+        jellyfin_interfaces.refresh(
+            interface_id, connection.jellyfin_kwargs, log=request.state.log,
+        )
     elif connection == 'plex':
-        if interface_id not in preferences.plex_args:
-            raise HTTPException(
-                status_code=409,
-                detail=f'No Plex connection with ID {interface_id}',
-            )
-        preferences.plex_args[interface_id]['enabled'] = status == 'enable'
-        if status == 'enable':
-            refresh_plex_interfaces(interface_id, log=log)
+        plex_interfaces.refresh(
+            interface_id, connection.plex_kwargs, log=request.state.log,
+        )
     elif connection == 'sonarr':
-        if interface_id not in preferences.sonarr_args:
-            raise HTTPException(
-                status_code=409,
-                detail=f'No Sonarr connection with ID {interface_id}',
-            )
-        preferences.sonarr_args[interface_id]['enabled'] = status == 'enable'
-        if status == 'enable':
-            refresh_sonarr_interfaces(interface_id, log=log)
+        sonarr_interfaces.refresh(
+            interface_id, connection.sonarr_kwargs, log=request.state.log,
+        )
 
-    preferences.commit(log=log)
+    return connection
 
 
 @connection_router.get('/emby/all', status_code=200)
 def get_all_emby_connection_details(
-        preferences: Preferences = Depends(get_preferences),
+        db: Session = Depends(get_database),
     ) -> list[EmbyConnection]:
     """
     Get Emby connection details for all defined interfaces.
     """
 
-    return preferences.all_emby_argument_groups
+    return db.query(models.connection.Connection)\
+        .filter_by(interface='Emby')\
+        .all()
 
 
 @connection_router.get('/emby/{interface_id}', status_code=200)
 def get_emby_connection_details_by_id(
         interface_id: int,
-        preferences: Preferences = Depends(get_preferences),
+        db: Session = Depends(get_database),
     ) -> EmbyConnection:
     """
     Get the details for the Emby connection with the given ID.
@@ -227,30 +191,26 @@ def get_emby_connection_details_by_id(
     - interface_id: ID of the Interface whose connection details to get.
     """
 
-    if interface_id in preferences.emby_args:
-        return preferences.emby_args[interface_id]
-
-    raise HTTPException(
-        status_code=404,
-        detail=f'No Emby connection with ID {interface_id}',
-    )
+    return get_connection(db, interface_id, raise_exc=True)
 
 
 @connection_router.get('/jellyfin/all', status_code=200)
 def get_all_jellyfin_connection_details(
-        preferences: Preferences = Depends(get_preferences),
+        db: Session = Depends(get_database),
     ) -> list[JellyfinConnection]:
     """
     Get Jellyfin connection details for all defined interfaces.
     """
 
-    return preferences.all_emby_argument_groups
+    return db.query(models.connection.Connection)\
+        .filter_by(interface='Jellyfin')\
+        .all()
 
 
 @connection_router.get('/jellyfin/{interface_id}', status_code=200)
 def get_jellyfin_connection_details_by_id(
         interface_id: int,
-        preferences: Preferences = Depends(get_preferences),
+        db: Session = Depends(get_database),
     ) -> JellyfinConnection:
     """
     Get the details for the Emby connection with the given ID.
@@ -258,30 +218,26 @@ def get_jellyfin_connection_details_by_id(
     - interface_id: ID of the Interface whose connection details to get.
     """
 
-    if interface_id in preferences.jellyfin_args:
-        return preferences.jellyfin_args[interface_id]
-
-    raise HTTPException(
-        status_code=404,
-        detail=f'No Jellyfin connection with ID {interface_id}',
-    )
+    return get_connection(db, interface_id, raise_exc=True)
 
 
 @connection_router.get('/plex/all', status_code=200)
 def get_all_plex_connection_details(
-        preferences: Preferences = Depends(get_preferences),
+        db: Session = Depends(get_database),
     ) -> list[PlexConnection]:
     """
     Get Plex connection details for all defined interfaces.
     """
 
-    return preferences.all_plex_argument_groups
+    return db.query(models.connection.Connection)\
+        .filter_by(interface='Plex')\
+        .all()
 
 
 @connection_router.get('/plex/{interface_id}', status_code=200)
 def get_plex_connection_details_by_id(
         interface_id: int,
-        preferences: Preferences = Depends(get_preferences),
+        db: Session = Depends(get_database),
     ) -> PlexConnection:
     """
     Get the details for the Plex connection with the given ID.
@@ -289,30 +245,26 @@ def get_plex_connection_details_by_id(
     - interface_id: ID of the Interface whose connection details to get.
     """
 
-    if interface_id in preferences.plex_args:
-        return preferences.plex_args[interface_id]
-
-    raise HTTPException(
-        status_code=404,
-        detail=f'No Plex connection with ID {interface_id}',
-    )
+    return get_connection(db, interface_id, raise_exc=True)
 
 
 @connection_router.get('/sonarr/all', status_code=200)
 def get_all_sonarr_connection_details(
-        preferences: Preferences = Depends(get_preferences),
+        db: Session = Depends(get_database),
     ) -> list[SonarrConnection]:
     """
     Get Sonarr connection details for all defined interfaces.
     """
 
-    return preferences.all_sonarr_argument_groups
+    return db.query(models.connection.Connection)\
+        .filter_by(interface='Sonarr')\
+        .all()
 
 
 @connection_router.get('/sonarr/{interface_id}', status_code=200)
 def get_sonarr_connection_details_by_id(
         interface_id: int,
-        preferences: Preferences = Depends(get_preferences),
+        db: Session = Depends(get_database),
     ) -> SonarrConnection:
     """
     Get the details for the Sonarr connection with the given ID.
@@ -320,13 +272,7 @@ def get_sonarr_connection_details_by_id(
     - interface_id: ID of the Interface whose connection details to get.
     """
 
-    if interface_id in preferences.sonarr_args:
-        return preferences.sonarr_args[interface_id]
-
-    raise HTTPException(
-        status_code=404,
-        detail=f'No Sonarr connection with ID {interface_id}',
-    )
+    return get_connection(db, interface_id, raise_exc=True)
 
 
 @connection_router.get('/tmdb', status_code=200)
@@ -341,79 +287,81 @@ def get_tmdb_connection_details(
 
 
 @connection_router.patch('/emby/{interface_id}', status_code=200)
-def update_emby_connection_by_id(
+def update_emby_connection(
         request: Request,
         interface_id: int,
         update_emby: UpdateEmby = Body(...),
-        preferences: Preferences = Depends(get_preferences),
+        db: Session = Depends(get_database),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
     ) -> EmbyConnection:
     """
-    Update the connection details for Emby.
+    Update the Connection details for the given Emby interface.
 
-    - update_sonarr: New Emby connection details.
+    - update_emby: Connection details to modify.
     """
 
     return update_connection(
-        preferences, interface_id, update_emby, 'emby',
-        log=request.state.log
-    ).emby_args[interface_id]
+        db, interface_id, emby_interfaces, update_emby, log=request.state.log
+    )
 
 
 @connection_router.patch('/jellyfin/{interface_id}', status_code=200)
-def update_jellyfin_connection_by_id(
+def update_jellyfin_connection(
         request: Request,
         interface_id: int,
         update_jellyfin: UpdateJellyfin = Body(...),
-        preferences: Preferences = Depends(get_preferences),
+        db: Session = Depends(get_database),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
     ) -> JellyfinConnection:
     """
-    Update the connection details for Jellyfin.
+    Update the Connection details for the given Jellyfin interface.
 
-    - update_sonarr: New Jellyfin connection details.
+    - update_jellyfin: Connection details to modify.
     """
 
     return update_connection(
-        preferences, interface_id, update_jellyfin, 'pjellyfinlex',
+        db, interface_id, jellyfin_interfaces, update_jellyfin,
         log=request.state.log
-    ).jellyfin_args[interface_id]
+    )
 
 
 @connection_router.patch('/plex/{interface_id}', status_code=200)
-def update_plex_connection_by_id(
+def update_plex_connection(
         request: Request,
         interface_id: int,
         update_plex: UpdatePlex = Body(...),
-        preferences: Preferences = Depends(get_preferences),
+        db: Session = Depends(get_database),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
     ) -> PlexConnection:
     """
-    Update the connection details for Plex.
+    Update the Connection details for the given Plex interface.
 
-    - update_sonarr: New Plex connection details.
+    - update_plex: Connection details to modify.
     """
 
     return update_connection(
-        preferences, interface_id, update_plex, 'plex',
-        log=request.state.log
-    ).plex_args[interface_id]
+        db, interface_id, plex_interfaces, update_plex, log=request.state.log
+    )
 
 
 @connection_router.patch('/sonarr/{interface_id}', status_code=200)
-def update_sonarr_connection_by_id(
+def update_sonarr_connection(
         request: Request,
         interface_id: int,
         update_sonarr: UpdateSonarr = Body(...),
-        preferences: Preferences = Depends(get_preferences),
+        db: Session = Depends(get_database),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
     ) -> SonarrConnection:
     """
-    Update the connection details for Sonarr.
+    Update the Connection details for the given Sonarr interface.
 
-    - update_sonarr: New Sonarr connection details.
+    - update_sonarr: Connection details to modify.
     """
 
     return update_connection(
-        preferences, interface_id, update_sonarr, 'sonarr',
+        db, interface_id, sonarr_interfaces, update_sonarr,
         log=request.state.log
-    ).sonarr_args[interface_id]
+    )
 
 
 @connection_router.patch('/tmdb', status_code=200)
@@ -429,6 +377,41 @@ def update_tmdb_connection(
     """
 
     return update_tmdb(preferences, update_object, log=request.state.log)
+
+
+@connection_router.delete('/{interface_id}')
+def delete_connection(
+        interface_id: int,
+        db: Session = Depends(get_database),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
+    ) -> None:
+    """
+    Delete the Connection with the given ID. This also disables and
+    removes the Interface from the relevant InterfaceGroup.
+
+    - interface_id: ID of the Connection to delete.
+    """
+
+    # Get Connection with this ID
+    connection = get_connection(db, interface_id, raise_exc=True)
+
+    # Remove Interface from group
+    if connection.interface == 'Emby':
+        emby_interfaces.disable(interface_id)
+    elif connection.interface == 'Jellyfin':
+        jellyfin_interfaces.disable(interface_id)
+    elif connection.interface == 'Plex':
+        plex_interfaces.disable(interface_id)
+    elif connection.interface == 'Sonarr':
+        sonarr_interfaces.disable(interface_id)
+
+    # Delete Connection
+    db.delete(connection)
+    log.info(f'Deleted {connection.log_str}')
+    db.commit()
 
 
 @connection_router.get('/sonarr/libraries', status_code=200, tags=['Sonarr'])
