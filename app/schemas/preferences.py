@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import DirectoryPath, PositiveInt, constr, validator # pylint: disable=no-name-in-module
 
-from app.schemas.base import Base, ImageSource, UpdateBase, UNSPECIFIED
+from app.schemas.base import Base, InterfaceName, ImageSource, UpdateBase, UNSPECIFIED
 
 
 """
@@ -36,11 +36,15 @@ class ToggleOption(NamedOption):
 # class MediaServerToggle(ToggleOption):
 #     ...
 
-class EpisodeDataSourceToggle(ToggleOption):
-    ...
+class EpisodeDataSourceToggle(Base):
+    interface: InterfaceName
+    interface_id: int
+    selected: bool
 
-class ImageSourceToggle(ToggleOption):
-    ...
+class ImageSourceToggle(Base):
+    interface: InterfaceName
+    interface_id: int
+    selected: bool
 
 class LanguageToggle(ToggleOption):
     ...
