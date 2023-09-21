@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.models.card import Card
+from app.models.connection import Connection
 from app.models.episode import Episode
 from app.models.font import Font
 from app.models.series import Series
@@ -77,6 +78,22 @@ def get_card(
     return _get_obj(db, models.card.Card, 'Card', card_id, raise_exc)
 
 
+def get_connection(
+        db: Session,
+        connection_id: int,
+        /,
+        *,
+        raise_exc: bool = True,
+    ) -> Optional[Connection]:
+    """
+    Get the Connection with the given ID from the given Database.
+
+    See `_get_obj` for all details.
+    """
+
+    return _get_obj(db, Connection, 'Connection', connection_id, raise_exc)
+
+
 def get_episode(
         db: Session,
         episode_id: int,
@@ -89,7 +106,7 @@ def get_episode(
     See `_get_obj` for all details.
     """
 
-    return _get_obj(db, models.episode.Episode, 'Episode', episode_id,raise_exc)
+    return _get_obj(db, Episode, 'Episode', episode_id, raise_exc)
 
 
 def get_font(
@@ -104,7 +121,7 @@ def get_font(
     See `_get_obj` docstring for all details.
     """
 
-    return _get_obj(db, models.font.Font, 'Font', font_id, raise_exc)
+    return _get_obj(db, Font, 'Font', font_id, raise_exc)
 
 
 def get_series(
@@ -119,7 +136,7 @@ def get_series(
     See `_get_obj` for all details.
     """
 
-    return _get_obj(db, models.series.Series, 'Series', series_id, raise_exc)
+    return _get_obj(db, Series, 'Series', series_id, raise_exc)
 
 
 def get_sync(
@@ -134,7 +151,7 @@ def get_sync(
     See `_get_obj` for all details.
     """
 
-    return _get_obj(db, models.sync.Sync, 'Sync', sync_id, raise_exc)
+    return _get_obj(db, Sync, 'Sync', sync_id, raise_exc)
 
 
 def get_template(
@@ -149,9 +166,7 @@ def get_template(
     See `_get_obj` for all details.
     """
 
-    return _get_obj(
-        db, models.template.Template, 'Template', template_id, raise_exc
-    )
+    return _get_obj(db, Template, 'Template', template_id, raise_exc)
 
 
 def get_all_templates(
