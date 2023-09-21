@@ -17,8 +17,10 @@ from app.internal.episodes import refresh_episode_data
 from app.internal.sources import download_series_logo
 from app.models.episode import Episode
 from app.models.series import Series
-from app.schemas.preferences import MediaServer, Preferences
-from app.schemas.series import NewSeries
+from app.schemas.base import MediaServer
+from app.schemas.connection import EpisodeDataSourceInterface
+from app.schemas.preferences import Preferences
+from app.schemas.series import NewSeries, SearchResult
 
 from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
@@ -47,10 +49,10 @@ def set_all_series_ids(*, log: Logger = log) -> None:
                 try:
                     changed |= set_series_database_ids(
                         series, db,
-                        get_all_emby_interfaces(),
-                        get_all_jellyfin_interfaces(),
-                        get_all_plex_interfaces(),
-                        get_all_sonarr_interfaces(),
+                        get_emby_interfaces(),
+                        get_jellyfin_interfaces(),
+                        get_plex_interfaces(),
+                        get_sonarr_interfaces(),
                         get_tmdb_interface(),
                         commit=False,
                     )
@@ -130,10 +132,10 @@ def download_all_series_posters(*, log: Logger = log) -> None:
                 try:
                     download_series_poster(
                         db, get_preferences(), series,
-                        get_all_emby_interfaces(),
+                        get_emby_interfaces(),
                         get_imagemagick_interface(),
-                        get_all_jellyfin_interfaces(),
-                        get_all_plex_interfaces(),
+                        get_jellyfin_interfaces(),
+                        get_plex_interfaces(),
                         get_tmdb_interface(),
                         log=log,
                     )
@@ -349,9 +351,9 @@ def load_series_title_cards(
         series: Series,
         media_server: MediaServer,
         db: Session,
-        emby_interface: Optional[EmbyInterface] = None,
-        jellyfin_interface: Optional[JellyfinInterface] = None,
-        plex_interface: Optional[PlexInterface] = None,
+        emby_interface: InterfaceGroup[int, EmbyInterface],
+        jellyfin_interface: InterfaceGroup[int, JellyfinInterface],
+        plex_interface: InterfaceGroup[int, PlexInterface],
         force_reload: bool = False,
         *,
         log: Logger = log,
@@ -364,14 +366,14 @@ def load_series_title_cards(
         series: Series to load the Title Cards of.
         media_server: Where to load the Title Cards into.
         db: Database to look for and add Loaded records from/to.
-        *_interface: Interface to the applicable Media Server to load
+        *_interfaces: Interfaces to the applicable Media Server to load
             Title Cards into.
         force_reload: Whether to reload Title Cards even if no changes
             are detected.
         log: Logger for all log messages.
 
     Raises:
-        HTTPException (409) if the specified Media Server cannot be
+        HTTPException (409): The specified Media Server cannot be
             communciated with, or if the given Series does not have an
             associated library.
     """

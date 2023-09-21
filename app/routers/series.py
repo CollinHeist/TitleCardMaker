@@ -27,8 +27,8 @@ from app.internal.series import (
 )
 from app.internal.sources import download_episode_source_image
 from app.internal.auth import get_current_user
-from app.schemas.base import UNSPECIFIED
-from app.schemas.preferences import EpisodeDataSource, MediaServer
+from app.schemas.base import MediaServer, UNSPECIFIED
+from app.schemas.preferences import EpisodeDataSource
 from app.schemas.series import NewSeries, SearchResult, Series, UpdateSeries
 
 from modules.EmbyInterface2 import EmbyInterface
@@ -134,11 +134,11 @@ def add_new_series(
         new_series: NewSeries = Body(...),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_all_emby_interfaces),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
         imagemagick_interface: ImageMagickInterface = Depends(get_imagemagick_interface),
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_all_jellyfin_interfaces),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_all_plex_interfaces),
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_all_sonarr_interfaces),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Series:
     """
@@ -365,9 +365,9 @@ def load_title_cards_into_media_server(
         media_server: MediaServer,
         request: Request,
         db: Session = Depends(get_database),
-        emby_interface = Depends(get_emby_interface),
-        jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface)
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
     ) -> None:
     """
     Load all of the given Series' unloaded Title Cards into the given
@@ -383,8 +383,8 @@ def load_title_cards_into_media_server(
     series = get_series(db, series_id, raise_exc=True)
 
     load_series_title_cards(
-        series, media_server, db, emby_interface, jellyfin_interface,
-        plex_interface, force_reload=False, log=request.state.log,
+        series, media_server, db, emby_interfaces, jellyfin_interfaces,
+        plex_interfaces, force_reload=False, log=request.state.log,
     )
 
 
@@ -395,9 +395,9 @@ def reload_title_cards_into_media_server(
         media_server: MediaServer,
         request: Request,
         db: Session = Depends(get_database),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface)
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces)
     ) -> None:
     """
     Reload all of the given Series' Title Cards into the given Media
@@ -412,8 +412,8 @@ def reload_title_cards_into_media_server(
     series = get_series(db, series_id, raise_exc=True)
 
     return load_series_title_cards(
-        series, media_server, db, emby_interface, jellyfin_interface,
-        plex_interface, force_reload=True, log=request.state.log,
+        series, media_server, db, emby_interfaces, jellyfin_interfaces,
+        plex_interfaces, force_reload=True, log=request.state.log,
     )
 
 
@@ -424,10 +424,10 @@ def process_series(
         series_id: int,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_all_emby_interfaces),
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_all_jellyfin_interfaces),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_all_plex_interfaces),
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_all_sonarr_interfaces),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> None:
     """
@@ -501,7 +501,7 @@ def remove_series_labels(
         series_id: int,
         labels: list[str] = Query(default=['TCM', 'Overlay']),
         db: Session = Depends(get_database),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_all_plex_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
     ) -> None:
     """
     Remove the given labels from the given Series' Episodes within Plex.
@@ -532,10 +532,10 @@ def download_series_poster_(
         request: Request,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_all_emby_interfaces),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
         imagemagick_interface: ImageMagickInterface = Depends(get_imagemagick_interface),
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_all_jellyfin_interfaces),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_all_plex_interfaces),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
     ) -> None:
     """

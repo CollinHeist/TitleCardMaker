@@ -41,11 +41,11 @@ def sync_all(*, log: Logger = log) -> None:
                 try:
                     run_sync(
                         db, get_preferences(), sync,
-                        get_all_emby_interfaces(),
+                        get_emby_interfaces(),
                         get_imagemagick_interface(),
-                        get_all_jellyfin_interfaces(),
-                        get_all_plex_interfaces(),
-                        get_all_sonarr_interfaces(),
+                        get_jellyfin_interfaces(),
+                        get_plex_interfaces(),
+                        get_sonarr_interfaces(),
                         get_tmdb_interface(),
                         log=log,
                     )

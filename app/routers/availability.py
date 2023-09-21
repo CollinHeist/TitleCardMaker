@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from requests import get as req_get
 from sqlalchemy.orm import Session
 
+from app.database.query import get_connection
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.auth import get_current_user
 from app.internal.availability import get_latest_version
@@ -17,7 +18,7 @@ from app.schemas.availability import (
 )
 from app.schemas.card import CardType, LocalCardType, RemoteCardType
 from app.schemas.card_type import Extra
-from app.schemas.preferences import EpisodeDataSourceToggle, StyleOption
+from app.schemas.preferences import EpisodeDataSourceToggle, ImageSourceToggle, StyleOption
 from app.schemas.series import MediaServerLibrary
 from app.schemas.sync import Tag
 
@@ -189,30 +190,23 @@ def get_available_episode_data_sources(
     Get all available (enabled) Episode data sources.
     """
 
-    return [ # TODO update
-        {
-            'name': source,
-            'value': source,
-            'selected': source == preferences.episode_data_source
-        } for source in preferences.valid_episode_data_sources
+    return [
+        eds | {'selected': eds == preferences.episode_data_source}
+        for eds in  preferences.valid_episode_data_sources
     ]
 
 
 @availablility_router.get('/image-source-priority', status_code=200)
 def get_image_source_priority(
         preferences: Preferences = Depends(get_preferences),
-    ) -> list[EpisodeDataSourceToggle]:
+    ) -> list[ImageSourceToggle]:
     """
     Get the global image source priority.
     """
 
-    return [ # TODO update
-        {
-            'name': source,
-            'value': source,
-            'selected': (source in preferences.image_source_priority)
-        }
-        for source in (set(preferences.image_source_priority)
+    return [
+        isp | {'selected': isp in preferences.image_source_priority}
+        for isp in (set(preferences.image_source_priority)
                        | set(preferences.valid_image_sources))
     ]
 
@@ -220,9 +214,9 @@ def get_image_source_priority(
 @availablility_router.get('/libraries', status_code=200,
                           tags=['Emby', 'Jellyfin', 'Plex'])
 def get_server_libraries(
-        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_all_emby_interfaces),
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_all_jellyfin_interfaces),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_all_plex_interfaces),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
     ) -> list[MediaServerLibrary]:
     """
     Get all available TV libraries for all enabled interfaces.
@@ -262,8 +256,7 @@ def get_emby_usernames(
         emby_interface: EmbyInterface = Depends(require_emby_interface),
     ) -> list[str]:
     """
-    Get all the public usernames in Emby. Returns an empty list if
-    Emby is disabled.
+    Get all the public usernames in Emby.
     """
 
     return emby_interface.get_usernames()
@@ -271,10 +264,10 @@ def get_emby_usernames(
 
 @availablility_router.get('/usernames/jellyfin', status_code=200, tags=['Jellyfin'])
 def get_jellyfin_usernames(
-        jellyfin_interface: JellyfinInterface = Depends(require_jellyfin_interface),
+        jellyfin_interface: EmbyInterface = Depends(require_jellyfin_interface),
     ) -> list[str]:
     """
-    Get all the public usernames in the specified Jellyfin interface.
+    Get all the public usernames in Jellyfin.
     """
 
     return jellyfin_interface.get_usernames()

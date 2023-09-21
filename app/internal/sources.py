@@ -75,9 +75,9 @@ def download_all_series_logos(*, log: Logger = log) -> None:
                 try:
                     download_series_logo(
                         get_preferences(),
-                        get_all_emby_interfaces(),
+                        get_emby_interfaces(),
                         get_imagemagick_interface(),
-                        get_all_jellyfin_interfaces(),
+                        get_jellyfin_interfaces(),
                         get_tmdb_interface(),
                         series, log=log,
                     )
