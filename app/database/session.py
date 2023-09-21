@@ -4,6 +4,7 @@ from os import environ
 from pathlib import Path
 from re import sub as re_sub
 from shutil import copy as file_copy
+from typing import Optional
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -131,38 +132,11 @@ except Exception as e:
     pass
 
 EmbyInterfaces: InterfaceGroup[int, EmbyInterface] = InterfaceGroup(EmbyInterface)
-try:
-    EmbyInterfaces = InterfaceGroup.from_argument_list(
-        EmbyInterface, PreferencesLocal.emby_args.values(),
-    )
-except Exception as exc:
-    log.exception(f'Error initializing Emby interfaces')
-
 JellyfinInterfaces: InterfaceGroup[int, JellyfinInterface] = InterfaceGroup(JellyfinInterface)
-try:
-    JellyfinInterfaces = InterfaceGroup.from_argument_list(
-        JellyfinInterface, PreferencesLocal.jellyfin_args.values(),
-    )
-except Exception as exc:
-    log.exception(f'Error initializing Jellyfin interfaces')
-
 PlexInterfaces: InterfaceGroup[int, PlexInterface] = InterfaceGroup(PlexInterface)
-try:
-    PlexInterfaces = InterfaceGroup.from_argument_list(
-        PlexInterface, PreferencesLocal.plex_args.values(),
-    )
-except Exception as exc:
-    log.exception(f'Error initializating Plex interfaces', exc)
-
 SonarrInterfaces: InterfaceGroup[int, SonarrInterface] = InterfaceGroup(SonarrInterface)
-try:
-    SonarrInterfaces = InterfaceGroup.from_argument_list(
-        SonarrInterface, PreferencesLocal.sonarr_args.values(),
-    )
-except Exception as exc:
-    log.exception(f'Error initializating Sonarr interfaces', exc)
+TMDbInterfaceLocal: Optional[TMDbInterface] = None
 
-TMDbInterfaceLocal = None
 if PreferencesLocal.use_tmdb:
     try:
         TMDbInterfaceLocal = TMDbInterface(**PreferencesLocal.tmdb_arguments)

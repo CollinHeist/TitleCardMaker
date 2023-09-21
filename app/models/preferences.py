@@ -1,7 +1,7 @@
 from logging import Logger
 from os import environ
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Literal, Optional, Union
 
 from pickle import dump, load
 
@@ -32,12 +32,12 @@ class Preferences:
     )
     DEFAULT_CARD_EXTENSION: CardExtension = '.jpg'
     DEFAULT_IMAGE_SOURCE_PRIORITY = [
-        {'media_server': 'TMDb', 'interface_id': 0},
-        {'media_server': 'Plex', 'interface_id': 0},
-        {'media_server': 'Emby', 'interface_id': 0},
-        {'media_server': 'Jellyfn', 'interface_id': 0},
+        {'interface': 'TMDb', 'interface_id': 0},
+        {'interface': 'Plex', 'interface_id': 0},
+        {'interface': 'Emby', 'interface_id': 0},
+        {'interface': 'Jellyfn', 'interface_id': 0},
     ]
-    DEFAULT_EPISODE_DATA_SOURCE = {'media_server': 'Sonarr', 'interface_id': 0}
+    DEFAULT_EPISODE_DATA_SOURCE = {'interface': 'Sonarr', 'interface_id': 0}
     VALID_IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp')
 
     """Directory to all internal assets"""
@@ -62,7 +62,6 @@ class Preferences:
         'require_auth', 'task_crontabs', 'simplified_data_table',
         'home_page_size', 'episode_data_page_size',
         'stylize_unmonitored_posters', 'sources_as_table',
-        'emby_args', 'jellyfin_args', 'plex_args', 'sonarr_args',
     )
 
 
@@ -96,13 +95,13 @@ class Preferences:
         # Migrate old settings
         if isinstance(self.episode_data_source, str):
             self.episode_data_source = {
-                'media_server': self.episode_data_source, 'interface_id': 0,
+                'interface': self.episode_data_source, 'interface_id': 0,
             }
             self.commit()
         if (len(self.image_source_priority) > 0
             and isinstance(self.image_source_priority[0], str)):
             self.image_source_priority = [
-                {'media_server': source, 'interface_id': 0}
+                {'interface': source, 'interface_id': 0}
                 for source in self.image_source_priority
             ]
             self.commit()
@@ -170,11 +169,6 @@ class Preferences:
         self.excluded_card_types = []
         self.default_watched_style = 'unique'
         self.default_unwatched_style = 'unique'
-
-        self.emby_args: dict[int, dict] = {}
-        self.jellyfin_args: dict[int, dict] = {}
-        self.plex_args: dict[int, dict] = {}
-        self.sonarr_args: dict[int, dict] = {}
 
         self.use_tmdb = False
         self.tmdb_api_key = ''
@@ -304,173 +298,12 @@ class Preferences:
 
 
     @property
-    def valid_image_sources(self) -> list[ImageSource]:
-        """
-        List of valid image sources.
-
-        Returns:
-            List of the names of all valid image sources. Only image
-            sources with at least one defined interface are returned.
-        """
-
-        return ((['Emby'] if self.emby_args else [])
-            + (['Jellyfin'] if self.jellyfin_args else [])
-            + (['Plex'] if self.plex_args else [])
-            + (['TMDb'] if self.use_tmdb else [])
-        )
-
-
-    @property
-    def emby_argument_groups(self) -> list[dict[str, Any]]:
-        """
-        Argument groups for initializing an `InterfaceGroup` of
-        `EmbyInterface` objects.
-
-        Returns:
-            List of dictionaries whose keys/values match a
-            `EmbyConnection` object. Only enabled interfaces are
-            returned.
-        """
-
-        return [
-            {'interface_id': id_} | interface_args
-            for id_, interface_args in self.emby_args.items()
-            if interface_args['enabled']
-        ]
-
-
-    @property
-    def all_emby_argument_groups(self) -> list[dict[str, Any]]:
-        """
-        All argument groups for initializing an `InterfaceGroup` of
-        `EmbyInterface` objects.
-
-        Returns:
-            List of dictionaries whose keys/values match a
-            `EmbyConnection` object.
-        """
-
-        return [
-            {'interface_id': id_} | interface_args
-            for id_, interface_args in self.emby_args.items()
-        ]
-
-
-    @property
     def imagemagick_arguments(self) -> dict[str, bool]:
         """Arguments for initializing a ImageMagickInterface"""
 
         return {
             'use_magick_prefix': self.use_magick_prefix,
         }
-
-
-    @property
-    def jellyfin_argument_groups(self) -> list[dict[str, Any]]:
-        """
-        Argument groups for initializing an `InterfaceGroup` of
-        `JellyfinInterface` objects.
-
-        Returns:
-            List of dictionaries whose keys/values match a
-            `JellyfinConnection` object. Only enabled interfaces are
-            returned.
-        """
-
-        return [
-            {'interface_id': id_} | interface_args
-            for id_, interface_args in self.jellyfin_args.items()
-            if interface_args['enabled']
-        ]
-
-
-    @property
-    def all_jellyfin_argument_groups(self) -> list[dict[str, Any]]:
-        """
-        All argument groups for initializing an `InterfaceGroup` of
-        `JellyfinInterface` objects.
-
-        Returns:
-            List of dictionaries whose keys/values match a
-            `JellyfinConnection` object.
-        """
-
-        return [
-            {'interface_id': id_} | interface_args
-            for id_, interface_args in self.jellyfin_args.items()
-        ]
-
-
-    @property
-    def plex_argument_groups(self) -> list[dict[str, Any]]:
-        """
-        Argument groups for initializing an `InterfaceGroup` of
-        `PlexInterface` objects.
-
-        Returns:
-            List of dictionaries whose keys/values match a
-            `PlexConnection` object. Only enabled interfaces are
-            returned.
-        """
-
-        return [
-            {'interface_id': id_} | interface_args
-            for id_, interface_args in self.plex_args.items()
-            if interface_args['enabled']
-        ]
-
-
-    @property
-    def all_plex_argument_groups(self) -> list[dict[str, Any]]:
-        """
-        All argument groups for initializing an `InterfaceGroup` of
-        `PlexInterface` objects.
-
-        Returns:
-            List of dictionaries whose keys/values match a
-            `PlexConnection` object.
-        """
-
-        return [
-            {'interface_id': id_} | interface_args
-            for id_, interface_args in self.plex_args.items()
-        ]
-
-
-    @property
-    def sonarr_argument_groups(self) -> list[dict[str, Any]]:
-        """
-        Argument groups for initializing an `InterfaceGroup` of
-        `SonarrInterface` objects.
-
-        Returns:
-            List of dictionaries whose keys/values match a
-            `SonarrConnection` object. Only enabled interfaces are
-            returned.
-        """
-
-        return [
-            {'interface_id': id_} | interface_args
-            for id_, interface_args in self.sonarr_args.items()
-            if interface_args['enabled']
-        ]
-
-
-    @property
-    def all_sonarr_argument_groups(self) -> list[dict[str, Any]]:
-        """
-        All argument groups for initializing an `InterfaceGroup` of
-        `SonarrInterface` objects.
-
-        Returns:
-            List of dictionaries whose keys/values match a
-            `SonarrConnection` object.
-        """
-
-        return [
-            {'interface_id': id_} | interface_args
-            for id_, interface_args in self.sonarr_args.items()
-        ]
 
 
     @property
@@ -484,6 +317,43 @@ class Preferences:
             'blacklist_threshold': 3, # TODO add variable
             'logo_language_priority': self.tmdb_logo_language_priority,
         }
+
+
+    @property
+    def valid_episode_data_sources(self) -> list[dict[Literal['interface', 'interface_id'], Union[str, int]]]:
+        """
+        _summary_ # TODO update
+
+        Returns:
+            _description_
+        """
+
+        return (self.emby_argument_groups
+            + self.plex_argument_groups
+            + self.jellyfin_argument_groups
+            + self.sonarr_argument_groups
+            + ([{'interface': 'TMDb', 'interface_id': 0}]
+               if self.use_tmdb else [])
+        )
+
+
+    @property
+    def valid_image_sources(self) -> list[dict[Literal['interface', 'interface_id'], Union[str, int]]]:
+        """
+        List of valid image sources.
+
+        Returns:
+            List of the names of all valid image sources. Only image
+            sources with at least one defined interface are returned.
+        """ # TODO update
+
+        return (self.emby_argument_groups
+            + self.plex_argument_groups
+            + self.jellyfin_argument_groups
+            + self.sonarr_argument_groups
+            + ([{'interface': 'TMDb', 'interface_id': 0}]
+               if self.use_tmdb else [])
+        )
 
 
     @property
