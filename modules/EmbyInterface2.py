@@ -44,7 +44,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             url: str,
             api_key: str,
             username: str,
-            verify_ssl: bool = True,
+            use_ssl: bool = True,
             filesize_limit: Optional[int] = None,
             use_magick_prefix: bool = False,
             *,
@@ -59,7 +59,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             api_key: The API key for API requests.
             username: Username of the Emby account to get watch statuses
                 of.
-            verify_ssl: Whether to verify SSL requests.
+            use_ssl: Whether to use SSL in all requests.
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
             use_magick_prefix: Whether to use 'magick' command prefix.
@@ -74,7 +74,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         # Store attributes of this Interface
         self._interface_id = interface_id
-        self.session = WebInterface('Emby', verify_ssl, log=log)
+        self.session = WebInterface('Emby', use_ssl, log=log)
         self.url = url[:-1] if url.endswith('/') else url
         self.__params = {'api_key': api_key}
         self.username = username
