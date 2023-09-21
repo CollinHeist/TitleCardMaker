@@ -30,8 +30,3 @@ input.private:not(:hover,:focus) {
 .visible.compact.message {
   display: inline-block !important;
 }
-
-/* Ensure there is a newline before the submit buttons */
-.button[type="submit"] {
-  display: block;
-}

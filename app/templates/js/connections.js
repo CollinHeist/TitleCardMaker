@@ -392,20 +392,77 @@ function enablePlexFilesizeWarning() {
   });
 }
 
+function initializeEmby() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/connection/emby/all',
+    success: connections => {
+      const embyTemplate = document.getElementById('emby-connection-template');
+      const embySection = document.getElementById('emby-connections');
+
+      // Add accordions for each Connection
+      const embyForms = connections.map(connection => {
+        const embyForm = embyTemplate.content.cloneNode(true);
+        embyForm.querySelector('.content').id = `connection${connection.id}`;
+        // Enable later
+        embyForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name}`;
+        embyForm.querySelector('input[name="name"]').value = connection.name;
+        embyForm.querySelector('input[name="url"]').value = connection.url;
+        embyForm.querySelector('input[name="api_key"]').value = connection.api_key;
+        // Username later
+        // SSL later
+        embyForm.querySelector('input[name="filesize_limit"]').value = connection.filesize_limit;
+
+        return embyForm;
+      });
+      embySection.replaceChildren(...embyForms);
+
+      // Initialize elements of Form
+      connections.forEach(connection => {
+        // Enabled
+        $(`#connection${connection.id} .checkbox[data-value="enabled"]`).checkbox(
+          connection.enabled ? 'check' : 'uncheck'
+        );
+        // Query for usernames to initialize Dropdown if Connection is enabled
+        if (connection.enabled) {
+          $.ajax({
+            type: 'GET',
+            url: `/api/available/usernames/emby?interface_id=${connection.id}`,
+            success: usernames => {
+              $(`#connection${connection.id} .dropdown[data-value="username"]`).dropdown({
+                values: usernames.map(username => {
+                  return {name: username, selected: username === connection.username};
+                }),
+              });
+            }, error: response => showErrorToast({title: `Error Querying ${connection.name} Usernames`, response}),
+          });
+        }
+        // SSL
+        $(`#connection${connection.id} .checkbox[data-value="use_ssl"]`).checkbox(
+          connection.use_ssl ? 'check' : 'uncheck'
+        );
+        // Assign save function to button
+
+        // Assign delete function to button
+        
+      });
+
+    }, error: response => showErrorToast({title: 'Error Querying Emby Connections', response}),
+  });
+}
+
 async function initAll() {
+  initializeEmby();
+
   // Enable dropdowns, checkboxes
   $('.ui.dropdown').dropdown();
   $('.ui.checkbox').checkbox();
+  $('.ui.accordion').accordion();
 
-  {% if preferences.use_emby %}
-  getEmbyUsernames();
-  {% endif %}
-  {% if preferences.use_jellyfin %}
-  getJellyfinUsernames();
-  {% endif %}
-  {% if preferences.use_sonarr %}
-  getSonarrLibraries();
-  {% endif %}
+  // getEmbyUsernames();
+  // getJellyfinUsernames();
+  // getSonarrLibraries();
+
   addFormValidation();
   getLanguagePriorities();
   initializeFilesizeDropdown();

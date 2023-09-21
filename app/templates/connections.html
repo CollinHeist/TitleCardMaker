@@ -21,6 +21,70 @@
       <input type="text" placeholder="Library Path">
     </div>
   </template>
+
+  <template id="emby-connection-template">
+    <div class="title">
+      <i class="dropdown icon"></i>
+      {Connection Title}
+    </div>
+    <div class="content">
+      <div data-value="enabled" class="ui left aligned checkbox field">
+        <input type="checkbox">
+        <label>Enabled</label>
+      </div>
+
+      <form class="ui fluid form">
+        <div class="ui required eight wide field">
+          <label>Connection Name</label>
+          <input name="name" type="text">
+        </div>
+
+        <div class="ui required eight wide field" data-tooltip="Host URL to communicate with Emby">
+          <label>URL</label>
+          <input name="url" type="text">
+        </div>
+
+        <div class="ui required eight wide field" data-tooltip="API key to authenticate communication with Emby">
+          <label>API Key</label>
+          <input name="api_key" type="text" class="private">
+        </div>
+
+        <div class="ui required field" data-tooltip="Username of the Emby user to query watch statuses from">
+          <label>Username</label>
+          <div data-value="username" class="ui compact selection dropdown">
+            <input type="hidden" name="username">
+            <i class="dropdown icon"></i>
+            <div class="default text"></div>
+            <div class="menu"></div>
+          </div>
+        </div>
+
+        <div data-value="use_ssl" class="ui left aligned checkbox field" data-tooltip="Connect with HTTPS instead of HTTP">
+          <input name="use_ssl" type="checkbox">
+          <label>Use SSL</label>
+        </div>
+
+        <div class="ui field">
+          <label>Filesize Limit</label>
+          <input name="filesize_limit" type="text">
+        </div>
+
+        <div class="ui error message"></div>
+        <button class="ui primary animated button" type="submit">
+          <div class="visible content">Save Changes</div>
+          <div class="hidden content">
+            <i class="right arrow icon"></i>
+          </div>
+        </button>
+        <button class="ui negative animated button">
+          <div class="visible content">Delete</div>
+          <div class="hidden content">
+            <i class="trash icon"></i>
+          </div>
+        </button>
+      </form>
+    </div>
+  </template>
   
 </head>
 
@@ -69,76 +133,9 @@
       </div>
 
       <!-- Emby Connections -->
-      <h2 class="ui dividing header">Emby Media Server</h2>
-      <div id="emby-connection" class="connection-form">
-        <!-- Enable button -->
-        {% if preferences.use_emby %}
-        <div id="enable-emby" class="ui left aligned checked checkbox field">
-          <input type="checkbox" checked="">
-        {% else %}
-        <div id="enable-emby" class="ui left aligned checkbox field">
-          <input type="checkbox" >
-        {% endif %}
-          <label for="enable-emby-checkbox">Enable Emby</label>
-        </div>
+      <h2 class="ui dividing header">Emby Media Servers</h2>
+      <div id="emby-connections" class="ui styled accordion">
 
-        <form id="emby-settings" class="ui fluid form">
-          <div class="ui disabled required eight wide field" data-tooltip="Host URL to communicate with Emby">
-            <label>URL</label>
-            <input name="url" type="text" value="{{preferences.emby_url}}">
-          </div>
-
-          <div class="ui disabled required eight wide field" data-tooltip="API key to authenticate communication with Emby">
-            <label>API Key</label>
-            <input name="api_key" type="text" class="private" value="{{preferences.emby_api_key}}">
-          </div>
-
-          <div class="ui disabled required field" data-tooltip="Username of the Emby user to query watch statuses from">
-            <label>Username</label>
-            <div data-value="emby_username" class="ui compact selection dropdown">
-              <input type="hidden" name="username">
-              <i class="dropdown icon"></i>
-              <div class="default text">{{preferences.emby_username}}</div>
-              <div class="menu"></div>
-            </div>
-          </div>
-
-          <div class="ui left aligned disabled checkbox field" data-tooltip="Connect with HTTPS instead of HTTP">
-            {% if preferences.emby_use_ssl %}
-            <input name="use_ssl" type="checkbox" checked="">
-            {% else %}
-            <input name="use_ssl" type="checkbox">
-            {% endif %}
-            <label for="emby-use-ssl-checkbox">Use SSL</label>
-          </div>
-
-          <div class="ui disabled field">
-            <label>Filesize Limit</label>
-            <div class="ui fields">
-              <div class="two wide field" data-tooltip="Maximum file size of assets to upload to Emby">
-                <input name="filesize_limit_number" type="number" min="0" value="{{preferences.emby_filesize_limit_number}}">
-              </div>
-              <div class="three wide field">
-                <div data-value="emby_filesize_limit_unit" class="ui selection dropdown">
-                  <input name="filesize_limit_unit" type="hidden">
-                  <i class="dropdown icon"></i>
-                  <div class="default text"></div>
-                  <div class="menu"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="ui error message"></div>
-          <div class=field>
-            <button id="submit-emby" class="ui primary animated button" type="submit">
-              <div class="visible content">Save Changes</div>
-              <div class="hidden content">
-                <i class="right arrow icon"></i>
-              </div>
-            </button>
-          </div>
-        </form>
       </div>
 
       <!-- Jellyfin Connections -->
