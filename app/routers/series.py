@@ -23,7 +23,7 @@ from app.internal.cards import (
 )
 from app.internal.series import (
     add_series, delete_series_and_episodes, download_series_poster,
-    load_series_title_cards,
+    load_series_title_cards, lookup_series,
 )
 from app.internal.sources import download_episode_source_image
 from app.internal.auth import get_current_user
@@ -215,59 +215,25 @@ def search_existing_series(
     )
 
 
-@series_router.get('/lookup', status_code=200)
-def lookup_series(
+@series_router.get('/lookup/sonarr', status_code=200)
+def look_series_on_sonarr(
         request: Request,
-        name: str = Query(..., min_length=1),
-        interface: EpisodeDataSource = Query(...),
+        name: str = Query(...),
         db: Session = Depends(get_database),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface2),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
+        sonarr_interace: SonarrInterface = Depends(require_sonarr_interface),
     ) -> Page[SearchResult]:
     """
-    Look up the given series name on the indicated interface. Returned
-    results are not necessary already added to TCM - use the `/search`
-    endpoint for that.
+    Look up the given Series name on Sonarr. Returned results are not
+    necessary already added to TCM - use the `/search` endpoint for
+    that.
 
     - name: Series name or substring to look up.
-    - interface: Which Episode data interface to look up on.
+    - interface_id: ID of the Sonarr interface to query.
     """
 
-    # Get associated Interface to query
-    interface_obj = {
-        'Emby': emby_interface,
-        'Jellyfin': jellyfin_interface,
-        'Plex': plex_interface,
-        'Sonarr': sonarr_interface,#sonarr_interfaces,#sonarr_interface,
-        'TMDb': tmdb_interface,
-    }.get(interface)
-    if not interface_obj:
-        raise HTTPException(
-            status_code=409,
-            detail=f'Cannot connect to {interface}',
-        )
-    interface_obj: Union[EmbyInterface, JellyfinInterface, PlexInterface,
-                         SonarrInterface, TMDbInterface] = interface_obj
-
-    # Query Interface, only return max of 25 results TODO temporary?
-    results: list[SearchResult] = interface_obj.query_series(
-        name, log=request.state.log,
-    )[:25]
-
-    # Update `added` attributes
-    for result in results:
-        # Query database for this result
-        existing = db.query(models.series.Series)\
-            .filter(result.series_info.filter_conditions(models.series.Series))\
-            .first()
-
-        # Result has been added if there is an existing Series
-        result.added = existing is not None
-
-    return paginate_sequence(results)
+    return paginate_sequence(
+        lookup_series(db, sonarr_interace, name, log=request.state.log)
+    )
 
 
 @series_router.get('/{series_id}', status_code=200)

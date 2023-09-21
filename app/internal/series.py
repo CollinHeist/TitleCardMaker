@@ -590,3 +590,41 @@ def add_series(
     )
 
     return series
+
+
+def lookup_series(
+        db: Session,
+        interface: EpisodeDataSourceInterface,
+        name: str,
+        *,
+        max_results: int = 25,
+        log: Logger = log,
+    ) -> list[SearchResult]:
+    """
+    _summary_
+
+    Args:
+        db: _description_
+        interface: _description_
+        max_results: _description_. Defaults to 25.
+        log: _description_. Defaults to log.
+
+    Returns:
+        _description_
+    """
+
+    # Query Interface, only return max of 25 results TODO temporary?
+    results: list[SearchResult] = interface.query_series(name, log=log)
+    results = results[:max_results]
+
+    # Update added attribute(s)
+    for result in results:
+        # Query database for this result
+        existing = db.query(models.series.Series)\
+            .filter(result.series_info.filter_conditions(models.series.Series))\
+            .first()
+
+        # Result has been added if there is an existing Series
+        result.added = existing is not None
+
+    return results
