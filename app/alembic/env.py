@@ -27,6 +27,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 from app.database.session import Base
 from app.models.card import Card
+from app.models.connection import Connection
 from app.models.episode import Episode
 from app.models.font import Font
 from app.models.loaded import Loaded
