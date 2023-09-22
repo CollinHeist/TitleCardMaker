@@ -160,6 +160,7 @@ class Title:
             List of strings that is this split title.
         """
 
+        all_lines = [self.full_title]
         for _ in range(max_line_count+2-1):
             # Start splitting from the last line added
             top, bottom = all_lines.pop(), ''
@@ -188,7 +189,7 @@ class Title:
             all_lines += [top, bottom]
 
         # Strip every line, delete blank entries
-        all_lines = list(filter(len, map(str.strip,all_lines)))
+        all_lines = list(filter(len, map(str.strip, all_lines)))
 
         # If misformatted, combine overflow lines
         if len(all_lines) > max_line_count:
@@ -238,12 +239,10 @@ class Title:
         if len(self.full_title) > max_line_count * max_line_width:
             log.debug(f'Title {self} too long, potential misformat')
 
-        # Start splitting on the base full title
-        all_lines = [self.full_title]
-
         if top_heavy:
             return self.__top_split(max_line_width, max_line_count)
 
+        all_lines = [self.full_title]
         # For bottom heavy splitting, start on bottom and move text UP
         for _ in range(max_line_count+2-1):
             top, bottom = '', all_lines.pop()
