@@ -62,6 +62,16 @@ class CalligraphyTitleCard(BaseCardType):
                 description=(
                     'Scalar for how much to scale the size of the logo element'
                 ), tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
+            ), Extra(
+                name='Deep Blur Unwatched Toggle',
+                identifier='deep_blur_if_unwatched',
+                description=(
+                    'Whether to apply a stronger blur to unwatched Episodes'
+                ), tooltip=(
+                    'Either <v>True</v> or <v>False</v>. Applies a more '
+                    'spoiler-free blurring if a Blur style is used and the '
+                    'Episode is unwatched. Default is <v>True</v>.'
+                ),
             ),
         ], description=[
             'Stylized Card featuring a prominent logo and all text in a '
@@ -102,13 +112,16 @@ class CalligraphyTitleCard(BaseCardType):
     """Custom blur profile"""
     BLUR_PROFILE = '0x10'
 
+    """Blur profile to use if deep blurring is enabled"""
+    DEEP_BLUR_PROFILE = BaseCardType.BLUR_PROFILE
+
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_file',
         'font_size', 'font_color', 'font_interline_spacing',
         'font_interword_spacing', 'font_kerning', 'font_vertical_shift',
         'logo_file', 'add_texture', 'episode_text_color', 'logo_size',
-        'randomize_texture', 'separator',
+        'randomize_texture', 'separator', 'deep_blur',
     )
 
     def __init__(self, *,
@@ -127,9 +140,11 @@ class CalligraphyTitleCard(BaseCardType):
             font_size: float = 1.0,
             font_vertical_shift: int = 0,
             logo_file: Optional[Path] = None,
+            watched: bool = True,
             blur: bool = False,
             grayscale: bool = False,
             add_texture: bool = True,
+            deep_blur_if_unwatched: bool = True,
             episode_text_color: str = TITLE_COLOR,
             logo_size: float = 1.0,
             offset_titles: bool = True,
@@ -169,6 +184,7 @@ class CalligraphyTitleCard(BaseCardType):
 
         # Optional extras
         self.add_texture = add_texture
+        self.deep_blur = blur and deep_blur_if_unwatched and not watched
         self.episode_text_color = episode_text_color
         self.logo_size = logo_size
         self.randomize_texture = randomize_texture
@@ -446,10 +462,22 @@ class CalligraphyTitleCard(BaseCardType):
         object's defined title card.
         """
 
+        style_commands = self.resize_and_style
+        if self.deep_blur:
+            style_commands = [
+                *self.resize,
+                # Optionally blur
+                f'-blur {self.DEEP_BLUR_PROFILE}',
+                # Optionally set gray colorspace
+                f'-colorspace gray' if self.grayscale else '',
+                # Reset to full colorspace
+                f'-set colorspace sRGB',
+            ]
+
         command = ' '.join([
             f'magick "{self.source_file.resolve()}"',
             # Resize and apply styles to source image
-            *self.resize_and_style,
+            *style_commands,
             # Add each layer
             *self.texture_commands,
             *self.logo_commands,

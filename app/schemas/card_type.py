@@ -115,7 +115,9 @@ class CalligraphyCardType(BaseCardTypeCustomFontAllText):
     font_color: BetterColor = CalligraphyTitleCard.TITLE_COLOR
     font_file: FilePath = CalligraphyTitleCard.TITLE_FONT
     logo_file: Path
+    watched: bool = False
     add_texture: bool = True
+    deep_blur_if_unwatched: bool = True
     episode_text_color: Optional[BetterColor] = 'white'
     logo_size: PositiveFloat = 1.0
     offset_titles: bool = True
