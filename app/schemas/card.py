@@ -1,5 +1,5 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
 
 from pydantic import Field, PositiveInt, validator, root_validator # pylint: disable=no-name-in-module
 
@@ -15,7 +15,7 @@ Models of card types and series extras.
 class TitleCharacteristics(Base):
     max_line_width: PositiveInt
     max_line_count: PositiveInt
-    top_heavy: bool
+    top_heavy: Union[bool, Literal['even']]
 
 class Extra(Base):
     name: str

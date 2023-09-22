@@ -1,5 +1,5 @@
 from re import compile as re_compile, IGNORECASE
-from typing import Optional, Union
+from typing import Literal, Optional, Union
 
 from modules.Debug import log
 
@@ -115,10 +115,93 @@ class Title:
         return self.full_title
 
 
+    def __evenly_split(self) -> list[str]:
+        """
+        Attempt to evenly split this Title between two lines of text.
+
+        Returns:
+            List of strings that is this split title.
+        """
+
+        lines = [[], []]
+        len_l1 = lambda: sum(map(len, lines[0]))
+        len_l2 = lambda: sum(map(len, lines[1]))
+        diff = lambda: abs(len_l2() - len_l1())
+
+        # Add each word to the shortest line
+        words = self.full_title.split()
+        for word in words:
+            # Always add word to end of last line
+            lines[1].append(word)
+
+            # While there is a last line, the first line is shorter than
+            # the last, and the current line length difference is at
+            # least twice the length of the next-popped word, move the
+            # first word of the last line to last position on first line
+            while (lines[1]
+                   and len_l1() < len_l2()
+                   and diff() >= 2 * len(lines[1][0])):
+                lines[0].append(lines[1].pop(0))
+
+        return list(map(' '.join,  lines))
+
+
+    def __top_split(self,
+            max_line_width: int,
+            max_line_count: int,
+        ) -> list[str]:
+        """
+        Args:
+            max_line_width: Maximum line width to base splitting on.
+            max_line_count: The maximum line count to split the title
+                into.
+
+        Returns:
+            List of strings that is this split title.
+        """
+
+        for _ in range(max_line_count+2-1):
+            # Start splitting from the last line added
+            top, bottom = all_lines.pop(), ''
+            while ((len(top) > max_line_width
+                    or len(bottom) in range(1, 6))
+                    and ' ' in top):
+                # Look to split on special characters
+                special_split = False
+                for char in self.SPLIT_CHARACTERS:
+                    # Split only if present after first third of next line
+                    if f'{char} ' in top[max_line_width//2:max_line_width]:
+                        top, bottom_add = top.rsplit(f'{char} ', 1)
+                        top += char
+                        bottom = f'{bottom_add} {bottom}'
+                        special_split = True
+                        break
+
+                # If no special character splitting was done, split on space
+                if not special_split:
+                    try:
+                        top, bottom_add = top.rsplit(' ', 1)
+                        bottom = f'{bottom_add} {bottom}'.strip()
+                    except ValueError:
+                        break
+
+            all_lines += [top, bottom]
+
+        # Strip every line, delete blank entries
+        all_lines = list(filter(len, map(str.strip,all_lines)))
+
+        # If misformatted, combine overflow lines
+        if len(all_lines) > max_line_count:
+            all_lines[-2] = f'{all_lines[-2]} {all_lines[-1]}'
+            del all_lines[-1]
+
+        return all_lines
+
+
     def split(self,
             max_line_width: int,
             max_line_count: int,
-            top_heavy: bool
+            top_heavy: Union[bool, Literal['even']],
         ) -> list[str]:
         """
         Split this title's text into multiple lines. If the title cannot
@@ -141,9 +224,15 @@ class Title:
         if self.__manually_specified:
             return self.__title_lines
 
-        # If the title can fit on one line, or a single line is requested
-        if len(self.full_title) <= max_line_width or max_line_count <= 1:
+        # If the title can fit on one line, is one line or one word, return
+        if (len(self.full_title) <= max_line_width
+            or max_line_count <= 1
+            or ' ' not in self.full_title):
             return [self.full_title]
+
+        # Split title into two "even" width lines
+        if top_heavy == 'even':
+            return self.__evenly_split()
 
         # Misformat ahead..
         if len(self.full_title) > max_line_count * max_line_width:
@@ -152,44 +241,8 @@ class Title:
         # Start splitting on the base full title
         all_lines = [self.full_title]
 
-        # For top heavy splitting, start on top and move text DOWN
         if top_heavy:
-            for _ in range(max_line_count+2-1):
-                # Start splitting from the last line added
-                top, bottom = all_lines.pop(), ''
-                while ((len(top) > max_line_width
-                        or len(bottom) in range(1, 6))
-                        and ' ' in top):
-                    # Look to split on special characters
-                    special_split = False
-                    for char in self.SPLIT_CHARACTERS:
-                        # Split only if present after first third of next line
-                        if f'{char} ' in top[max_line_width//2:max_line_width]:
-                            top, bottom_add = top.rsplit(f'{char} ', 1)
-                            top += char
-                            bottom = f'{bottom_add} {bottom}'
-                            special_split = True
-                            break
-
-                    # If no special character splitting was done, split on space
-                    if not special_split:
-                        try:
-                            top, bottom_add = top.rsplit(' ', 1)
-                            bottom = f'{bottom_add} {bottom}'.strip()
-                        except ValueError:
-                            break
-
-                all_lines += [top, bottom]
-
-            # Strip every line, delete blank entries
-            all_lines = list(filter(len, map(str.strip,all_lines)))
-
-            # If misformatted, combine overflow lines
-            if len(all_lines) > max_line_count:
-                all_lines[-2] = f'{all_lines[-2]} {all_lines[-1]}'
-                del all_lines[-1]
-
-            return all_lines
+            return self.__top_split(max_line_width, max_line_count)
 
         # For bottom heavy splitting, start on bottom and move text UP
         for _ in range(max_line_count+2-1):
