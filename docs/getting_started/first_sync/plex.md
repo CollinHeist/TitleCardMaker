@@ -5,7 +5,7 @@
     For this tutorial, I'll be referring to _Better Call Saul_ and _Breaking
     Bad_ as example Series. If you do not have either of these Series in your
     Plex server, you can add them (and remove them later - or not, because
-    they're great shows), or just pick two entirely different Series.
+    they're great shows :wink:), or just pick two entirely different Series.
 
 1. Open Plex.
 
