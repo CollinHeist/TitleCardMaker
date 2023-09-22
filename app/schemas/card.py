@@ -71,6 +71,7 @@ class PreviewTitleCard(UpdateBase):
     hide_episode_text: bool = False
     blur: bool = False
     grayscale: bool = False
+    watched: bool = True
     season_number: int = 1
     episode_number: int = 1
     absolute_number: int = 1

@@ -40,6 +40,7 @@ function reloadPreview(watchStatus, formElement, cardElement, imgElement) {
     ...Object.fromEntries(form.entries()),
     extra_keys: listData.extra_keys,
     extra_values: listData.extra_values,
+    watched: watchStatus === 'watched',
   };
   cardElement.classList.add('loading');
   $.ajax({
