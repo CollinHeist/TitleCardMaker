@@ -88,7 +88,7 @@ class CalligraphyTitleCard(BaseCardType):
     FONT_REPLACEMENTS = {}
 
     """Characteristics of the episode text"""
-    EPISODE_TEXT_FORMAT = 'Episode {episode_number}'
+    EPISODE_TEXT_FORMAT = 'Episode {episode_number_cardinal_title}'
 
     """Whether this CardType uses season titles for archival purposes"""
     USES_SEASON_TITLE = True
