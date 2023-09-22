@@ -110,6 +110,8 @@ class AnimeCardType(BaseCardTypeCustomFontAllText):
         return values
 
 class CalligraphyCardType(BaseCardTypeCustomFontAllText):
+    season_text: str
+    episode_text: str
     font_color: BetterColor = CalligraphyTitleCard.TITLE_COLOR
     font_file: FilePath = CalligraphyTitleCard.TITLE_FONT
     logo_file: Path
