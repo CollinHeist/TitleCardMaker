@@ -18,13 +18,19 @@ function addTemplate() {
 function reloadPreview(watchStatus, formElement, cardElement, imgElement) {
   let form = new FormData(formElement);
   let listData = {extra_keys: [], extra_values: []};
+
+  // Set style based on this preview's watched status
   if (watchStatus === 'watched' && form.get('watched_style') === '') {
     form.set('style', '{{preferences.default_watched_style}}');
   } else if (watchStatus === 'unwatched' && form.get('unwatched_style') === '') {
     form.set('style', '{{preferences.default_unwatched_style}}');
-  } else if (form.get(`${watchStatus}_style`).includes('blur')) {
+  }
+
+  // Set blur/grayscale attribute
+  if (form.get(`${watchStatus}_style`).includes('blur')) {
     form.set('blur', true);
-  } else if (form.get(`${watchStatus}_style`).includes('grayscale')) {
+  }
+  if (form.get(`${watchStatus}_style`).includes('grayscale')) {
     form.set('grayscale', true);
   }
   
