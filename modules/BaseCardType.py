@@ -136,7 +136,7 @@ class BaseCardType(ImageMaker):
     @property
     @abstractmethod
     def API_DETAILS(self) -> CardDescription:
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     @property
@@ -147,14 +147,14 @@ class BaseCardType(ImageMaker):
         keys for max_line_width, max_line_count, and top_heavy. See
         `Title` class for details.
         """
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     @property
     @abstractmethod
     def ARCHIVE_NAME(self) -> str:
         """How to name archive directories for this type of card"""
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     @property
@@ -164,21 +164,21 @@ class BaseCardType(ImageMaker):
         Standard font (full path or ImageMagick recognized font name) to
         use for the episode title text.
         """
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     @property
     @abstractmethod
     def TITLE_COLOR(self) -> str:
         """Standard color to use for the episode title text"""
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     @property
     @abstractmethod
     def USES_SEASON_TITLE(self) -> bool:
         """Whether this class uses season titles for archives"""
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     """Slots for standard style attributes"""
@@ -294,7 +294,7 @@ class BaseCardType(ImageMaker):
         Returns:
             True if a custom font is indicated, False otherwise.
         """
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     @staticmethod
@@ -310,7 +310,7 @@ class BaseCardType(ImageMaker):
         Returns:
             True if a custom season title is indicated, False otherwise.
         """
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     @property
@@ -424,4 +424,4 @@ class BaseCardType(ImageMaker):
         CardType. All implementations of this method should delete any
         intermediate files.
         """
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
