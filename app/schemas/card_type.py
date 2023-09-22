@@ -11,6 +11,7 @@ from pydantic import ( # pylint: disable=no-name-in-module
 
 from app.schemas.base import Base, BetterColor, DictKey
 from modules.cards.AnimeTitleCard import AnimeTitleCard
+from modules.cards.CalligraphyTitleCard import CalligraphyTitleCard
 from modules.cards.ComicBookTitleCard import ComicBookTitleCard
 from modules.cards.CutoutTitleCard import CutoutTitleCard
 from modules.cards.DividerTitleCard import DividerTitleCard
@@ -30,10 +31,10 @@ from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 
 LocalCardIdentifiers = Literal[
-    'anime', 'comic book', 'cutout', 'divider', 'fade', 'frame', 'generic',
-    'gundam', 'ishalioh', 'landscape', 'logo', 'marvel', 'musikmann', 'olivier',
-    'phendrena', 'photo', 'polymath', 'poster', 'reality tv', 'roman',
-    'roman numeral', 'sherlock', 'standard', 'star wars', 'textless',
+    'anime', 'calligraphy', 'comic book', 'cutout', 'divider', 'fade', 'frame',
+    'generic', 'gundam', 'ishalioh', 'landscape', 'logo', 'marvel', 'musikmann',
+    'olivier', 'phendrena', 'photo', 'polymath', 'poster', 'reality tv',
+    'roman', 'roman numeral', 'sherlock', 'standard', 'star wars', 'textless',
     'tinted glass', '4x3', 'white border',
 ]
 
@@ -92,7 +93,7 @@ Creation classes
 """
 class AnimeCardType(BaseCardTypeCustomFontAllText):
     font_color: BetterColor = AnimeTitleCard.TITLE_COLOR
-    font_file: FilePath = AnimeTitleCard.REF_DIRECTORY / 'Flanker Griffo.otf'
+    font_file: FilePath = AnimeTitleCard.TITLE_FONT
     kanji: Optional[str] = None
     require_kanji: bool = False
     kanji_vertical_shift: int = 0
@@ -107,6 +108,17 @@ class AnimeCardType(BaseCardTypeCustomFontAllText):
             raise ValueError(f'Kanji is required and not specified')
 
         return values
+
+class CalligraphyCardType(BaseCardTypeCustomFontAllText):
+    font_color: BetterColor = CalligraphyTitleCard.TITLE_COLOR
+    font_file: FilePath = CalligraphyTitleCard.TITLE_FONT
+    logo_file: Path
+    add_texture: bool = True
+    episode_text_color: Optional[BetterColor] = 'white'
+    logo_size: PositiveFloat = 1.0
+    offset_titles: bool = True
+    randomize_texture: bool = True
+    separator: str = '-'
 
 RandomAngleRegex = r'random\[([+-]?\d+.?\d*),\s*([+-]?\d+.?\d*)\]'
 RandomAngle = constr(regex=RandomAngleRegex)
@@ -433,6 +445,7 @@ LocalCardTypeModels = {
     '4x3': FadeCardType,
     'anime': AnimeCardType,
     'blurred border': TintedFrameCardType,
+    'calligraphy': CalligraphyCardType,
     'comic book': ComicBookCardType,
     'cutout': CutoutCardType,
     'divider': DividerCardType,

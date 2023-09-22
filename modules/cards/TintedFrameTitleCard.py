@@ -12,10 +12,10 @@ MiddleElement = Literal['logo', 'omit']
 
 class TintedFrameTitleCard(BaseCardType):
     """
-    This class describes a CardType that produces title cards featuring
-    a rectangular frame with blurred content on the edges of the frame,
-    and unblurred content within. The frame itself can be intersected by
-    title text, index text, or a logo at the top and bottom.
+    CardType that produces title cards featuring a rectangular frame
+    with blurred content on the edges of the frame, and unblurred
+    content within. The frame itself can be intersected by title text,
+    index text, or a logo at the top and bottom.
     """
 
     """API Parameters"""
@@ -97,7 +97,7 @@ class TintedFrameTitleCard(BaseCardType):
                 identifier='logo_size',
                 description=(
                     'Scalar for how much to scale the size of the logo element'
-                ), tooltip='Number ≥<v>0.0</v>.'
+                ), tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
             ), Extra(
                 name='Edge Blurring',
                 identifier='blur_edges',
