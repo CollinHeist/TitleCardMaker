@@ -509,7 +509,7 @@ def load_episode_title_card(
             break
 
         log.debug(f'{episode.series.log_str} {episode.log_str} not found - waiting')
-        sleep(10)
+        sleep(15)
 
     # Episode was not loaded, exit
     if not loaded_assets:
