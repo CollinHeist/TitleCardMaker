@@ -22,7 +22,7 @@ class CalligraphyTitleCard(BaseCardType):
         creators=['CollinHeist', '/u/Recker_Man'],
         source='builtin',
         supports_custom_fonts=True,
-        supports_custom_seasons=False,
+        supports_custom_seasons=True,
         supported_extras=[
             Extra(
                 name='Texture Toggle',
@@ -75,7 +75,7 @@ class CalligraphyTitleCard(BaseCardType):
             ),
         ], description=[
             'Stylized Card featuring a prominent logo and all text in a '
-            'hand-written calligraphy font. A subtle matte paper texture is ',
+            'hand-written calligraphy font. A subtle matte paper texture is '
             'applied to the image.', 'Looks best when a blurred/grayscale '
             'style is utilized as the text and texture are more pronounced.'
         ]
