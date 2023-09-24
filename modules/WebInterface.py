@@ -28,9 +28,8 @@ class WebInterface:
 
     """Content to ignore if returned by any GET request"""
     BAD_CONTENT = (
-        b'<html><head><title>Not Found</title></head>'
-        b'<body><h1>404 Not Found</h1></body></html>',
-        b'<Code>AccessDenied</Code>'
+        b'<html><head><title>',
+        b'<Code>AccessDenied</Code>',
     )
 
 
