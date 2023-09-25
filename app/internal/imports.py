@@ -280,6 +280,45 @@ def _parse_filename_format(yaml_dict: dict[str, Any]) -> str:
         .replace('{abs_number:02}', '{absolute_number:02}')
 
 
+def _parse_season_folder_format(yaml_dict: dict[str, Any]) -> str:
+    """
+    Parse the season folder format from the given YAML. This converts
+    any "old" variables (e.g. {season} or {episode}) into their new
+    equivalents.
+
+    Args:
+        yaml_dict: Dictionary of YAML to parse.
+
+    Returns:
+        The parsed (and converted) season folder format. If the format
+        is not in the specified YAML, then UNSPECIFIED is returned.
+
+    Raises:
+        HTTPException (422): The format cannot be parsed.
+    """
+
+    # If no YAML or no EDS indicated, return None
+    if (not isinstance(yaml_dict, dict)
+        or (folder_format := yaml_dict.get('season_folder_format')) is None):
+        return UNSPECIFIED
+
+    if not isinstance(folder_format, str):
+        raise HTTPException(
+            status_code=422,
+            detail=f'Invalid season folder format',
+        )
+
+    return folder_format\
+        .replace('{name}', '{series_name}')\
+        .replace('{full_name}', '{series_full_name}')\
+        .replace('{season}', '{season_number}')\
+        .replace('{season:02}', '{season_number:02}')\
+        .replace('{episode}', '{episode_number}')\
+        .replace('{episode:02}', '{episode_number:02}')\
+        .replace('{abs_number}', '{absolute_number}')\
+        .replace('{abs_number:02}', '{absolute_number:02}')
+
+
 def _remove_unspecifed_args(**dict_kwargs: dict) -> dict:
     """
     Remove unspecified arguments.
@@ -362,7 +401,7 @@ def parse_preferences(
         card_extension=_get(options, 'card_extension', type_=Extension, default=unsp),
         image_source_priority=image_source_priority,
         episode_data_source=episode_data_source,
-        season_folder_format=_get(options, 'season_folder_format', default=unsp),
+        season_folder_format=_parse_season_folder_format(options),
         sync_specials=_get(options, 'sync_specials', type_=bool, default=unsp),
         default_card_type=_get(options, 'card_type', default=unsp),
         default_unwatched_style=_get(
