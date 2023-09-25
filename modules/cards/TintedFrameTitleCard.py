@@ -40,6 +40,7 @@ class TintedFrameTitleCard(BaseCardType):
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the season and episode text',
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
             ), Extra(
                 name='Episode Text Vertical Shift',
                 identifier='episode_text_vertical_shift',
