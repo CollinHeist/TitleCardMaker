@@ -85,6 +85,7 @@ class NewJellyfinConnection(BaseNewMediaServer):
 
 class NewPlexConnection(BaseNewMediaServer):
     name: str = 'Plex Server'
+    api_key: str
     interface: ServerName = 'Plex'
     integrate_with_pmm: bool = False
 
