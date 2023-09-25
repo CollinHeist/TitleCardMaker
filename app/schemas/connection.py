@@ -64,6 +64,7 @@ class BaseNewMediaServer(BaseNewServer):
     filesize_limit: FilesizeLimit = '5 Megabytes'
 
 class BaseUpdateServer(UpdateBase):
+    name: str = UNSPECIFIED
     url: AnyUrl = UNSPECIFIED
     use_ssl: bool = UNSPECIFIED
 
