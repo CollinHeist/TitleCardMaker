@@ -75,7 +75,7 @@ def get_card(
     See `_get_obj` for all details.
     """
 
-    return _get_obj(db, models.card.Card, 'Card', card_id, raise_exc)
+    return _get_obj(db, Card, 'Card', card_id, raise_exc)
 
 
 def get_connection(

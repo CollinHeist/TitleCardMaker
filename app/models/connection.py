@@ -27,7 +27,7 @@ class Connection(Base):
     use_ssl = Column(Boolean, default=True, nullable=False)
 
     username = Column(String, default=None)
-    filesize_limit = Column(String, default='5 MB')
+    filesize_limit = Column(String, default='5 Megabytes')
     integrate_with_pmm = Column(Boolean, default=False, nullable=False)
     downloaded_only = Column(Boolean, default=True, nullable=False)
     libraries = Column(MutableList.as_mutable(JSON), default=[], nullable=False)
