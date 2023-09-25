@@ -167,6 +167,17 @@ def enable_or_disable_connection_by_id(
     return connection
 
 
+@connection_router.get('/all', status_code=200)
+def get_all_connection_details(
+        db: Session = Depends(get_database),
+    ) -> list[ServerConnection]:
+    """
+    
+    """
+
+    return db.query(models.connection.Connection).all()
+
+
 @connection_router.get('/emby/all', status_code=200)
 def get_all_emby_connection_details(
         db: Session = Depends(get_database),
@@ -399,14 +410,17 @@ def delete_connection(
     connection = get_connection(db, interface_id, raise_exc=True)
 
     # Remove Interface from group
-    if connection.interface == 'Emby':
-        emby_interfaces.disable(interface_id)
-    elif connection.interface == 'Jellyfin':
-        jellyfin_interfaces.disable(interface_id)
-    elif connection.interface == 'Plex':
-        plex_interfaces.disable(interface_id)
-    elif connection.interface == 'Sonarr':
-        sonarr_interfaces.disable(interface_id)
+    try:
+        if connection.interface == 'Emby':
+            emby_interfaces.disable(interface_id)
+        elif connection.interface == 'Jellyfin':
+            jellyfin_interfaces.disable(interface_id)
+        elif connection.interface == 'Plex':
+            plex_interfaces.disable(interface_id)
+        elif connection.interface == 'Sonarr':
+            sonarr_interfaces.disable(interface_id)
+    except KeyError:
+        pass
 
     # Delete Connection
     db.delete(connection)
