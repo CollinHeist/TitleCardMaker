@@ -48,7 +48,7 @@ class BaseServer(Base):
     enabled: bool
     name: str
     url: AnyUrl
-    api_key: SecretStr
+    api_key: str # SecretStr
     use_ssl: bool = True
 
 class BaseNewConnection(Base):
@@ -140,7 +140,7 @@ class UpdateTMDb(UpdateBase):
 Return classes
 """
 class ServerConnection(BaseServer):
-    username: Optional[int]
+    username: Optional[str]
     filesize_limit: Optional[FilesizeLimit]
     downloaded_only: bool
     libraries: list[SonarrLibrary]
