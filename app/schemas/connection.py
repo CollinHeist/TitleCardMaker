@@ -39,7 +39,7 @@ Base classes
 class SonarrLibrary(Base):
     name: str
     path: str
-    media_server: MediaServer
+    # media_server: MediaServer
     interface_id: int
 
 class BaseServer(Base):
