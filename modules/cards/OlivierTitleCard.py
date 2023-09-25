@@ -27,7 +27,12 @@ class OlivierTitleCard(BaseCardType):
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
             ), Extra(
-                name='Episode Text Vertical Shit',
+                name='Episode Text Font Size',
+                identifier='episode_text_font_size',
+                description='Size adjustment for the episode text',
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
+            ), Extra(
+                name='Episode Text Vertical Shift',
                 identifier='episode_text_vertical_shift',
                 description='Vertical offset to apply to the episode text',
                 tooltip='Unit is pixels.'
@@ -78,7 +83,8 @@ class OlivierTitleCard(BaseCardType):
         'episode_prefix', 'episode_text', 'font_color', 'font_file',
         'font_interline_spacing', 'font_interword_spacing', 'font_kerning',
         'font_size', 'font_stroke_width', 'font_vertical_shift', 'stroke_color',
-        'episode_text_color', 'episode_text_vertical_shift',
+        'episode_text_color', 'episode_text_font_size',
+        'episode_text_vertical_shift',
     )
 
     def __init__(self,
@@ -98,6 +104,7 @@ class OlivierTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
+            episode_text_font_size: float = 1.0,
             episode_text_vertical_shift: int = 0,
             stroke_color: str = STROKE_COLOR,
             preferences: Optional['Preferences'] = None, # type: ignore
@@ -138,6 +145,7 @@ class OlivierTitleCard(BaseCardType):
 
         # Optional extras
         self.episode_text_color = episode_text_color
+        self.episode_text_font_size = episode_text_font_size
         self.episode_text_vertical_shift = episode_text_vertical_shift
         self.stroke_color = stroke_color
 
@@ -190,16 +198,19 @@ class OlivierTitleCard(BaseCardType):
         if self.episode_prefix is None or self.hide_episode_text:
             return []
 
+        size = 60 * self.episode_text_font_size
+        kerning = 19 * self.episode_text_font_size
+        stroke_width = 5 * self.episode_text_font_size
         vertical_shift = -150 + self.episode_text_vertical_shift
 
         return [
             f'-gravity west',
             f'-font "{self.EPISODE_PREFIX_FONT.resolve()}"',
-            f'-pointsize 60',
-            f'-kerning 19',
+            f'-pointsize {size}',
+            f'-kerning {kerning}',
             f'-fill black',
             f'-stroke black',
-            f'-strokewidth 5',
+            f'-strokewidth {stroke_width}',
             f'-annotate +325{vertical_shift:+} "{self.episode_prefix}"',
             f'-fill "{self.episode_text_color}"',
             f'-stroke "{self.episode_text_color}"',
@@ -223,6 +234,9 @@ class OlivierTitleCard(BaseCardType):
             return []
 
         # Vertical shift
+        kerning = 19 * self.episode_text_font_size
+        size = 60 * self.episode_text_font_size
+        stroke_width = 7 * self.episode_text_font_size
         vertical_shift = -150 + self.episode_text_vertical_shift
 
         # Get variable horizontal offset based of episode prefix
@@ -230,19 +244,21 @@ class OlivierTitleCard(BaseCardType):
         if self.episode_prefix is None:
             offset = 0
         elif self.episode_prefix in text_offset:
-            offset = text_offset[self.episode_prefix]
+            offset = text_offset[self.episode_prefix] \
+                * self.episode_text_font_size
         else:
             offset_per_char = text_offset['EPISODE'] / len('EPISODE')
-            offset = offset_per_char * len(self.episode_prefix) * 1.10
+            offset = offset_per_char * len(self.episode_prefix) * 1.10\
+                * self.episode_text_font_size
 
         return [
             f'-gravity west',
             f'-font "{self.EPISODE_NUMBER_FONT.resolve()}"',
-            f'-pointsize 60',
-            f'-kerning 19',
+            f'-pointsize {size}',
+            f'-kerning {kerning}',
             f'-fill black',
             f'-stroke black',
-            f'-strokewidth 7',
+            f'-strokewidth {stroke_width}',
             f'-annotate +{325+offset}{vertical_shift:+} "{self.episode_text}"',
             f'-fill "{self.episode_text_color}"',
             f'-stroke "{self.episode_text_color}"',
@@ -272,6 +288,8 @@ class OlivierTitleCard(BaseCardType):
             if 'episode_text_color' in extras:
                 extras['episode_text_color'] =\
                     OlivierTitleCard.EPISODE_TEXT_COLOR
+            if 'episode_text_font_size' in extras:
+                extras['episode_text_font_size'] = 1.0
             if 'episode_text_vertical_shift' in extras:
                 extras['episode_text_vertical_shift'] = 0
             if 'stroke_color' in extras:
