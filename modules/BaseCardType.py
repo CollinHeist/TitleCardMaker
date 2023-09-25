@@ -9,6 +9,83 @@ from modules.ImageMaker import ImageMaker
 ImageMagickCommands = list[str]
 
 
+class Coordinate:
+    """Class that defines a single Coordinate on an x/y plane."""
+
+    __slots__ = ('x', 'y')
+
+    def __init__(self, x: float, y: float) -> None:
+        """Initialize this Coordinate with the given x/y coordinates."""
+
+        self.x = x
+        self.y = y
+
+
+    def __iadd__(self, other: 'Coordinate') -> 'Coordinate':
+        """
+        Add the given Coordinate to this one. This adds the x/y
+        positions individually.
+
+        Args:
+            other: The Coordinate to add.
+
+        Returns:
+            This object.
+        """
+
+        self.x += other.x
+        self.y += other.y
+
+        return self
+
+
+    def __str__(self) -> str:
+        """
+        Represent this Coordinate as a string.
+
+        >>> str(Coordinate(1.2, 3.4))
+        '1,2'
+        """
+
+        return f'{self.x:.0f},{self.y:.0f}'
+
+    @property
+    def as_svg(self) -> str:
+        """SVG representation of this Coordinate."""
+
+        return f'{self.x:.1f} {self.y:.1f}'
+
+
+class Rectangle:
+    """Class that defines movable SVG rectangle."""
+
+    __slots__ = ('start', 'end')
+
+    def __init__(self, start: Coordinate, end: Coordinate) -> None:
+        """
+        Initialize this Rectangle that encompasses the two given start
+        and end Coordinates. These Coordinates are the opposite corners
+        of the rectangle.
+        """
+
+        self.start = start
+        self.end = end
+
+
+    def __str__(self) -> str:
+        """
+        Represent this Rectangle as a string. This is the joined string
+        representation of the start and end coordinate.
+        """
+
+        return f'{str(self.start)},{str(self.end)}'
+
+    def draw(self) -> str:
+        """Draw this Rectangle."""
+
+        return f'-draw "rectangle {str(self)}"'
+
+
 class BaseCardType(ImageMaker):
     """
     This class describes an abstract card type. A BaseCardType is a
@@ -61,14 +138,14 @@ class BaseCardType(ImageMaker):
         keys for max_line_width, max_line_count, and top_heavy. See
         `Title` class for details.
         """
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     @property
     @abstractmethod
     def ARCHIVE_NAME(self) -> str:
         """How to name archive directories for this type of card"""
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     @property
@@ -78,21 +155,21 @@ class BaseCardType(ImageMaker):
         Standard font (full path or ImageMagick recognized font name) to
         use for the episode title text.
         """
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     @property
     @abstractmethod
     def TITLE_COLOR(self) -> str:
         """Standard color to use for the episode title text"""
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     @property
     @abstractmethod
     def USES_SEASON_TITLE(self) -> bool:
         """Whether this class uses season titles for archives"""
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     """Slots for standard style attributes"""
@@ -169,7 +246,7 @@ class BaseCardType(ImageMaker):
         Returns:
             True if a custom font is indicated, False otherwise.
         """
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     @staticmethod
@@ -185,7 +262,7 @@ class BaseCardType(ImageMaker):
         Returns:
             True if a custom season title is indicated, False otherwise.
         """
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     @property
@@ -299,4 +376,4 @@ class BaseCardType(ImageMaker):
         CardType. All implementations of this method should delete any
         intermediate files.
         """
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
