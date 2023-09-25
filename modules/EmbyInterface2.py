@@ -63,6 +63,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
             use_magick_prefix: Whether to use 'magick' command prefix.
+            interface_id: ID of this interface.
             log: Logger for all log messages.
 
         Raises:

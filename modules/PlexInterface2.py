@@ -44,7 +44,7 @@ def catch_and_log(
 
     Args:
         message: Message to log upon uncaught exception.
-        default: (Keyword) Value to return if decorated function raises
+        default: Value to return if decorated function raises
             an uncaught exception.
 
     Returns:
@@ -87,12 +87,13 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
     def __init__(self,
             url: str,
-            token: str = 'NA',
-            verify_ssl: bool = True,
+            api_key: str = 'NA',
+            use_ssl: bool = True,
             integrate_with_pmm: bool = False,
             filesize_limit: int = 10485760,
             use_magick_prefix: bool = False,
             *,
+            interface_id: int = 0,
             log: Logger = log,
         ) -> None:
         """
@@ -100,38 +101,39 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         Args:
             url: URL of plex server.
-            token: X-Plex Token for sending API requests to Plex.
-            verify_ssl: Whether to verify SSL requests when querying
-                Plex.
+            api_key: X-Plex Token for sending API requests to Plex.
+            use_ssl: Whether to use SSL in all requests.
             integrate_with_pmm: Whether to integrate with PMM in image
-                uploading.
+                uploads.
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
             use_magick_prefix: Whether to use 'magick' command prefix.
-            log: (Keyword) Logger for all log messages.
+            interface_id: ID of this interface.
+            log: Logger for all log messages.
         """
 
         super().__init__(filesize_limit, use_magick_prefix)
 
         # Create Session for caching HTTP responses
-        self.__session = WebInterface('Plex', verify_ssl, log=log).session
+        self._interface_id = interface_id
+        self.__session = WebInterface('Plex', use_ssl, log=log).session
 
         # Create PlexServer object with these arguments
         try:
-            self.__token = token
-            self.__server = PlexServer(url, token, self.__session)
+            self.__token = api_key
+            self.__server = PlexServer(url, api_key, self.__session)
         except Unauthorized as e:
-            log.critical(f'Invalid Plex Token "{token}"')
+            log.critical(f'Invalid Plex Token "{api_key}"')
             raise HTTPException(
                 status_code=401,
                 detail=f'Invalid Plex Token',
             ) from e
-        except Exception as e:
-            log.critical(f'Cannot connect to Plex - returned error: "{e}"')
+        except Exception as exc:
+            log.critical(f'Cannot connect to Plex - returned error: "{exc}"')
             raise HTTPException(
                 status_code=400,
-                detail=f'Cannot connect to Plex - {e}',
-            ) from e
+                detail=f'Cannot connect to Plex - {exc}',
+            ) from exc
 
         # Store integration
         self.integrate_with_pmm = integrate_with_pmm
@@ -154,7 +156,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         Args:
             library_name: The name of the library to get.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             The Library object if found, None otherwise.
@@ -184,7 +186,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         Args:
             library: The Library object to search for within Plex.
             series_info: Series to get the episodes of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             The Series associated with this SeriesInfo object.
@@ -292,7 +294,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             excluded_tags: Optional list of tags to filter return by. If
                 provided, series with any of the given tags are not
                 returned.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of tuples whose elements are the SeriesInfo of the
@@ -356,7 +358,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         Args:
             library_name: The name of the library containing the series.
             series_info: Series to get the episodes of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of tuples of the EpisodeInfos and that episode's
@@ -414,7 +416,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             library_name: The name of the library containing the Series.
             series_info: The Series to update.
             episodes: List of Episode objects to update.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # If no episodes, exit
@@ -455,7 +457,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         Args:
             library_name: The name of the library containing the series.
             series_info: SeriesInfo to update.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # If all possible ID's are defined
@@ -499,7 +501,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             library_name: Name of the library the series is under.
             series_info: SeriesInfo for the entry.
             infos: List of EpisodeInfo objects to update.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # If the given library cannot be found, exit
@@ -550,7 +552,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         Args:
             query: Series name or substring to look up.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of SearchResults for the given query. Results are from
@@ -610,7 +612,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             library_name: Name of the library the series is under.
             series_info: The series to get the source image of.
             episode_info: The episode to get the source image of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             URL to the thumbnail of the given Episode. None if the
@@ -664,7 +666,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         Args:
             library_name: Name of the library the series is under.
             series_info: The series to get the poster of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             URL to the poster for the given series. None if the library,
@@ -734,7 +736,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             series_info: SeriesInfo whose cards are being loaded.
             episode_and_cards: List of tuple of Episode and their
                 corresponding Card objects to load.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # No episodes to load, exit
@@ -796,7 +798,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         Args:
             rating_key: Rating key used to fetch the item within Plex.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of tuples of the library name, SeriesInfo, EpisodeInfo,
@@ -873,7 +875,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             series_info: SeriesInfo whose Episodes' labels are being
                 removed.
             labels: List of labels to remove.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # Exit if no labels to remove

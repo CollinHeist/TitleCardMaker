@@ -37,10 +37,11 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             url: str,
             api_key: str,
             username: Optional[str] = None,
-            verify_ssl: bool = True,
+            use_ssl: bool = True,
             filesize_limit: Optional[int] = None,
             use_magick_prefix: bool = False,
             *,
+            interface_id: int = 0,
             log: Logger = log,
         ) -> None:
         """
@@ -51,10 +52,11 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             api_key: The API key for API requests.
             username: Username of the Jellyfin account to get watch
                 statuses of.
-            verify_ssl: Whether to verify SSL requests.
+            use_ssl: Whether to use SSL in all requests.
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
             use_magick_prefix: Whether to use 'magick' command prefix.
+            interface_id: ID of this interface.
             log: Logger for all log messages.
         """
 
@@ -62,7 +64,8 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         super().__init__(filesize_limit, use_magick_prefix)
 
         # Store attributes of this Interface
-        self.session = WebInterface('Jellyfin', verify_ssl, log=log)
+        self._interface_id = interface_id
+        self.session = WebInterface('Jellyfin', use_ssl, log=log)
         self.url = url[:-1] if url.endswith('/') else url
         self.__params = {'api_key': api_key}
         self.username = username
