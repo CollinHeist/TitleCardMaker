@@ -28,9 +28,8 @@ class WebInterface:
 
     """Content to ignore if returned by any GET request"""
     BAD_CONTENT = (
-        b'<html><head><title>Not Found</title></head>'
-        b'<body><h1>404 Not Found</h1></body></html>',
-        b'<Code>AccessDenied</Code>'
+        b'<html><head><title>',
+        b'<Code>AccessDenied</Code>',
     )
 
 
@@ -163,9 +162,9 @@ class WebInterface:
             # Get content from URL
             image = get(image, timeout=30).content
             if len(image) == 0:
-                raise Exception(f'URL {image} returned no content error')
+                raise ValueError(f'URL {image} returned no content error')
             if any(bad_content in image for bad_content in WebInterface.BAD_CONTENT):
-                raise Exception(f'URL {image} returned (bad) malformed content')
+                raise ValueError(f'URL {image} returned (bad) malormed content')
 
             # Write content to file, return success
             destination.write_bytes(image)
