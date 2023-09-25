@@ -9,12 +9,6 @@ form > *:last-child {
   margin-bottom: 0.3em;
 }
 
-/* For library path inputs, align the library name/label to the right */
-.library.field,
-.library.field > input {
-  text-align: right;
-}
-
 /* Blur private input fields when not selected or hovered */
 input.private:not(:hover,:focus) {
   color: transparent !important;
@@ -29,4 +23,9 @@ input.private:not(:hover,:focus) {
 /* Ensure the Sonarr libraries info message is compact */
 .visible.compact.message {
   display: inline-block !important;
+}
+
+/* Equal padding on Sonarr library fields */
+.dropdown ~ .dropdown {
+  margin-top: 4px !important;
 }
