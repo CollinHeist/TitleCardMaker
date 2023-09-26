@@ -1,3 +1,9 @@
+// Get all Connection data
+let allConnections;
+async function getAllConnections() {
+  allConnections = await fetch('/api/connection/all').then(resp => resp.json());
+}
+
 // Get the latest episode data sources, update dropdown
 async function getEpisodeDataSources() {
   const sources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
@@ -9,13 +15,28 @@ async function getEpisodeDataSources() {
 }
 
 // Get the latest image source priority, update dropdown
-async function getImageSourcePriority() {
-  const sources = await fetch('/api/settings/image-source-priority').then(resp => resp.json());
-  $('#image-source-priority').dropdown({
-    values: sources.map(({name, selected}) => {
-      return {name: name, value: name, selected: selected};
-    })
-  });
+function getImageSourcePriority() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/settings/image-source-priority',
+    success: sources => {
+      $('#image-source-priority').dropdown({
+        values: sources.map(({interface, interface_id, selected}) => {
+          // TMDb does not need to be matched to a Connection
+          if (interface === 'TMDb') {
+            return {name: 'TMDb', value: 0, selected};
+          }
+          // Match this interface to a defined Connection (to get the name)
+          for (let {id, name} of allConnections) {
+            if (id === interface_id) {
+              return {name, value: id, selected};
+            }
+          }
+          return {name: interface, value: interface_id, selected};
+        })
+      });
+    }, error: response => showErrorToast({title: 'Error Querying Image Source Priority', response}),
+  });  
 }
 
 async function initCardTypeDropdowns() {
@@ -26,6 +47,7 @@ async function initCardTypeDropdowns() {
     showExcluded: true,
     dropdownArgs: {
       useLabels: false,
+      placeholder: 'None',
     }
   });
   // Load default card type dropdown
@@ -33,7 +55,6 @@ async function initCardTypeDropdowns() {
     element: '#default-card-type',
     isSelected: (identifier) => identifier === '{{preferences.default_card_type}}',
     showExcluded: false,
-    // Dropdown args
     dropdownArgs: {
       onChange: (value, text, $selectedItem) => {
         $('#title-card-image')
@@ -45,7 +66,10 @@ async function initCardTypeDropdowns() {
   return allCards;
 }
 
-// Function to update the preview title card
+/*
+ * Update the preview title card for the given type. This updates all
+ * elements of the preview card.
+ */
 function updatePreviewTitleCard(allCards, previewCardType) {
   for (let {name, identifier, example, creators, supports_custom_fonts,
             supports_custom_seasons, description} of allCards) {
@@ -62,7 +86,8 @@ function updatePreviewTitleCard(allCards, previewCardType) {
   }
 }
 
-function initAll() {
+async function initAll() {
+  await getAllConnections();
   getEpisodeDataSources();
   getImageSourcePriority();
 
