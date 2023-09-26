@@ -23,28 +23,28 @@
   <template id="emby-connection-template">
     <div class="title">
       <i class="dropdown icon"></i>
-      {Connection Title}
+      New Connection
     </div>
     <div class="content">
-      <div data-value="enabled" class="ui left aligned checkbox field">
-        <input type="checkbox">
-        <label>Enabled</label>
-      </div>
+      <form class="ui fluid form" form-type="emby">
+        <div data-value="enabled" class="ui left aligned checkbox field">
+          <input name="enabled" type="checkbox">
+          <label>Enabled</label>
+        </div>
 
-      <form class="ui fluid form">
         <div class="ui required eight wide field">
           <label>Connection Name</label>
-          <input name="name" type="text">
+          <input name="name" type="text" placeholder="My Server">
         </div>
 
         <div class="ui required eight wide field" data-tooltip="Host URL">
           <label>URL</label>
-          <input name="url" type="text">
+          <input name="url" type="text" placeholder="http://192.168.0.1:8000/">
         </div>
 
         <div class="ui required eight wide field" data-tooltip="API key to authenticate communication with">
           <label>API Key</label>
-          <input name="api_key" type="text" class="private">
+          <input name="api_key" type="text" class="private" placeholder="abcdef">
         </div>
 
         <div class="ui required field" data-tooltip="Username of the user to query watch statuses from">
@@ -64,7 +64,7 @@
 
         <div class="ui eight wide field">
           <label>Filesize Limit</label>
-          <input name="filesize_limit" type="text">
+          <input name="filesize_limit" type="text" placeholder="5 Megabytes">
         </div>
 
         <div class="ui error message"></div>
@@ -87,28 +87,28 @@
   <template id="plex-connection-template">
     <div class="title">
       <i class="dropdown icon"></i>
-      {Connection Title}
+      New Connection
     </div>
     <div class="content">
-      <div data-value="enabled" class="ui left aligned checkbox field">
-        <input type="checkbox">
-        <label>Enabled</label>
-      </div>
+      <form class="ui fluid form" form-type="plex">
+        <div data-value="enabled" class="ui left aligned checkbox field">
+          <input name="enabled" type="checkbox">
+          <label>Enabled</label>
+        </div>
 
-      <form class="ui fluid form">
         <div class="ui required eight wide field">
           <label>Connection Name</label>
-          <input name="name" type="text">
+          <input name="name" type="text" placeholder="Plex Server">
         </div>
 
         <div class="ui required eight wide field" data-tooltip="Host URL">
           <label>URL</label>
-          <input name="url" type="text">
+          <input name="url" type="text" placeholder="http://192.168.0.1:32400/">
         </div>
 
         <div class="ui required eight wide field" data-tooltip="API key to authenticate communication with">
           <label>Token <a href="https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/" target="_blank"><i class="external alternate small icon"></i></a></label>
-          <input name="api_key" type="text" class="private">
+          <input name="api_key" type="text" class="private" placeholder="hunter2">
         </div>
 
         <div data-value="use_ssl" class="ui left aligned checkbox field" data-tooltip="Connect with HTTPS instead of HTTP">
@@ -123,7 +123,7 @@
 
         <div class="ui eight wide field">
           <label>Filesize Limit</label>
-          <input name="filesize_limit" type="text">
+          <input name="filesize_limit" type="text" placeholder="5 Megabytes">
         </div>
 
         <div class="ui error message"></div>
@@ -146,28 +146,28 @@
   <template id="sonarr-connection-template">
     <div class="title">
       <i class="dropdown icon"></i>
-      {Connection Title}
+      New Connection
     </div>
     <div class="content">
-      <div data-value="enabled" class="ui left aligned checkbox field">
-        <input type="checkbox">
-        <label>Enabled</label>
-      </div>
+      <form class="ui fluid form" form-type="sonarr">
+        <div data-value="enabled" class="ui left aligned checkbox field">
+          <input name="enabled" type="checkbox">
+          <label>Enabled</label>
+        </div>
 
-      <form class="ui fluid form">
         <div class="ui required eight wide field">
           <label>Connection Name</label>
-          <input name="name" type="text">
+          <input name="name" type="text" placeholder="Sonarr Server">
         </div>
 
         <div class="ui required eight wide field" data-tooltip="Host URL">
           <label>URL</label>
-          <input name="url" type="text">
+          <input name="url" type="text" placeholder="http://192.168.0.1:8989/">
         </div>
 
         <div class="ui required eight wide field" data-tooltip="API key to authenticate communication with">
           <label>API Key</label>
-          <input name="api_key" type="text" class="private">
+          <input name="api_key" type="text" class="private" placeholder="abcdef">
         </div>
 
         <div data-value="use_ssl" class="ui left aligned checkbox field" data-tooltip="Connect with HTTPS instead of HTTP">
@@ -278,24 +278,36 @@
 
       <!-- Emby Connections -->
       <h2 class="ui dividing header">Emby</h2>
+      <button class="ui primary tertiary button" onclick="addConnection('emby');">
+        Add Connection
+      </button>
       <div id="emby-connections" class="ui styled fluid accordion">
         <!-- Added later -->
       </div>
 
       <!-- Jellyfin Connections -->
       <h2 class="ui dividing header">Jellyfin</h2>
+      <button class="ui primary tertiary button" onclick="addConnection('jellyfin');">
+        Add Connection
+      </button>
       <div id="jellyfin-connections" class="ui styled fluid accordion">
         <!-- Added later -->
       </div>
 
       <!-- Plex Connections -->
       <h2 class="ui dividing header">Plex</h2>
+      <button class="ui primary tertiary button" onclick="addConnection('plex');">
+        Add Connection
+      </button>
       <div id="plex-connections" class="ui styled fluid accordion">
         <!-- Added later -->
       </div>
 
       <!-- Sonarr Connections -->
       <h2 class="ui dividing header">Sonarr</h2>
+      <button class="ui primary tertiary button" onclick="addConnection('sonarr');">
+        Add Connection
+      </button>
       <div id="sonarr-connections" class="ui styled fluid accordion">
         <!-- Added later -->
       </div>

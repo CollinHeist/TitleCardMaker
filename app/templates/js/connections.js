@@ -455,7 +455,10 @@ function initializeEmby() {
         });
       });
     }, error: response => showErrorToast({title: 'Error Querying Emby Connections', response}),
-    complete: () => refreshTheme(),
+    complete: () => {
+      addFormValidation;
+      refreshTheme();
+    },
   });
 }
 
@@ -512,6 +515,7 @@ function initializeJellyfin() {
         // Assign save function to button
         $(`#connection${connection.id} form`).on('submit', (event) => {
           event.preventDefault();
+          if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
           updateConnection(new FormData(event.target), connection.id, 'Jellyfin');
         });
         // Assign delete function to button
@@ -521,7 +525,10 @@ function initializeJellyfin() {
         });
       });
     }, error: response => showErrorToast({title: 'Error Querying Jellyfin Connections', response}),
-    complete: () => refreshTheme(),
+    complete: () => {
+      addFormValidation();
+      refreshTheme();
+    },
   });
 }
 
@@ -573,11 +580,15 @@ function initializePlex() {
         // Assign delete function to button
         $(`#connection${connection.id} button[data-action="delete"]`).on('click', (event) => {
           event.preventDefault();
+          if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
           deleteConnection(connection.id);
         });
       });
     }, error: response => showErrorToast({title: 'Error Querying Plex Connections', response}),
-    complete: () => refreshTheme(),
+    complete: () => {
+      addFormValidation();
+      refreshTheme();
+    },
   });
 }
 
@@ -607,9 +618,9 @@ function initializeSonarr() {
           // media_server later
           const dropdown = interfaceDropdownTemplate.content.cloneNode(true);
           sonarrForm.querySelector('.field[data-value="libraries"] .field[data-value="media_server"]').appendChild(dropdown);
-          const nameInput = document.createElement('input'); nameInput.value = name;
+          const nameInput = document.createElement('input'); nameInput.name = 'library_name'; nameInput.value = name;
           sonarrForm.querySelector('.field[data-value="libraries"] .field[data-value="library_name"]').appendChild(nameInput);
-          const pathInput = document.createElement('input'); pathInput.value = path;
+          const pathInput = document.createElement('input'); pathInput.name = 'library_path'; pathInput.value = path;
           sonarrForm.querySelector('.field[data-value="libraries"] .field[data-value="library_path"]').appendChild(pathInput);
         });
         // Add/query library buttons later
@@ -662,6 +673,7 @@ function initializeSonarr() {
         // Assign save function to button
         $(`#connection${connection.id} form`).on('submit', (event) => {
           event.preventDefault();
+          if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
           const form = new FormData(event.target);
           // Add library list data
           const libraryData = [];
@@ -670,7 +682,7 @@ function initializeSonarr() {
               name: element.value,
               path: $(`#connection${connection.id} .field[data-value="library_path"] input`).eq(index).val(),
               interface_id: $(`#connection${connection.id} .dropdown[data-value="interface_id"] input`).eq(index).val(),
-            })
+            });
           });
           updateConnection(form, connection.id, 'Sonarr', {libraries: libraryData});
         });
@@ -681,7 +693,10 @@ function initializeSonarr() {
         });
       });
     }, error: response => showErrorToast({title: 'Error Querying Sonarr Connections', response}),
-    complete: () => refreshTheme(),
+    complete: () => {
+      addFormValidation();
+      refreshTheme();
+    },
   });
 }
 
@@ -721,6 +736,37 @@ function initializeTMDb() {
   });
 }
 
+function addConnection(connectionType) {
+  // Get the template for this connection
+  let template;
+  if (connectionType === 'jellyfin') {
+    template = document.getElementById(`emby-connection-template`).content.cloneNode(true);
+  } else {
+    template = document.getElementById(`${connectionType}-connection-template`).content.cloneNode(true);
+  }
+  // Turn save button into create
+  template.querySelector('button[data-action="save"] > .visible.content').innerText = 'Create';
+  template.querySelector('form').onsubmit = (event) => {
+    event.preventDefault();
+    console.log(event);
+    let form = new FormData(event.target);
+    $.ajax({
+      type: 'POST',
+      url: `/api/connection/${connectionType}/new`,
+      data: JSON.stringify({
+        ...Object.fromEntries(form.entries()),
+        // ...jsonData,
+      }),
+      contentType: 'application/json',
+      success: newConnection => showInfoToast(`Created Connection "${newConnection.name}"`),
+      error: response => showErrorToast({title: 'Error Creating Connection', response}),
+    });
+  };
+  const connections = document.getElementById(`${connectionType.toLowerCase()}-connections`);
+  connections.appendChild(template);
+  refreshTheme();
+}
+
 async function initAll() {
   await getAllConnections();
   initializeEmby();
@@ -728,6 +774,8 @@ async function initAll() {
   initializePlex();
   initializeSonarr();
   initializeTMDb();
+
+  addFormValidation();
 
   // Enable dropdowns, checkboxes
   $('.ui.dropdown').dropdown();
@@ -738,7 +786,6 @@ async function initAll() {
   // getJellyfinUsernames();
   // getSonarrLibraries();
 
-  addFormValidation();
   getLanguagePriorities();
   // initializeFilesizeDropdown();
   initializeAuthForm();
