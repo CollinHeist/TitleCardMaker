@@ -234,46 +234,55 @@ function initializeFormToggles() {
  */
 function addFormValidation() {
   // Add form validation
-  $('#emby-settings').form({
+  $('form[form-type="emby"]').form({
     on: 'blur',
     inline: true,
     fields: {
+      name: ['empty'],
       url: ['empty'],
-      api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
-      filesize_limit_number: {
-        optional: true,
-        rules: [{type: 'integer[0..]'}], 
+      api_key: ['empty'],
+      filesize_limit: {
+        rules: [
+          {
+            type: 'regExp[/^\d+\s+(Bytes|Kilobytes|Megabytes)$/]',
+            prompt: 'Filesize limits can be in "Bytes", "Kilobytes", or "Megabytes"',
+          }
+        ]
+      }
+    },
+  });
+  $('form[form-type="plex"]').form({
+    on: 'blur',
+    inline: true,
+    fields: {
+      name: ['empty'],
+      url: ['empty'],
+      api_key: ['empty'],
+      filesize_limit: {
+        rules: [
+          {
+            type: 'regExp[/^\d+\s+(Bytes|Kilobytes|Megabytes)$/]',
+            prompt: 'Filesize limits can be in "Bytes", "Kilobytes", or "Megabytes"',
+          }
+        ]
+      }
+    },
+  });
+  $('form[form-type="sonarr"]').form({
+    on: 'blur',
+    inline: true,
+    fields: {
+      name: ['empty'],
+      url: ['empty'],
+      api_key: ['empty'],
+      library_name: {
+        rules: [
+          {type: 'empty'},
+        ],
       },
     },
   });
-  $('#jellyfin-settings').form({
-    on: 'blur',
-    inline: true,
-    fields: {
-      url: ['empty'],
-      api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
-      filesize_limit_number: {
-        optional: true,
-        rules: [{type: 'integer[0..]'}], 
-      },
-    },
-  });
-  $('#plex-settings').form({
-    on: 'blur',
-    inline: true,
-    fields: {
-      url: ['empty'],
-      filesize_limit_number: ['integer[0..]'],
-    },
-  });
-  $('#sonarr-settings').form({
-    on: 'blur',
-    inline: true,
-    fields: {
-      url: ['empty'],
-      api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
-    },
-  });
+  // OLD STUFF 
   $('#tmdb-settings').form({
     on: 'blur',
     inline: true,
@@ -436,6 +445,7 @@ function initializeEmby() {
         // Assign save function to button
         $(`#connection${connection.id} form`).on('submit', (event) => {
           event.preventDefault();
+          if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
           updateConnection(new FormData(event.target), connection.id, 'Emby');
         });
         // Assign delete function to button
