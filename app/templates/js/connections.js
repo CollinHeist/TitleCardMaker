@@ -748,23 +748,17 @@ function addConnection(connectionType) {
 }
 
 async function initAll() {
-  await getAllConnections();
   initializeEmby();
   initializeJellyfin();
   initializePlex();
+  await getAllConnections();
   initializeSonarr();
   initializeTMDb();
-
-  addFormValidation();
 
   // Enable dropdowns, checkboxes
   $('.ui.dropdown').dropdown();
   $('.ui.checkbox').checkbox();
   $('.ui.accordion').accordion();
-
-  // getEmbyUsernames();
-  // getJellyfinUsernames();
-  // getSonarrLibraries();
 
   getLanguagePriorities();
   // initializeFilesizeDropdown();
@@ -778,50 +772,4 @@ async function initAll() {
     .modal({blurring: true})
     .modal('attach events', '#tautulli-agent-button', 'show')
     .modal('setting', 'transition', 'fade up');
-}
-
-// Add new library path
-function addSonarrLibrary() {
-  // Add library name input
-  const nameInput = document.createElement('input');
-  nameInput.type = 'text'; nameInput.placeholder = 'Library Name';
-  nameInput.name = 'library_names';
-  $('#sonarr-libraries-library-names').append(nameInput);
-  // Add library path input
-  const pathInput = document.createElement('input');
-  pathInput.type = 'text'; pathInput.placeholder = 'Library Path';
-  pathInput.name = 'library_paths';
-  $('#sonarr-libraries-library-paths').append(pathInput);
-}
-
-// Query for Sonarr libraries
-async function querySonarrLibraries() {
-  // Get all the potential Sonarr libraries
-  $('#submit-sonarr').toggleClass('loading', true);
-  const libraries = await fetch('/api/connection/sonarr/libraries').then(resp => resp.json());
-  if (libraries === undefined) {
-    $.toast({class: 'error', message: 'Unable to query Sonarr Libraries'});
-    $('#submit-sonarr').toggleClass('loading', false);
-    return;
-  }
-
-  // Get the existing input elements
-  let libraryNames = $('input[name="library_names"]');
-  let libraryPaths = $('input[name="library_paths"]');
-  for (let [index, {name, path}] of libraries.entries()) {
-    // If there is no existing input for this library, add a new one
-    if (libraryNames[index] === undefined) {
-      addSonarrLibrary();
-      libraryNames = $('input[name="library_names"]');
-      libraryPaths = $('input[name="library_paths"]');
-    }
-
-    // Fill in text input fields
-    libraryNames[index].value = name;
-    libraryPaths[index].value = path;
-  }
-
-  // Add warning that these libraries will need to be checked
-  $('#sonarr-settings').toggleClass('warning', true);
-  $('#submit-sonarr').toggleClass('loading', false);
 }
