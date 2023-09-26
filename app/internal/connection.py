@@ -46,7 +46,7 @@ def initialize_connections(
             (get_emby_interfaces(), 'Emby'),
             (get_jellyfin_interfaces(), 'Jellyfin'),
             (get_plex_interfaces(), 'Plex'),
-            (get_sonarr_interfaces(), 'sonarr')):
+            (get_sonarr_interfaces(), 'Sonarr')):
 
         # Get all Connections of this interface type
         connections: list[Connection] = db.query(Connection)\
