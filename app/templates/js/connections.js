@@ -1,20 +1,3 @@
-// Function to get the Sonarr library mappings
-async function getSonarrLibraries() {
-  const libraries = await fetch('/api/settings/sonarr-libraries').then(resp => resp.json());
-  libraries.forEach(({name, path}) => {
-    // Append library inputs
-    const libName = document.createElement('input');
-    libName.type = 'text'; libName.placeholder = 'Library Name';
-    libName.name = 'library_names'; libName.value = name;
-    $('#sonarr-libraries-library-names').append(libName);
-    // Append library paths
-    const libPath = document.createElement('input');
-    libPath.type = 'text'; libPath.placeholder = 'Library Path';
-    libPath.name = 'library_paths'; libPath.value = path;
-    $('#sonarr-libraries-library-paths').append(libPath);
-  });
-}
-
 let allConnections = [];
 async function getAllConnections() {
   let allC = await fetch('/api/connection/all').then(resp => resp.json());
@@ -377,6 +360,7 @@ function deleteConnection(connectionId) {
       showInfoToast('Deleted Connection');
       document.getElementById(`connection${connectionId}-title`).remove();
       document.getElementById(`connection${connectionId}`).remove();
+      getAllConnections().then(() => initializeSonarr());
     },
     error: response => showErrorToast({title: 'Error Deleting Connection', response}),
   });
@@ -589,6 +573,7 @@ function initializeSonarr() {
     success: connections => {
       const sonarrTemplate = document.getElementById('sonarr-connection-template');
       const sonarrSection = document.getElementById('sonarr-connections');
+      const interfaceDropdownTemplate = document.getElementById('interface-dropdown-template');
 
       // Add accordions for each Connection
       const sonarrForms = connections.map(connection => {
