@@ -43,33 +43,6 @@ function getLanguagePriorities() {
 }
 
 /*
- * Initialize all the media server filesize limit dropdowns.
- */
-function initializeFilesizeDropdown() {
-  // Emby
-  $('.dropdown[data-value="emby_filesize_limit_unit"]').dropdown({
-    placeholder: '{{preferences.emby_filesize_limit_unit}}',
-    values: ['Bytes', 'Kilobytes', 'Megabytes', 'Gigabytes', 'Terabytes'].map(unit => {
-      return {name: unit, value: unit, selected: unit === '{{preferences.emby_filesize_limit_unit}}'};
-    }),
-  });
-  // Jellyfin
-  $('.dropdown[data-value="jellyfin_filesize_limit_unit"]').dropdown({
-    placeholder: '{{preferences.jellyfin_filesize_limit_unit}}',
-    values: ['Bytes', 'Kilobytes', 'Megabytes', 'Gigabytes', 'Terabytes'].map(unit => {
-      return {name: unit, value: unit, selected: unit === '{{preferences.jellyfin_filesize_limit_unit}}'};
-    }),
-  });
-  // Plex
-  $('.dropdown[data-value="plex_filesize_limit_unit"]').dropdown({
-    placeholder: '{{preferences.plex_filesize_limit_unit}}',
-    values: ['Bytes', 'Kilobytes', 'Megabytes', 'Gigabytes', 'Terabytes'].map(unit => {
-      return {name: unit, value: unit, selected: unit === '{{preferences.plex_filesize_limit_unit}}'};
-    }),
-  });
-}
-
-/*
  * Submit the API request to enable authentication. If successful the page
  * is redirected to the login page with a callback to redirect back here
  * if the subsequent login is successful.
@@ -249,7 +222,8 @@ function addFormValidation() {
       filesize_limit: {
         rules: [
           {
-            type: 'regExp[/^\d+\s+(Bytes|Kilobytes|Megabytes)$/]',
+            type: 'regExp',
+            value: /^\d+\s+(Bytes|Kilobytes|Megabytes)$/,
             prompt: 'Filesize limits can be in "Bytes", "Kilobytes", or "Megabytes"',
           }
         ]
@@ -266,7 +240,8 @@ function addFormValidation() {
       filesize_limit: {
         rules: [
           {
-            type: 'regExp[/^\d+\s+(Bytes|Kilobytes|Megabytes)$/]',
+            type: 'regExp',
+            value: /^\d+\s+(Bytes|Kilobytes|Megabytes)$/,
             prompt: 'Filesize limits can be in "Bytes", "Kilobytes", or "Megabytes"',
           }
         ]
