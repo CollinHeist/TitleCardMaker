@@ -716,29 +716,40 @@ function initializeTMDb() {
   });
 }
 
+/*
+ * Add a new (blank) Connection of the given type to the UI. This adjusts the
+ * save button to submit a POST request instead of PATCH. 
+ */
 function addConnection(connectionType) {
-  // Get the template for this connection
+  // Get the template for this connection - Jellyfin uses Emby template
   let template;
   if (connectionType === 'jellyfin') {
-    template = document.getElementById(`emby-connection-template`).content.cloneNode(true);
+    template = document.getElementById('emby-connection-template').content.cloneNode(true);
   } else {
     template = document.getElementById(`${connectionType}-connection-template`).content.cloneNode(true);
+  }
+  // Disable library fields
+  if (connectionType === 'sonarr') {
+    template.querySelector('.info.message').classList.remove('visible');
+    template.querySelector('.button[data-action="add-library"]').classList.add('disabled');
+    template.querySelector('.button[data-action="query-libraries"]').classList.add('disabled');
   }
   // Turn save button into create
   template.querySelector('button[data-action="save"] > .visible.content').innerText = 'Create';
   template.querySelector('form').onsubmit = (event) => {
     event.preventDefault();
-    console.log(event);
+    // Parse form and submit API request
     let form = new FormData(event.target);
     $.ajax({
       type: 'POST',
       url: `/api/connection/${connectionType}/new`,
-      data: JSON.stringify({
-        ...Object.fromEntries(form.entries()),
-        // ...jsonData,
-      }),
+      data: JSON.stringify({...Object.fromEntries(form.entries())}),
       contentType: 'application/json',
-      success: newConnection => showInfoToast(`Created Connection "${newConnection.name}"`),
+      success: newConnection => {
+        // Show toast, reload page
+        showInfoToast({title:`Created Connection "${newConnection.name}"`, message: 'Reloading page..'});
+        setTimeout(() => window.location.reload(), 2000);
+      },
       error: response => showErrorToast({title: 'Error Creating Connection', response}),
     });
   };
