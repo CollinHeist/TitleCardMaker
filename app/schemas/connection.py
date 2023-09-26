@@ -65,6 +65,7 @@ class BaseNewMediaServer(BaseNewServer):
 
 class BaseUpdateServer(UpdateBase):
     name: str = UNSPECIFIED
+    enabled: bool = UNSPECIFIED
     url: AnyUrl = UNSPECIFIED
     use_ssl: bool = UNSPECIFIED
 
