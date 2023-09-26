@@ -174,7 +174,7 @@ def update_connection(
     connection: Connection = get_connection(db, interface_id, raise_exc=True)
 
     # Update each attribute of the object
-    changed = True
+    changed = False
     for attr, value in update_object.dict().items():
         if value != UNSPECIFIED and getattr(connection, attr) != value:
             log.debug(f'Connection[{interface_id}].{attr} = {value}')
@@ -184,8 +184,9 @@ def update_connection(
     # If any values were changed, commit to database
     if changed:
         db.commit()
-        interface_group.refresh(
-            interface_id, connection.interface_kwargs, log=log
-        )
+        if connection.enabled:
+            interface_group.refresh(
+                interface_id, connection.interface_kwargs, log=log
+            )
 
     return connection
