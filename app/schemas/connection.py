@@ -42,6 +42,9 @@ class SonarrLibrary(Base):
     # media_server: MediaServer
     interface_id: int
 
+class PotentialSonarrLibrary(SonarrLibrary):
+    interface_id: Optional[int] = None
+
 class BaseServer(Base):
     id: int
     interface: ServerName

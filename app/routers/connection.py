@@ -12,9 +12,9 @@ from app import models
 from app.schemas.connection import (
     EmbyConnection, JellyfinConnection, NewEmbyConnection,
     NewJellyfinConnection, NewPlexConnection, NewSonarrConnection,
-    NewTautulliConnection, PlexConnection, ServerConnection, SonarrConnection,
-    SonarrLibrary, TMDbConnection, UpdateEmby, UpdateJellyfin, UpdatePlex,
-    UpdateSonarr, UpdateTMDb,
+    NewTautulliConnection, PlexConnection, PotentialSonarrLibrary,
+    ServerConnection, SonarrConnection, TMDbConnection, UpdateEmby,
+    UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb,
 )
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TautulliInterface2 import TautulliInterface
@@ -172,7 +172,7 @@ def get_all_connection_details(
         db: Session = Depends(get_database),
     ) -> list[ServerConnection]:
     """
-    
+    Get details for all defined Connections (of all types).
     """
 
     return db.query(models.connection.Connection).all()
@@ -183,7 +183,7 @@ def get_all_emby_connection_details(
         db: Session = Depends(get_database),
     ) -> list[EmbyConnection]:
     """
-    Get Emby connection details for all defined interfaces.
+    Get details for all defined Emby Connections.
     """
 
     return db.query(models.connection.Connection)\
@@ -210,7 +210,7 @@ def get_all_jellyfin_connection_details(
         db: Session = Depends(get_database),
     ) -> list[JellyfinConnection]:
     """
-    Get Jellyfin connection details for all defined interfaces.
+    Get details for all defined Jellyfin Connections.
     """
 
     return db.query(models.connection.Connection)\
@@ -237,7 +237,7 @@ def get_all_plex_connection_details(
         db: Session = Depends(get_database),
     ) -> list[PlexConnection]:
     """
-    Get Plex connection details for all defined interfaces.
+    Get details for all defined Plex Connections.
     """
 
     return db.query(models.connection.Connection)\
@@ -264,7 +264,7 @@ def get_all_sonarr_connection_details(
         db: Session = Depends(get_database),
     ) -> list[SonarrConnection]:
     """
-    Get Sonarr connection details for all defined interfaces.
+    Get details for all defined Sonarr Connections.
     """
 
     return db.query(models.connection.Connection)\
@@ -428,22 +428,27 @@ def delete_connection(
     db.commit()
 
 
-@connection_router.get('/sonarr/libraries', status_code=200, tags=['Sonarr'])
+@connection_router.get('/sonarr/{interface_id}/libraries', status_code=200, tags=['Sonarr'])
 def get_potential_sonarr_libraries(
-        sonarr_interface: SonarrInterface = Depends(require_sonarr_interface),
-    ) -> list[SonarrLibrary]:
+        interface_id: int,
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
+    ) -> list[PotentialSonarrLibrary]:
     """
     Get the potential library names and paths from Sonarr.
     """
 
-    # Function to parse a library name from a folder name
-    def _guess_library_name(folder_name: str) -> str:
-        return folder_name.replace('-', ' ').replace('_', ' ')
+    if not (sonarr_interface := sonarr_interfaces[interface_id]):
+        raise HTTPException(
+            status_code=409,
+            detail=f'No valid Sonarr Connection with ID {interface_id}',
+        )
 
     # Attempt to interpret library names from root folders
     return [
-        {'name': _guess_library_name(folder.name), 'path': str(folder)}
-        for folder in sonarr_interface.get_root_folders()
+        {
+            'name': folder.name.replace('-', ' ').replace('_', ' '),
+            'path': str(folder)
+        } for folder in sonarr_interface.get_root_folders()
     ]
 
 
