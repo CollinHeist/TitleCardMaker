@@ -1,5 +1,6 @@
-let allConnections = [];
+let allConnections;
 async function getAllConnections() {
+  allConnections = [];
   let allC = await fetch('/api/connection/all').then(resp => resp.json());
   allC.forEach(connection => {
     if (connection.interface !== 'Sonarr') {
@@ -326,6 +327,10 @@ function addSonarrLibraryField(connectionId) {
   refreshTheme();
 }
 
+/*
+ * Submit an API request to update the given Connection. This parses the given
+ * form, and adds any checkboxes or given jsonData to the submitted JSON object.
+ */
 function updateConnection(form, connectionId, connectionType, jsonData) {
   $(`#connection${connectionId} .button[data-action="save"]`).toggleClass('loading', true);
   // Add checkbox status as true/false
@@ -350,7 +355,7 @@ function updateConnection(form, connectionId, connectionType, jsonData) {
 /*
  * Submit an API request to delete the Connection with the given ID. If
  * successful, then the HTML element(s) for this Connection is removed from the
- * page.
+ * page and the Sonarr connections are re-initialized.
  */
 function deleteConnection(connectionId) {
   $.ajax({
@@ -358,14 +363,18 @@ function deleteConnection(connectionId) {
     url: `/api/connection/${connectionId}`,
     success: () => {
       showInfoToast('Deleted Connection');
+      // Delete this connection from the page, refresh Sonarr so server dropdowns update
       document.getElementById(`connection${connectionId}-title`).remove();
       document.getElementById(`connection${connectionId}`).remove();
-      getAllConnections().then(() => initializeSonarr());
+      getAllConnections().then(initializeSonarr);
     },
     error: response => showErrorToast({title: 'Error Deleting Connection', response}),
   });
 }
 
+/*
+ * Initialize the Emby portion of the page with all Emby Connections.
+ */
 function initializeEmby() {
   $.ajax({
     type: 'GET',
@@ -436,6 +445,9 @@ function initializeEmby() {
   });
 }
 
+/*
+ * Initialize the Jellyfin portion of the page with all Jellyfin Connections.
+ */
 function initializeJellyfin() {
   $.ajax({
     type: 'GET',
@@ -506,6 +518,9 @@ function initializeJellyfin() {
   });
 }
 
+/*
+ * Initialize the Plex portion of the page with all Plex Connections.
+ */
 function initializePlex() {
   $.ajax({
     type: 'GET',
@@ -549,12 +564,12 @@ function initializePlex() {
         // Assign save function to button
         $(`#connection${connection.id} form`).on('submit', (event) => {
           event.preventDefault();
+          if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
           updateConnection(new FormData(event.target), connection.id, 'Plex');
         });
         // Assign delete function to button
         $(`#connection${connection.id} button[data-action="delete"]`).on('click', (event) => {
           event.preventDefault();
-          if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
           deleteConnection(connection.id);
         });
       });
@@ -566,6 +581,9 @@ function initializePlex() {
   });
 }
 
+/*
+ * Initialize the Sonarr portion of the page with all Sonarr Connections.
+ */
 function initializeSonarr() {
   $.ajax({
     type: 'GET',
