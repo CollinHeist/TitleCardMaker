@@ -15,16 +15,21 @@ async function getSonarrLibraries() {
   });
 }
 
-let allConnections;
+let allConnections = [];
 async function getAllConnections() {
-  allConnections = await fetch('/api/connection/all').then(resp => resp.json());
+  let allC = await fetch('/api/connection/all').then(resp => resp.json());
+  allC.forEach(connection => {
+    if (connection.interface !== 'Sonarr') {
+      allConnections.push(connection);
+    }
+  });
 }
 
 /*
  * Get the global logo language priority, and initialize the dropdown
  * with those values.
  */
-async function getLanguagePriorities() {
+function getLanguagePriorities() {
   $.ajax({
     type: 'GET',
     url: '/api/settings/logo-language-priority',
