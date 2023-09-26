@@ -321,21 +321,26 @@ function initializeTautulliForm() {
 }
 
 /*
- * Add an onChange event to the Plex filesize limit field that displays
- * the filesize limit warning if a size >10 MB is entered.
+ * Add the required HTML elements for a new Sonarr library field to the Form
+ * of the Connection with the given ID.
  */
-function enablePlexFilesizeWarning() {
-  $('.field[data-value="plex_filesize_limit"]').on('change', () => {
-    const number = $('.field[data-value="plex_filesize_limit"] input[name="filesize_limit_number"]').val() * 1;
-    const unit = $('.field[data-value="plex_filesize_limit"] input[name="filesize_limit_unit"]').val();
-    const unitValues = {
-      'Bytes': 1, 'Kilobytes':  2**10, 'Megabytes':  2**20,
-      'Gigabytes':  2**30, 'Terabytes':  2**40,
-    };
-    let current = unitValues[unit] * number,
-        limit   = 10 * unitValues['Megabytes'];
-    $('#plex-filesize-warning').toggleClass('visible', current > limit);
+function addSonarrLibraryField(connectionId) {
+  // Add interface_id dropdown
+  const interfaceDropdownTemplate = document.getElementById('interface-dropdown-template');
+  const dropdown = interfaceDropdownTemplate.content.cloneNode(true);
+  $(`#connection${connectionId} .field[data-value="media_server"]`).append(dropdown);
+  $(`#connection${connectionId} .dropdown[data-value="interface_id"]`).last().dropdown({
+    placeholder: 'Media Server',
+    values: allConnections.map(({id, name}) => {
+      return {value: id, name: name, selected: false};
+    }),
   });
+  // Add library name and path inputs
+  const name = document.createElement('input');
+  $(`#connection${connectionId} .field[data-value="library_name"]`).append(name);
+  const path = document.createElement('input');
+  $(`#connection${connectionId} .field[data-value="library_path"]`).append(path);
+  refreshTheme();
 }
 
 function updateConnection(form, connectionId, connectionType, jsonData) {
@@ -359,6 +364,11 @@ function updateConnection(form, connectionId, connectionType, jsonData) {
   });
 }
 
+/*
+ * Submit an API request to delete the Connection with the given ID. If
+ * successful, then the HTML element(s) for this Connection is removed from the
+ * page.
+ */
 function deleteConnection(connectionId) {
   $.ajax({
     type: 'DELETE',
@@ -579,11 +589,12 @@ function initializeSonarr() {
     success: connections => {
       const sonarrTemplate = document.getElementById('sonarr-connection-template');
       const sonarrSection = document.getElementById('sonarr-connections');
-      const interfaceDropdownTemplate = document.getElementById('interface-dropdown-template');
 
       // Add accordions for each Connection
       const sonarrForms = connections.map(connection => {
         const sonarrForm = sonarrTemplate.content.cloneNode(true);
+        // Remove warning
+        sonarrForm.querySelector('.warning.message').remove();
         sonarrForm.querySelector('.title').id = `connection${connection.id}-title`;
         sonarrForm.querySelector('.content').id = `connection${connection.id}`;
         // Enable later
@@ -633,22 +644,24 @@ function initializeSonarr() {
           })
         });
         // Add new library field on click
-        $(`#connection${connection.id} .button[data-action="add-library"]`).on('click', () => {
-          // Add interface_id dropdown
-          const dropdown = interfaceDropdownTemplate.content.cloneNode(true);
-          $(`#connection${connection.id} .field[data-value="media_server"]`).append(dropdown);
-          $(`#connection${connection.id} .dropdown[data-value="interface_id"]`).last().dropdown({
-            placeholder: 'Media Server',
-            values: allConnections.map(({id, name}) => {
-              return {value: id, name: name, selected: false};
-            }),
+        $(`#connection${connection.id} .button[data-action="add-library"]`).on('click', () => addSonarrLibraryField(connection.id));
+        // Query libraries on click
+        $(`#connection${connection.id} .button[data-action="query-libraries"]`).on('click', () => {
+          $.ajax({
+            type: 'GET',
+            url: `/api/connection/sonarr/${connection.id}/libraries`,
+            success: libraries => {
+              // Add new library fields if needed
+              const inputCount = $(`#connection${connection.id} .field[data-value="library_name"] input`).length;
+              if (inputCount < libraries.length) {
+                [...Array(libraries.length - inputCount)].map(() => addSonarrLibraryField(connection.id));
+              }
+              libraries.forEach(({name, path}, index) => {
+                $(`#connection${connection.id} .field[data-value="library_name"] input`).eq(index).val(name);
+                $(`#connection${connection.id} .field[data-value="library_path"] input`).eq(index).val(path);
+              });
+            }, error: response => showErrorToast({title: 'Error Querying Libraries', response}),
           });
-          // Add library name and path inputs
-          const name = document.createElement('input');
-          $(`#connection${connection.id} .field[data-value="library_name"]`).append(name);
-          const path = document.createElement('input');
-          $(`#connection${connection.id} .field[data-value="library_path"]`).append(path);
-          refreshTheme();
         });
         // Assign save function to button
         $(`#connection${connection.id} form`).on('submit', (event) => {
