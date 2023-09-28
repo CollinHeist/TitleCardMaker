@@ -13,11 +13,15 @@ async function loadCardTypes(args) {
   }
 
   // Generate lists of local/remote types
-  let localTypes = [];
-  let remoteTypes = [];
+  let builtinTypes = [],
+      localTypes = [],
+      remoteTypes = [];
   allCardTypes.forEach(({name, identifier, source, creators}) => {
     const selected = isSelected(identifier);
-    if (source === 'local') {
+    if (source === 'builtin') {
+      builtinTypes.push({name: name, value: identifier, selected: selected});
+    }
+    else if (source === 'local') {
       localTypes.push({name: name, value: identifier, selected: selected});
     } else {
       remoteTypes.push({
@@ -35,6 +39,8 @@ async function loadCardTypes(args) {
   $(element).dropdown({
     values: [
       {name: 'Built-in Cards', type: 'header'},
+      ...builtinTypes,
+      {name: 'Local Cards', type: 'header'},
       ...localTypes,
       {name: 'Remote Cards', type: 'header'},
       ...remoteTypes,

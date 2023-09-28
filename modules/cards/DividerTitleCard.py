@@ -29,7 +29,7 @@ class DividerTitleCard(BaseCardType):
         identifier='divider',
         example='/internal_assets/cards/divider.jpg',
         creators=['CollinHeist'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=True,
         supported_extras=[
@@ -44,7 +44,10 @@ class DividerTitleCard(BaseCardType):
                     'Which side the title text should be positioned relative '
                     'to the index text'
                 ),
-                tooltip='Either <v>left</v>, or <v>right</v>.',
+                tooltip=(
+                    'Either <v>left</v>, or <v>right</v>. Default is '
+                    '<v>left</v>.'
+                ),
             ), Extra(
                 name='Text Position',
                 identifier='text_position',
@@ -52,13 +55,13 @@ class DividerTitleCard(BaseCardType):
                 tooltip=(
                     'Either <v>upper left</v>, <v>upper right</v>, '
                     '<v>right</v>, <v>lower right</v>, <v>lower left</v>, or '
-                    '<v>left</v>.'
+                    '<v>left</v>. Default is <v>lower right</v>.'
                 ),
             ), Extra(
                 name='Divider Color',
                 identifier='divider_color',
                 description='Color of the divider bar between text',
-                tooltip='Defaults to the Font color',
+                tooltip='Defaults to match the Font color',
             )
         ], description=[
             'A simple title card featuring the title and index text separated '

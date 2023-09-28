@@ -248,7 +248,7 @@
       <h1 class="ui header">Connections</h1>
 
       <!-- Authentication -->
-      <h2 class="ui dividing header">Authentication</h2>
+      <h2 id="authentication" class="ui dividing header">Authentication</h2>
       <div class="connection-form">
         <!-- Enable button -->
         <div data-value="require_auth" class="ui left aligned checkbox field" data-tooltip="Whether to require a username and password">
@@ -317,7 +317,7 @@
       </div>
 
       <!-- Tautulli Integration -->
-      <h2 class="ui dividing header">Tautulli</h2>
+      <h2 id="tautulli" class="ui dividing header">Tautulli</h2>
       <button id="tautulli-agent-button" class="ui labeled icon blue button">
         <i class="bell icon"></i>
         Create Notification Agent
@@ -398,8 +398,13 @@
       <i class="close icon"></i>
       <div class="header">Tautulli Notification Agent</div>
       <div class="content">
-        <div class="ui compact raised segment">
-          <span>TitleCardMaker can create a Notification Agent on Tautulli to immediately update Title Cards for newly added or recently watched Episodes.</span>
+        <div class="ui compact floating visible info message">
+          <!-- <i class="info circle icon"></i>
+          <b>Info</b> -->
+          <ul class="list">
+            <li>A Tautulli Notification Agent can be used to immediately update Title Cards for newly added or recently watched Episodes.</li>
+            <li>This bypasses the Scheduler, and is <i>highly</i> recommended for Plex users.</li>
+          </ul>
         </div>
         <form id="tautulli-agent-form" class="ui form">
           <div class="ui field">
@@ -414,7 +419,7 @@
 
           <div class="ui left aligned checkbox field">
             <input name="tautulli_use_ssl" type="checkbox" checked="">
-            <label>Use SSL for Secure Connections</label>
+            <label>Use SSL</label>
           </div>
 
           <div class="ui field">

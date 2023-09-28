@@ -1,15 +1,14 @@
-from pathlib import Path
 from typing import Literal
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, UploadFile
 from sqlalchemy.orm import Session
 
 from app.database.query import get_font
-from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.dependencies import get_database, get_preferences
 from app.internal.auth import get_current_user
-from app import models
+from app.models.font import Font
+from app.models.preferences import Preferences
 from app.schemas.font import NamedFont, NewNamedFont, UpdateNamedFont
-from app.schemas.preferences import Preferences
 
 
 # Create sub router for all /fonts API requests
@@ -32,7 +31,7 @@ def create_font(
     """
 
     # Add to database
-    font = models.font.Font(**new_font.dict())
+    font = Font(**new_font.dict())
     db.add(font)
     db.commit()
 
@@ -71,7 +70,7 @@ async def add_font_file(
     file_path.write_bytes(file_content)
 
     # Update object and database
-    font.file = str(file_path)
+    font.file_name = file_path.name
     db.commit()
 
     return font
@@ -102,20 +101,18 @@ def delete_font_file(
             detail=f'Font {font.name} has no file',
         )
 
-    # If file exists, delete
-    if Path(font.file).exists():
-        # Raise exception if unable to delete file
-        try:
-            Path(font.file).unlink()
-        except Exception as e:
-            log.exception(f'Error deleting {font.file}', e)
-            raise HTTPException(
-                status_code=500,
-                detail=f'Error deleting font file - {e}',
-            ) from e
+    # Raise exception if unable to delete file
+    try:
+        font.file.unlink()
+    except Exception as exc:
+        log.exception(f'Error deleting {font.file}', exc)
+        raise HTTPException(
+            status_code=500,
+            detail=f'Error deleting Font file - {exc}',
+        ) from exc
 
     # Reset file path, update database
-    font.file = None
+    font.file_name = None
     db.commit()
 
     return font
@@ -158,17 +155,17 @@ def update_font(
 
 @font_router.get('/all', status_code=200)
 def get_all_fonts(
-        order_by: Literal['id', 'name'] = 'name',
+        order: Literal['id', 'name'] = 'name',
         db: Session = Depends(get_database),
     ) -> list[NamedFont]:
     """
     Get all defined Fonts.
     """
 
-    if order_by == 'id':
-        return db.query(models.font.Font).all()
+    if order == 'id':
+        return db.query(Font).all()
 
-    return db.query(models.font.Font).order_by(models.font.Font.sort_name).all()
+    return db.query(Font).order_by(Font.sort_name).all()
 
 
 @font_router.get('/{font_id}', status_code=200)
@@ -207,13 +204,14 @@ def delete_font(
     # If Font file is specified (and exists), delete
     if (font_file := font.file) is not None:
         try:
-            Path(font_file).unlink(missing_ok=True)
-        except Exception as e:
-            log.exception(f'Error deleting {font_file}', e)
+            font_file.unlink(missing_ok=True)
+            font_file.parent.rmdir()
+        except Exception as exc:
+            log.exception(f'Error deleting {font_file}', exc)
             raise HTTPException(
                 status_code=500,
-                detail=f'Error deleting font file - {e}',
-            ) from e
+                detail=f'Error deleting font file - {exc}',
+            ) from exc
 
     db.delete(font)
     db.commit()

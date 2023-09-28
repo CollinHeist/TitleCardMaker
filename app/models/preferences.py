@@ -11,11 +11,13 @@ from app.schemas.preferences import CardExtension, ImageSource
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.ImageMagickInterface import ImageMagickInterface
+from modules.RemoteCardType2 import RemoteCardType
 from modules.TitleCard import TitleCard
 from modules.Version import Version
 
 
 TCM_ROOT = Path(__file__).parent.parent.parent
+CONFIG_ROOT = TCM_ROOT / 'config'
 
 
 class Preferences:
@@ -46,6 +48,11 @@ class Preferences:
     """Directory for all temporary file operations"""
     TEMPORARY_DIRECTORY = TCM_ROOT / 'modules' / '.objects'
 
+    """Attributes whose values should be ignored when loading from file"""
+    __read_only = (
+        'is_docker', 'file', 'asset_directory', 'card_type_directory',
+        'remote_card_types', 'local_card_types',
+    )
 
     __slots__ = (
         'is_docker', 'asset_directory', 'card_directory', 'source_directory',
@@ -62,6 +69,7 @@ class Preferences:
         'require_auth', 'task_crontabs', 'simplified_data_table',
         'home_page_size', 'episode_data_page_size',
         'stylize_unmonitored_posters', 'sources_as_table',
+        'card_type_directory', 'local_card_types',
     )
 
 
@@ -87,24 +95,14 @@ class Preferences:
         # Initialize paths
         self.asset_directory = Path(self.asset_directory)
         self.card_directory = Path(self.card_directory)
+        self.card_type_directory = Path(self.card_type_directory)
         self.source_directory = Path(self.source_directory)
         for folder in (self.asset_directory, self.card_directory,
                        self.source_directory):
             folder.mkdir(parents=True, exist_ok=True)
 
-        # Migrate old settings
-        if isinstance(self.episode_data_source, str):
-            self.episode_data_source = {
-                'interface': self.episode_data_source, 'interface_id': 0,
-            }
-            self.commit()
-        if (len(self.image_source_priority) > 0
-            and isinstance(self.image_source_priority[0], str)):
-            self.image_source_priority = [
-                {'interface': source, 'interface_id': 0}
-                for source in self.image_source_priority
-            ]
-            self.commit()
+        # Parse local card type files
+        self.parse_local_card_types()
 
 
     def __getstate__(self) -> dict:
@@ -117,12 +115,12 @@ class Preferences:
             pickleable attributes excluded.
         """
 
-        # Exclude the remote card types dictionary because the types
-        # might not be loaded at runtime; which could cause an error
-        # when unpickling
+        # Exclude the card types dictionaries because the types might
+        # not be loaded at runtime; which could cause an error when
+        # unpickling
         return {
             attr: getattr(self, attr) for attr in self.__slots__
-            if attr not in ('remote_card_types', )
+            if attr not in ('remote_card_types', 'local_card_types')
         }
 
 
@@ -144,11 +142,13 @@ class Preferences:
         if self.is_docker:
             self.asset_directory = Path('/config/assets')
             self.card_directory = Path('/config/cards')
+            self.card_type_directory = Path('/config/card_types')
             self.source_directory = Path('/config/source')
         else:
-            self.asset_directory = TCM_ROOT / 'assets'
-            self.card_directory = TCM_ROOT / 'cards'
-            self.source_directory = TCM_ROOT / 'source'
+            self.asset_directory = CONFIG_ROOT / 'assets'
+            self.card_directory = CONFIG_ROOT / 'cards'
+            self.card_type_directory = CONFIG_ROOT / 'card_types'
+            self.source_directory = CONFIG_ROOT / 'source'
 
         self.card_width = TitleCard.DEFAULT_WIDTH
         self.card_height = TitleCard.DEFAULT_HEIGHT
@@ -165,6 +165,7 @@ class Preferences:
         self.sync_specials = True
         self.simplified_data_table = True
         self.remote_card_types = {}
+        self.local_card_types = {}
         self.default_card_type = 'standard'
         self.excluded_card_types = []
         self.default_watched_style = 'unique'
@@ -222,7 +223,7 @@ class Preferences:
 
         # Update each attribute known to this object
         for attribute in self.__slots__:
-            if hasattr(obj, attribute):
+            if hasattr(obj, attribute) and attribute not in self.__read_only:
                 setattr(self, attribute, getattr(obj, attribute))
 
         # Set attributes not parsed from the object
@@ -238,7 +239,7 @@ class Preferences:
         Commit the changes to this object to file.
 
         Args:
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # Open the file, dump this object's contents
@@ -280,7 +281,7 @@ class Preferences:
         commands.
 
         Args:
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # Try variations of the font list command with/out the "magick " prefix
@@ -295,6 +296,30 @@ class Preferences:
         # If none of the font commands worked, IM might not be installed
         log.critical(f"ImageMagick doesn't appear to be installed")
         return None
+
+
+    def parse_local_card_types(self, *, log: Logger = log) -> None:
+        """
+        Parse all locally specified CardType Python files. This attempts
+        to load each `.py` file in the card type directory as a
+        `RemoteCardType` object, and then stores the resulting
+        identifier and class in the local card types map.
+
+        Args:
+            log: Logger for all log messages.
+        """
+
+        # Parse all Python files in the card type directory
+        for file in self.card_type_directory.glob('*.py'):
+            # Attempt to load each file; skip if invalid
+            if not (card_type := RemoteCardType(file)).valid:
+                log.critical(f'Error reading local CardType')
+                continue
+
+            # Card type parsed, add to dictionary of identifiers to classes
+            details = card_type.card_class.API_DETAILS
+            self.local_card_types[details.identifier] = card_type.card_class
+            log.debug(f'Parsed local CardType[{details.identifier}]')
 
 
     @property
@@ -521,16 +546,16 @@ class Preferences:
 
 
     def get_card_type_class(self,
-            card_type_identifier: str,
+            identifier: str,
             *,
             log: Logger = log,
-        ) -> Optional['CardType']: # type: ignore
+        ) -> Optional[type['CardType']]: # type: ignore
         """
         Get the CardType class for the given card type identifier.
 
         Args:
-            card_type_identifier: Identifier of the CardType class.
-            log: (Keyword) Logger for all log messages.
+            identifier: Identifier of the CardType class.
+            log: Logger for all log messages.
 
         Returns:
             CardType subclass of the given identifier. If this is an
@@ -538,10 +563,12 @@ class Preferences:
         """
 
         # Get the effective card class
-        if card_type_identifier in TitleCard.CARD_TYPES:
-            return TitleCard.CARD_TYPES[card_type_identifier]
-        if card_type_identifier in self.remote_card_types:
-            return self.remote_card_types[card_type_identifier]
+        if identifier in TitleCard.CARD_TYPES:
+            return TitleCard.CARD_TYPES[identifier]
+        if identifier in self.remote_card_types:
+            return self.remote_card_types[identifier]
+        if identifier in self.local_card_types:
+            return self.local_card_types[identifier]
 
-        log.error(f'Unable to identify card type "{card_type_identifier}"')
+        log.error(f'Unable to identify card type "{identifier}"')
         return None

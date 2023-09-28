@@ -6,12 +6,14 @@ from re import IGNORECASE, compile as re_compile
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
 
+
 AbsoluteRange = namedtuple('AbsoluteRange', ('start', 'end'))
 EpisodeRange = namedtuple(
     'EpisodeRange',
     ('season_start', 'episode_start', 'season_end', 'episode_end')
 )
 Season = namedtuple('Season', ('season_number'))
+
 
 class SeasonTitleRanges:
     """
@@ -80,7 +82,6 @@ class SeasonTitleRanges:
             if isinstance(range_, AbsoluteRange):
                 # Episode has no absolute number, warn and skip
                 if episode_info.absolute_number is None:
-                    log.warning(f'Episode {episode_info} has no absolute number')
                     break
 
                 if range_.start <= episode_info.absolute_number <= range_.end:
@@ -96,4 +97,5 @@ class SeasonTitleRanges:
         # No matching season title range, return default
         if episode_info.season_number == 0:
             return f'Specials'
+
         return f'Season {episode_info.season_number}'

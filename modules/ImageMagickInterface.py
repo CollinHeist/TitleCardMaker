@@ -250,6 +250,10 @@ class ImageMagickInterface:
             Dimensions namedtuple.
         """
 
+        # No text
+        if not text_command:
+            return Dimensions(0, 0)
+
         text_command = ' '.join([
             f'convert',
             f'-debug annotate',

@@ -5,6 +5,8 @@
     This step is completely optional, and only those with Sonarr servers should
     continue.
 
+## Connecting
+
 1. Toggle the `Enable Sonarr` checkbox.
 2. Enter the _root_ URL of your Sonarr server (including the port).
 
@@ -87,3 +89,56 @@ guidance on how to enter your library paths.
 
 8. After entering all the necessary library paths, click the `Save Changes`
 button.
+
+## Webhook Integration
+
+!!! note "Tautulli Alternative"
+
+    Tautulli Notification Agents are a much better alternative to Sonarr
+    Webhooks _if_ you are using Plex __and__ Tautulli in your setup.
+
+    The process of setting this up Tautulli is covered [here](tautulli.md). It
+    is not recommended (or necessary) to enable both integrations.
+
+If you'd like to create Title Cards for Episodes faster than TCM typically does
+via the [adjustable scheduler](../scheduler.md), you can enable a Sonarr Webhook
+to trigger card creation for Episodes as they are grabbed by Sonarr. How to
+enable this functionality is described below.
+
+1. From the Sonarr WebUI, navigate to :fontawesome-solid-gears: `Settings`, then
+`Connect`.
+
+2. Click the plus button to create a new connection.
+
+3. Scroll to and click the last option, `Webhook`.
+
+4. Change the name to something like _TitleCardMaker_, and then select __only__
+the `On Import` and `On Upgrade` Notification Triggers.
+
+5. Leave the Tags field blank (unless you'd like to filter by tag).
+
+6. For the URL, enter your TCM WebUI URL (including the port) with
+`/api/cards/sonarr` added to the end.
+
+    ??? example "Example URL"
+
+        If I access the TCM web interface at `http://192.168.0.19:4242`, then
+        in this URL field I would enter
+        `http://192.168.0.19:4242/api/cards/sonarr`.
+
+7. Leave the method as `POST`, and the Username and Password fields blank.
+
+8. Hit `Save`, and in your TCM logs you should get some messages like this:
+
+    ```
+    [DEBUG] [...] Starting POST "/api/cards/sonarr"
+    [INFO] [...] Cannot find Series for Test Title (0)
+    [DEBUG] [...] Finished in xxx.xms
+    ```
+
+!!! success "Success"
+
+    With the Webhook created, Sonarr will now send a signal to TitleCardMaker
+    whenever an Episode is imported or upgraded. This typically results in
+    Title Cards being created for Episodes within _seconds_ of them being added
+    to your media server.

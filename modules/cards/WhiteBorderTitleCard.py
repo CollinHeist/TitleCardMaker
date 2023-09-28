@@ -19,7 +19,7 @@ class WhiteBorderTitleCard(BaseCardType):
         identifier='white border',
         example='/internal_assets/cards/white border.jpg',
         creators=['Musikmann2000', 'CollinHeist', 'mvanbaak', 'supermariobruh'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=True,
         supported_extras=[

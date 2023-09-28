@@ -1,3 +1,4 @@
+# pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from typing import Optional
 
 from pydantic import constr # pylint: disable=no-name-in-module

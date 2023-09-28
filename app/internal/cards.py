@@ -44,6 +44,7 @@ def create_all_title_cards(*, log: Logger = log) -> None:
 
     try:
         # Get the Database
+        failures = 0
         with next(get_database()) as db:
             # Get all Series
             all_series = db.query(Series).all()
@@ -65,6 +66,9 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                             log.warning(f'{series.log_str} {episode.log_str} - skipping Card')
                             log.debug(f'Exception: {e}')
                     except OperationalError:
+                        if failures > 10:
+                            break
+                        failures += 1
                         log.debug(f'Database is busy, sleeping..')
                         sleep(30)
     except Exception as e:
@@ -123,7 +127,9 @@ def refresh_all_remote_card_types(*, log: Logger = log) -> None:
     """
 
     try:
-        # Get the Database
+        # Refresh the local cards
+        get_preferences().parse_local_card_types(log=log)
+        # Refresh the remote cards
         with next(get_database()) as db:
             refresh_remote_card_types(db, reset=True, log=log)
     except Exception as e:
@@ -163,19 +169,21 @@ def refresh_remote_card_types(
 
     # Refresh all remote card types
     for card_identifier in card_identifiers:
-        # Card type is remote
-        if (card_identifier is not None
-            and card_identifier not in TitleCardCreator.CARD_TYPES):
-            # If not resetting, skip already loaded types
-            if not reset and card_identifier in preferences.remote_card_types:
-                continue
+        # Skip blank identifiers, and builtin or local cards
+        if (card_identifier is None
+            or card_identifier in TitleCardCreator.CARD_TYPES
+            or card_identifier in preferences.local_card_types):
+            continue
 
-            # Load new type
-            log.debug(f'Loading RemoteCardType[{card_identifier}]..')
-            remote_card_type = RemoteCardType(card_identifier, log=log)
-            if remote_card_type.valid and remote_card_type is not None:
-                preferences.remote_card_types[card_identifier] =\
-                    remote_card_type.card_class
+        # If not resetting, skip already loaded types
+        if not reset and card_identifier in preferences.remote_card_types:
+            continue
+
+        # Load new type
+        log.debug(f'Loading RemoteCardType[{card_identifier}]..')
+        card_type = RemoteCardType(card_identifier, log=log)
+        if card_type.valid and card_type is not None:
+            preferences.remote_card_types[card_identifier] =card_type.card_class
 
 
 def add_card_to_database(
@@ -366,14 +374,24 @@ def resolve_card_settings(
         )
         card_settings['logo_file'] = Path(series.source_directory) \
             / f"{formatted_filename}{card_settings['logo_file'].suffix}"
-    except KeyError as e:
+    except KeyError as exc:
         log.exception(f'{series.log_str} {episode.log_str} Cannot format logo '
-                      f'filename - missing data', e)
+                      f'filename - missing data', exc)
         raise HTTPException(
             status_code=400,
             detail=f'Cannot create Card - invalid logo filename format - '
-                   f'missing data {e}',
-        ) from e
+                   f'missing data {exc}',
+        ) from exc
+    except ValueError as exc:
+        log.exception(f'{series.log_str} {episode.log_str} Cannot format logo '
+                      f'filename - bad format', exc)
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f'Cannot create Card - invalid logo filename format - bad '
+                f'format {exc}'
+            )
+        ) from exc
 
     # Get the effective card class
     CardClass = preferences.get_card_type_class(
@@ -414,6 +432,13 @@ def resolve_card_settings(
         case_func = CardClass.CASE_FUNCTIONS[card_settings['font_title_case']]
     card_settings['title_text'] = case_func(card_settings['title_text'])
 
+    # Apply Font replacements again
+    if card_settings.get('font_replacements', {}):
+        for repl_in, repl_out in card_settings['font_replacements'].items():
+            card_settings['title'] = card_settings['title'].replace(
+                repl_in, repl_out
+            )
+
     # Apply title text format if indicated
     if (title_format := card_settings.get('title_text_format')) is not None:
         try:
@@ -424,6 +449,13 @@ def resolve_card_settings(
             raise HTTPException(
                 status_code=400,
                 detail=f'Invalid title text format - missing data {exc}'
+            ) from exc
+        except ValueError as exc:
+            log.exception(f'{series.log_str} {episode.log_str} Title Text '
+                          f'Format is invalid - bad format', exc)
+            raise HTTPException(
+                status_code=400,
+                detail=f'Invalid title text format - bad format {exc}'
             ) from exc
 
     # Get EpisodeInfo for this Episode
@@ -512,14 +544,17 @@ def resolve_card_settings(
     # If an explicit card file was indicated, use it vs. default
     try:
         if card_settings.get('card_file', None) is None:
+            filename = CleanPath.sanitize_name(
+                card_settings['card_filename_format'].format(**card_settings)
+            )
             card_settings['title'] = card_settings['title'].replace('\\n', '')
             card_settings['card_file'] = series_directory \
                 / preferences.get_folder_format(episode_info) \
-                / card_settings['card_filename_format'].format(**card_settings)
+                / filename
         else:
             card_settings['card_file'] = series_directory \
                 / preferences.get_folder_format(episode_info) \
-                / card_settings['card_file']
+                / CleanPath.sanitize_name(card_settings['card_file'])
     except KeyError as e:
         log.exception(f'{series.log_str} {episode.log_str} Cannot format Card '
                       f'filename - missing data', e)

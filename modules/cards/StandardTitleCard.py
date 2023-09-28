@@ -20,7 +20,7 @@ class StandardTitleCard(BaseCardType):
         identifier='standard',
         example='/internal_assets/cards/standard.jpg',
         creators=['/u/UniversalPolymath', 'CollinHeist'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=True,
         supported_extras=[

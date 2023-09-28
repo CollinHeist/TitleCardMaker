@@ -17,7 +17,7 @@ class PosterTitleCard(BaseCardType):
         identifier='poster',
         example='/internal_assets/cards/poster.jpg',
         creators=['/u/battleoflight', 'CollinHeist'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=False,
         supported_extras=[

@@ -1,8 +1,8 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
-from typing import Literal, Optional, Union
+from typing import Any, Literal, Optional, Union
 from pydantic import AnyUrl, NonNegativeInt, SecretStr, constr, validator # pylint: disable=no-name-in-module
 
-from app.schemas.base import Base, MediaServer, UpdateBase, UNSPECIFIED
+from app.schemas.base import Base, UpdateBase, UNSPECIFIED
 from modules.EmbyInterface2 import EmbyInterface
 from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
@@ -173,3 +173,26 @@ class TMDbConnection(Base):
     tmdb_skip_localized: bool
     tmdb_download_logos: bool
     tmdb_logo_language_priority: list[TMDbLanguageCode]
+
+"""
+Sonarr Webhooks
+"""
+class WebhookSeries(Base):
+    id: int
+    title: str
+    year: int
+    imdbId: Any = None
+    tvdbId: Any = None
+    tvRageId: Any = None
+
+class WebhookEpisode(Base):
+    id: int
+    episodeNumber: int
+    seasonNumber: int
+    title: str
+    seriesId: int
+
+class SonarrWebhook(Base):
+    series: WebhookSeries
+    episodes: list[WebhookEpisode] = []
+    eventType: str # Literal['SeriesAdd', 'Download']

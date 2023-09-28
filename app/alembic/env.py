@@ -42,6 +42,8 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+from os import environ
+IS_DOCKER = environ.get('TCM_IS_DOCKER', 'false').lower() == 'true'
 
 
 def run_migrations_offline() -> None:
@@ -54,9 +56,12 @@ def run_migrations_offline() -> None:
 
     Calls to context.execute() here emit the given string to the
     script output.
-
     """
+
     url = config.get_main_option("sqlalchemy.url")
+    if IS_DOCKER:
+        url = '/config/db.sqlite'
+
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -75,16 +80,21 @@ def run_migrations_online() -> None:
 
     In this scenario we need to create an Engine
     and associate a connection with the context.
-
     """
+
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
 
+    url = config.get_main_option("sqlalchemy.url")
+    if IS_DOCKER:
+        url = '/config/db.sqlite'
+
     with connectable.connect() as connection:
         context.configure(
+            url=url,
             connection=connection,
             target_metadata=target_metadata,
             compare_server_default=True,

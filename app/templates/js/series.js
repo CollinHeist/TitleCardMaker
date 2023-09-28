@@ -221,9 +221,14 @@ async function initalizeSeriesConfig() {
   // Fonts
   $('#card-config-form .dropdown[data-value="fonts"]').dropdown({
     values: availableFonts.map(({id, name}) => {
-      return {name: name, value: id, selected: `${id}` === '{{series.font_id}}'};
+      return {name, value: id, selected: `${id}` === '{{series.font_id}}'};
     })
   });
+  if ('{{series.font_id}}' === 'None') {
+    $('.field a[data-value="font-link"]').remove();
+  } else {
+    $('.field a[data-value="font-link"]')[0].href = `/fonts#font-id{{series.font_id}}`;
+  }
   // Font card case
   $('#card-config-form .dropdown[data-value="font_title_case"]').dropdown({
     values: [
@@ -367,7 +372,7 @@ function deleteObject(args) {
 
 function editEpisodeExtras(episode) {
   // Clear existing values
-  $('#episode-extras-modal .field').remove();
+  $('#episode-extras-modal .field > .field').remove();
   // Add existing translations
   for (let [data_key, value] of Object.entries(episode.translations)) {
     const newKey = document.createElement('input');
@@ -770,6 +775,7 @@ async function initAll() {
   allStyles = await fetch('/api/available/styles').then(resp => resp.json());
   availableTemplates = await fetch('/api/available/templates').then(resp => resp.json());
   availableFonts = await fetch('/api/available/fonts').then(resp => resp.json());
+
   // Initialize 
   initalizeSeriesConfig();
   getLibraries();
@@ -781,12 +787,20 @@ async function initAll() {
   getStatistics();
   getStatisticsId = setInterval(getStatistics, 30000); // Refresh stats every 30s
 
+  // Open tab indicated by URL param
+  const tab = window.location.hash.substring(1) || 'options';
+  $('.menu .item')
+    .tab('change tab', tab)
+    // When tab is changed, update hash URL field 
+    .tab({
+      onVisible: (tabPath) => history.replaceState(null, null, `#${tabPath}`),
+    });
+
   // Enable all dropdowns, menus, and accordians
   $('.ui.dropdown').dropdown();
-  // $('.ui.checkbox').checkbox();
-  $('.menu .item').tab()
   $('.ui.accordion').accordion();
   $('.ui.checkbox').checkbox();
+
   // Enable IOS hover on the series poster
   $('.ui.special.card .image').dimmer({
     on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'
@@ -1020,12 +1034,12 @@ function deleteListValues(attribute) {
     contentType: 'application/json',
     success: () => {
       if (attribute === 'season_titles') {
-        $('.field[data-value="season-title-range"] input').remove();
-        $('.field[data-value="season-title-value"] input').remove();
+        $('.field[data-value="season-title-range"] > input').remove();
+        $('.field[data-value="season-title-value"] > input').remove();
       } else if (attribute === 'translations') {
         $('.field [data-value="translations"] >*').remove();
       } else if (attribute === 'extras') {
-        $('.field[data-value="extras"] .field').remove();
+        $('.field[data-value="extras"] > .field').remove();
       }
       showInfoToast('Deleted Values');
     }, error: response => showErrorToast({title: 'Error Deleting Values', response}),
@@ -1121,16 +1135,7 @@ function addTranslations() {
 function importBlueprint(cardId, blueprint) {
   // Turn on loading
   document.getElementById(cardId).classList.add('slow', 'double', 'blue', 'loading');
-  // Submit API request to import blueprint
-  $.ajax({
-    type: 'PUT',
-    url: '/api/blueprints/import/series/{{series.id}}',
-    data: JSON.stringify(blueprint),
-    contentType: 'application/json',
-    success: () => showInfoToast('Blueprint Imported'),
-    error: response => showErrorToast({title: 'Error Importing Blueprint', response}),
-    complete: () => document.getElementById(cardId).classList.remove('slow', 'double', 'blue', 'loading'),
-  });
+
   // Get any URL's for Fonts to download
   let fontsToDownload = [];
   blueprint.fonts.forEach(font => {
@@ -1138,6 +1143,23 @@ function importBlueprint(cardId, blueprint) {
       fontsToDownload.push(font.file_download_url);
     }
   });
+
+  // Submit API request to import blueprint
+  $.ajax({
+    type: 'PUT',
+    url: '/api/blueprints/import/series/{{series.id}}',
+    data: JSON.stringify(blueprint),
+    contentType: 'application/json',
+    success: () => {
+      showInfoToast('Blueprint Imported');
+      if (fontsToDownload.length === 0) {
+        showInfoToast('Reloading page..');
+        setTimeout(() => location.reload(), 2000);
+      }
+    }, error: response => showErrorToast({title: 'Error Importing Blueprint', response}),
+    complete: () => document.getElementById(cardId).classList.remove('slow', 'double', 'blue', 'loading'),
+  });
+  
   // If any Fonts need downloaded, show toast
   if (fontsToDownload.length > 0) {
     $.toast({
@@ -1149,15 +1171,23 @@ function importBlueprint(cardId, blueprint) {
       actions: [
         {
           text: 'Open Pages',
-          click: () => fontsToDownload.forEach(url => window.open(url, '_blank')),
+          click: () => {
+            fontsToDownload.forEach(url => window.open(url, '_blank'));
+            showInfoToast('Reloading page..');
+            setTimeout(() => location.reload(), 10000);
+          },
         }, {
           icon: 'ban',
           class: 'icon red',
-          click: () => showErrorToast({
-            title: 'Blueprint Fonts',
-            message: 'Blueprint Fonts will not be correct if files are not downloaded',
-            displayTime: 10000,
-          }),
+          click: () => {
+            showErrorToast({
+              title: 'Blueprint Fonts',
+              message: 'Blueprint Fonts will not be correct if files are not downloaded',
+              displayTime: 10000,
+            });
+            showInfoToast('Reloading page..');
+            setTimeout(() => location.reload(), 10000);
+          },
         }
       ],
     });
@@ -1644,7 +1674,7 @@ function navigateSeries(next_or_previous) {
       if (series === null) {
         $(`i[data-action="${next_or_previous}-series"]`).toggleClass('disabled', true);
       } else {
-        window.location.href = `/series/${series.id}`;
+        window.location.href = `/series/${series.id}${window.location.hash}`;
       }
     }, error: response => showErrorToast({title: 'Navigation Failed', response}),
   });

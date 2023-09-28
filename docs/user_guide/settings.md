@@ -57,8 +57,9 @@ below.
         | ImageMagick Docker Container | Unchecked and Disabled |
 
 ## Quick Reference
-Below is a brief description of each setting. Each setting is described
-in greater detail below.
+Below is a brief description of each setting, as well as whether that setting
+can be overwritten per-Series. Each setting is described in greater detail
+below.
 
 | Setting | Overwritable | Description |
 | ---: | :---: | :--- |
@@ -157,8 +158,8 @@ Episode Data source - however, there are some differences between each.
     | :---: | :---: | :---: | :---: |
     | Emby | :material-close:{.red} | :material-check:{.green} | Average |
     | Jellyfin | :material-close:{.red} | :material-check:{.green} | Average |
-    | Plex | :material-close:{.red} | :material-check:{.green} | Slow |
-    | Sonarr | :material-check:{.green} | :octicons-x-16:{.red}| Fast |
+    | Plex | :material-close:{.red} | :material-check:{.green} | Average |
+    | Sonarr | :material-check:{.green} | :material-check:{.green} [^1] | Fast |
     | TMDb | :material-close:{.red} | :octicons-x-16:{.red} | Fast |
 
     The speed of a Media Server as an Episode data source will vary wildy with
@@ -259,7 +260,7 @@ differences in each type (with regards to TCM):
     | `png` | Lossless | :material-check:{.green} | 230% |
     | `tiff` | Lossless | :material-check:{.green} | 300% |
     | `gif` | Lossless | :material-check:{.green} | 90% |
-    | `webp` | Lessless / Lossy | :material-check:{.green} | 70% |
+    | `webp` | Lossless / Lossy | :material-check:{.green} | 70% |
 
     !!! note "Note about Transparency"
 
@@ -360,3 +361,5 @@ A full list of the available variables are listed below.
 ### Season Folder Format
 
 ^([^{]*(?:{(?:season|episode|absolute)_number(?::\d+)?})*)+$
+
+[^1]: This can be toggled on/off.

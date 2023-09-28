@@ -9,16 +9,14 @@ __pycache__/
 # PEP 582
 __pypackages__/
 
-app/assets/preview/card*.png
+app/assets/preview/card*
 backups/
-source/
-logs/
+config/
 fonts/
-yml/
 modules/.objects/
+yml/
 *._*
 *.prof
 .DS_Store
-db.sqlite
 missing.yml
 preferences.yml

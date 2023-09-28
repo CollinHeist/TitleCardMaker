@@ -11,6 +11,7 @@ from pydantic import ( # pylint: disable=no-name-in-module
 
 from app.schemas.base import Base, BetterColor, DictKey
 from modules.cards.AnimeTitleCard import AnimeTitleCard
+from modules.cards.CalligraphyTitleCard import CalligraphyTitleCard
 from modules.cards.ComicBookTitleCard import ComicBookTitleCard
 from modules.cards.CutoutTitleCard import CutoutTitleCard
 from modules.cards.DividerTitleCard import DividerTitleCard
@@ -18,7 +19,9 @@ from modules.cards.FadeTitleCard import FadeTitleCard
 from modules.cards.FrameTitleCard import FrameTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
+from modules.cards.MarvelTitleCard import MarvelTitleCard
 from modules.cards.OlivierTitleCard import OlivierTitleCard
+from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
 from modules.cards.RomanNumeralTitleCard import RomanNumeralTitleCard
 from modules.cards.StandardTitleCard import StandardTitleCard
@@ -28,10 +31,10 @@ from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 
 LocalCardIdentifiers = Literal[
-    'anime', 'comic book', 'cutout', 'divider', 'fade', 'frame', 'generic',
-    'gundam', 'ishalioh', 'landscape', 'logo', 'musikmann', 'olivier',
-    'phendrena', 'photo', 'polymath', 'poster', 'reality tv', 'roman',
-    'roman numeral', 'sherlock', 'standard', 'star wars', 'textless',
+    'anime', 'calligraphy', 'comic book', 'cutout', 'divider', 'fade', 'frame',
+    'generic', 'gundam', 'ishalioh', 'landscape', 'logo', 'marvel', 'musikmann',
+    'olivier', 'phendrena', 'photo', 'polymath', 'poster', 'reality tv',
+    'roman', 'roman numeral', 'sherlock', 'standard', 'star wars', 'textless',
     'tinted glass', '4x3', 'white border',
 ]
 
@@ -45,13 +48,13 @@ class Extra(Base):
     tooltip: Optional[str] = None
     card_type: str
 
-class BaseCardType(Base):
+class BaseCardModel(Base):
     source_file: FilePath
     card_file: Path
     blur: bool = False
     grayscale: bool = False
 
-class BaseCardTypeAllText(BaseCardType):
+class BaseCardTypeAllText(BaseCardModel):
     title_text: str
     season_text: constr(to_upper=True)
     episode_text: constr(to_upper=True)
@@ -65,7 +68,7 @@ class BaseCardTypeAllText(BaseCardType):
 
         return values
 
-class BaseCardTypeCustomFontNoText(BaseCardType):
+class BaseCardTypeCustomFontNoText(BaseCardModel):
     font_color: BetterColor
     font_file: FilePath
     font_interline_spacing: int = 0
@@ -90,7 +93,7 @@ Creation classes
 """
 class AnimeCardType(BaseCardTypeCustomFontAllText):
     font_color: BetterColor = AnimeTitleCard.TITLE_COLOR
-    font_file: FilePath = AnimeTitleCard.REF_DIRECTORY / 'Flanker Griffo.otf'
+    font_file: FilePath = AnimeTitleCard.TITLE_FONT
     kanji: Optional[str] = None
     require_kanji: bool = False
     kanji_vertical_shift: int = 0
@@ -105,6 +108,21 @@ class AnimeCardType(BaseCardTypeCustomFontAllText):
             raise ValueError(f'Kanji is required and not specified')
 
         return values
+
+class CalligraphyCardType(BaseCardTypeCustomFontAllText):
+    season_text: str
+    episode_text: str
+    font_color: BetterColor = CalligraphyTitleCard.TITLE_COLOR
+    font_file: FilePath = CalligraphyTitleCard.TITLE_FONT
+    logo_file: Path
+    watched: bool = False
+    add_texture: bool = True
+    deep_blur_if_unwatched: bool = True
+    episode_text_color: Optional[BetterColor] = 'white'
+    logo_size: PositiveFloat = 1.0
+    offset_titles: bool = True
+    randomize_texture: bool = True
+    separator: str = '-'
 
 RandomAngleRegex = r'random\[([+-]?\d+.?\d*),\s*([+-]?\d+.?\d*)\]'
 RandomAngle = constr(regex=RandomAngleRegex)
@@ -146,7 +164,7 @@ class ComicBookCardType(BaseCardTypeCustomFontAllText):
 
         return values
 
-class CutoutCardType(BaseCardType):
+class CutoutCardType(BaseCardModel):
     title_text: str
     episode_text: constr(to_upper=True)
     font_color: BetterColor = CutoutTitleCard.TITLE_COLOR
@@ -194,7 +212,7 @@ class FrameCardType(BaseCardTypeCustomFontAllText):
 
 BoxAdjustmentRegex = r'^([-+]?\d+)\s+([-+]?\d+)\s+([-+]?\d+)\s+([-+]?\d+)$'
 BoxAdjustments = constr(regex=BoxAdjustmentRegex)
-class LandscapeCardType(BaseCardType):
+class LandscapeCardType(BaseCardModel):
     title_text: str
     font_color: BetterColor = LandscapeTitleCard.TITLE_COLOR
     font_file: FilePath = LandscapeTitleCard.TITLE_FONT
@@ -221,7 +239,6 @@ class LandscapeCardType(BaseCardType):
         return values
 
 class LogoCardType(BaseCardTypeCustomFontAllText):
-    source_file: Path
     logo_file: FilePath
     font_color: BetterColor = LogoTitleCard.TITLE_COLOR
     font_file: Path = LogoTitleCard.TITLE_FONT
@@ -240,6 +257,18 @@ class LogoCardType(BaseCardTypeCustomFontAllText):
 
         return values
 
+class MarvelCardType(BaseCardTypeCustomFontAllText):
+    font_file: Path = MarvelTitleCard.TITLE_FONT
+    font_color: BetterColor = MarvelTitleCard.TITLE_COLOR
+    border_color: BetterColor = MarvelTitleCard.DEFAULT_BORDER_COLOR
+    border_size: PositiveInt = MarvelTitleCard.DEFAULT_BORDER_SIZE
+    episode_text_color: BetterColor = MarvelTitleCard.EPISODE_TEXT_COLOR
+    episode_text_location: Literal['compact', 'fixed'] = 'fixed'
+    fit_text: bool = True
+    hide_border: bool = False
+    text_box_color: BetterColor = MarvelTitleCard.DEFAULT_TEXT_BOX_COLOR
+    text_box_height: PositiveInt = MarvelTitleCard.DEFAULT_TEXT_BOX_HEIGHT
+
 class OlivierCardType(BaseCardTypeCustomFontNoText):
     title_text: str
     episode_text: constr(to_upper=True)
@@ -247,9 +276,40 @@ class OlivierCardType(BaseCardTypeCustomFontNoText):
     font_color: BetterColor = OlivierTitleCard.TITLE_COLOR
     font_file: FilePath = OlivierTitleCard.TITLE_FONT
     episode_text_color: BetterColor = OlivierTitleCard.EPISODE_TEXT_COLOR
+    episode_text_font_size: PositiveFloat = 1.0
+    episode_text_vertical_shift: int = 0
     stroke_color: BetterColor = OlivierTitleCard.STROKE_COLOR
 
-class PosterCardType(BaseCardType):
+    @root_validator(skip_on_failure=True)
+    def toggle_text_hiding(cls, values):
+        values['hide_episode_text'] |= (len(values['episode_text']) == 0)
+
+        return values
+
+class OverlineCardType(BaseCardTypeCustomFontAllText):
+    font_color: BetterColor = OverlineTitleCard.TITLE_COLOR
+    font_file: FilePath = OverlineTitleCard.TITLE_FONT
+    episode_text_color: Optional[BetterColor] = None
+    hide_line: bool = False
+    line_color: Optional[BetterColor] = None
+    line_position: Literal['top', 'bottom'] = 'top'
+    line_width: PositiveInt = OverlineTitleCard.LINE_THICKNESS
+    omit_gradient: bool = False
+    separator: str = '-'
+
+    @root_validator(skip_on_failure=True)
+    def assign_unassigned_color(cls, values):
+        if values['episode_text_color'] is None:
+            values['episode_text_color'] = values['font_color']
+        if values['line_color'] is None:
+            if values['episode_text_color'] is None:
+                values['line_color'] = values['font_color']
+            else:
+                values['line_color'] = values['episode_text_color']
+
+        return values
+
+class PosterCardType(BaseCardModel):
     title_text: str
     episode_text: constr(to_upper=True)
     font_color: BetterColor = PosterTitleCard.TITLE_COLOR
@@ -289,7 +349,7 @@ class StandardCardType(BaseCardTypeCustomFontAllText):
     stroke_color: BetterColor = 'black'
     episode_text_color: BetterColor = StandardTitleCard.SERIES_COUNT_TEXT_COLOR
 
-class StarWarsCardType(BaseCardType):
+class StarWarsCardType(BaseCardModel):
     title_text: str
     episode_text: constr(to_upper=True)
     hide_episode_text: bool = False
@@ -306,7 +366,7 @@ class StarWarsCardType(BaseCardType):
 
         return values
 
-class TextlessCardType(BaseCardType):
+class TextlessCardType(BaseCardModel):
     pass
 
 OuterElement = Literal['index', 'logo', 'omit', 'title']
@@ -390,6 +450,7 @@ LocalCardTypeModels = {
     '4x3': FadeCardType,
     'anime': AnimeCardType,
     'blurred border': TintedFrameCardType,
+    'calligraphy': CalligraphyCardType,
     'comic book': ComicBookCardType,
     'cutout': CutoutCardType,
     'divider': DividerCardType,
@@ -400,8 +461,10 @@ LocalCardTypeModels = {
     'ishalioh': OlivierCardType,
     'landscape': LandscapeCardType,
     'logo': LogoCardType,
+    'marvel': MarvelCardType,
     'musikmann': WhiteBorderCardType,
     'olivier': OlivierCardType,
+    'overline': OverlineCardType,
     'phendrena': CutoutCardType,
     'photo': FrameCardType,
     'polymath': StandardCardType,

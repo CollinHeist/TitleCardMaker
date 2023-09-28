@@ -10,6 +10,7 @@ from modules.SeriesInfo import SeriesInfo
 
 # Built-in BaseCardType classes
 from modules.cards.AnimeTitleCard import AnimeTitleCard
+from modules.cards.CalligraphyTitleCard import CalligraphyTitleCard
 from modules.cards.ComicBookTitleCard import ComicBookTitleCard
 from modules.cards.CutoutTitleCard import CutoutTitleCard
 from modules.cards.DividerTitleCard import DividerTitleCard
@@ -17,7 +18,9 @@ from modules.cards.FadeTitleCard import FadeTitleCard
 from modules.cards.FrameTitleCard import FrameTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
+from modules.cards.MarvelTitleCard import MarvelTitleCard
 from modules.cards.OlivierTitleCard import OlivierTitleCard
+from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
 from modules.cards.RomanNumeralTitleCard import RomanNumeralTitleCard
 from modules.cards.StandardTitleCard import StandardTitleCard
@@ -28,6 +31,7 @@ from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 
 from app.schemas.card_type import LocalCardTypeModels
+
 
 class TitleCard:
     """
@@ -61,6 +65,7 @@ class TitleCard:
         '4x3': FadeTitleCard,
         'anime': AnimeTitleCard,
         'blurred border': TintedFrameTitleCard,
+        'calligraphy': CalligraphyTitleCard,
         'comic book': ComicBookTitleCard,
         'cutout': CutoutTitleCard,
         'divider': DividerTitleCard,
@@ -72,8 +77,10 @@ class TitleCard:
         'ishalioh': OlivierTitleCard,
         'landscape': LandscapeTitleCard,
         'logo': LogoTitleCard,
+        'marvel': MarvelTitleCard,
         'musikmann': WhiteBorderTitleCard,
         'olivier': OlivierTitleCard,
+        'overline': OverlineTitleCard,
         'phendrena': CutoutTitleCard,
         'photo': FrameTitleCard,
         'polymath': StandardTitleCard,
@@ -138,11 +145,20 @@ class TitleCard:
           | extra_characteristics
 
         # Initialize model
-        inverse_mappings = {CardClass: identifier for identifier, CardClass in self.CARD_TYPES.items()}
-        CardModel = LocalCardTypeModels[inverse_mappings[self.episode.card_class]](
-            logo_file=episode.source.parent / 'logo.png',
-            **kwargs,
-        )
+        if hasattr(self.episode.card_class, 'CardModel'):
+            CardModel = self.episode.card_class.CardModel(
+                logo_file=episode.source.parent / 'logo.png',
+                **kwargs,
+            )
+        else:
+            inverse_mappings = {
+                CardClass: identifier
+                for identifier, CardClass in self.CARD_TYPES.items()
+            }
+            CardModel = LocalCardTypeModels[inverse_mappings[self.episode.card_class]](
+                logo_file=episode.source.parent / 'logo.png',
+                **kwargs,
+            )
 
         try:
             self.maker = self.episode.card_class(**CardModel.dict())

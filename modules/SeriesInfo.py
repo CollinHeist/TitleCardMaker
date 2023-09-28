@@ -1,7 +1,9 @@
-from re import match, compile as re_compile
+from re import compile as re_compile, match, sub as re_sub, IGNORECASE
 from typing import Optional, Union
 
 from plexapi.video import Show as PlexShow
+from sqlalchemy import and_, or_
+from sqlalchemy.orm import Query
 
 from modules.CleanPath import CleanPath
 from modules.DatabaseInfoContainer import DatabaseInfoContainer
@@ -239,6 +241,13 @@ class SeriesInfo(DatabaseInfoContainer):
         return ''.join(filter(str.isalnum, text)).lower()
 
 
+    @property
+    def sort_name(self) -> str:
+        """The sort-friendly name of this Series."""
+
+        return re_sub(r'^(a|an|the)(\s)', '', self.name.lower(), IGNORECASE)
+
+
     def matches(self, *names: tuple[str]) -> bool:
         """
         Get whether any of the given names match this Series.
@@ -254,3 +263,47 @@ class SeriesInfo(DatabaseInfoContainer):
         matching_names = map(self.get_matching_title, names)
 
         return any(name == self.match_name for name in matching_names)
+
+
+    def filter_conditions(self,
+            SeriesModel: 'sqlachemy.Model' # type: ignore
+        ) -> Query:
+        """
+        Get the SQLAlchemy Query condition for this object.
+
+        Args:
+            SeriesModel: Series model to utilize for Query conditions.
+
+        Returns:
+            Query condition for this object. This includes an OR for any
+            (non-None) database ID matches as well as a year+name match.
+        """
+
+        # Conditions to filter by database ID
+        id_conditions = []
+        if self.emby_id is not None:
+            id_conditions.append(SeriesModel.emby_id==self.emby_id)
+        if self.imdb_id is not None:
+            id_conditions.append(SeriesModel.imdb_id==self.imdb_id)
+        if self.jellyfin_id is not None:
+            id_conditions.append(SeriesModel.jellyfin_id==self.jellyfin_id)
+        if self.sonarr_id is not None:
+            id_conditions.append(SeriesModel.sonarr_id==self.sonarr_id)
+        if self.tmdb_id is not None:
+            id_conditions.append(SeriesModel.tmdb_id==self.tmdb_id)
+        if self.tvdb_id is not None:
+            id_conditions.append(SeriesModel.tvdb_id==self.tvdb_id)
+        if self.tvrage_id is not None:
+            id_conditions.append(SeriesModel.tvrage_id==self.tvrage_id)
+
+        return or_(
+            # Find by database ID
+            or_(*id_conditions),
+            # Find by title and year
+            and_(
+                or_(
+                    SeriesModel.name==self.name,
+                    SeriesModel.sort_name==self.sort_name,
+                ), SeriesModel.year==self.year
+            ),
+        )

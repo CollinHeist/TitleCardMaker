@@ -18,13 +18,19 @@ function addTemplate() {
 function reloadPreview(watchStatus, formElement, cardElement, imgElement) {
   let form = new FormData(formElement);
   let listData = {extra_keys: [], extra_values: []};
+
+  // Set style based on this preview's watched status
   if (watchStatus === 'watched' && form.get('watched_style') === '') {
     form.set('style', '{{preferences.default_watched_style}}');
   } else if (watchStatus === 'unwatched' && form.get('unwatched_style') === '') {
     form.set('style', '{{preferences.default_unwatched_style}}');
-  } else if (form.get(`${watchStatus}_style`).includes('blur')) {
+  }
+
+  // Set blur/grayscale attribute
+  if (form.get(`${watchStatus}_style`).includes('blur')) {
     form.set('blur', true);
-  } else if (form.get(`${watchStatus}_style`).includes('grayscale')) {
+  }
+  if (form.get(`${watchStatus}_style`).includes('grayscale')) {
     form.set('grayscale', true);
   }
   
@@ -40,6 +46,7 @@ function reloadPreview(watchStatus, formElement, cardElement, imgElement) {
     ...Object.fromEntries(form.entries()),
     extra_keys: listData.extra_keys,
     extra_values: listData.extra_values,
+    watched: watchStatus === 'watched',
   };
   cardElement.classList.add('loading');
   $.ajax({
@@ -140,6 +147,7 @@ async function getAllTemplates() {
   const allEpisodeDataSources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
   const allTranslations = await fetch('/api/available/translations').then(resp => resp.json());
   await queryAvailableExtras();
+  await getAllCardTypes();
   const elements = allTemplates.items.map(templateObj => {
     // Clone template
     const base = document.querySelector('#template').content.cloneNode(true);
@@ -258,13 +266,19 @@ async function getAllTemplates() {
       }
     });
     // Font
-    $(`#template-id${templateObj.id} >* .dropdown[data-value="font-dropdown"]`).dropdown({
+    $(`#template-id${templateObj.id} .dropdown[data-value="font-dropdown"]`).dropdown({
       values: allFonts.map(({id, name}) => {
         return {name: name, value: id, selected: id === templateObj.font_id};
       }), placeholder: 'Card Default',
     });
+    // Update/remove link to Font
+    if (templateObj.font_id === null) {
+      $(`#template-id${templateObj.id} a[data-value="font-link"]`).remove();
+    } else {
+      $(`#template-id${templateObj.id} a[data-value="font-link"]`)[0].href = `/fonts#font-id${templateObj.font_id}`;
+    }
     // Watched style
-    $(`#template-id${templateObj.id} >* .dropdown[data-value="watched-style"]`).dropdown({
+    $(`#template-id${templateObj.id} .dropdown[data-value="watched-style"]`).dropdown({
       values: [
         {name: 'Art Variations', type: 'header'},
         ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {

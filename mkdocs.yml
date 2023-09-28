@@ -1,5 +1,5 @@
 site_name: TitleCardMaker
-site_url: ''
+site_url: https://github.com/CollinHeist/TitleCardMaker
 site_author: Collin Heist
 site_description: >-
   Automated title card creator for Plex, Emby, and Jellyfin.
@@ -170,22 +170,22 @@ nav:
     - Importer: user_guide/importer.md
   - Card Types:
     - card_types/index.md
-    - Local:
-      - Anime: card_types/local/anime.md
-      - Cutout: card_types/local/cutout.md
-      - Divider: card_types/local/divider.md
-      - Fade: card_types/local/fade.md
-      - Frame: card_types/local/frame.md
-      - Landscape: card_types/local/landscape.md
-      - Logo: card_types/local/logo.md
-      - Olivier: card_types/local/olivier.md
-      - Poster: card_types/local/poster.md
-      - Roman Numeral: card_types/local/roman_numeral.md
-      - Standard: card_types/local/standard.md
-      - Star Wars: card_types/local/star_wars.md
-      - Textless: card_types/local/textless.md
-      - Tinted Frame: card_types/local/tinted_frame.md
-      - Tinted Glass: card_types/local/tinted_glass.md
+    - Local: card_types/local.md
+    #   - Anime: card_types/local/anime.md
+    #   - Cutout: card_types/local/cutout.md
+    #   - Divider: card_types/local/divider.md
+    #   - Fade: card_types/local/fade.md
+    #   - Frame: card_types/local/frame.md
+    #   - Landscape: card_types/local/landscape.md
+    #   - Logo: card_types/local/logo.md
+    #   - Olivier: card_types/local/olivier.md
+    #   - Poster: card_types/local/poster.md
+    #   - Roman Numeral: card_types/local/roman_numeral.md
+    #   - Standard: card_types/local/standard.md
+    #   - Star Wars: card_types/local/star_wars.md
+    #   - Textless: card_types/local/textless.md
+    #   - Tinted Frame: card_types/local/tinted_frame.md
+    #   - Tinted Glass: card_types/local/tinted_glass.md
   - Development:
     - Contributing: development/contributing.md
     - The API: development/api.md

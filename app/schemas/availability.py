@@ -1,4 +1,4 @@
-# pylint: disable=missing-class-docstring
+# pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from typing import Optional
 
 from app.schemas.base import Base
@@ -17,3 +17,7 @@ class AvailableSeries(Base):
 class AvailableTemplate(Base):
     id: int
     name: str
+
+class TranslationLanguage(Base):
+    language_code: str
+    language: str

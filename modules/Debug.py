@@ -15,7 +15,12 @@ from tqdm import tqdm
 
 
 def generate_context_id() -> str:
-    """Generate a unique (pseudo)random string for contextual logging"""
+    """
+    Generate a unique pseudo-random "unique" ID.
+    
+    Returns:
+        12 character string of pseudo-random hexadecimal chacters.
+    """
 
     return ''.join(random_choices(hexdigits, k=12)).lower()
 
@@ -31,8 +36,12 @@ TQDM_KWARGS = {
     'disable': None,
 }
 
+IS_DOCKER = environ.get('TCM_IS_DOCKER', 'false').lower() == 'true'
+
 """Log file"""
-LOG_FILE = Path(__file__).parent.parent / 'logs' / 'maker.log'
+LOG_FILE = Path(__file__).parent.parent / 'config' / 'logs' / 'maker.log'
+if IS_DOCKER:
+    LOG_FILE = Path('/config/logs/maker.log')
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
 
@@ -62,7 +71,7 @@ class LogHandler(StreamHandler):
 
 # Get local timezone
 tz = None
-if environ.get('TCM_IS_DOCKER', False) and environ.get('TZ', None) is not None:
+if IS_DOCKER and environ.get('TZ', None) is not None:
     tz = timezone(environ.get('TZ'))
 
 

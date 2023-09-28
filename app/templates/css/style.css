@@ -207,7 +207,11 @@ html.ios body {
 
   /* Use reduced padding */
   #main-content {
-    padding-left: 95px;
+    /* padding-left: 95px; */
+    padding-left: 15px;
+  }
+  #nav-menu {
+    display: none;
   }
   #nav-menu .item {
     padding: 1.25em 0.1em;

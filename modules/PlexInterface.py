@@ -225,11 +225,13 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         Get all libraries and their associated base directories.
 
         Args:
-            filer_libraries: List of library names to filter the return by.
+            filer_libraries: List of library names to filter the return
+                by.
 
         Returns:
-            Dictionary whose keys are the library names, and whose values are
-            the list of paths to that library's base directories.
+            Dictionary whose keys are the library names, and whose
+            values are the list of paths to that library's base
+            directories.
         """
 
         # Go through every library in this server
@@ -331,7 +333,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         ) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
-        have  already aired are returned.
+        have already aired are returned.
 
         Args:
             library_name: The name of the library containing the series.
@@ -428,16 +430,19 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             style_set: StyleSet,
         ) -> None:
         """
-        Modify the Episode objects according to the watched status of the
-        corresponding episodes within Plex, and the spoil status of the object.
-        If a loaded card needs its spoiler status changed, the card is deleted
-        and the loaded map is forced to reload that card.
+        Modify the Episode objects according to the watched status of
+        the corresponding episodes within Plex, and the spoil status of
+        the object. If a loaded card needs its spoiler status changed,
+        the card is deleted and the loaded map is forced to reload that
+        card.
 
         Args:
             library_name: The name of the library containing the series.
             series_info: The series to update.
-            episode_map: Dictionary of episode keys to Episode objects to modify
-            style_set: StyleSet object to update the style of the Episodes with.
+            episode_map: Dictionary of episode keys to Episode objects
+                to modify
+            style_set: StyleSet object to update the style of the
+                Episodes with.
         """
 
         # If no episodes, exit
@@ -609,7 +614,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             episode_info: The episode to get the source image of.
 
         Returns:
-            URL to the thumbnail of the given Episode. None if the episode DNE.
+            URL to the thumbnail of the given Episode. None if the
+            episode DNE.
         """
 
         # If the given library cannot be found, exit
@@ -659,7 +665,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             filepath: Path,
         ) -> None:
         """
-        Upload the given poster to the given Episode, retrying if it fails.
+        Upload the given poster to the given Episode, retrying if it
+        fails.
 
         Args:
             plex_object: The plexapi object to upload the file to.
@@ -766,9 +773,11 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         Set the season posters from the given set within Plex.
 
         Args:
-            library_name: Name of the library containing the series to update.
+            library_name: Name of the library containing the series to
+                update.
             series_info: The series to update.
-            season_poster_set: SeasonPosterSet with season posters to set.
+            season_poster_set: SeasonPosterSet with season posters to
+                set.
         """
 
         # If no posters to upload, skip
@@ -835,17 +844,19 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             rating_key: int,
         ) -> list[tuple[SeriesInfo, EpisodeInfo, str]]:
         """
-        Get all details for all episodes indicated by the given Plex rating key.
+        Get all details for all episodes indicated by the given Plex
+        rating key.
 
         Args:
             rating_key: Rating key used to fetch the item within Plex.
 
         Returns:
-            List of tuples of the SeriesInfo, EpisodeInfo, and the library name
-            corresponding to the given rating key. If the object associated with
-            the rating key is a show/season, then all contained episodes are
-            detailed. An empty list is returned if the item(s) associated with
-            the given key cannot be found.
+            List of tuples of the SeriesInfo, EpisodeInfo, and the
+            library name corresponding to the given rating key. If the
+            object associated with the rating key is a show/season, then
+            all contained episodes are detailed. An empty list is
+            returned if the item(s) associated with the given key cannot
+            be found.
         """
 
         try:

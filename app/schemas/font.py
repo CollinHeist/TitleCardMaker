@@ -1,7 +1,10 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
+from pathlib import Path
 from typing import Literal, Optional
 
-from pydantic import Field, PositiveFloat, constr, validator, root_validator
+from pydantic import ( # pylint: disable=no-name-in-module
+    NonNegativeFloat, PositiveFloat, constr, validator, root_validator
+)
 
 from app.schemas.base import (
     Base, BetterColor, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
@@ -25,11 +28,7 @@ Base classes
 class BaseFont(Base):
     color: Optional[BetterColor] = None
     title_case: Optional[TitleCase] = None
-    size: float = Field(
-        default=1.0,
-        gt=0.0,
-        title='Font size (scalar)'
-    )
+    size: NonNegativeFloat = 1.0
     kerning: float = 1.0
     stroke_width: float = 1.0
     interline_spacing: int = 0
@@ -117,6 +116,6 @@ class SeriesFont(BaseFont):
 class NamedFont(BaseNamedFont):
     id: int
     sort_name: str
-    file: Optional[str]
+    file: Optional[Path]
     file_name: Optional[str]
     replacements: dict[str, str]

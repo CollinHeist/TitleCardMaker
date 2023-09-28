@@ -24,7 +24,7 @@ class TintedGlassTitleCard(BaseCardType):
         identifier='tinted glass',
         example='/internal_assets/cards/tinted glass.jpg',
         creators=['/u/RaceDebriefF1', 'CollinHeist'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=True,
         supported_extras=[
@@ -36,7 +36,10 @@ class TintedGlassTitleCard(BaseCardType):
                 name='Episode Text Position',
                 identifier='episode_text_position',
                 description='Position of the episode text relative to the title text',
-                tooltip='Either <v>left</v>, <v>center</v>, or <v>right</v>.',
+                tooltip=(
+                    'Either <v>left</v>, <v>center</v>, or <v>right</v>. '
+                    'Default is <v>center</v>.'
+                ),
             ), Extra(
                 name='Bounding Box Adjustments',
                 identifier='box_adjustments',
@@ -50,7 +53,7 @@ class TintedGlassTitleCard(BaseCardType):
                 name='Glass Color',
                 identifier='glass_color',
                 description='Color of the "glass" beneath the text',
-                tooltip='Default value is <v>rgba(25, 25, 25, 0.7)</v>.',
+                tooltip='Default is <v>rgba(25, 25, 25, 0.7)</v>.',
             ),
         ], description=[
             'Card type featuring a darkened and blurred rounded rectangle '

@@ -439,16 +439,16 @@
         <!-- Data Tabs -->
         <div class="twelve wide column">
           <div class="ui top attached stackable tabular menu">
-            <a class="item active" data-tab="configuration">Options</a>
+            <a class="item active" data-tab="options">Options</a>
             <a class="item" data-tab="card-config">Card Configuration</a>
             <a class="item" data-tab="blueprints">Blueprints</a>
-            <a class="item" data-tab="episode-data">Episode Data</a>
+            <a class="item" data-tab="episodes">Episode Data</a>
             <a class="item" data-tab="files">Files</a>
-            <a class="item" data-tab="database-ids">Database ID's</a>
+            <a class="item" data-tab="ids">Database ID's</a>
           </div>
           
           <!-- Configuration tab -->
-          <div id="series-tabs" class="ui bottom attached tab segment" data-tab="configuration">
+          <div id="series-tabs" class="ui bottom attached tab segment" data-tab="options">
             <form id="series-config-form" class="ui compact form">
               <!-- Warning if Series is not found in various interfaces -->
               {% if preferences.use_emby and series.emby_id is none %}
@@ -631,7 +631,7 @@
                     </div>
 
                     <div class="field">
-                      <label>Font</label>
+                      <label>Font <a data-value="font-link"><i class="external alternate small icon"></i></a></label>
                       <div data-value="fonts" class="ui very long clearable selection search dropdown" data-tooltip="Font to apply to this series (overrides any Template Font)">
                         <input name="font_id" type="hidden">
                         <i class="dropdown icon"></i>
@@ -879,14 +879,15 @@
 
           <!-- Blueprints Tab -->
           <div class="ui bottom attached tab segment" data-tab="blueprints">
-            <button data-action="search" onclick="queryBlueprints();" class="ui green tertiary button" data-tooltip="Search for any existing Blueprints">
+            <button data-action="search" onclick="queryBlueprints();" class="ui blue tertiary button" data-tooltip="Search for any existing Blueprints">
               <i class="search icon"></i>
-              Search for Blueprints
+              Search
             </button>
-            <button data-action="export" onclick="exportBlueprint();" class="ui blue tertiary button" data-tooltip="Export a zip file with this Series' Blueprint">
+            <button data-action="export" onclick="exportBlueprint();" class="ui green tertiary button" data-tooltip="Export a zip file with this Series' Blueprint">
               <i class="file export icon"></i>
-              Export Blueprint
+              Export
             </button>
+              
             <div class="ui floating hidden info icon message">
               <i class="blue notched circle loading icon"></i>
               <div class="content">
@@ -905,10 +906,18 @@
             <br>
             <div id="blueprint-cards" class="ui two stackable raised cards"><!-- Added asynchrously --></div>
             <br>
+            <div class="ui visible floating info message">
+              <div class="header">What are Blueprints?</div>
+              <ul class="list">
+                <li>Blueprints are pre-made Card configurations which can be imported and applied to a Series.</li>
+                <li> When imported, any included Fonts, Templates, Series, and Episode customizations are applied directly.</li>
+                <li>All Blueprints are user-made and submitted - feel free to submit your own by clicking the <b>Export</b> button above.</li>
+              </ul>
+            </div>
           </div>
 
           <!-- Episode Data Tab -->
-          <div class="ui bottom attached tab segment" data-tab="episode-data">
+          <div class="ui bottom attached tab segment" data-tab="episodes">
             <!-- Mass table editor buttons -->
             <button id="new-episode" class="ui green tertiary button">
               <i class="plus square outline icon"></i>
@@ -1071,7 +1080,7 @@
           </div>
 
           <!-- Database ID's Tab -->
-          <div class="ui bottom attached tab segment" data-tab="database-ids">
+          <div class="ui bottom attached tab segment" data-tab="ids">
             <form id="series-ids-form" class="ui compact form">
               {% if preferences.use_emby %}
               <div id-type="Emby ID" class="field">
@@ -1157,6 +1166,8 @@
       </div>
     </div>
 
+    <!-- MODALS -->
+
     <!-- Edit poster modal -->
     <div id="edit-poster-modal" class="ui mini modal">
       <i class="close icon"></i>
@@ -1178,7 +1189,7 @@
           <!-- File upload -->
           <div class="file clearable input field">
             <label>Upload File</label>
-            <input type="file" name="poster_file">
+            <input name="poster_file" type="file" accept="image/*">
           </div>
         </form>
       </div>
@@ -1236,7 +1247,7 @@
 
           <div class="file clearable input field">
             <label>Upload File</label>
-            <input type="file" name="file">
+            <input name="file" type="file" accept="image/*">
           </div>
         </form>
       </div>
@@ -1345,7 +1356,7 @@
     </div>
 
     <!-- Season title helper popup -->
-    <div id="season-title-popup" class="ui flowing popup right">
+    <div id="season-title-popup" class="ui flowing uninvertible popup right">
       <div class="ui list content">
         <div class="item">
           A number indicates an entire season - e.g. <span class="ui red text">1</span> for <span class="ui red text">season 1</span>.

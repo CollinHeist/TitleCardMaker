@@ -20,7 +20,7 @@ class FrameTitleCard(BaseCardType):
         identifier='frame',
         example='/internal_assets/cards/frame.jpg',
         creators=['CollinHeist'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=True,
         supported_extras=[
@@ -30,15 +30,14 @@ class FrameTitleCard(BaseCardType):
                 description=(
                     'Position of the episode text relative to the title text'
                 ),
-                tooltip='Either <v>left</v>, <v>surround</v>, or <v>right</v>.',
+                tooltip=(
+                    'Either <v>left</v>, <v>surround</v>, or <v>right</v>. '
+                    'Default is <v>surround</v>.'
+                ),
             ), Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to use for the episode text',
-            ), Extra(
-                name='Interword Spacing',
-                identifier='interword_spacing',
-                description='Spacing to offset the spacing between words',
             ),
         ], description=[
             'Title card styled to look like a Polaroid photo.',

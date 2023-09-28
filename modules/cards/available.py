@@ -1,4 +1,5 @@
 from modules.cards.AnimeTitleCard import AnimeTitleCard
+from modules.cards.CalligraphyTitleCard import CalligraphyTitleCard
 from modules.cards.ComicBookTitleCard import ComicBookTitleCard
 from modules.cards.CutoutTitleCard import CutoutTitleCard
 from modules.cards.DividerTitleCard import DividerTitleCard
@@ -6,7 +7,9 @@ from modules.cards.FadeTitleCard import FadeTitleCard
 from modules.cards.FrameTitleCard import FrameTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
+from modules.cards.MarvelTitleCard import MarvelTitleCard
 from modules.cards.OlivierTitleCard import OlivierTitleCard
+from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
 from modules.cards.RomanNumeralTitleCard import RomanNumeralTitleCard
 from modules.cards.StandardTitleCard import StandardTitleCard
@@ -18,6 +21,7 @@ from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 
 LocalCards = [
     AnimeTitleCard.API_DETAILS,
+    CalligraphyTitleCard.API_DETAILS,
     ComicBookTitleCard.API_DETAILS,
     CutoutTitleCard.API_DETAILS,
     DividerTitleCard.API_DETAILS,
@@ -25,7 +29,9 @@ LocalCards = [
     FrameTitleCard.API_DETAILS,
     LandscapeTitleCard.API_DETAILS,
     LogoTitleCard.API_DETAILS,
+    MarvelTitleCard.API_DETAILS,
     OlivierTitleCard.API_DETAILS,
+    OverlineTitleCard.API_DETAILS,
     PosterTitleCard.API_DETAILS,
     RomanNumeralTitleCard.API_DETAILS,
     StandardTitleCard.API_DETAILS,

@@ -1,7 +1,7 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from typing import Any, Literal, Optional
 
-from pydantic import conint, constr, Field, root_validator, validator  # pylint: disable=no-name-in-module
+from pydantic import conint, constr, Field, root_validator, validator # pylint: disable=no-name-in-module
 
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.base import (

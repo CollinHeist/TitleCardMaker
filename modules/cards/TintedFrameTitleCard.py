@@ -1,45 +1,21 @@
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, ImageMagickCommands, Extra, CardDescription
+    BaseCardType, CardDescription, Coordinate, Extra, ImageMagickCommands,
+    Rectangle,
 )
 
 Element = Literal['index', 'logo', 'omit', 'title']
 MiddleElement = Literal['logo', 'omit']
 
 
-@dataclass(repr=False)
-class Coordinate:
-    """Class that defines a single Coordinate on an x/y plane."""
-    x: float
-    y: float
-
-    def __str__(self) -> str:
-        return f'{self.x:.0f},{self.y:.0f}'
-
-
-@dataclass(repr=False)
-class Rectangle:
-    """Class that defines movable SVG rectangle."""
-    start: Coordinate
-    end: Coordinate
-
-    def __str__(self) -> str:
-        return f'rectangle {str(self.start)},{str(self.end)}'
-
-    def draw(self) -> str:
-        """Draw this Rectangle"""
-        return f'-draw "{str(self)}"'
-
-
 class TintedFrameTitleCard(BaseCardType):
     """
-    This class describes a CardType that produces title cards featuring
-    a rectangular frame with blurred content on the edges of the frame,
-    and unblurred content within. The frame itself can be intersected by
-    title text, index text, or a logo at the top and bottom.
+    CardType that produces title cards featuring a rectangular frame
+    with blurred content on the edges of the frame, and unblurred
+    content within. The frame itself can be intersected by title text,
+    index text, or a logo at the top and bottom.
     """
 
     """API Parameters"""
@@ -48,7 +24,7 @@ class TintedFrameTitleCard(BaseCardType):
         identifier='tinted frame',
         example='/internal_assets/cards/tinted frame.jpg',
         creators=['CollinHeist'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=True,
         supported_extras=[
@@ -64,10 +40,14 @@ class TintedFrameTitleCard(BaseCardType):
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the season and episode text',
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
             ), Extra(
                 name='Episode Text Vertical Shift',
                 identifier='episode_text_vertical_shift',
-                description='Additional vertical shift to apply to the season and episode text',
+                description=(
+                    'Additional vertical shift to apply to the season and '
+                    'episode text'
+                ),
             ), Extra(
                 name='Separator Character',
                 identifier='separator',
@@ -76,12 +56,15 @@ class TintedFrameTitleCard(BaseCardType):
                 name='Frame Color',
                 identifier='frame_color',
                 description='Color of the frame edges',
-                tooltip='If unspecified, the font color is utilized.',
+                tooltip='Defaults to match the Font color.',
             ), Extra(
                 name='Frame Width',
                 identifier='frame_width',
                 description='Width of the frame',
-                tooltip='Thickness of the frame. Unit in pixels. Default is 3.',
+                tooltip=(
+                    'Thickness of the frame. Default is <v>3</v>. Unit is '
+                    'pixels.'
+                ),
             ), Extra(
                 name='Top Element',
                 identifier='top_element',
@@ -90,7 +73,7 @@ class TintedFrameTitleCard(BaseCardType):
                     'Either <v>index</v> to display the season and episode '
                     'text, <v>logo</v> to display the logo, <v>omit</v> to not '
                     'display anything, or <v>title</v> to display the title '
-                    'text.'
+                    'text. Default is <v>title</v>.'
                 ),
             ), Extra(
                 name='Middle Element',
@@ -98,7 +81,7 @@ class TintedFrameTitleCard(BaseCardType):
                 description='Which element to display in the middle of the frame',
                 tooltip=(
                     'Either <v>logo</v> to display the logo, or <v>omit</v> to '
-                    'not display anything.'
+                    'not display anything. Default is <v>omit</v>.'
                 ),
             ), Extra(
                 name='Bottom Element',
@@ -108,23 +91,27 @@ class TintedFrameTitleCard(BaseCardType):
                     'Either <v>index</v> to display the season and episode '
                     'text, <v>logo</v> to display the logo, <v>omit</v> to not '
                     'display anything, or <v>title</v> to display the title '
-                    'text.'
+                    'text. Default is <v>index</v>'
                 ),
             ), Extra(
                 name='Logo Size',
                 identifier='logo_size',
-                description='Scalar for how much to scale the size of the logo element',
+                description=(
+                    'Scalar for how much to scale the size of the logo element'
+                ), tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
             ), Extra(
                 name='Edge Blurring',
                 identifier='blur_edges',
                 description='Whether to blur the edges around the frame',
-                tooltip='Either <v>True</v> or <v>False</v>.',
+                tooltip=(
+                    'Either <v>True</v> or <v>False</v>. Default is <v>True</v>.'
+                ),
             ),
         ], description=[
             'Title card featuring a rectangular frame with blurred content on '
-            'the outside of the frame, and unblurred content within.',
-            'The frame and all text can be recolored via extras.',
-            'The top and bottoms of the frame can also be optionally '
+            'the outside of the frame, and unblurred content within.', 'The '
+            'frame and all text can be recolored via extras.', 'The top, '
+            'bottom, and middle of the frame can also be optionally '
             'intersected by title text, index text, and/or a logo.',
         ]
     )
@@ -255,8 +242,8 @@ class TintedFrameTitleCard(BaseCardType):
             List of ImageMagick Commands.
         """
 
-        # Blurring is disabled, return empty command
-        if not self.blur_edges:
+        # Blurring is disabled (or being applied globally), return empty command
+        if not self.blur_edges or self.blur:
             return []
 
         crop_width = self.WIDTH - (2 * self.BOX_OFFSET) - 6 # 6px margin
@@ -570,7 +557,7 @@ class TintedFrameTitleCard(BaseCardType):
     @property
     def frame_commands(self) -> ImageMagickCommands:
         """
-        Subcommand to add the box that separates the outer (blurred)
+        Subcommands to add the box that separates the outer (blurred)
         image and the interior (unblurred) image. This box features a
         drop shadow. The top and bottom parts of the frame are
         optionally intersected by a index text, title text, or a logo.
@@ -616,6 +603,34 @@ class TintedFrameTitleCard(BaseCardType):
             f'-composite',
         ]
 
+
+    @property
+    def mask_commands(self) -> ImageMagickCommands:
+        """
+        Subcommands to add the top-level mask which overlays all other
+        elements of the image, even the frame. This mask can be used to
+        have parts of the image appear to "pop out" of the frame.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        # Do not apply mask if stylized
+        if self.blur or self.grayscale:
+            return []
+
+        # Look for mask file corresponding to this source image
+        mask = self.source_file.parent / f'{self.source_file.stem}-mask.png'
+
+        # Mask exists, return commands to compose atop image
+        if mask.exists():
+            return [
+                f'\( "{mask.resolve()}"',
+                *self.resize_and_style,
+                f'\) -composite',
+            ]
+
+        return []
 
     @staticmethod
     def modify_extras(
@@ -705,6 +720,8 @@ class TintedFrameTitleCard(BaseCardType):
             *self.index_text_commands,
             *self.logo_commands,
             *self.frame_commands,
+            # Attempt to overlay mask
+            *self.mask_commands,
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

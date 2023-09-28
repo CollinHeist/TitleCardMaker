@@ -20,8 +20,8 @@ class StarWarsTitleCard(BaseCardType):
         identifier='star wars',
         example='/internal_assets/cards/star wars.jpg',
         creators=['/u/Olivier_286', 'CollinHeist'],
-        source='local',
-        supports_custom_fonts=False,
+        source='builtin',
+        supports_custom_fonts=True,
         supports_custom_seasons=False,
         supported_extras=[
             Extra(
@@ -30,10 +30,10 @@ class StarWarsTitleCard(BaseCardType):
                 description='Color of the season and episode text',
             ),
         ], description=[
-            'Title cards intended for Star Wars (or more generically Space-themed) shows.',
-            'Similar to the Olivier title card, these cards feature left-aligned title and episode text',
-            'A star-filled gradient overlay is applied to the source image.',
-            'This card is not very customizable.',
+            'Title cards intended for Star Wars (or more generically Space-'
+            'themed) shows.', 'Similar to the Olivier title card, these cards '
+            'feature left-aligned title and episode text', 'A star-filled '
+            'gradient overlay is applied to the source image.',
         ]
     )
     # pylint: enable=line-too-long

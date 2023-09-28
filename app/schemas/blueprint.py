@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Any, Optional
 
-from pydantic import root_validator
+from pydantic import root_validator # pylint: disable=no-name-in-module
 
 from app.schemas.base import Base
 from app.schemas.font import TitleCase

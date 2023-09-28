@@ -12,6 +12,7 @@ class TemporaryPreferenceParser:
     def __init__(self, database_directory):
         """Fake initialize this object"""
 
+        self.card_dimensions = '3200x1800'
         self.database_directory = Path(database_directory)
         self.imagemagick_container = None
 

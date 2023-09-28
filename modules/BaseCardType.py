@@ -1,32 +1,92 @@
 from abc import abstractmethod
-from typing import Literal, Optional, Union
+from typing import Optional, Union
 
 from titlecase import titlecase
 
-from app.schemas.base import Base
+from app.schemas.card import CardTypeDescription, Extra, TitleCharacteristics
 from modules.ImageMaker import ImageMaker
 
 
+CardDescription = CardTypeDescription
+Extra = Extra # pylint: disable=self-assigning-variable
 ImageMagickCommands = list[str]
 
 
-class Extra(Base): # pylint: disable=missing-class-docstring
-    name: str
-    identifier: str
-    description: str
-    tooltip: Optional[str] = None
+class Coordinate:
+    """Class that defines a single Coordinate on an x/y plane."""
+
+    __slots__ = ('x', 'y')
+
+    def __init__(self, x: float, y: float) -> None:
+        """Initialize this Coordinate with the given x/y coordinates."""
+
+        self.x = x
+        self.y = y
 
 
-class CardDescription(Base): # pylint: disable=missing-class-docstring
-    name: str
-    identifier: str
-    example: str
-    creators: list[str]
-    source: Literal['local', 'remote']
-    supports_custom_fonts: bool
-    supports_custom_seasons: bool
-    supported_extras: list[Extra]
-    description: list[str]
+    def __iadd__(self, other: 'Coordinate') -> 'Coordinate':
+        """
+        Add the given Coordinate to this one. This adds the x/y
+        positions individually.
+
+        Args:
+            other: The Coordinate to add.
+
+        Returns:
+            This object.
+        """
+
+        self.x += other.x
+        self.y += other.y
+
+        return self
+
+
+    def __str__(self) -> str:
+        """
+        Represent this Coordinate as a string.
+
+        >>> str(Coordinate(1.2, 3.4))
+        '1,2'
+        """
+
+        return f'{self.x:.0f},{self.y:.0f}'
+
+    @property
+    def as_svg(self) -> str:
+        """SVG representation of this Coordinate."""
+
+        return f'{self.x:.1f} {self.y:.1f}'
+
+
+class Rectangle:
+    """Class that defines movable SVG rectangle."""
+
+    __slots__ = ('start', 'end')
+
+    def __init__(self, start: Coordinate, end: Coordinate) -> None:
+        """
+        Initialize this Rectangle that encompasses the two given start
+        and end Coordinates. These Coordinates are the opposite corners
+        of the rectangle.
+        """
+
+        self.start = start
+        self.end = end
+
+
+    def __str__(self) -> str:
+        """
+        Represent this Rectangle as a string. This is the joined string
+        representation of the start and end coordinate.
+        """
+
+        return f'{str(self.start)},{str(self.end)}'
+
+    def draw(self) -> str:
+        """Draw this Rectangle."""
+
+        return f'-draw "rectangle {str(self)}"'
 
 
 class BaseCardType(ImageMaker):
@@ -46,6 +106,9 @@ class BaseCardType(ImageMaker):
 
     """Default case string for all title text"""
     DEFAULT_FONT_CASE = 'upper'
+
+    """Default font replacements"""
+    FONT_REPLACEMENTS = {}
 
     """Mapping of 'case' strings to format functions"""
     CASE_FUNCTIONS = {
@@ -72,20 +135,26 @@ class BaseCardType(ImageMaker):
 
     @property
     @abstractmethod
+    def API_DETAILS(self) -> CardDescription:
+        raise NotImplementedError
+
+
+    @property
+    @abstractmethod
     def TITLE_CHARACTERISTICS(self) -> dict[str, Union[int, bool]]:
         """
         Characteristics of title splitting for this card type. Must have
         keys for max_line_width, max_line_count, and top_heavy. See
         `Title` class for details.
         """
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     @property
     @abstractmethod
     def ARCHIVE_NAME(self) -> str:
         """How to name archive directories for this type of card"""
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     @property
@@ -95,28 +164,21 @@ class BaseCardType(ImageMaker):
         Standard font (full path or ImageMagick recognized font name) to
         use for the episode title text.
         """
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     @property
     @abstractmethod
     def TITLE_COLOR(self) -> str:
         """Standard color to use for the episode title text"""
-        raise NotImplementedError(f'All CardType objects must implement this')
-
-
-    @property
-    @abstractmethod
-    def FONT_REPLACEMENTS(self) -> dict:
-        """Standard font replacements for the episode title font"""
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     @property
     @abstractmethod
     def USES_SEASON_TITLE(self) -> bool:
         """Whether this class uses season titles for archives"""
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     """Slots for standard style attributes"""
@@ -151,6 +213,45 @@ class BaseCardType(ImageMaker):
         # Store style attributes
         self.blur = blur
         self.grayscale = grayscale
+
+
+    def __init_subclass__(cls, **kwargs) -> None:
+        """
+        
+        """
+
+        super().__init_subclass__(**kwargs)
+
+        if not isinstance(cls.API_DETAILS, CardTypeDescription):
+            raise TypeError(f'{cls.__name__}.API_DETAILS must be a '
+                            f'CardTypeDescription object')
+
+        TitleCharacteristics(**cls.TITLE_CHARACTERISTICS)
+
+        if not isinstance(cls.ARCHIVE_NAME, str):
+            raise TypeError(f'{cls.__name__}.ARCHIVE_NAME must be a string')
+        if len(cls.ARCHIVE_NAME) == 0:
+            raise ValueError(f'{cls.__name__}.ARCHIVE_NAME must be at least 1 '
+                             f'characters long')
+
+        if not isinstance(cls.DEFAULT_FONT_CASE, str):
+            raise TypeError(f'{cls.__name__}.DEFAULT_FONT_CASE must be a string')
+        if cls.DEFAULT_FONT_CASE not in ('blank', 'lower', 'source', 'title',
+                                         'upper'):
+            raise TypeError(f'{cls.__name__}.DEFAULT_FONT_CASE must be "blank",'
+                            f' "lower", "source", "title", or "upper"')
+
+        if not isinstance(cls.TITLE_COLOR, str):
+            raise TypeError(f'{cls.__name__}.TITLE_COLOR must be a string')
+
+        if not isinstance(cls.FONT_REPLACEMENTS, dict):
+            raise TypeError(f'{cls.__name__}.FONT_REPLACEMENTS must be a '
+                            f'dictionary')
+
+        if not all(isinstance(k, str) and isinstance(v, str)
+                   for k, v in cls.FONT_REPLACEMENTS.items()):
+            raise TypeError(f'All keys and values of '
+                            f'{cls.__name__}.FONT_REPLACEMENTS must strings')
 
 
     def __repr__(self) -> str:
@@ -193,7 +294,7 @@ class BaseCardType(ImageMaker):
         Returns:
             True if a custom font is indicated, False otherwise.
         """
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     @staticmethod
@@ -209,7 +310,7 @@ class BaseCardType(ImageMaker):
         Returns:
             True if a custom season title is indicated, False otherwise.
         """
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError
 
 
     @property
@@ -311,8 +412,8 @@ class BaseCardType(ImageMaker):
             f'+profile "*"',
             f'-background transparent',
             f'-gravity center',
-            f'-resize "{self.preferences.card_dimensions}"',
-            f'-extent "{self.preferences.card_dimensions}"',
+            f'-resize "{self.card_dimensions}"',
+            f'-extent "{self.card_dimensions}"',
         ]
 
 
@@ -323,4 +424,4 @@ class BaseCardType(ImageMaker):
         CardType. All implementations of this method should delete any
         intermediate files.
         """
-        raise NotImplementedError(f'All CardType objects must implement this')
+        raise NotImplementedError

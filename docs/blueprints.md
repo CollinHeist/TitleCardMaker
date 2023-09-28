@@ -25,21 +25,19 @@ and anyone can (and is encouraged to!) submit a Blueprint for availability
 across all of TCM. This process is described
 [below](#sharing-your-own-blueprint).
 
-## Importing a Blueprint
+## Viewing Blueprints
 
-To import a Blueprint for a Series, simply open the Series' page and then open
-the _Blueprints_ tab. Click `Search for Blueprints`, and TCM will look for any
-available Blueprints for this Series. If any are available, a card will show you
-the details.
+There are two main ways of browsing Blueprints.
 
-On this card will be a preview of the Blueprint, as well as what customizations
-will be imported. This can be any number of Fonts, Templates, or Episode
-overrides.
+1. Searching for the available Blueprints for a specific Series. This is done by
+going to the _Blueprints_ tab on a Series' page.
 
-After picking the Blueprint you like, simply click :material-cloud-download:
-`Import` and TCM will grab and apply the Blueprint for you.
+2. Viewing _all_ available Blueprints for _all_ Series. These are accessed by
+going to the new/add Series page.
 
-!!! note "Note about Font Files"
+## Importing Blueprints
+
+??? note "Note about Font Files"
 
     If the Blueprint has any Named Fonts that include custom font files, you
     might be prompted to download the Font file from a 3rd party website. This
@@ -49,10 +47,36 @@ After picking the Blueprint you like, simply click :material-cloud-download:
     TCM will import the rest of the Font customizations for you, so just be sure
     to upload the Font files before you start Title Card creation.
 
+### By Series
+
+To import a Blueprint for a Series, simply open the Series' page and then open
+the _Blueprints_ tab. Click `Search for Blueprints`, and TCM will look for any
+available Blueprints for this Series. If any are available, a preview card will
+show the details.
+
+On this card will be a preview of the Blueprint, as well as what customizations
+will be imported. This can be any number of Fonts, Templates, or Episode
+overrides.
+
+After picking the Blueprint you like, simply click :material-cloud-download:
+`Import` and TCM will grab and apply the Blueprint for you.
+
 Once a Blueprint has been imported, you are free to make any edits to the
 Series, Templates, or Fonts as you see fit. TitleCardMaker will not override
 your changes with the Blueprint settings unless you prompt it to do so by
 re-importing the Blueprint.
+
+### Browsing
+
+If you'd like to browse all available Blueprints, go to the new Series page
+(the `/add` URL) and scroll down to the Blueprints section. After clicking
+`Browse Blueprints`, preview cards for each Blueprint will be shown.
+
+These can be sorted by release date and Series name. Each Blueprint can be
+imported (along with the associated Series _if_ it is not already in TCM), or
+hidden from this display. Once hidden, that Blueprint will no longer appear in
+the list (even after page reloads) - however it will still be present if you
+browse for Blueprints [by Series](#by-series).
 
 ## Sharing your own Blueprint
 
@@ -62,26 +86,18 @@ as easy as possible.
 
 !!! tip "Submission Checklist"
 
-    If you are already familiar with GitHub, and just want a quick checklist of
-    what to do for your Blueprint submission, see below:
+    If you just want a quick checklist of what to do for your Blueprint
+    submission, see below:
 
     - [x] Export your Blueprint within the TCM UI.
     - [x] Choose an effective preview image.
     - [x] [Create an issue](https://github.com/CollinHeist/TitleCardMaker-Blueprints/issues/new?assignees=CollinHeist&labels=blueprint&projects=&template=new_blueprint.yml&title=%5BBlueprint%5D+)
-    on the Blueprints repository.
+    on the Blueprints repository (this should be started for you).
     - [x] Fill out the issue form's required data:
         - [x] Series name, year, your username, and the blueprint description
         - [x] Copy/paste the contents of the exported `blueprint.json` file in
         the _Blueprint File_ field.
         - [x] Upload any associated files.
-        
-            !!! tip "Uploading Multiple Files"
-
-                If you have more than one file to upload - i.e. a preview image
-                _and_ 1+ Font files - then compress/zip these files and only
-                upload the zipped file.
-
-
             - [x] Verify any Font licenses permit the files to be shared - if
             not, [see below](#editing-the-blueprint).
 
@@ -89,17 +105,17 @@ as easy as possible.
 
 Once you've customized a Series' Cards to :pinched_fingers: _perfection_, open
 it's page in TitleCardMaker, and then go to the _Blueprints_ tab. Click the
-:fontawesome-solid-file-export: `Export Blueprint` button, and TCM will do a few
-things:
+:fontawesome-solid-file-export: `Export` button, and TCM will do a few things:
 
 1. If the Series (or any linked Templates) have a Named Font -  __this includes
 those linked directly to Episodes__ - it will copy any Font files;
 2. Search for and copy the first available[^1] Title Card for the Series;
 3. Convert the Series, Templates, Fonts, and Episode customizations into a
 Blueprint "object" written as JSON.
-
-All of this data is then bundled into a `.zip` file and downloaded through your
-browser. This is (practically) all you need in order to submit the Blueprint.
+4. All of the above data is bundled (and sub-bundled) into a `.zip` file and
+downloaded through your browser.
+5. Finally, TCM will open a new tab to GitHub and begin filling out the
+Blueprint submission form (if you are logged in).
 
 ### Editing the Blueprint
 
@@ -170,7 +186,7 @@ With this Blueprint, the next (and final) step is to submit it to the Blueprints
 repository.
 
 1. Open a [new issue](https://github.com/CollinHeist/TitleCardMaker-Blueprints/issues/new?assignees=CollinHeist&labels=blueprint&projects=&template=new_blueprint.yml&title=%5BBlueprint%5D+)
-on the Blueprints GitHub repository.
+on the Blueprints GitHub repository - this should have been started for you.
 
 2. Fill out the form with the relevant information.
 
@@ -188,9 +204,8 @@ File_ field.
 
     === "Font Files"
 
-        If you have at least one Font file - then you need to compress/zip all
-        Font Files into one zip file and drag/drop or attach that zipped file
-        into the _Zip of Font Files_ field.
+        If you have at least one Font file - then you need to drag/drop or
+        attach that zipped file into the _Zip of Font Files_ field.
 
         ??? question "Why is this necessary?"
 

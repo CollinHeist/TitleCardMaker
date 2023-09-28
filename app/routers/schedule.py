@@ -7,7 +7,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 
-from app.database.session import backup_database
+from app.database.session import backup_data
 from app.dependencies import get_preferences, get_scheduler
 from app.internal.auth import get_current_user
 from app.internal.availability import get_latest_version
@@ -150,7 +150,7 @@ def wrapped_set_series_ids(log: Optional[Logger] = None):
 def wrapped_backup_database(log: Optional[Logger] = None):
     log = log or contextualize()
     _wrap_before(JOB_BACKUP_DATABASE, log=log)
-    backup_database(log=log)
+    backup_data(log=log)
     _wrap_after(JOB_BACKUP_DATABASE, log=log)
 
 def wrapped_remove_duplicate_cards(log: Optional[Logger] = None):
@@ -219,7 +219,7 @@ BaseJobs = {
         function=wrapped_backup_database,
         seconds=60 * 60 * 24,
         crontab='0 0 */1 * *',
-        description='Backup the primary database',
+        description='Backup the database and global settings',
     ),
     # Internal (private) jobs
     INTERNAL_JOB_CHECK_FOR_NEW_RELEASE: NewJob(
@@ -420,7 +420,7 @@ def reschedule_task(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log = request.state.log # pylint: disable=redefined-outer-name
 
     # Verify job exists, raise 404 if DNE
     if (job := scheduler.get_job(task_id)) is None:

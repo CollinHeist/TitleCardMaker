@@ -1,8 +1,10 @@
 from logging import Logger
 from pathlib import Path
+from time import sleep
 from typing import Optional
 
 from fastapi import HTTPException
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
@@ -43,14 +45,20 @@ def download_all_source_images(*, log: Logger = log) -> None:
                 for episode in series.episodes:
                     try:
                         download_episode_source_image(
-                            db, get_preferences(), get_emby_interface(),
-                            get_jellyfin_interface(), get_plex_interface(),
+                            db, get_preferences(), get_emby_interfaces(),
+                            get_jellyfin_interfaces(), get_plex_interfaces(),
                             get_tmdb_interface(), episode, log=log,
                         )
                     except HTTPException:
                         log.warning(f'{series.log_str} {episode.log_str} '
                                     f'Skipping source selection')
                         continue
+                    except OperationalError:
+                        if failures > 10:
+                            break
+                        failures += 1
+                        log.debug(f'Database is busy, sleeping..')
+                        sleep(30)
     except Exception as exc:
         log.exception(f'Failed to download source images', exc)
 

@@ -1,3 +1,17 @@
+function toggleNavMenu() {
+  const navMenu = document.getElementById('nav-menu');
+  const mainContent = document.getElementById('main-content');
+  if (navMenu.style.display === 'none') {
+    // Currently hidden, show
+    navMenu.style.display = 'block';
+    mainContent.style.removeProperty('padding-left');
+    // mainContent.style.paddingLeft = 'unset';
+  } else {
+    navMenu.style.display = 'none';
+    mainContent.style.paddingLeft = '15px';
+  }
+}
+
 function isSmallScreen() {
   return window.screen.availHeight < 768;
 }

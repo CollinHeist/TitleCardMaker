@@ -131,7 +131,7 @@ importing YAML. A summary of what each box enables is below:
         Archives
 
         :   Currently, Archives are completely removed from TCM v2 due to their
-            complexity and relatively niche use. 
+            complexity and relatively niche use.
 
         ImageMagick container name
 

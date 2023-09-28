@@ -1,7 +1,7 @@
 # Welcome to TitleCardMaker
 TitleCardMaker is a program and Docker container written in Python that
-automates the creation of customized title cards for use in personal
-media server services like Plex, Jellyfin, or Emby.
+automates the creation of customized title cards for use in personal media
+server services like Plex, Jellyfin, or Emby.
 
 ??? question "What is a Title Card?"
 
@@ -101,36 +101,35 @@ will now be downloaded into that directory.
             1. Replace `~/Your/Install/Directory` with the path to the directory
             from the above Step 2.
 
-2. Within the main installation directory, create the required folders for
-TCM - these are the `assets`, `cards`, `logs`, and `source` directories - by
-executing the following command(s):
+2. Within the main installation directory, create the required folder for 
+TCM - this is `config` - by executing the following command:
 
     === ":material-linux: Linux"
 
         ```bash
-        mkdir assets cards logs source
+        mkdir config
         ```
 
     === ":material-apple: MacOS"
 
         ```bash
-        mkdir assets cards logs source
+        mkdir config
         ```
 
     === ":material-powershell: Windows (Powershell)"
 
         ```bash
-        mkdir assets; mkdir cards; mkdir logs; mkdir source;
+        mkdir config
         ```
 
     === ":material-microsoft-windows: Windows (Non-Powershell)"
 
         ```bash
-        mkdir assets; mkdir cards; mkdir logs; mkdir source;
+        mkdir config
         ```
 
-3. We now need to make sure these directories have the correct permissions
-assigned to them. 
+3. We now need to make sure this directory has the correct permissions assigned
+to them.
 
     === ":material-linux: Linux"
 
@@ -138,7 +137,7 @@ assigned to them.
         the following command:
 
         ```bash
-        sudo chown -R {group}:{user} ./assets ./cards ./logs ./source # (1)!
+        sudo chown -R {group}:{user} ./config # (1)!
         ```
 
         1. Replace `{group}` and `{user}` with the actual group and user (or
@@ -150,7 +149,7 @@ assigned to them.
         the following command:
 
         ```bash
-        sudo chown -R {group}:{user} ./assets ./cards ./logs ./source # (1)!
+        sudo chown -R {group}:{user} ./config # (1)!
         ```
 
         1. Replace `{group}` and `{user}` with the actual group and user (or
@@ -158,11 +157,11 @@ assigned to them.
 
     === ":material-powershell: Windows (Powershell)"
 
-        Changing the permissions is not necessary on Windows.
+        Changing the permissions is (generally) not necessary on Windows.
 
     === ":material-microsoft-windows: Windows (Non-Powershell)"
 
-        Changing the permissions is not necessary on Windows.
+        Changing the permissions is (generally) not necessary on Windows.
 
 !!! info "Choice of Installation"
 
@@ -173,39 +172,32 @@ assigned to them.
 
 === ":material-docker: Docker"
 
-    1. Build the Docker container by executing the following command:
+    1. Build the Docker container, and label it `titlecardmaker`, by
+    executing the following command:
 
         === ":material-linux: Linux"
 
             ```bash
-            docker build -t "titlecardmaker" . # (1)!
+            docker build -t "titlecardmaker" .
             ```
-
-            1. This will label the built container `titlecardmaker`.
 
         === ":material-apple: MacOS"
 
             ```bash
-            docker build -t "titlecardmaker" . # (1)!
+            docker build -t "titlecardmaker" .
             ```
-
-            1. This will label the built container `titlecardmaker`.
 
         === ":material-powershell: Windows (Powershell)"
 
             ```bash
-            docker build -t "titlecardmaker" . <#(1)#>
+            docker build -t "titlecardmaker" .
             ```
-
-            1. This will label the built container `titlecardmaker`.
 
         === ":material-microsoft-windows: Windows (Non-Powershell)"
 
             ```bash
-            docker build -t "titlecardmaker" . # (1)!
+            docker build -t "titlecardmaker" .
             ```
-
-            1. This will label the built container `titlecardmaker`.
 
     2. Determine your timezone, a full list is available
     [here](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). You
@@ -244,10 +236,7 @@ assigned to them.
             ```bash
             docker run -itd \
                 --net="bridge" \
-                -v "$(pwd)/logs/":"/maker/logs/" \
-                -v "$(pwd)/assets/":"/config/assets/" \
-                -v "$(pwd)/source/":"/config/source/" \
-                -v "$(pwd)/cards/":"/config/cards/" \
+                -v "$(pwd)/config/":"/config/" \
                 -e TZ="$TZ" \
                 -p 4242:4242 \
                 titlecardmaker
@@ -258,10 +247,7 @@ assigned to them.
             ```bash
             docker run -itd \
                 --net="bridge" \
-                -v "$(pwd)/logs/":"/maker/logs/" \
-                -v "$(pwd)/assets/":"/config/assets/" \
-                -v "$(pwd)/source/":"/config/source/" \
-                -v "$(pwd)/cards/":"/config/cards/" \
+                -v "$(pwd)/config/":"/config/" \
                 -e TZ="$TZ" \
                 -p 4242:4242 \
                 titlecardmaker
@@ -272,10 +258,7 @@ assigned to them.
             ```bash
             docker run -itd `
                 --net="bridge" `
-                -v "$(pwd)\logs":"/maker/logs/" `
-                -v "$(pwd)\assets":"/config/assets/" `
-                -v "$(pwd)\source":"/config/source/" `
-                -v "$(pwd)\cards":"/config/cards/" `
+                -v "$(pwd)\config":"/config/" `
                 -e TZ="$env:TZ" `
                 -p 4242:4242 `
                 titlecardmaker
@@ -286,10 +269,7 @@ assigned to them.
             ```bash
             docker run -itd ^
                 --net="bridge" ^
-                -v "%cd%\logs":"/maker/logs/" ^
-                -v "%cd%\assets":"/config/assets/" ^
-                -v "%cd%\source":"/config/source/" ^
-                -v "%cd%\cards":"/config/cards/" ^
+                -v "%cd%\config":"/config/" ^
                 -e TZ=%TZ% ^
                 -p 4242:4242 ^
                 titlecardmaker
@@ -304,8 +284,8 @@ assigned to them.
             3. The `-v` commands make your directories accessible inside the
             container.
             4. The `-e TZ..` command defines your timezone inside the container.
-            5. Exposes the _internal_ `4242` port outside the container, so that you
-            can access it on your machine.
+            5. Exposes the _internal_ `4242` port outside the container, so that
+            you can access it on your machine.
 
     !!! success "Success"
 
@@ -314,52 +294,36 @@ assigned to them.
 
 === ":material-language-python: Non-Docker"
 
-    4. Run the following command to install the required Python packages and launch
-    the TCM interface.
+    4. Run the following command to install the required Python packages and
+    launch the TCM interface.
 
         === ":material-linux: Linux"
 
             ```bash
-            pipenv install; # (1)!
-            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 # (2)!
+            pipenv install;
+            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
             ```
-
-            1. This installs the required Python dependencies
-            2. This launches a webserver at your `{your IP}:4242` which the TCM Web
-            UI is accessible at.
 
         === ":material-apple: MacOS"
 
             ```bash
-            pipenv install; # (1)!
-            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 # (2)!
+            pipenv install;
+            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
             ```
-
-            1. This installs the required Python dependencies
-            2. This launches a webserver at your `{your IP}:4242` which the TCM Web
-            UI is accessible at.
 
         === ":material-powershell: Windows (Powershell)"
 
             ```bash
-            pipenv install; <#(1)#>
-            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 <#(2)#>
+            pipenv install;
+            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
             ```
-
-            1. This installs the required Python dependencies
-            2. This launches a webserver at your `{your IP}:4242` which the TCM Web
-            UI is accessible at.
 
         === ":material-microsoft-windows: Windows (Non-Powershell)"
 
             ```bash
-            pipenv install; # (1)!
-            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 --workers 4 # (2)!
+            pipenv install;
+            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
             ```
-
-            1. This installs the required Python dependencies
-            2. This launches a webserver at your `{your IP}:4242` which the TCM Web
-            UI is accessible at.
 
     !!! success "Success"
 
@@ -374,16 +338,16 @@ assigned to them.
         INFO:     Application startup complete.
         ```
         
-        And neither the `http://0.0.0.0:4242` or `http://localhost:4242/` URL loads
-        into the TCM UI, then replace the `0.0.0.0` part of the previous command
-        with your _local_ IP address - e.g. `192.168.0.10`. If you still have
-        issues, reach out on the Discord.
+        And neither the `http://0.0.0.0:4242` or `http://localhost:4242/` URL
+        loads into the TCM UI, then replace the `0.0.0.0` part of the previous
+        command with your _local_ IP address - e.g. `192.168.0.10`. If you still
+        have issues, reach out on the Discord.
 
 # Getting Started
 !!! info "Detailed Tutorial"
 
-    For more detailed tutorials that take step-by-step through the installation
-    and setup of TitleCardMaker, continue to the Tutorial pages.
+    For more detailed tutorials that take you step-by-step through the
+    installation and setup of TitleCardMaker, continue to the Tutorial pages.
 
 TitleCardMaker is designed to for an easy "out of the box" setup. The basic
 steps are as follows:
