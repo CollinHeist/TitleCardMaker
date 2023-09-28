@@ -266,13 +266,19 @@ async function getAllTemplates() {
       }
     });
     // Font
-    $(`#template-id${templateObj.id} >* .dropdown[data-value="font-dropdown"]`).dropdown({
+    $(`#template-id${templateObj.id} .dropdown[data-value="font-dropdown"]`).dropdown({
       values: allFonts.map(({id, name}) => {
         return {name: name, value: id, selected: id === templateObj.font_id};
       }), placeholder: 'Card Default',
     });
+    // Update/remove link to Font
+    if (templateObj.font_id === null) {
+      $(`#template-id${templateObj.id} a[data-value="font-link"]`).remove();
+    } else {
+      $(`#template-id${templateObj.id} a[data-value="font-link"]`)[0].href = `/fonts#font-id${templateObj.font_id}`;
+    }
     // Watched style
-    $(`#template-id${templateObj.id} >* .dropdown[data-value="watched-style"]`).dropdown({
+    $(`#template-id${templateObj.id} .dropdown[data-value="watched-style"]`).dropdown({
       values: [
         {name: 'Art Variations', type: 'header'},
         ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {

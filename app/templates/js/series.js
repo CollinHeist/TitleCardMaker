@@ -221,9 +221,14 @@ async function initalizeSeriesConfig() {
   // Fonts
   $('#card-config-form .dropdown[data-value="fonts"]').dropdown({
     values: availableFonts.map(({id, name}) => {
-      return {name: name, value: id, selected: `${id}` === '{{series.font_id}}'};
+      return {name, value: id, selected: `${id}` === '{{series.font_id}}'};
     })
   });
+  if ('{{series.font_id}}' === 'None') {
+    $('.field a[data-value="font-link"]').remove();
+  } else {
+    $('.field a[data-value="font-link"]')[0].href = `/fonts#font-id{{series.font_id}}`;
+  }
   // Font card case
   $('#card-config-form .dropdown[data-value="font_title_case"]').dropdown({
     values: [

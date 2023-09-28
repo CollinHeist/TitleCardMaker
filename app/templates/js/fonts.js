@@ -128,6 +128,7 @@ async function getAllFonts() {
   // Query for all Fonts
   const fonts = await fetch('/api/fonts/all').then(resp => resp.json());
   const hasManyFonts = fonts.length > 20; // Add headers if >10 Fonts
+  const activeFont = window.location.hash.substring(1);
 
   // Create array of elements
   const fontElements = [];
@@ -139,6 +140,7 @@ async function getAllFonts() {
     if (hasManyFonts && letter != currentHeader) {
       currentHeader = letter;
       const header = document.createElement('h2');
+      // header.id = letter;
       header.className = 'ui dividing header';
       if (letter === ' ') {
         header.innerText = 'Blank Fonts';
@@ -151,6 +153,11 @@ async function getAllFonts() {
     // Add Font accordion
     const template = document.querySelector('#font-template').content.cloneNode(true);
     template.querySelector('.accordion').id = `font-id${fontObj.id}`;
+    // Make accordion active if this was indicated in the URL has
+    if (`font-id${fontObj.id}` === activeFont) {
+      template.querySelector('.title').classList.add('active');
+      template.querySelector('.content').classList.add('active');
+    }
     template.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${fontObj.name}`;
     template.querySelector('input[name="name"]').value = fontObj.name;
     const file = template.querySelector('label[data-value="file"]');
@@ -226,6 +233,14 @@ async function getAllFonts() {
   // Put new font elements on the page
   const fontsElement = document.getElementById('fonts');
   fontsElement.replaceChildren(...fontElements);
+
+  // Scroll to active Font if indicated
+  if (activeFont) {
+    document.getElementById(activeFont).scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
+  }
 
   // Enable accordion/dropdown/checkbox elements
   $('.ui.accordion').accordion();
