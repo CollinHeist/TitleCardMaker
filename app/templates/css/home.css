@@ -34,12 +34,19 @@
   min-width: 0;
 }
 
-/* On mobile, show 3 cards/row */
+/* Mobile formatting */
 @media (max-width: 768px) {
+  /* Hide statistics */
+  #statistics {
+    display: none !important;
+  }
+
+  /* Show 3 cards/row */
   .ui.cards .card {
     min-width: unset;
     width: calc(33% - 1em);
   }
+
 }
 
 /* Pulse cards on hover - alternate */
