@@ -6,7 +6,8 @@ from app.internal.auth import get_current_user
 from app.models.connection import Connection
 from app.models.preferences import Preferences as PreferencesModel
 from app.schemas.preferences import (
-    ImageSourceToggle, LanguageToggle, Preferences, UpdatePreferences
+    EpisodeDataSourceToggle, ImageSourceToggle, LanguageToggle, Preferences,
+    UpdatePreferences
 )
 
 from modules.TMDbInterface2 import TMDbInterface
@@ -52,22 +53,31 @@ def update_global_settings(
 def get_global_episode_data_source(
         db: Session = Depends(get_database),
         preferences: PreferencesModel = Depends(get_preferences),
-    ) -> list[ImageSourceToggle]:
+    ) -> list[EpisodeDataSourceToggle]:
     """
     Get the list of Episode data sources.
     """
 
-    # Add default EDS
-    sources = [preferences.episode_data_source | {'selected': True}]
+    return [
+        {
+            'interface': connection.interface,
+            'interface_id': connection.id,
+            'name': connection.name,
+            'selected': preferences.episode_data_source['interface_id'] == connection.id,
+        } for connection in db.query(Connection).all()
+    ]
 
-    # Add remaining Connections
     for connection in db.query(Connection).all():
-        if connection.id != preferences.episode_data_source['interface_id']:
-            sources.append({
-                'interface': connection.interface,
-                'interface_id': connection.id,
-                'selected': False,
-            })
+        # if connection.id != preferences.episode_data_source['interface_id']:
+        selected = (
+            preferences.episode_data_source['interface_id'] == connection.id
+        )
+        sources.append({
+            'interface': connection.interface,
+            'interface_id': connection.id,
+            'name': connection.name,
+            'selected': selected,
+        })
 
     return sources
 
@@ -84,7 +94,9 @@ def get_image_source_priority(
     # Add all selected Connections
     sources, source_ids = [], []
     for connection in preferences.image_source_priority:
-        sources.append(connection | {'selected': True})
+        name = db.query(Connection).filter_by(id=connection['interface_id'])\
+            .first().name
+        sources.append(connection | {'selected': True, 'name': name})
         source_ids.append(connection['interface_id'])
 
     # Add remaining non-Sonarr Connections
@@ -96,6 +108,7 @@ def get_image_source_priority(
             sources.append({
                 'interface': connection.interface,
                 'interface_id': connection.id,
+                'name': connection.name,
                 'selected': False,
             })
 

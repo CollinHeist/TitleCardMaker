@@ -14,18 +14,12 @@ function getEpisodeDataSources() {
     url: '/api/settings/episode-data-source',
     success: sources => {
       $('.dropdown[data-value="episode_data_source"]').dropdown({
-        values: sources.map(({interface, interface_id, selected}) => {
+        values: sources.map(({interface, interface_id, name, selected}) => {
           // TMDb does not need to be matched to a Connection
           if (interface === 'TMDb') {
             return {name: 'TMDb', value: 0, selected};
           }
-          // Match this interface to a defined Connection (to get the name)
-          for (let {id, name} of allConnections) {
-            if (id === interface_id) {
-              return {name, value: id, selected};
-            }
-          }
-          return {name: interface, value: interface_id, selected};
+          return {name, value: interface_id, selected};
         })
       });
     }, error: response => showErrorToast({title: 'Error Querying Episode Data Sources', response}),

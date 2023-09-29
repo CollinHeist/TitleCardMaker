@@ -39,6 +39,7 @@ class ToggleOption(NamedOption):
 class EpisodeDataSourceToggle(Base):
     interface: InterfaceName
     interface_id: int
+    name: str
     selected: bool
 
 class ImageSourceToggle(EpisodeDataSourceToggle):
