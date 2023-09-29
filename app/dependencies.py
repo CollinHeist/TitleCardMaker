@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Any, Callable, Iterator, Literal, Optional
+from typing import Any, Iterator, Literal, Optional
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import HTTPException, Query

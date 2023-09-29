@@ -1,12 +1,12 @@
 from logging import Logger
 from os import environ
 from pathlib import Path
-from typing import Any, Literal, Optional, Union
+from typing import Any, Optional
 
 from pickle import dump, load
 
 from app.schemas.base import UNSPECIFIED, MediaServer
-from app.schemas.preferences import CardExtension, ImageSource
+from app.schemas.preferences import CardExtension
 
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
@@ -35,11 +35,8 @@ class Preferences:
     DEFAULT_CARD_EXTENSION: CardExtension = '.jpg'
     DEFAULT_IMAGE_SOURCE_PRIORITY = [
         {'interface': 'TMDb', 'interface_id': 0},
-        {'interface': 'Plex', 'interface_id': 0},
-        {'interface': 'Emby', 'interface_id': 0},
-        {'interface': 'Jellyfn', 'interface_id': 0},
     ]
-    DEFAULT_EPISODE_DATA_SOURCE = {'interface': 'Sonarr', 'interface_id': 0}
+    DEFAULT_EPISODE_DATA_SOURCE = {'interface': 'TMDb', 'interface_id': 0}
     VALID_IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp')
 
     """Directory to all internal assets"""
@@ -342,43 +339,6 @@ class Preferences:
             'blacklist_threshold': 3, # TODO add variable
             'logo_language_priority': self.tmdb_logo_language_priority,
         }
-
-
-    @property
-    def valid_episode_data_sources(self) -> list[dict[Literal['interface', 'interface_id'], Union[str, int]]]:
-        """
-        _summary_ # TODO update
-
-        Returns:
-            _description_
-        """
-
-        return (self.emby_argument_groups
-            + self.plex_argument_groups
-            + self.jellyfin_argument_groups
-            + self.sonarr_argument_groups
-            + ([{'interface': 'TMDb', 'interface_id': 0}]
-               if self.use_tmdb else [])
-        )
-
-
-    @property
-    def valid_image_sources(self) -> list[dict[Literal['interface', 'interface_id'], Union[str, int]]]:
-        """
-        List of valid image sources.
-
-        Returns:
-            List of the names of all valid image sources. Only image
-            sources with at least one defined interface are returned.
-        """ # TODO update
-
-        return (self.emby_argument_groups
-            + self.plex_argument_groups
-            + self.jellyfin_argument_groups
-            + self.sonarr_argument_groups
-            + ([{'interface': 'TMDb', 'interface_id': 0}]
-               if self.use_tmdb else [])
-        )
 
 
     @property
