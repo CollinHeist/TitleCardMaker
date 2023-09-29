@@ -243,7 +243,7 @@ def get_image_source_priority(
     ]
 
 
-@availablility_router.get('/libraries', status_code=200,
+@availablility_router.get('/libraries/all', status_code=200,
                           tags=['Emby', 'Jellyfin', 'Plex'])
 def get_server_libraries(
         emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
