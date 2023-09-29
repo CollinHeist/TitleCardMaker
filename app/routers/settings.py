@@ -54,7 +54,7 @@ def get_global_episode_data_source(
         preferences: PreferencesModel = Depends(get_preferences),
     ) -> list[ImageSourceToggle]:
     """
-    
+    Get the list of Episode data sources.
     """
 
     # Add default EDS

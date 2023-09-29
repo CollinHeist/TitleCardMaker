@@ -78,14 +78,14 @@
               <i class="layer group icon"></i>
               Episode Data
             </h3>
-            <div id="episode-data-settings" class="field">
+            <div class="field">
               <div class="field">
                 <label>Episode Data Source</label>
-                <div id="episode-data-source" class="ui compact selection dropdown" data-tooltip="Where to get Episode data from" data-position="right center">
-                  <input id="episode-data-source-input" type="hidden" name="episode_data_source" value="{{preferences.episode_data_source}}">
+                <div data-value="episode_data_source" class="ui compact selection dropdown" data-tooltip="Where to get episode data from" data-position="right center">
+                  <input type="hidden" name="episode_data_source">
                   <i class="dropdown icon"></i>
-                  <div class="default text">{{preferences.episode_data_source}}</div>
-                  <div id="episode-data-source-choices" class="menu">
+                  <div class="default text">Connection</div>
+                  <div class="menu">
                     <!-- Added asynchronously -->
                   </div>
                 </div>
