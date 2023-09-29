@@ -53,7 +53,11 @@ class LanguageToggle(ToggleOption):
 Base classes
 """
 class EpisodeDataSource(Base):
-    media_server: Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr', 'TMDb']
+    interface: Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr', 'TMDb']
+    interface_id: int = 0
+
+class ImageSourceOption(Base):
+    interface: ImageSource
     interface_id: int = 0
 
 """
@@ -66,7 +70,7 @@ class UpdatePreferences(UpdateBase):
     card_height: PositiveInt = UNSPECIFIED
     card_filename_format: str = UNSPECIFIED
     card_extension: CardExtension = UNSPECIFIED
-    image_source_priority: list[ImageSource] = UNSPECIFIED
+    image_source_priority: list[ImageSourceOption] = UNSPECIFIED
     episode_data_source: EpisodeDataSource = UNSPECIFIED
     specials_folder_format: str = UNSPECIFIED
     season_folder_format: str = UNSPECIFIED
@@ -123,10 +127,10 @@ class Preferences(Base):
     card_height: PositiveInt
     card_filename_format: str
     card_extension: str
-    image_source_priority: list[ImageSource]
-    valid_image_sources: list[ImageSource]
+    image_source_priority: list[ImageSourceOption]
+    # valid_image_sources: list[ImageSource]
     episode_data_source: EpisodeDataSource
-    valid_episode_data_sources: list[EpisodeDataSource]
+    # valid_episode_data_sources: list[EpisodeDataSource]
     valid_image_extensions: list[str]
     specials_folder_format: str
     season_folder_format: str
