@@ -25,7 +25,6 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from app.database.session import Base
 from app.models.card import Card
 from app.models.connection import Connection
 from app.models.episode import Episode
@@ -36,6 +35,7 @@ from app.models.series import Series
 from app.models.sync import Sync
 from app.models.template import Template
 from app.models.user import User
+from app.database.session import Base
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,

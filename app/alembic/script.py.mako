@@ -9,6 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 ${imports if imports else ""}
 
+from modules.Debug import contextualize
+
 # revision identifiers, used by Alembic.
 revision = ${repr(up_revision)}
 down_revision = ${repr(down_revision)}
@@ -17,9 +19,10 @@ depends_on = ${repr(depends_on)}
 
 
 def upgrade() -> None:
-    print(f'Upgrading SQL to Revision[{revision}]..')
+    log = contextualize()
+    log.debug(f'Upgrading SQL Schema to Version[{revision}]..')
     ${upgrades if upgrades else "pass"}
-    print(f'Upgraded SQL to Revision[{revision}]')
+    log.debug(f'Upgraded SQL Schema to Version[{revision}]')
 
 
 def downgrade() -> None:
