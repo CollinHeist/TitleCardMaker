@@ -13,6 +13,7 @@ Interface = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr']
 class Tag(Base):
     id: int
     label: str
+    interface_id: int
 
 class NewBaseSync(Base):
     name: constr(min_length=1)

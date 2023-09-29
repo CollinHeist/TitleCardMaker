@@ -251,7 +251,7 @@ def get_server_libraries(
         plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
     ) -> list[MediaServerLibrary]:
     """
-    Get all available TV libraries for all enabled interfaces.
+    Get all available libraries for all enabled interfaces.
     """
 
     libraries = []
@@ -307,13 +307,20 @@ def get_jellyfin_usernames(
 
 @availablility_router.get('/tags/sonarr', status_code=200, tags=['Sonarr'])
 def get_sonarr_tags(
-        sonarr_interface: SonarrInterface = Depends(require_sonarr_interface)
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces)
     ) -> list[Tag]:
     """
-    Get all tags defined in the specified Sonarr interface.
+    Get all tags defined in all Sonarr interfaces.
     """
 
-    return sonarr_interface.get_all_tags()
+    tags = []
+    for interface_id, interface in sonarr_interfaces:
+        tags += [
+            tag | {'interface_id': interface_id}
+            for tag in interface.get_all_tags()
+        ]
+
+    return tags
 
 
 @availablility_router.get('/fonts', status_code=200, tags=['Fonts'])
