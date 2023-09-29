@@ -20,7 +20,7 @@ from app.schemas.card import (
     BuiltinCardType, CardTypeDescription, LocalCardType, RemoteCardType
 )
 from app.schemas.card_type import Extra
-from app.schemas.preferences import EpisodeDataSourceToggle, ImageSourceToggle, StyleOption
+from app.schemas.preferences import StyleOption
 from app.schemas.series import MediaServerLibrary
 from app.schemas.sync import Tag
 
@@ -214,32 +214,54 @@ def get_available_tmdb_translations() -> list[TranslationLanguage]:
     ]
 
 
-@availablility_router.get('/episode-data-sources', status_code=200)
-def get_available_episode_data_sources(
-        preferences: Preferences = Depends(get_preferences),
-    ) -> list[EpisodeDataSourceToggle]:
+@availablility_router.get('/libraries/emby', status_code=200, tags=['Emby'])
+def get_emby_libraries(
+        emby_interface: EmbyInterface = Depends(require_emby_interface),
+    ) -> list[MediaServerLibrary]:
     """
-    Get all available (enabled) Episode data sources.
+    Get all available libraries for the given Emby interface.
     """
 
     return [
-        eds | {'selected': eds == preferences.episode_data_source}
-        for eds in  preferences.valid_episode_data_sources
+        MediaServerLibrary(
+            media_server='Emby',
+            interface_id=emby_interface._interface_id,
+            name=library,
+        ) for library in emby_interface.get_libraries()
     ]
 
 
-@availablility_router.get('/image-source-priority', status_code=200)
-def get_image_source_priority(
-        preferences: Preferences = Depends(get_preferences),
-    ) -> list[ImageSourceToggle]:
+@availablility_router.get('/libraries/emby', status_code=200, tags=['Jellyfin'])
+def get_jellyfin_libraries(
+        jellyfin_interface: JellyfinInterface = Depends(require_jellyfin_interface),
+    ) -> list[MediaServerLibrary]:
     """
-    Get the global image source priority.
+    Get all available libraries for the given Jellyfin interface.
     """
 
     return [
-        isp | {'selected': isp in preferences.image_source_priority}
-        for isp in (set(preferences.image_source_priority)
-                       | set(preferences.valid_image_sources))
+        MediaServerLibrary(
+            media_server='Jellyfin',
+            interface_id=jellyfin_interface._interface_id,
+            name=library,
+        ) for library in jellyfin_interface.get_libraries()
+    ]
+
+
+@availablility_router.get('/libraries/plex', status_code=200, tags=['Plex'])
+def get_plex_libraries(
+        plex_interface: PlexInterface = Depends(require_plex_interface),
+    ) -> list[MediaServerLibrary]:
+    """
+    Get all available libraries for the given Plex interface.
+    """
+
+    return [
+        MediaServerLibrary(
+            media_server='Plex',
+            interface_id=plex_interface._interface_id,
+            name=library,
+        ) for library in plex_interface.get_libraries()
     ]
 
 
