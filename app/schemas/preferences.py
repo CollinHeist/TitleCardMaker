@@ -41,10 +41,8 @@ class EpisodeDataSourceToggle(Base):
     interface_id: int
     selected: bool
 
-class ImageSourceToggle(Base):
-    interface: InterfaceName
-    interface_id: int
-    selected: bool
+class ImageSourceToggle(EpisodeDataSourceToggle):
+    ...
 
 class LanguageToggle(ToggleOption):
     ...
