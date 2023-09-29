@@ -67,6 +67,16 @@ class Preferences:
         'home_page_size', 'episode_data_page_size',
         'stylize_unmonitored_posters', 'sources_as_table',
         'card_type_directory', 'local_card_types',
+
+        # Arguments required only for the Connection data migrations 
+        'emby_url', 'emby_api_key', 'emby_username', 'emby_use_ssl',
+        'emby_filesize_limit_number', 'emby_filesize_limit_unit',
+        'jellyfin_url', 'jellyfin_api_key', 'jellyfin_username',
+        'jellyfin_use_ssl', 'jellyfin_filesize_limit_number',
+        'jellyfin_filesize_limit_unit', 'plex_url', 'plex_token',
+        'plex_use_ssl', 'plex_integrate_with_pmm', 'plex_filesize_limit_number',
+        'plex_filesize_limit_unit', 'sonarr_url', 'sonarr_api_key',
+        'sonarr_use_ssl', 'sonarr_downloaded_only', 'sonarr_libraries',
     )
 
 
@@ -187,6 +197,31 @@ class Preferences:
         self.episode_data_page_size = 50
         self.stylize_unmonitored_posters = False
         self.sources_as_table = False
+
+        # Data migration attributes
+        self.emby_url = ''
+        self.emby_api_key = ''
+        self.emby_username = None
+        self.emby_use_ssl = True
+        self.emby_filesize_limit_number = None
+        self.emby_filesize_limit_unit = None
+        self.jellyfin_url = ''
+        self.jellyfin_api_key = ''
+        self.jellyfin_username = None
+        self.jellyfin_use_ssl = True
+        self.jellyfin_filesize_limit_number = None
+        self.jellyfin_filesize_limit_unit = None
+        self.plex_url = ''
+        self.plex_token = ''
+        self.plex_use_ssl = True
+        self.plex_integrate_with_pmm = False
+        self.plex_filesize_limit_number = 10
+        self.plex_filesize_limit_unit = 'Megabytes'
+        self.sonarr_url = ''
+        self.sonarr_api_key = ''
+        self.sonarr_use_ssl = True
+        self.sonarr_downloaded_only = True
+        self.sonarr_libraries = []
 
 
     def read_file(self) -> Optional[object]:

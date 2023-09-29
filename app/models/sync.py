@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String, JSON
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, JSON
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
@@ -17,6 +17,8 @@ class Sync(Base):
 
     # Referencial arguments
     id = Column(Integer, primary_key=True, index=True)
+    connection = relationship('Connection', back_populates='syncs')
+    interface_id = Column(Integer, ForeignKey('connection.id'))
     series = relationship('Series', back_populates='sync')
     templates = relationship(
         'Template',
@@ -26,7 +28,6 @@ class Sync(Base):
 
     name = Column(String, nullable=False)
     interface = Column(String, nullable=False)
-    interface_id = Column(Integer, nullable=False)
 
     required_tags = Column(JSON, default=[], nullable=False)
     required_libraries = Column(JSON, default=[], nullable=False)

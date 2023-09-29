@@ -3,6 +3,7 @@ from typing import Optional
 from sqlalchemy import Boolean, Column, Integer, String, JSON
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.mutable import MutableList
+from sqlalchemy.orm import relationship
 
 from app.database.session import Base
 
@@ -17,6 +18,10 @@ class Connection(Base):
     __tablename__ = 'connection'
 
     id = Column(Integer, primary_key=True, index=True)
+
+    series = relationship('Series', back_populates='data_source')
+    syncs = relationship('Sync', back_populates='connection')
+    templates = relationship('Template', back_populates='data_source')
 
     interface = Column(String, nullable=False)
     enabled = Column(Boolean, default=False, nullable=False)

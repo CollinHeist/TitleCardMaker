@@ -38,9 +38,11 @@ class Series(Base):
 
     # Referencial arguments
     id = Column(Integer, primary_key=True)
-    font_id = Column(Integer, ForeignKey('font.id'))
-    font = relationship('Font', back_populates='series')
+    data_source_id = Column(Integer, ForeignKey('connection.id'), default=None)
+    font_id = Column(Integer, ForeignKey('font.id'), default=None)
     sync_id = Column(Integer, ForeignKey('sync.id'), default=None)
+    data_source = relationship('Connection', back_populates='series')
+    font = relationship('Font', back_populates='series')
     sync = relationship('Sync', back_populates='series')
     cards = relationship('Card', back_populates='series')
     loaded = relationship('Loaded', back_populates='series')
@@ -65,7 +67,6 @@ class Series(Base):
     directory = Column(String, default=None)
     libraries = Column(MutableList.as_mutable(JSON), default=[], nullable=False)
     card_filename_format = Column(String, default=None)
-    data_source = Column(MutableDict.as_mutable(JSON), default=None)
     sync_specials = Column(Boolean, default=None)
     skip_localized_images = Column(Boolean, default=None)
     translations = Column(MutableList.as_mutable(JSON), default=None)
