@@ -457,10 +457,10 @@ def create_cards_for_sonarr_webhook(
         webhook: SonarrWebhook = Body(...),
         preferences: Preferences = Depends(get_preferences),
         db: Session = Depends(get_database),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> None:
     """
@@ -517,10 +517,10 @@ def create_cards_for_sonarr_webhook(
         # Refresh data and look for Episode again
         if episode is None:
             refresh_episode_data(
-                db, preferences, series, emby_interface=emby_interface,
-                jellyfin_interface=jellyfin_interface,
-                plex_interface=plex_interface,
-                sonarr_interface=sonarr_interface,
+                db, preferences, series, emby_interfaces=emby_interfaces,
+                jellyfin_interfaces=jellyfin_interfaces,
+                plex_interfaces=plex_interfaces,
+                sonarr_interfaces=sonarr_interfaces,
                 tmdb_interface=tmdb_interface,
                 log=log,
             )
@@ -538,9 +538,9 @@ def create_cards_for_sonarr_webhook(
 
         # Look for source, add translation, create Card if source exists
         image = download_episode_source_image(
-            db, preferences, emby_interface=emby_interface,
-            jellyfin_interface=jellyfin_interface,
-            plex_interface=plex_interface, tmdb_interface=tmdb_interface,
+            db, preferences, emby_interfaces=emby_interfaces,
+            jellyfin_interfaces=jellyfin_interfaces,
+            plex_interfaces=plex_interfaces, tmdb_interface=tmdb_interface,
             episode=episode, log=log,
         )
         translate_episode(db, episode, tmdb_interface, log=log)
@@ -556,7 +556,7 @@ def create_cards_for_sonarr_webhook(
         # is committed; but this does not happen.
         db.refresh(episode)
 
-        # Attempt to load card up to 6 times
+        # Attempt to load card up to 6 times # TODO update for multi-conn
         if series.emby_library_name and emby_interface:
             load_episode_title_card(
                 episode, db, 'Emby', emby_interface=emby_interface,
