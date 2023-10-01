@@ -475,7 +475,7 @@ class CalligraphyTitleCard(BaseCardType):
             ]
 
         command = ' '.join([
-            f'magick "{self.source_file.resolve()}"',
+            f'convert "{self.source_file.resolve()}"',
             # Resize and apply styles to source image
             *style_commands,
             # Add each layer

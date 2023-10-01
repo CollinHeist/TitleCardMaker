@@ -135,8 +135,7 @@ pipenv install
 ### Installing ImageMagick
 
 ImageMagick is the image manipulation and creation library that TCM uses to
-create the Title Cards. As of `v2.0-alpha.5.2-webui76`, ImageMagick v7.0 (or
-later) is __required__ for all cards to work as expected.
+create the Title Cards.
 
 === ":material-linux: Linux"
 

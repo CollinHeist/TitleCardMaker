@@ -21,7 +21,7 @@ RUN apt-get update && \
 # Set base image for running TCM
 FROM python:3.11-slim
 LABEL maintainer="CollinHeist" \
-      description="Automated Title card maker for Emby, Jellyfin, and Plex"
+      description="Automated Title card maker for Emby, Jellyfin, and Plex" \
       version="v2.0-alpha.5.2"
 
 # Set working directory, copy source into container
