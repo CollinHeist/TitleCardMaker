@@ -161,7 +161,7 @@ class ImageMagickInterface:
 
     def run_get_output(self, command: str) -> str:
         """
-        Wrapper for run(), but return the byte-decoded stdout.
+        Wrapper for `run()`, but return the byte-decoded stdout.
 
         Args:
             command: The command (as string) being executed.

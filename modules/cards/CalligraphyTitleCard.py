@@ -290,7 +290,7 @@ class CalligraphyTitleCard(BaseCardType):
             f'-gravity center',
             f'-compose multiply',
             f'-composite',
-            f'+compose',
+            f'-compose over',
         ]
 
 

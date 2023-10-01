@@ -149,7 +149,10 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         }
 
 
-    def set_series_ids(self, library_name: str, series_info: SeriesInfo) ->None:
+    def set_series_ids(self,
+            library_name: str,
+            series_info: SeriesInfo,
+        ) -> None:
         """
         Set the series ID's for the given SeriesInfo object.
 
@@ -372,7 +375,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         if not isinstance(response, dict) or 'Items' not in response:
             log.error(f'Jellyfin returned bad Episode data for {series_info}')
-            log.debug(f'{response=}')
+            log.debug(f'{response=} {series_info=!r}')
             return []
 
         # Parse each returned episode into EpisodeInfo object
@@ -484,6 +487,11 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             f'{self.url}/Shows/{series_info.jellyfin_id}/Episodes',
             params={'UserId': self.user_id} | self.__params
         )
+
+        if not isinstance(response, dict) or 'Items' not in response:
+            log.error(f'Jellyfin returned bad Episode data')
+            log.debug(f'{response=} {series_info=!r}')
+            return None
 
         # Go through each episode in Jellyfin, update Episode status/card
         for jellyfin_episode in response['Items']:
