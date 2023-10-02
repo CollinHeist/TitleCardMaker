@@ -22,7 +22,9 @@
     <div id="main-content" class="article">
       <div class="ui stackable grid">
         <div id="settings" class="sixteen wide column">
-          <h1 class="ui header" onclick="$('#about').toggleClass('hidden')">Settings</h1>
+          <h1 class="ui header" onclick="$('#about').toggleClass('hidden')" data-tooltip="Click to view info about TCM" data-position="bottom left">
+            Settings
+          </h1>
           {% if preferences.available_version is not none and preferences.available_version > preferences.current_version %}
           <div class="ui floating compact info message">
             <i class="info circle icon"></i>
@@ -31,7 +33,7 @@
           <br>
           {% endif %}
 
-          <!-- About -->
+          <!-- About info -->
           <div id="about" class="ui compact floating hidden info message">
             <div class="header">
               About
@@ -52,6 +54,10 @@
                 {% else %}
                 Standalone
                 {% endif %}
+              </div>
+              <div class="item">
+                <div class="ui blue horizontal label">Changelog</div>
+                <a onclick="notifyChanges('{{preferences.current_version}}', true);">View</a>
               </div>
             </div>
           </div>
