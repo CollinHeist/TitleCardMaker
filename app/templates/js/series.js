@@ -156,7 +156,7 @@ function saveAllEpisodes() {
   });
 }
 
-// Initialize series specific dropdowns
+// Initialize series config data
 let allStyles, availableTemplates, availableFonts;
 async function initalizeSeriesConfig() {
   // Get all connections

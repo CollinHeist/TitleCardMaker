@@ -12,7 +12,7 @@ from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard
 from app.internal.episodes import refresh_episode_data
 from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo
-from app import models
+from app.models.connection import Connection
 from app.models.preferences import Preferences
 from app.models.series import Series
 from app.schemas.sync import (
@@ -37,7 +37,7 @@ def sync_all(*, log: Logger = log) -> None:
         # Get the Database
         with next(get_database()) as db:
             # Get and run all Syncs
-            for sync in db.query(models.sync.Sync).all():
+            for sync in db.query(Sync).all():
                 try:
                     run_sync(
                         db, get_preferences(), sync,
@@ -75,7 +75,7 @@ def add_sync(
     templates = get_all_templates(db, new_sync_dict)
 
     # Create DB entry from Pydantic model, add to database
-    sync = models.sync.Sync(**new_sync_dict, templates=templates)
+    sync = Sync(**new_sync_dict, templates=templates)
     db.add(sync)
     db.commit()
 
@@ -127,9 +127,7 @@ def run_sync(
     # Sync depending on the associated interface
     added: list[Series] = []
     log.debug(f'{sync.log_str} starting to query {sync.interface}[{sync.interface_id}]')
-    # Sync from Emby
     if sync.interface == 'Emby':
-        # Get filtered list of series from Sonarr
         interface: EmbyInterface = interface
         all_series = interface.get_all_series(
             required_libraries=sync.required_libraries,
@@ -138,9 +136,7 @@ def run_sync(
             excluded_tags=sync.excluded_tags,
             log=log,
         )
-    # Sync from Jellyfin
     elif sync.interface == 'Jellyfin':
-        # Get filtered list of series from Jellyfin
         interface: JellyfinInterface = interface
         all_series = interface.get_all_series(
             required_libraries=sync.required_libraries,
@@ -149,9 +145,7 @@ def run_sync(
             excluded_tags=sync.excluded_tags,
             log=log,
         )
-    # Sync from Plex
     elif sync.interface == 'Plex':
-        # Get filtered list of series from Plex
         interface: PlexInterface = interface
         all_series = interface.get_all_series(
             required_libraries=sync.required_libraries,
@@ -160,9 +154,7 @@ def run_sync(
             excluded_tags=sync.excluded_tags,
             log=log,
         )
-    # Sync from Sonarr
     elif sync.interface == 'Sonarr':
-        # Get filtered list of series from Sonarr
         interface: SonarrInterface = interface
         all_series = interface.get_all_series(
             required_tags=sync.required_tags,
@@ -185,29 +177,47 @@ def run_sync(
 
         # Determine this Series' libraries
         libraries = []
-        if sync.interface in ('Emby', 'Jellyfin', 'Plex'):
-            libraries.append({
-                'media_server': sync.interface,
-                'interface_id': sync.interface_id,
-                'name': lib_or_dir
-            })
-        else:
-            library_data = preferences.determine_sonarr_library(
-                lib_or_dir, sync.interface_id,
-            )
-            for media_server, interface_id, library in library_data:
+        if sync.interface == 'Sonarr':
+            # Get the Connection associated with this Sync
+            connection = db.query(Connection)\
+                .filter_by(id=sync.interface_id)\
+                .first()
+            if connection is None:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f'Unable to communicate with {sync.interface}',
+                )
+
+            # Determine libraries using this Connection
+            library_data = connection.determine_libraries(lib_or_dir)
+            for interface_id, library in library_data:
+                # Get Connection of this library
+                library_connection = db.query(Connection)\
+                    .filter_by(id=interface_id)\
+                    .first()
+                if library_connection is None:
+                    log.error(f'No Connection of ID {interface_id} - cannot '
+                              f'assign library')
+                    continue
+
                 libraries.append({
-                    'media_server': media_server,
+                    'interface': library_connection.interface,
                     'interface_id': interface_id,
                     'name': library,
                 })
+        else:
+            libraries.append({
+                'interface': sync.interface,
+                'interface_id': sync.interface_id,
+                'name': lib_or_dir
+            })
 
         series = Series(
             name=series_info.name,
             year=series_info.year,
             sync=sync,
             templates=sync.templates,
-            libraries=libraries
+            libraries=libraries,
             **series_info.ids,
         )
         db.add(series)

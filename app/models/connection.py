@@ -114,3 +114,31 @@ class Connection(Base):
                 'downloaded_only': self.downloaded_only,
                 'libraries': self.libraries,   
             }
+
+
+    def determine_libraries(self,
+            directory: str,
+        ) -> list[tuple[int, str]]:
+        """
+        Determine the libraries of the series in the given directory.
+        >>> connection.libraries = [
+            {'interface_id': 2, 'name': 'TV', 'path': '/mnt/media/tv'},
+            {'interface_id': 3, 'name': 'TV 4K', 'path': '/mnt/media/tv'},
+            {'interface_id': 3, 'name': 'Anime', 'path': '/mnt/media/anime'},
+        ]
+        >>> connection.determine_libraries('/mnt/media/tv/Series (1999)')
+        [(2, 'TV'), (3, 'TV 4K')]
+
+        Args:
+            directory: Directory whose library is being determined.
+
+        Returns:
+            List of tuples of the interface ID and the library names
+            that are associated with the given directory.
+        """
+
+        return [
+            (library['interface_id'], library['name'])
+            for library in self.libraries
+            if directory.startswith(library['path'])
+        ]

@@ -37,10 +37,9 @@ TMDbLanguageCode = Literal[
 Base classes
 """
 class SonarrLibrary(Base):
+    interface_id: int
     name: str
     path: str
-    # media_server: MediaServer
-    interface_id: int
 
 class PotentialSonarrLibrary(SonarrLibrary):
     interface_id: Optional[int] = None

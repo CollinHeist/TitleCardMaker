@@ -471,30 +471,6 @@ class Preferences:
         return '0', 'Bytes'
 
 
-    def determine_sonarr_library(self,
-            directory: str,
-            interface_id: int,
-        ) -> list[tuple[MediaServer, int, str]]:
-        """
-        Determine the libraries of the series in the given directory.
-
-        Args:
-            directory: Directory whose library is being determined.
-            interface_id: ID of the Sonarr interface corresponding to
-                whose libraries are being evaluated.
-
-        Returns:
-            List of tuples of the media server name, interface ID, and
-            the library name.
-        """
-
-        return [
-            (library['media_server'], library['interface_id'], library)
-            for library in self.sonarr_args[interface_id]['libraries']
-            if directory.startswith(library['path'])
-        ]
-
-
     def standardize_style(self, style: str) -> str:
         """
         Standardize the given style string so that style modifiers are
