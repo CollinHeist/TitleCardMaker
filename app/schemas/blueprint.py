@@ -31,6 +31,7 @@ class SeriesBase(BlueprintBase):
     season_title_values: Optional[list[str]] = None
     extra_keys: Optional[list[str]] = None
     extra_values: Optional[list[Any]] = None
+    skip_localized_images: Optional[bool] = None
 
 class BlueprintSeries(SeriesBase):
     template_ids: Optional[list[int]] = None

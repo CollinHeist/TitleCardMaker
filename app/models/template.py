@@ -208,6 +208,7 @@ class Template(Base):
             'translations': self.translations,
             'extra_keys': ex_ranges,
             'extra_values': ex_values,
+            'skip_localized_images': self.skip_localized_images,
         }
 
 

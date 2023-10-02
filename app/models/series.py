@@ -299,6 +299,7 @@ class Series(Base):
             'extra_keys': ex_keys,
             'extra_values': ex_values,
             'translations': self.translations,
+            'skip_localized_images': self.skip_localized_images,
         }
 
 
