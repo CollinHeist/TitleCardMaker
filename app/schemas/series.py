@@ -41,7 +41,7 @@ class BaseConfig(Base):
     sync_specials: Optional[bool] = None
     skip_localized_images: Optional[bool] = None
     card_filename_format: Optional[str] = None
-    data_source: Optional[EpisodeDataSource] = None
+    data_source_id: Optional[int] = None
     card_type: Optional[str] = None
     unwatched_style: Optional[Style] = None
     watched_style: Optional[Style] = None
@@ -88,7 +88,7 @@ class BaseUpdate(UpdateBase):
     sync_specials: Optional[bool] = UNSPECIFIED
     skip_localized_images: Optional[bool] = UNSPECIFIED
     card_filename_format: Optional[str] = UNSPECIFIED
-    data_source: Optional[EpisodeDataSource] = UNSPECIFIED
+    data_source_id: Optional[int] = UNSPECIFIED
     translations: Optional[list[Translation]] = UNSPECIFIED
     card_type: Optional[str] = UNSPECIFIED
     hide_season_text: Optional[bool] = UNSPECIFIED

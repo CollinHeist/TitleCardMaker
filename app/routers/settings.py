@@ -67,20 +67,6 @@ def get_global_episode_data_source(
         } for connection in db.query(Connection).all()
     ]
 
-    for connection in db.query(Connection).all():
-        # if connection.id != preferences.episode_data_source['interface_id']:
-        selected = (
-            preferences.episode_data_source['interface_id'] == connection.id
-        )
-        sources.append({
-            'interface': connection.interface,
-            'interface_id': connection.id,
-            'name': connection.name,
-            'selected': selected,
-        })
-
-    return sources
-
 
 @settings_router.get('/image-source-priority')
 def get_image_source_priority(
