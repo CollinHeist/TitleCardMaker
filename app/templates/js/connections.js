@@ -239,11 +239,11 @@ function addFormValidation() {
       name: ['empty'],
       url: ['empty'],
       api_key: ['empty'],
-      library_name: {
-        rules: [
-          {type: 'empty'},
-        ],
-      },
+      // library_name: { // Allow libraries to be removed by clearing name
+      //   rules: [
+      //     {type: 'empty'},
+      //   ],
+      // },
     },
   });
   // OLD STUFF 
