@@ -254,17 +254,17 @@ def download_series_poster(
     # Download poster from Media Server if possible
     series_info, poster = series.as_series_info, None
     for library in series.libraries:
-        if (library['media_server'] == 'Emby'
+        if (library['interface'] == 'Emby'
             and (interface := emby_interfaces[library['interface_id']])):
             poster = interface.get_series_poster(
                 library['name'], series_info, log=log
             )
-        elif (library['media_server'] == 'Jellyfin'
+        elif (library['interface'] == 'Jellyfin'
             and (interface := jellyfin_interfaces[library['interface_id']])):
             poster = interface.get_series_poster(
                 library['name'], series_info, log=log
             )
-        elif (library['media_server'] == 'Plex'
+        elif (library['interface'] == 'Plex'
             and (interface := plex_interfaces[library['interface_id']])):
             poster = interface.get_series_poster(
                 library['name'], series_info, log=log
