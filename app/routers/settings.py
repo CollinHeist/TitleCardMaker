@@ -70,6 +70,7 @@ def get_global_episode_data_source(
 
 @settings_router.get('/image-source-priority')
 def get_image_source_priority(
+        request: Request,
         db: Session = Depends(get_database),
         preferences: PreferencesModel = Depends(get_preferences),
     ) -> list[ImageSourceToggle]:
@@ -80,10 +81,27 @@ def get_image_source_priority(
     # Add all selected Connections
     sources, source_ids = [], []
     for connection in preferences.image_source_priority:
-        name = db.query(Connection).filter_by(id=connection['interface_id'])\
-            .first().name
-        sources.append(connection | {'selected': True, 'name': name})
+        if connection['interface'] == 'TMDb':
+            sources.append({
+                'interface': 'TMDb',
+                'interface_id': 0,
+                'name': 'TMDb',
+                'selected': True,
+            })
+            source_ids.append('TMDb')
+            continue
+
+        isp_connection = db.query(Connection)\
+            .filter_by(id=connection['interface_id'])\
+            .first()
+        if isp_connection is None:
+            request.state.log.warning(f'No Connection with ID {connection["interface_id"]}')
+            continue
+
         source_ids.append(connection['interface_id'])
+        sources.append(
+            connection | {'selected': True, 'name': isp_connection.name}
+        )
 
     # Add remaining non-Sonarr Connections
     connections = db.query(Connection)\
@@ -97,6 +115,15 @@ def get_image_source_priority(
                 'name': connection.name,
                 'selected': False,
             })
+
+    # Add TMDb
+    if preferences.use_tmdb and 'TMDb' not in source_ids:
+        sources.append({
+            'interface': 'TMDb',
+            'interface_id': 0,
+            'name': 'TMDb',
+            'selected': True,
+        })
 
     return sources
 
