@@ -6,6 +6,7 @@ from typing import Optional
 
 from modules.Debug import log
 from modules.ImageMaker import ImageMaker
+from modules import global_objects
 
 
 class BaseSummary(ImageMaker):
@@ -90,7 +91,7 @@ class BaseSummary(ImageMaker):
         ))
 
         # Filter specials if indicated
-        if self.preferences.summary_ignore_specials:
+        if global_objects.pp.summary_ignore_specials:
             available_episodes = list(filter(
                 lambda e: self.show.episodes[e].episode_info.season_number != 0,
                 available_episodes
@@ -101,7 +102,7 @@ class BaseSummary(ImageMaker):
             return False
 
         # Skip if the number of available episodes is below the minimum
-        minimum = self.preferences.summary_minimum_episode_count
+        minimum = global_objects.pp.summary_minimum_episode_count
         if episode_count < minimum:
             log.debug(f'Skipping Summary, {self.show} has {episode_count} '
                       f'episodes, minimum setting is {minimum}')
