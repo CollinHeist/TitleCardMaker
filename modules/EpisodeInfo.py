@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any, Optional, Union
 
 from num2words import num2words
+from titlecase import titlecase
 
 from modules import global_objects
 from modules.DatabaseInfoContainer import DatabaseInfoContainer
@@ -50,19 +51,29 @@ class WordSet(dict):
             # Catch exceptions caused by an unsupported language
             try:
                 cardinal = num2words(number, to='cardinal', lang=lang)
-                self.update({f'{label}_cardinal_{lang}': cardinal})
+                self.update({
+                    f'{label}_cardinal_{lang}': cardinal,
+                    f'{label}_cardinal_{lang}_title': titlecase(cardinal),
+                })
             except NotImplementedError:
                 pass
             try:
                 ordinal = num2words(number, to='ordinal', lang=lang)
-                self.update({f'{label}_ordinal_{lang}': ordinal})
+                self.update({
+                    f'{label}_ordinal_{lang}': ordinal,
+                    f'{label}_ordinal_{lang}_title': titlecase(ordinal),
+                })
             except NotImplementedError:
                 pass
         # No language indicated, convert using base language
         else:
+            cardinal = num2words(number, to='cardinal')
+            ordinal = num2words(number, to='ordinal')
             self.update({
-                f'{label}_cardinal': num2words(number, to='cardinal'),
-                f'{label}_ordinal': num2words(number, to='ordinal'),
+                f'{label}_cardinal': cardinal,
+                f'{label}_cardinal_title': f'{titlecase(cardinal)}',
+                f'{label}_ordinal': ordinal,
+                f'{label}_ordinal_title': titlecase(ordinal),
             })
 
         return None
