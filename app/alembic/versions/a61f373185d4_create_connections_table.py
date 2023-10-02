@@ -211,19 +211,19 @@ def upgrade() -> None:
         libraries = []
         if series.emby_library_name and emby:
             libraries.append({
-                'media_server': 'Emby',
+                'interface': 'Emby',
                 'interface_id': emby.id,
                 'name': series.emby_library_name,
             })
         if series.jellyfin_library_name and jellyfin:
             libraries.append({
-                'media_server': 'Jellyfin',
+                'interface': 'Jellyfin',
                 'interface_id': jellyfin.id,
                 'name': series.jellyfin_library_name,
             })
         if series.plex_library_name and plex:
             libraries.append({
-                'media_server': 'Plex',
+                'interface': 'Plex',
                 'interface_id': plex.id,
                 'name': series.plex_library_name,
             })

@@ -32,7 +32,7 @@ class Translation(Base):
     data_key: DictKey
 
 class MediaServerLibrary(Base):
-    media_server: MediaServer
+    interface: MediaServer
     interface_id: int
     name: str
 

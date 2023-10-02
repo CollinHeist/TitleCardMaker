@@ -280,7 +280,7 @@ def get_server_libraries(
     for interface_id, interface in emby_interfaces:
         libraries += [
             MediaServerLibrary(
-                media_server='Emby',
+                interface='Emby',
                 interface_id=interface_id,
                 name=library
             ) for library in interface.get_libraries()
@@ -288,7 +288,7 @@ def get_server_libraries(
     for interface_id, interface in jellyfin_interfaces:
         libraries += [
             MediaServerLibrary(
-                media_server='Jellyfin',
+                interface='Jellyfin',
                 interface_id=interface_id,
                 name=library
             ) for library in interface.get_libraries()
@@ -296,7 +296,7 @@ def get_server_libraries(
     for interface_id, interface in plex_interfaces:
         libraries += [
             MediaServerLibrary(
-                media_server='Plex',
+                interface='Plex',
                 interface_id=interface_id,
                 name=library
             ) for library in interface.get_libraries()
