@@ -328,10 +328,10 @@ async function getAllTemplates() {
       value: templateObj.hide_episode_text,
     });
     // Episode data source
-    $(`#template-id${templateObj.id} .dropdown[data-value="episode-data-source"]`).dropdown({
+    $(`#template-id${templateObj.id} .dropdown[data-value="data_source_id"]`).dropdown({
       placeholder: 'Global Default',
       values: allEpisodeDataSources.map(({name, interface_id}) => {
-        return {name, value: interface_id, selected: interface_id === templateObj.episode_data_source};
+        return {name, value: interface_id, selected: interface_id === templateObj.data_source_id};
       }),
     });
     // Skip localized images

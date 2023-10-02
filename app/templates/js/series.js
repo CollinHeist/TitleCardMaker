@@ -160,13 +160,12 @@ function saveAllEpisodes() {
 let allStyles, availableTemplates, availableFonts;
 async function initalizeSeriesConfig() {
   // Episode data sources
-  const sources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
-  const placeholder = '{{series.episode_data_source}}' === 'None' ? 'Global Default' : '{{series.episode_data_source}}';
-  $('#episode-data-source').dropdown({
-    placeholder: placeholder,
-    values: sources.map(({name, selected}) => {
-      return {name: name, value: name, selected: name == '{{series.episode_data_source}}'};
-    })
+  const allEpisodeDataSources = await fetch('/api/settings/episode-data-source').then(resp => resp.json());
+  $('.dropdown[data-value="data_source_id"]').dropdown({
+    placeholder: 'Default',
+    values: allEpisodeDataSources.map(({name, interface_id}) => {
+      return {name, value: interface_id, selected: `${interface_id}` === '{{series.data_source_id}}'};
+    }),
   });
   // Special syncing
   initializeNullableBoolean({
