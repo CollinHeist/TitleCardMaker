@@ -19,6 +19,13 @@
 <script type="text/javascript" src="/templates/js/messages.js?v={{preferences.current_version}}"></script>
 <script type="text/javascript" src="/templates/js/helper.js?v={{preferences.current_version}}"></script>
 <script type="text/javascript" src="/templates/js/tablesort.js?v={{preferences.current_version}}"></script>
+<script type="text/javascript" src="/templates/js/changelog.js?v={{preferences.current_version}}"></script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    // Show changelog if necessary
+    notifyChanges('{{preferences.current_version}}');
+  });
+</script>
 
 <!-- Styles -->
 <link rel="stylesheet" type="text/css" href="/templates/css/style.css"/>
