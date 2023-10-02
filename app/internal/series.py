@@ -185,12 +185,9 @@ def set_series_database_ids(
     for interface_id, library_name in series.get_libraries('Plex'):
         if (interface := plex_interfaces[interface_id]):
             interface.set_series_ids(library_name, series_info, log=log)
-    if series.primary_sonarr_interface_id is None:
-        for _, interface in sonarr_interfaces:
-            interface.set_series_ids(None, series_info, log=log)
-            break
-    elif (interface := sonarr_interfaces[series.primary_sonarr_interface_id]):
+    for _, interface in sonarr_interfaces:
         interface.set_series_ids(None, series_info, log=log)
+        break
     if tmdb_interface:
         tmdb_interface.set_series_ids(None, series_info, log=log)
 
