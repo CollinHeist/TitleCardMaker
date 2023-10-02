@@ -731,11 +731,11 @@
                     </div>
                   </div>
 
-                  <!-- Font interline spacing, vertical shift -->
+                  <!-- Font interline spacing, interword spacing, vertical shift -->
                   <div class="three fields">
                     <div class="field">
                       <label>Interline Spacing</label>
-                      {% if series.font_interline is none %}
+                      {% if series.font_interline_spacing is none %}
                       <input name="font_interline_spacing" type="number" placeholder="Default">
                       {% else %}
                       <input name="font_interline_spacing" type="number" placeholder="Default" value="{{series.font_interline_spacing}}">
