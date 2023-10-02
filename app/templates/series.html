@@ -476,6 +476,17 @@
               </div>
               {% endif %}
 
+              <!-- Libraries -->
+              <div class="ui field">
+                <label>Libraries</label>
+                <div data-value="libraries" class="ui compact multiple selection dropdown">
+                  <input name="libraries" type="hidden">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">None</div>
+                  <div class="menu"><!-- Added asynchronousely --></div>
+                </div>
+              </div>
+
               <!-- Episode Data Source -->
               <div class="field">
                 <label>Episode Data Source</label>
@@ -517,45 +528,6 @@
                   <div class="menu"><!-- Added asynchronously --></div>
                 </div>
               </div>
-
-              <!-- Emby Library -->
-              {% if preferences.use_emby or series.emby_library_name %}
-              <div class="ui field">
-                <label>Emby Library</label>
-                <div id="emby-library" class="ui compact selection clearable dropdown">
-                  <input name="emby_library_name" id="emby-library-input" type="hidden">
-                  <div class="default text">None</div>
-                  <i class="dropdown icon"></i>
-                  <div class="menu"><!-- Added asynchronously --></div>
-                </div>
-              </div>
-              {% endif %}
-
-              <!-- Jellyfin Library -->            
-              {% if preferences.use_jellyfin or series.jellyfin_library_name %}
-              <div class="ui field">
-                <label>Jellyfin Library</label>
-                <div id="jellyfin-library" class="ui compact selection clearable dropdown">
-                  <input name="jellyfin_library_name" type="hidden">
-                  <div class="default text">None</div>
-                  <i class="dropdown icon"></i>
-                  <div class="menu"><!-- Added asynchronously --></div>
-                </div>
-              </div>
-              {% endif %}
-
-              <!-- Plex Library -->
-              {% if preferences.use_plex or series.plex_library_name %}
-              <div class="ui field">
-                <label>Plex Library</label>
-                <div id="plex-library" class="ui compact selection clearable dropdown" data-tooltip="Library within Plex to load Title Cards into" data-position="right center">
-                  <input name="plex_library_name" type="hidden">
-                  <div class="default text">None</div>
-                  <i class="dropdown icon"></i>
-                  <div class="menu"><!-- Added asynchronously --></div>
-                </div>
-              </div>
-              {% endif %}
 
               <!-- Card Directory -->
               <div class="ui field" data-tooltip="Where to store title cards" data-position="top left">

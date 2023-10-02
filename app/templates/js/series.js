@@ -159,6 +159,30 @@ function saveAllEpisodes() {
 // Initialize series specific dropdowns
 let allStyles, availableTemplates, availableFonts;
 async function initalizeSeriesConfig() {
+  // Get all connections
+  const allConnections = await fetch('/api/connection/all').then(resp => resp.json());
+  // Libraries
+  $.ajax({
+    type: 'GET',
+    url: '/api/available/libraries/all',
+    success: libraries => {
+      $('.dropdown[data-value="libraries"]').dropdown({
+        placeholder: 'None',
+        values: libraries.map(({interface_id, interface, name}) => {
+          const serverName = allConnections.filter(connection => connection.id === interface_id)[0].name || interface;
+          return {
+            name: name,
+            text: `${name} (${serverName})`,
+            value: `${interface}:${interface_id}:${name}`,
+            description: serverName,
+            descriptionVertical: true,
+            selected: {{series.libraries|safe}}.some(library => library.interface_id === interface_id && library.name === name),
+          };
+        }),
+      });
+    }, error: response => showErrorToast({title: 'Error Querying Libraries', response}),
+  });
+
   // Episode data sources
   const allEpisodeDataSources = await fetch('/api/settings/episode-data-source').then(resp => resp.json());
   $('.dropdown[data-value="data_source_id"]').dropdown({
@@ -480,7 +504,7 @@ function initStyles() {
   refreshTheme();
 }
 
-let currentPage=1;
+let currentPage = 1;
 async function getFileData(page=currentPage) {
   const sourceImageContainer = document.getElementById('source-images');
   const fileTemplate = document.getElementById('file-card-template');
@@ -929,11 +953,19 @@ async function initAll() {
       season_title_ranges: [], season_title_values: [],
       language_code: [], data_key: [],
     };
-    let template_ids = [];
+    let template_ids = [],
+        libraries = [];
     for (const [key, value] of [...form.entries()]) {
       // Handle Templates
       if (key === 'template_ids' && value != '') {
         template_ids = value.split(',');
+      }
+      if (key === 'libraries' && value != '') {
+        libraries = value.split(',').map(libraryStr => {
+          const libraryData = libraryStr.split(':');
+          return {interface: libraryData[0], interface_id: libraryData[1], name: libraryData[2]};
+        });
+        form.delete('libraries');
       }
       // Add list data fields to listData object
       if (Object.keys(listData).includes(key) && value !== '') {
@@ -964,9 +996,11 @@ async function initAll() {
       form.append($(val).attr('name'), $(val).is(':checked'));
     });
 
-    // Add Templates if the correct form
+    // Add Templates and libraries if the correct form
     if (event.target.id === 'card-config-form') {
       listData.template_ids = template_ids;
+    } else if (event.target.id === 'series-config-form') {
+      listData.libraries = libraries;
     }
 
     // Submit API request
