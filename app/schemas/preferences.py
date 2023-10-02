@@ -200,7 +200,11 @@ class UpdateTMDb(UpdateBase):
     @validator('logo_language_priority', pre=True)
     def validate_list(cls, v):
         # Split comma separated language codes into list of codes
-        return list(map(lambda s: str(s).lower().strip(), v.split(',')))
+        if isinstance(v, list):
+            return v
+        elif isinstance(v, str):
+            return list(map(lambda s: str(s).lower().strip(), v.split(',')))
+        raise ValueError
 
 """
 Return classes
