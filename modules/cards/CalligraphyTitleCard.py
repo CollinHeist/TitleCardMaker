@@ -217,7 +217,8 @@ class CalligraphyTitleCard(BaseCardType):
         lines = title_text.splitlines()
 
         # Don't offset if the bottom line is much longer than the first
-        if len(lines[1]) > len(lines[0]) * 2:
+        if (len(lines[1]) > len(lines[0]) * 2
+            or len(lines[1]) > len(lines[0]) + 12):
             return title_text
 
         def limit(lower: int, value: int, upper: int) -> int:
