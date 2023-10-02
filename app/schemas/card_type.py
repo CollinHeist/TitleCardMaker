@@ -119,6 +119,7 @@ class CalligraphyCardType(BaseCardTypeCustomFontAllText):
     add_texture: bool = True
     deep_blur_if_unwatched: bool = True
     episode_text_color: Optional[BetterColor] = 'white'
+    episode_text_font_size: PositiveFloat = 1.0
     logo_size: PositiveFloat = 1.0
     offset_titles: bool = True
     randomize_texture: bool = True

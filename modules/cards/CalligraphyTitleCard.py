@@ -44,6 +44,11 @@ class CalligraphyTitleCard(BaseCardType):
                 description='Color to utilize for the episode text',
                 tooltip='Defaults to match the Font color.'
             ), Extra(
+                name='Episode Text Font Size',
+                identifier='episode_text_font_size',
+                description='Size adjustment for the episode text',
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
+            ), Extra(
                 name='Offset Title Toggle',
                 identifier='offset_titles',
                 description='Whether to offset multi-line titles',
@@ -121,7 +126,7 @@ class CalligraphyTitleCard(BaseCardType):
         'font_size', 'font_color', 'font_interline_spacing',
         'font_interword_spacing', 'font_kerning', 'font_vertical_shift',
         'logo_file', 'add_texture', 'episode_text_color', 'logo_size',
-        'randomize_texture', 'separator', 'deep_blur',
+        'randomize_texture', 'separator', 'deep_blur', 'episode_text_font_size',
     )
 
     def __init__(self, *,
@@ -146,6 +151,7 @@ class CalligraphyTitleCard(BaseCardType):
             add_texture: bool = True,
             deep_blur_if_unwatched: bool = True,
             episode_text_color: str = TITLE_COLOR,
+            episode_text_font_size: float = 1.0,
             logo_size: float = 1.0,
             offset_titles: bool = True,
             randomize_texture: bool = True,
@@ -186,6 +192,7 @@ class CalligraphyTitleCard(BaseCardType):
         self.add_texture = add_texture
         self.deep_blur = blur and deep_blur_if_unwatched and not watched
         self.episode_text_color = episode_text_color
+        self.episode_text_font_size = episode_text_font_size
         self.logo_size = logo_size
         self.randomize_texture = randomize_texture
         self.separator = separator
@@ -373,7 +380,7 @@ class CalligraphyTitleCard(BaseCardType):
 
         interline_spacing = -50 + self.font_interline_spacing
         kerning = 1.0 * self.font_kerning
-        size = 75 * self.font_size
+        size = 75 * self.episode_text_font_size
 
         base_commands = [
             f'-background None',
