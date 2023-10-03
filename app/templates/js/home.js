@@ -92,16 +92,21 @@ async function getAllSeries(page=undefined) {
 }
 
 // Get all statistics and load them into HTML
-async function getAllStatistics() {
-  const statistics = await fetch('/api/statistics').then(resp => resp.json());
-  const statisticsElement = document.getElementById('statistics');
-  const template = document.querySelector('#statistic-template');
-  statistics.forEach(({value_text, unit, description}) => {
-    const clone = template.content.cloneNode(true);
-    clone.querySelector('.statistic').title = description;
-    clone.querySelector('.value').innerText = value_text;
-    clone.querySelector('.label').innerText = unit;
-    statisticsElement.appendChild(clone);
+function getAllStatistics() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/statistics',
+    success: statistics => {
+      const statisticsElement = document.getElementById('statistics');
+      const template = document.getElementById('statistic-template');
+      statistics.forEach(({value_text, unit, description}) => {
+        const clone = template.content.cloneNode(true);
+        clone.querySelector('.statistic').title = description;
+        clone.querySelector('.value').innerText = value_text;
+        clone.querySelector('.label').innerText = unit;
+        statisticsElement.appendChild(clone);
+      });
+    }, error: response => showErrorToast({title: 'Error Querying Statistics', response}),
   });
 }
 
