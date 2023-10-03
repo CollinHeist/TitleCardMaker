@@ -1,12 +1,17 @@
 """Create Connections Table
 Create new Connections SQL table / Model
+- Turn existing connection details from global Preferences into Connection
+  objects which are assigned during SQL migration.
+Modify Loaded table:
+- Add new interface_id column tied to newly created Connection(s)
+- Remove media_server column
 Modify Series table:
 - Turn separate emby,jellyfin,plex_library_name columns into single libraries
   column that is a JSON list object like
   [{'media_server': (Emby/Jellyfin/Plex), 'interface_id': (int), 'name': (str)}]
 - Perform data migration of existing Series libraries into the above objects
 - Remove emby_library_name, jellyfin_library_name, and plex_library_name
-  columns.
+  columns
 Modify Sync table:
 - Add new interface_id and connection columns / relationships as a Sync now must
 be tied to an existing Connection.
@@ -16,8 +21,8 @@ Modify Template table:
 Revision ID: a61f373185d4
 Revises: 4d7cb48238be
 Create Date: 2023-09-28 12:56:59.752356
-
 """
+# pylint: disable
 from alembic import op
 import sqlalchemy as sa
 from modules.Debug import contextualize
@@ -31,7 +36,7 @@ depends_on = None
 # Models necessary for data migration
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.mutable import MutableList
-from sqlalchemy.orm import Session, relationship
+from sqlalchemy.orm import Session
 from app.database.session import PreferencesLocal
 
 Base = declarative_base()
@@ -40,10 +45,6 @@ class Connection(Base):
     __tablename__ = 'connection'
 
     id = sa.Column(sa.Integer, primary_key=True, index=True)
-
-    series = relationship('Series', back_populates='data_source')
-    syncs = relationship('Sync', back_populates='connection')
-    templates = relationship('Template', back_populates='data_source')
 
     interface = sa.Column(sa.String, nullable=False)
     enabled = sa.Column(sa.Boolean, default=False, nullable=False)
@@ -59,6 +60,15 @@ class Connection(Base):
     downloaded_only = sa.Column(sa.Boolean, default=True, nullable=False)
     libraries = sa.Column(MutableList.as_mutable(sa.JSON), default=[], nullable=False)
 
+class Loaded(Base):
+    __tablename__ = 'loaded'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    # Existing Columns for migrating
+    media_server = sa.Column(sa.String, nullable=False)
+    # New column(s)
+    interface_id = sa.Column(sa.Integer, sa.ForeignKey('connection.id'))
+
 class Series(Base):
     __tablename__ = 'series'
 
@@ -68,10 +78,9 @@ class Series(Base):
     emby_library_name = sa.Column(sa.String)
     jellyfin_library_name = sa.Column(sa.String)
     plex_library_name = sa.Column(sa.String)
-    # New column
+    # New column(s)
     libraries = sa.Column(MutableList.as_mutable(sa.JSON), default=[], nullable=False)
     data_source_id = sa.Column(sa.Integer, sa.ForeignKey('connection.id'), default=None)
-    data_source = relationship('Connection', back_populates='series')
 
 class Template(Base):
     __tablename__ = 'template'
@@ -79,14 +88,12 @@ class Template(Base):
     id = sa.Column(sa.Integer, primary_key=True)
     # Existing Columns for migrating
     episode_data_source = sa.Column(sa.String)
-    # New column
+    # New column(s)
     data_source_id = sa.Column(sa.Integer, sa.ForeignKey('connection.id'), default=None)
-    data_source = relationship('Connection', back_populates='templates')
 
 class Sync(Base):
     __tablename__ = 'sync'
     id = sa.Column(sa.Integer, primary_key=True, index=True)
-    connection = relationship('Connection', back_populates='syncs')
     interface_id = sa.Column(sa.Integer, sa.ForeignKey('connection.id'))
 
 
@@ -111,6 +118,11 @@ def upgrade() -> None:
     )
     with op.batch_alter_table('connection', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_connection_id'), ['id'], unique=False)
+
+    with op.batch_alter_table('loaded', schema=None) as batch_op:
+        batch_op.add_column(sa.Column('library_name', sa.String(), nullable=True))
+        batch_op.add_column(sa.Column('interface_id', sa.Integer(), nullable=True))
+        batch_op.create_foreign_key('fk_connection_loaded', 'connection', ['interface_id'], ['id'])
 
     with op.batch_alter_table('series', schema=None) as batch_op:
         batch_op.add_column(sa.Column('data_source_id', sa.Integer(), nullable=True))
@@ -206,6 +218,15 @@ def upgrade() -> None:
     PreferencesLocal.image_source_priority = isp
     log.debug(f'Migrated Global Image Source Priority to {isp}')
 
+    # Migrate Loaded media_server into interface_id
+    for loaded in session.query(Loaded).all():
+        if loaded.media_server == 'Emby' and emby:
+            loaded.interface_id = emby.id
+        elif loaded.media_server == 'Jellyfin' and jellyfin:
+            loaded.interface_id = jellyfin.id
+        elif loaded.media_server == 'Plex' and plex:
+            loaded.interface_id = plex.id
+
     # Migrate Series *_library_name into libraries list
     for series in session.query(Series).all():
         libraries = []
@@ -234,30 +255,35 @@ def upgrade() -> None:
     # Migrate Series and Template episode_data_source into data_source
     for series in session.query(Series).all():
         if emby and series.episode_data_source in ('Emby', 'emby'):
-            series.data_source = emby
+            series.data_source_id = emby.id
         elif jellyfin and series.episode_data_source in ('Jellyfin', 'jellyfin'):
-            series.data_source = jellyfin
+            series.data_source_id = jellyfin.id
         elif plex and series.episode_data_source in ('Plex', 'plex'):
-            series.data_source = plex
+            series.data_source_id = plex.id
         elif sonarr and series.episode_data_source in ('Sonarr', 'sonarr'):
-            series.data_source = sonarr
+            series.data_source_id = sonarr.id
 
-        if series.data_source:
-            log.debug(f'Initialized Series[{series.id}].data_source = {series.data_source}')
+        if series.data_source_id:
+            log.debug(f'Initialized Series[{series.id}].data_source_id = {series.data_source_id}')
     for template in session.query(Template).all():
         if emby and template.episode_data_source in ('Emby', 'emby'):
-            template.data_source = emby
+            template.data_source_id = emby.id
         elif jellyfin and template.episode_data_source in ('Jellyfin', 'jellyfin') :
-            template.data_source = jellyfin
+            template.data_source_id = jellyfin.id
         elif plex and template.episode_data_source in ('Plex', 'plex'):
-            template.data_source = plex
+            template.data_source_id = plex.id
         elif sonarr and template.episode_data_source in ('Sonarr', 'sonarr'):
-            template.data_source = sonarr
+            template.data_source_id = sonarr.id
 
-        if template.data_source:
-            log.debug(f'Initialized Template[{template.id}].data_source = {template.data_source}')
+        if template.data_source_id:
+            log.debug(f'Initialized Template[{template.id}].data_source_id = {template.data_source_id}')
+
+    # Commit changes
+    session.commit()
 
     # Drop columns once migration is completed
+    with op.batch_alter_table('loaded', schema=None) as batch_op:
+        batch_op.drop_column('media_server')
 
     with op.batch_alter_table('series', schema=None) as batch_op:
         batch_op.drop_column('emby_library_name')
@@ -275,6 +301,12 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    with op.batch_alter_table('loaded', schema=None) as batch_op:
+        batch_op.add_column(sa.Column('media_server', sa.VARCHAR(), nullable=False))
+        batch_op.drop_constraint('fk_connection_loaded', type_='foreignkey')
+        batch_op.drop_column('interface_id')
+        batch_op.drop_column('library_name')
+
     with op.batch_alter_table('template', schema=None) as batch_op:
         batch_op.add_column(sa.Column('episode_data_source', sa.VARCHAR(), nullable=True))
         batch_op.drop_constraint('fk_connection_template', type_='foreignkey')

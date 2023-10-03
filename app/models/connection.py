@@ -19,6 +19,7 @@ class Connection(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
+    loaded = relationship('Loaded', back_populates='connection')
     series = relationship('Series', back_populates='data_source')
     syncs = relationship('Sync', back_populates='connection')
     templates = relationship('Template', back_populates='data_source')
