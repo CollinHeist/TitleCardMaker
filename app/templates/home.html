@@ -52,9 +52,13 @@
 
 <body onload="initAll();">
   <div>
-    <!-- Static header and sidebar loaded by external script -->
-    <div id="page-header"></div>
-    <div id="nav-menu"></div>
+    <!-- Static header and sidebar -->
+    <div id="page-header">
+      {% include "./header.html" %}
+    </div>
+    <div id="nav-menu">
+      {% include "./sidebar.html" %}
+    </div>
 
     <!-- Actual page content -->
     <div id="main-content" class="article">
@@ -70,13 +74,6 @@
         </div>
 
         <!-- <div class="ui compact blue inverted menu">
-          <a class="blue item">
-            <i class="edit outline icon"></i>
-            Editor
-          </a>
-        </div>
-        
-        <div class="ui compact blue inverted menu">
           <a class="blue item">
             <i class="edit outline icon"></i>
             Editor
