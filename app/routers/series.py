@@ -23,7 +23,7 @@ from app.internal.cards import (
 )
 from app.internal.series import (
     add_series, delete_series_and_episodes, download_series_poster,
-    load_series_title_cards, lookup_series,
+    load_all_series_title_cards, load_series_title_cards, lookup_series,
 )
 from app.internal.sources import download_episode_source_image
 from app.internal.auth import get_current_user
@@ -324,62 +324,32 @@ def toggle_series_monitored_status(
     return series
 
 
-@series_router.post('/{series_id}/load/{media_server}', status_code=201,
+@series_router.post('/{series_id}/load/all', status_code=201,
         tags=['Emby', 'Jellyfin', 'Plex'])
-def load_title_cards_into_media_server(
+def load_title_cards_into_all_servers(
         series_id: int,
-        media_server: MediaServer,
         request: Request,
+        reload: bool = Query(default=False),
         db: Session = Depends(get_database),
         emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
         jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
         plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
     ) -> None:
     """
-    Load all of the given Series' unloaded Title Cards into the given
-    Media Server. This only loads Cards that have not previously been
-    loaded, or whose previously loaded cards have been changed.
+    Load all of the given Series' Cards.
 
     - series_id: ID of the Series whose Cards are being loaded.
-    - media_server: Which Media Server to load cards into. Must have an
-    active, valid Interface connection.
+    - reload: Whether to "force" reload all Cards, even those that have
+    already been loaded. If false, only Cards that have not been loaded
+    previously (or that have changed) are loaded.
     """
 
     # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    load_series_title_cards(
-        series, media_server, db, emby_interfaces, jellyfin_interfaces,
-        plex_interfaces, force_reload=False, log=request.state.log,
-    )
-
-
-@series_router.post('/{series_id}/reload/{media_server}', status_code=201,
-        tags=['Emby', 'Jellyfin', 'Plex'])
-def reload_title_cards_into_media_server(
-        series_id: int,
-        media_server: MediaServer,
-        request: Request,
-        db: Session = Depends(get_database),
-        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces)
-    ) -> None:
-    """
-    Reload all of the given Series' Title Cards into the given Media
-    Server. This loads all Cards, even those that have not changed.
-
-    - series_id: ID of the Series whose Cards are being loaded.
-    - media_server: Which Media Server to load cards into. Must have an
-    active, valid Interface connection.
-    """
-
-    # Get this Series, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
-
-    return load_series_title_cards(
-        series, media_server, db, emby_interfaces, jellyfin_interfaces,
-        plex_interfaces, force_reload=True, log=request.state.log,
+    load_all_series_title_cards(
+        series, db, emby_interfaces, jellyfin_interfaces, plex_interfaces,
+        force_reload=reload, log=request.state.log,
     )
 
 
