@@ -1,12 +1,11 @@
-let allConnections;
+let allConnections = [];
+/*
+ * Get all the defined non-Sonarr Connections and update the allConnections
+ * list.
+ */
 async function getAllConnections() {
-  allConnections = [];
   let allC = await fetch('/api/connection/all').then(resp => resp.json());
-  allC.forEach(connection => {
-    if (connection.interface !== 'Sonarr') {
-      allConnections.push(connection);
-    }
-  });
+  allConnections = allC.filter(connection => connection.interface !== 'Sonarr');
 }
 
 /*
@@ -239,11 +238,6 @@ function addFormValidation() {
       name: ['empty'],
       url: ['empty'],
       api_key: ['empty'],
-      // library_name: { // Allow libraries to be removed by clearing name
-      //   rules: [
-      //     {type: 'empty'},
-      //   ],
-      // },
     },
   });
   // OLD STUFF 
@@ -353,23 +347,43 @@ function updateConnection(form, connectionId, connectionType, jsonData) {
 }
 
 /*
- * Submit an API request to delete the Connection with the given ID. If
- * successful, then the HTML element(s) for this Connection is removed from the
- * page and the Sonarr connections are re-initialized.
+ * Display a temporary modal which asks the user to confirm the Connection
+ * deletion. If confirmed, then submit an API request to delete the Connection
+ * with the given ID. If that is successful, then the HTML element(s) for this
+ * Connection are removed from the page and the Sonarr connections are
+ * re-initialized (so they may display the correct library dropdowns).
  */
 function deleteConnection(connectionId) {
-  $.ajax({
-    type: 'DELETE',
-    url: `/api/connection/${connectionId}`,
-    success: () => {
-      showInfoToast('Deleted Connection');
-      // Delete this connection from the page, refresh Sonarr so server dropdowns update
-      document.getElementById(`connection${connectionId}-title`).remove();
-      document.getElementById(`connection${connectionId}`).remove();
-      getAllConnections().then(initializeSonarr);
-    },
-    error: response => showErrorToast({title: 'Error Deleting Connection', response}),
-  });
+  $.modal({
+    classTitle: 'ui icon header',
+    title: '<i class="trash icon"></i>Delete Connection?',
+    class: 'basic',
+    classContent: 'center aligned',
+    content: '<span class="ui text">This action cannot be undone.</span><br><span class="ui text">This will delete any associated Syncs, libraries, Episode and Image sources.</span>',
+    classActions: 'center aligned',
+    actions: [
+      {text: 'No', icon: 'remove', class: 'green ok basic inverted'},
+      {
+        text: 'Yes, delete this Connection',
+        icon: 'trash alternate outline',
+        class: 'red inverted',
+        click: () => {
+          $.ajax({
+            type: 'DELETE',
+            url: `/api/connection/${connectionId}`,
+            success: () => {
+              showInfoToast('Deleted Connection');
+              // Delete this connection from the page, refresh Sonarr so server dropdowns update
+              document.getElementById(`connection${connectionId}-title`).remove();
+              document.getElementById(`connection${connectionId}`).remove();
+              getAllConnections().then(initializeSonarr);
+            },
+            error: response => showErrorToast({title: 'Error Deleting Connection', response}),
+          });
+        }
+      },
+    ]
+  }).modal('show');
 }
 
 /*
@@ -415,7 +429,11 @@ function initializeEmby() {
             success: usernames => {
               $(`#connection${connection.id} .dropdown[data-value="username"]`).dropdown({
                 values: usernames.map(username => {
-                  return {name: username, selected: username === connection.username};
+                  return {
+                    name: username,
+                    value: username,
+                    selected: username === connection.username
+                  };
                 }),
               });
             }, error: response => showErrorToast({title: `Error Querying ${connection.name} Usernames`, response}),
@@ -439,7 +457,7 @@ function initializeEmby() {
       });
     }, error: response => showErrorToast({title: 'Error Querying Emby Connections', response}),
     complete: () => {
-      addFormValidation;
+      addFormValidation();
       refreshTheme();
     },
   });
@@ -488,7 +506,11 @@ function initializeJellyfin() {
             success: usernames => {
               $(`#connection${connection.id} .dropdown[data-value="username"]`).dropdown({
                 values: usernames.map(username => {
-                  return {name: username, selected: username === connection.username};
+                  return {
+                    name: username,
+                    value: username,
+                    selected: username === connection.username
+                  };
                 }),
               });
             }, error: response => showErrorToast({title: `Error Querying ${connection.name} Usernames`, response}),
@@ -674,11 +696,14 @@ function initializeSonarr() {
           // Add library list data
           const libraryData = [];
           $(`#connection${connection.id} .field[data-value="library_name"] input`).each((index, element) => {
-            libraryData.push({
-              name: element.value,
-              path: $(`#connection${connection.id} .field[data-value="library_path"] input`).eq(index).val(),
-              interface_id: $(`#connection${connection.id} .dropdown[data-value="interface_id"] input`).eq(index).val(),
-            });
+            const path = $(`#connection${connection.id} .field[data-value="library_path"] input`).eq(index).val();
+            if (path !== "") {
+              libraryData.push({
+                name: element.value,
+                path: path,
+                interface_id: $(`#connection${connection.id} .dropdown[data-value="interface_id"] input`).eq(index).val(),
+              });
+            }
           });
           updateConnection(form, connection.id, 'Sonarr', {libraries: libraryData});
         });
@@ -772,26 +797,25 @@ function addConnection(connectionType) {
   const connections = document.getElementById(`${connectionType.toLowerCase()}-connections`);
   connections.appendChild(template);
   refreshTheme();
+  addFormValidation();
 }
 
 async function initAll() {
   initializeEmby();
   initializeJellyfin();
   initializePlex();
+  initializeTMDb();
   await getAllConnections();
   initializeSonarr();
-  initializeTMDb();
 
-  // Enable dropdowns, checkboxes
+  // Enable elements
   $('.ui.dropdown').dropdown();
   $('.ui.checkbox').checkbox();
   $('.ui.accordion').accordion();
 
   getLanguagePriorities();
-  // initializeFilesizeDropdown();
   initializeAuthForm();
   initializeFormToggles();
-  // enablePlexFilesizeWarning();
   initializeTautulliForm();
 
   // Attach Tautlli modal to button
