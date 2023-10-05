@@ -1,5 +1,4 @@
-"""
-Modify Font table:
+"""Modify Font table:
 - Add interword_spacing column (default 0)
 - Remove validate_characters column (unused)
 - Explicitly make some columns non-nullable
@@ -11,11 +10,12 @@ Modify Episode table:
 Revision ID: 0233f2608d72
 Revises: 65fd10d8732e
 Create Date: 2023-08-18 11:10:19.833668
-
 """
+
 from alembic import op
 import sqlalchemy as sa
 
+from modules.Debug import contextualize
 
 # revision identifiers, used by Alembic.
 revision = '0233f2608d72'
@@ -25,6 +25,9 @@ depends_on = None
 
 
 def upgrade() -> None:
+    log = contextualize()
+    log.debug(f'Upgrading SQL Schema to Version[{revision}]..')
+
     with op.batch_alter_table('font', schema=None) as batch_op:
         batch_op.add_column(sa.Column(
             'interword_spacing',
@@ -53,8 +56,13 @@ def upgrade() -> None:
             server_default=str(0),
         ))
 
+    log.debug(f'Upgraded SQL Schema to Version[{revision}]')
+
 
 def downgrade() -> None:
+    log = contextualize()
+    log.debug(f'Downgrading SQL Schema to Version[{down_revision}]..')
+
     with op.batch_alter_table('card', schema=None) as batch_op:
         batch_op.drop_column('font_interword_spacing')
 
@@ -73,3 +81,4 @@ def downgrade() -> None:
         batch_op.alter_column('name', existing_type=sa.VARCHAR(), nullable=True)
         batch_op.drop_column('interword_spacing')
 
+    log.debug(f'Downgraded SQL Schema to Version[{down_revision}]')
