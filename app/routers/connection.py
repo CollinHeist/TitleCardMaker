@@ -34,13 +34,17 @@ def add_emby_connection(
         new_connection: NewEmbyConnection = Body(...),
         db: Session = Depends(get_database),
         interface_group: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
+        preferences: Preferences = Depends(get_preferences),
     ) -> EmbyConnection:
     """
-    # TODO write
+    Create a new Connection to Emby; adding it to the Database and
+    adding an initialized Interface to the InterFaceGroup.
+
+    - new_connection: Details of the new Connection to add and create.
     """
 
     return add_connection(
-        db, new_connection, interface_group, log=request.state.log,
+        db, new_connection, interface_group, preferences, log=request.state.log,
     )
 
 
@@ -50,13 +54,17 @@ def add_jellyfin_connection(
         new_connection: NewJellyfinConnection = Body(...),
         db: Session = Depends(get_database),
         interface_group: InterfaceGroup[int, EmbyInterface] = Depends(get_jellyfin_interfaces),
-    ) -> EmbyConnection:
+        preferences: Preferences = Depends(get_preferences),
+    ) -> JellyfinConnection:
     """
-    # TODO write
+    Create a new Connection to Jellyfin; adding it to the Database and
+    adding an initialized Interface to the InterFaceGroup.
+
+    - new_connection: Details of the new Connection to add and create.
     """
 
     return add_connection(
-        db, new_connection, interface_group, log=request.state.log,
+        db, new_connection, interface_group, preferences, log=request.state.log,
     )
 
 
@@ -66,13 +74,17 @@ def add_plex_connection(
         new_connection: NewPlexConnection = Body(...),
         db: Session = Depends(get_database),
         interface_group: InterfaceGroup[int, EmbyInterface] = Depends(get_plex_interfaces),
-    ) -> EmbyConnection:
+        preferences: Preferences = Depends(get_preferences),
+    ) -> PlexConnection:
     """
-    # TODO write
+    Create a new Connection to Sonarr; adding it to the Database and
+    adding an initialized Interface to the InterFaceGroup.
+
+    - new_connection: Details of the new Connection to add and create.
     """
 
     return add_connection(
-        db, new_connection, interface_group, log=request.state.log,
+        db, new_connection, interface_group, preferences, log=request.state.log,
     )
 
 
@@ -82,13 +94,17 @@ def add_sonarr_connection(
         new_connection: NewSonarrConnection = Body(...),
         db: Session = Depends(get_database),
         interface_group: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
+        preferences: Preferences = Depends(get_preferences),
     ) -> SonarrConnection:
     """
-    # TODO write
+    Create a new Connection to sonarr; adding it to the Database and
+    adding an initialized Interface to the InterFaceGroup.
+
+    - new_connection: Details of the new Connection to add and create.
     """
 
     return add_connection(
-        db, new_connection, interface_group, log=request.state.log,
+        db, new_connection, interface_group, preferences, log=request.state.log,
     )
 
 
