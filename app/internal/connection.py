@@ -29,6 +29,7 @@ UpdateConnection = Union[UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr]
 
 def initialize_connections(
         db: Session,
+        preferences: Preferences,
         *,
         log: Logger = log,
     ) -> None:
@@ -38,6 +39,7 @@ def initialize_connections(
 
     Args:
         db: Database with Connection definitions to query.
+        preferences: Preferences whose `use_*` toggles to set.
         log: Logger for all log messages.
     """
 
@@ -52,6 +54,10 @@ def initialize_connections(
         connections: list[Connection] = db.query(Connection)\
             .filter_by(interface=interface_name)\
             .all()
+        
+        # Set use_ toggle
+        setattr(preferences, f'use_{interface_name.lower()}', bool(connections))
+        log.debug(f'Preferences.use_{interface_name.lower()} = {getattr(preferences, f"use_{interface_name.lower()}")}')
 
         # Initialize an Interface for each Connection (if enabled)
         for connection in connections:
@@ -71,6 +77,7 @@ def add_connection(
         db: Session,
         new_connection: NewConnection,
         interface_group: InterfaceGroup,
+        preferences: Preferences,
         *,
         log: Logger = log,
     ) -> Connection:
@@ -84,6 +91,8 @@ def add_connection(
         new_connection: Details of the new Connection to add.
         interface_group: InterfaceGroup to add the initialized Interface
             to (if enabled).
+        preferences: Global preferences whose interface-enable attribute
+            should be toggled.
         log: Logger for all log messages.
 
     Returns:
@@ -95,6 +104,9 @@ def add_connection(
     db.add(connection)
     db.commit()
     log.info(f'Created {connection.log_str}')
+
+    # Update global use_ attribute
+    setattr(preferences, f'use_{connection.interface.lower()}', True)
 
     # Update InterfaceGroup
     if connection.enabled:

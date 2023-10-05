@@ -58,17 +58,17 @@ class Preferences:
         'valid_image_extensions', 'specials_folder_format',
         'season_folder_format', 'sync_specials', 'remote_card_types',
         'default_card_type', 'excluded_card_types', 'default_watched_style',
-        'default_unwatched_style', 'use_tmdb', 'tmdb_api_key',
-        'tmdb_minimum_width', 'tmdb_minimum_height', 'tmdb_skip_localized',
-        'tmdb_download_logos', 'tmdb_logo_language_priority',
-        'supported_language_codes', 'use_magick_prefix', 'current_version',
-        'available_version', 'blacklisted_blueprints', 'advanced_scheduling',
-        'require_auth', 'task_crontabs', 'simplified_data_table',
-        'home_page_size', 'episode_data_page_size',
-        'stylize_unmonitored_posters', 'sources_as_table',
-        'card_type_directory', 'local_card_types',
+        'default_unwatched_style', 'use_emby', 'use_jellyfin', 'use_plex',
+        'use_sonarr', 'use_tmdb', 'tmdb_api_key', 'tmdb_minimum_width',
+        'tmdb_minimum_height', 'tmdb_skip_localized', 'tmdb_download_logos',
+        'tmdb_logo_language_priority', 'supported_language_codes',
+        'use_magick_prefix', 'current_version', 'available_version',
+        'blacklisted_blueprints', 'advanced_scheduling', 'require_auth',
+        'task_crontabs', 'simplified_data_table', 'home_page_size',
+        'episode_data_page_size', 'stylize_unmonitored_posters',
+        'sources_as_table', 'card_type_directory', 'local_card_types',
 
-        # Arguments required only for the Connection data migrations 
+        # Arguments required only for the Connection data migrations
         'emby_url', 'emby_api_key', 'emby_username', 'emby_use_ssl',
         'emby_filesize_limit_number', 'emby_filesize_limit_unit',
         'jellyfin_url', 'jellyfin_api_key', 'jellyfin_username',
@@ -178,7 +178,12 @@ class Preferences:
         self.default_watched_style = 'unique'
         self.default_unwatched_style = 'unique'
 
+        self.use_emby = False
+        self.use_jellyfin = False
+        self.use_plex = False
+        self.use_sonarr = False
         self.use_tmdb = False
+
         self.tmdb_api_key = ''
         self.tmdb_minimum_width = 0
         self.tmdb_minimum_height = 0
