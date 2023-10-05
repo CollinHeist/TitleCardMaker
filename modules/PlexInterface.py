@@ -4,6 +4,7 @@ from re import IGNORECASE, compile as re_compile
 from sys import exit as sys_exit
 from typing import Any, Callable, Optional, Union
 
+from PIL import Image
 from plexapi.exceptions import PlexApiException
 from plexapi.server import PlexServer, NotFound, Unauthorized
 from plexapi.library import Library as PlexLibrary
@@ -78,6 +79,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     """How many failed episodes result in skipping a series"""
     SKIP_SERIES_THRESHOLD = 3
 
+    """EXIF data to write to images if PMM integration is enabled"""
+    EXIF_TAG = {'key': 0x4242, 'data': 'titlecard'}
+
     """Episode titles that indicate a placeholder and are to be ignored"""
     __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
 
@@ -127,7 +131,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             sys_exit(1)
 
         # Store integration
-        self.integrate_with_pmm_overlays = integrate_with_pmm_overlays
+        self.integrate_with_pmm = integrate_with_pmm_overlays
 
         # Create/read loaded card database
         self.__posters = PersistentDatabase(self.LOADED_POSTERS_DB)
@@ -676,6 +680,24 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         plex_object.uploadPoster(filepath=filepath)
 
 
+    def __add_exif_tag(self, card: Path) -> None:
+        """
+        Add an EXIF tag to the given Card file. This adds "titlecard" at
+        0x4242, and overwrites the existing file.
+
+        Args:
+            card: Path to the Card file to modify.
+        """
+
+        # Create Image object, read EXIF data
+        card_image = Image.open(card)
+        exif = card_image.getexif()
+
+        # Add EXIF data, write modified file
+        exif[self.EXIF_TAG['key']] = self.EXIF_TAG['data']
+        card_image.save(card.resolve(), exif=exif)
+
+
     @catch_and_log('Error uploading title cards')
     def set_title_cards(self,
             library_name: str,
@@ -733,10 +755,17 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             if (card := self.compress_image(episode.destination)) is None:
                 continue
 
-            # Upload card to Plex, optionally remove Overlay label
+            # Upload card to Plex
             try:
+                # If integrating with PMM, add EXIF data
+                if self.integrate_with_pmm:
+                    self.__add_exif_tag(card)
+
+                # Upload card
                 self.__retry_upload(pl_episode, card.resolve())
-                if self.integrate_with_pmm_overlays:
+
+                # If integrating with PMM, remove label
+                if self.integrate_with_pmm:
                     pl_episode.removeLabel(['Overlay'])
             except Exception as e:
                 error_count += 1
