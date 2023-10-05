@@ -8,6 +8,9 @@ from app.internal.auth import get_current_user
 from app.internal.connection import (
     add_connection, update_connection, update_tmdb
 )
+from app.models.series import Series
+from app.models.sync import Sync
+from app.models.template import Template
 from app import models
 from app.schemas.connection import (
     EmbyConnection, JellyfinConnection, NewEmbyConnection,
@@ -409,7 +412,9 @@ def update_tmdb_connection(
 @connection_router.delete('/{interface_id}')
 def delete_connection(
         interface_id: int,
+        request: Request,
         db: Session = Depends(get_database),
+        preferences: Preferences = Depends(get_preferences),
         emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
         jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
         plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
@@ -417,10 +422,17 @@ def delete_connection(
     ) -> None:
     """
     Delete the Connection with the given ID. This also disables and
-    removes the Interface from the relevant InterfaceGroup.
+    removes the Interface from the relevant InterfaceGroup, deletes any
+    linked Syncs, removes this Connection[s libraries from any Series,
+    any Episode Data Sources from Series and templates, and deletes the
+    Connection from the global image source priority and episode data
+    source.
 
     - interface_id: ID of the Connection to delete.
     """
+
+    # Get contextual logger
+    log: Logger = request.state.log
 
     # Get Connection with this ID
     connection = get_connection(db, interface_id, raise_exc=True)
@@ -438,9 +450,47 @@ def delete_connection(
     except KeyError:
         pass
 
+    # Delete any linked Syncs
+    for sync in db.query(Sync).filter_by(interface_id=interface_id).all():
+        log.info(f'Deleting {sync.log_str}')
+        db.delete(sync)
+
+    # Remove from any linked Series libraries or data sources
+    for series in db.query(Series).all():
+        if any(library['interface_id'] == interface_id
+               for library in series.libraries):
+            log.warning(f'Removing {connection.log_str} libraries from {series.log_str}')
+            series.libraries = [
+                library for library in series.libraries
+                if library['interface_id'] != interface_id
+            ]
+
+        if series.data_source_id == interface_id:
+            log.warning(f'Removing Episode Data Source from {series.log_str}')
+            series.data_source_id = None
+
+    # Remove linked data source from Templates
+    for template in db.query(Template).filter_by(data_source_id=interface_id).all():
+        log.warning(f'Removing Episode Data Source from {template.log_str}')
+        template.data_source_id = None
+
+    # Delete from ISP if present
+    preferences.image_source_priority = [
+        source for source in preferences.image_source_priority
+        if source['interface_id'] != interface_id
+    ]
+
+    # Reset EDS if set
+    if preferences.episode_data_source['interface_id'] == interface_id:
+        preferences.episode_data_source =preferences.DEFAULT_EPISODE_DATA_SOURCE
+        log.warning(f'Reset global Episode data source')
+
     # Delete Connection
     db.delete(connection)
-    log.info(f'Deleted {connection.log_str}')
+    log.info(f'Deleting {connection.log_str}')
+
+    # Commit changes to global options and Database
+    preferences.commit()
     db.commit()
 
 
