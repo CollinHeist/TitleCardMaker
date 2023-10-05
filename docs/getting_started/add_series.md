@@ -14,8 +14,8 @@ Series can be _manually_ added to TCM.
 ## Instructions
 
 1. Navigate back to the TitleCardMaker homepage - this can be done by clicking
-:fontawesome-solid-tv: `Series` from the side navigation bar, or clicking the
-TCM logo in the top corner.
+:fontawesome-solid-tv: `Series` from the side navigation bar, or hitting
+++shift++ + ++h++ (when a text box is not selected).
 
 2. In the top right (below the search bar), click the `+ New Series` button.
 This will take you to a separate page where you can browse both Series and
@@ -31,7 +31,7 @@ Saul_ in the top search bar and click `Search`.
 
         If your default search connection is Emby, Jellyfin, or Plex and you
         don't have Better Call Saul in your server, you can choose a different
-        connection or search TMDb.
+        connection, or just search TMDb.
 
 4. TCM will now query your selected connection for all Series that match that
 name. _Better Call Saul_ should be the first result. There are now two ways to
@@ -68,18 +68,13 @@ Series page in one of a few ways:
             You can enter the Search box by typing ++f++ or ++s++ (for `f`ind
             and `s`earch) anywhere in TCM (when a textbox is not selected).
     
-    2. Return to the home page by clicking the `Series` button on the left
-    navigation bar, find _Better Call Saul_ and click either the `View` button
-    or the Series name.
-
-        !!! tip "Keyboard Shortcut"
-
-            You can return to the home page by typing ++shift++ + ++h++ (for
-            `h`ome) anywhere in TCM (when a textbox is not selected).
+    2. Return to the home page by clicking the :fontawesome-solid-tv: `Series`
+    button on the left navigation bar, find _Better Call Saul_ and click either
+    the `View` button or the Series name.
 
 7. Click the `Card Configuration` tab, then in the "Font" dropdown select the
 `Better Call Saul` font we created earlier. This _assigns_ this custom font (and
-all of it's associated customizations) to BCS. Scroll down and click `Save.` If
+all of it's associated customizations) to BCS. Scroll down and click `Save`. If
 you imported a Blueprint back in Step 5, a custom Font will already have been
 assigned.
 
