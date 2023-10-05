@@ -15,8 +15,9 @@ from app.internal.sources import download_series_logo
 from app.models.connection import Connection
 from app.models.preferences import Preferences
 from app.models.series import Series
+from app.models.sync import Sync
 from app.schemas.sync import (
-    NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync, Sync
+    NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync
 )
 
 from modules.Debug import log

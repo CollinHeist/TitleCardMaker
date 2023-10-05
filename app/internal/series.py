@@ -1,6 +1,5 @@
 from logging import Logger
 from pathlib import Path
-from shutil import copy as file_copy
 from time import sleep
 from typing import Literal, Optional, Union
 
@@ -19,7 +18,6 @@ from app.models.card import Card
 from app.models.episode import Episode
 from app.models.loaded import Loaded
 from app.models.series import Series
-from app.schemas.base import MediaServer
 from app.schemas.connection import EpisodeDataSourceInterface
 from app.schemas.preferences import Preferences
 from app.schemas.series import NewSeries, SearchResult
@@ -84,24 +82,17 @@ def load_all_media_servers(*, log: Logger = log) -> None:
         with next(get_database()) as db:
             # Get all Series
             for series in db.query(Series).all():
-                # Get the primary Media Server to load cards into
-                # TODO update
-                if series.emby_library_name is not None:
-                    media_server = 'Emby'
-                elif series.jellyfin_library_name is not None:
-                    media_server = 'Jellyfin'
-                elif series.plex_library_name is not None:
-                    media_server = 'Plex'
                 # Skip this Series if it has no library
-                else:
+                if not series.libraries:
                     log.debug(f'{series.log_str} has no Library, not loading Title Cards')
                     continue
 
                 # Load Title Cards for this Series
                 try:
-                    load_series_title_cards( # TODO update w/ multi-conn
-                        series, media_server, db, get_emby_interface(),
-                        get_jellyfin_interface(), get_plex_interface(), log=log,
+                    load_all_series_title_cards(
+                        series, db, get_emby_interfaces(),
+                        get_jellyfin_interfaces(), get_plex_interfaces(),
+                        log=log,
                     )
                 except HTTPException:
                     log.warning(f'{series.log_str} Skipping Title Card loading')
@@ -348,55 +339,28 @@ def delete_series_and_episodes(
 
 def load_series_title_cards(
         series: Series,
-        media_server: MediaServer,
+        library_name: str,
+        interface_id: int,
         db: Session,
-        emby_interface: InterfaceGroup[int, EmbyInterface],
-        jellyfin_interface: InterfaceGroup[int, JellyfinInterface],
-        plex_interface: InterfaceGroup[int, PlexInterface],
+        interface: Union[EmbyInterface, JellyfinInterface, PlexInterface],
         force_reload: bool = False,
         *,
         log: Logger = log,
     ) -> None:
     """
-    Load the Title Cards for the given Series into the associated media
-    server.
+    Load the Title Cards for the given Series into the associated
+    library.
 
     Args:
         series: Series to load the Title Cards of.
         media_server: Where to load the Title Cards into.
         db: Database to look for and add Loaded records from/to.
-        *_interfaces: Interfaces to the applicable Media Server to load
+        interface: Interfaces to the applicable Media Server to load
             Title Cards into.
         force_reload: Whether to reload Title Cards even if no changes
             are detected.
         log: Logger for all log messages.
-
-    Raises:
-        HTTPException (409): The specified Media Server cannot be
-            communciated with, or if the given Series does not have an
-            associated library.
     """
-
-    # Get associated library for the indicated media server
-    # TODO Update
-    library = getattr(series, f'{media_server.lower()}_library_name', None)
-    interface: Union[EmbyInterface, JellyfinInterface, PlexInterface] = {
-        'Emby': emby_interface,
-        'Jellyfin': jellyfin_interface,
-        'Plex': plex_interface,
-    }.get(media_server, None)
-
-    # Raise 409 if no library, or the server's interface is invalid
-    if library is None:
-        raise HTTPException(
-            status_code=409,
-            detail=f'{series.log_str} has no linked {media_server} Library',
-        )
-    if not interface:
-        raise HTTPException(
-            status_code=409,
-            detail=f'Unable to communicate with {media_server}',
-        )
 
     # Get list of Episodes to reload
     changed, episodes_to_load = False, []
@@ -408,25 +372,23 @@ def load_series_title_cards(
         card = episode.card[0]
 
         # Find previously loaded Card
-        previously_loaded = None
-        for loaded in episode.loaded:
-            if loaded.media_server == media_server:
-                previously_loaded = loaded
-                break
+        previously_loaded = db.query(Loaded)\
+            .filter_by(card_id=card.id,
+                       interface_id=interface_id,
+                       library_name=library_name)
 
-        # No previously loaded Cards for this Episode in this server, load
-        if previously_loaded is None:
+        # No previously loaded Cards, load
+        if previously_loaded.first() is None:
             episodes_to_load.append((episode, card))
             continue
 
         # There is a previously loaded card, delete loaded entry, reload
-        if (force_reload or (previously_loaded is not None
-                             and previously_loaded.filesize != card.filesize)):
+        if (force_reload
+            or (previously_loaded.first() is not None
+                and previously_loaded.first().filesize != card.filesize)):
             # Delete previously loaded entries for this server
-            for loaded in episode.loaded:
-                if loaded.media_server == media_server:
-                    db.delete(loaded)
-                    changed = True
+            previously_loaded.delete()
+            changed = True
             episodes_to_load.append((episode, card))
         # Episode does not need to be (re)loaded
         else:
@@ -434,37 +396,83 @@ def load_series_title_cards(
 
     # Load into indicated interface
     loaded_assets = interface.load_title_cards(
-        library, series.as_series_info, episodes_to_load, log=log,
+        library_name, series.as_series_info, episodes_to_load, log=log,
     )
 
     # Update database with loaded entries
     for loaded_episode, loaded_card in loaded_assets:
         try:
             db.add(Loaded(
-                media_server=media_server,
-                series=series,
-                episode=loaded_episode,
                 card_id=loaded_card.id,
+                episode_id=loaded_episode.id,
+                interface_id=interface_id,
+                series_id=series.id,
                 filesize=loaded_card.filesize,
+                library_name=library_name,
             ))
-            log.debug(f'{series.log_str} {loaded_episode.log_str} Loaded {card.log_str}')
+            log.debug(f'{series.log_str} {loaded_episode.log_str} Loaded '
+                      f'{card.log_str} into "{library_name}"')
         except InvalidRequestError:
-            log.warning(f'Error creating Loaded asset for {loaded_episode.log_str} {card.log_str}')
+            log.warning(f'Error creating Loaded asset for '
+                        f'{loaded_episode.log_str} {card.log_str}')
             continue
 
     # If any cards were (re)loaded, commit updates to database
     if changed or loaded_assets:
         db.commit()
-        log.info(f'{series.log_str} Loaded {len(loaded_assets)} Cards into {media_server}')
+        log.info(f'{series.log_str} Loaded {len(loaded_assets)} Cards into '
+                 f'"{library_name}"')
+
+
+def load_all_series_title_cards(
+        series: Series,
+        db: Session,
+        emby_interfaces: InterfaceGroup[int, EmbyInterface],
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface],
+        plex_interfaces: InterfaceGroup[int, PlexInterface],
+        force_reload: bool = False,
+        *,
+        log: Logger = log,
+    ) -> None:
+    """
+    Load the Title Cards for the given Series into all the Series
+    assigned libraries and Connections.
+
+    Args:
+        series: Series to load the Cards of.
+        media_server: Where to load the Cards into.
+        db: Database to look for and add Loaded records from/to.
+        *_interfaces: Interfaces to all Media Servers to load Cards into
+        force_reload: Whether to reload Cards even if no changes are
+            detected.
+        log: Logger for all log messages.
+    """
+
+    # Load Cards for all Emby, Jellyfin, and Plex libraries
+    for interface_type, interface_group in (('Emby', emby_interfaces),
+                                            ('Jellyfin', jellyfin_interfaces),
+                                            ('Plex', plex_interfaces)):
+        for interface_id, library in series.get_libraries(interface_type):
+            if (interface := interface_group[interface_id]) is None:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f'Unable to communicate with Connection {interface_id}',
+                )
+
+            load_series_title_cards(
+                series, library, interface_id, db, interface,
+                force_reload=force_reload, log=log,
+            )
+
+    return None
 
 
 def load_episode_title_card(
         episode: Episode,
         db: Session,
-        media_server: Literal['Emby', 'Jellyfin', 'Plex'],
-        emby_interface: Optional[EmbyInterface] = None,
-        jellyfin_interface: Optional[JellyfinInterface] = None,
-        plex_interface: Optional[PlexInterface] = None,
+        library_name: str,
+        interface_id: int,
+        interface: Union[EmbyInterface, JellyfinInterface, PlexInterface],
         *,
         attempts: int = 1,
         log: Logger = log,
@@ -484,7 +492,7 @@ def load_episode_title_card(
 
     Returns:
         Whether the Episode's Card was loaded or not. None if there is
-        no Card, or no connection to the indicated media server.
+        no Card.
     """
 
     # Only load if Episode has a Card
@@ -495,33 +503,24 @@ def load_episode_title_card(
 
     # Get previously loaded asset for comparison
     previously_loaded = db.query(Loaded)\
-        .filter_by(episode_id=episode.id, media_server=media_server)\
-        .first()
+        .filter_by(episode_id=episode.id,
+                   interface_id=interface_id,
+                   library_name=library_name)
 
     # If this asset's filesize has not changed, no need to reload
-    if (previously_loaded is not None
-        and previously_loaded.filesize == card.filesize):
+    if (previously_loaded.first() is not None
+        and previously_loaded.first().filesize == card.filesize):
         return True
 
     # New Card is different, delete Loaded entry
-    if previously_loaded is not None:
-        db.delete(previously_loaded)
-
-    # Load into the given server
-    interface: Union[EmbyInterface, JellyfinInterface, PlexInterface] = {
-        'Emby': emby_interface,
-        'Jellyfin': jellyfin_interface,
-        'Plex': plex_interface,
-    }[media_server]
-    if not interface:
-        log.debug(f'No {media_server} connection - cannot load Card')
-        return None
+    if previously_loaded.first() is not None:
+        previously_loaded.delete()
 
     loaded_assets = []
     for _ in range(attempts):
         # Load Episode's Card; exit loop if loaded
         loaded_assets = interface.load_title_cards(
-            episode.series.plex_library_name,
+            library_name,
             episode.series.as_series_info,
             [(episode, card)],
             log=log,
@@ -538,16 +537,16 @@ def load_episode_title_card(
 
     # Episode loaded, create Loaded asset and commit to database
     db.add(Loaded(
-        media_server=media_server,
-        series=episode.series,
-        episode=episode,
-        card=card,
+        card_id=card.id,
+        episode_id=episode.id,
+        interface_id=interface_id,
+        series_id=episode.series.id,
         filesize=card.filesize,
+        library_name=library_name,
     ))
-    log.debug(f'{episode.series.log_str} {episode.log_str} Loaded {card.log_str}')
+    log.debug(f'{episode.series.log_str} {episode.log_str} Loaded '
+              f'{card.log_str} into "{library_name}"')
     db.commit()
-    return None
-
     return True
 
 

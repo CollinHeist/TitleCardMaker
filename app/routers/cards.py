@@ -340,7 +340,8 @@ def create_cards_for_plex_rating_keys(
         db: Session = Depends(get_database),
         emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
         jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
-        plex_interface: PlexInterface = Depends(require_plex_interface), # TODO evaluate if Tautulli can pass query param
+        # TODO evaluate if Tautulli can pass query param
+        plex_interface: PlexInterface = Depends(require_plex_interface),
         plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
         sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
@@ -445,10 +446,23 @@ def create_cards_for_plex_rating_keys(
         # because SQLAlchemy SHOULD update child objects when the DELETE
         # is committed; but this does not happen.
         db.refresh(episode)
-        load_episode_title_card(
-            episode, db, 'Plex', plex_interface=plex_interface,
-            attempts=6, log=log,
-        )
+
+        for interface_type, interface_group in (('Emby', emby_interfaces),
+                                                ('Jellyfin', jellyfin_interfaces),
+                                                ('Plex', plex_interfaces)):
+            for interface_id, library in series.get_libraries(interface_type):
+                if (interface := interface_group[interface_id]) is None:
+                    raise HTTPException(
+                        status_code=409,
+                        detail=f'Unable to communicate with Connection {interface_id}',
+                    )
+
+                load_episode_title_card(
+                    episode, db, library, interface_id, interface,
+                    attempts=6, log=log,
+                )
+
+    return None
 
 
 @card_router.post('/sonarr', tags=['Sonarr'])
@@ -484,7 +498,6 @@ def create_cards_for_sonarr_webhook(
         name=webhook.series.title,
         year=webhook.series.year,
         imdb_id=webhook.series.imdbId,
-        sonarr_id=f'0-{webhook.series.id}',
         tvdb_id=webhook.series.tvdbId,
         tvrage_id=webhook.series.tvRageId,
     )
@@ -556,21 +569,20 @@ def create_cards_for_sonarr_webhook(
         # is committed; but this does not happen.
         db.refresh(episode)
 
-        # Attempt to load card up to 6 times # TODO update for multi-conn
-        if series.emby_library_name and emby_interface:
-            load_episode_title_card(
-                episode, db, 'Emby', emby_interface=emby_interface,
-                attempts=6, log=log
-            )
-        if series.jellyfin_library_name and jellyfin_interface:
-            load_episode_title_card(
-                episode, db, 'Jellyfin', jellyfin_interface=jellyfin_interface,
-                attempts=6, log=log
-            )
-        if series.plex_library_name and plex_interface:
-            load_episode_title_card(
-                episode, db, 'Plex', plex_interface=plex_interface,
-                attempts=6, log=log
-            )
+        # Attempt to load card in all libraries up to 5 times
+        for interface_type, interface_group in (('Emby', emby_interfaces),
+                                                ('Jellyfin', jellyfin_interfaces),
+                                                ('Plex', plex_interfaces)):
+            for interface_id, library in series.get_libraries(interface_type):
+                if (interface := interface_group[interface_id]) is None:
+                    raise HTTPException(
+                        status_code=409,
+                        detail=f'Unable to communicate with Connection {interface_id}',
+                    )
+
+                load_episode_title_card(
+                    episode, db, library, interface_id, interface,
+                    attempts=5, log=log
+                )
 
     return None
