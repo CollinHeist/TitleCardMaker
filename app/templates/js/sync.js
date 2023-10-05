@@ -386,6 +386,7 @@ async function initAll() {
           showInfoToast(`Created Sync "${response.name}"`);
           getAllSyncs();
           $(`#${modalID}`).modal('hide');
+          $(`#${formID}`).form('clear');
         }, error: response => showErrorToast({title: 'Error Creating Sync', response}),
       });
     });
