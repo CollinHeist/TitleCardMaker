@@ -70,7 +70,7 @@ class CalligraphyTitleCard(BaseCardType):
             font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_vertical_shift: int = 0,
-            logo_file: Optional[Path] = None,
+            logo: Optional[Path] = None,
             watched: bool = True,
             blur: bool = False,
             grayscale: bool = False,
@@ -92,7 +92,7 @@ class CalligraphyTitleCard(BaseCardType):
 
         self.source_file = source_file
         self.output_file = card_file
-        self.logo_file = logo_file
+        self.logo_file = None if logo is None else Path(logo)
 
         # Ensure characters that need to be escaped are
         self.season_text = self.image_magick.escape_chars(season_text)
