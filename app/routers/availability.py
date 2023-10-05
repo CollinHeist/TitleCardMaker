@@ -6,7 +6,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from requests import get as req_get
 from sqlalchemy.orm import Session
 
-from app.database.query import get_connection
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.auth import get_current_user
 from app.internal.availability import get_latest_version
@@ -26,11 +25,6 @@ from app.schemas.sync import Tag
 
 from modules.cards.available import LocalCards
 from modules.Debug import log
-from modules.EmbyInterface2 import EmbyInterface
-from modules.JellyfinInterface2 import JellyfinInterface
-from modules.PlexInterface2 import PlexInterface
-from modules.SonarrInterface2 import SonarrInterface
-from modules.TMDbInterface2 import TMDbInterface
 
 
 # URL for user card types

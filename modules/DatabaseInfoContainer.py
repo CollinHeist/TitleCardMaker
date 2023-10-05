@@ -325,13 +325,13 @@ class DatabaseInfoContainer(ABC):
 
         id_name = id_ if id_.endswith('_id') else f'{id_}_id'
 
-        if interface_id is None:
-            if isinstance((val := getattr(self, id_name)), InterfaceID):
+        if isinstance((val := getattr(self, id_name)), InterfaceID):
+            if interface_id is None:
                 raise ValueError(f'InterfaceID objects require an interface_id')
 
-            return val is not None
+            return val[interface_id] is not None
 
-        return getattr(self, id_name)[interface_id] is not None
+        return val is not None
 
 
     def has_ids(self,
