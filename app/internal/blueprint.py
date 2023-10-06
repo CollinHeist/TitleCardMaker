@@ -90,12 +90,12 @@ def get_blueprint_folders(series_name: str) -> tuple[str, str]:
     """
 
     # Remove illegal path characters
-    clean_name = CleanPath.sanitize_name(series_name).lower()
+    clean_name = CleanPath.sanitize_name(series_name)
 
     # Remove prefix words like A/An/The
     sort_name = re_sub(r'^(a|an|the)(\s)', '', clean_name, flags=IGNORECASE)
 
-    return sort_name[0], clean_name
+    return sort_name[0].upper(), clean_name
 
 
 def generate_series_blueprint(
