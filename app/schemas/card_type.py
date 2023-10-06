@@ -392,6 +392,7 @@ class TintedFrameCardType(BaseCardTypeAllText):
     middle_element: MiddleElement = 'omit'
     bottom_element: OuterElement = 'index'
     logo_size: PositiveFloat = 1.0
+    logo_vertical_shift: int = 0
     blur_edges: bool = True
 
     @root_validator(skip_on_failure=True)

@@ -100,6 +100,14 @@ class TintedFrameTitleCard(BaseCardType):
                     'Scalar for how much to scale the size of the logo element'
                 ), tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
             ), Extra(
+                name='Logo Vertical Shift',
+                identifier='logo_vertical_shift',
+                description='Vertical shift to apply to the logo',
+                tooltip=(
+                    'Positive values to shift the logo down, negative values to'
+                    'shift it up. Unit is pixels. Default is <v>0.0</v>.'
+                ),
+            ), Extra(
                 name='Edge Blurring',
                 identifier='blur_edges',
                 description='Whether to blur the edges around the frame',
@@ -152,9 +160,9 @@ class TintedFrameTitleCard(BaseCardType):
         'font_size', 'font_color', 'font_interline_spacing',
         'font_interword_spacing', 'font_kerning', 'font_vertical_shift',
         'episode_text_color', 'separator', 'frame_color', 'logo', 'top_element',
-        'middle_element', 'bottom_element', 'logo_size', 'blur_edges',
-        'episode_text_font', 'frame_width', 'episode_text_font_size',
-        'episode_text_vertical_shift',
+        'middle_element', 'bottom_element', 'logo_size', 'logo_vertical_shift',
+        'blur_edges', 'episode_text_font', 'frame_width',
+        'episode_text_font_size', 'episode_text_vertical_shift',
     )
 
     def __init__(self, *,
@@ -186,6 +194,7 @@ class TintedFrameTitleCard(BaseCardType):
             bottom_element: Element = 'index',
             logo_file: Optional[Path] = None,
             logo_size: float = 1.0,
+            logo_vertical_shift: int = 0,
             blur_edges: bool = True,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
@@ -227,6 +236,7 @@ class TintedFrameTitleCard(BaseCardType):
         self.frame_color = frame_color
         self.frame_width = frame_width
         self.logo_size = logo_size
+        self.logo_vertical_shift = logo_vertical_shift
         self.middle_element = middle_element
         self.separator = separator
         self.top_element = top_element
@@ -381,6 +391,7 @@ class TintedFrameTitleCard(BaseCardType):
             vertical_shift = 700
         else:
             vertical_shift = 0
+        vertical_shift += self.logo_vertical_shift
 
         # Determine logo height
         if self.middle_element == 'logo':
