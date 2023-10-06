@@ -82,6 +82,9 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
     """Series ID's that can be set by TMDb"""
     SERIES_IDS = ('imdb_id', 'tmdb_id', 'tvdb_id')
 
+    """EXIF data to write to images if PMM integration is enabled"""
+    EXIF_TAG = {'key': 0x4242, 'data': 'titlecard'}
+
     """Episode titles that indicate a placeholder and are to be ignored"""
     __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
 
@@ -791,10 +794,10 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             try:
                 # If integrating with PMM, add EXIF data
                 if self.integrate_with_pmm:
-                    self.__add_exif_tag(card)
+                    self.__add_exif_tag(image)
 
                 # Upload card
-                self.__retry_upload(plex_episode, card.resolve())
+                self.__retry_upload(plex_episode, image.resolve())
 
                 # If integrating with PMM, remove label
                 if self.integrate_with_pmm:
