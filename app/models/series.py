@@ -281,6 +281,8 @@ class Series(Base):
             ex_keys = list(self.extras.keys())
             ex_values = list(self.extras.values())
 
+        match_titles = None if self.match_titles else self.match_titles
+
         return {
             'font_color': self.font_color,
             'font_title_case': self.font_title_case,
@@ -300,6 +302,7 @@ class Series(Base):
             'extra_values': ex_values,
             'translations': self.translations,
             'skip_localized_images': self.skip_localized_images,
+            'match_titles': match_titles,
         }
 
 

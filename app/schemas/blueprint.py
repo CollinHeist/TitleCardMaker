@@ -34,6 +34,7 @@ class SeriesBase(BlueprintBase):
     skip_localized_images: Optional[bool] = None
 
 class BlueprintSeries(SeriesBase):
+    match_titles: Optional[bool] = None
     template_ids: Optional[list[int]] = None
     font_color: Optional[str] = None
     font_title_case: Optional[TitleCase] = None
