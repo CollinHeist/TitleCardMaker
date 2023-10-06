@@ -43,5 +43,5 @@ $(document).ready(() => {
   // if (siteTheme === 'dark') { refreshTheme(); }
   refreshTheme();
   // Highlight side bar icon of current page
-  $(`#nav-menu a[href="${location.pathname}"] i`).css('color', 'var(--tcm-blue-color)');
+  $(`#nav-menu a[href="${location.pathname}"]`).toggleClass('highlighted', true);
 });
