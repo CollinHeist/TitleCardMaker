@@ -69,11 +69,6 @@ async function initSeriesImport() {
     },
   });
   $('#import-cards-form .dropdown[data-value="series_id"]').toggleClass('loading', false);
-  // Toggle media server dropdown with load checkbox
-  $('.checkbox[data-value="load_afterwards"]').checkbox({
-    onChecked: () => $('.field[data-value="media_server"]').toggleClass('disabled', false),
-    onUnchecked: () => $('.field[data-value="media_server"]').toggleClass('disabled', true),
-  });
 }
 
 async function importSeriesForm(form) {
@@ -164,18 +159,16 @@ async function initAll() {
   })
 }
 
+/*
+ * Submit an API request to load the Cards for the Series with the given ID.
+ */
 function loadCards(seriesId) {
   // Get associated Media Server to load cards into, default Plex
-  let mediaServer = $('input[name="media_server"]')[0].value;
-  mediaServer = mediaServer === '' ? 'Plex' : mediaServer;
   $.ajax({
     type: 'POST',
-    url: `/api/series/${seriesId}/load/${mediaServer}`,
-    success: response => {
-      $.toast({class: 'blue info', title: 'Loaded Title Cards'});
-    }, error: response => {
-      $.toast({class: 'error', title: 'Error loading Title Cards', message: response.responseJSON.detail});
-    }, complete: () => {},
+    url: `/api/series/${seriesId}/load/all`,
+    success: () => showInfoToast('Loaded Title Cards'),
+    error: response => showErrorToast({title: 'Error loading Title Cards', response}),
   });
 }
 
