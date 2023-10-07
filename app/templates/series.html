@@ -1141,7 +1141,7 @@
 
               <div id-type="TVDb" class="field">
                 {% if series.tvdb_id %}
-                <label>TVDb <a href="https://thetvdb.com/search?query={{series.tvdb_id}}" target="_blank"><i class="external alternate small icon"></i></a></label>
+                <label>TVDb <a href="https://www.thetvdb.com/dereferrer/series/{{series.tvdb_id}}" target="_blank"><i class="external alternate small icon"></i></a></label>
                 <input name="tvdb_id" type="text" placeholder="{{series.tvdb_id}}" value="{{series.tvdb_id}}">
                 {% else %}
                 <label>TVDb</label>
