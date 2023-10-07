@@ -29,16 +29,19 @@ const changeLog = [
   </div>
   <div class="item">Back up global settings / preferences when performing the <b>BackupDatabase</b> task</div>
   <div class="item">Toggle side navigation bar completely when the TCM icon is clicked</div>
+  <div class="item">Display changelogs within the UI (<i>you're looking at it!</i>)</div>
+  <div class="item">Write EXIF data to all Plex uploaded images when PMM Integration is enabled</div>
 </div>
 <h2>Major Fixes</h2>
 <div class="ui ordered list">
   <div class="item">Correctly display and edit extras in Episode modals</div>
   <div class="item">Use bottom-heavy titling in Overline card</div>
-  <div class="item">Make Blueprint search case-agnostic - e.g. <b>ONE PIECE (2023)</b> will match <b>One Piece (2023)</b></div>
+  <div class="item"><s>Make Blueprint search case-agnostic - e.g. <b>ONE PIECE (2023)</b> will match <b>One Piece (2023)</b></s> - This has been moved to the next release</div>
   <div class="item">Correct YAML importing to properly sequence imports of Fonts, then Templates, then Series</div>
   <div class="item">Properly apply custom Fonts to Series when importing YAML</div>
   <div class="item">Correctly convert season folder format variables when importing YAML</div>
   <div class="item">Hide home page statistics on mobile to improve formatting</div>
+  <div class="item">Properly initialize, enable, and display the Template special syncing dropdown</div>
 </div>
 <h2>Minor Changes</h2>
 <div class="ui ordered list">
@@ -58,6 +61,11 @@ const changeLog = [
   <div class="item">Add variables for the "title-case" version of spelled episode text cardinal and ordinal numbers - i.e. "One" instead of "one" (only applies to Cards with non-fix cased season/episode text)</div>
   <div class="item">Add episode text font size extra to Olivier card</div>
   <div class="item">Add dynamic links to the assigned Fonts for Templates and Series which opens the Font page for easier editing</div>
+  <div class="item">Export Series and Template localized image rejection in Blueprints</div>
+  <div class="item">Add navbar and header via Jinja2 templates, not AJAX injection</div>
+  <div class="item">Add contextual logging to each Alembic SQL schema migration</div>
+  <div class="item">Add logo vertical shift extra to Tinted Frame card</div>
+  <div class="item">Highlight the active page in the nav bar</div>
 </div>
 <h2>Minor Fixes</h2>
 <div class="ui ordered list">
@@ -68,6 +76,11 @@ const changeLog = [
   <div class="item">Correct preview episode text in card preview endpoint</div>
   <div class="item">Pass watched attribute into Preview card model so that watched-status specific toggles (not styles) are applied</div>
   <div class="item">Properly apply blurred grayscale style modifiers to preview cards if watched and unwatched styles are both blurred and grayscale</div>
+  <div class="item">Correctly import the <b>logo_language_priority</b> YAML option</div>
+  <div class="item">Fix v1 Summary image creation</div>
+  <div class="item">Handle bad <b>TZ</b> environment declarations in Docker</div>
+  <div class="item">Export Series <b>match_titles</b> property in Blueprints</div>
+  <div class="item">Use TVDb <b>/dereferrer</b> endpoint in TVDb links</div>
 </div>`
   },
   {
