@@ -38,8 +38,8 @@ def _get_obj(
         is None.
 
     Raises:
-        HTTPException (404) if the Object cannot be found and
-        `raise_exc` is True.
+        HTTPException (404): The Object cannot be found and `raise_exc`
+            is True.
     """
 
     # No ID provided, return immediately
@@ -74,7 +74,7 @@ def get_card(
     See `_get_obj` for all details.
     """
 
-    return _get_obj(db, models.card.Card, 'Card', card_id, raise_exc)
+    return _get_obj(db, Card, 'Card', card_id, raise_exc)
 
 
 def get_episode(
