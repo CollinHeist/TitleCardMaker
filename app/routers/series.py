@@ -188,13 +188,16 @@ def search_existing_series(
     Query all defined defined series by the given parameters. This
     performs an AND operation with the given conditions.
 
-    - Arguments: Search arguments to filter the results by.
+    - name: Name to fuzzy match the Series against.
+    - year: Year to exactly filter results by.
+    - monitored: Monitored status to filter results by.
+    - *_id: Object ID to filter results by.
     """
 
     # Generate conditions for the given arguments
     conditions = []
     if name is not None:
-        conditions.append(models.series.Series.name.contains(name))
+        conditions.append(models.series.Series.fuzzy_matches(name))
     if year is not None:
         conditions.append(models.series.Series.year==year)
     if monitored is not None:
@@ -219,8 +222,8 @@ def search_existing_series(
 def lookup_series(
         request: Request,
         name: str = Query(..., min_length=1),
+        year: Optional[int] = Query(default=None),
         interface: EpisodeDataSource = Query(...),
-        # year: Optional[int] = None,
         db: Session = Depends(get_database),
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
         jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
@@ -256,10 +259,19 @@ def lookup_series(
     # Query Interface, only return max of 25 results TODO temporary?
     results: list[SearchResult] = interface_obj.query_series(
         name, log=request.state.log,
-    )[:25]
+    )
 
     # Update `added` attributes
+    final_results = []
     for result in results:
+        # Exit if 25 results have been found
+        if len(final_results) >= 25:
+            break
+
+        # Filter by year if provided
+        if year is not None and result.year != year:
+            continue
+
         # Query database for this result
         existing = db.query(models.series.Series)\
             .filter(result.series_info.filter_conditions(models.series.Series))\
@@ -267,8 +279,9 @@ def lookup_series(
 
         # Result has been added if there is an existing Series
         result.added = existing is not None
+        final_results.append(result)
 
-    return paginate_sequence(results)
+    return paginate_sequence(final_results)
 
 
 @series_router.get('/{series_id}', status_code=200)

@@ -19,7 +19,7 @@ from modules.SeriesInfo import SeriesInfo
 
 INTERNAL_ASSET_DIRECTORY = Path(__file__).parent.parent / 'assets'
 
-
+from thefuzz.fuzz import partial_ratio
 def regex_replace(pattern, replacement, string):
     """Perform a Regex replacement with the given arguments"""
 
@@ -154,6 +154,33 @@ class Series(Base):
         """Class-expression of `sort_name` property."""
 
         return func.regex_replace(r'^(a|an|the)(\s)', '', func.lower(cls.name))
+
+
+    @hybrid_method
+    def fuzzy_matches(self, other: str, threshold: int = 70) -> bool:
+        """
+        Determine whether the given name's fuzzy Levenshtein Distance
+        exceeds the given match threshold.
+
+        Args:
+            other: Name being fuzzy-matched against.
+            threshold: Requirement for a match. 0-100, 0 being all text
+                matches; 100 being perfect match.
+
+        Returns:
+            True if the fuzzy match quantity of this Series' name and
+            the given `other` name exceed the given threshold.
+        """
+
+        return partial_ratio(self.name.lower(), other.lower()) >= threshold
+
+    @fuzzy_matches.expression
+    def fuzzy_matches(cls: 'Series', other: str, threshold: int = 70):
+        """Class-expression of the `fuzzy_matches` method."""
+
+        return func.partial_ratio(
+            func.lower(cls.name), other.lower()
+        ) >= threshold
 
 
     @hybrid_property

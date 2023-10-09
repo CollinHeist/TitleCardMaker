@@ -14,6 +14,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.event import listens_for
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+from thefuzz.fuzz import partial_ratio
 
 from app.models.preferences import Preferences
 
@@ -25,10 +26,11 @@ from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
+
 # Whether a Docker execution or not
 IS_DOCKER = environ.get('TCM_IS_DOCKER', 'false').lower() == 'true'
 
-# Get URL of the SQL Database - based on whether in Docker or not
+# URL of the SQL Database - based on whether in Docker or not
 SQLALCHEMY_DATABASE_URL = 'sqlite:///./config/db.sqlite'
 if IS_DOCKER:
     SQLALCHEMY_DATABASE_URL = 'sqlite:////config/db.sqlite'
@@ -99,19 +101,22 @@ def backup_data(*, log: Logger = log) -> tuple[Path, Path]:
 Register a custom Regex replacement function that can be used on this
 database.
 """
-def regex_replace(pattern, replacement, string):
-    """Wrapper for `re_sub()`"""
-    return re_sub(pattern, replacement, string)
 
 @listens_for(engine, 'connect')
 def register_custom_functions(
         dbapi_connection,
         connection_record, # pylint: disable=unused-argument
     ) -> None:
-    """When the engine is connected, register the `regex_replace` function"""
-    dbapi_connection.create_function('regex_replace', 3, regex_replace)
+    """
+    When the engine is connected, register the regex replacement
+    function (`re_sub`) as `regex_replace`, as well as the
+    `partial_ratio` fuzzy-string match function.
+    """
+    dbapi_connection.create_function('regex_replace', 3, re_sub)
+    dbapi_connection.create_function('partial_ratio', 2, partial_ratio)
 
 
+# Session maker for connecting to each database
 SessionLocal = sessionmaker(
     bind=engine, expire_on_commit=False, autocommit=False, autoflush=False,
 )
