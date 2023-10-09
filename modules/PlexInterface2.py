@@ -562,9 +562,9 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             proxy API endpoint to obfuscate this Server's token.
         """
 
-        # Search Plex for this query.
+        # Search Plex for this query
         results: list[PlexShow] = self.__server.search(
-            query, mediatype='show', limit=25
+            query, mediatype='show', limit=50
         )
 
         def parse_ids(show: PlexShow) -> dict:

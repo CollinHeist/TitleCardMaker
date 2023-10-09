@@ -353,7 +353,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 tmdb_id=result.get('ProviderIds', {}).get('Tmdb'),
                 tvdb_id=result.get('ProviderIds', {}).get('Tvdb'),
                 tvrage_id=result.get('ProviderIds', {}).get('TvRage'),
-            ) for result in search_results['Items'][:25]
+            ) for result in search_results['Items']
             if 'ProductionYear' in result
         ]
 
