@@ -396,7 +396,7 @@ def import_blueprint(
         preferences: Preferences to use for the asset directory.
         series: Series the imported Blueprint is affecting.
         blueprint: Blueprint to parse for imported settings.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     # Get subfolder for this Series
@@ -419,11 +419,11 @@ def import_blueprint(
         if getattr(font, 'file', None) is not None:
             file_url = f'{blueprint_folder}/{font.file}'
             response = get(file_url, timeout=30)
-            if response.status_code == 404:
-                log.error(f'Specified Font file does not exist at "{file_url}"')
+            if not response.ok:
+                log.error(f'Error downloading Font file from "{file_url}"')
                 raise HTTPException(
-                    status_code=404,
-                    detail=f'Blueprint Font file not found',
+                    status_code=response.status_code,
+                    detail=f'Font returned error - {response.reason}',
                 )
             font_content = response.content
 
