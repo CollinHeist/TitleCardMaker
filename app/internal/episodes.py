@@ -164,7 +164,7 @@ def get_all_episode_data(
 
     Raises:
         HTTPException (404): A Series Template does not exist.
-        HTTPException (409): The indicted episode data source cannot be
+        HTTPException (409): The indicated Episode Data Source cannot be
             communicated with.
     """
 
@@ -179,13 +179,17 @@ def get_all_episode_data(
     )
 
     # Raise 409 if cannot communicate with the Series' Episode data source
-    interface = {
-        'Emby': emby_interfaces,
-        'Jellyfin': jellyfin_interfaces,
-        'Plex': plex_interfaces,
-        'Sonarr': sonarr_interfaces,
-        'TMDb': {0: tmdb_interface},
-    }[episode_data_source.media_server][episode_data_source.interface_id]
+    if episode_data_source.interface == 'TMDb':
+        interface = tmdb_interface
+    elif episode_data_source.interface_id in emby_interfaces:
+        interface = emby_interfaces[episode_data_source.interface_id]
+    elif episode_data_source.interface_id in jellyfin_interfaces:
+        interface = jellyfin_interfaces[episode_data_source.interface_id]
+    elif episode_data_source.interface_id in plex_interfaces:
+        interface = plex_interfaces[episode_data_source.interface_id]
+    elif episode_data_source.interface_id in sonarr_interfaces:
+        interface = sonarr_interfaces[episode_data_source.interface_id]
+
     if interface is None:
         if raise_exc:
             raise HTTPException(
@@ -194,23 +198,23 @@ def get_all_episode_data(
             )
         return []
 
+    if episode_data_source.interface in ('Sonarr', 'TMDb'):
+        return interface.get_all_episodes(None, series.as_series_info, log=log)
+
     # Verify Series has an associated Library (if EDS is a media server)
-    library = series.get_library(
-        episode_data_source.media_server, episode_data_source.interface_id,
-    )
-    if (episode_data_source.media_server in ('Emby', 'Jellyfin', 'Plex')
-        and library is None):
+    libraries = list(series.get_libraries(episode_data_source.interface_id))
+    if not libraries:
         if raise_exc:
-            eds_str = f'{episode_data_source.media_server}[{episode_data_source.interface_id}]'
             raise HTTPException(
                 status_code=409,
-                detail=f'Series does not have an associated {eds_str} Library'
+                detail=f'Series does not have a Library for Connection[{episode_data_source.interface_id}]'
             )
+        log.error(f'Series does not have a Library for Connection[{episode_data_source.interface_id}]')
         return []
 
-    interface: Union[EmbyInterface, JellyfinInterface, PlexInterface,
-                     SonarrInterface, TMDbInterface] = interface
-    return interface.get_all_episodes(library, series.as_series_info, log=log)
+    return interface.get_all_episodes(
+        libraries[0], series.as_series_info, log=log
+    )
 
 
 def refresh_episode_data(

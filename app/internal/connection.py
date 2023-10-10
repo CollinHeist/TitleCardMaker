@@ -54,7 +54,7 @@ def initialize_connections(
         connections: list[Connection] = db.query(Connection)\
             .filter_by(interface=interface_name)\
             .all()
-        
+
         # Set use_ toggle
         setattr(preferences, f'use_{interface_name.lower()}', bool(connections))
         log.debug(f'Preferences.use_{interface_name.lower()} = {getattr(preferences, f"use_{interface_name.lower()}")}')
