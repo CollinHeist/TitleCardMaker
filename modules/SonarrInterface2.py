@@ -327,7 +327,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
                 sonarr_id=get_sonarr_id(result.get('id', None)),
                 tvdb_id=result.get('tvdbId', None),
                 tvrage_id=result.get('tvRageId', None) or None,
-            ) for result in search_results[:25] if result['year']
+            ) for result in search_results if result['year']
         ]
 
 
