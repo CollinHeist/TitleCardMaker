@@ -63,7 +63,7 @@ class InterfaceID:
         self._type = type_
 
         # No ID provided
-        if id_ is None:
+        if not id_:
             self._ids = {}
         else:
             if '-' in id_:
@@ -150,9 +150,9 @@ class InterfaceID:
         """
 
         if isinstance(other, str):
-            return self >= InterfaceID(other)
+            return self > InterfaceID(other)
 
-        return set(self._ids) >= set(other._ids)
+        return set(self._ids) > set(other._ids)
 
 
     def __lt__(self, other: Union[str, 'InterfaceID']) -> bool:
@@ -173,9 +173,9 @@ class InterfaceID:
         """
 
         if isinstance(other, str):
-            return self <= InterfaceID(other)
+            return self < InterfaceID(other)
 
-        return set(self._ids) <= set(other._ids)
+        return set(self._ids) < set(other._ids)
 
 
     def __bool__(self) -> bool:
@@ -207,16 +207,18 @@ class InterfaceID:
         )
 
 
-    def __add__(self, other: Union[str, 'InterfaceID']) -> None:
+    def __add__(self, other: Union[str, 'InterfaceID']) -> 'InterfaceID':
         """
         Add this object to the given object, returning the combination
-        of their IDs.
+        of their IDs. This objects IDs take priority in any interface
+        ID conflicts.
 
         >>> id0 = InterfaceID('0:123,1:234')
-        >>> (str(id0 + InterfaceID('1:999,2:987'))
+        >>> id1 = InterfaceID('1:999,2:987')
+        >>> str(id0 + id1) # id0's 1:234 takes priority of id1's 1:999
         '0:123,1:234,2:987'
         """
-        
+
         if not isinstance(other, (str, InterfaceID)):
             raise TypeError('Can only add IDs from a str or InterfaceID')
 
@@ -225,7 +227,7 @@ class InterfaceID:
 
         return_id = InterfaceID(str(self), type_=self._type)
         for interface_id, id_ in other._ids.items():
-            if id_.get(interface_id) is None:
+            if return_id[interface_id] is None:
                 return_id[interface_id] = id_
 
         return return_id
@@ -364,10 +366,18 @@ class DatabaseInfoContainer(ABC):
 
         # Go through all attributes of this object
         for attr in self.__slots__:
-            # Attribute is ID, this container doesn't have, other does
-            if (attr.endswith('_id')
-                and not getattr(self, attr)
-                and getattr(other, attr)):
-                # Transfer ID
-                log.debug(f'Copied {attr}[{getattr(other, attr)}] into {self!r}')
+            # Skip non-ID attributes
+            if not attr.endswith('_id'):
+                continue
+
+            # If this is an InterfaceID, combine
+            if isinstance(getattr(self, attr), InterfaceID):
+                if getattr(other, attr) > getattr(self, attr):
+                    # log.debug(f'Merging {attr} <-- {getattr(self, attr)!r} + {getattr(other, attr)!r}')
+                    setattr(self, attr, getattr(self, attr) + getattr(other, attr))
+            # Regular ID, copy if this info is missing
+            elif not getattr(self, attr) and getattr(other, attr):
+                # log.debug(f'Copying {attr} <- {getattr(other, attr)}')
                 setattr(self, attr, getattr(other, attr))
+
+        return None
