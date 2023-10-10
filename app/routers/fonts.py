@@ -1,4 +1,6 @@
+from string import printable, punctuation, whitespace
 from typing import Literal
+from unicodedata import category as unicode_category, normalize
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, UploadFile
 from sqlalchemy.orm import Session
@@ -9,6 +11,7 @@ from app.internal.auth import get_current_user
 from app.models.font import Font
 from app.models.preferences import Preferences
 from app.schemas.font import NamedFont, NewNamedFont, UpdateNamedFont
+from modules.FontValidator2 import FontValidator
 
 
 # Create sub router for all /fonts API requests
@@ -215,3 +218,72 @@ def delete_font(
 
     db.delete(font)
     db.commit()
+
+
+@font_router.get('/{font_id}/replacements', status_code=200)
+def get_suggested_font_replacements(
+        request: Request,
+        font_id: int,
+        db: Session = Depends(get_database),
+    ) -> dict[str, str]:
+    """
+    
+    """
+
+    # Get contextual logger
+    log = request.state.log
+
+    # Get Font with this ID, raise 404 if DNE
+    font = get_font(db, font_id, raise_exc=True)
+
+    # Font has no custom file, do not suggest replacements
+    if font.file_name is None:
+        return {}
+
+    # Get any titles associated with this Font - look at all Episodes
+    # using this Font; all Episodes of all Series using this Font; all
+    # Episodes using a Template using this Font; and all Episodes of all
+    # Series using a Template that use this Font
+    titles = set(episode.title for episode in font.episodes) \
+        | set(episode.title for series in font.series
+                            for episode in series.episodes) \
+        | set(episode.title for template in font.templates
+                            for episode in template.episodes) \
+        | set(episode.title for template in font.templates
+                            for series in template.series
+                            for episode in series.episodes)
+
+    # Get all (non-whitespace) letters in these titles, add base printables
+    letters = (set(''.join(titles)) | set(printable)) - set(whitespace)
+
+    # Query FontValidator for this Font
+    validator = FontValidator(font.file)
+    missing = validator.get_missing_characters(letters)
+    log.debug(f'Identified missing characters: {" ".join(missing)}')
+
+    replacements = {}
+    bad = []
+    for char in missing:
+        # Remove any unicode non-spacing comibing marks - e.g. é -> ´e -> e
+        replacement = ''.join(ch for ch in normalize('NFD', char)
+                              if unicode_category(ch) != 'Mn')
+
+        # If this replacement is missing, try the lowercase equivalent
+        if replacement in missing and replacement.lower() not in missing:
+            replacement = replacement.lower()
+
+        # If replacement is still missing, suggest space if character is
+        # punction
+        if replacement in missing and char in punctuation:
+            replacement = ' '
+
+        # If the replacement is defined, add to replacements set
+        if replacement not in missing:
+            replacements[char] = replacement
+        else:
+            bad.append(char)
+
+    if bad:
+        log.warning(f'No suitable replacement for characters {" ".join(bad)}')
+
+    return replacements
