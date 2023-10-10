@@ -38,6 +38,17 @@ body {
   border-radius: 10px;
 }
 
+/* Stylize logo */
+#login img {
+  /* Center */
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  /* Limit size */
+  max-width: 45px;
+  max-height: 45px;
+}
+
 #login h2 {
   margin: 0 0 30px;
   padding: 0;
@@ -99,10 +110,11 @@ body {
   text-transform: uppercase;
   overflow: hidden;
   transition: 0.5s;
-  margin-top: 40px;
+  margin-top: 20px;
   letter-spacing: 4px;
 }
 
+/* Style login button when hovered */
 #login form a:hover,
 #login form a:focus {
   background: var(--tcm-blue-color);
@@ -112,4 +124,23 @@ body {
               0 0 25px var(--tcm-blue-color)
               0 0 50px var(--tcm-blue-color)
               0 0 100px var(--tcm-blue-color);
+}
+
+#login .forgot {
+  /* Mouse hover effect */
+  cursor: pointer;
+  /* Center */
+  display: inline-block;
+  left: 50%;
+  transform: translate(-50%);
+  position: relative;
+  /* Font styling */
+  color: #787e85;
+  font-size: 0.8em;
+}
+
+/* Style forgot button when hovered */
+#login .forgot:hover,
+#login .forgot:focus {
+  color: crimson;
 }
