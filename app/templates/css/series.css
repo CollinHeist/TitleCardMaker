@@ -90,25 +90,25 @@
 /* Desktop only formatting */
 @media (min-width: 768px) {
   /* Limit card size to 33% */
-  #files-list .card {
+  #source-images .card {
     max-width: calc(33% - 1em);
   }
 }
 
 /* Show cursor on all file card icons, and images in tmdb modal */
-#files-list .card .icon,
+#source-images .card .icon,
 #browse-tmdb-modal .image.content .images a,
 #browse-tmdb-logo-modal .image.content .images a {
   cursor: pointer;
 }
 
 /* File search icon should color semantic blue on hover */
-#files-list .card i[data-action="search"]:hover {
+#source-images .card i[data-action="search"]:hover {
   color: #2185d0;
 }
 
 /* Upload file icon should color semantic green on hover */
-#files-list .card i[data-action="upload"]:hover {
+#source-images .card i[data-action="upload"]:hover {
   color: #21ba45;
 }
 
@@ -116,6 +116,10 @@
 img[data-action="browse-tmdb"] {
   height: 14px;
   padding-right: 3px;
+}
+
+.tab[data-tab="files"] .accordion .image {
+  width: 32%;
 }
 
 /* Add padding between images on TMDb image browser */

@@ -264,6 +264,18 @@
     </div>
   </template>
 
+  <template id="preview-image-template">
+    <div class="ui image"> <!-- transition hidden -->
+      <div class="ui bottom dimmer">
+        <div class="content">
+          <h3>Season {x} Episode {y}</h3>
+              {file name}
+        </div>
+      </div>
+      <img loading="lazy">
+    </div>
+  </template>
+
   <template id="file-row-template">
     <tr class="center aligned"> 
       <td data-column="season_number" class="center aligned collapsing"></td>
@@ -605,7 +617,7 @@
               <div class="sixteen wide column">
                 <div class="ui visible floating info message">
                   <i class="info circle icon"></i>
-                  Options are listed in increasing priority
+                  Options are listed in <b>increasing</b> priority.
                 </div>
 
                 <form id="card-config-form" class="ui compact form">
@@ -1021,12 +1033,19 @@
 
           <!-- Files Tab -->
           <div class="ui bottom attached tab segment" data-tab="files">
-            <div class="ui segment">
-              <span class="ui text">
-                Source images are located within <span class="ui blue text">{{series.source_directory}}</span>
-              </span>
+            <h2 class="ui dividing header">Title Cards</h2>
+            <div class="ui styled fluid accordion">
+              <div class="title">
+                <i class="dropdown icon"></i>
+                View Images
+              </div>
+              <div class="content">
+                <div id="card-previews" class="ui images"><!-- Added asynchrously --></div>
+                <div id="card-pagination" class="ui attached pagination menu"><!-- Added asynchrously --></div>
+              </div>
             </div>
-            <h3 class="ui dividing header">Source Images</h3>
+
+            <h2 class="ui dividing header" data-tooltip="test">Source Images</h2>
             {% if preferences.sources_as_table %}
             <div class="ui scrolling long container">
               <table class="ui compact striped head stuck sortable unstackable scrolling long table">
@@ -1052,8 +1071,23 @@
             {% endif %}
             <div id="file-pagination" class="ui attached pagination menu"><!-- Added asynchrously --></div>
 
+            <div class="ui styled fluid accordion">
+              <div class="title">
+                <i class="dropdown icon"></i>
+                View Images
+              </div>
+              <div class="content">
+                <div id="source-image-previews" class="ui images"><!-- Added asynchrously --></div>
+              </div>
+            </div>
+
+            <div class="ui visible floating info message">
+              <i class="info circle icon"></i>
+              Source images are located within <span class="ui blue text">{{series.source_directory}}</span>
+            </div>
+
             <!-- Logo -->
-            <h3 class="ui dividing header">Logo</h3>
+            <h2 class="ui dividing header">Logo</h2>
             {% if preferences.use_tmdb %}
             <div class="ui blue tertiary button" onclick="browseLogos();">
               Browse
@@ -1066,7 +1100,7 @@
             <img id="logo" class="ui rounded image" src="/source/{{series.path_safe_name}}/logo.png" loading="lazy" onerror="this.remove();">
 
             <!-- Backdrop -->
-            <h3 class="ui dividing header">Backdrop</h3>
+            <h2 class="ui dividing header">Backdrop</h2>
             {% if preferences.use_tmdb %}
             <div class="ui blue tertiary button" onclick="browseBackdrops();">
               Browse
