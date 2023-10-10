@@ -62,7 +62,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             downloaded_only: Whether to ignore Episode that are not
                 downloaded when querying Sonarr for Episode data.
             interface_id: Interface ID of this interface.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Raises:
             HTTPException (401) if the Sonarr system status cannot be
@@ -134,23 +134,25 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             log: Logger = log,
         ) -> list[tuple[SeriesInfo, str]]:
         """
-        Get all the series within Sonarr, filtered by the given parameters.
+        Get all the series within Sonarr, filtered by the given
+        parameters.
 
          Args:
-            required_tags: List of tags to filter return by. If provided, only
-                series that have all of the given tags are returned.
-            excluded_tags: List of tags to filter return by. If provided, series
-                with any of the given tags are excluded from return.
-            monitored_only: Whether to filter return to exclude series that are
-                unmonitored within Sonarr.
-            downloaded_only: Whether to filter return to exclude series that do
-                not have any downloaded episodes.
+            required_tags: List of tags to filter return by. Only series
+                that have all of the given tags are returned.
+            excluded_tags: List of tags to filter return by. Series with
+                any of the given tags are excluded from return.
+            monitored_only: Whether to filter return to exclude series
+                that are unmonitored within Sonarr.
+            downloaded_only: Whether to filter return to exclude series
+                that do not have any downloaded episodes.
             series_type: Optional series type to filter series by.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
-            List of tuples. Tuple contains the SeriesInfo object for the series,
-            and the Path to the series' media as reported by Sonarr.
+            List of tuples. Tuple contains the SeriesInfo object for the
+            series, and the Path to the series' media as reported by
+            Sonarr.
         """
 
         # Construct GET arguments
@@ -191,7 +193,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
                 or show['year'] == 0):
                 continue
 
-            # Construct SeriesInfo object for this show, do not use MediaInfoSet
+            # Construct SeriesInfo object for this show
             series_info = SeriesInfo(
                 show['title'],
                 show['year'],
@@ -219,7 +221,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
         Args:
             library_name: Unused argument.
             series_info: SeriesInfo to update.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # If all possible ID's are defined, exit
@@ -273,7 +275,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
 
         Args:
             query: Series name or substring to look up.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of SearchResults for the given query. Results include
@@ -343,7 +345,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
         Args:
             library_name: Unused argument.
             series_info: SeriesInfo for the entry.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of tuples of the EpisodeInfo objects and None (as the
@@ -435,7 +437,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             library_name: Unused argument.
             series_info: SeriesInfo for the entry.
             episode_infos: List of EpisodeInfo objects to update.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # Get all episodes for this series
