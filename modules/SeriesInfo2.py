@@ -148,14 +148,14 @@ class SeriesInfo(DatabaseInfoContainer):
 
 
     @property
-    def ids(self) -> dict[str, Union[str, int, InterfaceID]]:
-        """Dictionary of ID's for this object."""
+    def ids(self) -> dict[str, Union[str, int]]:
+        """Dictionary of IDs for this object."""
 
         return {
-            'emby_id': self.emby_id,
+            'emby_id': str(self.emby_id),
             'imdb_id': self.imdb_id,
-            'jellyfin_id': self.jellyfin_id,
-            'sonarr_id': self.sonarr_id,
+            'jellyfin_id': str(self.jellyfin_id),
+            'sonarr_id': str(self.sonarr_id),
             'tmdb_id': self.tmdb_id,
             'tvdb_id': self.tvdb_id,
             'tvrage_id': self.tvrage_id,

@@ -288,13 +288,13 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     @property
-    def ids(self) -> dict[str, Any]:
+    def ids(self) -> dict[str, Union[str, int, None]]:
         """This object's ID's (as a dictionary)"""
 
         return {
-            'emby_id': self.emby_id,
+            'emby_id': str(self.emby_id),
             'imdb_id': self.imdb_id,
-            'jellyfin_id': self.jellyfin_id,
+            'jellyfin_id': str(self.jellyfin_id),
             'tmdb_id': self.tmdb_id,
             'tvdb_id': self.tvdb_id,
             'tvrage_id': self.tvrage_id,
