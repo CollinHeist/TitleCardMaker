@@ -336,6 +336,38 @@ class Series(Base):
 
 
     @hybrid_method
+    def update_from_series_info(self, other: SeriesInfo) -> bool:
+        """
+        Update this Series' database IDs from the given SeriesInfo.
+
+        >>> s = Series(..., imdb_id='tt1234', sonarr_id='0:9876')
+        >>> si = SeriesInfo(..., sonarr_id='1:456', tmdb_id=50,
+                                 imdb_id='tt990')
+        >>> s.update_from_series_info(si)
+        >>> s.imdb_id, s.sonarr_id, s.tmdb_id
+        ('tt1234', '0:9876,1:456', 50)
+
+        Args:
+            other: Other set of Series info to merge into this.
+
+        Returns:
+            Whether this object was changed at all.
+        """
+
+        info = self.as_series_info
+        info.copy_ids(other)
+
+        changed = False
+        for id_type, id_ in info.ids.items():
+            if id_ and getattr(self, id_type) != id_:
+                print(f'{self.log_str}.{id_type} | {getattr(self, id_type)} -> {id_}')
+                setattr(self, id_type, id_)
+                changed = True
+
+        return changed
+
+
+    @hybrid_method
     def comes_before(self, name: str) -> bool:
         """
         Whether the given name comes before this Series.

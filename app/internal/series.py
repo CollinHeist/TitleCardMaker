@@ -152,13 +152,13 @@ def set_series_database_ids(
         log: Logger = log,
     ) -> bool:
     """
-    Set the database ID's of the given Series.
+    Set the database IDs of the given Series.
 
     Args:
-        series: Series to set the ID's of.
+        series: Series to set the IDs of.
         db: Database to commit changes to.
-        *_interface: Interface to query for database ID's from.
-        commit: Whether to commit changes after setting any ID's.
+        *_interface: Interface to query for database IDs from.
+        commit: Whether to commit changes after setting any IDs.
         log: Logger for all log messages.
 
     Returns:
@@ -178,32 +178,11 @@ def set_series_database_ids(
             interface.set_series_ids(library_name, series_info, log=log)
     for _, interface in sonarr_interfaces:
         interface.set_series_ids(None, series_info, log=log)
-        break
     if tmdb_interface:
         tmdb_interface.set_series_ids(None, series_info, log=log)
 
-    # Update database if new ID's are available; first do basic IDs
-    changed = False
-    for id_type in ('imdb_id', 'tmdb_id', 'tvdb_id', 'tvrage_id'):
-        if getattr(series, id_type) is None and series_info.has_id(id_type):
-            setattr(series, id_type, getattr(series_info, id_type))
-            changed = True
-
-    # Update interface IDs
-    for id_type in ('emby_id', 'jellyfin_id', 'sonarr_id'): # TODO add rating key
-        # If this InterfaceID contains more data than currently defined, add
-        if getattr(series, id_type) is None:
-            continue # TODO remove when DB migration is added for None -> ''
-        if getattr(series_info, id_type) > getattr(series, id_type):
-            setattr(
-                series,
-                id_type,
-                str(getattr(series_info, id_type) + getattr(series, id_type))
-            )
-            changed = True
-            log.info(f'series.{id_type} = {getattr(series, id_type)}') # TODO temporary logging
-
-    if commit and changed:
+    # Update Series with new IDs
+    if (changed := series.update_from_series_info(series_info)) and commit:
         db.commit()
 
     return changed
