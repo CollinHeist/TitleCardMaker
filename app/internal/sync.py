@@ -169,21 +169,16 @@ def run_sync(
 
     # Process all Series returned by Sync
     for series_info, lib_or_dir in all_series:
-        # Look for existing Series, skip if already exists
+        # Look for existing Series
         existing = db.query(Series)\
             .filter(series_info.filter_conditions(Series))\
             .first()
-        if existing:
-            continue
 
         # Determine this Series' libraries
         libraries = []
         if sync.interface == 'Sonarr':
             # Get the Connection associated with this Sync
-            connection = db.query(Connection)\
-                .filter_by(id=sync.interface_id)\
-                .first()
-            if connection is None:
+            if (connection := sync.connection) is None:
                 raise HTTPException(
                     status_code=409,
                     detail=f'Unable to communicate with {sync.interface}',
@@ -213,6 +208,20 @@ def run_sync(
                 'name': lib_or_dir
             })
 
+        # If already exists in Database, update IDs and libraries then skip
+        if existing:
+            # Add any new libraries
+            existing.libraries += [
+                library for library in libraries
+                if library not in existing.libraries
+            ]
+            # Update IDs
+            existing.update_from_series_info(series_info)
+            db.commit()
+            continue
+
+        # Create Series, add to database and immediately commit so any
+        # subsequent same-Series can be matched
         series = Series(
             name=series_info.name,
             year=series_info.year,
@@ -222,12 +231,11 @@ def run_sync(
             **series_info.ids,
         )
         db.add(series)
+        db.commit()
         added.append(series)
 
-    # If anything was added, commit updates to database
-    if added:
-        db.commit()
-    else:
+    # Nothing added, log
+    if not added:
         log.debug(f'{sync.log_str} No new Series synced')
 
     # Process each newly added series
