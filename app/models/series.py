@@ -1,6 +1,6 @@
 from pathlib import Path
 from re import sub as re_sub, IGNORECASE
-from typing import Any, Iterator, Literal, Optional
+from typing import Any, Iterator, Literal, Optional, Union
 
 from sqlalchemy import (
     Boolean, Column, Float, ForeignKey, Integer, String, JSON, func
@@ -439,10 +439,12 @@ class Series(Base):
 
     @hybrid_method
     def get_libraries(self,
-            interface: Literal['Emby', 'Jellyfin', 'Plex'],
+            interface: Union[int, Literal['Emby', 'Jellyfin', 'Plex']],
         ) -> Iterator[tuple[int, str]]:
         """
-        Iterate over this Series' libraries of the given server type.
+        Iterate over this Series' libraries of the given server type or
+        interface ID.
+
         >>> s = Series(...)
         >>> s.libraries = [
             {'interface': 'Emby', 'interface_id': 0, 'name': 'TV'},
@@ -451,40 +453,19 @@ class Series(Base):
         ]
         >>> list(s.get_libraries('Plex'))
         [(0, 'TV'), (1, 'Anime')]
+        >>> list(s.get_libraries(1))
+        [(1, 'Anime')]
 
         Args:
-            interface: Interface type whose libraries to yield.
+            interface: Interface type or ID whose libraries to yield.
 
         Yields:
             Tuple of the interface ID and library name.
         """
 
         for library in self.libraries:
-            if library['interface'] == interface:
+            if ((isinstance(interface, int)
+                    and library['interface_id'] == interface)
+                or (isinstance(interface, str)
+                    and library['interface'] == interface)):
                 yield library['interface_id'], library['name']
-
-
-    @hybrid_method
-    def get_library(self,
-            interface: Literal['Emby', 'Jellyfin', 'Plex'],
-            interface_id: int,
-        ) -> Optional[str]:
-        """
-        Get this Series' library name with the given server type and
-        interface ID.
-
-        Args:
-            interface: Interface type of the library.
-            interface_id: Interface ID of the library.
-
-        Returns:
-            Name of the library with the given server + ID match; None
-            if there is no matching library.
-        """
-
-        for library in self.libraries:
-            if (library['media_server'] == interface
-                and library['interface_id'] == interface_id):
-                return library['name']
-
-        return None
