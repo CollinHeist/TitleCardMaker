@@ -221,3 +221,43 @@ html.ios body {
   }
 }
 
+/* Add glow effect on selected input fields */
+body.dark input:active,
+body.dark input:focus {
+  /* Dark theme */
+  box-shadow: 0px 0px 15px white !important;
+}
+body:not(.dark) input:active,
+body:not(.dark) input:focus {
+  /* Light theme */
+  box-shadow: 0px 0px 15px #b6b6b6 !important;
+}
+
+/* Format help notes */
+p.help {
+  color: #737373;
+  font-size: 0.95em;
+  font-style: italic;
+  padding-top: 0.2em;
+  /* display: none; */
+}
+
+/* Make help text for active inputs more evident */
+body.dark input:active ~ p.help,
+body.dark input:focus ~ p.help,
+body.dark .dropdown:hover ~ p.help,
+body.dark .dropdown.active ~ p.help,
+body.dark .field.checkbox:hover p.help
+body.dark .fields:hover ~ p.help {
+  /* Dark theme */
+  color: #cce2ff; /* #d7dfeb */
+  /* display: block; */
+}
+body:not(.dark) input:active ~ p.help,
+body:not(.dark) input:focus ~ p.help,
+body:not(.dark) .dropdown:hover ~ p.help,
+body:not(.dark) .dropdown.active ~ p.help,
+body:not(.dark) .field.checkbox:hover p.help {
+  /* Light theme */
+  color: #171515;
+}

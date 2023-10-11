@@ -9,9 +9,12 @@ function refreshTheme() {
   $('#main-content .ui:not(.uninvertible)').toggleClass('inverted', inverted);
   $('.modal:not(.basic):not(.uninvertible), .modal:not(.basic):not(.uninvertible) >* .ui:not(.uninvertible), .accordion:not(.uninvertible), .accordion:not(.uninvertible) >* .ui:not(.uninvertible)').toggleClass('inverted', inverted);
   if (inverted) {
-    $('body')[0].style.setProperty('background-image', 'linear-gradient(to bottom right, var(--background-color-dark), #313131)');
+    // $('body')[0].style.setProperty('background-image', 'linear-gradient(to bottom right, var(--background-color-dark), #313131)');
+    $('body')[0].style.setProperty('background-image', 'linear-gradient(to bottom right, rgb(29,29,29), rgb(40,40,40))');
+    document.querySelector('body').classList.add('dark');
   } else {
     $('body')[0].style.setProperty('background-image', 'linear-gradient(to bottom right, var(--background-color-light), #d9d9d9)');
+    document.querySelector('body').classList.remove('dark');
   }
 }
 

@@ -43,7 +43,7 @@ function addSeries(result, resultElementId) {
     data: JSON.stringify(generateNewSeriesObject(result)),
     contentType: 'application/json',
     success: series => {
-      $(`#${resultElementId}`).toggleClass('disabled', true);
+      document.getElementById(resultElementId).classList.add('disabled');
       showInfoToast(`Added Series "${series.name}"`);
     }, error: response => showErrorToast({title: 'Error Adding Series', response}),
     complete: () => $('#add-series-modal').modal('hide'),

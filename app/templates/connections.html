@@ -43,9 +43,10 @@
       <h2 id="authentication" class="ui dividing header">Authentication</h2>
       <div class="connection-form">
         <!-- Enable button -->
-        <div data-value="require_auth" class="ui left aligned checkbox field" data-tooltip="Whether to require a username and password">
-          <input type="checkbox">
+        <div data-value="require_auth" class="ui left aligned checkbox field">
           <label>Require Authentication</label>
+          <input type="checkbox">
+          <p class="help">Whether to require a username and password to access TCM.</p>
         </div>
 
         <form id="auth-settings" class="ui fluid form">
@@ -87,17 +88,19 @@
         </div>
 
         <form id="emby-settings" class="ui fluid form">
-          <div class="ui disabled required eight wide field" data-tooltip="Host URL to communicate with Emby">
+          <div class="ui disabled required eight wide field">
             <label>URL</label>
             <input name="url" type="text" value="{{preferences.emby_url}}">
+            <p class="help">Host URL or IP Address of the server (including the port number).</p>
           </div>
 
-          <div class="ui disabled required eight wide field" data-tooltip="API key to authenticate communication with Emby">
+          <div class="ui disabled required eight wide field">
             <label>API Key</label>
             <input name="api_key" type="text" class="private" value="{{preferences.emby_api_key}}">
+            <p class="help">API key to authenticate communication.</p>
           </div>
 
-          <div class="ui disabled required field" data-tooltip="Username of the Emby user to query watch statuses from">
+          <div class="ui disabled required field">
             <label>Username</label>
             <div data-value="emby_username" class="ui compact selection dropdown">
               <input type="hidden" name="username">
@@ -105,22 +108,24 @@
               <div class="default text">{{preferences.emby_username}}</div>
               <div class="menu"></div>
             </div>
+            <p class="help">Username of the user to query Episode watched statuses from.</p>
           </div>
 
-          <div class="ui left aligned disabled checkbox field" data-tooltip="Connect with HTTPS instead of HTTP">
+          <div class="ui left aligned disabled checkbox field">
+            <label>Use SSL</label>
             {% if preferences.emby_use_ssl %}
             <input name="use_ssl" type="checkbox" checked="">
             {% else %}
             <input name="use_ssl" type="checkbox">
             {% endif %}
-            <label for="emby-use-ssl-checkbox">Use SSL</label>
+            <p class="help">Connect with HTTPS instead of HTTP.</p>
           </div>
 
           <div class="ui disabled field">
             <label>Filesize Limit</label>
             <div class="ui fields">
-              <div class="two wide field" data-tooltip="Maximum file size of assets to upload to Emby">
-                <input name="filesize_limit_number" type="number" min="0" value="{{preferences.emby_filesize_limit_number}}">
+              <div class="two wide field">
+                <input name="filesize_limit_number" type="number" min="0" value="{{preferences.emby_filesize_limit_number}}" placeholder="None">
               </div>
               <div class="three wide field">
                 <div data-value="emby_filesize_limit_unit" class="ui selection dropdown">
@@ -131,6 +136,11 @@
                 </div>
               </div>
             </div>
+            <p class="help">
+              Maximum file size of Title Cards to upload.
+              <br>
+              Title Cards larger than this will be compressed.
+            </p>
           </div>
 
           <div class="ui error message"></div>
@@ -160,17 +170,19 @@
         </div>
 
         <form id="jellyfin-settings" class="ui fluid form">
-          <div class="ui disabled required eight wide field" data-tooltip="Host URL to communicate with Jellyfin">
+          <div class="ui disabled required eight wide field">
             <label>URL</label>
             <input name="url" type="text" value="{{preferences.jellyfin_url}}">
+            <p class="help">Host URL or IP Address of the server (including the port number).</p>
           </div>
 
-          <div class="ui disabled required eight wide field" data-tooltip="API key to authenticate communication with Jellyfin">
+          <div class="ui disabled required eight wide field">
             <label>API Key</label>
             <input name="api_key" type="text" class="private" value="{{preferences.jellyfin_api_key}}">
+            <p class="help">API key to authenticate communication.</p>
           </div>
 
-          <div class="ui disabled required field" data-tooltip="Username of the Jellyfin user to query watch statuses from">
+          <div class="ui disabled required field">
             <label>Username</label>
             <div data-value="jellyfin_username" class="ui compact selection dropdown">
               <input type="hidden" name="username">
@@ -178,22 +190,24 @@
               <div class="default text">{{preferences.jellyfin_username}}</div>
               <div class="menu"></div>
             </div>
+            <p class="help">Username of the user to query Episode watched statuses from.</p>
           </div>
 
-          <div class="ui left aligned disabled checkbox field" data-tooltip="Connect with HTTPS instead of HTTP">
+          <div class="ui left aligned disabled checkbox field">
+            <label>Use SSL</label>
             {% if preferences.jellyfin_use_ssl %}
             <input name="use_ssl" type="checkbox" checked="">
             {% else %}
             <input name="use_ssl" type="checkbox">
             {% endif %}
-            <label for="emby-use-ssl-checkbox">Use SSL</label>
+            <p class="help">Connect with HTTPS instead of HTTP.</p>
           </div>
 
           <div class="ui disabled field">
             <label>Filesize Limit</label>
             <div class="ui fields">
               <div class="two wide field" data-tooltip="Maximum file size of assets to upload to Jellyfin">
-                <input name="filesize_limit_number" type="number" min="0" placeholder="{{preferences.jellyfin_filesize_limit_number}}" value="{{preferences.jellyfin_filesize_limit_number}}">
+                <input name="filesize_limit_number" type="number" min="0" placeholder="None" value="{{preferences.jellyfin_filesize_limit_number}}">
               </div>
               <div class="three wide field">
                 <div data-value="jellyfin_filesize_limit_unit" class="ui selection dropdown">
@@ -204,6 +218,11 @@
                 </div>
               </div>
             </div>
+            <p class="help">
+              Maximum file size of Title Cards to upload.
+              <br>
+              Title Cards larger than this will be compressed.
+            </p>
           </div>
 
           <div class="ui error message"></div>
@@ -223,50 +242,53 @@
       <div id="plex-connection" class="connection-form">
         <!-- Enable button -->
         <div id="enable-plex" class="ui left aligned checkbox field">
+          <label>Enable Plex</label>
           {% if preferences.use_plex %}
           <input type="checkbox" checked="">
           {% else %}
           <input type="checkbox">
           {% endif %}
-          <label>Enable Plex</label>
+          
         </div>
 
         <form id="plex-settings" class="ui fluid form">
-          <div class="ui disabled required eight wide field" data-tooltip="Host URL to communicate with Plex">
+          <div class="ui disabled required eight wide field">
             <label>URL</label>
-            <input name="url" type="text" value="{{preferences.plex_url}}">
+            <input name="url" type="text" value="{{preferences.plex_url}}" placeholder="http://localhost:32400/">
+            <p class="help">Host URL or IP Address of the server (including the port number).</p>
           </div>
           
-          <div class="ui disabled eight wide field" data-tooltip="Token to authenticate communication with Plex">
+          <div class="ui disabled eight wide field">
             <label>Token <a href="https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/" target="_blank"><i class="external alternate small icon"></i></a></label>
             <input name="token" type="text" class="private" value="{{preferences.plex_token}}">
+            <p class="help">X-Plex-Token to authenticate communication.</p>
           </div>
 
-          {% if preferences.plex_use_ssl %}
-          <div class="ui left aligned disabled checked checkbox field" data-tooltip="Connect with HTTPS instead of HTTP">
-            <input name="use_ssl" type="checkbox" checked="">
-          {% else %}
-          <div class="ui left aligned disabled checkbox field" data-tooltip="Connect with HTTPS instead of HTTP">                  
-            <input name="use_ssl" type="checkbox">
-          {% endif %}
+          <div class="ui left aligned disabled checked checkbox field">
             <label>Use SSL</label>
+            {% if preferences.plex_use_ssl %}
+            <input name="use_ssl" type="checkbox" checked="">
+            {% else %}             
+            <input name="use_ssl" type="checkbox">
+            {% endif %}
+            <p class="help">Connect with HTTPS instead of HTTP.</p>
           </div>
           <br>
 
-          {% if preferences.plex_integrate_with_pmm %}
-          <div class="ui left aligned disabled checked checkbox field" data-tooltip="Whether to reset PMM overlays when applying title cards">
-            <input name="integrate_with_pmm" type="checkbox" checked="">
-          {% else %}
-          <div class="ui left aligned disabled checkbox field" data-tooltip="Whether to reset PMM overlays when applying title cards">
-            <input name="integrate_with_pmm"type="checkbox">
-          {% endif %}
+          <div class="ui left aligned disabled checkbox field">
             <label>Integrate with Plex Meta Manager</label>
+            {% if preferences.plex_integrate_with_pmm %}
+            <input name="integrate_with_pmm" type="checkbox" checked="">
+            {% else %}
+            <input name="integrate_with_pmm"type="checkbox">
+            {% endif %}
+            <p class="help">Whether to reset Plex Meta Manager overlays when uploading Title Cards.</p>
           </div>
 
           <div data-value="plex_filesize_limit" class="ui disabled field">
             <label>Filesize Limit</label>
             <div class="ui fields">
-              <div class="two wide field" data-tooltip="Maximum file size of assets to upload to Plex">
+              <div class="two wide field">
                 <input name="filesize_limit_number" type="number" min="1" value="{{preferences.plex_filesize_limit_number}}">
               </div>
               <div class="three wide field">
@@ -278,6 +300,13 @@
                 </div>
               </div>
             </div>
+            <p class="help">
+              Maximum file size of Title Cards to upload.
+              <br>
+              Title Cards larger than this will be compressed.
+              <br>
+              Plex rejects all images larger than 10 Megabytes.
+            </p>
           </div>
           <!-- Filesize warning -->
           {% if (preferences.plex_filesize_limit or 0) > 10485760 %}
@@ -304,52 +333,59 @@
       <div id="sonarr-connection" class="connection-form">
         <!-- Enable button -->
         <div id="enable-sonarr" class="ui left aligned checkbox field">
+          <label>Enable Sonarr</label>
           {% if preferences.use_sonarr %}
           <input type="checkbox" name="enable_sonarr" checked="">
           {% else %}
           <input type="checkbox" name="enable_sonarr">
           {% endif %}
-          <label>Enable Sonarr</label>
         </div>
 
         <form id="sonarr-settings" class="ui fluid form">
-          <div class="ui disabled required eight wide field" data-tooltip="Host URL to communicate with Sonarr">
+          <div class="ui disabled required eight wide field">
             <label>URL</label>
-            <input type="text" name="url" value="{{preferences.sonarr_url}}">
+            <input type="text" name="url" value="{{preferences.sonarr_url}}" placeholder="http://localhost:8989">
+            <p class="help">Host URL or IP Address of the server (including the port number).</p>
           </div>
 
-          <div class="ui disabled required eight wide field" data-tooltip="API Key to authenticate communication with Sonarr">
+          <div class="ui disabled required eight wide field">
             <label>API Key <a href="https://github.com/CollinHeist/TitleCardMaker/wiki/Sonarr-Attributes#sonarr-api-key" target="_blank"><i class="external alternate small icon"></i></a></label>
             <input name="api_key" type="text" class="private" value="{{preferences.sonarr_api_key}}">
+            <p class="help">API key to authenticate communication.</p>
           </div>
 
-          {% if preferences.sonarr_use_ssl %}
-          <div class="ui left aligned disabled checked checkbox field" data-tooltip="Connect with HTTPS instead of HTTP">
-            <input name="use_ssl" type="checkbox" checked="">
-          {% else %}
-          <div class="ui left aligned disabled checkbox field" data-tooltip="Connect with HTTPS instead of HTTP">                  
-            <input name="use_ssl" type="checkbox">
-          {% endif %}
+          <div class="ui left aligned checkbox field" >
             <label>Use SSL</label>
+            {% if preferences.sonarr_use_ssl %}
+            <input name="use_ssl" type="checkbox" checked="">
+            {% else %}
+            <input name="use_ssl" type="checkbox">
+            {% endif %}
+            <p class="help">Connect with HTTPS instead of HTTP.</p>
           </div>
           <br>
-          {% if preferences.sonarr_downloaded_only %}
-          <div class="ui left aligned disabled checked checkbox field" data-tooltip="Whether to ignore Episodes that are not downloaded">
-            <input name="downloaded_only" type="checkbox" checked="">
-          {% else %}
-          <div class="ui left aligned disabled checkbox field" data-tooltip="Whether to ignore Episodes that are not downloaded">                  
-            <input name="downloaded_only" type="checkbox">
-          {% endif %}
+
+          <div class="ui left aligned checkbox field">
             <label>Query Downloaded Episodes Only</label>
+            {% if preferences.sonarr_downloaded_only %}
+            <input type="checkbox" name="downloaded_only" checked="">
+            {% else %}
+            <input type="checkbox" name="downloaded_only">
+            {% endif %}
+            <p class="help">Whether to ignore Sonarr Episode data for Episodes that are not downloaded.</p>
           </div>
-          <br>
 
           <div class="ui disabled field">
             <label>Library Paths</label>
-            <div class="ui compact floating visible info message">
+            <p class="help">
+              How TCM should interpret Sonarr's paths in order to auto-assign a Library.
+              <br>
+              Only required if Syncing from Sonarr.
+            </p>
+            <!-- <div class="ui compact floating visible info message">
               <i class="info circle icon"></i>
               Only required if Syncing from Sonarr
-            </div>
+            </div> -->
             <div class="fields">
               <div id="sonarr-libraries-library-names" class="two wide library field">
                 <label>Library Name</label> 
@@ -407,39 +443,49 @@
 
         <form id="tmdb-settings" class="ui fluid form">
           <!-- Input fields -->
-          <div class="ui disabled required eight wide field" data-tooltip="API Key to authenticate communication with TMDb">
+          <div class="ui disabled required eight wide field">
             <label>API Key <a href="https://developers.themoviedb.org/3/getting-started/introduction" target="_blank"><i class="external alternate small icon"></i></a></label>
             <input name="api_key"type="text" class="private" placeholder="{{preferences.tmdb_api_key}}" value="{{preferences.tmdb_api_key}}">
+            <p class="help">Key to submit API requests to TMDb.</p>
           </div>
 
           <div class="two fields">
-            <div class="two wide field" data-tooltip="Minimum required width of images to gather from TMDb">
+            <div class="two wide field">
               <label>Minimum Width</label>
               <input name="minimum_width" type="number" value="{{preferences.tmdb_minimum_width}}">
             </div>
-            <div class="two wide field" data-tooltip="Minimum required height of images to gather from TMDb">
+            <div class="two wide field">
               <label>Minimum Height</label>
               <input name="minimum_height" type="number" value="{{preferences.tmdb_minimum_height}}">
             </div>
           </div>
+          <p class="help">
+            Minimum image resolution for source images from TMDb (in pixels).
+          </p>
 
-          <div class="ui left aligned checkbox field" data-tooltip="Whether to ignore images with assigned languages">
+          <div class="ui left aligned checkbox field">
+            <label>Ignore Localized Images</label>
             {% if preferences.tmdb_skip_localized %}
             <input name="skip_localized" type="checkbox" checked="">
             {% else %}
             <input name="skip_localized" type="checkbox" >
             {% endif %}
-            <label>Ignore Localized Images</label>
+            <p class="help">
+              Whether to ignore images with assigned Languages (i.e. images with text).
+              <br>
+              Can be overwritten per-Series.
+            </p>
           </div>
 
           <br>
-          <div class="ui left aligned checkbox field" data-tooltip="Whether to download logos automatically">
+          <div class="ui left aligned checkbox field">
+            <label>Download Logos</label>
             {% if preferences.tmdb_download_logos %}
             <input name="download_logos" type="checkbox" checked="">
             {% else %}
             <input name="download_logos" type="checkbox">
             {% endif %}
-            <label>Download Logos</label>
+            <p class="help">Whether to download logos automatically.</p>
           </div>
 
           <div class="field">
@@ -450,6 +496,7 @@
               <div class="default text"></div>
               <div class="menu"><!-- Added asynchronousely --></div>
             </div>
+            <p class="help">Order of languages to search for logos in.</p>
           </div>
 
           <div class="ui error message"></div>
@@ -478,12 +525,12 @@
         <form id="tautulli-agent-form" class="ui form">
           <div class="ui field">
             <label>Tautulli URL</label>
-            <input name="tautulli_url">
+            <input name="tautulli_url" placeholder="http://localhost:8181/">
           </div>
           
           <div class="ui field">
             <label>Tautulli API Key</label>
-            <input name="tautulli_api_key" type="password">
+            <input name="tautulli_api_key" type="password" placeholder="abcdef">
           </div>
 
           <div class="ui left aligned checkbox field">

@@ -1,14 +1,3 @@
-/*
- * Add the indicated number of placeholder elements.
- */
-function addPlaceholders(element, amount=10, placeholderElementId='card-placeholder-template') {
-  const placeholders = Array.from({length: amount}).map(() => {
-    return document.getElementById(placeholderElementId).content.cloneNode(true);
-  });
-  element.replaceChildren(...placeholders);
-  refreshTheme();
-}
-
 // Get all series and load their cards into HTML
 async function getAllSeries(page=undefined) {
   // Get page from URL param if provided
@@ -123,7 +112,6 @@ function getAllStatistics() {
 
 async function initAll() {
   getAllStatistics();
-  // addPlaceholders(document.getElementById('series-list'), {{preferences.home_page_size}});
   getAllSeries();
 
   // Dim Series posters on hover
