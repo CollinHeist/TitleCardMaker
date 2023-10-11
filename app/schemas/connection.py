@@ -1,6 +1,6 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from typing import Any, Literal, Optional, Union
-from pydantic import AnyUrl, NonNegativeInt, SecretStr, constr, validator # pylint: disable=no-name-in-module
+from pydantic import AnyUrl, constr, validator # pylint: disable=no-name-in-module
 
 from app.schemas.base import Base, UpdateBase, UNSPECIFIED
 from modules.EmbyInterface2 import EmbyInterface
@@ -9,6 +9,8 @@ from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
+# Names of all interface types
+InterfaceType = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr', 'TMDb']
 
 # Names of acceptable server types
 ServerName = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr']
@@ -16,7 +18,7 @@ ServerName = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr']
 # Any acceptable Interface to an EpisodeDataSource
 EpisodeDataSourceInterface = Union[
     EmbyInterface, JellyfinInterface, PlexInterface, SonarrInterface,
-    TMDbInterface
+    TMDbInterface,
 ]
 
 # Match hexstrings of A-F and 0-9.s
@@ -46,11 +48,11 @@ class PotentialSonarrLibrary(SonarrLibrary):
 
 class BaseServer(Base):
     id: int
-    interface: ServerName
+    interface_type: ServerName
     enabled: bool
     name: str
     url: AnyUrl
-    api_key: str # SecretStr
+    api_key: str
     use_ssl: bool = True
 
 class BaseNewConnection(Base):
@@ -79,28 +81,47 @@ Creation classes
 """
 class NewEmbyConnection(BaseNewMediaServer):
     name: str = 'Emby Server'
-    interface: ServerName = 'Emby'
+    interface_type: Literal['Emby'] = 'Emby'
     username: Optional[str] = None
 
 class NewJellyfinConnection(BaseNewMediaServer):
     name: str = 'Jellyfin Server'
-    interface: ServerName = 'Jellyfin'
+    interface_type: Literal['Jellyfin'] = 'Jellyfin'
     username: Optional[str] = None
 
 class NewPlexConnection(BaseNewMediaServer):
     name: str = 'Plex Server'
     api_key: str
-    interface: ServerName = 'Plex'
+    interface_type: Literal['Plex'] = 'Plex'
     integrate_with_pmm: bool = False
 
 class NewSonarrConnection(BaseNewServer):
     name: str = 'Sonarr Server'
-    interface: ServerName = 'Sonarr'
+    interface_type: Literal['Sonarr'] = 'Sonarr'
     downloaded_only: bool = True
     libraries: list[SonarrLibrary] = []
 
 class NewTautulliConnection(BaseNewServer):
     agent_name: str
+
+class NewTMDbConnection(Base):
+    name: str = 'TMDb'
+    interface_type: Literal['TMDb'] = 'TMDb'
+    enabled: bool = True
+    api_key: Hexstring
+    minimum_dimensions: constr(regex=r'^\d+x\d+$') = '0x0'
+    skip_localized: bool = True
+    logo_language_priority: list[TMDbLanguageCode] = []
+
+    @validator('minimum_dimensions')
+    def validate_dimensions(cls, v):
+        width, height = str(v).split('x')
+        if width < 0 or height < 0:
+            raise ValueError(f'Minimum dimensions must be positive')
+
+    @validator('logo_language_priority', pre=True)
+    def comma_separate_language_codes(cls, v):
+        return list(map(lambda s: str(s).lower().strip(), v.split(',')))
 
 """
 Update classes
@@ -129,11 +150,15 @@ class UpdateSonarr(BaseUpdateServer):
 
 class UpdateTMDb(UpdateBase):
     api_key: Hexstring = UNSPECIFIED
-    minimum_width: NonNegativeInt = UNSPECIFIED
-    minimum_height: NonNegativeInt = UNSPECIFIED
+    minimum_dimensions: constr(regex=r'^\d+x\d+$') = UNSPECIFIED
     skip_localized: bool = UNSPECIFIED
-    download_logos: bool = UNSPECIFIED
     logo_language_priority: list[TMDbLanguageCode] = UNSPECIFIED
+
+    @validator('minimum_dimensions')
+    def validate_dimensions(cls, v):
+        width, height = str(v).split('x')
+        if width < 0 or height < 0:
+            raise ValueError(f'Minimum dimensions must be positive')
 
     @validator('logo_language_priority', pre=True)
     def comma_separate_language_codes(cls, v):
@@ -165,13 +190,14 @@ class SonarrConnection(BaseServer):
     libraries: list[SonarrLibrary]
 
 class TMDbConnection(Base):
-    use_tmdb: bool
-    tmdb_api_key: SecretStr
-    tmdb_minimum_width: NonNegativeInt
-    tmdb_minimum_height: NonNegativeInt
-    tmdb_skip_localized: bool
-    tmdb_download_logos: bool
-    tmdb_logo_language_priority: list[TMDbLanguageCode]
+    id: int
+    interface: Literal['TMDb']
+    enabled: bool
+    name: str
+    api_key: str
+    minimum_dimensions: str
+    skip_localized: bool
+    logo_language_priority: list[TMDbLanguageCode]
 
 """
 Sonarr Webhooks
