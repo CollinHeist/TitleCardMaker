@@ -33,9 +33,6 @@ class Preferences:
         '{series_full_name} - S{season_number:02}E{episode_number:02}'
     )
     DEFAULT_CARD_EXTENSION: CardExtension = '.jpg'
-    DEFAULT_IMAGE_SOURCE_PRIORITY = [
-        {'interface': 'TMDb', 'interface_id': 0},
-    ]
     DEFAULT_EPISODE_DATA_SOURCE = {'interface': 'TMDb', 'interface_id': 0}
     VALID_IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp')
 
@@ -162,7 +159,7 @@ class Preferences:
         self.card_filename_format = self.DEFAULT_CARD_FILENAME_FORMAT
         self.card_extension = self.DEFAULT_CARD_EXTENSION
 
-        self.image_source_priority = self.DEFAULT_IMAGE_SOURCE_PRIORITY
+        self.image_source_priority: list[int] = []
         self.episode_data_source = self.DEFAULT_EPISODE_DATA_SOURCE
         self.valid_image_extensions = self.VALID_IMAGE_EXTENSIONS
 

@@ -1,11 +1,19 @@
-from typing import Optional
+from typing import Literal, Optional, Union
 
 from sqlalchemy import Boolean, Column, Integer, String, JSON
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import relationship
 
+from app.database.query import (
+    EmbyInterface, JellyfinInterface, PlexInterface, SonarrInterface,
+    TMDbInterface, get_interface
+)
 from app.database.session import Base
+from app.schemas.connection import InterfaceType
+
+
+SonarrLibraries = dict[Literal['interface_id', 'name', 'path'], Union[int, str]]
 
 
 class Connection(Base):
@@ -24,40 +32,46 @@ class Connection(Base):
     syncs = relationship('Sync', back_populates='connection')
     templates = relationship('Template', back_populates='data_source')
 
-    interface = Column(String, nullable=False)
+    interface_type: InterfaceType = Column(String, nullable=False)
     enabled = Column(Boolean, default=False, nullable=False)
     name = Column(String, nullable=False)
-
-    url = Column(String, nullable=False)
     api_key = Column(String, nullable=False)
+
+    url = Column(String, default=None, nullable=True)
     use_ssl = Column(Boolean, default=True, nullable=False)
 
     username = Column(String, default=None)
     filesize_limit = Column(String, default='5 Megabytes')
     integrate_with_pmm = Column(Boolean, default=False, nullable=False)
     downloaded_only = Column(Boolean, default=True, nullable=False)
-    libraries = Column(MutableList.as_mutable(JSON), default=[], nullable=False)
+    libraries: SonarrLibraries = Column(
+        MutableList.as_mutable(JSON),
+        default=[],
+        nullable=False
+    )
+
+    minimum_dimensions = Column(String, default=None)
+    skip_localized = Column(Boolean, default=True, nullable=False)
+    logo_language_priority: list[str] = Column(
+        MutableList.as_mutable(JSON),
+        default=[],
+        nullable=False
+    )
 
 
     @hybrid_property
     def log_str(self) -> str:
         """
-        _summary_ # TODO populate
-
-        Returns:
-            _description_
+        Loggable string that defines this object (i.e. `__repr__`).
         """
 
-        return f'{self.interface}Connection[{self.id}]'
+        return f'{self.interface_type}Connection[{self.id}]'
 
 
     @hybrid_property
     def filesize_limit_value(self) -> Optional[int]:
         """
-        The filesize limit of this Connection - in Bytes.
-
-        Returns:
-            The filesize limit in Bytes, or None.
+        The filesize limit of this Connection - in Bytes (or None).
         """
 
         if self.filesize_limit is None:
@@ -75,6 +89,30 @@ class Connection(Base):
 
 
     @hybrid_property
+    def minimum_width(self) -> Optional[int]:
+        """
+        The minimum width dimension of this Connection (in pixels).
+        """
+
+        if self.minimum_dimensions is None or self.interface_type != 'TMDb':
+            return None
+
+        return self.minimum_dimensions.split('x')[0]
+
+
+    @hybrid_property
+    def minimum_height(self) -> Optional[int]:
+        """
+        The minimum width dimension of this Connection (in pixels).
+        """
+
+        if self.minimum_dimensions is None or self.interface_type != 'TMDb':
+            return None
+
+        return self.minimum_dimensions.split('x')[1]
+
+
+    @hybrid_property
     def interface_kwargs(self) -> dict:
         """
         The dictionary of keyword arguments required to initialize an
@@ -86,7 +124,7 @@ class Connection(Base):
             Dictionary of keyword-arguments.
         """
 
-        if self.interface in ('Emby', 'Jellyfin'):
+        if self.interface_type in ('Emby', 'Jellyfin'):
             return {
                 'interface_id': self.id,
                 'url': self.url,
@@ -96,7 +134,7 @@ class Connection(Base):
                 'username': self.username,
             }
 
-        if self.interface == 'Plex':
+        if self.interface_type == 'Plex':
             return {
                 'interface_id': self.id,
                 'url': self.url,
@@ -106,7 +144,7 @@ class Connection(Base):
                 'integrate_with_pmm': self.integrate_with_pmm,
             }
 
-        if self.interface == 'Sonarr':
+        if self.interface_type == 'Sonarr':
             return {
                 'interface_id': self.id,
                 'url': self.url,
@@ -115,6 +153,17 @@ class Connection(Base):
                 'downloaded_only': self.downloaded_only,
                 'libraries': self.libraries,   
             }
+
+
+    @hybrid_property
+    def interface(self) -> Union[EmbyInterface, JellyfinInterface,
+                                 PlexInterface, SonarrInterface, TMDbInterface]:
+        """
+        Get the `Interface` object to actually communicate with this
+        Connection's interface.
+        """
+
+        return get_interface(self.id)
 
 
     def determine_libraries(self,

@@ -6,7 +6,7 @@ Modify Loaded table:
 - Add new interface_id column tied to newly created Connection(s)
 - Remove media_server column
 Modify Series table:
-- Turn separate emby,jellyfin,plex_library_name columns into single libraries
+- Turn separate emby/jellyfin/plex _library_name columns into single libraries
   column that is a JSON list object like
   [{'media_server': (Emby/Jellyfin/Plex), 'interface_id': (int), 'name': (str)}]
 - Perform data migration of existing Series libraries into the above objects
@@ -14,7 +14,7 @@ Modify Series table:
   columns
 Modify Sync table:
 - Add new interface_id and connection columns / relationships as a Sync now must
-be tied to an existing Connection.
+  be tied to an existing Connection.
 Modify Template table:
 - Turn episode_data_source column into data_source column
 
@@ -46,12 +46,12 @@ class Connection(Base):
 
     id = sa.Column(sa.Integer, primary_key=True, index=True)
 
-    interface = sa.Column(sa.String, nullable=False)
+    interface_type = sa.Column(sa.String, nullable=False)
     enabled = sa.Column(sa.Boolean, default=False, nullable=False)
     name = sa.Column(sa.String, nullable=False)
+    api_key = sa.Column(sa.String, nullable=False)
 
     url = sa.Column(sa.String, nullable=False)
-    api_key = sa.Column(sa.String, nullable=False)
     use_ssl = sa.Column(sa.Boolean, default=True, nullable=False)
 
     username = sa.Column(sa.String, default=None)
@@ -59,6 +59,10 @@ class Connection(Base):
     integrate_with_pmm = sa.Column(sa.Boolean, default=False, nullable=False)
     downloaded_only = sa.Column(sa.Boolean, default=True, nullable=False)
     libraries = sa.Column(MutableList.as_mutable(sa.JSON), default=[], nullable=False)
+
+    minimum_dimensions = sa.Column(sa.String, default=None)
+    skip_localized = sa.Column(sa.Boolean, default=True, nullable=False)
+    logo_language_priority = sa.Column(MutableList.as_mutable(sa.JSON), default=[], nullable=False)
 
 class Loaded(Base):
     __tablename__ = 'loaded'
@@ -103,7 +107,7 @@ def upgrade() -> None:
 
     op.create_table('connection',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('interface', sa.String(), nullable=False),
+        sa.Column('interface_type', sa.String(), nullable=False),
         sa.Column('enabled', sa.Boolean(), nullable=False),
         sa.Column('name', sa.String(), nullable=False),
         sa.Column('url', sa.String(), nullable=False),
@@ -114,6 +118,9 @@ def upgrade() -> None:
         sa.Column('integrate_with_pmm', sa.Boolean(), nullable=False),
         sa.Column('downloaded_only', sa.Boolean(), nullable=False),
         sa.Column('libraries', sa.JSON(), nullable=False),
+        sa.Column('minimum_dimensions', sa.String(), nullable=True),
+        sa.Column('skip_localized', sa.Boolean(), nullable=False),
+        sa.Column('logo_language_priority', sa.JSON(), nullable=False),
         sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('connection', schema=None) as batch_op:
@@ -141,10 +148,10 @@ def upgrade() -> None:
     session = Session(bind=op.get_bind())
 
     # Turn existing connections from Preferences into Connection objects
-    emby, jellyfin, plex, sonarr = None, None, None, None
+    emby, jellyfin, plex, sonarr, tmdb = None, None, None, None, None
     if PreferencesLocal.emby_url:
         emby = Connection(
-            interface='Emby',
+            interface_type='Emby',
             enabled=True,
             name='Emby Server',
             url=PreferencesLocal.emby_url,
@@ -156,7 +163,7 @@ def upgrade() -> None:
         log.info(f'Created Emby Connection[{emby.id}]')
     if PreferencesLocal.jellyfin_url:
         jellyfin = Connection(
-            interface='Jellyfin',
+            interface_type='Jellyfin',
             enabled=True,
             name='Jellyfin Server',
             url=PreferencesLocal.jellyfin_url,
@@ -168,7 +175,7 @@ def upgrade() -> None:
         log.info(f'Created Jellyfin Connection[{jellyfin.id}]')
     if PreferencesLocal.plex_url:
         plex = Connection(
-            interface='Plex',
+            interface_type='Plex',
             enabled=True,
             name='Plex Server',
             url=PreferencesLocal.plex_url,
@@ -191,6 +198,15 @@ def upgrade() -> None:
         )
         session.add(sonarr)
         log.info(f'Created Sonarr Connection[{sonarr.id}]')
+    if PreferencesLocal.tmdb_api_key:
+        tmdb = Connection(
+            interface_type='TMDb',
+            enabled=True,
+            name='TMDb',
+            minimum_dimensions=f'{PreferencesLocal.tmdb_minimum_width}x{PreferencesLocal.tmdb_minimum_height}',
+            skip_localized=PreferencesLocal.tmdb_skip_localized,
+            logo_language_priority=PreferencesLocal.tmdb_logo_language_priority,
+        )
 
     # Migrate the global Episode data source and image source priorities
     if emby and PreferencesLocal.episode_data_source == 'Emby':
@@ -200,7 +216,7 @@ def upgrade() -> None:
     elif sonarr and PreferencesLocal.episode_data_source == 'Sonarr':
         PreferencesLocal.episode_data_source = {'interface': 'Sonarr', 'interface_id': sonarr.id}
     elif PreferencesLocal.episode_data_source == 'TMDb':
-        PreferencesLocal.episode_data_source = {'interface': 'TMDb', 'interface_id': 0}
+        PreferencesLocal.episode_data_source = {'interface': 'TMDb', 'interface_id': tmdb.id}
     else:
         PreferencesLocal.episode_data_source = PreferencesLocal.DEFAULT_EPISODE_DATA_SOURCE
     log.debug(f'Migrated Global Episode data source to {PreferencesLocal.episode_data_source}')
@@ -208,13 +224,13 @@ def upgrade() -> None:
     isp = []
     for source in PreferencesLocal.image_source_priority:
         if emby and source == 'Emby':
-            isp.append({'interface': source, 'interface_id': emby.id})
+            isp.append(emby.id)
         elif jellyfin and source == 'Jellyfin':
-            isp.append({'interface': source, 'interface_id': jellyfin.id})
+            isp.append(jellyfin.id)
         elif plex and source == 'Plex':
-            isp.append({'interface': source, 'interface_id': plex.id})
+            isp.append(plex.id)
         elif source == 'TMDb':
-            isp.append({'interface': source, 'interface_id': 0})
+            isp.append(tmdb.id)
     PreferencesLocal.image_source_priority = isp
     log.debug(f'Migrated Global Image Source Priority to {isp}')
 
@@ -262,6 +278,8 @@ def upgrade() -> None:
             series.data_source_id = plex.id
         elif sonarr and series.episode_data_source in ('Sonarr', 'sonarr'):
             series.data_source_id = sonarr.id
+        elif tmdb and series.episode_data_source in ('TMDb', 'tmdb'):
+            series.data_source_id = tmdb.id
 
         if series.data_source_id:
             log.debug(f'Initialized Series[{series.id}].data_source_id = {series.data_source_id}')
@@ -274,6 +292,8 @@ def upgrade() -> None:
             template.data_source_id = plex.id
         elif sonarr and template.episode_data_source in ('Sonarr', 'sonarr'):
             template.data_source_id = sonarr.id
+        elif tmdb and template.episode_data_source in ('TMDb', 'tmdb'):
+            template.data_source_id = tmdb.id
 
         if template.data_source_id:
             log.debug(f'Initialized Template[{template.id}].data_source_id = {template.data_source_id}')
