@@ -25,6 +25,8 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
     connects to an instance of Sonarr.
     """
 
+    INTERFACE_TYPE = 'Sonarr'
+
     """Use a longer request timeout for Sonarr to handle slow databases"""
     REQUEST_TIMEOUT = 600
 

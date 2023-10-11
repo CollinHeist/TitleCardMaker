@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 
 
 class Interface(ABC):
@@ -6,6 +6,12 @@ class Interface(ABC):
     This class describes an abstract interface to some service. This
     class only defines the `__bool__` method and an `active` attribute.
     """
+
+    @property
+    @abstractmethod
+    def INTERFACE_TYPE(self) -> str: # pylint: disable=missing-function-docstring
+        raise NotImplementedError
+
 
     def __init__(self) -> None:
         """

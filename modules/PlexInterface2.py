@@ -78,6 +78,8 @@ def catch_and_log(
 class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
     """This class describes an interface to Plex."""
 
+    INTERFACE_TYPE = 'Plex'
+
     """Series ID's that can be set by TMDb"""
     SERIES_IDS = ('imdb_id', 'tmdb_id', 'tvdb_id')
 

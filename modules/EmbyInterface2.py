@@ -24,6 +24,8 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
     cards can be loaded into).
     """
 
+    INTERFACE_TYPE = 'Emby'
+
     """Default no filesize limit for all uploaded assets"""
     DEFAULT_FILESIZE_LIMIT = None
 

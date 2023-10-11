@@ -65,6 +65,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
     is to communicate with TMDb.
     """
 
+    INTERFACE_TYPE = 'TMDb'
+
     """Default for how many failed requests lead to a blacklisted entry"""
     BLACKLIST_THRESHOLD = 5
 

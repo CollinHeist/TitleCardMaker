@@ -23,8 +23,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
     cards can be loaded into).
     """
 
-    """Default is no filesize limit for all uploaded assets"""
-    DEFAULT_FILESIZE_LIMIT = None
+    INTERFACE_TYPE = 'Jellyfin'
 
     """Series ID's that can be set by Jellyfin"""
     SERIES_IDS = ('imdb_id', 'jellyfin_id', 'tmdb_id', 'tvdb_id')
@@ -96,7 +95,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             log.critical(f'Cannot identify ID of user "{username}"')
             self.user_id = None
 
-        # Get the ID's of all libraries within this server
+        # # Get the ID's of all libraries within this server
         self.libraries = self._map_libraries()
         self.activate()
 
@@ -319,7 +318,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         """
 
         # If all possible ID's are defined
-        if series_info.has_ids(*self.SERIES_IDS):
+        if series_info.has_ids(*self.SERIES_IDS, interface_id=self._interface_id):
             return None
 
         # Find series
