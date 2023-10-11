@@ -156,7 +156,7 @@ async function initAll() {
     $('#series-form').toggleClass('error', false);
 
     importSeriesForm(form);
-  })
+  });
 }
 
 /*
