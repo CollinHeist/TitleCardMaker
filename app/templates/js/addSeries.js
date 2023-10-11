@@ -54,7 +54,7 @@ function addSeries(result, resultElementId) {
  * Submit the API requests to add the Series indicated by the given
  * result, and then import the given Blueprint to that Series.
  */
-function addSeriesImportBlueprint(result, blueprint, resultElementId) {
+function addSeriesImportBlueprint(result, blueprintId, resultElementId) {
   $('#add-series-modal form').toggleClass('loading', true);
   // Create Series
   $.ajax({
@@ -63,17 +63,15 @@ function addSeriesImportBlueprint(result, blueprint, resultElementId) {
     data: JSON.stringify(generateNewSeriesObject(result)),
     contentType: 'application/json',
     success: series => {
-      $(`#${resultElementId}`).toggleClass('disabled', true);
-      $.toast({class: 'blue info', title: `Added Series "${series.name}"`});
+      document.getElementById(resultElementId).classList.add('disabled');
+      showInfoToast(`Added Series "${series.name}"`);
       // API request to import blueprint
       $.ajax({
         type: 'PUT',
-        url: `/api/blueprints/import/series/${series.id}`,
+        url: `/api/blueprints/import/series/${series.id}/blueprint/${blueprintId}`,
         contentType: 'application/json',
-        data: JSON.stringify(blueprint),
-        success: () => {
-          $.toast({class: 'blue info', title: 'Blueprint Imported'});
-        }, error: response => showErrorToast({title: 'Error Importing Blueprint', response}),
+        success: () => showInfoToast('Blueprint Imported'),
+        error: response => showErrorToast({title: 'Error Importing Blueprint', response}),
       });
     }, error: response => showErrorToast({title: 'Error adding Series', response}),
     complete: () => $('#add-series-modal').modal('hide'),
@@ -81,57 +79,18 @@ function addSeriesImportBlueprint(result, blueprint, resultElementId) {
 }
 
 /*
- * Import the given global Blueprint - creating the associated Series if
- * it does not exist.
+ * Submit an API request to import the given global Blueprint - creating
+ * the associated Series if it does not exist.
  */
-function importBlueprint(blueprint, elementId) {
-  // Import Blueprint to Series - creating if necessary
+function importBlueprint(blueprintId, elementId) {
   $.ajax({
     type: 'PUT',
-    url: '/api/blueprints/import/blueprint',
-    data: JSON.stringify(blueprint),
-    contentType: 'application/json',
+    url: `/api/blueprints/import/blueprint/${blueprintId}`,
     success: series => {
-      $.toast({class: 'blue info', title: `Imported Blueprint to "${series.full_name}"`});
+      showInfoToast(`Imported Blueprint to "${series.full_name}"`);
       document.getElementById(elementId).classList.add('disabled');
     }, error: response => showErrorToast({title: 'Error Importing Blueprint', response}),
   });
-}
-
-/*
- * Fill out the given Blueprint card element with the details - i.e. the
- * creator, title, image, description, etc.
- */
-function populateBlueprintCard(card, blueprint, blueprintId) {
-  // Fill out card
-  card.querySelector('.card').id = blueprintId;
-  card.querySelector('img').src = blueprint.preview;
-  card.querySelector('[data-value="creator"]').innerText = blueprint.creator;
-  // If there is a Series name element, fill out
-  if (card.querySelector('[data-value="series_full_name"')) {
-    card.querySelector('[data-value="series_full_name"').innerText = blueprint.series_full_name;
-  }
-  if (blueprint.fonts.length === 0) {
-    card.querySelector('[data-value="font-count"]').remove();
-  } else {
-    let text = `<b>${blueprint.fonts.length}</b> Font` + (blueprint.fonts.length > 1 ? 's' : '');
-    card.querySelector('[data-value="font-count"]').innerHTML = text;
-  }
-  if (blueprint.templates.length === 0) {
-    card.querySelector('[data-value="template-count"]').remove();
-  } else {
-    let text = `<b>${blueprint.templates.length}</b> Template` + (blueprint.templates.length > 1 ? 's' : '');
-    card.querySelector('[data-value="template-count"]').innerHTML = text;
-  }
-  const episodeOverrideCount = Object.keys(blueprint.episodes).length;
-  if (episodeOverrideCount === 0) {
-    card.querySelector('[data-value="episode-count"]').remove();
-  } else {
-    let text = `<b>${episodeOverrideCount}</b> Episode Override` + (episodeOverrideCount > 1 ? 's' : '');
-    card.querySelector('[data-value="episode-count"]').innerHTML = text;
-  }
-  card.querySelector('[data-value="description"]').innerHTML = '<p>' + blueprint.description.join('</p><p>') + '</p>';
-  return card;
 }
 
 /*
@@ -154,7 +113,7 @@ async function queryBlueprints(result, resultElementId) {
     let card = blueprintTemplate.content.cloneNode(true);
     card = populateBlueprintCard(card, blueprint, `series-blueprint-id${blueprintId}`);
     // Assign function to import button
-    card.querySelector('a[data-action="import-blueprint"]').onclick = () => addSeriesImportBlueprint(result, blueprint, resultElementId);
+    card.querySelector('a[data-action="import-blueprint"]').onclick = () => addSeriesImportBlueprint(result, blueprint.id, resultElementId);
     return card;
   });
   blueprintResults.replaceChildren(...blueprintCards);
@@ -169,34 +128,35 @@ function queryAllBlueprints(page=1) {
   const blueprintResults = document.getElementById('all-blueprint-results');
   const blueprintTemplate = document.getElementById('all-blueprint-template');
   const orderBy = $('[data-value="order_by"]').val();
+  const includeMissing = $('.checkbox[data-value="include_missing_series"]').checkbox('is unchecked');
   // Only add placeholders if on page 1 (first load)
   if (page === 1) {
     addPlaceholders(blueprintResults, 9, 'blueprint-placeholder-template');
   }
   $.ajax({
     type: 'GET',
-    url: `/api/blueprints/query/all?page=${page}&size=15&order_by=${orderBy}`,
+    url: `/api/blueprints/query/all?page=${page}&size=15&order_by=${orderBy}&include_missing_series=${includeMissing}`,
     success: allBlueprints => {
       const blueprintCards = allBlueprints.items.map((blueprint, blueprintId) => {
         // Clone template, fill out basic info
         let card = blueprintTemplate.content.cloneNode(true);
         card = populateBlueprintCard(card, blueprint, `blueprint-id${blueprintId}`);
         // Assign function to import button
-        card.querySelector('[data-action="import-blueprint"]').onclick = () => importBlueprint(blueprint, `blueprint-id${blueprintId}`);
+        card.querySelector('[data-action="import-blueprint"]').onclick = () => importBlueprint(blueprint.id, `blueprint-id${blueprintId}`);
         // Assign blacklist function to hide button
         card.querySelector('[data-action="blacklist-blueprint"]').onclick = () => {
           $(`#blueprint-id${blueprintId}`).transition({animation: 'fade', duration: 1000});
           $.ajax({
             type: 'PUT',
-            url: `/api/blueprints/query/blacklist?series_full_name=${blueprint.series_full_name}&blueprint_id=${blueprint.id}`,
+            url: `/api/blueprints/blacklist/${blueprint.id}`,
             success: () => {
               // Remove Blueprint card from display
-              $(`#blueprint-id${blueprintId}`).transition({animation: 'fade', duration: 1000});
+              $(`#blueprint-id${blueprintId}`).transition({animation: 'fade', duration: 800});
               setTimeout(() => {
                 document.getElementById(`blueprint-id${blueprintId}`).remove();
-                $.toast({class: 'blue info', title: 'Blueprint Hidden'});
-              }, 1000);
-            }, error: response => showErrorToast({title: 'Error Blacklisting Blueprint', response}),
+                showInfoToast('Blueprint Hidden');
+              }, 800);
+            }, error: response => showErrorToast({title: 'Error Hiding Blueprint', response}),
           });
         }
         return card;
@@ -213,6 +173,7 @@ function queryAllBlueprints(page=1) {
       });
       // Transition elements in
       $('#all-blueprint-results .card').transition({animation: 'scale', interval: 40});
+      $('[data-value="file-count"]').popup({inline: true});
       refreshTheme();
     }, error: response => showErrorToast({title: 'Unable to Query Blueprints', response}),
   });
@@ -254,7 +215,7 @@ function showAddSeriesModal(result, resultElementId) {
 /*
  * Quick-add the indicated result. This uses the last-selected Templates/libraries.
  */
-async function quickAddSeries(result, resultElementId) {
+function quickAddSeries(result, resultElementId) {
   let resultElement = document.getElementById(resultElementId)
   resultElement.classList.add('loading');
   resultElement.classList.remove('transition');
@@ -349,11 +310,23 @@ async function initAll() {
 async function querySeries() {
   const resultTemplate = document.getElementById('search-result-template');
   const resultSegment = document.getElementById('search-results');
-  const query = $('#search-query').val();
+  let query = $('#search-query').val();
+  // Parse query name and year (if indicated)
+  let year;
+  if (query.match(/(.+)\s+y:(\d+)/)) {
+    [, query, year] = query.match(/(.+)\s+y:(\d+)/);
+  }
+
+  // Exit if are no HTML elements or query
   if (resultTemplate === null || resultSegment === null || !query) { return; }
+
+  // Add placeholders while searching
   addPlaceholders(resultSegment, 10);
   const interfaceName = $('#search-interface').val() || 'Sonarr';
-  const allResults = await fetch(`/api/series/lookup?name=${query}&interface=${interfaceName}`).then(resp => resp.json());
+  const qStr = `name=${query}` + (year ? `&year=${year}` : '');
+
+  // Submit API request
+  const allResults = await fetch(`/api/series/lookup?${qStr}&interface=${interfaceName}`).then(resp => resp.json());
   const results = allResults.items.map((result, index) => {
     // Clone template
     const card = resultTemplate.content.cloneNode(true);

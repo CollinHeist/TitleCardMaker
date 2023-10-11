@@ -5,7 +5,6 @@ function toggleNavMenu() {
     // Currently hidden, show
     navMenu.style.display = 'block';
     mainContent.style.removeProperty('padding-left');
-    // mainContent.style.paddingLeft = 'unset';
   } else {
     navMenu.style.display = 'none';
     mainContent.style.paddingLeft = '15px';
@@ -332,4 +331,69 @@ async function initializeExtraDropdowns(
       $selectedItem.closest('.field').find('.popup .description').html(popups[value]);
     }
   });
+}
+
+/*
+ * Fill out the given Blueprint card element with the details - i.e. the
+ * creator, title, image, description, etc.
+ */
+function populateBlueprintCard(card, blueprint, blueprintId) {
+  // Fill out card
+  card.querySelector('.card').id = blueprintId;
+  let preview = card.querySelector('img');
+  preview.src = blueprint.json.previews[0];
+  // More than one preview, mark image as multi (for CSS formatting), and cycle through images on click
+  if (blueprint.json.previews.length > 1) {
+    card.querySelector('.image').classList.add('multi');
+    card.querySelector('.image').style.backgroundImage = `url("${blueprint.json.previews[1]}")`;
+    preview.dataset.imageIndex = 0;
+    preview.onclick = () => {
+      let newImageIndex = ($(`#${blueprintId} img`).data('imageIndex') + 1) % blueprint.json.previews.length;
+      let nextImageIndex = (newImageIndex + 1) % blueprint.json.previews.length;
+      $(`#${blueprintId} .image`).css('background-image', `url("${blueprint.json.previews[nextImageIndex]}")`);
+      $(`#${blueprintId} img`).attr('src', blueprint.json.previews[newImageIndex]);
+      $(`#${blueprintId} img`).data('imageIndex', newImageIndex);
+    };
+  }
+  card.querySelector('[data-value="creator"]').innerText = blueprint.creator;
+  // If there is a Series name element, fill out
+  if (card.querySelector('[data-value="series_full_name"')) {
+    card.querySelector('[data-value="series_full_name"').innerText = `${blueprint.series.name} (${blueprint.series.year})`;
+  }
+  // Font count
+  if (blueprint.json.fonts.length === 0) {
+    card.querySelector('[data-value="font-count"]').remove();
+  } else {
+    let text = `<b>${blueprint.json.fonts.length}</b> Font` + (blueprint.json.fonts.length > 1 ? 's' : '');
+    card.querySelector('[data-value="font-count"]').innerHTML = text;
+  }
+  // Templates count
+  if (blueprint.json.templates.length === 0) {
+    card.querySelector('[data-value="template-count"]').remove();
+  } else {
+    let text = `<b>${blueprint.json.templates.length}</b> Template` + (blueprint.json.templates.length > 1 ? 's' : '');
+    card.querySelector('[data-value="template-count"]').innerHTML = text;
+  }
+  // Episodes count
+  const episodeOverrideCount = Object.keys(blueprint.json.episodes).length;
+  if (episodeOverrideCount === 0) {
+    card.querySelector('[data-value="episode-count"]').remove();
+  } else {
+    let text = `<b>${episodeOverrideCount}</b> Episode Override` + (episodeOverrideCount > 1 ? 's' : '');
+    card.querySelector('[data-value="episode-count"]').innerHTML = text;
+  }
+  // Source files count
+  if (blueprint.json.series.source_files.length === 0) {
+    card.querySelector('[data-value="file-count"]').remove();
+    card.querySelector('.popup').remove();
+  } else {
+    // let fileNames = '<li>' + blueprint.json.series.source_files.join('</li><li>') + '</li>';
+    const text = `<b>${blueprint.json.series.source_files.length}</b> Source Files`;
+    card.querySelector('[data-value="file-count"]').innerHTML = text;
+    card.querySelector('.popup .content').innerHTML = blueprint.json.series.source_files.join(', ');
+    // let text = `<span data-variation="mini" data-tooltip="${fileNames}"><b>${blueprint.json.series.source_files.length}</b> Source Files</span>`;
+    // card.querySelector('[data-value="file-count"]').outerHTML = text;
+  }
+  card.querySelector('[data-value="description"]').innerHTML = '<p>' + blueprint.json.description.join('</p><p>') + '</p>';
+  return card;
 }

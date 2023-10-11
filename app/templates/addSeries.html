@@ -80,6 +80,7 @@
           <span data-value="font-count"><b>{x}</b> Named Font</span>
           <span data-value="template-count"><b>{x}</b> Template</span>
           <span data-value="episode-count"><b>{x}</b> Episode Overrides</span>
+          <span data-value="file-count"><b>{x}</b> Source Files</span>
         </div>
         <div data-value="description" class="description"><!-- <p>Description</p> --></div>
       </div>
@@ -100,10 +101,15 @@
       <div class="content">
         <div data-value="series_full_name" class="header">{series_name} ({series_year})</div>
         <div class="meta">
-          <span>Created by</span><span data-value="creator">{author}</span>
+          <span><i>by</span><span data-value="creator">{author}</span></i>
           <span data-value="font-count"><b>{x}</b> Named Font</span>
           <span data-value="template-count"><b>{x}</b> Template</span>
           <span data-value="episode-count"><b>{x}</b> Episode Overrides</span>
+          <span data-value="file-count"><b>{x}</b> Source Files</span>
+          <div class="ui mini uninvertible popup">
+            <div class="header">Imported Source Files</div>
+            <div class="content"></div>
+          </div>
         </div>
         <div data-value="description" class="description"><!-- <p>Description</p> --></div>
       </div>
@@ -174,6 +180,10 @@
           <!-- <i class="search icon"></i> -->
           Browse Blueprints
         </button>
+      </div>
+      <div data-value="include_missing_series" class="ui checkbox" data-tooltip="Whether to only show Blueprints for Series present in TitleCardMaker">
+        <input type="checkbox" name="include_missing_series">
+        <label>Only include existing Series</label>
       </div>
 
       <!-- <button class="ui green tertiary button" onclick="queryAllBlueprints();">

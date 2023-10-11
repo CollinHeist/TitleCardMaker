@@ -1197,7 +1197,7 @@ function importBlueprint(cardId, blueprint) {
 
   // Get any URL's for Fonts to download
   let fontsToDownload = [];
-  blueprint.fonts.forEach(font => {
+  blueprint.json.fonts.forEach(font => {
     if (font.file_download_url) {
       fontsToDownload.push(font.file_download_url);
     }
@@ -1272,32 +1272,9 @@ async function queryBlueprints() {
   }
   // Blueprints available, create cards
   const blueprints = allBlueprints.map((blueprint, blueprintId) => {
-    // Clone template
-    const card = blueprintTemplate.content.cloneNode(true);
-    // Fill out card
-    card.querySelector('.card').id = `blueprint-id${blueprintId}`;
-    card.querySelector('img').src = blueprint.preview;
-    card.querySelector('[data-value="creator"]').innerText = blueprint.creator;
-    if (blueprint.fonts.length === 0) {
-      card.querySelector('[data-value="font-count"]').remove();
-    } else {
-      let text = `<b>${blueprint.fonts.length}</b> Named Font` + (blueprint.fonts.length > 1 ? 's' : '');
-      card.querySelector('[data-value="font-count"]').innerHTML = text;
-    }
-    if (blueprint.templates.length === 0) {
-      card.querySelector('[data-value="template-count"]').remove();
-    } else {
-      let text = `<b>${blueprint.templates.length}</b> Template` + (blueprint.templates.length > 1 ? 's' : '');
-      card.querySelector('[data-value="template-count"]').innerHTML = text;
-    }
-    const episode_count = Object.keys(blueprint.episodes).length
-    if (episode_count === 0) {
-      card.querySelector('[data-value="episode-count"]').remove();
-    } else {
-      let text = `<b>${episode_count}</b> Episode Override` + (episode_count > 1 ? 's' : '');
-      card.querySelector('[data-value="episode-count"]').innerHTML = text;
-    }
-    card.querySelector('[data-value="description"]').innerHTML = '<p>' + blueprint.description.join('</p><p>') + '</p>';
+    // Clone template, fill out card
+    let card = blueprintTemplate.content.cloneNode(true);
+    card = populateBlueprintCard(card, blueprint, `blueprint-id${blueprintId}`);
     // Assign import to button
     card.querySelector('a[data-action="import-blueprint"]').onclick = () => importBlueprint(`blueprint-id${blueprintId}`, blueprint);
     return card;
