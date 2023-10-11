@@ -106,7 +106,7 @@ def add_connection(
     log.info(f'Created {connection.log_str}')
 
     # Update global use_ attribute
-    setattr(preferences, f'use_{connection.interface.lower()}', True)
+    setattr(preferences, f'use_{connection.interface_type.lower()}', True)
 
     # Update InterfaceGroup
     if connection.enabled:

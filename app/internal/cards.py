@@ -297,7 +297,6 @@ def create_card(
 
 
 def resolve_card_settings(
-        preferences: Preferences,
         episode: Episode,
         *,
         log: Logger = log,
@@ -307,7 +306,6 @@ def resolve_card_settings(
     all global, Series, and Template overrides.
 
     Args:
-        preferences: Preferences with the default global settings.
         episode: Episode whose Card settings are being resolved.
         log: Logger for all log messages.
 
@@ -337,6 +335,7 @@ def resolve_card_settings(
         series_font_dict = series_template.font.card_properties
 
     # Resolve all settings from global -> Episode
+    preferences = get_preferences()
     card_settings = TieredSettings.new_settings(
         {'hide_season_text': False, 'hide_episode_text': False},
         DefaultFont,

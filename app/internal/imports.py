@@ -1143,6 +1143,7 @@ def parse_series(
     # If not a dictionary of series, return empty list
     if not isinstance(all_series, dict):
         return []
+
     # Determine which media server to assume libraries are for
     if preferences.use_emby:
         library_type = 'emby_library_name'
@@ -1320,7 +1321,6 @@ def parse_series(
 
 def import_cards(
         db: Session,
-        preferences: Preferences,
         series: Series,
         directory: Optional[Path],
         image_extension: CardExtension,
@@ -1335,7 +1335,6 @@ def import_cards(
 
     Args:
         db: Database to query for existing Cards.
-        preferences: Preferences for resolving the Card settings.
         series: Series whose Cards are being imported.
         directory: Directory to search for Cards to import. If omitted,
             then the Series default card directory is used.
@@ -1391,7 +1390,7 @@ def import_cards(
 
         # Get finalized Card settings for this Episode, override card file
         try:
-            card_settings = resolve_card_settings(preferences, episode, log=log)
+            card_settings = resolve_card_settings(episode, log=log)
         except HTTPException as e:
             log.exception(f'{series.log_str} {episode.log_str} Cannot import '
                           f'Card - settings are invalid {e}', e)
