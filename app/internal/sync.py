@@ -7,13 +7,12 @@ from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
-from app.database.query import get_all_templates
+from app.database.query import get_all_templates, get_interface
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.episodes import refresh_episode_data
 from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo
 from app.models.connection import Connection
-from app.models.preferences import Preferences
 from app.models.series import Series
 from app.models.sync import Sync
 from app.schemas.sync import (
@@ -21,12 +20,6 @@ from app.schemas.sync import (
 )
 
 from modules.Debug import log
-from modules.EmbyInterface2 import EmbyInterface
-from modules.ImageMagickInterface import ImageMagickInterface
-from modules.JellyfinInterface2 import JellyfinInterface
-from modules.PlexInterface2 import PlexInterface
-from modules.SonarrInterface2 import SonarrInterface
-from modules.TMDbInterface2 import TMDbInterface
 
 
 def sync_all(*, log: Logger = log) -> None:
@@ -40,16 +33,7 @@ def sync_all(*, log: Logger = log) -> None:
             # Get and run all Syncs
             for sync in db.query(Sync).all():
                 try:
-                    run_sync(
-                        db, get_preferences(), sync,
-                        get_emby_interfaces(),
-                        get_imagemagick_interface(),
-                        get_jellyfin_interfaces(),
-                        get_plex_interfaces(),
-                        get_sonarr_interfaces(),
-                        get_tmdb_interface(),
-                        log=log,
-                    )
+                    run_sync(db, sync, log=log)
                 except HTTPException as e:
                     log.exception(f'{sync.log_str} Error Syncing - {e.detail}', e)
                 except OperationalError:
@@ -85,14 +69,7 @@ def add_sync(
 
 def run_sync(
         db: Session,
-        preferences: Preferences,
         sync: Sync,
-        emby_interfaces: InterfaceGroup[int, EmbyInterface],
-        imagemagick_interface: ImageMagickInterface,
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface],
-        plex_interfaces: InterfaceGroup[int, PlexInterface],
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface],
-        tmdb_interface: InterfaceGroup[int, TMDbInterface],
         background_tasks: Optional[BackgroundTasks] = None,
         *,
         log: Logger = log,
@@ -104,70 +81,21 @@ def run_sync(
 
     Args:
         db: Database to query for existing Series.
-        preferences: Preferences to use for global settings.
         sync: Sync to run.
-        *_interface: Interfaces to query.
         background_tasks: BackgroundTasks to add tasks to for any newly
             added Series.
         log: Logger for all log messages.
     """
 
-    # If specified interface is disabled, raise 409
-    interface = {
-        'Emby': emby_interfaces,
-        'Jellyfin': jellyfin_interfaces,
-        'Plex': plex_interfaces,
-        'Sonarr': sonarr_interfaces,
-    }[sync.interface][sync.interface_id]
-    if interface is None:
-        raise HTTPException(
-            status_code=409,
-            detail=f'Unable to communicate with {sync.interface}',
-        )
+    # Get specified Interface
+    interface = get_interface(sync.interface_id, raise_exc=True)
 
-    # Sync depending on the associated interface
-    added: list[Series] = []
+    # Query interface for the indicated subset of Series
     log.debug(f'{sync.log_str} starting to query {sync.interface}[{sync.interface_id}]')
-    if sync.interface == 'Emby':
-        interface: EmbyInterface = interface
-        all_series = interface.get_all_series(
-            required_libraries=sync.required_libraries,
-            excluded_libraries=sync.excluded_libraries,
-            required_tags=sync.required_tags,
-            excluded_tags=sync.excluded_tags,
-            log=log,
-        )
-    elif sync.interface == 'Jellyfin':
-        interface: JellyfinInterface = interface
-        all_series = interface.get_all_series(
-            required_libraries=sync.required_libraries,
-            excluded_libraries=sync.excluded_libraries,
-            required_tags=sync.required_tags,
-            excluded_tags=sync.excluded_tags,
-            log=log,
-        )
-    elif sync.interface == 'Plex':
-        interface: PlexInterface = interface
-        all_series = interface.get_all_series(
-            required_libraries=sync.required_libraries,
-            excluded_libraries=sync.excluded_libraries,
-            required_tags=sync.required_tags,
-            excluded_tags=sync.excluded_tags,
-            log=log,
-        )
-    elif sync.interface == 'Sonarr':
-        interface: SonarrInterface = interface
-        all_series = interface.get_all_series(
-            required_tags=sync.required_tags,
-            excluded_tags=sync.excluded_tags,
-            monitored_only=sync.monitored_only,
-            downloaded_only=sync.downloaded_only,
-            required_series_type=sync.required_series_type,
-            excluded_series_type=sync.excluded_series_type,
-            log=log,
-        )
+    all_series = interface.get_all_series(**sync.sync_kwargs, log=log)
 
     # Process all Series returned by Sync
+    added: list[Series] = []
     for series_info, lib_or_dir in all_series:
         # Look for existing Series
         existing = db.query(Series)\
@@ -197,7 +125,7 @@ def run_sync(
                     continue
 
                 libraries.append({
-                    'interface': library_connection.interface,
+                    'interface': library_connection.interface_type,
                     'interface_id': interface_id,
                     'name': library,
                 })
@@ -244,50 +172,34 @@ def run_sync(
         Path(series.source_directory).mkdir(parents=True, exist_ok=True)
         # Set Series ID's, download poster and logo
         if background_tasks is None:
-            set_series_database_ids(
-                series, db, emby_interfaces, jellyfin_interfaces,
-                plex_interfaces, sonarr_interfaces, tmdb_interface, log=log,
-            )
-            download_series_poster(
-                db, preferences, series, emby_interfaces, imagemagick_interface,
-                jellyfin_interfaces, plex_interfaces, tmdb_interface, log=log,
-            )
-            download_series_logo(
-                preferences, emby_interfaces, imagemagick_interface,
-                jellyfin_interfaces, tmdb_interface, series, log=log,
-            )
-            refresh_episode_data(
-                db, preferences, series, emby_interfaces, jellyfin_interfaces,
-                plex_interfaces, sonarr_interfaces, tmdb_interface, log=log
-            )
+            set_series_database_ids(series, db, log=log)
+            download_series_poster(db, series, log=log)
+            download_series_logo(series, log=log)
+            refresh_episode_data(db, series, log=log)
         else:
             background_tasks.add_task(
                 # Function
                 set_series_database_ids,
                 # Arguments
-                series, db, emby_interfaces, jellyfin_interfaces,
-                plex_interfaces, sonarr_interfaces, tmdb_interface, log=log,
+                series, db, log=log,
             )
             background_tasks.add_task(
                 # Function
                 download_series_poster,
                 # Arguments
-                db, preferences, series, emby_interfaces, imagemagick_interface,
-                jellyfin_interfaces, plex_interfaces, tmdb_interface, log=log,
+                db, series, log=log,
             )
             background_tasks.add_task(
                 # Function
                 download_series_logo,
                 # Arguments
-                preferences, emby_interfaces, imagemagick_interface,
-                jellyfin_interfaces, tmdb_interface, series, log=log,
+                series, log=log,
             )
             background_tasks.add_task(
                 # Function
                 refresh_episode_data,
                 # Arguments
-                db, preferences, series, emby_interfaces, jellyfin_interfaces,
-                plex_interfaces, sonarr_interfaces, tmdb_interface, log=log
+                db, series, log=log
             )
 
     return added

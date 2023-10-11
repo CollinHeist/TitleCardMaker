@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal
 
 from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request
@@ -251,12 +251,6 @@ def import_series_yaml(
         import_yaml: ImportSeriesYaml = Body(...),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
-        imagemagick_interface: ImageMagickInterface = Depends(get_imagemagick_interface),
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
     ) -> list[Series]:
     """
     Import all Series defined in the given YAML.
@@ -300,22 +294,19 @@ def import_series_yaml(
             # Function
             set_series_database_ids,
             # Arguments
-            series, db, emby_interfaces, jellyfin_interfaces, plex_interfaces,
-            sonarr_interfaces, tmdb_interface, log=log,
+            series, db, log=log,
         )
         background_tasks.add_task(
             # Function
             download_series_poster,
             # Arguments
-            db, preferences, series, emby_interfaces, imagemagick_interface,
-            jellyfin_interfaces, plex_interfaces, tmdb_interface, log=log,
+            db, series, log=log,
         )
         background_tasks.add_task(
             # Function
             download_series_logo,
             # Arguments
-            preferences, emby_interfaces, imagemagick_interface,
-            jellyfin_interfaces, tmdb_interface, series, log=log,
+            series, log=log,
         )
         all_series.append(series)
     db.commit()
@@ -329,7 +320,6 @@ def import_cards_for_series(
         request: Request,
         series_id: int,
         card_directory: ImportCardDirectory = Body(...),
-        preferences: Preferences = Depends(get_preferences),
         db: Session = Depends(get_database)
     ) -> None:
     """
@@ -345,7 +335,7 @@ def import_cards_for_series(
     series = get_series(db, series_id, raise_exc=True)
 
     import_cards(
-        db, preferences, series, card_directory.directory,
+        db, series, card_directory.directory,
         card_directory.image_extension, card_directory.force_reload,
         log=request.state.log,
     )
@@ -356,7 +346,6 @@ def import_cards_for_series(
 def import_cards_for_multiple_series(
         request: Request,
         card_import: MultiCardImport = Body(...),
-        preferences: Preferences = Depends(get_preferences),
         db: Session = Depends(get_database)
     ) -> None:
     """
@@ -374,7 +363,6 @@ def import_cards_for_multiple_series(
 
         # Import Cards for this Series
         import_cards(
-            db, preferences, series, None, card_import.image_extension,
-            card_import.force_reload,
-            log=request.state.log,
+            db, series, None, card_import.image_extension,
+            card_import.force_reload, log=request.state.log,
         )

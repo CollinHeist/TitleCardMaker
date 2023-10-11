@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, Request
 from fastapi_pagination.ext.sqlalchemy import paginate
@@ -31,11 +31,6 @@ def add_new_episode(
         request: Request,
         new_episode: NewEpisode = Body(...),
         db: Session = Depends(get_database),
-        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Episode:
     """
     Add a new episode to the given series.
@@ -60,10 +55,7 @@ def add_new_episode(
     refresh_remote_card_types(db, log=request.state.log)
 
     # Add ID's for this Episode
-    set_episode_ids(
-        db, series, [episode], emby_interfaces, jellyfin_interfaces,
-        plex_interfaces, sonarr_interfaces, tmdb_interface, log=request.state.log,
-    )
+    set_episode_ids(db, series, [episode], log=request.state.log)
 
     return episode
 
@@ -148,12 +140,6 @@ def refresh_episode_data_(
         request: Request,
         series_id: int,
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences),
-        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> None:
     """
     Refresh the episode data associated with the given series. This
@@ -167,11 +153,7 @@ def refresh_episode_data_(
     series = get_series(db, series_id, raise_exc=True)
 
     # Refresh episode data, use BackgroundTasks for ID assignment
-    refresh_episode_data(
-        db, preferences, series, emby_interfaces, jellyfin_interfaces,
-        plex_interfaces, sonarr_interfaces, tmdb_interface, background_tasks,
-        log=request.state.log,
-    )
+    refresh_episode_data(db, series, background_tasks, log=request.state.log)
 
 
 @episodes_router.patch('/batch', status_code=200)

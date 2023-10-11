@@ -1,3 +1,4 @@
+from logging import logger
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +13,7 @@ from app.database.session import Base
 from app.models.template import EpisodeTemplates
 from app.schemas.preferences import Style
 
+from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
 
 
@@ -216,6 +218,39 @@ class Episode(Base):
             tvrage_id=self.tvrage_id,
             airdate=self.airdate,
         )
+
+
+    @hybrid_method
+    def update_from_info(self, other: EpisodeInfo, log: Logger = log) -> bool:
+        """
+        Update this Episodes' database IDs from the given EpisodeInfo.
+
+        >>> e = Episode(..., imdb_id='tt1234', emby_id='0:9876')
+        >>> ei = EpisodeInfo(..., emby_id='1:456', tmdb_id=50,
+                                  imdb_id='tt990')
+        >>> e.update_from_info(ei)
+        >>> e.imdb_id, e.emby_id, s.tmdb_id
+        ('tt1234', '0:9876,1:456', 50)
+
+        Args:
+            other: Other set of info to merge into this.
+            log: Logger for all log messages.
+
+        Returns:
+            Whether this object was changed.
+        """
+
+        info = self.as_episode_info
+        info.copy_ids(other)
+
+        changed = False
+        for id_type, id_ in info.ids.items():
+            if id_ and getattr(self, id_type) != id_:
+                print(f'{self.log_str}.{id_type} | {getattr(self, id_type)} -> {id_}')
+                setattr(self, id_type, id_)
+                changed = True
+
+        return changed
 
 
     @hybrid_method

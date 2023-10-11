@@ -1,5 +1,5 @@
 from shutil import copy as file_copy
-from typing import Literal, Optional, Union
+from typing import Literal, Optional
 
 from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, Query,
@@ -13,7 +13,7 @@ from sqlalchemy import func
 
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.database.session import Page
-from app.database.query import get_all_templates, get_font, get_series
+from app.database.query import get_all_templates, get_font, get_interface, get_series
 from app.internal.episodes import refresh_episode_data
 from app.internal.translate import translate_episode
 from app import models
@@ -23,17 +23,13 @@ from app.internal.cards import (
 )
 from app.internal.series import (
     add_series, delete_series_and_episodes, download_series_poster,
-    load_all_series_title_cards, load_series_title_cards, lookup_series,
+    load_all_series_title_cards, lookup_series,
 )
 from app.internal.sources import download_episode_source_image
 from app.internal.auth import get_current_user
-from app.schemas.base import MediaServer, UNSPECIFIED
-from app.schemas.preferences import EpisodeDataSource
+from app.schemas.base import UNSPECIFIED
 from app.schemas.series import NewSeries, SearchResult, Series, UpdateSeries
 
-from modules.EmbyInterface2 import EmbyInterface
-from modules.JellyfinInterface2 import JellyfinInterface
-from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
@@ -133,13 +129,6 @@ def add_new_series(
         request: Request,
         new_series: NewSeries = Body(...),
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences),
-        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
-        imagemagick_interface: ImageMagickInterface = Depends(get_imagemagick_interface),
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Series:
     """
     Create a new Series. This also creates background tasks to set the
@@ -148,11 +137,7 @@ def add_new_series(
     - new_series: Series definition to create.
     """
 
-    return add_series(
-        new_series, background_tasks, db, preferences, emby_interfaces,
-        imagemagick_interface, jellyfin_interfaces, plex_interfaces,
-        sonarr_interfaces, tmdb_interface, log=request.state.log,
-    )
+    return add_series(new_series, background_tasks, db, log=request.state.log)
 
 
 @series_router.delete('/{series_id}', status_code=204)
@@ -216,7 +201,7 @@ def search_existing_series(
 
 
 @series_router.get('/lookup/sonarr', status_code=200)
-def look_series_on_sonarr(
+def lookup_series_on_sonarr(
         request: Request,
         name: str = Query(...),
         db: Session = Depends(get_database),
@@ -238,7 +223,6 @@ def look_series_on_sonarr(
 
 @series_router.get('/{series_id}', status_code=200)
 def get_series_config(
-        request: Request,
         series_id: int,
         db: Session = Depends(get_database)
     ) -> Series:
@@ -247,8 +231,9 @@ def get_series_config(
 
     - series_id: ID of the series to get the config of.
     """
+
     series = get_series(db, series_id, raise_exc=True)
-    request.state.log.info(f'{series.as_series_info=!r}')
+
     return series
 
 
@@ -331,9 +316,6 @@ def load_title_cards_into_all_servers(
         request: Request,
         reload: bool = Query(default=False),
         db: Session = Depends(get_database),
-        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
     ) -> None:
     """
     Load all of the given Series' Cards.
@@ -348,8 +330,7 @@ def load_title_cards_into_all_servers(
     series = get_series(db, series_id, raise_exc=True)
 
     load_all_series_title_cards(
-        series, db, emby_interfaces, jellyfin_interfaces, plex_interfaces,
-        force_reload=reload, log=request.state.log,
+        series, db, force_reload=reload, log=request.state.log,
     )
 
 
@@ -359,12 +340,6 @@ def process_series(
         request: Request,
         series_id: int,
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences),
-        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> None:
     """
     Completely process the given Series. This does all major "tasks,"
@@ -388,10 +363,7 @@ def process_series(
     # Begin processing the Series
     # Refresh episode data, use BackgroundTasks for ID assignment
     log.debug(f'{series.log_str} Started refreshing Episode data')
-    refresh_episode_data(
-        db, preferences, series, emby_interfaces, jellyfin_interfaces,
-        plex_interfaces, sonarr_interfaces, tmdb_interface, log=log,
-    )
+    refresh_episode_data(db, series, log=log)
 
     # Begin downloading Source images - use BackgroundTasks
     log.debug(f'{series.log_str} Started downloading source images')
@@ -400,8 +372,7 @@ def process_series(
             # Function
             download_episode_source_image,
             # Arguments
-            db, preferences, emby_interfaces, jellyfin_interfaces,
-            plex_interfaces, tmdb_interface, episode, raise_exc=False, log=log,
+            db, episode, raise_exc=False, log=log,
         )
 
     # Begin Episode translation - use BackgroundTasks
@@ -411,14 +382,11 @@ def process_series(
             # Function
             translate_episode,
             # Arguments
-            db, episode, tmdb_interface, log=log,
+            db, episode, log=log,
         )
 
     # Update watch statuses
-    update_episode_watch_statuses(
-        emby_interfaces, jellyfin_interfaces, plex_interfaces,
-        series, series.episodes, log=log,
-    )
+    update_episode_watch_statuses(series, series.episodes, log=log)
     db.commit()
 
     # Begin Card creation - use BackgroundTasks
@@ -427,7 +395,7 @@ def process_series(
             # Function
             create_episode_card,
             # Arguments
-            db, preferences, background_tasks, episode, raise_exc=False, log=log
+            db, background_tasks, episode, raise_exc=False, log=log
         )
 
 
@@ -437,7 +405,6 @@ def remove_series_labels(
         series_id: int,
         labels: list[str] = Query(default=['TCM', 'Overlay']),
         db: Session = Depends(get_database),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
     ) -> None:
     """
     Remove the given labels from the given Series' Episodes within Plex.
@@ -450,14 +417,13 @@ def remove_series_labels(
     # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    # Raise 409 if no library, or the server's interface is invalid
-    for interface_id, library in series.get_libraries('Plex'):
-        if (interface := plex_interfaces[interface_id]):
-            interface.remove_series_labels(
-                library, series.as_series_info, labels, log=request.state.log,
-            )
-        else:
-            log.warning(f'Unable to communicate with Plex[{interface_id}]')
+    # Remove labels from each library
+    for library in series.libraries:
+        interface = get_interface(library['interface_id'], raise_exc=True)
+        interface.remove_series_labels(
+            library['name'], series.as_series_info, labels,
+            log=request.state.log
+        )
 
     return None
 
@@ -467,12 +433,6 @@ def download_series_poster_(
         series_id: int,
         request: Request,
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences),
-        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
-        imagemagick_interface: ImageMagickInterface = Depends(get_imagemagick_interface),
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
     ) -> None:
     """
     Download and return a poster for the given Series.
@@ -483,14 +443,10 @@ def download_series_poster_(
     # Find Series with this ID, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    download_series_poster(
-        db, preferences, series, emby_interfaces, imagemagick_interface,
-        jellyfin_interfaces, plex_interfaces, tmdb_interface,
-        log=request.state.log,
-    )
+    download_series_poster(db, series, log=request.state.log)
 
 
-@series_router.put('/{series_id}/poster/query', status_code=200)
+@series_router.get('/{series_id}/poster/query', status_code=200)
 def query_series_poster(
         series_id: int,
         db: Session = Depends(get_database),

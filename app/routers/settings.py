@@ -60,7 +60,7 @@ def get_global_episode_data_source(
 
     return [
         {
-            'interface': connection.interface,
+            'interface': connection.interface_type,
             'interface_id': connection.id,
             'name': connection.name,
             'selected': preferences.episode_data_source['interface_id'] == connection.id,
@@ -105,12 +105,12 @@ def get_image_source_priority(
 
     # Add remaining non-Sonarr Connections
     connections = db.query(Connection)\
-        .filter(Connection.interface != 'Sonarr')\
+        .filter(Connection.interface_type != 'Sonarr')\
         .all()
     for connection in connections:
         if connection.id not in source_ids:
             sources.append({
-                'interface': connection.interface,
+                'interface': connection.interface_type,
                 'interface_id': connection.id,
                 'name': connection.name,
                 'selected': False,

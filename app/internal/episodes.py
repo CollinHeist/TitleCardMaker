@@ -1,27 +1,21 @@
 from logging import Logger
 from time import sleep
-from typing import Optional, Union
+from typing import Iterable, Optional
 
 from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
+from app.database.query import get_interface
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.templates import get_effective_series_template
 from app import models
 from app.models.episode import Episode
 from app.models.series import Series
-from app.models.preferences import Preferences
-from app.schemas.preferences import EpisodeDataSource
 
 from modules.Debug import log
-from modules.EmbyInterface2 import EmbyInterface
 from modules.EpisodeInfo2 import EpisodeInfo
-from modules.JellyfinInterface2 import JellyfinInterface
-from modules.PlexInterface2 import PlexInterface
-from modules.SonarrInterface2 import SonarrInterface
 from modules.TieredSettings import TieredSettings
-from modules.TMDbInterface2 import TMDbInterface
 
 
 def refresh_all_episode_data(*, log: Logger = log) -> None:
@@ -45,11 +39,7 @@ def refresh_all_episode_data(*, log: Logger = log) -> None:
                     continue
 
                 try:
-                    refresh_episode_data(
-                        db, get_preferences(), series, get_emby_interface(),
-                        get_jellyfin_interface(), get_plex_interface(),
-                        get_sonarr_interface(), get_tmdb_interface(), log=log,
-                    )
+                    refresh_episode_data(db, series, log=log)
                 except OperationalError:
                     log.debug(f'Database is busy, sleeping..')
                     sleep(30)
@@ -60,24 +50,17 @@ def refresh_all_episode_data(*, log: Logger = log) -> None:
 def set_episode_ids(
         db: Session,
         series: Series,
-        episodes: list[Episode],
-        emby_interfaces: InterfaceGroup[int, EmbyInterface],
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface],
-        plex_interfaces: InterfaceGroup[int, PlexInterface],
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface],
-        tmdb_interface: Optional[TMDbInterface],
+        episodes: Iterable[Episode],
         *,
         log: Logger = log,
     ) -> None:
     """
-    Set the database ID's of the given Episodes using the given
-    Interfaces.
+    Set the database IDs of the given Episodes.
 
     Args:
         db: Database to read/update/modify.
-        series: Series of the Episodes whose ID's are being set.
-        episodes: List of Episodes to set the ID's of.
-        *_interface(s): Interface(s) to set ID's from.
+        series: Series of the Episodes whose IDs are being set.
+        episodes: Any Episodes to set the IDs of.
         log: Logger for all log messages.
     """
 
@@ -85,47 +68,26 @@ def set_episode_ids(
     episode_infos = [episode.as_episode_info for episode in episodes]
 
     # Set ID's from all possible interfaces
-    for interface_id, library in series.get_libraries('Emby'):
-        if (interface := emby_interfaces[interface_id]):
+    for library in series.libraries:
+        if (interface := get_interface(library['interface_id'])):
             interface.set_episode_ids(
-                library, series.as_series_info, episode_infos, log=log
+                library['name'], series.as_series_info, episode_infos, log=log,
             )
-    for interface_id, library in series.get_libraries('Jellyfin'):
-        if (interface := jellyfin_interfaces[interface_id]):
-            interface.set_episode_ids(
-                library, series.as_series_info, episode_infos, log=log
-            )
-    for interface_id, library in series.get_libraries('Plex'):
-        if (interface := plex_interfaces[interface_id]):
-            interface.set_episode_ids(
-                library, series.as_series_info, episode_infos, log=log
-            )
-    for _, interface in sonarr_interfaces:
+
+    # Set from Sonarr and TMDb
+    for _, interface in get_sonarr_interfaces():
         interface.set_episode_ids(
             None, series.as_series_info, episode_infos, log=log
         )
-    if tmdb_interface:
-        tmdb_interface.set_episode_ids(
+    for _, interface in get_tmdb_interfaces():
+        interface.set_episode_ids(
             None, series.as_series_info, episode_infos, log=log
         )
 
     # Update database if new ID's are available
     changed = False
     for episode, episode_info in zip(episodes, episode_infos):
-        for id_type in ('imdb_id', 'tmdb_id', 'tvdb_id', 'tvrage_id'):
-            if getattr(episode, id_type) is None and episode_info.has_id(id_type):
-                setattr(episode, id_type, getattr(episode_info, id_type))
-                changed = True
-
-        for id_type in ('emby_id', 'jellyfin_id'): # TODO + rating keys
-            if getattr(episode_info, id_type) > getattr(series, id_type):
-                setattr(
-                    episode,
-                    id_type,
-                    str(getattr(episode_info, id_type) + getattr(series, id_type))
-                )
-                changed = True
-                log.info(f'episode.{id_type} = {getattr(series, id_type)}')
+        changed |= episode.update_from_info(episode_info, log=log)
 
     # Write any changes to the DB
     if changed:
@@ -133,13 +95,7 @@ def set_episode_ids(
 
 
 def get_all_episode_data(
-        preferences: Preferences,
         series: Series,
-        emby_interfaces: InterfaceGroup[int, EmbyInterface],
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface],
-        plex_interfaces: InterfaceGroup[int, PlexInterface],
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface],
-        tmdb_interface: Optional[TMDbInterface],
         *,
         raise_exc: bool = True,
         log: Logger = log,
@@ -149,9 +105,7 @@ def get_all_episode_data(
     data source.
 
     Args:
-        preferences: Global Preferences to use for setting resolution.
         series: Series whose Episode data is being queried.
-        *_interface: Interface to potentially query for Episode data.
         raise_exc: Whether to raise any HTTPExceptions caused by
             disabled interfaces or missing libraries.
         log: Logger for all log messages.
@@ -170,48 +124,36 @@ def get_all_episode_data(
 
     # Get Series' effective Episode data source
     series_template_dict = get_effective_series_template(series, as_dict=True)
-    episode_data_source = EpisodeDataSource(
-        **TieredSettings.resolve_singular_setting(
-            preferences.episode_data_source,
-            series_template_dict.get('data_source', None),
-            series.data_source,
-        )
+    interface_id = TieredSettings.resolve_singular_setting(
+        get_preferences().episode_data_source['interface_id'],
+        series_template_dict.get('data_source_id', None),
+        series.data_source_id,
     )
 
     # Raise 409 if cannot communicate with the Series' Episode data source
-    if episode_data_source.interface == 'TMDb':
-        interface = tmdb_interface
-    elif episode_data_source.interface_id in emby_interfaces:
-        interface = emby_interfaces[episode_data_source.interface_id]
-    elif episode_data_source.interface_id in jellyfin_interfaces:
-        interface = jellyfin_interfaces[episode_data_source.interface_id]
-    elif episode_data_source.interface_id in plex_interfaces:
-        interface = plex_interfaces[episode_data_source.interface_id]
-    elif episode_data_source.interface_id in sonarr_interfaces:
-        interface = sonarr_interfaces[episode_data_source.interface_id]
-
-    if interface is None:
+    if (interface := get_interface(interface_id)) is None:
         if raise_exc:
             raise HTTPException(
                 status_code=409,
-                detail=f'Unable to communicate with {episode_data_source}'
+                detail=f'Unable to communicate with Connection[{interface_id}]'
             )
         return []
 
-    if episode_data_source.interface in ('Sonarr', 'TMDb'):
+    # Sonarr and TMDb do not have libraries, query separately
+    if interface.INTERFACE_TYPE in ('Sonarr', 'TMDb'):
         return interface.get_all_episodes(None, series.as_series_info, log=log)
 
-    # Verify Series has an associated Library (if EDS is a media server)
-    libraries = list(series.get_libraries(episode_data_source.interface_id))
-    if not libraries:
+    # Verify Series has an associated Library if EDS is a media server
+    if not (libraries := list(series.get_libraries(interface_id))):
         if raise_exc:
             raise HTTPException(
                 status_code=409,
-                detail=f'Series does not have a Library for Connection[{episode_data_source.interface_id}]'
+                detail=f'Series does not have a Library for Connection[{interface_id}]'
             )
-        log.error(f'Series does not have a Library for Connection[{episode_data_source.interface_id}]')
+        log.error(f'Series does not have a Library for Connection[{interface_id}]')
         return []
 
+    # Get Episodes from the Series' first (primary) library
     return interface.get_all_episodes(
         libraries[0], series.as_series_info, log=log
     )
@@ -219,13 +161,7 @@ def get_all_episode_data(
 
 def refresh_episode_data(
         db: Session,
-        preferences: Preferences,
         series: Series,
-        emby_interfaces: InterfaceGroup[int, EmbyInterface],
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface],
-        plex_interfaces: InterfaceGroup[int, PlexInterface],
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface],
-        tmdb_interface: Optional[TMDbInterface],
         background_tasks: Optional[BackgroundTasks] = None,
         *,
         log: Logger = log,
@@ -238,9 +174,7 @@ def refresh_episode_data(
 
     Args:
         db: Database to read/update/modify.
-        preferences: Preferences to reference global settings.
         series: Series whose episodes are being refreshed.
-        *_interface(s): Interface(s) to set ID's from.
         background_tasks: Optional BackgroundTasks queue to add the
             Episode ID assignment task to, if provided. If omitted then
             the assignment is done in a blocking manner.
@@ -253,16 +187,12 @@ def refresh_episode_data(
     """
 
     # Get all Episodes for this Series from the Episode data source
-    all_episodes = get_all_episode_data(
-        preferences, series, emby_interfaces, jellyfin_interfaces,
-        plex_interfaces, sonarr_interfaces, tmdb_interface, raise_exc=True,
-        log=log,
-    )
+    all_episodes = get_all_episode_data(series, raise_exc=True, log=log)
 
     # Get effective episode data source and sync specials toggle
     series_template = get_effective_series_template(series)
     sync_specials: bool = TieredSettings.resolve_singular_setting(
-        preferences.sync_specials,
+        get_preferences().sync_specials,
         getattr(series_template, 'sync_specials', None),
         series.sync_specials,
     )
@@ -319,16 +249,12 @@ def refresh_episode_data(
 
     # Set Episode ID's for all new Episodes as background task or directly
     if background_tasks is None:
-        set_episode_ids(
-            db, series, episodes, emby_interfaces, jellyfin_interfaces,
-            plex_interfaces, sonarr_interfaces, tmdb_interface, log=log,
-        )
+        set_episode_ids(db, series, episodes, log=log)
     else:
         background_tasks.add_task(
             set_episode_ids,
             # Arguments
-            db, series, episodes, emby_interfaces, jellyfin_interfaces,
-            plex_interfaces, sonarr_interfaces, tmdb_interface, log=log
+            db, series, episodes, log=log
         )
 
     # Commit to database if changed

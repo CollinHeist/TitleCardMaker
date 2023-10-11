@@ -1,3 +1,5 @@
+from typing import Literal, TypedDict, Union
+
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, JSON
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
@@ -5,6 +7,17 @@ from sqlalchemy.orm import relationship
 from app.database.session import Base
 from app.models.template import SyncTemplates
 
+
+SyncInterface = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr']
+SonarrKwargs = TypedDict('SonarrKwargs',{
+    'required_tags': list[str], 'excluded_tags': list[str],
+    'monitored_only': bool, 'downloaded_only': bool,
+    'required_series_type': str, 'excluded_series_type': str,
+})
+NonSonarrKwargs = TypedDict('NonSnarrKwargs' {
+    'required_libraries': list[str], 'excluded_libraries': list[str],
+    'required_tags': list[str], 'excluded_tags': list[str]
+})
 
 class Sync(Base):
     """
@@ -27,7 +40,7 @@ class Sync(Base):
     )
 
     name = Column(String, nullable=False)
-    interface = Column(String, nullable=False)
+    interface: SyncInterface = Column(String, nullable=False)
 
     required_tags = Column(JSON, default=[], nullable=False)
     required_libraries = Column(JSON, default=[], nullable=False)
@@ -61,3 +74,33 @@ class Sync(Base):
         """
 
         return f'Sync[{self.id}] {self.name}'
+
+
+    @hybrid_property
+    def sync_kwargs(self) -> Union[SonarrKwargs, NonSonarrKwargs]:
+        """
+        Keyword arguments for calling the Sync function of the Interface
+        associated with this type of Sync - e.g. some implementation of
+        `SyncInterface.get_all_series(**sync.sync_kwargs)`.
+
+        Returns:
+            Dictionary that can be unpacked in a call of the sync
+            function.
+        """
+
+        if self.interface == 'Sonarr':
+            return {
+                'required_tags': self.required_tags,
+                'excluded_tags': self.excluded_tags,
+                'monitored_only': self.monitored_only,
+                'downloaded_only': self.downloaded_only,
+                'required_series_type': self.required_series_type,
+                'excluded_series_type': self.excluded_series_type,
+            }
+        
+        return {
+            'required_libraries': self.required_libraries,
+            'excluded_libraries': self.excluded_libraries,
+            'required_tags': self.required_tags,
+            'excluded_tags': self.excluded_tags,
+        }

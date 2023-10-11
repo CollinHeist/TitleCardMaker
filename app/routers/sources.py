@@ -38,11 +38,6 @@ def download_series_source_images(
         series_id: int,
         # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences),
-        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> None:
     """
     Download a Source image for all Episodes in the given Series. This
@@ -64,9 +59,7 @@ def download_series_source_images(
             # Function
             download_episode_source_image,
             # Arguments
-            db, preferences, emby_interfaces, jellyfin_interfaces,
-            plex_interfaces, tmdb_interface, episode, raise_exc=False,
-            log=request.state.log,
+            db, episode, raise_exc=False, log=request.state.log,
         )
 
 
@@ -77,9 +70,6 @@ def download_series_backdrop(
         # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        # emby_interface = Depends(get_emby_interface),
-        # jellyfin_interface = Depends(get_jellyfin_interface),
-        # plex_interface = Depends(get_plex_interface),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Optional[str]:
     """
@@ -127,11 +117,6 @@ def download_series_logo_(
         request: Request,
         # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences),
-        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
-        imagemagick_interface: ImageMagickInterface = Depends(get_imagemagick_interface),
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Optional[str]:
     """
     Download a logo for the given Series. This uses the most relevant
@@ -146,10 +131,7 @@ def download_series_logo_(
     # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    return download_series_logo(
-        preferences, emby_interfaces, imagemagick_interface,
-        jellyfin_interfaces, tmdb_interface, series, log=request.state.log,
-    )
+    return download_series_logo(series, log=request.state.log)
 
 
 @source_router.post('/episode/{episode_id}', status_code=200)
@@ -158,11 +140,6 @@ def download_episode_source_image_(
         request: Request,
         # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences),
-        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Optional[str]:
     """
     Download a Source image for the given Episode. This uses the most
@@ -179,8 +156,7 @@ def download_episode_source_image_(
     episode = get_episode(db, episode_id, raise_exc=True)
 
     return download_episode_source_image(
-        db, preferences, emby_interfaces, jellyfin_interfaces, plex_interfaces,
-        tmdb_interface, episode, raise_exc=True, log=request.state.log,
+        db, episode, raise_exc=True, log=request.state.log,
     )
 
 
@@ -274,7 +250,6 @@ def get_existing_series_source_images(
         series_id: int,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
     ) -> Page[SourceImage]:
     """
     Get the SourceImage details for the given Series.
@@ -288,8 +263,7 @@ def get_existing_series_source_images(
             .order_by(models.episode.Episode.season_number,
                       models.episode.Episode.episode_number),
         transformer=lambda episodes: [
-            get_source_image(preferences, imagemagick_interface, episode)
-            for episode in episodes
+            get_source_image(preferences, episode) for episode in episodes
         ]
     )
 
@@ -298,8 +272,6 @@ def get_existing_series_source_images(
 def get_existing_episode_source_images(
         episode_id: int,
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences),
-        imagemagick_interface: ImageMagickInterface = Depends(get_imagemagick_interface),
     ) -> SourceImage:
     """
     Get the SourceImage details for the given Episode.
@@ -310,7 +282,7 @@ def get_existing_episode_source_images(
     # Get the Episode and Series with this ID, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
 
-    return get_source_image(preferences, imagemagick_interface, episode)
+    return get_source_image(episode)
 
 
 @source_router.post('/episode/{episode_id}/upload', status_code=201)
@@ -321,7 +293,6 @@ async def set_episode_source_image(
         file: Optional[UploadFile] = None,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        imagemagick_interface: ImageMagickInterface = Depends(get_imagemagick_interface),
     ) -> SourceImage:
     """
     Set the Source Image for the given Episode. If there is an existing
@@ -395,7 +366,7 @@ async def set_episode_source_image(
     )
 
     # Return created SourceImage
-    return get_source_image(preferences, imagemagick_interface, episode)
+    return get_source_image(episode)
 
 
 @source_router.post('/series/{series_id}/logo/upload', status_code=201)
@@ -406,7 +377,6 @@ async def set_series_logo(
         file: Optional[UploadFile] = None,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        imagemagick_interface: ImageMagickInterface = Depends(get_imagemagick_interface),
     ) -> None:
     """
     Set the logo for the given Series. If there is an existing logo
@@ -453,9 +423,7 @@ async def set_series_logo(
     if url is not None:
         # If logo is SVG, handle separately
         if url.endswith('.svg'):
-            return process_svg_logo(
-                url, series, file, imagemagick_interface, log=log,
-            )
+            return process_svg_logo(url, series, file, log=log)
 
         try:
             content = get(url, timeout=30).content

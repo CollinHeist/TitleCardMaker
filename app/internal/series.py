@@ -1,13 +1,13 @@
 from logging import Logger
 from pathlib import Path
 from time import sleep
-from typing import Literal, Optional, Union
+from typing import Optional, Union
 
 from fastapi import BackgroundTasks, HTTPException
 from requests import get
 from sqlalchemy.exc import InvalidRequestError, OperationalError
 from sqlalchemy.orm import Session
-from app.database.query import get_all_templates, get_font
+from app.database.query import get_all_templates, get_font, get_interface
 
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app import models
@@ -47,15 +47,7 @@ def set_all_series_ids(*, log: Logger = log) -> None:
             changed = False
             for series in db.query(Series).all():
                 try:
-                    changed |= set_series_database_ids(
-                        series, db,
-                        get_emby_interfaces(),
-                        get_jellyfin_interfaces(),
-                        get_plex_interfaces(),
-                        get_sonarr_interfaces(),
-                        get_tmdb_interface(),
-                        commit=False,
-                    )
+                    changed |= set_series_database_ids(series, db, commit=False)
                 except HTTPException:
                     log.warning(f'{series.log_str} Skipping ID assignment')
                     continue
@@ -89,11 +81,7 @@ def load_all_media_servers(*, log: Logger = log) -> None:
 
                 # Load Title Cards for this Series
                 try:
-                    load_all_series_title_cards(
-                        series, db, get_emby_interfaces(),
-                        get_jellyfin_interfaces(), get_plex_interfaces(),
-                        log=log,
-                    )
+                    load_all_series_title_cards(series, db, log=log)
                 except HTTPException:
                     log.warning(f'{series.log_str} Skipping Title Card loading')
                     continue
@@ -123,15 +111,7 @@ def download_all_series_posters(*, log: Logger = log) -> None:
             # Get all Series
             for series in db.query(Series).all():
                 try:
-                    download_series_poster(
-                        db, get_preferences(), series,
-                        get_emby_interfaces(),
-                        get_imagemagick_interface(),
-                        get_jellyfin_interfaces(),
-                        get_plex_interfaces(),
-                        get_tmdb_interface(),
-                        log=log,
-                    )
+                    download_series_poster(db, series, log=log)
                 except HTTPException:
                     log.warning(f'{series.log_str} Skipping poster selection')
                     continue
@@ -142,11 +122,6 @@ def download_all_series_posters(*, log: Logger = log) -> None:
 def set_series_database_ids(
         series: Series,
         db: Session,
-        emby_interfaces: InterfaceGroup[int, EmbyInterface],
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface],
-        plex_interfaces: InterfaceGroup[int, PlexInterface],
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface],
-        tmdb_interface: Optional[TMDbInterface],
         *,
         commit: bool = True,
         log: Logger = log,
@@ -157,7 +132,6 @@ def set_series_database_ids(
     Args:
         series: Series to set the IDs of.
         db: Database to commit changes to.
-        *_interface: Interface to query for database IDs from.
         commit: Whether to commit changes after setting any IDs.
         log: Logger for all log messages.
 
@@ -167,19 +141,13 @@ def set_series_database_ids(
 
     # Create SeriesInfo object for this entry, query all interfaces
     series_info = series.as_series_info
-    for interface_id, library_name in series.get_libraries('Emby'):
-        if (interface := emby_interfaces[interface_id]):
-            interface.set_series_ids(library_name, series_info, log=log)
-    for interface_id, library_name in series.get_libraries('Jellyfin'):
-        if (interface := jellyfin_interfaces[interface_id]):
-            interface.set_series_ids(library_name, series_info, log=log)
-    for interface_id, library_name in series.get_libraries('Plex'):
-        if (interface := plex_interfaces[interface_id]):
-            interface.set_series_ids(library_name, series_info, log=log)
-    for _, interface in sonarr_interfaces:
+    for library in series.libraries:
+        if (interface := get_interface(library['interface_id'])):
+            interface.set_series_ids(library['name'], series_info, log=log)
+    for _, interface in get_sonarr_interfaces():
         interface.set_series_ids(None, series_info, log=log)
-    if tmdb_interface:
-        tmdb_interface.set_series_ids(None, series_info, log=log)
+    for _, interface in get_tmdb_interfaces():
+        interface.set_series_ids(None, series_info, log=log)
 
     # Update Series with new IDs
     if (changed := series.update_from_series_info(series_info)) and commit:
@@ -190,13 +158,7 @@ def set_series_database_ids(
 
 def download_series_poster(
         db: Session,
-        preferences: Preferences,
         series: Series,
-        emby_interfaces: InterfaceGroup[int, EmbyInterface],
-        image_magick_interface: ImageMagickInterface,
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface],
-        plex_interfaces: InterfaceGroup[int, PlexInterface],
-        tmdb_interface: Optional[TMDbInterface] = None,
         *,
         log: Logger = log,
     ) -> None:
@@ -205,9 +167,7 @@ def download_series_poster(
 
     Args:
         db: Database to commit any changes to.
-        preferences: Base Preferences to get the global asset directory.
         series: Series to download the poster of.
-        *_interface: Interface to TMDb to query for posters.
         log: Logger for all log messages.
     """
 
@@ -224,18 +184,7 @@ def download_series_poster(
     # Download poster from Media Server if possible
     series_info, poster = series.as_series_info, None
     for library in series.libraries:
-        if (library['interface'] == 'Emby'
-            and (interface := emby_interfaces[library['interface_id']])):
-            poster = interface.get_series_poster(
-                library['name'], series_info, log=log
-            )
-        elif (library['interface'] == 'Jellyfin'
-            and (interface := jellyfin_interfaces[library['interface_id']])):
-            poster = interface.get_series_poster(
-                library['name'], series_info, log=log
-            )
-        elif (library['interface'] == 'Plex'
-            and (interface := plex_interfaces[library['interface_id']])):
+        if (interface := get_interface(library['interface_id'])):
             poster = interface.get_series_poster(
                 library['name'], series_info, log=log
             )
@@ -245,8 +194,10 @@ def download_series_poster(
             break
 
     # If no poster was returned, download from TMDb
-    if poster is None and tmdb_interface:
-        poster = tmdb_interface.get_series_poster(series_info, log=log)
+    if poster is None:
+        for _, interface in get_tmdb_interfaces():
+            if (poster := interface.get_series_poster(series_info, log=log)):
+                break
 
     # If no posters were returned, log and exit
     if poster is None:
@@ -254,7 +205,7 @@ def download_series_poster(
         return None
 
     # Get path to the poster to download
-    path = preferences.asset_directory / str(series.id) / 'poster.jpg'
+    path = get_preferences().asset_directory / str(series.id) / 'poster.jpg'
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
         # Write or download
@@ -271,7 +222,7 @@ def download_series_poster(
 
     # Create resized small poster
     resized_path = path.parent / 'poster-750.jpg'
-    image_magick_interface.resize_image(
+    get_imagemagick_interface().resize_image(
         path, resized_path, by='width', width=750,
     )
 
@@ -406,9 +357,6 @@ def load_series_title_cards(
 def load_all_series_title_cards(
         series: Series,
         db: Session,
-        emby_interfaces: InterfaceGroup[int, EmbyInterface],
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface],
-        plex_interfaces: InterfaceGroup[int, PlexInterface],
         force_reload: bool = False,
         *,
         log: Logger = log,
@@ -421,26 +369,23 @@ def load_all_series_title_cards(
         series: Series to load the Cards of.
         media_server: Where to load the Cards into.
         db: Database to look for and add Loaded records from/to.
-        *_interfaces: Interfaces to all Media Servers to load Cards into
         force_reload: Whether to reload Cards even if no changes are
             detected.
         log: Logger for all log messages.
     """
 
-    # Load Cards for all Emby, Jellyfin, and Plex libraries
-    for interface_type, interface_group in (('Emby', emby_interfaces),
-                                            ('Jellyfin', jellyfin_interfaces),
-                                            ('Plex', plex_interfaces)):
-        for interface_id, library in series.get_libraries(interface_type):
-            if (interface := interface_group[interface_id]) is None:
-                raise HTTPException(
-                    status_code=409,
-                    detail=f'Unable to communicate with Connection {interface_id}',
-                )
-
+    # Load into each assigned library
+    for library in series.libraries:
+        interface_id = library['interface_id']
+        if (interface := get_interface(interface_id)):
             load_series_title_cards(
                 series, library, interface_id, db, interface,
                 force_reload=force_reload, log=log,
+            )
+        else:
+            raise HTTPException(
+                status_code=409,
+                detail=f'Unable to communicate with Connection {interface_id}',
             )
 
     return None
@@ -533,13 +478,6 @@ def add_series(
         new_series: NewSeries,
         background_tasks: BackgroundTasks,
         db: Session,
-        preferences: Preferences,
-        emby_interfaces: InterfaceGroup[int, EmbyInterface],
-        imagemagick_interface: ImageMagickInterface,
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface],
-        plex_interfaces: InterfaceGroup[int, PlexInterface],
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface],
-        tmdb_interface: Optional[TMDbInterface],
         *,
         log: Logger = log,
     ) -> Series:
@@ -553,7 +491,6 @@ def add_series(
         background_tasks: BackgroundTasks to add the Episode data refresh
             task to.
         db: Database to add the Series to.
-        preferences: Global Preferences for setting resolution.
         *_interface: Interface to query.
         log: Logger for all log messages.
 
@@ -580,18 +517,9 @@ def add_series(
     Path(series.source_directory).mkdir(parents=True, exist_ok=True)
 
     # Set Series ID's, download poster and logo
-    set_series_database_ids(
-        series, db, emby_interfaces, jellyfin_interfaces, plex_interfaces,
-        sonarr_interfaces, tmdb_interface, log=log,
-    )
-    download_series_poster(
-        db, preferences, series, emby_interfaces, imagemagick_interface,
-        jellyfin_interfaces, plex_interfaces, tmdb_interface, log=log
-    )
-    download_series_logo(
-        preferences, emby_interfaces, imagemagick_interface, jellyfin_interfaces,
-        tmdb_interface, series, log=log,
-    )
+    set_series_database_ids(series, db, log=log)
+    download_series_poster(db, series, log=log)
+    download_series_logo(series, log=log)
 
     # Refresh card types in case new remote type was specified
     refresh_remote_card_types(db, log=log)
@@ -601,9 +529,7 @@ def add_series(
         # Function
         refresh_episode_data,
         # Arguments
-        db, preferences, series, emby_interfaces, jellyfin_interfaces,
-        plex_interfaces, sonarr_interfaces, tmdb_interface, background_tasks,
-        log=log,
+        db, series, log=log,
     )
 
     return series

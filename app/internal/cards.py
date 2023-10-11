@@ -7,13 +7,13 @@ from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy import or_
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Query, Session
+from app.database.query import get_interface
 
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.templates import get_effective_templates
 from app import models
 from app.models.card import Card
 from app.models.episode import Episode
-from app.models.preferences import Preferences
 from app.models.series import Series
 from app.schemas.font import DefaultFont
 from app.schemas.card import NewTitleCard
@@ -22,9 +22,6 @@ from modules.BaseCardType import BaseCardType
 
 from modules.CleanPath import CleanPath
 from modules.Debug import log
-from modules.EmbyInterface2 import EmbyInterface
-from modules.JellyfinInterface2 import JellyfinInterface
-from modules.PlexInterface2 import PlexInterface
 from modules.RemoteCardType2 import RemoteCardType
 from modules.RemoteFile import RemoteFile
 from modules.SeasonTitleRanges import SeasonTitleRanges
@@ -50,17 +47,12 @@ def create_all_title_cards(*, log: Logger = log) -> None:
             all_series = db.query(Series).all()
             for series in all_series:
                 # Set watch statuses of all Episodes
-                update_episode_watch_statuses(
-                    get_emby_interface(), get_jellyfin_interface(),
-                    get_plex_interface(), series, series.episodes, log=log,
-                )
+                update_episode_watch_statuses(series, series.episodes, log=log)
 
                 # Create Cards for all Episodes
                 for episode in series.episodes:
                     try:
-                        create_episode_card(
-                            db, get_preferences(), None, episode, log=log,
-                        )
+                        create_episode_card(db, None, episode, log=log)
                     except HTTPException as e:
                         if e.status_code != 404:
                             log.warning(f'{series.log_str} {episode.log_str} - skipping Card')
@@ -213,7 +205,6 @@ def add_card_to_database(
 
 
 def validate_card_type_model(
-        preferences: Preferences,
         card_settings: dict,
         *,
         log: Logger = log,
@@ -223,7 +214,6 @@ def validate_card_type_model(
     and BaseCardType class.
 
     Args:
-        preferences: Preferences to query the BaseCardType class from.
         card_settings: Dictionary of Card settings.
         log: Logger for all log messages.
 
@@ -236,7 +226,7 @@ def validate_card_type_model(
     """
 
     # Initialize class of the card type being created
-    CardClass = preferences.get_card_type_class(
+    CardClass = get_preferences().get_card_type_class(
         card_settings['card_type'], log=log
     )
     if CardClass is None:
@@ -262,7 +252,6 @@ def validate_card_type_model(
 
 def create_card(
         db: Session,
-        preferences: Preferences,
         card_model: NewTitleCard,
         CardClass: BaseCardType,
         CardTypeModel: Any,
@@ -274,7 +263,6 @@ def create_card(
 
     Args:
         db: Database to add the Card entry to.
-        preferences: Preferences to pass to the CardClass.
         card_model: TitleCard model to update and add to the Database.
         CardClass: Class to initialize for Card creation.
         CardTypeModel: Pydantic model for this Card to pass the
@@ -283,7 +271,7 @@ def create_card(
     """
 
     # Create card
-    card_maker = CardClass(**CardTypeModel.dict(), preferences=preferences)
+    card_maker = CardClass(**CardTypeModel.dict(),preferences=get_preferences())
     card_maker.create()
 
     # If file exists, card was created successfully - add to database
@@ -574,7 +562,6 @@ def resolve_card_settings(
 
 def create_episode_card(
         db: Session,
-        preferences: Preferences,
         background_tasks: Optional[BackgroundTasks],
         episode: Episode,
         *,
@@ -586,8 +573,6 @@ def create_episode_card(
 
     Args:
         db: Database to query and update.
-        preferences: Global Preferences to use as lowest priority
-            settings.
         background_tasks: Optional BackgroundTasks to queue card
             creation within.
         episode: Episode whose Card is being created.
@@ -602,7 +587,7 @@ def create_episode_card(
     # Resolve Card settings
     series = episode.series
     try:
-        card_settings = resolve_card_settings(preferences, episode, log=log)
+        card_settings = resolve_card_settings(episode, log=log)
     except HTTPException as exc:
         if raise_exc:
             raise exc
@@ -616,9 +601,7 @@ def create_episode_card(
     )
 
     # Get a validated card class, and card type Pydantic model
-    CardClass, CardTypeModel = validate_card_type_model(
-        preferences, card_settings, log=log,
-    )
+    CardClass, CardTypeModel = validate_card_type_model(card_settings, log=log)
 
     # Create Card parent directories if needed
     card_settings['card_file'].parent.mkdir(parents=True, exist_ok=True)
@@ -626,11 +609,11 @@ def create_episode_card(
     # Inner function to begin card creation as a background task, or immediately
     def _start_card_creation():
         if background_tasks is None:
-            create_card(db, preferences, card, CardClass, CardTypeModel,log=log)
+            create_card(db, card, CardClass, CardTypeModel, log=log)
         else:
             background_tasks.add_task(
-                create_card, db, preferences, card, CardClass, CardTypeModel,
-                log=log,
+                create_card,
+                db, card, CardClass, CardTypeModel, log=log,
             )
 
     # No existing card, create and add to database
@@ -670,9 +653,6 @@ def create_episode_card(
 
 
 def update_episode_watch_statuses(
-        emby_interfaces: InterfaceGroup[int, EmbyInterface],
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface],
-        plex_interfaces: InterfaceGroup[int, PlexInterface],
         series: Series,
         episodes: list[Episode],
         *,
@@ -680,30 +660,17 @@ def update_episode_watch_statuses(
     ) -> None:
     """
     Update the watch statuses of all Episodes for the given Series. Only
-    the first library provided for each media server is queried.
+    the first library (with a valid Interface) is queried.
 
     Args:
-        *_interfaces: Interfaces to the media server to query for
-            updated watch statuses.
         series: Series whose Episodes are being updated.
         episodes: List of Episodes to update the statuses of.
         log: Logger for all log messages.
     """
 
-    for interface_id, library in series.get_libraries('Emby'):
-        if (interface := emby_interfaces[interface_id]):
-            interface.update_watched_statuses(
-                library, series.as_series_info, episodes, log=log,
-            )
-            break
-    for interface_id, library in series.get_libraries('Jellyfin'):
-        if (interface := jellyfin_interfaces[interface_id]):
-            interface.update_watched_statuses(
-                library, series.as_series_info, episodes, log=log,
-            )
-            break
-    for interface_id, library in series.get_libraries('Plex'):
-        if (interface := plex_interfaces[interface_id]):
+    # Try each library, stopping after first successful query
+    for library in series.libraries:
+        if (interface := get_interface(library['interface_id'])):
             interface.update_watched_statuses(
                 library, series.as_series_info, episodes, log=log,
             )

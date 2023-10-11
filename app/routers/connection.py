@@ -439,13 +439,13 @@ def delete_connection(
 
     # Remove Interface from group
     try:
-        if connection.interface == 'Emby':
+        if connection.interface_type == 'Emby':
             emby_interfaces.disable(interface_id)
-        elif connection.interface == 'Jellyfin':
+        elif connection.interface_type == 'Jellyfin':
             jellyfin_interfaces.disable(interface_id)
-        elif connection.interface == 'Plex':
+        elif connection.interface_type == 'Plex':
             plex_interfaces.disable(interface_id)
-        elif connection.interface == 'Sonarr':
+        elif connection.interface_type == 'Sonarr':
             sonarr_interfaces.disable(interface_id)
     except KeyError:
         pass

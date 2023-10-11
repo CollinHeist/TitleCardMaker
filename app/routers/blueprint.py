@@ -1,7 +1,7 @@
 from json import dump
 from pathlib import Path
 from shutil import copy as copy_file, make_archive as zip_directory
-from typing import Literal, Optional
+from typing import Literal
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse
@@ -42,12 +42,6 @@ def export_series_blueprint(
         include_global_defaults: bool = Query(default=True),
         include_episode_overrides: bool = Query(default=True),
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences),
-        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> BlankBlueprint:
     """
     Generate the Blueprint for the given Series. This Blueprint can be
@@ -69,14 +63,11 @@ def export_series_blueprint(
     episode_data = []
     if include_episode_overrides:
         episode_data = get_all_episode_data(
-            preferences, series, emby_interfaces, jellyfin_interfaces,
-            plex_interfaces, sonarr_interfaces, tmdb_interface, raise_exc=False,
-            log=request.state.log,
+            series, raise_exc=False, log=request.state.log,
         )
 
     return generate_series_blueprint(
-        series, episode_data, include_global_defaults,
-        include_episode_overrides, preferences,
+        series, episode_data, include_global_defaults, include_episode_overrides
     )
 
 
@@ -123,11 +114,6 @@ async def export_series_blueprint_as_zip(
         include_episode_overrides: bool = Query(default=True),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> FileResponse:
     """
     Export a zipped file of the given Series' Blueprint (as JSON), any
@@ -151,9 +137,7 @@ async def export_series_blueprint_as_zip(
     episode_data = []
     if include_episode_overrides:
         episode_data = get_all_episode_data(
-            preferences, series, emby_interfaces, jellyfin_interfaces,
-            plex_interfaces, sonarr_interfaces, tmdb_interface, raise_exc=False,
-            log=request.state.log,
+            series, raise_exc=False, log=request.state.log,
         )
         # Get just the EpisodeInfo objects
         episode_data = [data[0] for data in episode_data]
@@ -161,7 +145,7 @@ async def export_series_blueprint_as_zip(
     # Generate Blueprint
     blueprint = generate_series_blueprint(
         series, episode_data, include_global_defaults,
-        include_episode_overrides, preferences,
+        include_episode_overrides,
     )
     blueprint = BlankBlueprint(**blueprint).dict()
 
@@ -354,13 +338,6 @@ def import_blueprint_and_series(
         request: Request,
         blueprint: RemoteMasterBlueprint = Body(...),
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences),
-        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
-        imagemagick_interface: ImageMagickInterface = Depends(get_imagemagick_interface),
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Series:
     """
     Import the given Blueprint - creating the associated Series if it
@@ -390,13 +367,11 @@ def import_blueprint_and_series(
         log.debug(f'Blueprint Series {series_info} not found - adding to database')
         series = add_series(
             NewSeries(name=series_info.name, year=series_info.year),
-            background_tasks, db, preferences, emby_interfaces,
-            imagemagick_interface, jellyfin_interfaces, plex_interfaces,
-            sonarr_interfaces, tmdb_interface, log=log,
+            background_tasks, db, log=log,
         )
 
     # Import Blueprint
-    import_blueprint(db, preferences, series, blueprint, log=log)
+    import_blueprint(db, series, blueprint, log=log)
 
     return series
 
@@ -407,7 +382,6 @@ def import_series_blueprint_by_id(
         series_id: int,
         blueprint_id: int,
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences),
     ) -> None:
     """
     Import the Blueprint with the given ID to the given Series.
@@ -424,7 +398,7 @@ def import_series_blueprint_by_id(
     blueprint = get_blueprint_by_id(series, blueprint_id, log=request.state.log)
 
     # Import Blueprint
-    import_blueprint(db, preferences, series, blueprint, log=request.state.log)
+    import_blueprint(db, series, blueprint, log=request.state.log)
 
 
 @blueprint_router.put('/import/series/{series_id}', status_code=200)
@@ -433,7 +407,6 @@ def import_series_blueprint_(
         series_id: int,
         blueprint: RemoteBlueprint = Body(...),
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences)
     ) -> None:
     """
     Import the given Blueprint into the given Series.
@@ -446,4 +419,4 @@ def import_series_blueprint_(
     series = get_series(db, series_id, raise_exc=True)
 
     # Import Blueprint
-    import_blueprint(db, preferences, series, blueprint, log=request.state.log)
+    import_blueprint(db, series, blueprint, log=request.state.log)

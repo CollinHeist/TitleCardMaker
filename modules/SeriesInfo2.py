@@ -1,5 +1,5 @@
 from re import match, compile as re_compile
-from typing import Optional, Union
+from typing import Iterable, Optional, Union
 
 from plexapi.video import Show as PlexShow
 from sqlalchemy import and_, literal, or_
@@ -107,6 +107,41 @@ class SeriesInfo(DatabaseInfoContainer):
         """Returns a string representation of the object."""
 
         return self.full_name
+
+
+    @staticmethod
+    def from_series_infos(
+            primary: 'SeriesInfo',
+            *series_infos: tuple['SeriesInfo'],
+        ) -> 'SeriesInfo':
+        """
+        Construct a SeriesInfo object from all the given objects. This
+        takes `primary` as the base info (name, year, etc.), and then
+        adds the IDs from the other infos.
+
+        Args:
+            primary: Base info.
+            series_infos: Any number of infos whose IDs to utilize in
+                the construction of the resulting SeriesInfo object.
+                IDs are taken in priority sequentially.
+
+        Returns:
+            SeriesInfo object with the name/year of `primary`, but the
+            combined IDs of all infos. 
+        """
+
+        series_info = SeriesInfo(
+            primary.name, primary.year, emby_id=primary.emby_id,
+            imdb_id=primary.imdb_id, jellyfin_id=primary.jellyfin_id,
+            sonarr_id=primary.sonarr_id, tmdb_id=primary.tmdb_id,
+            tvdb_id=primary.tvdb_id, tvrage_id=primary.tvrage_id,
+            match_titles=primary.match_titles,
+        )
+
+        for info in series_infos:
+            series_info.copy_ids(info)
+
+        return SeriesInfo
 
 
     @staticmethod

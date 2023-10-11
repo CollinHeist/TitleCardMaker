@@ -1,6 +1,6 @@
 from pathlib import Path
 from re import sub as re_sub, IGNORECASE
-from typing import Any, Iterator, Literal, Optional, Union
+from typing import Any, Iterator, Literal, TypedDict, Union
 
 from sqlalchemy import (
     Boolean, Column, Float, ForeignKey, Integer, String, JSON, func
@@ -13,11 +13,19 @@ from sqlalchemy.orm import relationship
 from app.database.session import Base
 from app.dependencies import get_preferences
 from app.models.template import SeriesTemplates
+from app.schemas.connection import ServerName
 
 from modules.CleanPath import CleanPath
 from modules.SeriesInfo2 import SeriesInfo
 
+
 INTERNAL_ASSET_DIRECTORY = Path(__file__).parent.parent / 'assets'
+
+# Return type of the library iterator
+Library = TypedDict(
+    'Library',
+    {'interface': ServerName, 'interface_id': int, 'name': str}
+)
 
 
 def regex_replace(pattern, replacement, string):
@@ -65,7 +73,7 @@ class Series(Base):
 
     # Series config arguments
     directory = Column(String, default=None)
-    libraries = Column(MutableList.as_mutable(JSON), default=[], nullable=False)
+    libraries: list[Library] = Column(MutableList.as_mutable(JSON), default=[], nullable=False)
     card_filename_format = Column(String, default=None)
     sync_specials = Column(Boolean, default=None)
     skip_localized_images = Column(Boolean, default=None)
@@ -351,7 +359,7 @@ class Series(Base):
             other: Other set of Series info to merge into this.
 
         Returns:
-            Whether this object was changed at all.
+            Whether this object was changed.
         """
 
         info = self.as_series_info

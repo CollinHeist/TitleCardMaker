@@ -1,9 +1,13 @@
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app import models
+from app.dependencies import (
+    EmbyInterface, EmbyInterfaces, JellyfinInterface, JellyfinInterfaces,
+    PlexInterface, PlexInterfaces, SonarrInterface, SonarrInterfaces,
+    TMDbInterface, TMDbInterfaces,
+)
 from app.models.card import Card
 from app.models.connection import Connection
 from app.models.episode import Episode
@@ -200,3 +204,53 @@ def get_all_templates(
         get_template(db, template_id, raise_exc=raise_exc)
         for template_id in template_ids
     ]
+
+
+def get_interface(
+        interface_id: int,
+        *,
+        raise_exc: bool = True,
+    ) -> Optional[Union[EmbyInterface, JellyfinInterface, PlexInterface,
+                        SonarrInterface, TMDbInterface]]:
+    """
+    Get the `Interface` to communicate with the service with the given
+    ID. This searches all the global `InterfaceGroup` for each service.
+
+    Args:
+        interface_id: ID of the Interface to return.
+        raise_exc: Whether to raise an `HTTPException` if there is no
+            Interface with this ID.
+
+    Returns:
+        `Interface` with the given ID, or None (if `raise_exc` is False).
+    """
+
+    # Look for interface under each type
+    interface = None
+    if not interface and interface_id in EmbyInterfaces:
+        interface = EmbyInterfaces[interface_id]
+
+    if not interface and interface_id in JellyfinInterfaces:
+        interface = JellyfinInterfaces[interface_id]
+
+    if not interface and interface_id in PlexInterfaces:
+        interface = PlexInterfaces[interface_id]
+
+    if not interface and interface_id in SonarrInterfaces:
+        interface = SonarrInterfaces[interface_id]
+
+    if not interface and interface_id in TMDbInterfaces:
+        interface = TMDbInterfaces[interface_id]
+
+    # If defined (and activated), return
+    if interface:
+        return interface
+
+    # Not defined / activated, raise or return None
+    if raise_exc:
+        raise HTTPException(
+            status_code=404,
+            detail=f'No Connection with ID {interface_id}'
+        )
+
+    return None
