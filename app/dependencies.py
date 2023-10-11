@@ -1,13 +1,17 @@
+from datetime import datetime, timedelta
 from logging import Logger
+from pathlib import Path
 from typing import Iterator
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from fastapi import HTTPException, Request
+from requests import get
 from sqlalchemy.orm import Session
 
 from app.database.session import (
-    EmbyInterfaceLocal, ImageMagickInterfaceLocal, JellyfinInterfaceLocal,
-    PreferencesLocal, PlexInterfaceLocal, Scheduler, SessionLocal,
-    SonarrInterfaceLocal, TMDbInterfaceLocal,
+    BlueprintSessionMaker, EmbyInterfaceLocal, ImageMagickInterfaceLocal,
+    JellyfinInterfaceLocal, PreferencesLocal, PlexInterfaceLocal, Scheduler,
+    SessionLocal, SonarrInterfaceLocal, TMDbInterfaceLocal, IS_DOCKER,
 )
 from app.models.preferences import Preferences
 
@@ -20,6 +24,13 @@ from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
 
+if IS_DOCKER:
+    BLUEPRINT_DATABASE_FILE = Path('/config/.modules/blueprints.db')
+else:
+    BLUEPRINT_DATABASE_FILE = Path(__file__).parent.parent / 'modules' \
+        / '.objects' / 'blueprints.db'
+
+
 def get_database() -> Iterator[Session]:
     """
     Dependency to get a Session to the SQLite database.
@@ -30,6 +41,62 @@ def get_database() -> Iterator[Session]:
     """
 
     db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+def download_blueprint_database(*, log: Logger = log) -> None:
+    """
+    Download the Blueprint SQL database from the GitHub repository.
+
+    Args:
+        log: Logger for all log messages.
+    """
+
+    DB_URL = 'https://github.com/CollinHeist/TCM-Blueprints-v2/raw/master/blueprints.db'
+
+    response = get(DB_URL, timeout=30)
+
+    # If no file was found, raise
+    if response.status_code == 404:
+        log.error(f'No blueprint database file found at "{DB_URL}"')
+        raise HTTPException(
+            status_code=404,
+            detail=f'No Blueprint database file found',
+        )
+
+    # Non-404 error, raise
+    if not response.ok:
+        raise HTTPException(
+            status_code=response.status_code,
+            detail=f'Error downloading Blueprint database',
+        )
+
+    BLUEPRINT_DATABASE_FILE.write_bytes(response.content)
+
+
+_db_expiration = datetime.now()
+def get_blueprint_database(request: Request) -> Iterator[Session]:
+    """
+    Dependency to get a Session to the Blueprint SQLite database.
+
+    Returns:
+        Iterator that yields a Session to the database then closes the
+        connection.
+    """
+
+    # Get contextual logger
+    log = request.state.log
+
+    global _db_expiration # pylint: disable=global-statement
+    if not BLUEPRINT_DATABASE_FILE.exists() or _db_expiration <= datetime.now():
+        download_blueprint_database()
+        log.debug(f'Downloaded Blueprint database')
+        _db_expiration = datetime.now() + timedelta(hours=2)
+
+    db = BlueprintSessionMaker()
     try:
         yield db
     finally:
@@ -65,7 +132,7 @@ def refresh_emby_interface(*, log: Logger = log) -> None:
     overrides the object.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     global EmbyInterfaceLocal
@@ -98,7 +165,7 @@ def refresh_imagemagick_interface() -> None:
     overrides the object.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     global ImageMagickInterfaceLocal
@@ -124,7 +191,7 @@ def refresh_jellyfin_interface(*, log: Logger = log) -> JellyfinInterface:
     overrides the object.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     global JellyfinInterfaceLocal
@@ -157,7 +224,7 @@ def refresh_plex_interface(*, log: Logger = log) -> None:
     overrides the object.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     global PlexInterfaceLocal
@@ -190,7 +257,7 @@ def refresh_sonarr_interface(*, log: Logger = log) -> None:
     overrides the object.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     global SonarrInterfaceLocal
@@ -225,7 +292,7 @@ def refresh_tmdb_interface(*, log: Logger = log) -> None:
     overrides the object.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     global TMDbInterfaceLocal

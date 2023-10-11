@@ -35,7 +35,15 @@ SQLALCHEMY_DATABASE_URL = 'sqlite:///./config/db.sqlite'
 if IS_DOCKER:
     SQLALCHEMY_DATABASE_URL = 'sqlite:////config/db.sqlite'
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={'check_same_thread': False}
+    SQLALCHEMY_DATABASE_URL, connect_args={'check_same_thread': False},
+)
+
+# URL to the Blueprints SQL database
+BLUEPRINT_SQL_DATABASE_URL = 'sqlite:///./modules/.objects/blueprints.db'
+if IS_DOCKER:
+    BLUEPRINT_SQL_DATABASE_URL = 'sqlite:////config/.modules/blueprints.db'
+blueprint_engine = create_engine(
+    BLUEPRINT_SQL_DATABASE_URL, connect_args={'check_same_thread': False},
 )
 
 
@@ -114,6 +122,13 @@ def register_custom_functions(
     """
     dbapi_connection.create_function('regex_replace', 3, re_sub)
     dbapi_connection.create_function('partial_ratio', 2, partial_ratio)
+@listens_for(blueprint_engine, 'connect')
+def register_custom_functions_blueprints(
+        dbapi_connection,
+        connection_record, # pylint: disable=unused-argument
+    ) -> None:
+    """When the engine is connected, register the `regex_replace` function"""
+    dbapi_connection.create_function('regex_replace', 3, re_sub)
 
 
 # Session maker for connecting to each database
@@ -121,6 +136,8 @@ SessionLocal = sessionmaker(
     bind=engine, expire_on_commit=False, autocommit=False, autoflush=False,
 )
 Base = declarative_base()
+BlueprintSessionMaker = sessionmaker(bind=blueprint_engine)
+BlueprintBase = declarative_base()
 
 # Scheduler
 Scheduler = BackgroundScheduler(
