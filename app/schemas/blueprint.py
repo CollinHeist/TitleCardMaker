@@ -1,12 +1,16 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from datetime import datetime
+from json import loads
+from re import sub as re_sub, IGNORECASE
 from typing import Any, Optional
 
-from pydantic import root_validator # pylint: disable=no-name-in-module
+from pydantic import Field, root_validator, validator # pylint: disable=no-name-in-module
 
 from app.schemas.base import Base
 from app.schemas.font import TitleCase
 from app.schemas.series import Condition, SeasonTitleRange, Translation
+
+from modules.CleanPath import CleanPath
 
 """
 Base classes
@@ -34,8 +38,8 @@ class SeriesBase(BlueprintBase):
     skip_localized_images: Optional[bool] = None
 
 class BlueprintSeries(SeriesBase):
+    template_ids: list[int] = []
     match_titles: Optional[bool] = None
-    template_ids: Optional[list[int]] = None
     font_color: Optional[str] = None
     font_title_case: Optional[TitleCase] = None
     font_size: Optional[float] = None
@@ -44,6 +48,7 @@ class BlueprintSeries(SeriesBase):
     font_interline_spacing: Optional[int] = None
     font_interword_spacing: Optional[int] = None
     font_vertical_shift: Optional[int] = None
+    source_files: list[str] = []
 
 class BlueprintEpisode(BlueprintSeries):
     title: Optional[str] = None
@@ -79,6 +84,8 @@ class Blueprint(Base):
     episodes: dict[str, BlueprintEpisode] = {}
     templates: list[BlueprintTemplate] = []
     fonts: list[BlueprintFont] = []
+    previews: list[str] = []
+    description: list[str] = []
 
 """
 Update classes
@@ -97,12 +104,42 @@ class BlankBlueprint(Blueprint):
 class RemoteBlueprintFont(BlueprintFont):
     file_download_url: Optional[str] = None
 
-class RemoteBlueprint(Blueprint):
+class RemoteBlueprintSeries(Base):
+    name: str
+    year: int
+    imdb_id: Optional[str]
+    tmdb_id: Optional[int]
+    tvdb_id: Optional[int]
+
+class RemoteBlueprint(Base):
     id: int
-    description: list[str]
-    preview: str
+    blueprint_number: int
     creator: str
     created: datetime
+    series: RemoteBlueprintSeries
+    json_: Blueprint = Field(alias='json') # Any = Field(alias='json')#
 
-class RemoteMasterBlueprint(RemoteBlueprint):
-    series_full_name: str
+    @validator('json_', pre=True)
+    def parse_blueprint_json(cls, v):
+        return v if isinstance(v, dict) else loads(v)
+
+    @root_validator(skip_on_failure=True)
+    def finalize_preview_urls(cls, values):
+        # Remove illegal path characters
+        full_name = f'{values["series"].name} ({values["series"].year})'
+        clean_name = CleanPath.sanitize_name(full_name)
+
+        # Remove prefix words like A/An/The
+        sort_name = re_sub(r'^(a|an|the)(\s)', '', clean_name, flags=IGNORECASE)
+
+        # Add base repo URL to all preview filenames
+        values['json_'].previews = [
+            preview
+            if preview.startswith('https://') else
+            (f'https://github.com/CollinHeist/TCM-Blueprints-v2/raw'
+             + f'/master/blueprints/{sort_name[0].upper()}/{clean_name}/'
+             + f'{values["blueprint_number"]}/{preview}')
+            for preview in values['json_'].previews
+        ]
+
+        return values
