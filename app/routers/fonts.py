@@ -261,8 +261,8 @@ def get_suggested_font_replacements(
     missing = validator.get_missing_characters(letters)
     log.debug(f'Identified missing characters: {" ".join(missing)}')
 
-    replacements = {}
-    bad = []
+    # Attempt to find replacements for all missing characters
+    bad, replacements = [], {}
     for char in missing:
         # Remove any unicode non-spacing comibing marks - e.g. é -> ´e -> e
         replacement = ''.join(ch for ch in normalize('NFD', char)
@@ -273,7 +273,7 @@ def get_suggested_font_replacements(
             replacement = replacement.lower()
 
         # If replacement is still missing, suggest space if character is
-        # punction
+        # punctuation
         if replacement in missing and char in punctuation:
             replacement = ' '
 
