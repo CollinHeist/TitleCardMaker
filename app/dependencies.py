@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Any, Iterator, Literal, Optional
+from typing import Any, Iterator
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import HTTPException, Query
@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.database.session import (
     EmbyInterfaces, ImageMagickInterfaceLocal, JellyfinInterfaces,
-    PreferencesLocal, Scheduler, SessionLocal, TMDbInterfaceLocal,
+    PreferencesLocal, Scheduler, SessionLocal, TMDbInterfaces,
     PlexInterfaces, SonarrInterfaces,
 )
 from app.models.preferences import Preferences
@@ -63,7 +63,7 @@ def get_preferences() -> Preferences:
 def _require_interface(
         interface_group: InterfaceGroup,
         interface_id: int,
-        name: Literal['emby', 'jellyfin', 'plex', 'sonarr'],
+        name: str,
     ) -> Any:
     """
     Dependency to get the interface with the given ID from the given
@@ -266,52 +266,32 @@ def refresh_tmdb_interface(*, log: Logger = log) -> None:
     )
 
 
-def get_tmdb_interface() -> Optional[TMDbInterface]:
+def get_tmdb_interfaces() -> InterfaceGroup[int, TMDbInterface]:
     """
-    Dependency to get the global interface to TMDb. This refreshes the
-    connection if it is enabled but not initialized.
+    Dependency to get all interfaces to TMDb.
 
     Returns:
-        Global TMDbInterface.
+        Global `InterfaceGroup` of `TMDbInterface` objects.
     """
 
-    if get_preferences().use_tmdb and not TMDbInterfaceLocal:
-        try:
-            refresh_tmdb_interface()
-        except Exception as e:
-            log.exception(f'Error connecting to TMDb', e)
-
-    return TMDbInterfaceLocal
+    return TMDbInterfaces
 
 
-def require_tmdb_interface() -> TMDbInterface:
+def require_tmdb_interface(interface_id: int = Query(...)) -> TMDbInterface:
     """
-    Dependency to get the global `TMDbInterface`.
+    Dependency to get the `TMDbInterface` with the given ID. This adds
+    `interface_id` as a Query parameter.
+
+    Args:
+        interface_id: ID of the interface to get.
 
     Returns:
-        Globally defined `TMDbInterface`.
+        `TMDbInterface` with the given ID as defined in the global
+        `InterfaceGroup`.
 
     Raises:
-        HTTPException (409): TMDb is disabled.
-        HTTPException (400): TMDb cannot be communicated with.
+        HTTPException (400): The interface cannot be communicated with.
+        HTTPException (404): There is no interface with the given ID.
     """
 
-    # Interface is disabled, raise 409
-    if not get_preferences().use_tmdb:
-        raise HTTPException(
-            status_code=409,
-            detail='TMDb is disabled'
-        )
-
-    # Interface is enabled but not active, refresh
-    if not TMDbInterfaceLocal:
-        try:
-            refresh_tmdb_interface()
-        except Exception as exc:
-            log.exception('Error connecting to TMDb', exc)
-            raise HTTPException(
-                status_code=400,
-                detail='Error connecting to TMDb',
-            ) from exc
-
-    return TMDbInterfaceLocal
+    return _require_interface(TMDbInterfaces, interface_id, 'tmdb')
