@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app import models
+from app.models.blueprint import Blueprint
 from app.models.card import Card
 from app.models.episode import Episode
 from app.models.font import Font
@@ -60,6 +61,21 @@ def _get_obj(
 
     # Object found, return it
     return obj
+
+
+def get_blueprint(
+        db: Session,
+        blueprint_id: int,
+        *,
+        raise_exc: bool = True
+    ) -> Optional[Blueprint]:
+    """
+    Get the Blueprint with the given ID from the given Database.
+
+    See `_get_obj` for all details.
+    """
+
+    return _get_obj(db, Blueprint, 'Blueprint', blueprint_id, raise_exc)
 
 
 def get_card(
