@@ -120,6 +120,11 @@ class Preferences:
         # Parse local card type files
         self.parse_local_card_types()
 
+        # Convert Blueprint blacklist
+        if (self.blacklisted_blueprints
+            and any(isinstance(_, tuple) for _ in self.blacklisted_blueprints)):
+            self.blacklisted_blueprints: set[int] = set()
+
 
     def __getstate__(self) -> dict:
         """
@@ -228,7 +233,7 @@ class Preferences:
 
         self.supported_language_codes = []
         self.use_magick_prefix = False
-        self.blacklisted_blueprints = set()
+        self.blacklisted_blueprints: set[int] = set()
         self.advanced_scheduling = False
         self.task_crontabs = {}
 
