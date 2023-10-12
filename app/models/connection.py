@@ -5,10 +5,6 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import relationship
 
-from app.database.query import (
-    EmbyInterface, JellyfinInterface, PlexInterface, SonarrInterface,
-    TMDbInterface, get_interface
-)
 from app.database.session import Base
 from app.schemas.connection import InterfaceType
 
@@ -153,17 +149,6 @@ class Connection(Base):
                 'downloaded_only': self.downloaded_only,
                 'libraries': self.libraries,   
             }
-
-
-    @hybrid_property
-    def interface(self) -> Union[EmbyInterface, JellyfinInterface,
-                                 PlexInterface, SonarrInterface, TMDbInterface]:
-        """
-        Get the `Interface` object to actually communicate with this
-        Connection's interface.
-        """
-
-        return get_interface(self.id)
 
 
     def determine_libraries(self,
