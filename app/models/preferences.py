@@ -33,7 +33,6 @@ class Preferences:
         '{series_full_name} - S{season_number:02}E{episode_number:02}'
     )
     DEFAULT_CARD_EXTENSION: CardExtension = '.jpg'
-    DEFAULT_EPISODE_DATA_SOURCE = {'interface': 'TMDb', 'interface_id': 0}
     VALID_IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp')
 
     """Directory to all internal assets"""
@@ -160,7 +159,7 @@ class Preferences:
         self.card_extension = self.DEFAULT_CARD_EXTENSION
 
         self.image_source_priority: list[int] = []
-        self.episode_data_source = self.DEFAULT_EPISODE_DATA_SOURCE
+        self.episode_data_source: Optional[int] = None
         self.valid_image_extensions = self.VALID_IMAGE_EXTENSIONS
 
         self.specials_folder_format = 'Specials'
