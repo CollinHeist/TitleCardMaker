@@ -63,7 +63,7 @@ def get_global_episode_data_source(
             'interface': connection.interface_type,
             'interface_id': connection.id,
             'name': connection.name,
-            'selected': preferences.episode_data_source['interface_id'] == connection.id,
+            'selected': preferences.episode_data_source == connection.id,
         } for connection in db.query(Connection).all()
     ]
 
@@ -81,16 +81,6 @@ def get_image_source_priority(
     # Add all selected Connections
     sources, source_ids = [], []
     for connection in preferences.image_source_priority:
-        if connection['interface'] == 'TMDb':
-            sources.append({
-                'interface': 'TMDb',
-                'interface_id': 0,
-                'name': 'TMDb',
-                'selected': True,
-            })
-            source_ids.append('TMDb')
-            continue
-
         isp_connection = db.query(Connection)\
             .filter_by(id=connection['interface_id'])\
             .first()
@@ -116,40 +106,4 @@ def get_image_source_priority(
                 'selected': False,
             })
 
-    # Add TMDb
-    if preferences.use_tmdb and 'TMDb' not in source_ids:
-        sources.append({
-            'interface': 'TMDb',
-            'interface_id': 0,
-            'name': 'TMDb',
-            'selected': True,
-        })
-
     return sources
-
-
-@settings_router.get('/logo-language-priority')
-def get_tmdb_logo_language_priority(
-        preferences: PreferencesModel = Depends(get_preferences),
-    ) -> list[LanguageToggle]:
-    """
-    Get the global TMDb logo language priority setting.
-    """
-
-    languages = []
-    for code in preferences.tmdb_logo_language_priority:
-        languages.append({
-            'name': TMDbInterface.LANGUAGES[code],
-            'value': code,
-            'selected': True
-        })
-    for code, language in sorted(TMDbInterface.LANGUAGES.items(),
-                                 key=lambda kv: kv[1]):
-        if code not in preferences.tmdb_logo_language_priority:
-            languages.append({
-                'name': language,
-                'value': code,
-                'selected': False,
-            })
-
-    return languages
