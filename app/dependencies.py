@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Any, Iterator
+from typing import Any, Iterator, Optional
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import HTTPException, Query
@@ -277,21 +277,29 @@ def get_tmdb_interfaces() -> InterfaceGroup[int, TMDbInterface]:
     return TMDbInterfaces
 
 
-def require_tmdb_interface(interface_id: int = Query(...)) -> TMDbInterface:
+def require_tmdb_interface(
+        interface_id: Optional[int] = Query(default=None)
+    ) -> TMDbInterface:
     """
     Dependency to get the `TMDbInterface` with the given ID. This adds
-    `interface_id` as a Query parameter.
+    `interface_id` as a Query parameter. If the parameter is omitted,
+    then the first TMDbInterface is used.
 
     Args:
         interface_id: ID of the interface to get.
 
     Returns:
-        `TMDbInterface` with the given ID as defined in the global
+        `TMDbInterface` with the given ID (or the first one if
+        `interface_id` is None) as defined in the global
         `InterfaceGroup`.
 
     Raises:
         HTTPException (400): The interface cannot be communicated with.
         HTTPException (404): There is no interface with the given ID.
     """
+
+    if interface_id is None:
+        for _, interface in TMDbInterfaces:
+            return interface
 
     return _require_interface(TMDbInterfaces, interface_id, 'tmdb')
