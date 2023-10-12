@@ -12,17 +12,9 @@ async function getAllConnections() {
  * Get the global logo language priority, and initialize the dropdown
  * with those values.
  */
-function getLanguagePriorities() {
-  $.ajax({
-    type: 'GET',
-    url: '/api/settings/logo-language-priority',
-    success: languages => {
-      $('.dropdown[data-value="tmdb_logo_language_priority"]').dropdown({
-        values: languages,
-        clearable: true,
-      });
-    }, error: response => showErrorToast({title: 'Error Querying Language Priority', response}),
-  });
+let availableLanguages = [];
+async function getAvailableLanguages() {
+  availableLanguages = await fetch('/api/available/logo-languages').then(resp => resp.json());
 }
 
 /*
@@ -149,47 +141,6 @@ function initializeAuthForm() {
 }
 
 /*
- * Initialize the enable/disable connection toggles for all the non-auth
- * forms. This assigns the /enable API request to the checkbox checking,
- * and /disable to the unchecking. It then initializes the form enabled/
- * disabled statuses themselves.
- */
-function initializeFormToggles() {
-  // Fields to enable/disable on button presses
-  const toggleFields = [
-    {title: 'TMDb',     toggleAPI: '/api/connection/tmdb',     buttonId: '#enable-tmdb'},
-  ];
-  toggleFields.forEach(({title, buttonId, toggleAPI}) => {
-    $(buttonId).checkbox({
-      onChecked: () => {
-        // Enable connection
-        $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', false);
-        $.ajax({
-          type: 'PUT',
-          url: `${toggleAPI}/enable`,
-          success: () => showInfoToast(`Enabled ${title} Connection`),
-          error: response => showErrorToast({title: `Error Enabling ${title} Connection`, response})
-        });
-      }, onUnchecked: () => {
-        // Disable connection
-        $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', true);
-        $.ajax({
-          type: 'PUT',
-          url: `${toggleAPI}/disable`,
-          success: () => $.toast({class: 'warning', title: `Disabled ${title} Connection`}),
-          error: response => showErrorToast({title: `Error Disabling ${title} Connection`, response}),
-        });
-      },
-    })
-  });
-
-  // Initialize enabled/disabled states of form fields
-  toggleFields.forEach(({title, buttonId}) => {
-    $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', !$(buttonId)[0].classList.contains('checked'));
-  });
-}
-
-/*
  * Add form validation for all the non-Auth and Tautulli connection
  * forms.
  */
@@ -240,14 +191,13 @@ function addFormValidation() {
       api_key: ['empty'],
     },
   });
-  // OLD STUFF 
-  $('#tmdb-settings').form({
+  $('form[form-type="tmdb"]').form({
     on: 'blur',
     inline: true,
     fields: {
+      name: ['empty'],
       api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
-      minimum_width: ['integer[0..]'],
-      minimum_height: ['integer[0..]'],
+      minimum_dimensions: ['empty', 'regExp[/^\d+x\d+$/gi]'],
       logo_language_priority: ['empty', 'minLength[1]'],
     },
   });
@@ -721,39 +671,69 @@ function initializeSonarr() {
   });
 }
 
+/*
+ * Initialize the TMDb portion of the page with all TMDb Connections.
+ */
 function initializeTMDb() {
-  $('#tmdb-settings').on('submit', (event) => {
-    // Prevent default event form handler
-    event.preventDefault();
-    if (!$('#tmdb-settings').form('is valid')) { return; }
+  $.ajax({
+    type: 'GET',
+    url: '/api/connection/tmdb/all',
+    success: connections => {
+      const tmdbTemplate = document.getElementById('tmdb-connection-template');
+      const tmdbSection = document.getElementById('tmdb-connections');
 
-    // Merge multiple form inputs into list values
-    let form = new FormData(event.target);
-    for (const [key, value] of [...form.entries()]) {
-      if (value === '') { form.delete(key); }
-    }
-    // Add checkbox status as true/false
-    $.each($('#tmdb-settings').find('input[type=checkbox]'), (key, val) => {
-      form.append($(val).attr('name'), $(val).is(':checked'))
-    });
+      // Add accordions for each Connection
+      const tmdbForms = connections.map(connection => {
+        const tmdbForm = tmdbTemplate.content.cloneNode(true);
+        tmdbForm.querySelector('.title').id = `connection${connection.id}-title`;
+        tmdbForm.querySelector('.content').id = `connection${connection.id}`;
+        // Enable later
+        tmdbForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name}`;
+        tmdbForm.querySelector('input[name="name"]').value = connection.name;
+        tmdbForm.querySelector('input[name="api_key"]').value = connection.api_key;
+        tmdbForm.querySelector('input[name="minimum_resolution"]').value = connection.minimum_resolution;
+        // Language priority later
+        return tmdbForm;
+      });
+      tmdbSection.replaceChildren(...tmdbForms);
 
-    // Submit API request
-    $('#submit-tmdb').toggleClass('disabled loading', true);
-    $.ajax({
-      type: 'PATCH',
-      url: '/api/connection/tmdb',
-      data: JSON.stringify({...Object.fromEntries(form.entries())}),
-      contentType: 'application/json',
-      success: () => {
-        if (successCallback !== undefined ) { successCallback(); }
-        showInfoToast(`Updated Connection to ${title}`);
-        $('#tmdb-settings').toggleClass('error', false);
-      }, error: response => {
-        showErrorToast({title: `Invalid ${title} Connection`, response});
-        $('#tmdb-settings').toggleClass('error', true);
-        $(`${formId} .error.message`)[0].innerHTML = `<div class="header">${response.statusText}</div><p>${response.responseText}</p>`;
-      }, complete: () => $('#submit-tmdb').toggleClass('disabled loading', false),
-    });
+      // Initialize elements of Form
+      connections.forEach(connection => {
+        // Enabled
+        $(`#connection${connection.id} .checkbox[data-value="enabled"]`).checkbox(
+          connection.enabled ? 'check' : 'uncheck'
+        );
+        // Ignore localized images
+        $(`#connection${connection.id} .checkbox[data-value="ignore_localized"]`).checkbox(
+          connection.ignore_localized ? 'check' : 'uncheck'
+        );
+        // Initialize logo language priority dropdown
+        $(`#connection#${connection.id} .dropdown[data-value="logo_language_priority"]`).dropdown({
+          values: availableLanguages.map(language => {
+            return {
+              name: language.name,
+              value: language.value,
+              selected: connection.logo_language_priority.includes(language.value),
+            };
+          }),
+        });
+        // Assign save function to button
+        $(`#connection${connection.id} form`).on('submit', (event) => {
+          event.preventDefault();
+          if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
+          updateConnection(new FormData(event.target), connection.id, 'TMDb');
+        });
+        // Assign delete function to button
+        $(`#connection${connection.id} button[data-action="delete"]`).on('click', (event) => {
+          event.preventDefault();
+          deleteConnection(connection.id);
+        });
+      });
+    }, error: response => showErrorToast({title: 'Error Querying TMDb Connections', response}),
+    complete: () => {
+      addFormValidation();
+      refreshTheme();
+    },
   });
 }
 
@@ -761,6 +741,7 @@ function initializeTMDb() {
  * Add a new (blank) Connection of the given type to the UI. This adjusts the
  * save button to submit a POST request instead of PATCH. 
  */
+let tempFormId = 0;
 function addConnection(connectionType) {
   // Get the template for this connection - Jellyfin uses Emby template
   let template;
@@ -769,11 +750,17 @@ function addConnection(connectionType) {
   } else {
     template = document.getElementById(`${connectionType}-connection-template`).content.cloneNode(true);
   }
+  // Add ID to form
+  let formId = `new-connection${tempFormId}`
+  template.querySelector('form').id = formId;
+  tempFormId++;
   // Disable library fields
   if (connectionType === 'sonarr') {
     template.querySelector('.info.message').classList.remove('visible');
     template.querySelector('.button[data-action="add-library"]').classList.add('disabled');
     template.querySelector('.button[data-action="query-libraries"]').classList.add('disabled');
+  } else if (connectionType === 'tmdb') {
+    template.querySelector('.field[data-value="logo_language_priority"]').classList.add('disabled');
   }
   // Turn save button into create
   template.querySelector('button[data-action="save"] > .visible.content').innerText = 'Create';
@@ -781,6 +768,9 @@ function addConnection(connectionType) {
     event.preventDefault();
     // Parse form and submit API request
     let form = new FormData(event.target);
+    $.each($(`#${formId}`).find('input[type=checkbox]'), (key, val) => {
+      form.append($(val).attr('name'), $(val).is(':checked'));
+    });
     $.ajax({
       type: 'POST',
       url: `/api/connection/${connectionType}/new`,
@@ -798,24 +788,24 @@ function addConnection(connectionType) {
   connections.appendChild(template);
   refreshTheme();
   addFormValidation();
+  $('.ui.checkbox').checkbox();
 }
 
 async function initAll() {
   initializeEmby();
   initializeJellyfin();
   initializePlex();
-  initializeTMDb();
   await getAllConnections();
   initializeSonarr();
+  await getAvailableLanguages();
+  initializeTMDb();
 
   // Enable elements
   $('.ui.dropdown').dropdown();
   $('.ui.checkbox').checkbox();
   $('.ui.accordion').accordion();
 
-  getLanguagePriorities();
   initializeAuthForm();
-  initializeFormToggles();
   initializeTautulliForm();
 
   // Attach Tautlli modal to button
