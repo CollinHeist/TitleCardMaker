@@ -70,8 +70,8 @@ def download_series_backdrop(
         # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
-    ) -> Optional[str]:
+        tmdb_interfaces: InterfaceGroup[int, TMDbInterface] = Depends(get_tmdb_interfaces),
+    ) -> str:
     """
     Download a backdrop (art image) for the given Series. This only uses
     TMDb.
@@ -94,21 +94,20 @@ def download_series_backdrop(
         return f'/source/{series.path_safe_name}/backdrop.jpg'
 
     # Download new backdrop
-    if tmdb_interface:
-        backdrop = tmdb_interface.get_series_backdrop(
-            series.as_series_info, raise_exc=True,
-        )
-        if WebInterface.download_image(backdrop, backdrop_file, log=log):
-            log.debug(f'{series.log_str} Downloaded {backdrop_file.resolve()} from TMDb')
-            return f'/source/{series.path_safe_name}/backdrop.jpg'
+    if tmdb_interfaces:
+        for _, interface in tmdb_interfaces:
+            backdrop = interface.get_series_backdrop(
+                series.as_series_info, raise_exc=True,
+            )
+            if (backdrop
+                and WebInterface.download_image(backdrop,backdrop_file,log=log)):
+                log.debug(f'{series.log_str} Downloaded backdrop from TMDb')
+                return f'/source/{series.path_safe_name}/backdrop.jpg'
 
-        raise HTTPException(
-            status_code=400,
-            detail=f'Unable to download backdrop'
-        )
-
-    # No backdrop returned
-    return None
+    raise HTTPException(
+        status_code=400,
+        detail=f'Unable to download backdrop'
+    )
 
 
 @source_router.post('/series/{series_id}/logo', status_code=200)
