@@ -8,10 +8,10 @@ function initConnectionDropdowns() {
     type: 'GET',
     url: '/api/connection/all',
     success: connections => {
-      const emby = connections.filter(({interface}) => interface === 'Emby');
-      const jellyfin = connections.filter(({interface}) => interface === 'Jellyfin');
-      const plex = connections.filter(({interface}) => interface === 'Plex');
-      const sonarr = connections.filter(({interface}) => interface === 'Sonarr');
+      const emby = connections.filter(({interface_type}) => interface_type === 'Emby');
+      const jellyfin = connections.filter(({interface_type}) => interface_type === 'Jellyfin');
+      const plex = connections.filter(({interface_type}) => interface_type === 'Plex');
+      const sonarr = connections.filter(({interface_type}) => interface_type === 'Sonarr');
 
       $('.dropdown[data-type="emby_connections"]').dropdown({
         placeholder: 'Connection',

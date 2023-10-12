@@ -1,11 +1,11 @@
-let allConnections = [];
 /*
- * Get all the defined non-Sonarr Connections and update the allConnections
- * list.
- */
+* Get all the defined non-Sonarr Connections and update the allConnections
+* list.
+*/
+let allConnections = [];
 async function getAllConnections() {
   let allC = await fetch('/api/connection/all').then(resp => resp.json());
-  allConnections = allC.filter(connection => connection.interface !== 'Sonarr');
+  allConnections = allC.filter(connection => connection.interface_type !== 'Sonarr');
 }
 
 /*
