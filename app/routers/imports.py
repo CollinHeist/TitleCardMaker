@@ -1,3 +1,4 @@
+from shutil import copyfile
 from typing import Literal
 
 from fastapi import (
@@ -18,9 +19,7 @@ from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo
 from app import models
 from app.schemas.font import NamedFont
-from app.schemas.imports import (
-    ImportCardDirectory, ImportSeriesYaml, ImportYaml, MultiCardImport
-)
+from app.schemas.imports import ImportCardDirectory, ImportYaml, MultiCardImport
 from app.schemas.preferences import Preferences
 from app.schemas.series import Series, Template
 from app.schemas.sync import Sync
@@ -70,12 +69,8 @@ def import_connection_yaml(
         request: Request,
         connection: Literal['all', 'emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
         import_yaml: ImportYaml = Body(...),
-        preferences: Preferences = Depends(get_preferences),
-        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
-        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
-        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
-    ) -> Preferences:
+        db: Session = Depends(get_database),
+    ) -> None:
     """
     Import the connection preferences defined in the given YAML. This
     does NOT import any Sync settings.
@@ -90,21 +85,19 @@ def import_connection_yaml(
     # Parse raw YAML into dictionary
     yaml_dict = parse_raw_yaml(import_yaml.yaml)
     if len(yaml_dict) == 0:
-        return preferences
+        return None
 
     try:
         if connection in ('all', 'emby'):
-            parse_emby(preferences, yaml_dict, emby_interfaces, log=log)
+            parse_emby(db, yaml_dict, log=log)
         if connection in ('all', 'jellyfin'):
-            parse_jellyfin(preferences, yaml_dict, jellyfin_interfaces, log=log)
+            parse_jellyfin(db, yaml_dict, log=log)
         if connection in ('all', 'plex'):
-            parse_plex(preferences, yaml_dict, plex_interfaces, log=log)
+            parse_plex(db, yaml_dict, log=log)
         if connection in ('all', 'sonarr'):
-            parse_sonarr(preferences, yaml_dict, sonarr_interfaces, log=log)
+            parse_sonarr(db, yaml_dict, log=log)
         if connection in ('all', 'tmdb'):
-            parse_tmdb(preferences, yaml_dict, log=log)
-
-        return preferences
+            parse_tmdb(db, yaml_dict, log=log)
     except ValidationError as exc:
         log.exception(f'Invalid YAML', exc)
         raise HTTPException(
@@ -161,7 +154,8 @@ def import_sync_yaml(
 def import_fonts_yaml(
         request: Request,
         import_yaml: ImportYaml = Body(...),
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
+        preferences: Preferences = Depends(get_preferences),
     ) -> list[NamedFont]:
     """
     Import all Fonts defined in the given YAML. This does NOT import any
@@ -191,12 +185,25 @@ def import_fonts_yaml(
 
     # Add each defined Font to the database
     all_fonts = []
-    for new_font in new_fonts:
+    for new_font, font_file in new_fonts:
         font = models.font.Font(**new_font.dict())
         db.add(font)
+        db.commit()
         log.info(f'{font.log_str} imported to Database')
         all_fonts.append(font)
-    db.commit()
+
+        # If there is a Font file, copy into asset directory
+        if font_file is not None:
+            if font_file.exists():
+                font_directory = preferences.asset_directory / 'fonts'
+                file_path = font_directory / str(font.id) / font_file.name
+                copyfile(font_file, file_path)
+
+                # Update object and database
+                font.file_name = file_path.name
+                db.commit()
+            else:
+                log.error(f'Font File "{font_file.resolve()}" does not exist')
 
     return all_fonts
 
