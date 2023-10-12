@@ -51,7 +51,7 @@ class Connection(Base):
     name = sa.Column(sa.String, nullable=False)
     api_key = sa.Column(sa.String, nullable=False)
 
-    url = sa.Column(sa.String, nullable=False)
+    url = sa.Column(sa.String, default=None, nullable=True)
     use_ssl = sa.Column(sa.Boolean, default=True, nullable=False)
 
     username = sa.Column(sa.String, default=None)
@@ -110,7 +110,7 @@ def upgrade() -> None:
         sa.Column('interface_type', sa.String(), nullable=False),
         sa.Column('enabled', sa.Boolean(), nullable=False),
         sa.Column('name', sa.String(), nullable=False),
-        sa.Column('url', sa.String(), nullable=False),
+        sa.Column('url', sa.String(), nullable=True),
         sa.Column('api_key', sa.String(), nullable=False),
         sa.Column('use_ssl', sa.Boolean(), nullable=False),
         sa.Column('username', sa.String(), nullable=True),
@@ -210,15 +210,15 @@ def upgrade() -> None:
 
     # Migrate the global Episode data source and image source priorities
     if emby and PreferencesLocal.episode_data_source == 'Emby':
-        PreferencesLocal.episode_data_source = {'interface': 'Emby', 'interface_id': emby.id}
+        PreferencesLocal.episode_data_source = emby.id
     elif jellyfin and PreferencesLocal.episode_data_source == 'Jellyfin':
-        PreferencesLocal.episode_data_source = {'interface': 'Jellyfin', 'interface_id': jellyfin.id}
+        PreferencesLocal.episode_data_source = jellyfin.id
     elif sonarr and PreferencesLocal.episode_data_source == 'Sonarr':
-        PreferencesLocal.episode_data_source = {'interface': 'Sonarr', 'interface_id': sonarr.id}
+        PreferencesLocal.episode_data_source = sonarr.id
     elif PreferencesLocal.episode_data_source == 'TMDb':
-        PreferencesLocal.episode_data_source = {'interface': 'TMDb', 'interface_id': tmdb.id}
+        PreferencesLocal.episode_data_source = tmdb.id
     else:
-        PreferencesLocal.episode_data_source = PreferencesLocal.DEFAULT_EPISODE_DATA_SOURCE
+        PreferencesLocal.episode_data_source = None
     log.debug(f'Migrated Global Episode data source to {PreferencesLocal.episode_data_source}')
 
     isp = []
