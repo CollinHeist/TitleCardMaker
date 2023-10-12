@@ -5,16 +5,14 @@ from fastapi import APIRouter, Body, Depends, Request
 from app.database.query import get_connection
 from app.dependencies import * # pylint: disable=W0401,W0614,W0621
 from app.internal.auth import get_current_user
-from app.internal.connection import (
-    add_connection, update_connection, update_tmdb
-)
+from app.internal.connection import add_connection, update_connection
+from app.models.connection import Connection
 from app.models.series import Series
 from app.models.sync import Sync
 from app.models.template import Template
-from app import models
 from app.schemas.connection import (
     EmbyConnection, JellyfinConnection, NewEmbyConnection,
-    NewJellyfinConnection, NewPlexConnection, NewSonarrConnection,
+    NewJellyfinConnection, NewPlexConnection, NewSonarrConnection, NewTMDbConnection,
     NewTautulliConnection, PlexConnection, PotentialSonarrLibrary,
     ServerConnection, SonarrConnection, TMDbConnection, UpdateEmby,
     UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb,
@@ -37,7 +35,6 @@ def add_emby_connection(
         new_connection: NewEmbyConnection = Body(...),
         db: Session = Depends(get_database),
         interface_group: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
-        preferences: Preferences = Depends(get_preferences),
     ) -> EmbyConnection:
     """
     Create a new Connection to Emby; adding it to the Database and
@@ -47,7 +44,7 @@ def add_emby_connection(
     """
 
     return add_connection(
-        db, new_connection, interface_group, preferences, log=request.state.log,
+        db, new_connection, interface_group, log=request.state.log,
     )
 
 
@@ -57,7 +54,6 @@ def add_jellyfin_connection(
         new_connection: NewJellyfinConnection = Body(...),
         db: Session = Depends(get_database),
         interface_group: InterfaceGroup[int, EmbyInterface] = Depends(get_jellyfin_interfaces),
-        preferences: Preferences = Depends(get_preferences),
     ) -> JellyfinConnection:
     """
     Create a new Connection to Jellyfin; adding it to the Database and
@@ -67,7 +63,7 @@ def add_jellyfin_connection(
     """
 
     return add_connection(
-        db, new_connection, interface_group, preferences, log=request.state.log,
+        db, new_connection, interface_group, log=request.state.log,
     )
 
 
@@ -77,7 +73,6 @@ def add_plex_connection(
         new_connection: NewPlexConnection = Body(...),
         db: Session = Depends(get_database),
         interface_group: InterfaceGroup[int, EmbyInterface] = Depends(get_plex_interfaces),
-        preferences: Preferences = Depends(get_preferences),
     ) -> PlexConnection:
     """
     Create a new Connection to Sonarr; adding it to the Database and
@@ -87,7 +82,7 @@ def add_plex_connection(
     """
 
     return add_connection(
-        db, new_connection, interface_group, preferences, log=request.state.log,
+        db, new_connection, interface_group, log=request.state.log,
     )
 
 
@@ -97,7 +92,6 @@ def add_sonarr_connection(
         new_connection: NewSonarrConnection = Body(...),
         db: Session = Depends(get_database),
         interface_group: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
-        preferences: Preferences = Depends(get_preferences),
     ) -> SonarrConnection:
     """
     Create a new Connection to sonarr; adding it to the Database and
@@ -107,7 +101,26 @@ def add_sonarr_connection(
     """
 
     return add_connection(
-        db, new_connection, interface_group, preferences, log=request.state.log,
+        db, new_connection, interface_group, log=request.state.log,
+    )
+
+
+@connection_router.post('/tmdb/new', status_code=201)
+def add_tmdb_connection(
+        request: Request,
+        new_connection: NewTMDbConnection = Body(...),
+        db: Session = Depends(get_database),
+        interface_group: InterfaceGroup[int, TMDbInterface] = Depends(get_tmdb_interfaces),
+    ) -> TMDbConnection:
+    """
+    Create a new Connection to TMDb; adding it to the Database and
+    adding an initialized Interface to the InterfaceGroup.
+
+    - new_connection: Details of the new Connection to add and create.
+    """
+
+    return add_connection(
+        db, new_connection, interface_group, log=request.state.log,
     )
 
 
@@ -194,7 +207,7 @@ def get_all_connection_details(
     Get details for all defined Connections (of all types).
     """
 
-    return db.query(models.connection.Connection).all()
+    return db.query(Connection).all()
 
 
 @connection_router.get('/emby/all', status_code=200)
@@ -205,8 +218,8 @@ def get_all_emby_connection_details(
     Get details for all defined Emby Connections.
     """
 
-    return db.query(models.connection.Connection)\
-        .filter_by(interface='Emby')\
+    return db.query(Connection)\
+        .filter_by(interface_type='Emby')\
         .all()
 
 
@@ -232,8 +245,8 @@ def get_all_jellyfin_connection_details(
     Get details for all defined Jellyfin Connections.
     """
 
-    return db.query(models.connection.Connection)\
-        .filter_by(interface='Jellyfin')\
+    return db.query(Connection)\
+        .filter_by(interface_type='Jellyfin')\
         .all()
 
 
@@ -259,8 +272,8 @@ def get_all_plex_connection_details(
     Get details for all defined Plex Connections.
     """
 
-    return db.query(models.connection.Connection)\
-        .filter_by(interface='Plex')\
+    return db.query(Connection)\
+        .filter_by(interface_type='Plex')\
         .all()
 
 
@@ -286,8 +299,8 @@ def get_all_sonarr_connection_details(
     Get details for all defined Sonarr Connections.
     """
 
-    return db.query(models.connection.Connection)\
-        .filter_by(interface='Sonarr')\
+    return db.query(Connection)\
+        .filter_by(interface_type='Sonarr')\
         .all()
 
 
@@ -305,33 +318,50 @@ def get_sonarr_connection_details_by_id(
     return get_connection(db, interface_id, raise_exc=True)
 
 
-@connection_router.get('/tmdb', status_code=200)
-def get_tmdb_connection_details(
-        preferences: Preferences = Depends(get_preferences),
-    ) -> TMDbConnection:
+@connection_router.get('/tmdb/all', status_code=200)
+def get_all_tmdb_connection_details(
+        db: Session = Depends(get_database),
+    ) -> list[TMDbConnection]:
     """
-    Get the connection details for TMDb.
+    Get details for all defined TMDb Connections.
     """
 
-    return preferences
+    return db.query(Connection)\
+        .filter_by(interface_type='TMDb')\
+        .all()
+
+
+@connection_router.get('/tmdb/{interface_id}', status_code=200)
+def get_tmdb_connection_details_by_id(
+        interface_id: int,
+        db: Session = Depends(get_database),
+    ) -> TMDbConnection:
+    """
+    Get the details for the TMDb connection with the given ID.
+
+    - interface_id: ID of the Interface whose connection details to get.
+    """
+
+    return get_connection(db, interface_id, raise_exc=True)
 
 
 @connection_router.patch('/emby/{interface_id}', status_code=200)
 def update_emby_connection(
         request: Request,
         interface_id: int,
-        update_emby: UpdateEmby = Body(...),
+        update_object: UpdateEmby = Body(...),
         db: Session = Depends(get_database),
         emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
     ) -> EmbyConnection:
     """
     Update the Connection details for the given Emby interface.
 
-    - update_emby: Connection details to modify.
+    - interface_id: ID of the Connection being modified.
+    - update_object: Connection details to modify.
     """
 
     return update_connection(
-        db, interface_id, emby_interfaces, update_emby, log=request.state.log
+        db, interface_id, emby_interfaces, update_object, log=request.state.log
     )
 
 
@@ -339,18 +369,19 @@ def update_emby_connection(
 def update_jellyfin_connection(
         request: Request,
         interface_id: int,
-        update_jellyfin: UpdateJellyfin = Body(...),
+        update_object: UpdateJellyfin = Body(...),
         db: Session = Depends(get_database),
         jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
     ) -> JellyfinConnection:
     """
     Update the Connection details for the given Jellyfin interface.
 
-    - update_jellyfin: Connection details to modify.
+    - interface_id: ID of the Connection being modified.
+    - update_object: Connection details to modify.
     """
 
     return update_connection(
-        db, interface_id, jellyfin_interfaces, update_jellyfin,
+        db, interface_id, jellyfin_interfaces, update_object,
         log=request.state.log
     )
 
@@ -359,18 +390,19 @@ def update_jellyfin_connection(
 def update_plex_connection(
         request: Request,
         interface_id: int,
-        update_plex: UpdatePlex = Body(...),
+        update_object: UpdatePlex = Body(...),
         db: Session = Depends(get_database),
         plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
     ) -> PlexConnection:
     """
     Update the Connection details for the given Plex interface.
 
-    - update_plex: Connection details to modify.
+    - interface_id: ID of the Connection being modified.
+    - update_object: Connection details to modify.
     """
 
     return update_connection(
-        db, interface_id, plex_interfaces, update_plex, log=request.state.log
+        db, interface_id, plex_interfaces, update_object, log=request.state.log
     )
 
 
@@ -378,35 +410,42 @@ def update_plex_connection(
 def update_sonarr_connection(
         request: Request,
         interface_id: int,
-        update_sonarr: UpdateSonarr = Body(...),
+        update_object: UpdateSonarr = Body(...),
         db: Session = Depends(get_database),
         sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
     ) -> SonarrConnection:
     """
-    Update the Connection details for the given Sonarr interface.
+    Update the Connection details for the given Sonarr connection.
 
-    - update_sonarr: Connection details to modify.
+    - interface_id: ID of the Connection being modified.
+    - update_object: Connection details to modify.
     """
 
     return update_connection(
-        db, interface_id, sonarr_interfaces, update_sonarr,
+        db, interface_id, sonarr_interfaces, update_object,
         log=request.state.log
     )
 
 
-@connection_router.patch('/tmdb', status_code=200)
+@connection_router.patch('/tmdb/{interface_id}', status_code=200)
 def update_tmdb_connection(
         request: Request,
+        interface_id: int,
         update_object: UpdateTMDb = Body(...),
-        preferences: Preferences = Depends(get_preferences),
+        db: Session = Depends(get_database),
+        tmdb_interfaces: InterfaceGroup[int, TMDbInterface] = Depends(get_tmdb_interfaces),
     ) -> TMDbConnection:
     """
-    Update the connection details for TMDb.
+    Update the Connection details for the given TMDb connection.
 
-    - update_tmdb: TMDb connection details to modify.
+    - interface_id: ID of the TMDb Connection being modified.
+    - update_object: Connection details to modify.
     """
 
-    return update_tmdb(preferences, update_object, log=request.state.log)
+    return update_connection(
+        db, interface_id, tmdb_interfaces, update_object,
+        log=request.state.log
+    )
 
 
 @connection_router.delete('/{interface_id}')
@@ -419,11 +458,12 @@ def delete_connection(
         jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
         plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
         sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
+        tmdb_interfaces: InterfaceGroup[int, TMDbInterface] = Depends(get_tmdb_interfaces),
     ) -> None:
     """
     Delete the Connection with the given ID. This also disables and
     removes the Interface from the relevant InterfaceGroup, deletes any
-    linked Syncs, removes this Connection[s libraries from any Series,
+    linked Syncs, removes this Connection's libraries from any Series,
     any Episode Data Sources from Series and templates, and deletes the
     Connection from the global image source priority and episode data
     source.
@@ -447,6 +487,8 @@ def delete_connection(
             plex_interfaces.disable(interface_id)
         elif connection.interface_type == 'Sonarr':
             sonarr_interfaces.disable(interface_id)
+        elif connection.interface_type == 'TMDb':
+            tmdb_interfaces.disable(interface_id)
     except KeyError:
         pass
 
@@ -477,12 +519,12 @@ def delete_connection(
     # Delete from ISP if present
     preferences.image_source_priority = [
         source for source in preferences.image_source_priority
-        if source['interface_id'] != interface_id
+        if source != interface_id
     ]
 
     # Reset EDS if set
-    if preferences.episode_data_source['interface_id'] == interface_id:
-        preferences.episode_data_source =preferences.DEFAULT_EPISODE_DATA_SOURCE
+    if preferences.episode_data_source == interface_id:
+        preferences.episode_data_source = db.query(Connection).first()
         log.warning(f'Reset global Episode data source')
 
     # Delete Connection

@@ -125,7 +125,7 @@ def get_all_episode_data(
     # Get Series' effective Episode data source
     series_template_dict = get_effective_series_template(series, as_dict=True)
     interface_id = TieredSettings.resolve_singular_setting(
-        get_preferences().episode_data_source['interface_id'],
+        get_preferences().episode_data_source,
         series_template_dict.get('data_source_id', None),
         series.data_source_id,
     )

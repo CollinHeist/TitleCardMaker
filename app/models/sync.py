@@ -14,7 +14,7 @@ SonarrKwargs = TypedDict('SonarrKwargs',{
     'monitored_only': bool, 'downloaded_only': bool,
     'required_series_type': str, 'excluded_series_type': str,
 })
-NonSonarrKwargs = TypedDict('NonSnarrKwargs' {
+NonSonarrKwargs = TypedDict('NonSonarrKwargs', {
     'required_libraries': list[str], 'excluded_libraries': list[str],
     'required_tags': list[str], 'excluded_tags': list[str]
 })
@@ -97,7 +97,7 @@ class Sync(Base):
                 'required_series_type': self.required_series_type,
                 'excluded_series_type': self.excluded_series_type,
             }
-        
+
         return {
             'required_libraries': self.required_libraries,
             'excluded_libraries': self.excluded_libraries,
