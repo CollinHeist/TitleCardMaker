@@ -111,17 +111,17 @@ class NewTMDbConnection(Base):
     api_key: Hexstring
     minimum_dimensions: constr(regex=r'^\d+x\d+$') = '0x0'
     skip_localized: bool = True
-    logo_language_priority: list[TMDbLanguageCode] = []
+    logo_language_priority: list[TMDbLanguageCode] = ['en']
 
     @validator('minimum_dimensions')
     def validate_dimensions(cls, v):
         width, height = str(v).split('x')
-        if width < 0 or height < 0:
+        if int(width) < 0 or int(height) < 0:
             raise ValueError(f'Minimum dimensions must be positive')
 
     @validator('logo_language_priority', pre=True)
     def comma_separate_language_codes(cls, v):
-        return list(map(lambda s: str(s).lower().strip(), v.split(',')))
+        return [str(s).lower().strip() for s in v.split(',') if str(s).strip()]
 
 """
 Update classes
