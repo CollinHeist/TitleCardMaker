@@ -5,15 +5,15 @@ from sqlalchemy.orm import Session
 from app.database.query import get_connection
 
 from app.dependencies import (
-    get_emby_interfaces, get_jellyfin_interfaces,
-    get_plex_interfaces, get_sonarr_interfaces, refresh_tmdb_interface
+    get_emby_interfaces, get_jellyfin_interfaces, get_plex_interfaces, get_preferences,
+    get_sonarr_interfaces, get_tmdb_interfaces,
 )
 from app.models.connection import Connection
 from app.models.preferences import Preferences
 from app.schemas.base import UNSPECIFIED
 from app.schemas.connection import (
     NewEmbyConnection, NewJellyfinConnection, NewPlexConnection,
-    NewSonarrConnection,
+    NewSonarrConnection, NewTMDbConnection,
     UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb
 )
 from modules.Debug import log
@@ -22,9 +22,11 @@ from modules.InterfaceGroup import InterfaceGroup
 
 NewConnection = Union[
     NewEmbyConnection, NewJellyfinConnection, NewPlexConnection,
-    NewSonarrConnection
+    NewSonarrConnection, NewTMDbConnection,
 ]
-UpdateConnection = Union[UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr]
+UpdateConnection = Union[
+    UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb
+]
 
 
 def initialize_connections(
@@ -44,20 +46,22 @@ def initialize_connections(
     """
 
     # Initialize each type of Interface
-    for interface_group, interface_name in (
+    for interface_group, interface_type in (
             (get_emby_interfaces(), 'Emby'),
             (get_jellyfin_interfaces(), 'Jellyfin'),
             (get_plex_interfaces(), 'Plex'),
-            (get_sonarr_interfaces(), 'Sonarr')):
+            (get_sonarr_interfaces(), 'Sonarr'),
+            (get_tmdb_interfaces(), 'TMDb')):
 
         # Get all Connections of this interface type
         connections: list[Connection] = db.query(Connection)\
-            .filter_by(interface=interface_name)\
+            .filter_by(interface_type=interface_type)\
             .all()
 
         # Set use_ toggle
-        setattr(preferences, f'use_{interface_name.lower()}', bool(connections))
-        log.debug(f'Preferences.use_{interface_name.lower()} = {getattr(preferences, f"use_{interface_name.lower()}")}')
+        setattr(preferences, f'use_{interface_type.lower()}', bool(connections))
+        toggle = getattr(preferences, f'use_{interface_type.lower()}')
+        log.debug(f'Preferences.use_{interface_type.lower()} = {toggle}')
 
         # Initialize an Interface for each Connection (if enabled)
         for connection in connections:
@@ -77,7 +81,6 @@ def add_connection(
         db: Session,
         new_connection: NewConnection,
         interface_group: InterfaceGroup,
-        preferences: Preferences,
         *,
         log: Logger = log,
     ) -> Connection:
@@ -91,8 +94,6 @@ def add_connection(
         new_connection: Details of the new Connection to add.
         interface_group: InterfaceGroup to add the initialized Interface
             to (if enabled).
-        preferences: Global preferences whose interface-enable attribute
-            should be toggled.
         log: Logger for all log messages.
 
     Returns:
@@ -106,6 +107,7 @@ def add_connection(
     log.info(f'Created {connection.log_str}')
 
     # Update global use_ attribute
+    preferences = get_preferences()
     setattr(preferences, f'use_{connection.interface_type.lower()}', True)
 
     # Update InterfaceGroup
@@ -115,46 +117,6 @@ def add_connection(
         )
 
     return connection
-
-
-def update_tmdb(
-        preferences: Preferences,
-        update_object: UpdateTMDb,
-        *,
-        log: Logger = log,
-    ) -> Preferences:
-    """
-    Update the connection details for TMDb, refreshing the interface if
-    any attributes were changed.
-
-    Args:
-        preferences: Preferences to update the connection attributes of.
-        update_object: Update object with attributes to update.
-        log: Logger for all log messages.
-
-    Returns:
-        Modified Preferences with any updated attributes.
-    """
-
-    # Change any attributes that are specified and different
-    changed = False
-    for attribute, value in update_object.dict().items():
-        if (value != UNSPECIFIED
-            and value != getattr(preferences, f'tmdb_{attribute}')):
-            setattr(preferences, f'tmdb_{attribute}', value)
-            if attribute.endswith(('_key', '_url')):
-                log.debug(f'Preferences.tmdb_{attribute} = *****')
-            else:
-                log.debug(f'Preferences.tmdb_{attribute} = {value}')
-            changed = True
-
-    # Refresh interface (if enabled), and write changes
-    if changed:
-        if preferences.use_tmdb:
-            refresh_tmdb_interface(log=log)
-        preferences.commit(log=log)
-
-    return preferences
 
 
 def update_connection(
