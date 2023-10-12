@@ -248,7 +248,7 @@ def import_template_yaml(
 def import_series_yaml(
         background_tasks: BackgroundTasks,
         request: Request,
-        import_yaml: ImportSeriesYaml = Body(...),
+        import_yaml: ImportYaml = Body(...),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
     ) -> list[Series]:
@@ -268,9 +268,7 @@ def import_series_yaml(
 
     # Create NewSeries objects from the YAML dictionary
     try:
-        new_series = parse_series(
-            db, preferences, yaml_dict, import_yaml.default_library, log=log,
-        )
+        new_series = parse_series(db, preferences, yaml_dict, log=log)
     except ValidationError as e:
         log.exception(f'Invalid YAML', e)
         raise HTTPException(
