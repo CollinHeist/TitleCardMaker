@@ -58,11 +58,12 @@ function formatFastAPIError(errorResponse) {
 }
 
 function showErrorToast(args) {
-  const {title, response, displayTime=10000} = args;
+  const {title, message, response, displayTime=10000} = args;
   if (response === undefined) {
     $.toast({
       class: 'error',
       title,
+      message,
       displayTime: displayTime,
     });
   } else {
@@ -383,16 +384,14 @@ function populateBlueprintCard(card, blueprint, blueprintId) {
     card.querySelector('[data-value="episode-count"]').innerHTML = text;
   }
   // Source files count
-  if (blueprint.json.series.source_files.length === 0) {
+  const sourceFileCount = blueprint.json.series.source_files.length;
+  if (sourceFileCount === 0) {
     card.querySelector('[data-value="file-count"]').remove();
     card.querySelector('.popup').remove();
   } else {
-    // let fileNames = '<li>' + blueprint.json.series.source_files.join('</li><li>') + '</li>';
-    const text = `<b>${blueprint.json.series.source_files.length}</b> Source Files`;
+    const text = `<b>${sourceFileCount}</b> Source File` + (sourceFileCount > 1 ? 's' : '');
     card.querySelector('[data-value="file-count"]').innerHTML = text;
     card.querySelector('.popup .content').innerHTML = blueprint.json.series.source_files.join(', ');
-    // let text = `<span data-variation="mini" data-tooltip="${fileNames}"><b>${blueprint.json.series.source_files.length}</b> Source Files</span>`;
-    // card.querySelector('[data-value="file-count"]').outerHTML = text;
   }
   card.querySelector('[data-value="description"]').innerHTML = '<p>' + blueprint.json.description.join('</p><p>') + '</p>';
   return card;
