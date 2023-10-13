@@ -8,6 +8,7 @@ from pickle import dump, load
 
 from app.schemas.base import UNSPECIFIED
 
+from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.ImageMagickInterface import ImageMagickInterface
@@ -675,16 +676,16 @@ class Preferences:
 
         # Format Specials differently
         if episode_info.season_number == 0:
-            return self.specials_folder_format.format(**episode_info.indices)
+            return self.specials_folder_format.format(**episode_info.indices)[:254]
 
-        return self.season_folder_format.format(**episode_info.indices)
+        return self.season_folder_format.format(**episode_info.indices)[:254]
 
 
     def get_card_type_class(self,
             identifier: str,
             *,
             log: Logger = log,
-        ) -> Optional[type['CardType']]: # type: ignore
+        ) -> Optional[type[BaseCardType]]:
         """
         Get the CardType class for the given card type identifier.
 

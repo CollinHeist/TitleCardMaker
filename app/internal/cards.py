@@ -513,7 +513,7 @@ def resolve_card_settings(
         try:
             card_settings['source_file'] = preferences.source_directory \
                 / series.path_safe_name \
-                / card_settings['source_file'].format(**card_settings)
+                / card_settings['source_file'].format(**card_settings)[:254]
         except KeyError as e:
             log.exception(f'{series.log_str} {episode.log_str} Source File '
                             f'Format is invalid - {e}', e)
@@ -538,7 +538,7 @@ def resolve_card_settings(
         series_directory = Path(preferences.card_directory) \
             / series.path_safe_name
     else:
-        series_directory = Path(card_settings.get('directory'))
+        series_directory = Path(card_settings.get('directory')[:254])
 
     # If an explicit card file was indicated, use it vs. default
     try:

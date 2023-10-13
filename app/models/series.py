@@ -215,7 +215,7 @@ class Series(Base):
     def path_safe_name(self) -> str:
         """Name of this Series to be utilized in Path operations"""
 
-        return str(CleanPath.sanitize_name(self.full_name))
+        return str(CleanPath.sanitize_name(self.full_name))[:254]
 
 
     @hybrid_property
