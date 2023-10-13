@@ -36,10 +36,8 @@ function deleteFont(font) {
 function reloadPreview(fontId, fontForm, previewForm, cardElement, imageElement) {
   const fontFormObj = new FormData(fontForm);
   const previewFormObj = new FormData(previewForm);
-  // Don't bother if no preview card type is selected
-  if (previewFormObj.get('card_type') === '') { return; }
   const previewCardObj = {
-    card_type: previewFormObj.get('card_type'),
+    card_type: previewFormObj.get('card_type') || '{{preferences.default_card_type}}',
     title_text: previewFormObj.get('title_text'),
     season_text: 'Season 1',
     episode_text: 'Episode 1',
@@ -173,6 +171,7 @@ async function getAllFonts() {
   const fonts = await fetch('/api/fonts/all').then(resp => resp.json());
   const hasManyFonts = fonts.length > 20; // Add headers if >10 Fonts
   const activeFont = window.location.hash.substring(1);
+  let previewData;
 
   // Create array of elements
   const fontElements = [];
@@ -266,6 +265,10 @@ async function getAllFonts() {
     const fontForm = template.querySelector('form[data-value="font-form"]');
     const previewForm =  template.querySelector('form[data-value="preview-form"]');
     template.querySelector('.button[data-action="refresh"]').onclick = () => reloadPreview(fontObj.id, fontForm, previewForm, previewCard, previewImage);
+    // If this font was indicated in URL, initiate preview load
+    if (`font-id${fontObj.id}` === activeFont) {
+      previewData = [fontObj.id, fontForm, previewForm, previewCard, previewImage];
+    }
     // Update title text + preview when a-z icon is clicked
     const titleInput = template.querySelector('form[data-value="preview-form"] input[name="title_text"]');
     template.querySelector('form[data-value="preview-form"] .field label a').onclick = () => {
@@ -274,18 +277,18 @@ async function getAllFonts() {
     }
 
     fontElements.push(template);
-    // return template;
   });
   // Put new font elements on the page
-  const fontsElement = document.getElementById('fonts');
-  fontsElement.replaceChildren(...fontElements);
+  document.getElementById('fonts').replaceChildren(...fontElements);
 
   // Scroll to active Font if indicated
   if (activeFont) {
     document.getElementById(activeFont).scrollIntoView({
       behavior: 'smooth',
       block: 'start',
-    })
+    });
+    // Start loading preview
+    reloadPreview(...previewData);
   }
 
   // Enable accordion/dropdown/checkbox elements
