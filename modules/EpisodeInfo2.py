@@ -208,20 +208,10 @@ class EpisodeInfo(DatabaseInfoContainer):
                 f'Can only compare equality between EpisodeInfo objects'
             )
 
-
         # ID matches are immediate equality
         for id_type, id_ in self.ids.items():
             if id_ is not None and info.has_id(id_type):
                 return id_ == getattr(info, id_type)
-
-        # TODO temporary to see if title match is useful
-        if (self.season_number == info.season_number
-            and self.episode_number == info.episode_number):
-            if self.title.matches(info.title):
-                log.info(f'Title matches on {self}')
-            else:
-                log.warning(f'Title does not match {self}')
-                log.debug(f'{self.title=} vs. {info.title=}')
 
         # Require title match
         return (
