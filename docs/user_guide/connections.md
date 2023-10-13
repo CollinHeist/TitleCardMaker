@@ -90,7 +90,10 @@ username and password as `admin` and `password`.
 
 4. Login, then change your credentials as desired.
 
-5. Get a password manager!
+5. Close TCM and either define `TCM_DISABLE_AUTH` as something other than
+`TRUE`, or remove the specification altogether. Re-build/launch TCM.
+
+6. Get a password manager!
 
 [^1]: All API endpoint require authorization _except_ the Tautulli and Sonarr
 integrations, as these services are not capable of authenticating themselves.
