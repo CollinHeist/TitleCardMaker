@@ -202,7 +202,7 @@ class TitleCard:
     def get_multi_output_filename(
             format_string: str,
             series_info: SeriesInfo,
-            multi_episode: 'MultiEpisode',                                      # type: ignore
+            multi_episode: 'MultiEpisode', # type: ignore
             media_directory: Path
         ) -> Path:
         """
