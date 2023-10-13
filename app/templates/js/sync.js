@@ -64,6 +64,7 @@ function getTemplates() {
     url: '/api/available/templates',
     success: availableTemplates => {
       $('.dropdown[data-value="template_ids"]').dropdown({
+        placeholder: 'None',
         values: getActiveTemplates(null, availableTemplates),
       });
     }, error: response => showErrorToast({'title': 'Error Getting Template List', response}),

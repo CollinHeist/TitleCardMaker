@@ -26,6 +26,7 @@ async function initCardTypeDropdowns() {
     showExcluded: true,
     dropdownArgs: {
       useLabels: false,
+      placeholder: 'None',
     }
   });
   // Load default card type dropdown
