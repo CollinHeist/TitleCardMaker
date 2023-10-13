@@ -3,6 +3,24 @@
   max-width: 250px !important;
 }
 
+/* Thematically color each connection card */
+.card {
+  --_connection-color: var(--connection-color, rgba(34,36,38,.12));
+  box-shadow: -2px 2px 3px var(--_connection-color) !important;
+}
+#emby-syncs .card {
+  --connection-color: #4CAF50;
+}
+#jellyfin-syncs .card {
+  --connection-color: rgb(108,119,199);
+}
+#plex-syncs .card {
+  --connection-color: rgb(226,179,61);
+}
+#sonarr-syncs .card {
+  --connection-color: rgb(92,201,250);
+}
+
 /* Custom add card */
 .add.card {
   display: inline-block !important;
