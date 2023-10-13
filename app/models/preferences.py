@@ -115,7 +115,11 @@ class Preferences:
         self.source_directory = Path(self.source_directory)
         for folder in (self.asset_directory, self.card_directory,
                        self.source_directory):
-            folder.mkdir(parents=True, exist_ok=True)
+            try:
+                folder.mkdir(parents=True, exist_ok=True)
+            except PermissionError:
+                log.critical(f'Could not initialize directory "{folder}" - '
+                             f'invalid permissions')
 
         # Parse local card type files
         self.parse_local_card_types()
