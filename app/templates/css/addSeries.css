@@ -28,10 +28,24 @@
   -webkit-transition: all 0.4s ease;
   transition: all 0.4s ease;
 }
+
 /* For multi-image cards, tilt the image when hovered */
 .card .multi.image:hover img {
   rotate: -2deg;
   -webkit-transform: translate(-2%);
   transform: translate(-2%);
   /* filter: blur(1px); /* grayscale(70%) blur(1px); */
+}
+
+/* Mobile formatting */
+@media (max-width: 768px) {
+  /* Do not cap description height on mobile (to avoid weird scrolling) */
+  .card .content .description {
+    max-height: none;
+  }
+
+  /* Left-float blueprint actions to avoid weird alignment issues */
+  .card .extra.content .right.floated {
+    float: left !important;
+  }
 }
