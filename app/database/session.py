@@ -83,7 +83,7 @@ def backup_data(*, log: Logger = log) -> tuple[Path, Path]:
                 log.warning(f'Cannot identify date of backup file "{prior}"')
                 continue
 
-            if date < datetime.now() - timedelta(weeks=4):
+            if date < datetime.now() - timedelta(weeks=3):
                 prior.unlink(missing_ok=True)
                 log.debug(f'Deleted old backup "{prior}"')
 
