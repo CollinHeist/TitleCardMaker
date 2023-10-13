@@ -1280,6 +1280,7 @@ async function queryBlueprints() {
     return card;
   });
   blueprintCards.replaceChildren(...blueprints);
+  $('[data-value="file-count"]').popup({inline: true});
 }
 
 /*
