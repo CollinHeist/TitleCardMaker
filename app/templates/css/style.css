@@ -239,25 +239,25 @@ p.help {
   font-size: 0.95em;
   font-style: italic;
   padding-top: 0.2em;
-  /* display: none; */
 }
 
 /* Make help text for active inputs more evident */
 body.dark input:active ~ p.help,
 body.dark input:focus ~ p.help,
+body.dark .input ~ p.help:hover,
 body.dark .dropdown:hover ~ p.help,
 body.dark .dropdown.active ~ p.help,
-body.dark .field.checkbox:hover p.help
+body.dark .checkbox.field:hover p.help,
 body.dark .fields:hover ~ p.help {
   /* Dark theme */
   color: #cce2ff; /* #d7dfeb */
-  /* display: block; */
 }
 body:not(.dark) input:active ~ p.help,
 body:not(.dark) input:focus ~ p.help,
 body:not(.dark) .dropdown:hover ~ p.help,
 body:not(.dark) .dropdown.active ~ p.help,
-body:not(.dark) .field.checkbox:hover p.help {
+body:not(.dark) .checkbox.field:hover p.help,
+body:not(.dark) .fields:hover ~ p.help {
   /* Light theme */
   color: #171515;
 }
