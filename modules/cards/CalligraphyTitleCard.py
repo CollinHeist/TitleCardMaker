@@ -5,6 +5,7 @@ from typing import Optional
 from modules.BaseCardType import (
     BaseCardType, CardDescription, Extra, ImageMagickCommands,
 )
+from modules.EpisodeInfo2 import EpisodeInfo
 
 
 class CalligraphyTitleCard(BaseCardType):
@@ -102,7 +103,7 @@ class CalligraphyTitleCard(BaseCardType):
     DEFAULT_FONT_CASE = 'source'
     FONT_REPLACEMENTS = {}
 
-    """Characteristics of the episode text"""
+    """How to format episode text"""
     EPISODE_TEXT_FORMAT = 'Episode {episode_number_cardinal_title}'
 
     """Whether this CardType uses season titles for archival purposes"""
@@ -196,6 +197,31 @@ class CalligraphyTitleCard(BaseCardType):
         self.logo_size = logo_size
         self.randomize_texture = randomize_texture
         self.separator = separator
+
+
+    @staticmethod
+    def SEASON_TEXT_FORMATTER(episode_info: EpisodeInfo) -> str:
+        """
+        Fallback season title formatter.
+
+        Args:
+            episode_info: Info of the Episode whose season text is being
+                determined.
+
+        Returns:
+            'Specials' if the season number is 0; otherwise the cardinal
+            version of the season number. If that's not possible, then
+            just 'Season {x}'.
+        """
+
+        if episode_info.season_number == 0:
+            return 'Specials'
+
+        try:
+            number = episode_info.word_set['season_number_cardinal_title']
+            return f'Season {number}'
+        except KeyError:
+            return f'Season {episode_info.season_number}'
 
 
     def __offset_title(self, title_text: str) -> str:

@@ -461,10 +461,12 @@ def resolve_card_settings(
     # If no season text was indicated, determine
     if card_settings.get('season_text') is None:
         ranges = SeasonTitleRanges(
-            card_settings.get('season_titles', {}), log=log
+            card_settings.get('season_titles', {}),
+            fallback=getattr(CardClass, 'SEASON_TEXT_FORMATTER', None),
+            log=log,
         )
         card_settings['season_text'] = ranges.get_season_text(
-            episode_info, card_settings, log=log
+            episode_info, card_settings,
         )
 
     # If no episode text was indicated, determine
