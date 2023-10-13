@@ -110,6 +110,7 @@ function saveFontForm(fontId, event) {
     contentType: false,
     success: () => showInfoToast('Uploaded Font File'),
     error: response => showErrorToast({title: 'Error Uploading Font File', response}),
+    complete: () => $(`#font-id${fontId} .button[data-action="populateReplacements"]`).toggleClass('disabled', false),
   });
 }
 
@@ -120,6 +121,49 @@ async function initCardTypeDropdowns() {
     isSelected: (identifier) => identifier === '{{preferences.default_card_type}}',
     showExcluded: false,
     dropdownArgs: {},
+  });
+}
+
+function querySuggestedFontReplacements(fontId, elementId) {
+  $.ajax({
+    type: 'GET',
+    url: `/api/fonts/${fontId}/analysis`,
+    success: analysis => {
+      // Disable button now that Font has been analyzed
+      $(`#${elementId} .button[data-action="populateReplacements"]`).toggleClass('disabled', true);
+      // Show toast for irreplacable characters
+      if (analysis.missing.length > 0) {
+        showErrorToast({
+          title: 'Irreplaceable Characters Identified',
+          message: 'No Suitable replacements found for: ' + analysis.missing.join(' '),
+          displayTime: 10000,
+        });
+      }
+      // No replacements, show toast and exit
+      if (Object.keys(analysis.replacements).length === 0) {
+        showInfoToast('No Suggested Replacements');
+        return;
+      }
+      // There are replacements, add to page
+      const inElement = document.querySelector(`#${elementId} .field[data-value="in-replacements"]`);
+      const outElement = document.querySelector(`#${elementId} .field[data-value="out-replacements"]`);
+      for (const [repl_in, repl_out] of Object.entries(replacements)) {
+        // Skip if this replacement already exists
+        let found = false;
+        $(`#${elementId} input[name="replacements_in"]`).each(function() {
+          if ($(this).val() === repl_in) { found = true; return; }
+        });
+        if (!found) {
+          const newInput = document.createElement('input');
+          newInput.value = repl_in; newInput.name = 'replacements_in'; newInput.type='text';
+          inElement.appendChild(newInput);
+          const newOutput = document.createElement('input');
+          newOutput.value = repl_out; newOutput.name = 'replacements_out'; newOutput.type='text';
+          outElement.appendChild(newOutput);
+        }
+      }
+      showInfoToast({title: 'Added Suggested Replacements', message: 'Blank replacements indicate a deleted character'});
+    }, error: response => showErrorToast({title: 'Error Analyzing Font', response}),
   });
 }
 
@@ -191,8 +235,10 @@ async function getAllFonts() {
         outElement.appendChild(newOutput);
       });
     }
+    // Query suggested font replacements on button click
+    template.querySelector('.button[data-action="populateReplacements"]').onclick = () => querySuggestedFontReplacements(fontObj.id, `font-id${fontObj.id}`);
     // Add new input fields on click of addReplacement button
-    template.querySelector('.button[data-value="addReplacement"]').onclick = () => {
+    template.querySelector('.button[data-action="addReplacement"]').onclick = () => {
       const blankInput = document.createElement('input');
       blankInput.name = 'replacements_in'; blankInput.type='text';
       inElement.appendChild(blankInput);

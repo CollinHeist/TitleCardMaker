@@ -10,8 +10,22 @@ from app.dependencies import get_database, get_preferences
 from app.internal.auth import get_current_user
 from app.models.font import Font
 from app.models.preferences import Preferences
-from app.schemas.font import NamedFont, NewNamedFont, UpdateNamedFont
+from app.schemas.font import (
+    FontAnalysis, NamedFont, NewNamedFont, UpdateNamedFont
+)
 from modules.FontValidator2 import FontValidator
+
+
+"""Common character replacements to try when querying replacements"""
+COMMON_REPLACEMENTS = {
+    '`': "'",
+    '’': "'",
+    '&': 'and',
+    '–': '-',
+    '…': '...',
+    'ø': 'o',
+    'Ø': 'O',
+}
 
 
 # Create sub router for all /fonts API requests
@@ -220,14 +234,22 @@ def delete_font(
     db.commit()
 
 
-@font_router.get('/{font_id}/replacements', status_code=200)
+@font_router.get('/{font_id}/analysis', status_code=200)
 def get_suggested_font_replacements(
         request: Request,
         font_id: int,
         db: Session = Depends(get_database),
-    ) -> dict[str, str]:
+    ) -> FontAnalysis:
     """
-    
+    Analyze the Font file associated with the Font with the given ID and
+    determine a suggested set of character replacements, along with a
+    list of which characters have no suitable replacements. This looks
+    at the leters of all associated Episodes that use this Font (through
+    Series, Templates, etc.), as well as the standard alphanumberic
+    set of English characters and punctuation.
+
+    - font_id: ID of the Font to analyze. If this Font does not have a
+    custom Font file, then no analysis is performed.
     """
 
     # Get contextual logger
@@ -236,9 +258,9 @@ def get_suggested_font_replacements(
     # Get Font with this ID, raise 404 if DNE
     font = get_font(db, font_id, raise_exc=True)
 
-    # Font has no custom file, do not suggest replacements
+    # Font has no custom file, make no suggestions
     if font.file_name is None:
-        return {}
+        return FontAnalysis()
 
     # Get any titles associated with this Font - look at all Episodes
     # using this Font; all Episodes of all Series using this Font; all
@@ -254,28 +276,38 @@ def get_suggested_font_replacements(
                             for episode in series.episodes)
 
     # Get all (non-whitespace) letters in these titles, add base printables
-    letters = (set(''.join(titles)) | set(printable)) - set(whitespace)
+    title_letters = set(''.join(titles).lower()) | set(''.join(titles).upper())
+    letters = (title_letters | set(printable)) - set(whitespace)
 
     # Query FontValidator for this Font
     validator = FontValidator(font.file)
     missing = validator.get_missing_characters(letters)
-    log.debug(f'Identified missing characters: {" ".join(missing)}')
+    if missing:
+        log.debug(f'Identified missing characters: {" ".join(missing)}')
 
     # Attempt to find replacements for all missing characters
     bad, replacements = [], {}
     for char in missing:
-        # Remove any unicode non-spacing comibing marks - e.g. é -> ´e -> e
+        # Remove any unicode non-spacing combining marks - e.g. é -> ´e -> e
         replacement = ''.join(ch for ch in normalize('NFD', char)
                               if unicode_category(ch) != 'Mn')
 
-        # If this replacement is missing, try the lowercase equivalent
+        # See if there is a common replacement for this
+        if (replacement in missing
+            and char in COMMON_REPLACEMENTS
+            and all(c not in missing for c in COMMON_REPLACEMENTS[char])):
+            replacement = COMMON_REPLACEMENTS[char]
+
+        # If this replacement is missing, try the other case-equivalent
         if replacement in missing and replacement.lower() not in missing:
             replacement = replacement.lower()
+        if replacement in missing and replacement.upper() not in missing:
+            replacement = replacement.upper()
 
-        # If replacement is still missing, suggest space if character is
+        # If replacement is still missing, suggest deletion if character is
         # punctuation
         if replacement in missing and char in punctuation:
-            replacement = ' '
+            replacement = ''
 
         # If the replacement is defined, add to replacements set
         if replacement not in missing:
@@ -283,7 +315,7 @@ def get_suggested_font_replacements(
         else:
             bad.append(char)
 
-    if bad:
-        log.warning(f'No suitable replacement for characters {" ".join(bad)}')
-
-    return replacements
+    return FontAnalysis(
+        replacements=replacements,
+        missing=bad,
+    )
