@@ -52,9 +52,12 @@ class FontValidator:
                     return False
 
                 # Check glyph has boundaires (i.e. is not blank)
-                glyph = self._font['glyf'][table.cmap[ord_char]]
-                if not hasattr(glyph, 'xMin'):
-                    return False
+                try:
+                    glyph = self._font['glyf'][table.cmap[ord_char]]
+                    if not hasattr(glyph, 'xMin'):
+                        return False
+                except KeyError:
+                    continue
 
         return True
 
