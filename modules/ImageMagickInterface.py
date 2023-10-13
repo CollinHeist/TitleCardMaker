@@ -1,5 +1,6 @@
 from collections import namedtuple
 from logging import Logger
+from os import environ
 from pathlib import Path
 from re import findall
 from shlex import split as command_split
@@ -52,7 +53,7 @@ class ImageMagickInterface:
 
 
     def __init__(self,
-            container: Optional[str] = 'ImageMagick',
+            container: Optional[str] = None,
             use_magick_prefix: bool = False,
             timeout: int = COMMAND_TIMEOUT_SECONDS,
         ) -> None:
@@ -68,7 +69,7 @@ class ImageMagickInterface:
         """
 
         # Definitions of this interface, i.e. whether to use docker and how
-        self.container = container
+        self.container = environ.get('TCM_IM_DOCKER', container)
         self.use_docker = bool(container)
 
         # Whether to prefix commands with "magick" or not
