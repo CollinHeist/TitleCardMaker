@@ -59,13 +59,13 @@ disable authentication.
     === ":material-linux: Linux"
 
         ```bash
-        TCM_DISABLE_AUTH="TRUE"
+        export TCM_DISABLE_AUTH=TRUE
         ```
 
     === ":material-apple: MacOS"
 
         ```bash
-        TCM_DISABLE_AUTH="TRUE"
+        TCM_DISABLE_AUTH=TRUE
         ```
 
     === ":material-powershell: Windows (Powershell)"

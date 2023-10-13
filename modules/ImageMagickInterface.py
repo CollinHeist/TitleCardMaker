@@ -70,7 +70,7 @@ class ImageMagickInterface:
 
         # Definitions of this interface, i.e. whether to use docker and how
         self.container = environ.get('TCM_IM_DOCKER', container)
-        self.use_docker = bool(container)
+        self.use_docker = bool(self.container)
 
         # Whether to prefix commands with "magick" or not
         self.prefix = 'magick ' if use_magick_prefix else ''
