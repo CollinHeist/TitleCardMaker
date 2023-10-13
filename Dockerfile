@@ -33,7 +33,8 @@ COPY --from=python-reqs /usr/local/lib/python3.11/site-packages /usr/local/lib/p
 
 # Script environment variables
 ENV TCM_PREFERENCES=/config/preferences.yml \
-    TCM_IS_DOCKER=TRUE
+    TCM_IS_DOCKER=TRUE \
+    TZ=UTC
 
 # These are from the dpokidov/imagemagick Docker container
 # https://hub.docker.com/r/dpokidov/imagemagick/dockerfile
