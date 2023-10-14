@@ -4,6 +4,7 @@ from re import compile as re_compile, sub as re_sub, IGNORECASE
 from time import sleep
 
 from fastapi import HTTPException
+from requests import get
 from sqlalchemy.orm import Session
 
 from app.models.blueprint import Blueprint, BlueprintSeries
@@ -291,7 +292,7 @@ def import_blueprint(
 
     # Import Fonts
     font_map: dict[int, Font] = {}
-    for font_id, font in enumerate(blueprint.fonts):
+    for font_id, font in enumerate(blueprint.json_.fonts):
         # See if this Font already exists (match by name)
         if ((existing_font := db.query(Font).filter_by(name=font.name).first())
             is not None):
@@ -337,7 +338,7 @@ def import_blueprint(
 
     # Import Templates
     template_map: dict[int, Template] = {}
-    for template_id, template in enumerate(blueprint.templates):
+    for template_id, template in enumerate(blueprint.json_.templates):
         # See if this Template already exists (match by name)
         existing_template = db.query(Template).filter_by(name=template.name)\
             .first()
@@ -363,7 +364,7 @@ def import_blueprint(
 
     # Assign updated Fonts and Templates to Series
     changed = False
-    series_blueprint = blueprint.series.dict()
+    series_blueprint = blueprint.json_.series.dict()
     if (new_font_id := series_blueprint.pop('font_id', None)) is not None:
         log.debug(f'Series[{series.id}].font_id = {font_map[new_font_id].id}')
         series.font = font_map[new_font_id]
@@ -383,7 +384,7 @@ def import_blueprint(
             changed = True
 
     # Import Episode overrides
-    for episode_key, episode_blueprint in blueprint.episodes.items():
+    for episode_key, episode_blueprint in blueprint.json_.episodes.items():
         # Identify indices for this override
         if (indices := EPISODE_REGEX.match(episode_key)) is None:
             log.error(f'Cannot identify index of Episode override "{episode_key}"')
