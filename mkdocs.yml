@@ -159,15 +159,15 @@ nav:
     - Creating Title Cards: getting_started/creating_cards.md
   - Blueprints: blueprints.md
   - User Guide:
-    - user_guide/index.md
-    - Series: user_guide/series.md
-    - Templates: user_guide/templates.md
-    - Fonts: user_guide/fonts.md
-    - Sync: user_guide/sync.md
+    # - user_guide/index.md
+    # - Series: user_guide/series.md
+    # - Templates: user_guide/templates.md
+    # - Fonts: user_guide/fonts.md
+    # - Sync: user_guide/sync.md
     - Connections: user_guide/connections.md
-    - Settings: user_guide/settings.md
-    - Scheduler: user_guide/scheduler.md
-    - Importer: user_guide/importer.md
+    # - Settings: user_guide/settings.md
+    # - Scheduler: user_guide/scheduler.md
+    # - Importer: user_guide/importer.md
   - Card Types:
     - card_types/index.md
     - Local: card_types/local.md
