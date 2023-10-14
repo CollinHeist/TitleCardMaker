@@ -133,7 +133,6 @@ def add_new_series(
         request: Request,
         new_series: NewSeries = Body(...),
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences),
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
         imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
         jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
@@ -149,7 +148,7 @@ def add_new_series(
     """
 
     return add_series(
-        new_series, background_tasks, db, preferences, emby_interface,
+        new_series, background_tasks, db, emby_interface,
         imagemagick_interface, jellyfin_interface, plex_interface,
         sonarr_interface, tmdb_interface, log=request.state.log,
     )
@@ -333,7 +332,7 @@ def update_series_(
             changed = True
 
     # Update each attribute of the object
-    for attr, value in update_series.dict().items():
+    for attr, value in update_series_dict.items():
         if value != UNSPECIFIED and getattr(series, attr) != value:
             log.debug(f'Series[{series_id}].{attr} = {value}')
             setattr(series, attr, value)

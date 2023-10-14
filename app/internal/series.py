@@ -8,7 +8,7 @@ from fastapi import BackgroundTasks, HTTPException
 from requests import get
 from sqlalchemy.exc import InvalidRequestError, OperationalError
 from sqlalchemy.orm import Session
-from app.database.query import get_all_templates, get_font
+from app.database.query import get_all_templates, get_font, get_sync
 
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app import models
@@ -18,8 +18,9 @@ from app.internal.sources import download_series_logo
 from app.models.card import Card
 from app.models.episode import Episode
 from app.models.loaded import Loaded
+from app.models.series import Series
 from app.schemas.preferences import MediaServer, Preferences
-from app.schemas.series import NewSeries, Series
+from app.schemas.series import NewSeries
 
 from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
@@ -44,7 +45,7 @@ def set_all_series_ids(*, log: Logger = log) -> None:
         with next(get_database()) as db:
             # Get all Series
             changed = False
-            for series in db.query(models.series.Series).all():
+            for series in db.query(Series).all():
                 try:
                     changed |= set_series_database_ids(
                         series, db, get_emby_interface(),
@@ -77,7 +78,7 @@ def load_all_media_servers(*, log: Logger = log) -> None:
         retries = 0
         with next(get_database()) as db:
             # Get all Series
-            for series in db.query(models.series.Series).all():
+            for series in db.query(Series).all():
                 # Get the primary Media Server to load cards into
                 if series.emby_library_name is not None:
                     media_server = 'Emby'
@@ -123,7 +124,7 @@ def download_all_series_posters(*, log: Logger = log) -> None:
         # Get the Database
         with next(get_database()) as db:
             # Get all Series
-            for series in db.query(models.series.Series).all():
+            for series in db.query(Series).all():
                 try:
                     download_series_poster(
                         db, get_preferences(), series, get_emby_interface(),
@@ -533,7 +534,6 @@ def add_series(
         new_series: NewSeries,
         background_tasks: BackgroundTasks,
         db: Session,
-        preferences: Preferences,
         emby_interface: Optional[EmbyInterface] = None,
         imagemagick_interface: Optional[ImageMagickInterface] = None,
         jellyfin_interface: Optional[JellyfinInterface] = None,
@@ -553,7 +553,6 @@ def add_series(
         background_tasks: BackgroundTasks to add the Episode data refresh
             task to.
         db: Database to add the Series to.
-        preferences: Global Preferences for setting resolution.
         *_interface: Interface to query.
         log: Logger for all log messages.
 
@@ -561,25 +560,32 @@ def add_series(
         The Created Series.
 
     Raises:
-        HTTPException (404) if any specified linked objects do not exist.
+        HTTPException (404): Any specified linked objects do not exist.
     """
 
     # Convert object to dictionary
     new_series_dict = new_series.dict()
 
-    # If a Font or any Templates were indicated, verify they exist
+    # If a Font, Sync, or any Templates were indicated, verify they exist
     get_font(db, getattr(new_series, 'font_id', None), raise_exc=True)
-    templates = get_all_templates(db, new_series_dict)
+    get_sync(db, getattr(new_series_dict, 'sync_id', None), raise_exc=True)
+    templates = get_all_templates(db, new_series_dict, raise_exc=True)
 
     # Add to database
-    series = models.series.Series(**new_series_dict, templates=templates)
+    series = Series(**new_series_dict)
     db.add(series)
+    db.commit()
+    log.info(f'Added {series.log_str} to Database')
+
+    # Assign Templates
+    series.assign_templates(templates, log=log)
     db.commit()
 
     # Create source directory if DNE
     Path(series.source_directory).mkdir(parents=True, exist_ok=True)
 
     # Set Series ID's, download poster and logo
+    preferences = get_preferences()
     set_series_database_ids(
         series, db, emby_interface, jellyfin_interface, plex_interface,
         sonarr_interface, tmdb_interface, log=log,

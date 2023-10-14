@@ -67,7 +67,7 @@ function getTemplates() {
         placeholder: 'None',
         values: getActiveTemplates(null, availableTemplates),
       });
-    }, error: response => showErrorToast({'title': 'Error Getting Template List', response}),
+    }, error: response => showErrorToast({'title': 'Error Querying Templates', response}),
   })
 }
 
