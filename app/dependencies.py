@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.database.session import (
     BlueprintSessionMaker, EmbyInterfaceLocal, ImageMagickInterfaceLocal,
     JellyfinInterfaceLocal, PreferencesLocal, PlexInterfaceLocal, Scheduler,
-    SessionLocal, SonarrInterfaceLocal, TMDbInterfaceLocal, IS_DOCKER,
+    SessionLocal, SonarrInterfaceLocal, TMDbInterfaceLocal,
 )
 from app.models.preferences import Preferences
 
@@ -24,11 +24,7 @@ from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
 
-if IS_DOCKER:
-    BLUEPRINT_DATABASE_FILE = Path('/config/.modules/blueprints.db')
-else:
-    BLUEPRINT_DATABASE_FILE = Path(__file__).parent.parent / 'modules' \
-        / '.objects' / 'blueprints.db'
+BLUEPRINT_DATABASE_FILE = Preferences.TEMPORARY_DIRECTORY / 'blueprints.db'
 
 
 def get_database() -> Iterator[Session]:
