@@ -58,11 +58,13 @@ async function getPlexLibraries() {
   });
 }
 
+let allTemplates = [];
 function getTemplates() {
   $.ajax({
     type: 'GET',
     url: '/api/available/templates',
     success: availableTemplates => {
+      allTemplates = availableTemplates;
       $('.dropdown[data-value="template_ids"]').dropdown({
         placeholder: 'None',
         values: getActiveTemplates(null, availableTemplates),
@@ -96,6 +98,10 @@ async function showEditModel(sync) {
   // Fill out existing data
   $(`#edit-sync${sync.id} .header`)[0].innerText = `Editing Sync "${sync.name}"`;
   $(`#edit-sync${sync.id} input[name="name"]`)[0].value = sync.name;
+  $(`#edit-sync${sync.id} .dropdown[data-value="template_ids"]`).dropdown({
+    placeholder: 'None',
+    values: getActiveTemplates(sync.template_ids, allTemplates),
+  });
   $(`#edit-sync${sync.id} .dropdown[data-value="template_ids"]`).dropdown('set selected', sync.template_ids);
   $(`#edit-sync${sync.id} .dropdown[data-value="required_tags"]`).dropdown('set selected', sync.required_tags);
   $(`#edit-sync${sync.id} .dropdown[data-value="required_libraries"]`).dropdown('set selected', sync.required_libraries);
