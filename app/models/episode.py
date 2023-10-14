@@ -4,12 +4,13 @@ from typing import Any
 from sqlalchemy import (
     Boolean, Column, DateTime, Integer, Float, ForeignKey, String, JSON
 )
+from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.ext.mutable import MutableDict
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, object_session, relationship
 
 from app.database.session import Base
-from app.models.template import EpisodeTemplates
+from app.models.template import EpisodeTemplates, Template
 from app.schemas.preferences import Style
 
 from modules.EpisodeInfo2 import EpisodeInfo
@@ -27,15 +28,29 @@ class Episode(Base):
     # Referencial arguments
     id = Column(Integer, primary_key=True, index=True)
     font_id = Column(Integer, ForeignKey('font.id'))
-    font = relationship('Font', back_populates='episodes')
     series_id = Column(Integer, ForeignKey('series.id'))
+
+    card = relationship(
+        'Card',
+        back_populates='episode',
+        cascade='all, delete-orphan'
+    )
+    font = relationship('Font', back_populates='episodes')
     series = relationship('Series', back_populates='episodes')
-    card = relationship('Card', back_populates='episode', cascade='all, delete-orphan')
-    loaded = relationship('Loaded', back_populates='episode', cascade='all, delete-orphan')
-    templates = relationship(
-        'Template',
-        secondary=EpisodeTemplates.__table__,
-        back_populates='episodes'
+    loaded = relationship(
+        'Loaded',
+        back_populates='episode',
+        cascade='all, delete-orphan'
+    )
+    _templates: Mapped[list[EpisodeTemplates]] = relationship(
+        EpisodeTemplates,
+        back_populates='episode',
+        order_by=EpisodeTemplates.order,
+        cascade='all, delete-orphan',
+    )
+    templates: AssociationProxy[list[Template]] = association_proxy(
+        '_templates', 'template',
+        creator=lambda st: st,
     )
 
     source_file = Column(String, default=None)
@@ -81,6 +96,44 @@ class Episode(Base):
         MutableDict.as_mutable(JSON),
         default={'Emby': 0, 'Jellyfin': 0, 'Plex': 0, 'TMDb': 0}
     )
+
+
+    @hybrid_method
+    def assign_templates(self,
+            templates: list[Template],
+            *,
+            log
+        ) -> None:
+        """
+        Assign the given Templates to this Episode. This updates the
+        association table for Episode:Template relationships as needed.
+
+        Args:
+            templates: List of Templates to assign to this object. The
+                provided order is used for the creation of the
+                association table objects so that order is preserved
+                within the relationship.
+            log: Logger for all log messages.
+        """
+
+        # Reset existing assocations
+        self.templates = []
+        for index, template in enumerate(templates):
+            existing = object_session(template).query(EpisodeTemplates)\
+                .filter_by(episode_id=self.id,
+                           template_id=template.id,
+                           order=index)\
+                .first()
+            if existing:
+                self.templates.append(existing)
+            else:
+                self.templates.append(EpisodeTemplates(
+                    episode_id=self.id,
+                    template_id=template.id,
+                    order=index,
+                ))
+
+        log.debug(f'Episode[{self.id}].template_ids = {[t.id for t in templates]}')
 
 
     # Relationship column properties

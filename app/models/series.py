@@ -6,20 +6,21 @@ from sqlalchemy import (
     Boolean, Column, Float, ForeignKey, Integer, String, JSON, func
 )
 
+from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.ext.mutable import MutableDict, MutableList
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, object_session, relationship
+from thefuzz.fuzz import partial_ratio
 
 from app.database.session import Base
 from app.dependencies import get_preferences
-from app.models.template import SeriesTemplates
-
+from app.models.template import SeriesTemplates, Template
 from modules.CleanPath import CleanPath
 from modules.SeriesInfo import SeriesInfo
 
+
 INTERNAL_ASSET_DIRECTORY = Path(__file__).parent.parent / 'assets'
 
-from thefuzz.fuzz import partial_ratio
 def regex_replace(pattern, replacement, string):
     """Perform a Regex replacement with the given arguments"""
 
@@ -38,17 +39,23 @@ class Series(Base):
 
     # Referencial arguments
     id = Column(Integer, primary_key=True)
-    font_id = Column(Integer, ForeignKey('font.id'))
-    font = relationship('Font', back_populates='series')
+    font_id = Column(Integer, ForeignKey('font.id'), default=None)
     sync_id = Column(Integer, ForeignKey('sync.id'), default=None)
-    sync = relationship('Sync', back_populates='series')
+
     cards = relationship('Card', back_populates='series')
+    font = relationship('Font', back_populates='series')
+    sync = relationship('Sync', back_populates='series')
     loaded = relationship('Loaded', back_populates='series')
     episodes = relationship('Episode', back_populates='series')
-    templates = relationship(
-        'Template',
-        secondary=SeriesTemplates.__table__,
-        back_populates='series'
+    _templates: Mapped[list[SeriesTemplates]] = relationship(
+        SeriesTemplates,
+        back_populates='series',
+        order_by=SeriesTemplates.order,
+        cascade='all, delete-orphan',
+    )
+    templates: AssociationProxy[list[Template]] = association_proxy(
+        '_templates', 'template',
+        creator=lambda st: st,
     )
 
     # Required arguments
@@ -115,6 +122,44 @@ class Series(Base):
         """
 
         return [episode.id for episode in self.episodes]
+
+
+    @hybrid_method
+    def assign_templates(self,
+            templates: list[Template],
+            *,
+            log
+        ) -> None:
+        """
+        Assign the given Templates to this Series. This updates the
+        association table for Series:Template relationships as needed.
+
+        Args:
+            templates: List of Templates to assign to this object. The
+                provided order is used for the creation of the
+                association table objects so that order is preserved
+                within the relationship.
+            log: Logger for all log messages.
+        """
+
+        # Reset existing assocations
+        self.templates = []
+        for index, template in enumerate(templates):
+            existing = object_session(template).query(SeriesTemplates)\
+                .filter_by(series_id=self.id,
+                           template_id=template.id,
+                           order=index)\
+                .first()
+            if existing:
+                self.templates.append(existing)
+            else:
+                self.templates.append(SeriesTemplates(
+                    series_id=self.id,
+                    template_id=template.id,
+                    order=index,
+                ))
+
+        log.debug(f'Series[{self.id}].template_ids = {[t.id for t in templates]}')
 
 
     @hybrid_property

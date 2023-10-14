@@ -151,11 +151,15 @@ def import_sync_yaml(
     for new_sync in new_syncs:
         new_sync_dict = new_sync.dict()
         templates = get_all_templates(db, new_sync_dict)
-        sync = models.sync.Sync(**new_sync_dict, templates=templates)
+        sync = models.sync.Sync(**new_sync_dict)
         db.add(sync)
+        db.commit()
         log.info(f'{sync.log_str} imported to Database')
         all_syncs.append(sync)
-    db.commit()
+
+        # Assign Templates
+        sync.assign_templates(templates, log=log)
+        db.commit()
 
     return all_syncs
 
@@ -293,9 +297,14 @@ def import_series_yaml(
         # Add to batabase
         new_series_dict = series.dict()
         templates = get_all_templates(db, new_series_dict)
-        series = models.series.Series(**new_series_dict, templates=templates)
+        series = models.series.Series(**new_series_dict)
         db.add(series)
+        db.commit()
         log.info(f'{series.log_str} imported to Database')
+
+        # Assign Templates
+        series.assign_templates(templates, log=log)
+        db.commit()
 
         # Add background tasks for setting ID's, downloading poster and logo
         # Add background tasks to set ID's, download poster and logo

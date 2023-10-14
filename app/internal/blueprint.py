@@ -374,9 +374,8 @@ def import_blueprint(
         changed = True
 
     if (new_template_ids := series_blueprint.pop('template_ids', [])):
-        template_ids = [template_map[id_].id for id_ in new_template_ids]
-        log.debug(f'Series[{series.id}].template_ids = {template_ids}')
-        series.templates = [template_map[id_] for id_ in new_template_ids]
+        templates = [template_map[id_] for id_ in new_template_ids]
+        series.assign_templates(templates, log=log)
         changed = True
 
     # Update each attribute of the Series object based on import
@@ -417,9 +416,8 @@ def import_blueprint(
             changed = True
 
         if (new_template_ids := episode_dict.pop('template_ids', [])):
-            template_ids = [template_map[id_].id for id_ in new_template_ids]
-            log.debug(f'Episode[{episode.id}].template_ids = {template_ids}')
-            episode.templates = [template_map[id_] for id_ in new_template_ids]
+            templates = [template_map[id_] for id_ in new_template_ids]
+            episode.assign_templates(templates, log=log)
             changed = True
 
         # All other attributes

@@ -4,6 +4,7 @@ from re import match as re_match
 from typing import Any, Optional
 
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, JSON
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy.orm import relationship
@@ -12,13 +13,14 @@ from app.database.session import Base
 
 from modules.Debug import log
 
+
 """Format of all refrence dates for before and after operations"""
 DATETIME_FORMAT = '%Y-%m-%d'
 
 """
 Dictionary of Operation keywords to the corresponding Operation function
 """
-lower_str = lambda v: str(v).lower()
+lower_str = lambda v: str(v).lower() # pylint: disable=unnecessary-lambda-assignment
 OPERATIONS = {
     'is true': lambda v, r: bool(v),
     'is false': lambda v, r: not bool(v),
@@ -62,6 +64,10 @@ class SeriesTemplates(Base):
     id = Column(Integer, primary_key=True, index=True)
     template_id = Column(Integer, ForeignKey('template.id'))
     series_id = Column(Integer, ForeignKey('series.id'))
+    order = Column(Integer)
+
+    template = relationship('Template', back_populates='_series')
+    series = relationship('Series', back_populates='_templates')
 
 class EpisodeTemplates(Base):
     """SQL Relationship table for Episode:Template relationships"""
@@ -71,6 +77,10 @@ class EpisodeTemplates(Base):
     id = Column(Integer, primary_key=True, index=True)
     template_id = Column(Integer, ForeignKey('template.id'))
     episode_id = Column(Integer, ForeignKey('episode.id'))
+    order = Column(Integer)
+
+    template = relationship('Template', back_populates='_episodes')
+    episode = relationship('Episode', back_populates='_templates')
 
 class SyncTemplates(Base):
     """SQL Relationship table for Sync:Template relationships"""
@@ -80,9 +90,15 @@ class SyncTemplates(Base):
     id = Column(Integer, primary_key=True, index=True)
     template_id = Column(Integer, ForeignKey('template.id'))
     sync_id = Column(Integer, ForeignKey('sync.id'))
+    order = Column(Integer)
+
+    template = relationship('Template', back_populates='_syncs')
+    sync = relationship('Sync', back_populates='_templates')
 
 
-# Template table
+"""
+Table for the Template SQL objects themselves.
+"""
 class Template(Base):
     """
     SQL Table that defines a Template. This contains Filters, Card
@@ -96,21 +112,24 @@ class Template(Base):
     id = Column(Integer, primary_key=True, index=True)
     font_id = Column(Integer, ForeignKey('font.id'))
     font = relationship('Font', back_populates='templates')
-    syncs = relationship(
-        'Sync',
-        secondary=SyncTemplates.__table__,
-        back_populates='templates'
+    _syncs = relationship(
+        SyncTemplates,
+        back_populates='template',
+        cascade='all, delete-orphan',
     )
-    series = relationship(
-        'Series',
-        secondary=SeriesTemplates.__table__,
-        back_populates='templates'
+    syncs = association_proxy('_syncs', 'sync')
+    _series = relationship(
+        SeriesTemplates,
+        back_populates='template',
+        cascade='all, delete-orphan',
     )
-    episodes = relationship(
-        'Episode',
-        secondary=EpisodeTemplates.__table__,
-        back_populates='templates'
+    series = association_proxy('_series', 'series')
+    _episodes = relationship(
+        EpisodeTemplates,
+        back_populates='template',
+        cascade='all, delete-orphan',
     )
+    episodes = association_proxy('_episodes', 'episode')
 
     name = Column(String, nullable=False)
     filters = Column(MutableList.as_mutable(JSON), default=[], nullable=False)

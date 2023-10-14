@@ -76,8 +76,12 @@ def add_sync(
     templates = get_all_templates(db, new_sync_dict)
 
     # Create DB entry from Pydantic model, add to database
-    sync = models.sync.Sync(**new_sync_dict, templates=templates)
+    sync = Sync(**new_sync_dict)
     db.add(sync)
+    db.commit()
+
+    # Add Templates
+    sync.assign_templates(templates, log=log)
     db.commit()
 
     return sync

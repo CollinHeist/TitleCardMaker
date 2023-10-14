@@ -328,7 +328,8 @@ def update_series_(
     if ((template_ids := update_series_dict.get('template_ids', None))
         not in (None, UNSPECIFIED)):
         if series.template_ids != template_ids:
-            series.templates = get_all_templates(db, update_series_dict)
+            templates = get_all_templates(db, update_series_dict)
+            series.assign_templates(templates, log=log)
             changed = True
 
     # Update each attribute of the object
