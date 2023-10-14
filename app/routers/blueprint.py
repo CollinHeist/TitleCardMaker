@@ -411,8 +411,8 @@ def import_blueprint_and_series(
 
     # Series does not exist, create and add to database
     if not series:
-        log.debug(f'Blueprint Series {series.as_series_info} not found - '
-                  f'adding to database')
+        log.debug(f'Blueprint Series {blueprint.series.as_series_info} not '
+                  f'found - adding to database')
         series = add_series(
             blueprint.series.as_new_series,
             background_tasks, db, emby_interface, imagemagick_interface,
