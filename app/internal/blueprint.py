@@ -4,7 +4,6 @@ from re import compile as re_compile, sub as re_sub, IGNORECASE
 from time import sleep
 
 from fastapi import HTTPException
-from requests import get, JSONDecodeError
 from sqlalchemy.orm import Session
 
 from app.models.blueprint import Blueprint, BlueprintSeries
@@ -38,9 +37,6 @@ REPO_URL = 'https://github.com/CollinHeist/TitleCardMaker-Blueprints/raw/master'
 
 """URL under which all Blueprint subdirectories are located"""
 BLUEPRINTS_URL = f'{REPO_URL}/blueprints'
-
-"""URL to the master Blueprint file"""
-MASTER_BLUEPRINT_FILE = f'{REPO_URL}/master_blueprints.json'
 
 
 def delay_zip_deletion(zip_directory: Path, zip_file: Path) -> None:
