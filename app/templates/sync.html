@@ -41,7 +41,15 @@
       <div class="ui grid">
         <div id="sync" class="sixteen wide column">
           <h1 class="ui header">Syncs</h1>
+          
+          {% if not preferences.use_emby and not preferences.use_jellyfin and not preferences.use_plex and not preferences.use_sonarr %}
+          <div class="ui compact floating visible info message">
+            <i class="info circle icon"></i>
+            Syncs can be created <i>after</i> <a href="/connections">Connections</a> are defined.
+          </div>
+          {% else %}
           <div id="next-sync" class="ui compact raised segment"></div>
+          {% endif %}
 
           <!-- Emby -->
           {% if preferences.use_emby %}
