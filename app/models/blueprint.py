@@ -1,3 +1,4 @@
+# pylint: disable=no-self-argument
 from re import sub as re_sub, IGNORECASE
 
 from sqlalchemy import Column, DateTime, Integer, String, ForeignKey, func
@@ -5,6 +6,7 @@ from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from app.database.session import BlueprintBase
+from app.schemas.blueprint import ImportBlueprint
 from app.schemas.series import NewSeries
 from modules.SeriesInfo import SeriesInfo
 
@@ -106,3 +108,17 @@ class Blueprint(BlueprintBase):
     json = Column(String, nullable=False)
 
     series: Mapped[BlueprintSeries] = relationship('BlueprintSeries', back_populates='blueprints')
+
+
+    @hybrid_property
+    def blueprint(self) -> ImportBlueprint:
+        """
+        Attribute of the actual Blueprint (i.e. configurable options)
+        for this object.
+
+        Returns:
+            The Pydantic model creation of this object's raw blueprint
+            JSON.
+        """
+
+        return ImportBlueprint.parse_raw(self.json)

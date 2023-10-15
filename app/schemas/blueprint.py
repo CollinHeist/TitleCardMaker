@@ -24,7 +24,7 @@ class BlueprintBase(Base):
 
         return values
 
-class SeriesBase(BlueprintBase):
+class ConfigBase(BlueprintBase): # Base of Series, Episodes, and Templates
     font_id: Optional[int] = None
     card_type: Optional[str] = None
     hide_season_text: Optional[bool] = None
@@ -37,7 +37,7 @@ class SeriesBase(BlueprintBase):
     extra_values: Optional[list[Any]] = None
     skip_localized_images: Optional[bool] = None
 
-class BlueprintSeries(SeriesBase):
+class BaseSeriesEpisode(ConfigBase): # Base of Series and Episodes
     template_ids: list[int] = []
     match_titles: Optional[bool] = None
     font_color: Optional[str] = None
@@ -48,9 +48,14 @@ class BlueprintSeries(SeriesBase):
     font_interline_spacing: Optional[int] = None
     font_interword_spacing: Optional[int] = None
     font_vertical_shift: Optional[int] = None
+
+"""
+Creation classes
+"""
+class BlueprintSeries(BaseSeriesEpisode):
     source_files: list[str] = []
 
-class BlueprintEpisode(BlueprintSeries):
+class BlueprintEpisode(BaseSeriesEpisode):
     title: Optional[str] = None
     match_title: Optional[bool] = None
     auto_split_title: Optional[bool] = None
@@ -72,13 +77,10 @@ class BlueprintFont(BlueprintBase):
     title_case: Optional[TitleCase] = None
     vertical_shift: int = None
 
-class BlueprintTemplate(SeriesBase):
+class BlueprintTemplate(ConfigBase):
     name: str
     filters: list[Condition] = []
 
-"""
-Creation classes
-"""
 class Blueprint(Base):
     series: BlueprintSeries
     episodes: dict[str, BlueprintEpisode] = {}
@@ -98,8 +100,11 @@ class DownloadableFile(Base):
     url: str
     filename: str
 
-class BlankBlueprint(Blueprint):
-    preview: str = 'Name of preview file here'
+class ExportBlueprint(Blueprint):
+    ...
+
+class ImportBlueprint(Blueprint):
+    ...
 
 class RemoteBlueprintFont(BlueprintFont):
     file_download_url: Optional[str] = None

@@ -22,10 +22,10 @@ from app.internal.episodes import get_all_episode_data
 from app.internal.series import add_series
 from app import models
 from app.models.blueprint import Blueprint, BlueprintSeries
-from app.models.series import Series
 from app.schemas.blueprint import (
-    BlankBlueprint, DownloadableFile, RemoteBlueprint,
+    DownloadableFile, ExportBlueprint, RemoteBlueprint,
 )
+from app.schemas.series import Series
 from modules.SeriesInfo import SeriesInfo
 
 
@@ -50,7 +50,7 @@ def export_series_blueprint(
         plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
         sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
-    ) -> BlankBlueprint:
+    ) -> ExportBlueprint:
     """
     Generate the Blueprint for the given Series. This Blueprint can be
     imported to completely recreate a Series' (and all associated
@@ -304,8 +304,8 @@ def query_all_blueprints_(
             try:
                 # Determine if this Series already exists
                 series_info = blueprint.series.as_series_info
-                series = db.query(Series)\
-                    .filter(series_info.filter_conditions(Series))\
+                series = db.query(models.series.Series)\
+                    .filter(series_info.filter_conditions(models.series.Series))\
                     .first()
 
                 # Series not present, do not include
@@ -390,7 +390,7 @@ def import_blueprint_and_series(
         plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
         sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
-    ) -> None:
+    ) -> Series:
     """
     Import the given Blueprint - creating the associated Series if it
     does not already exist.
@@ -405,8 +405,9 @@ def import_blueprint_and_series(
     blueprint = get_blueprint(blueprint_db, blueprint_id, raise_exc=True)
 
     # Query for this Blueprint's Series
-    series = db.query(Series)\
-        .filter(blueprint.series.as_series_info.filter_conditions(Series))\
+    series_info = blueprint.series.as_series_info
+    series = db.query(models.series.Series)\
+        .filter(series_info.filter_conditions(models.series.Series))\
         .first()
 
     # Series does not exist, create and add to database
@@ -422,6 +423,8 @@ def import_blueprint_and_series(
 
     # Import Blueprint
     import_blueprint(db, preferences, series, blueprint, log=log)
+
+    return series
 
 
 @blueprint_router.put('/import/series/{series_id}/blueprint/{blueprint_id}', status_code=200)

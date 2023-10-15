@@ -1192,7 +1192,7 @@ function addTranslations() {
  * loading. If successful, the page is reloaded.
  */
 function importBlueprint(cardId, blueprint) {
-  // Turn on loading
+  // Indicate loading
   document.getElementById(cardId).classList.add('slow', 'double', 'blue', 'loading');
 
   // Get any URL's for Fonts to download
@@ -1206,14 +1206,13 @@ function importBlueprint(cardId, blueprint) {
   // Submit API request to import blueprint
   $.ajax({
     type: 'PUT',
-    url: '/api/blueprints/import/series/{{series.id}}',
-    data: JSON.stringify(blueprint),
-    contentType: 'application/json',
+    url: `/api/blueprints/import/series/{{series.id}}/blueprint/${blueprint.id}`,
     success: () => {
-      showInfoToast('Blueprint Imported');
       if (fontsToDownload.length === 0) {
-        showInfoToast('Reloading page..');
+        showInfoToast({title: 'Blueprint Imported', message: 'Reloading page...'});
         setTimeout(() => location.reload(), 2000);
+      } else {
+        showInfoToast('Blueprint Imported');
       }
     }, error: response => showErrorToast({title: 'Error Importing Blueprint', response}),
     complete: () => document.getElementById(cardId).classList.remove('slow', 'double', 'blue', 'loading'),
