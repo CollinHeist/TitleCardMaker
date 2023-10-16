@@ -1,45 +1,21 @@
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Optional
 
-from modules.BaseCardType import BaseCardType, ImageMagickCommands
-from modules.Debug import log
+from modules.BaseCardType import (
+    BaseCardType, Coordinate, ImageMagickCommands, Rectangle,
+)
 
 SeriesExtra = Optional
 Element = Literal['index', 'logo', 'omit', 'title']
 MiddleElement = Literal['logo', 'omit']
 
 
-@dataclass(repr=False)
-class Coordinate:
-    """Class that defines a single Coordinate on an x/y plane."""
-    x: float
-    y: float
-
-    def __str__(self) -> str:
-        return f'{self.x:.0f},{self.y:.0f}'
-
-
-@dataclass(repr=False)
-class Rectangle:
-    """Class that defines movable SVG rectangle."""
-    start: Coordinate
-    end: Coordinate
-
-    def __str__(self) -> str:
-        return f'rectangle {str(self.start)},{str(self.end)}'
-
-    def draw(self) -> str:
-        """Draw this Rectangle"""
-        return f'-draw "{str(self)}"'
-
-
 class TintedFrameTitleCard(BaseCardType):
     """
-    This class describes a CardType that produces title cards featuring
-    a rectangular frame with blurred content on the edges of the frame,
-    and unblurred content within. The frame itself can be intersected by
-    title text, index text, or a logo at the top and bottom.
+    CardType that produces title cards featuring a rectangular frame
+    with blurred content on the edges of the frame, and unblurred
+    content within. The frame itself can be intersected by title text,
+    index text, or a logo at the top and bottom.
     """
 
     """Directory where all reference files used by this card are stored"""

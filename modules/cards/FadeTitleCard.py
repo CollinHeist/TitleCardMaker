@@ -132,7 +132,6 @@ class FadeTitleCard(BaseCardType):
         self.font_kerning = font_kerning
         self.font_size = font_size
         self.font_vertical_shift = font_vertical_shift
-
         self.episode_text_color = episode_text_color
 
 
@@ -146,7 +145,7 @@ class FadeTitleCard(BaseCardType):
         """
 
         # No logo indicated, return blank command
-        if self.logo is None:
+        if self.logo is None or not self.logo.exists():
             return []
 
         return [
