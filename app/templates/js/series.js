@@ -1301,9 +1301,24 @@ function exportBlueprint() {
         message: 'Verify any applicable Font licenses allow the Fonts to be shared.',
         displayTime: 15000,
       });
+
+      // Get database ID string for this Series
+      let databaseIds = [];
+      if ('{{series.imdb_id}}' !== 'None') { databaseIds.push('imdb:{{series.imdb_id}}'); }
+      if ('{{series.tmdb_id}}' !== 'None') { databaseIds.push('tmdb:{{series.tmdb_id}}'); }
+      if ('{{series.tvdb_id}}' !== 'None') { databaseIds.push('tmdb:{{series.tvdb_id}}'); }
+      const idStr = databaseIds.join(',');
+
+      // Get URL to pre-fill Blueprint form
+      let url = `series_year={{series.year}}&database_ids=${(idStr)}`
+      + `&series_name=${encodeURIComponent('{{series.name}}')}`
+      + `&title=[Blueprint] ${encodeURIComponent('{{series.name}}')}`;
+
       // Open window for Blueprint submission
       window.open(
-        'https://github.com/CollinHeist/TitleCardMaker-Blueprints/issues/new?assignees=CollinHeist&labels=blueprint&projects=&template=new_blueprint.yml&title=[Blueprint] {{series.name}}&series_name={{series.name}}&series_year={{series.year}}',
+        'https://github.com/CollinHeist/TitleCardMaker-Blueprints/issues/new?'
+        + `assignees=CollinHeist&labels=blueprint&template=new_blueprint.yaml`
+        + `&${url}`,
         '_blank'
       );
     }, error: response => showErrorToast({title: 'Error Exporting Blueprint', response}),
