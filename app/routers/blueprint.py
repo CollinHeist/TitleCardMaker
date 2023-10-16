@@ -274,6 +274,7 @@ def query_all_blueprints_(
         blueprint_db: Session = Depends(get_blueprint_database),
         order_by: Literal['date', 'name'] = Query(default='date'),
         include_blacklisted: bool = Query(default=False),
+        include_imported: bool = Query(default=False),
         include_missing_series: bool = Query(default=True),
         preferences: Preferences = Depends(get_preferences),
     ) -> Page[RemoteBlueprint]:
@@ -284,6 +285,8 @@ def query_all_blueprints_(
     - order_by: How to order the returned Blueprints.
     - include_blacklisted: Whether to include Blacklisted Blueprints in
     the return.
+    - include_imported: Whether to include previously imported
+    Blueprints in the return.
     - include_missing_series: Whether to include Blueprints for Series
     that are not present in the database.
     """
@@ -299,24 +302,29 @@ def query_all_blueprints_(
             Whether the Blueprint should be included in the return.
         """
 
+        # Exclude if blacklisted (and filtering)
+        if (not include_blacklisted
+            and blueprint.id in preferences.blacklisted_blueprints):
+            return False
+
+        # Exclude if previously imported (and filtering)
+        if (not include_imported
+            and blueprint.id in preferences.imported_blueprints):
+            return False
+
+        # Exclude if Series is not present
         if not include_missing_series:
-            try:
-                # Determine if this Series already exists
-                series_info = blueprint.series.as_series_info
-                series = db.query(models.series.Series)\
-                    .filter(series_info.filter_conditions(models.series.Series))\
-                    .first()
+            # Determine if this Series already exists
+            series_info = blueprint.series.as_series_info
+            series = db.query(models.series.Series)\
+                .filter(series_info.filter_conditions(models.series.Series))\
+                .first()
 
-                # Series not present, do not include
-                if series is None:
-                    return False
-            except ValueError:
-                pass
+            # Series not present, do not include
+            if series is None:
+                return False
 
-        return (
-            include_blacklisted
-            or blueprint.id not in preferences.blacklisted_blueprints
-        )
+        return True
 
     # Get list of Blueprints
     if order_by == 'date':

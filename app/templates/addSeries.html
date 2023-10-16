@@ -181,9 +181,19 @@
           Browse Blueprints
         </button>
       </div>
-      <div data-value="include_missing_series" class="ui checkbox" data-tooltip="Whether to only show Blueprints for Series present in TitleCardMaker">
-        <input type="checkbox" name="include_missing_series">
-        <label>Only include existing Series</label>
+      <br><br>
+      <div class="ui two fields">
+        <div data-value="include_missing_series" class="ui checkbox field">
+          <label>Only include existing Series</label>
+          <input type="checkbox" name="include_missing_series">
+          <p class="help">Exclude Blueprints for Series not in TitleCardMaker</p>
+        </div>
+        <br>
+        <div data-value="included_imported" class="ui checkbox checkbox">
+          <label>Include previously imported</label>
+          <input type="checkbox" name="included_imported">
+          <p class="help">Include Blueprints that have been previously imported</p>
+        </div>
       </div>
 
       <!-- <button class="ui green tertiary button" onclick="queryAllBlueprints();">

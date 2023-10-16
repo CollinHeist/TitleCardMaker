@@ -129,13 +129,14 @@ function queryAllBlueprints(page=1) {
   const blueprintTemplate = document.getElementById('all-blueprint-template');
   const orderBy = $('[data-value="order_by"]').val();
   const includeMissing = $('.checkbox[data-value="include_missing_series"]').checkbox('is unchecked');
+  const includeImported = $('.checkbox[data-value="included_imported"]').checkbox('is checked');
   // Only add placeholders if on page 1 (first load)
   if (page === 1) {
     addPlaceholders(blueprintResults, 9, 'blueprint-placeholder-template');
   }
   $.ajax({
     type: 'GET',
-    url: `/api/blueprints/query/all?page=${page}&size=15&order_by=${orderBy}&include_missing_series=${includeMissing}`,
+    url: `/api/blueprints/query/all?page=${page}&size=15&order_by=${orderBy}&include_missing_series=${includeMissing}&include_imported=${includeImported}`,
     success: allBlueprints => {
       const blueprintCards = allBlueprints.items.map((blueprint, blueprintId) => {
         // Clone template, fill out basic info
@@ -301,6 +302,7 @@ async function initAll() {
     values: await getActiveTemplates(undefined, allTemplates),
   });
   $('.ui.dropdown').dropdown();
+  $('.ui.checkbox').checkbox();
 }
 
 /*

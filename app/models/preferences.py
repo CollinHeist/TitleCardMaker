@@ -87,6 +87,7 @@ class Preferences:
         'task_crontabs', 'simplified_data_table', 'home_page_size',
         'episode_data_page_size', 'stylize_unmonitored_posters',
         'sources_as_table', 'card_type_directory', 'local_card_types',
+        'imported_blueprints',
     )
 
 
@@ -239,6 +240,7 @@ class Preferences:
         self.supported_language_codes = []
         self.use_magick_prefix = False
         self.blacklisted_blueprints: set[int] = set()
+        self.imported_blueprints: set[int] = set()
         self.advanced_scheduling = False
         self.task_crontabs = {}
 

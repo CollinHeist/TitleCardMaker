@@ -425,6 +425,10 @@ def import_blueprint(
                 setattr(episode, attr, value)
                 changed = True
 
+    # Add ID to imported set
+    preferences.imported_blueprints.add(blueprint.id)
+    preferences.commit()
+
     # Commit changes to Database
     if changed:
         db.commit()
