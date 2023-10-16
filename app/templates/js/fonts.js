@@ -145,7 +145,7 @@ function querySuggestedFontReplacements(fontId, elementId) {
       // There are replacements, add to page
       const inElement = document.querySelector(`#${elementId} .field[data-value="in-replacements"]`);
       const outElement = document.querySelector(`#${elementId} .field[data-value="out-replacements"]`);
-      for (const [repl_in, repl_out] of Object.entries(replacements)) {
+      for (const [repl_in, repl_out] of Object.entries(analysis.replacements)) {
         // Skip if this replacement already exists
         let found = false;
         $(`#${elementId} input[name="replacements_in"]`).each(function() {
