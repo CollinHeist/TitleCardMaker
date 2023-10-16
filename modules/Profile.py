@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Callable, Optional
 
 from re import compile as re_compile, match, IGNORECASE
 
@@ -173,13 +173,18 @@ class Profile:
         )
 
 
-    def get_season_text(self, episode_info: EpisodeInfo) -> str:
+    def get_season_text(self,
+            episode_info: EpisodeInfo,
+            default: Optional[Callable[[EpisodeInfo], str]] = None,
+        ) -> str:
         """
         Gets the season text for the given season number, after applying
         this profile's rules about season text.
 
         Args:
             episode_info: Episode info to get the season text of.
+            default: Default function to call for getting season text
+                of if no customizations are present.
 
         Returns:
             The season text for the given entry as defined by this
@@ -193,11 +198,11 @@ class Profile:
         # Generic season titles are Specials and Season {n}
         if not self.__use_custom_seasons:
             return self.__episode_map.get_generic_season_title(
-                episode_info=episode_info
+                episode_info=episode_info, default=default,
             )
 
         # Custom season title, query EpisodeMap for title
-        return self.__episode_map.get_season_title(episode_info)
+        return self.__episode_map.get_season_title(episode_info,default=default)
 
 
     def get_episode_text(self, episode: 'Episode') -> str:
