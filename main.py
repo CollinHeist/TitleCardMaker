@@ -6,6 +6,8 @@ from sys import exit as sys_exit
 from re import match
 from time import sleep
 
+from modules.Version import Version
+
 try:
     from requests import get
     import schedule
@@ -171,12 +173,12 @@ def check_for_update():
     # Make API call to get latest version
     try:
         response = get(REPO_URL, timeout=30)
+        available_version = Version(response.json().get('name', '').strip())
         assert response.ok
     except Exception:
         log.debug(f'Failed to check for new version')
     else:
-        available_version = response.json().get('name', '').strip()
-        if available_version != pp.version:
+        if available_version > pp.version:
             log.info(f'New version of TitleCardMaker ({available_version}) '
                      f'available')
             if is_docker:

@@ -26,6 +26,7 @@ from modules.TautulliInterface import TautulliInterface
 from modules.Template import Template
 from modules.TitleCard import TitleCard
 from modules.TMDbInterface import TMDbInterface
+from modules.Version import Version
 from modules.YamlReader import YamlReader
 
 YamlWriterSet = namedtuple(
@@ -73,7 +74,7 @@ class PreferenceParser(YamlReader):
         # Initialize parent YamlReader object - errors are critical
         super().__init__(log_function=log.critical)
         self.valid = True
-        self.version = self.VERSION_FILE.read_text().strip()
+        self.version = Version(self.VERSION_FILE.read_text().strip())
         self.is_docker = is_docker
 
         # Store and read file
