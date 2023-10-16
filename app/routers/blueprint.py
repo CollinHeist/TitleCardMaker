@@ -165,7 +165,6 @@ async def export_series_blueprint_as_zip(
         series, episode_data, include_global_defaults,
         include_episode_overrides, preferences,
     )
-    blueprint = BlankBlueprint(**blueprint).dict()
 
     # Get list of Font files for this Series' Blueprint
     font_files = get_blueprint_font_files(
@@ -213,7 +212,7 @@ async def export_series_blueprint_as_zip(
     # Write Blueprint as JSON into zip directory
     blueprint_file = zip_dir / 'blueprint.json'
     with blueprint_file.open('w') as file_handle:
-        dump(blueprint, file_handle, indent=2)
+        dump(blueprint.dict(), file_handle, indent=2)
     log.debug(f'Wrote "blueprint.json" into zip directory')
 
     # Create zip of Font zip + preview file + Blueprint JSON

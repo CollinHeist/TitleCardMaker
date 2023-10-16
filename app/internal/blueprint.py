@@ -13,7 +13,7 @@ from app.models.font import Font
 from app.models.preferences import Preferences
 from app.models.series import Series
 from app.models.template import Template
-from app.schemas.blueprint import RemoteBlueprint
+from app.schemas.blueprint import ExportBlueprint, RemoteBlueprint
 from app.schemas.episode import UpdateEpisode
 from app.schemas.font import NewNamedFont
 from app.schemas.series import NewTemplate, UpdateSeries
@@ -102,7 +102,7 @@ def generate_series_blueprint(
         include_global_defaults: bool,
         include_episode_overrides: bool,
         preferences: Preferences,
-    ) -> dict:
+    ) -> ExportBlueprint:
     """
     Generate the Blueprint for the given Series. This Blueprint can be
     imported to completely recreate a Series' (and all associated
@@ -205,7 +205,7 @@ def generate_series_blueprint(
         if template.font:
             export_obj['templates'][index]['font_id'] = fonts.index(template.font)
 
-    return export_obj
+    return ExportBlueprint(**export_obj)
 
 
 def get_blueprint_font_files(
