@@ -108,7 +108,7 @@ class PreferenceParser(YamlReader):
         self.validate_fonts = True
         self.season_folder_format = self.DEFAULT_SEASON_FOLDER_FORMAT
         self.sync_specials = True
-        self.supported_language_codes = []
+        self.supported_language_codes = ['en']
 
         self.archive_directory = None
         self.create_archive = False
@@ -484,6 +484,7 @@ class PreferenceParser(YamlReader):
             self.sync_specials = value
 
         if (value := self.get('options', 'language_codes', type_=list)) is not None:
+            value = set(value) | set(('en'))
             if all(code in SUPPORTED_LANGUAGE_CODES for code in value):
                 self.supported_language_codes = value
             else:
