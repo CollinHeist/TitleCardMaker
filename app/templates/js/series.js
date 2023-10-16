@@ -845,6 +845,7 @@ async function initAll() {
   // Schedule recurring statistics query
   getStatistics();
   getStatisticsId = setInterval(getStatistics, 30000); // Refresh stats every 30s
+  setInterval(getCardData, 30000);
 
   // Open tab indicated by URL param
   const tab = window.location.hash.substring(1) || 'options';
