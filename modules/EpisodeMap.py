@@ -259,6 +259,7 @@ class EpisodeMap:
     def get_generic_season_title(self, *,
             season_number: Optional[int] = None,
             episode_info: Optional[EpisodeInfo] = None,
+            default: Optional[Callable[[EpisodeInfo], str]] = None,
         ) -> str:
         """
         Get the generic season title for the given entry.
@@ -282,6 +283,10 @@ class EpisodeMap:
         # Get episode's season number if not provided directly
         if season_number is None:
             season_number = episode_info.season_number
+
+        # Call default function if provided
+        if default is not None:
+            return default(episode_info=episode_info)
 
         return 'Specials' if season_number == 0 else f'Season {season_number}'
 
