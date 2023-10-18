@@ -358,20 +358,26 @@ class EpisodeMap:
         return default(episode_info=episode_info)
 
 
-    def get_season_title(self, episode_info: EpisodeInfo) -> str:
+    def get_season_title(self,
+            episode_info: EpisodeInfo,
+            *,
+            default: Optional[Callable[[EpisodeInfo], str]] = None,
+        ) -> str:
         """
         Get the season title for the given Episode.
 
         Args:
             episode_info: Episode to get the season title of.
+            default: Optional function to get default season titles
+                from.
 
         Returns:
             Season title defined by this map for this Episode.
         """
 
         # Get season title for this episode
-        season_title = self.__get_value(episode_info, 'season_title',
-                                        self.get_generic_season_title)
+        def_func = self.get_generic_season_title if default is None else default
+        season_title = self.__get_value(episode_info, 'season_title', def_func)
 
         # Warn if default value was returned and indexing by absolute number
         if self.__index_by == 'episode':
