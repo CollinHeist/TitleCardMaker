@@ -5,7 +5,7 @@ from re import IGNORECASE, compile as re_compile
 from typing import Literal, Optional, Union
 
 from modules.Debug import log
-from modules.BaseCardType import BaseCardType, Coordinate, ImageMagickCommands,
+from modules.BaseCardType import BaseCardType, Coordinate, ImageMagickCommands
 
 
 class SvgRectangle:
