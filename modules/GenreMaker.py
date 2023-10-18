@@ -44,7 +44,7 @@ class GenreMaker(ImageMaker):
 
 
     @property
-    def gradient_commands(self) -> ImageMagickCommand:
+    def gradient_commands(self) -> ImageMagickCommands:
         """
         ImageMagick subcommands to add the gradient overlay to the image
         """
@@ -65,7 +65,7 @@ class GenreMaker(ImageMaker):
 
         if self.borderless:
             return []
-        
+
         return [
             f'-gravity center',
             f'-bordercolor white',
