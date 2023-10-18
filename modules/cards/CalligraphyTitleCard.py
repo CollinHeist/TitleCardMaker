@@ -2,7 +2,7 @@ from pathlib import Path
 from random import random
 from typing import Optional
 
-from modules.BaseCardType import BaseCardType, ImageMagickCommands
+from modules.BaseCardType import BaseCardType, Dimensions, ImageMagickCommands
 from modules.EpisodeInfo import EpisodeInfo
 
 
@@ -220,14 +220,33 @@ class CalligraphyTitleCard(BaseCardType):
         ]
 
 
-    @property
-    def texture_commands(self) -> ImageMagickCommands:
+    def __get_logo_size(self) -> Dimensions:
         """
-        Subcommand to apply the texture image (if enabled).
+        Get the effective size of the logo as it is overlaid onto the
+        image.
 
         Returns:
-            List of ImageMagick commands.
+            Effective dimensions of the logo after having been scaled.
         """
+
+        # Get base dimensions of the logo (before resizing)
+        width, height = self.image_magick.get_image_dimensions(self.logo_file)
+
+        # -resize 2800x
+        scaled_w = 2800
+        scaled_h = height * (scaled_w / width)
+
+        # -resize x{750 * self.logo_size}>
+        if scaled_h > (max_height := 750 * self.logo_size):
+            downsize = max_height / scaled_h
+            return Dimensions(scaled_w * downsize, scaled_h * downsize)
+
+        return Dimensions(scaled_w, scaled_h)
+
+
+    @property
+    def texture_commands(self) -> ImageMagickCommands:
+        """Subcommand to apply the texture image (if enabled)."""
 
         # Not adding texture, return
         if not self.add_texture:
@@ -256,12 +275,7 @@ class CalligraphyTitleCard(BaseCardType):
 
     @property
     def logo_commands(self) -> ImageMagickCommands:
-        """
-        Subcommand to add the logo (and drop shadow) to the image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand to add the logo (and drop shadow) to the image."""
 
         # Logo not specified or does not exist, return empty commands
         if not self.logo_file or not self.logo_file.exists():
@@ -280,12 +294,7 @@ class CalligraphyTitleCard(BaseCardType):
 
     @property
     def title_text_commands(self) -> ImageMagickCommands:
-        """
-        Subcommand for adding title text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand for adding title text to the source image."""
 
         # No title text, or not being shown
         if len(self.title_text) == 0:
@@ -314,26 +323,32 @@ class CalligraphyTitleCard(BaseCardType):
 
     @property
     def index_text_commands(self) -> ImageMagickCommands:
-        """
-        Subcommands for adding index text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommands for adding index text to the source image."""
 
         # Return if not showing text
         if self.hide_season_text and self.hide_episode_text:
             return []
 
-        index_text = f'{self.season_text} {self.separator} {self.episode_text}'
         if self.hide_season_text:
             index_text = self.episode_text
         elif self.hide_season_text:
             index_text = self.season_text
+        else:
+            index_text = (
+                f'{self.season_text} {self.separator} {self.episode_text}'
+            )
 
         interline_spacing = -50 + self.font_interline_spacing
         kerning = 1.0 * self.font_kerning
         size = 75 * self.episode_text_font_size
+
+        # Determine vertical offset - if no logo, place on top of image
+        if not self.logo_file or not self.logo_file.exists():
+            y = -750
+        # Logo is provided, position just above logo
+        else:
+            _, logo_height = self.__get_logo_size()
+            y = (-logo_height / 2) - 125 # 125px margin
 
         base_commands = [
             f'-background None',
@@ -345,7 +360,7 @@ class CalligraphyTitleCard(BaseCardType):
             f'label:"{index_text}"',
         ]
 
-        return self.__add_drop_shadow(base_commands, '95x2+0+12', 0, -500)
+        return self.__add_drop_shadow(base_commands, '95x2+0+12', 0, y)
 
 
     @staticmethod
