@@ -484,7 +484,7 @@ class PreferenceParser(YamlReader):
             self.sync_specials = value
 
         if (value := self.get('options', 'language_codes', type_=list)) is not None:
-            value = set(value) | set(('en'))
+            value = set(value) | set(('en', ))
             if all(code in SUPPORTED_LANGUAGE_CODES for code in value):
                 self.supported_language_codes = value
             else:
