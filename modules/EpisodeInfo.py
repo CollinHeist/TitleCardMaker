@@ -94,7 +94,7 @@ class WordSet(dict):
             for this label and language; False otherwise.
         """
 
-        if lang:
+        if lang is not None and lang != 'en':
             return (
                 f'{label}_cardinal_{lang}' in self
                 and f'{label}_ordinal_{lang}' in self
