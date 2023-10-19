@@ -16,6 +16,8 @@ class TautulliInterface(WebInterface, Interface):
     updating/creation.
     """
 
+    INTERFACE_TYPE = 'Tautulli'
+
     """Default configurations for the notification agent(s)"""
     DEFAULT_AGENT_NAME = 'Update TitleCardMaker'
 
@@ -42,12 +44,12 @@ class TautulliInterface(WebInterface, Interface):
             use_ssl: Whether to use SSL for the interface.
             agent_name: Name of the Notification Agent to check for and/
                 or create on Tautulli.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Raises:
-            HTTPException (400) if Tautulli cannot be connected to.
-            HTTPException (401) if Tautulli's status cannot be queried.
-            HTTPException (422) if the URL is invalid.
+            HTTPException (400): Tautulli cannot be connected to.
+            HTTPException (401): Tautulli's status cannot be queried.
+            HTTPException (422): The URL is invalid.
         """
 
         # Initialize parent classes
@@ -126,7 +128,7 @@ class TautulliInterface(WebInterface, Interface):
         Create a new Notification Agent.
 
         Args:
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             Notifier ID of created agent, None if agent was not created.
@@ -166,7 +168,7 @@ class TautulliInterface(WebInterface, Interface):
         exist or cannot be identified.
 
         Args:
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # If already integrated, skip
