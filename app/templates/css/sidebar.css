@@ -1,0 +1,108 @@
+#nav-menu {
+  width: 94px;
+}
+
+/* Add glow effect for hovered items */
+#nav-menu .glow-effect {
+  --glow-line-color: var(--tcm-blue-color);
+  --glow-line-thickness: 2px;
+  --glow-line-length: 20px;
+  --glow-blur-color: var(--tcm-blue-color);
+  --glow-blur-size: 5px;
+  --glow-offset: 0px;
+  --animation-speed: 1200ms;
+  /* do not change, used for calculations */
+  --container-offset: 100px;
+  position: relative;
+}
+
+#nav-menu .glow-container {
+  pointer-events: none;
+  position: absolute;
+  inset: calc(var(--container-offset) / -2);
+  width: calc(100% + var(--container-offset));
+  height: calc(100% + var(--container-offset));
+  opacity: 0;
+  /* outline: 3px solid blue; */
+}
+
+#nav-menu .glow-blur,
+#nav-menu .glow-line {
+  width: calc(100% - var(--container-offset) + var(--glow-offset));
+  height: calc(100% - var(--container-offset) + var(--glow-offset));
+  x: calc((var(--container-offset) / 2) + calc(var(--glow-offset) / -2));
+  y: calc((var(--container-offset) / 2) + calc(var(--glow-offset) / -2));
+  fill: transparent;
+  stroke: black;
+  stroke-width: 5px;
+  stroke-dasharray: var(--glow-line-length) calc(50px - var(--glow-line-length));
+}
+
+#nav-menu .glow-effect:is(:hover, :focus) :is(.glow-line, .glow-blur) {
+  stroke-dashoffset: -80px;
+  transition: stroke-dashoffset var(--animation-speed) ease-in;
+}
+
+#nav-menu .glow-line {
+  stroke: var(--glow-line-color);
+  stroke-width: var(--glow-line-thickness);
+}
+
+#nav-menu .glow-blur {
+  filter: blur(var(--glow-blur-size));
+  stroke: var(--glow-blur-color);
+  stroke-width: var(--glow-blur-size);
+}
+
+#nav-menu .glow-effect:is(:hover, :focus) .glow-container {
+  animation: glow-visibility ease-in-out var(--animation-speed);
+}
+
+@keyframes glow-visibility {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  25%,
+  75% {
+    opacity: 1;
+  }
+}
+
+#nav-menu .glow-effect[data-glow-animation="false"] {
+  --glow-line-length: 50px;
+}
+#nav-menu .glow-effect[data-glow-offset="true"] {
+  --glow-offset: 10px;
+}
+
+#nav-menu .glow-effect[data-glow-animation="grow"]:is(:hover, :focus) .glow-container {
+  scale: 1.3;
+  transition: scale var(--animation-speed) linear;
+}
+
+/* Highlight active tab */
+#nav-menu .highlighted.item {
+  /* Color icon and text a TCM blue */
+  color: var(--tcm-blue-color);
+  /* Add blurred shadow around icon and text */
+  text-shadow: 0 0 10px var(--tcm-blue-color);
+}
+
+/* Reduce padding on text */
+#nav-menu .menu .surround.item {
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+
+/* Add border box for surround items (i.e. visible submenus) */
+#nav-menu .surround.item {
+  border-left: 1px solid white;
+  border-right: 1px solid white;
+}
+#nav-menu .surround.item.top {
+  border-top: 1px solid white;
+}
+#nav-menu .surround.item.bottom {
+  border-bottom: 1px solid white;
+}

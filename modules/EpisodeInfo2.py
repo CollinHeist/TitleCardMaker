@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 from num2words import num2words
 from plexapi.video import Episode as PlexEpisode
@@ -199,18 +199,15 @@ class EpisodeInfo(DatabaseInfoContainer):
             match,  False otherwise.
         """
 
+        # Verify the comparison is another EpisodeInfo object
+        if not isinstance(info, EpisodeInfo):
+            raise TypeError(
+                f'Can only compare equality between EpisodeInfo objects'
+            )
+
         # ID matches are immediate equality
         if self == info:
             return True
-
-        # TODO temporary to see if title match is useful
-        if (self.season_number == info.season_number
-            and self.episode_number == info.episode_number):
-            if self.title.matches(info.title):
-                log.info(f'Title matches on {self}')
-            else:
-                log.warning(f'Title does not match {self}')
-                log.debug(f'{self.title=} vs. {info.title=}')
 
         # Require title match
         return (

@@ -5,9 +5,11 @@ Revises: 5861246a49f3
 Create Date: 2023-09-11 20:20:14.124994
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 
+from modules.Debug import contextualize
 
 # revision identifiers, used by Alembic.
 revision = '4d7cb48238be'
@@ -36,6 +38,9 @@ IS_DOCKER = environ.get('TCM_IS_DOCKER', 'false').lower() == 'true'
 
 
 def upgrade() -> None:
+    log = contextualize()
+    log.debug(f'Upgrading SQL Schema to Version[{revision}]..')
+
     with op.batch_alter_table('font', schema=None) as batch_op:
         batch_op.add_column(sa.Column('file_name', sa.String(), nullable=True))
         batch_op.alter_column('interword_spacing',
@@ -60,8 +65,13 @@ def upgrade() -> None:
     with op.batch_alter_table('font', schema=None) as batch_op:
         batch_op.drop_column('file')
 
+    log.debug(f'Upgraded SQL Schema to Version[{revision}]')
+
 
 def downgrade() -> None:
+    log = contextualize()
+    log.debug(f'Downgrading SQL Schema to Version[{down_revision}]..')
+
     with op.batch_alter_table('font', schema=None) as batch_op:
         batch_op.add_column(sa.Column('file', sa.VARCHAR(), nullable=True))
         batch_op.alter_column('interword_spacing',
@@ -90,3 +100,5 @@ def downgrade() -> None:
     # Drop unused file column
     with op.batch_alter_table('font', schema=None) as batch_op:
         batch_op.drop_column('file_name')
+
+    log.debug(f'Downgraded SQL Schema to Version[{down_revision}]')

@@ -165,6 +165,7 @@ class NewSeries(BaseSeries):
     season_title_values: Optional[list[str]] = None
     extra_keys: Optional[list[str]] = None
     extra_values: Optional[list[Any]] = None
+    sync_id: Optional[int] = None
 
     @validator('season_title_ranges', 'season_title_values',
                'extra_keys', 'extra_values', pre=True)

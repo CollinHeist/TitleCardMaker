@@ -8,6 +8,7 @@ from pickle import dump, load
 from app.schemas.base import UNSPECIFIED, MediaServer
 from app.schemas.preferences import CardExtension
 
+from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.ImageMagickInterface import ImageMagickInterface
@@ -63,7 +64,7 @@ class Preferences:
         'task_crontabs', 'simplified_data_table', 'home_page_size',
         'episode_data_page_size', 'stylize_unmonitored_posters',
         'sources_as_table', 'card_type_directory', 'local_card_types',
-
+        'imported_blueprints',
         # Arguments required only for the Connection data migrations
         'emby_url', 'emby_api_key', 'emby_username', 'emby_use_ssl',
         'emby_filesize_limit_number', 'emby_filesize_limit_unit',
@@ -102,10 +103,19 @@ class Preferences:
         self.source_directory = Path(self.source_directory)
         for folder in (self.asset_directory, self.card_directory,
                        self.source_directory):
-            folder.mkdir(parents=True, exist_ok=True)
+            try:
+                folder.mkdir(parents=True, exist_ok=True)
+            except PermissionError:
+                log.critical(f'Could not initialize directory "{folder}" - '
+                             f'invalid permissions')
 
         # Parse local card type files
         self.parse_local_card_types()
+
+        # Convert Blueprint blacklist
+        if (self.blacklisted_blueprints
+            and any(isinstance(_, tuple) for _ in self.blacklisted_blueprints)):
+            self.blacklisted_blueprints: set[int] = set()
 
 
     def __getstate__(self) -> dict:
@@ -189,7 +199,8 @@ class Preferences:
 
         self.supported_language_codes = []
         self.use_magick_prefix = False
-        self.blacklisted_blueprints = set()
+        self.blacklisted_blueprints: set[int] = set()
+        self.imported_blueprints: set[int] = set()
         self.advanced_scheduling = False
         self.task_crontabs = {}
 
@@ -512,16 +523,16 @@ class Preferences:
 
         # Format Specials differently
         if episode_info.season_number == 0:
-            return self.specials_folder_format.format(**episode_info.indices)
+            return self.specials_folder_format.format(**episode_info.indices)[:254]
 
-        return self.season_folder_format.format(**episode_info.indices)
+        return self.season_folder_format.format(**episode_info.indices)[:254]
 
 
     def get_card_type_class(self,
             identifier: str,
             *,
             log: Logger = log,
-        ) -> Optional[type['CardType']]: # type: ignore
+        ) -> Optional[type[BaseCardType]]:
         """
         Get the CardType class for the given card type identifier.
 

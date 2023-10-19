@@ -27,21 +27,25 @@
 <body onload="">
   <div class="pusher">
     <div id="login">
+      <img src="/internal_assets/logo512.png">
+
       <h2>Log In</h2>
       <div class="ui elastic inverted segment">
         <form id="login-form">
           <div class="text field">
-            <input id="username" name="username" type="text" required="" autofocus tabindex="0">
+            <input id="username" type="text" required="" autofocus tabindex="0">
             <label>Username</label>
           </div>
 
           <div class="text field">
-            <input id="password" name="passwod" type="password" required="" tabindex="0">
+            <input id="password" type="password" required="" tabindex="0">
             <label>Password</label>
           </div>
 
           <a onclick="submitForm();">Login</a>
         </form>
+
+        <a class="forgot" href="https://titlecardmaker.readthedocs.io/en/latest/user_guide/connections/#forgotten-login" target="_blank">Forgot Password?</a>
       </div>
     </div>
   </div>

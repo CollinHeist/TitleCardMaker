@@ -3,25 +3,27 @@ from pathlib import Path
 from shutil import copy as copy_file, make_archive as zip_directory
 from typing import Literal
 
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Request
+from fastapi import (
+    APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Request
+)
 from fastapi.responses import FileResponse
 from fastapi_pagination import paginate as paginate_sequence
 from sqlalchemy.orm import Session
-from app.database.query import get_series
 
+from app.database.query import get_blueprint, get_series
 from app.database.session import Page
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.auth import get_current_user
 from app.internal.blueprint import (
-    delay_zip_deletion, generate_series_blueprint, get_blueprint_by_id,
-    get_blueprint_font_files, import_blueprint, query_all_blueprints,
-    query_series_blueprints
+    delay_zip_deletion, generate_series_blueprint, get_blueprint_font_files,
+    import_blueprint, query_series_blueprints
 )
 from app.internal.episodes import get_all_episode_data
 from app.internal.series import add_series
 from app import models
+from app.models.blueprint import Blueprint, BlueprintSeries
 from app.schemas.blueprint import (
-    BlankBlueprint, DownloadableFile, RemoteBlueprint, RemoteMasterBlueprint
+    DownloadableFile, ExportBlueprint, RemoteBlueprint,
 )
 from app.schemas.series import NewSeries, Series
 from modules.SeriesInfo2 import SeriesInfo
@@ -42,7 +44,7 @@ def export_series_blueprint(
         include_global_defaults: bool = Query(default=True),
         include_episode_overrides: bool = Query(default=True),
         db: Session = Depends(get_database),
-    ) -> BlankBlueprint:
+    ) -> ExportBlueprint:
     """
     Generate the Blueprint for the given Series. This Blueprint can be
     imported to completely recreate a Series' (and all associated
@@ -147,7 +149,6 @@ async def export_series_blueprint_as_zip(
         series, episode_data, include_global_defaults,
         include_episode_overrides,
     )
-    blueprint = BlankBlueprint(**blueprint).dict()
 
     # Get list of Font files for this Series' Blueprint
     font_files = get_blueprint_font_files(
@@ -190,13 +191,12 @@ async def export_series_blueprint_as_zip(
     # Copy preview into main zip directory
     if card_file is not None:
         copy_file(card_file, zip_dir / f'preview{card_file.suffix}')
-        blueprint['preview'] = f'preview{card_file.suffix}'
         log.debug(f'Copied "{card_file}" into zip directory')
 
     # Write Blueprint as JSON into zip directory
     blueprint_file = zip_dir / 'blueprint.json'
     with blueprint_file.open('w') as file_handle:
-        dump(blueprint, file_handle, indent=2)
+        dump(blueprint.dict(), file_handle, indent=2)
     log.debug(f'Wrote "blueprint.json" into zip directory')
 
     # Create zip of Font zip + preview file + Blueprint JSON
@@ -207,19 +207,16 @@ async def export_series_blueprint_as_zip(
     return FileResponse(zip_)
 
 
-@blueprint_router.put('/query/blacklist')
+@blueprint_router.put('/blacklist/{blueprint_id}')
 def blacklist_blueprint(
+        blueprint_id: int,
         request: Request,
-        series_full_name: str = Query(..., min_length=8),
-        blueprint_id: int = Query(...),
         preferences: Preferences = Depends(get_preferences),
     ) -> None:
     """
     Blacklist the indicated Blueprint. Once blacklisted, this Blueprint
     should not by returned by the `/query/all` endpoint.
 
-    - series_full_name: Full name of the Series associated with this
-    Blueprint.
     - blueprint_id: Unique ID of the Blueprint.
     """
 
@@ -227,82 +224,112 @@ def blacklist_blueprint(
     log = request.state.log
 
     # Add to blacklist, commit changes
-    preferences.blacklisted_blueprints.add((series_full_name, blueprint_id))
+    preferences.blacklisted_blueprints.add(blueprint_id)
     preferences.commit(log=log)
 
-    log.debug(f'Blacklisted Blueprint[{series_full_name}, {blueprint_id}]')
+    log.debug(f'Blacklisted Blueprint[{blueprint_id}]')
 
 
-@blueprint_router.delete('/blacklist')
+@blueprint_router.delete('/blacklist/{blueprint_id}')
 def remove_blueprint_from_blacklist(
+        blueprint_id: int,
         request: Request,
-        series_full_name: str = Query(..., min_length=8),
-        blueprint_id: int = Query(...),
         preferences: Preferences = Depends(get_preferences),
     ) -> None:
     """
     Un-blacklist the Blueprint for the indicated Series.
 
-    - series_full_name: Full name of the Series associated with this
-    Blueprint.
     - blueprint_id: Unique ID of the Blueprint.
     """
 
     try:
-        preferences.blacklisted_blueprints.remove(
-            (series_full_name, blueprint_id)
-        )
+        preferences.blacklisted_blueprints.remove(blueprint_id)
         preferences.commit(log=request.state.log)
     except KeyError as exc:
         raise HTTPException(
             status_code=404,
-            detail=f'{series_full_name} Blueprint {blueprint_id} is not blacklisted',
+            detail=f'Blueprint {blueprint_id} is not blacklisted',
         ) from exc
 
 
 @blueprint_router.get('/query/all', status_code=200)
 def query_all_blueprints_(
-        request: Request,
+        db: Session = Depends(get_database),
+        blueprint_db: Session = Depends(get_blueprint_database),
         order_by: Literal['date', 'name'] = Query(default='date'),
         include_blacklisted: bool = Query(default=False),
+        include_imported: bool = Query(default=False),
+        include_missing_series: bool = Query(default=True),
         preferences: Preferences = Depends(get_preferences),
-    ) -> Page[RemoteMasterBlueprint]:
+    ) -> Page[RemoteBlueprint]:
     """
     Query for all available Blueprints for all Series. Blacklisted
     Blueprints are excluded from the return.
 
     - order_by: How to order the returned Blueprints.
-    include_blacklisted: Whether to include Blacklisted Blueprints in
+    - include_blacklisted: Whether to include Blacklisted Blueprints in
     the return.
+    - include_imported: Whether to include previously imported
+    Blueprints in the return.
+    - include_missing_series: Whether to include Blueprints for Series
+    that are not present in the database.
     """
 
-    # pylint: disable=unnecessary-lambda-assignment
+    def include(blueprint: Blueprint) -> bool:
+        """
+        Determine whether to include the given Blueprint.
+
+        Args:
+            blueprint: Blueprint being evaluated.
+
+        Returns:
+            Whether the Blueprint should be included in the return.
+        """
+
+        # Exclude if blacklisted (and filtering)
+        if (not include_blacklisted
+            and blueprint.id in preferences.blacklisted_blueprints):
+            return False
+
+        # Exclude if previously imported (and filtering)
+        if (not include_imported
+            and blueprint.id in preferences.imported_blueprints):
+            return False
+
+        # Exclude if Series is not present
+        if not include_missing_series:
+            # Determine if this Series already exists
+            series_info = blueprint.series.as_series_info
+            series = db.query(models.series.Series)\
+                .filter(series_info.filter_conditions(models.series.Series))\
+                .first()
+
+            # Series not present, do not include
+            if series is None:
+                return False
+
+        return True
+
+    # Get list of Blueprints
     if order_by == 'date':
-        order_func = lambda blueprint: blueprint['created']
+        sequence = blueprint_db.query(Blueprint)\
+            .order_by(Blueprint.created.desc())
     else:
-        order_func = lambda blueprint: blueprint['series_full_name'].lower()
+        sequence = blueprint_db.query(Blueprint)\
+            .join(BlueprintSeries,
+                  Blueprint.series_id==BlueprintSeries.id, isouter=True)\
+            .order_by(BlueprintSeries.sort_name)
 
-    def include(blueprint: RemoteMasterBlueprint) -> bool:
-        return (
-            include_blacklisted
-            or (blueprint['series_full_name'], blueprint['id'])
-                not in preferences.blacklisted_blueprints
-        )
-
-    return paginate_sequence(
-        sorted([
-            blueprint
-            for blueprint in query_all_blueprints(log=request.state.log)
-            if include(blueprint)
-        ], key=order_func, reverse=order_by == 'date')
-    )
+    return paginate_sequence([
+        blueprint for blueprint in sequence.all() if include(blueprint)
+    ])
 
 
 @blueprint_router.get('/query/series/{series_id}', status_code=200)
 def query_series_blueprints_(
-        request: Request,
         series_id: int,
         db: Session = Depends(get_database),
+        blueprint_db: Session = Depends(get_blueprint_database),
     ) -> list[RemoteBlueprint]:
     """
     Search for any Blueprints for the given Series.
@@ -313,14 +340,17 @@ def query_series_blueprints_(
     # Query for this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    return query_series_blueprints(series.full_name, log=request.state.log)
+    return query_series_blueprints(blueprint_db, series.as_series_info)
 
 
 @blueprint_router.get('/query/series', status_code=200)
-def query_blueprints_by_name(
-        request: Request,
+def query_blueprints_by_info(
         name: str = Query(..., min_length=1),
         year: int = Query(..., min=1900),
+        imdb_id: Optional[str] = Query(default=None),
+        tmdb_id: Optional[int] = Query(default=None),
+        tvdb_id: Optional[int] = Query(default=None),
+        blueprint_db: Session = Depends(get_blueprint_database),
     ) -> list[RemoteBlueprint]:
     """
     Search for any Blueprints for the given Series not yet added to TCM.
@@ -329,42 +359,45 @@ def query_blueprints_by_name(
     - year: Year of the Series to look up Blueprints for.
     """
 
-    return query_series_blueprints(f'{name} ({year})', log=request.state.log)
+    series_info = SeriesInfo(
+        name=name, year=year,
+        imdb_id=imdb_id, tmdb_id=tmdb_id, tvdb_id=tvdb_id,
+    )
+
+    return query_series_blueprints(blueprint_db, series_info)
 
 
-@blueprint_router.put('/import/blueprint', status_code=200)
+@blueprint_router.put('/import/blueprint/{blueprint_id}', status_code=201)
 def import_blueprint_and_series(
         background_tasks: BackgroundTasks,
         request: Request,
-        blueprint: RemoteMasterBlueprint = Body(...),
+        blueprint_id: int,
         db: Session = Depends(get_database),
+        blueprint_db: Session = Depends(get_blueprint_database),
     ) -> Series:
     """
     Import the given Blueprint - creating the associated Series if it
     does not already exist.
 
-    - blueprint: Blueprint to import.
+    - blueprint_id: ID of the Blueprint to import.
     """
 
     # Get contextual logger
     log: Logger = request.state.log
 
-    try:
-        series_info = SeriesInfo(blueprint.series_full_name)
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=422,
-            detail=f'Cannot identify Series associated with Blueprint'
-        ) from exc
+    # Get this Blueprint, raise 404 if DNE
+    blueprint = get_blueprint(blueprint_db, blueprint_id, raise_exc=True)
 
-    # Determine if this Series already exists
+    # Query for this Blueprint's Series
+    series_info = blueprint.series.as_series_info
     series = db.query(models.series.Series)\
         .filter(series_info.filter_conditions(models.series.Series))\
         .first()
 
     # Series does not exist, create and add to database
     if not series:
-        log.debug(f'Blueprint Series {series_info} not found - adding to database')
+        log.debug(f'Blueprint Series {blueprint.series.as_series_info} not '
+                  f'found - adding to database')
         series = add_series(
             NewSeries(name=series_info.name, year=series_info.year),
             background_tasks, db, log=log,
@@ -382,12 +415,12 @@ def import_series_blueprint_by_id(
         series_id: int,
         blueprint_id: int,
         db: Session = Depends(get_database),
+        blueprint_db: Session = Depends(get_blueprint_database),
     ) -> None:
     """
     Import the Blueprint with the given ID to the given Series.
 
-    - series_id: ID of the Series to query for Blueprints of and to
-    import into.
+    - series_id: ID of the Series to import into.
     - blueprint_id: ID of the Blueprint to import.
     """
 
@@ -395,7 +428,7 @@ def import_series_blueprint_by_id(
     series = get_series(db, series_id, raise_exc=True)
 
     # Get Blueprint with this ID, raise 404 if DNE
-    blueprint = get_blueprint_by_id(series, blueprint_id, log=request.state.log)
+    blueprint = get_blueprint(blueprint_db, blueprint_id, raise_exc=True)
 
     # Import Blueprint
     import_blueprint(db, series, blueprint, log=request.state.log)

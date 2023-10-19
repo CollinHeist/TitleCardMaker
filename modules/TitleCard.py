@@ -134,7 +134,10 @@ class TitleCard:
             'source_file': episode.source,
             'card_file': episode.destination,
             'title_text': self.converted_title,
-            'season_text': profile.get_season_text(self.episode.episode_info),
+            'season_text': profile.get_season_text(
+                self.episode.episode_info,
+                getattr(self.episode.card_class, 'SEASON_TEXT_FORMATTER', None),
+            ),
             'episode_text': profile.get_episode_text(self.episode),
             'hide_season_text': profile.hide_season_title,
             'blur': episode.blur,
@@ -222,7 +225,7 @@ class TitleCard:
     def get_multi_output_filename(
             format_string: str,
             series_info: SeriesInfo,
-            multi_episode: 'MultiEpisode',                                      # type: ignore
+            multi_episode: 'MultiEpisode', # type: ignore
             media_directory: Path
         ) -> Path:
         """

@@ -339,6 +339,11 @@ async function getAllTemplates() {
       dropdownElement: $(`#template-id${templateObj.id} .dropdown[data-value="skip_localized_images"]`),
       value: templateObj.skip_localized_images,
     });
+    // Special syncing
+    initializeNullableBoolean({
+      dropdownElement: $(`#template-id${templateObj.id} .dropdown[data-value="sync_specials"]`),
+      value: templateObj.sync_specials,
+    })
     // Translations
     if (templateObj.translations !== null && templateObj.translations.length > 0) {
       const translationSegment = $(`#template-id${templateObj.id} [data-value="translations"]`);

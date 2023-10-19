@@ -397,11 +397,13 @@ def resolve_card_settings(
         card_settings['font_color'] = CardClass.TITLE_COLOR
 
     # Apply Font replacements
+    replacements = CardClass.FONT_REPLACEMENTS
     if card_settings.get('font_replacements', {}):
-        for repl_in, repl_out in card_settings['font_replacements'].items():
-            card_settings['title'] = card_settings['title'].replace(
-                repl_in, repl_out
-            )
+        replacements = card_settings['font_replacements']
+    for repl_in, repl_out in replacements.items():
+        card_settings['title'] = card_settings['title'].replace(
+            repl_in, repl_out
+        )
 
     # Determine effective title text
     if card_settings.get('auto_split_title', True):
@@ -420,11 +422,10 @@ def resolve_card_settings(
     card_settings['title_text'] = case_func(card_settings['title_text'])
 
     # Apply Font replacements again
-    if card_settings.get('font_replacements', {}):
-        for repl_in, repl_out in card_settings['font_replacements'].items():
-            card_settings['title'] = card_settings['title'].replace(
-                repl_in, repl_out
-            )
+    for repl_in, repl_out in replacements.items():
+        card_settings['title_text'] = card_settings['title_text'].replace(
+            repl_in, repl_out
+        )
 
     # Apply title text format if indicated
     if (title_format := card_settings.get('title_text_format')) is not None:
@@ -451,10 +452,12 @@ def resolve_card_settings(
     # If no season text was indicated, determine
     if card_settings.get('season_text') is None:
         ranges = SeasonTitleRanges(
-            card_settings.get('season_titles', {}), log=log
+            card_settings.get('season_titles', {}),
+            fallback=getattr(CardClass, 'SEASON_TEXT_FORMATTER', None),
+            log=log,
         )
         card_settings['season_text'] = ranges.get_season_text(
-            episode_info, card_settings, log=log
+            episode_info, card_settings,
         )
 
     # If no episode text was indicated, determine
@@ -501,7 +504,7 @@ def resolve_card_settings(
         try:
             card_settings['source_file'] = preferences.source_directory \
                 / series.path_safe_name \
-                / card_settings['source_file'].format(**card_settings)
+                / card_settings['source_file'].format(**card_settings)[:254]
         except KeyError as e:
             log.exception(f'{series.log_str} {episode.log_str} Source File '
                             f'Format is invalid - {e}', e)
@@ -526,7 +529,7 @@ def resolve_card_settings(
         series_directory = Path(preferences.card_directory) \
             / series.path_safe_name
     else:
-        series_directory = Path(card_settings.get('directory'))
+        series_directory = Path(card_settings.get('directory')[:254])
 
     # If an explicit card file was indicated, use it vs. default
     try:

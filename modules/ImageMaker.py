@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 from modules import global_objects
-from modules.ImageMagickInterface import ImageMagickInterface
+from modules.ImageMagickInterface import ImageMagickInterface, Dimensions
 
 
 class ImageMaker(ABC):

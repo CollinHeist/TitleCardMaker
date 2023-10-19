@@ -10,7 +10,7 @@ from random import choices as random_choices
 from string import hexdigits
 from typing import Optional
 
-from pytz import timezone
+from pytz import timezone, UnknownTimeZoneError
 from tqdm import tqdm
 
 
@@ -72,7 +72,10 @@ class LogHandler(StreamHandler):
 # Get local timezone
 tz = None
 if IS_DOCKER and environ.get('TZ', None) is not None:
-    tz = timezone(environ.get('TZ'))
+    try:
+        tz = timezone(environ.get('TZ'))
+    except UnknownTimeZoneError:
+        print(f'Invalid timezone (TZ) environment variable')
 
 
 class Formatter(Formatter):

@@ -40,16 +40,19 @@ Template".
 
 6. Scroll down to "Miscellaneous" and then click the `Add Extra` button.
 
-7. Enter the key as `bottom_element` and the value as `logo`.
+7. In the dropdown, scroll down to the "Middle Element" extra under "Tinted
+Frame" - or, start typing "Tinted Frame" to filter all available extras. Hit
+++enter++ and then enter the value (in the right text box) as `logo`.
 
     ??? question "What are Extras?"
 
         Extras are a way of overriding or customizing specific components of a
         Title Card. Extras are typically card type-specific - and in this case
         the Tinted Frame card allows changing the bottom element to a Logo
-        (from index text) with the `bottom_element` extra.
+        (from index text).
 
-        A complete list of Extras are found [here]().
+        Most extras give expanded information - such as what values are
+        allowed - by hovering over the :octicons-question-24: icon.
 
 8. Hit `Save Changes`.
 

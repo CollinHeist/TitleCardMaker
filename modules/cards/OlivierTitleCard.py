@@ -44,8 +44,8 @@ class OlivierTitleCard(BaseCardType):
             ),
         ], description=[
             'Title card with left-aligned title and episode text.', 'This card '
-            'is structurally very similar to the StarWarsTitleCard, except it '
-            'does not feature the star overlay.',
+            'is structurally very similar to the Star Wars card except it does '
+            'not feature the star overlay.',
         ]
     )
 

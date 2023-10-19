@@ -31,7 +31,7 @@ the side navigation bar.
 
 5. In the "Title Color" field, put `#FFFF61`.
 
-    !!! tip annotate "Colors"
+    !!! note "Colors"
 
         TitleCardMaker (through ImageMagick) supports multiple styles of colors.
         The above color is an RGB Hexcode, but is equivalent to the following:

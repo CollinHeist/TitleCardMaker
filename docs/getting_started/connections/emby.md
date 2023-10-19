@@ -20,12 +20,6 @@ in the top right.
 5. Click `+ New Api Key`, and enter the name `TitleCardMaker`.
 6. Copy the created key, it should be a 32-character long string of numbers and
 the letters between A and F.
-
-    ??? danger "Security Warning"
-
-        Keep this API key private, as it can be used to remotely access and
-        modify Emby.
-
 7. Back within TitleCardMaker, paste the API key from Step 6 into the API key
 input box and then click the `Save Changes` button.
 

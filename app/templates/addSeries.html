@@ -80,6 +80,7 @@
           <span data-value="font-count"><b>{x}</b> Named Font</span>
           <span data-value="template-count"><b>{x}</b> Template</span>
           <span data-value="episode-count"><b>{x}</b> Episode Overrides</span>
+          <span data-value="file-count"><b>{x}</b> Source Files</span>
         </div>
         <div data-value="description" class="description"><!-- <p>Description</p> --></div>
       </div>
@@ -100,10 +101,15 @@
       <div class="content">
         <div data-value="series_full_name" class="header">{series_name} ({series_year})</div>
         <div class="meta">
-          <span>Created by</span><span data-value="creator">{author}</span>
+          <span><i>by</span><span data-value="creator">{author}</span></i>
           <span data-value="font-count"><b>{x}</b> Named Font</span>
           <span data-value="template-count"><b>{x}</b> Template</span>
           <span data-value="episode-count"><b>{x}</b> Episode Overrides</span>
+          <span data-value="file-count"><b>{x}</b> Source Files</span>
+          <div class="ui mini uninvertible popup">
+            <div class="header">Imported Source Files</div>
+            <div class="content"></div>
+          </div>
         </div>
         <div data-value="description" class="description"><!-- <p>Description</p> --></div>
       </div>
@@ -123,13 +129,17 @@
 
 <body onload="initAll();">
   <div class="pusher">
-    <!-- Static header and sidebar loaded by external script -->
-    <div id="page-header"></div>
-    <div id="nav-menu"></div>
+    <!-- Static header and sidebar -->
+    <div id="page-header">
+      {% include "./header.html" %}
+    </div>
+    <div id="nav-menu">
+      {% include "./home_sidebar.html" %}
+    </div>
 
     <!-- Actual page content -->
     <div id="main-content" class="article">
-      <h1 class="ui header">Add Series</h1>
+      <h1 class="ui header">Add New Series</h1>
 
       <!-- Series Name -->
       <h4 class="ui horizontal left aligned divider header">
@@ -170,6 +180,20 @@
           <!-- <i class="search icon"></i> -->
           Browse Blueprints
         </button>
+      </div>
+      <br><br>
+      <div class="ui two fields">
+        <div data-value="include_missing_series" class="ui checkbox field">
+          <label>Only include existing Series</label>
+          <input type="checkbox" name="include_missing_series">
+          <p class="help">Exclude Blueprints for Series not in TitleCardMaker</p>
+        </div>
+        <br>
+        <div data-value="included_imported" class="ui checkbox checkbox">
+          <label>Include previously imported</label>
+          <input type="checkbox" name="included_imported">
+          <p class="help">Include Blueprints that have been previously imported</p>
+        </div>
       </div>
 
       <!-- <button class="ui green tertiary button" onclick="queryAllBlueprints();">

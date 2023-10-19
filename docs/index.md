@@ -338,7 +338,7 @@ to them.
         INFO:     Application startup complete.
         ```
         
-        And neither the `http://0.0.0.0:4242` or `http://localhost:4242/` URL
+        And neither the `http://0.0.0.0:4242` or `http://localhost:4242` URL
         loads into the TCM UI, then replace the `0.0.0.0` part of the previous
         command with your _local_ IP address - e.g. `192.168.0.10`. If you still
         have issues, reach out on the Discord.

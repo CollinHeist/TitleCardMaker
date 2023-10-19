@@ -3,10 +3,10 @@
 !!! warning "Programming Knowledge"
 
     The development of local card types is not very difficult, but it _does_
-    require a basic understanding on programming (at least the Python language)
-    and ImageMagick. I can provide some support for the TCM-specific
-    requirements, but I do not have time to teach these concepts in addition to
-    developing TCM.
+    require a basic understanding of the Python programming language and
+    ImageMagick. I can provide some support for the TCM-specific requirements,
+    but I do not have time to teach these concepts in addition to developing
+    TCM.
 
 ## File Location
 

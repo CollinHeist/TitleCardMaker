@@ -10,19 +10,19 @@ allows these to be adjusted to any arbitrary interval.
 
     Below are the default intervals for all core TCM tasks:
 
-    | Task | Adjustable | Default Interval |
-    | ---: | :---: | :---: |
-    |  Download missing Source Images | :material-check:{.green} | 4 hours |
-    | Load Title Cards into your Media server | :material-check:{.green} | 4 hours |
-    | Search for title translations | :material-check:{.green} | 4 hours |
-    | Refresh Episode data | :material-check:{.green} | 6 hours |
-    | Run all Syncs | :material-check:{.green} | 6 hours |
-    | Create Title Cards | :material-check:{.green} | 6 hours |
-    | Download Series logos | :material-check:{.green} | 1 day |
-    | Download Series posters | :material-check:{.green} | 1 day |
-    | Check for a new version of TCM | :octicons-x-16:{.red} | 1 day |
-    | Refresh user Card Types | :octicons-x-16:{.red} | 1 day |
-    | Set Series ID's | :octicons-x-16:{.red} | 1 day |
+    | Task | Default Interval |
+    | ---: | :---: |
+    |  Download missing Source Images | 4 hours |
+    | Load Title Cards into your Media server | 4 hours |
+    | Search for title translations | 4 hours |
+    | Refresh Episode data | 6 hours |
+    | Run all Syncs | 6 hours |
+    | Create Title Cards | 6 hours |
+    | Download Series logos | 1 day |
+    | Download Series posters | 1 day |
+    | Check for a new version of TCM | 1 day |
+    | Refresh user Card Types | 1 day |
+    | Set Series ID's | 1 day |
 
 For this part of the tutorial, we'll be adjusting the interval for how often
 all Syncs are run. 

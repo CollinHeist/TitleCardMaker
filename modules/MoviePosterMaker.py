@@ -33,7 +33,9 @@ class MoviePosterMaker(ImageMaker):
             font_color: str = FONT_COLOR,
             font_size: float = 1.0,
             borderless: bool = False,
-            omit_gradient: bool = False) -> None:
+            add_drop_shadow: bool = False,
+            omit_gradient: bool = False,
+        ) -> None:
         """
         Construct a new instance of a CollectionPosterMaker.
 
@@ -51,6 +53,7 @@ class MoviePosterMaker(ImageMaker):
             font_file: Path to the font file of the poster's title.
             font_color: Font color of the poster text.
             font_size: Scalar for the font size of the poster's title.
+            add_drop_shadow: Whether to add a drop shadow to the text.
             borderless: Whether to omit the white frame border.
             omit_gradient: Whether to make the poster with no gradient
                 overlay.
@@ -68,6 +71,7 @@ class MoviePosterMaker(ImageMaker):
         self.font_color = font_color
         self.font_size = font_size
         self.borderless = borderless
+        self.add_drop_shadow = add_drop_shadow
         self.omit_gradient = omit_gradient
 
         # Uppercase title(s) if using default font
@@ -98,6 +102,7 @@ class MoviePosterMaker(ImageMaker):
             f'"{self.__GRADIENT.resolve()}"',
             f'-compose Multiply',
             f'-composite',
+            f'-compose over',
         ]
 
 
@@ -185,7 +190,6 @@ class MoviePosterMaker(ImageMaker):
             # Overlay 100px from top of image
             f'-gravity north',
             f'-geometry +0+100',
-            f'-compose Atop',
             f'-composite',
         ]
 
@@ -203,25 +207,44 @@ class MoviePosterMaker(ImageMaker):
         if not any(map(len, (self.top_subtitle, self.title, self.subtitle))):
             return []
 
+        y_offset = 262.5
+        if self.subtitle:
+            y_offset = 182.5
+
+        shadow_commands = []
+        if self.add_drop_shadow:
+            y_offset -= 15
+            shadow_commands = [
+                f'\( +clone',
+                f'-background None',
+                f'-shadow 90x3+10+10 \)',
+                f'+swap',
+                f'-background None',
+                f'-layers merge',
+                f'+repage',
+            ]
+
         # At least one title being added, return entire command
         return [
             ## Global font attributes
             f'-font "{self.font_file.resolve()}"',
             f'-fill "{self.font_color}"',
             # Create an image for each title
-            f'\( -background transparent',
+            f'\( \( -background transparent',
             *self.subtitle_font_attributes,
+            # Combine in order [TOP SUBTITLE] / [TITLE] / [SUBTITLE]
             f'label:"{self.top_subtitle}"' if len(self.top_subtitle)>0 else '',
             *self.title_font_attributes,
             f'label:"{self.title}"' if len(self.title) > 0 else '',
             *self.subtitle_font_attributes,
             f'label:"{self.subtitle}"' if len(self.subtitle) > 0 else '',
-            # Combine in order [TOP SUBTITLE] / [TITLE] / [SUBTITLE]
+            # Merge images
             f'-smush 30 \)',
+            # Add drop shadow to text
+            *shadow_commands,
             # Add titles to image
-            f'-gravity south',
-            f'-geometry +0+{182.5 if len(self.subtitle) > 0 else 262.5}',
-            f'-compose atop',
+            f'\) -gravity south',
+            f'-geometry +0+{y_offset}',
             f'-composite',
         ]
 

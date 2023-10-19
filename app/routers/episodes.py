@@ -47,8 +47,12 @@ def add_new_episode(
     templates = get_all_templates(db, new_episode_dict)
 
     # Create new entry, add to database
-    episode = models.episode.Episode(**new_episode_dict, templates=templates)
+    episode = models.episode.Episode(**new_episode_dict)
     db.add(episode)
+    db.commit()
+
+    # Assign Templates
+    episode.assign_templates(templates, log=log)
     db.commit()
 
     # Refresh card types in case new remote type was specified
@@ -190,8 +194,8 @@ def update_multiple_episode_configs(
         if ((template_ids := update_episode_dict.get('template_ids', None))
             not in (None, UNSPECIFIED)):
             if episode.template_ids != template_ids:
-                episode.templates = get_all_templates(db, update_episode_dict)
-                log.debug(f'{episode.log_str}.templates = {template_ids}')
+                templates = get_all_templates(db, update_episode_dict)
+                episode.assign_templates(templates, log=log)
                 changed = True
 
         # Update each attribute of the object
@@ -244,7 +248,8 @@ def update_episode_config(
     if ((template_ids := update_episode_dict.get('template_ids', None))
         not in (None, UNSPECIFIED)):
         if episode.template_ids != template_ids:
-            episode.templates = get_all_templates(db, update_episode_dict)
+            templates = get_all_templates(db, update_episode_dict)
+            episode.assign_templates(templates, log=log)
             changed = True
 
     # Update each attribute of the object

@@ -7,7 +7,7 @@ from fastapi import BackgroundTasks, HTTPException
 from requests import get
 from sqlalchemy.exc import InvalidRequestError, OperationalError
 from sqlalchemy.orm import Session
-from app.database.query import get_all_templates, get_font, get_interface
+from app.database.query import get_all_templates, get_font, get_interface, get_sync
 
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app import models
@@ -19,16 +19,12 @@ from app.models.episode import Episode
 from app.models.loaded import Loaded
 from app.models.series import Series
 from app.schemas.connection import EpisodeDataSourceInterface
-from app.schemas.preferences import Preferences
 from app.schemas.series import NewSeries, SearchResult
 
 from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
-from modules.ImageMagickInterface import ImageMagickInterface
 from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
-from modules.SonarrInterface2 import SonarrInterface
-from modules.TMDbInterface2 import TMDbInterface
 
 
 def set_all_series_ids(*, log: Logger = log) -> None:
@@ -498,19 +494,25 @@ def add_series(
         The Created Series.
 
     Raises:
-        HTTPException (404): A linked object does not exist.
+        HTTPException (404): Any specified linked objects do not exist.
     """
 
     # Convert object to dictionary
     new_series_dict = new_series.dict()
 
-    # If a Font or any Templates were indicated, verify they exist
+    # If a Font, Sync, or any Templates were indicated, verify they exist
     get_font(db, getattr(new_series, 'font_id', None), raise_exc=True)
-    templates = get_all_templates(db, new_series_dict)
+    get_sync(db, getattr(new_series_dict, 'sync_id', None), raise_exc=True)
+    templates = get_all_templates(db, new_series_dict, raise_exc=True)
 
     # Add to database
-    series = Series(**new_series_dict, templates=templates)
+    series = Series(**new_series_dict)
     db.add(series)
+    db.commit()
+    log.info(f'Added {series.log_str} to Database')
+
+    # Assign Templates
+    series.assign_templates(templates, log=log)
     db.commit()
 
     # Create source directory if DNE
@@ -553,7 +555,8 @@ def lookup_series(
         log: _description_. Defaults to log.
 
     Returns:
-        _description_
+        Search results from the specified Interface for the given
+        Series name.
     """
 
     # Query Interface, only return max of 25 results TODO temporary?
@@ -563,8 +566,8 @@ def lookup_series(
     # Update added attribute(s)
     for result in results:
         # Query database for this result
-        existing = db.query(models.series.Series)\
-            .filter(result.series_info.filter_conditions(models.series.Series))\
+        existing = db.query(Series)\
+            .filter(result.series_info.filter_conditions(Series))\
             .first()
 
         # Result has been added if there is an existing Series

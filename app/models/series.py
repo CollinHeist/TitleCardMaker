@@ -6,20 +6,22 @@ from sqlalchemy import (
     Boolean, Column, Float, ForeignKey, Integer, String, JSON, func
 )
 
+from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.ext.mutable import MutableDict, MutableList
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, object_session, relationship
+from thefuzz.fuzz import partial_ratio
 
 from app.database.session import Base
 from app.dependencies import get_preferences
 from app.models.template import SeriesTemplates
 from app.schemas.connection import ServerName
 
+from app.models.template import SeriesTemplates, Template
 from modules.CleanPath import CleanPath
 from modules.SeriesInfo2 import SeriesInfo
 
 
-INTERNAL_ASSET_DIRECTORY = Path(__file__).parent.parent / 'assets'
 
 # Return type of the library iterator
 Library = TypedDict(
@@ -27,6 +29,7 @@ Library = TypedDict(
     {'interface': ServerName, 'interface_id': int, 'name': str}
 )
 
+INTERNAL_ASSET_DIRECTORY = Path(__file__).parent.parent / 'assets'
 
 def regex_replace(pattern, replacement, string):
     """Perform a Regex replacement with the given arguments"""
@@ -52,13 +55,21 @@ class Series(Base):
     data_source = relationship('Connection', back_populates='series')
     font = relationship('Font', back_populates='series')
     sync = relationship('Sync', back_populates='series')
+
     cards = relationship('Card', back_populates='series')
+    font = relationship('Font', back_populates='series')
+    sync = relationship('Sync', back_populates='series')
     loaded = relationship('Loaded', back_populates='series')
     episodes = relationship('Episode', back_populates='series')
-    templates = relationship(
-        'Template',
-        secondary=SeriesTemplates.__table__,
-        back_populates='series'
+    _templates: Mapped[list[SeriesTemplates]] = relationship(
+        SeriesTemplates,
+        back_populates='series',
+        order_by=SeriesTemplates.order,
+        cascade='all, delete-orphan',
+    )
+    templates: AssociationProxy[list[Template]] = association_proxy(
+        '_templates', 'template',
+        creator=lambda st: st,
     )
 
     # Required arguments
@@ -124,6 +135,44 @@ class Series(Base):
         return [episode.id for episode in self.episodes]
 
 
+    @hybrid_method
+    def assign_templates(self,
+            templates: list[Template],
+            *,
+            log
+        ) -> None:
+        """
+        Assign the given Templates to this Series. This updates the
+        association table for Series:Template relationships as needed.
+
+        Args:
+            templates: List of Templates to assign to this object. The
+                provided order is used for the creation of the
+                association table objects so that order is preserved
+                within the relationship.
+            log: Logger for all log messages.
+        """
+
+        # Reset existing assocations
+        self.templates = []
+        for index, template in enumerate(templates):
+            existing = object_session(template).query(SeriesTemplates)\
+                .filter_by(series_id=self.id,
+                           template_id=template.id,
+                           order=index)\
+                .first()
+            if existing:
+                self.templates.append(existing)
+            else:
+                self.templates.append(SeriesTemplates(
+                    series_id=self.id,
+                    template_id=template.id,
+                    order=index,
+                ))
+
+        log.debug(f'Series[{self.id}].template_ids = {[t.id for t in templates]}')
+
+
     @hybrid_property
     def template_ids(self) -> list[int]:
         """
@@ -163,6 +212,33 @@ class Series(Base):
         return func.regex_replace(r'^(a|an|the)(\s)', '', func.lower(cls.name))
 
 
+    @hybrid_method
+    def fuzzy_matches(self, other: str, threshold: int = 70) -> bool:
+        """
+        Determine whether the given name's fuzzy Levenshtein Distance
+        exceeds the given match threshold.
+
+        Args:
+            other: Name being fuzzy-matched against.
+            threshold: Requirement for a match. 0-100, 0 being all text
+                matches; 100 being perfect match.
+
+        Returns:
+            True if the fuzzy match quantity of this Series' name and
+            the given `other` name exceed the given threshold.
+        """
+
+        return partial_ratio(self.name.lower(), other.lower()) >= threshold
+
+    @fuzzy_matches.expression
+    def fuzzy_matches(cls: 'Series', other: str, threshold: int = 70):
+        """Class-expression of the `fuzzy_matches` method."""
+
+        return func.partial_ratio(
+            func.lower(cls.name), other.lower()
+        ) >= threshold
+
+
     @hybrid_property
     def small_poster_url(self) -> str:
         """URI to the small poster URL of this Series."""
@@ -195,7 +271,7 @@ class Series(Base):
     def path_safe_name(self) -> str:
         """Name of this Series to be utilized in Path operations"""
 
-        return str(CleanPath.sanitize_name(self.full_name))
+        return str(CleanPath.sanitize_name(self.full_name))[:254]
 
 
     @hybrid_property
@@ -288,6 +364,8 @@ class Series(Base):
             ex_keys = list(self.extras.keys())
             ex_values = list(self.extras.values())
 
+        match_titles = None if self.match_titles else self.match_titles
+
         return {
             'font_color': self.font_color,
             'font_title_case': self.font_title_case,
@@ -306,6 +384,8 @@ class Series(Base):
             'extra_keys': ex_keys,
             'extra_values': ex_values,
             'translations': self.translations,
+            'skip_localized_images': self.skip_localized_images,
+            'match_titles': match_titles,
         }
 
 

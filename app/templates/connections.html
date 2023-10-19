@@ -37,17 +37,19 @@
           <input name="name" type="text" placeholder="My Server">
         </div>
 
-        <div class="ui required eight wide field" data-tooltip="Host URL">
+        <div class="ui required eight wide field">
           <label>URL</label>
           <input name="url" type="text" placeholder="http://192.168.0.1:8000/">
+          <p class="help">Host URL or IP Address of the server (including the port number).</p>
         </div>
 
-        <div class="ui required eight wide field" data-tooltip="API key to authenticate communication with">
+        <div class="ui required eight wide field">
           <label>API Key</label>
-          <input name="api_key" type="text" class="private" placeholder="abcdef">
+          <input name="api_key" type="text" class="private">
+          <p class="help">API key to authenticate communication.</p>
         </div>
 
-        <div class="ui required field" data-tooltip="Username of the user to query watch statuses from">
+        <div class="ui required field">
           <label>Username</label>
           <div data-value="username" class="ui compact selection dropdown">
             <input type="hidden" name="username">
@@ -55,16 +57,23 @@
             <div class="default text"></div>
             <div class="menu"></div>
           </div>
+          <p class="help">Username of the user to query Episode watched statuses from.</p>
         </div>
 
-        <div data-value="use_ssl" class="ui left aligned checkbox field" data-tooltip="Connect with HTTPS instead of HTTP">
-          <input name="use_ssl" type="checkbox">
+        <div data-value="use_ssl" class="ui left aligned checkbox field">
           <label>Use SSL</label>
+          <input name="use_ssl" type="checkbox">
+          <p class="help">Connect with HTTPS instead of HTTP.</p>
         </div>
 
         <div class="ui eight wide field">
           <label>Filesize Limit</label>
           <input name="filesize_limit" type="text" value="5 Megabytes">
+          <p class="help">
+            Maximum file size of Title Cards to upload.
+            <br>
+            Title Cards larger than this will be compressed.
+          </p>
         </div>
 
         <div class="ui error message"></div>
@@ -101,29 +110,40 @@
           <input name="name" type="text" placeholder="Plex Server">
         </div>
 
-        <div class="ui required eight wide field" data-tooltip="Host URL">
+        <div class="ui required eight wide field">
           <label>URL</label>
           <input name="url" type="text" placeholder="http://192.168.0.1:32400/">
+          <p class="help">Host URL or IP Address of the server (including the port number).</p>
         </div>
 
-        <div class="ui required eight wide field" data-tooltip="API key to authenticate communication with">
+        <div class="ui required eight wide field">
           <label>Token <a href="https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/" target="_blank"><i class="external alternate small icon"></i></a></label>
-          <input name="api_key" type="text" class="private" placeholder="hunter2">
+          <input name="api_key" type="text" class="private" placeholder="Token">
+          <p class="help">X-Plex-Token to authenticate communication.</p>
         </div>
 
-        <div data-value="use_ssl" class="ui left aligned checkbox field" data-tooltip="Connect with HTTPS instead of HTTP">
-          <input name="use_ssl" type="checkbox">
+        <div data-value="use_ssl" class="ui left aligned checkbox field"">
           <label>Use SSL</label>
+          <input name="use_ssl" type="checkbox">
+          <p class="help">Connect with HTTPS instead of HTTP.</p>
         </div>
 
-        <div data-value="integrate_with_pmm" class="ui left aligned checkbox field" data-tooltip="Whether to reset PMM overlays when applying title cards">
-          <input name="integrate_with_pmm" type="checkbox">
+        <div data-value="integrate_with_pmm" class="ui left aligned checkbox field">
           <label>Integrate with Plex Meta Manager</label>
+          <input name="integrate_with_pmm" type="checkbox">
+          <p class="help">Whether to reset Plex Meta Manager overlays when uploading Title Cards.</p>
         </div>
 
         <div class="ui eight wide field">
           <label>Filesize Limit</label>
           <input name="filesize_limit" type="text" value="5 Megabytes">
+          <p class="help">
+            Maximum file size of Title Cards to upload.
+            <br>
+            Title Cards larger than this will be compressed.
+            <br>
+            Plex rejects all images larger than 10 Megabytes.
+          </p>
         </div>
 
         <div class="ui error message"></div>
@@ -160,19 +180,22 @@
           <input name="name" type="text" placeholder="Sonarr Server">
         </div>
 
-        <div class="ui required eight wide field" data-tooltip="Host URL">
+        <div class="ui required eight wide field">
           <label>URL</label>
           <input name="url" type="text" placeholder="http://192.168.0.1:8989/">
+          <p class="help">Host URL or IP Address of the server (including the port number).</p>
         </div>
 
-        <div class="ui required eight wide field" data-tooltip="API key to authenticate communication with">
+        <div class="ui required eight wide field">
           <label>API Key</label>
-          <input name="api_key" type="text" class="private" placeholder="abcdef">
+          <input name="api_key" type="text" class="private" placeholder="API Key">
+          <p class="help">API key to authenticate communication.</p>
         </div>
 
-        <div data-value="use_ssl" class="ui left aligned checkbox field" data-tooltip="Connect with HTTPS instead of HTTP">
-          <input name="use_ssl" type="checkbox">
+        <div data-value="use_ssl" class="ui left aligned checkbox field">
           <label>Use SSL</label>
+          <input name="use_ssl" type="checkbox">
+          <p class="help">Connect with HTTPS instead of HTTP.</p>
         </div>
         <br>
 
@@ -183,10 +206,11 @@
 
         <div class="ui eight wide field" data-value="libraries">
           <label>Library Paths</label>
-          <div class="ui compact floating visible info message">
-            <i class="exclamation icon"></i>
-            Only required if Syncing from Sonarr - auto-filled libraries are <b>best-guesses</b>, and must be verified.
-          </div>
+          <p class="help">
+            How to interpret Sonarr's paths when auto-assigning Libraries.
+            <br>
+            Only required if Syncing from Sonarr.
+          </p>
           <div class="ui compact floating visible warning message">
             <i class="exclamation icon"></i>
             Libraries can be added <i>after</i> the Connection is created
@@ -254,16 +278,25 @@
         <div data-value="api_key" class="ui required eight wide field">
           <label>API Key <a href="https://developers.themoviedb.org/3/getting-started/introduction" target="_blank"><i class="external alternate small icon"></i></a></label>
           <input name="api_key" type="text" class="private">
+          <p class="help">Key to submit API requests to TMDb.</p>
         </div>
 
         <div data-value="minimum_dimensions" class="ui required four wide field">
           <label>Minimum Image Dimensions</label>
           <input name="minimum_dimensions" type="text" placeholder="0x0" value="0x0">
+          <p class="help">
+            Minimum image resolution for source images from TMDb (in pixels) - enter as <b>width</b>x<b>height</b>.
+          </p>
         </div>
 
         <div data-value="ignore_localized" class="ui left aligned checkbox field">
           <label>Ignore Localized Images</label>
           <input name="ignore_localized" type="checkbox">
+          <p class="help">
+            Whether to ignore images with assigned Languages (i.e. images with text).
+            <br>
+            Can be overwritten per-Series.
+          </p>
         </div>
 
         <div data-value="logo_language_priority" class="ui required field">
@@ -274,6 +307,7 @@
             <div class="default text"></div>
             <div class="menu"></div>
           </div>
+          <p class="help">Order of languages to search for logos in.</p>
         </div>
 
         <div class="ui error message"></div>
@@ -296,9 +330,13 @@
 
 <body onload="initAll();">
   <div class="pusher">
-    <!-- Static header and sidebar loaded by external script -->
-    <div id="page-header"></div>
-    <div id="nav-menu"></div>
+    <!-- Static header and sidebar -->
+    <div id="page-header">
+      {% include "./header.html" %}
+    </div>
+    <div id="nav-menu">
+      {% include "./settings_sidebar.html" %}
+    </div>
 
     <!-- Actual page content -->
     <div id="main-content" class="article">
@@ -309,9 +347,10 @@
       <h2 id="authentication" class="ui dividing header">Authentication</h2>
       <div class="connection-form">
         <!-- Enable button -->
-        <div data-value="require_auth" class="ui left aligned checkbox field" data-tooltip="Whether to require a username and password">
-          <input type="checkbox">
+        <div data-value="require_auth" class="ui left aligned checkbox field">
           <label>Require Authentication</label>
+          <input type="checkbox">
+          <p class="help">Whether to require a username and password to access TCM.</p>
         </div>
 
         <form id="auth-settings" class="ui fluid form">
@@ -406,12 +445,12 @@
         <form id="tautulli-agent-form" class="ui form">
           <div class="ui field">
             <label>Tautulli URL</label>
-            <input name="tautulli_url">
+            <input name="tautulli_url" placeholder="http://localhost:8181/">
           </div>
           
           <div class="ui field">
             <label>Tautulli API Key</label>
-            <input name="tautulli_api_key" type="password">
+            <input name="tautulli_api_key" type="password" placeholder="abcdef">
           </div>
 
           <div class="ui left aligned checkbox field">

@@ -2,9 +2,9 @@
 
 !!! warning "Linux Compatability"
 
-    Some Linux distros __do not__ support ImageMagick - which is a
-    requirement for TitleCardMaker - in this case the [Docker
-    installation](../docker/) is required.
+    Some Linux distros either do not support ImageMagick - which is a
+    requirement for TitleCardMaker. In this case the
+    [Docker installation](./docker/index.md) is required.
 
 ## Background
 Installing TitleCardMaker locally, instead of in a Docker container,
@@ -134,14 +134,26 @@ pipenv install
 
 ### Installing ImageMagick
 
+ImageMagick is the image manipulation and creation library that TCM uses to
+create the Title Cards.
+
 === ":material-linux: Linux"
 
     Depending on your Linux distro, you might be able to use
     whatever package manager comes installed. Some of the common
     installations are detailed
-    [here](https://www.xmodulo.com/install-imagemagick-linux.html).
+    [here](https://www.xmodulo.com/install-imagemagick-linux.html). It is also
+    worth checking the ImageMagick website
+    [here](https://imagemagick.org/script/download.php).
+
+    If there is no pre-installed package, and you don't want to use the
+    [Docker container](./docker/index.md), then you _can_ build ImageMagick
+    yourself. This process is much more complicated and error-prone, but is
+    described [here](https://imagemagick.org/script/install-source.php).
 
 === ":material-apple: MacOS"
+
+    Execute the following command:
 
     ```bash
     brew install imagemagick
@@ -155,7 +167,17 @@ pipenv install
     directory to your system path` and the `Install legacy utilities
     (e.g. convert)` checkboxes during installation.
 
+Verify it is installed by executing the following:
+
+```bash
+magick logo: logo.gif
+```
+
+This should create a `logo.gif` file of the ImageMagick wizard in that
+directory.
+
 ### Launching TitleCardMaker
+
 With all the required packages and software installed, you are ready
 to launch TitleCardMaker. This can be done by executing the following
 command:

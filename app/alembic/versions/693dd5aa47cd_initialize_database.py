@@ -3,11 +3,12 @@
 Revision ID: 693dd5aa47cd
 Revises: 
 Create Date: 2023-05-18 17:56:58.518419
-
 """
+
 from alembic import op
 import sqlalchemy as sa
 
+from modules.Debug import contextualize
 
 # revision identifiers, used by Alembic.
 revision = '693dd5aa47cd'
@@ -17,6 +18,9 @@ depends_on = None
 
 
 def upgrade() -> None:
+    log = contextualize()
+    log.debug(f'Upgrading SQL Schema to Version[{revision}]..')
+
     op.create_table('font',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(), nullable=True),
@@ -244,6 +248,8 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(['series_id'], ['series.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
+
+    log.debug(f'Upgraded SQL Schema to Version[{revision}]')
 
 
 def downgrade() -> None:

@@ -11,13 +11,6 @@
 
   <link rel="stylesheet" type="text/css" href="/templates/css/home.css"/>
 
-
-  <!-- <style>
-    .card:hover {
-      box-shadow: 0 1px 3px 3px #0586ef, 0 0 0 1px #0586ef !important;
-    }
-  </style> -->
-
   <!-- Templates -->
   <template id="series-template">
     <div class="ui raised card transition hidden"> <!-- Start hidden so they can be transitioned in -->
@@ -43,7 +36,7 @@
       </div>
       <div class="text content" tabindex="0">
         <a>
-          <div class="series-name ui tiny header"></div>
+          <div class="ui tiny header series-name"></div>
         </a>
       </div>
     </div>
@@ -59,9 +52,13 @@
 
 <body onload="initAll();">
   <div>
-    <!-- Static header and sidebar loaded by external script -->
-    <div id="page-header"></div>
-    <div id="nav-menu"></div>
+    <!-- Static header and sidebar -->
+    <div id="page-header">
+      {% include "./header.html" %}
+    </div>
+    <div id="nav-menu">
+      {% include "./home_sidebar.html" %}
+    </div>
 
     <!-- Actual page content -->
     <div id="main-content" class="article">
@@ -77,13 +74,6 @@
         </div>
 
         <!-- <div class="ui compact blue inverted menu">
-          <a class="blue item">
-            <i class="edit outline icon"></i>
-            Editor
-          </a>
-        </div>
-        
-        <div class="ui compact blue inverted menu">
           <a class="blue item">
             <i class="edit outline icon"></i>
             Editor
@@ -104,9 +94,14 @@
         </div>
       </div>
 
+      <div class="loading container">
+        <i class="layer"></i>
+        <i class="layer"></i>
+        <i class="layer"></i>
+      </div>
+
       <!-- Actual series content, added asynchronously -->
       <div id="series-list" class="ui cards"></div>
-
       <div id="pagination" class="ui centered pagination menu"><!-- Pagination added later --></div>
     </div>
   </div>

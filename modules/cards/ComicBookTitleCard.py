@@ -87,7 +87,10 @@ class SvgRectangle:
 
 class ComicBookTitleCard(BaseCardType):
     """
-    This class describes a CardType that produces title cards TODO update
+    This class describes a CardType that produces title cards styled
+    after a Comic Book panel. There are two banners - one for the title
+    and one for the index text - on the top and bottom of the card.
+    These panels can be rotated, recolored, and repositioned freely.
     """
 
     """API Parameters"""

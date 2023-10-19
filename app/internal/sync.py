@@ -1,5 +1,4 @@
 from logging import Logger
-from pathlib import Path
 from time import sleep
 from typing import Optional, Union
 
@@ -9,15 +8,18 @@ from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_interface
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
-from app.internal.episodes import refresh_episode_data
-from app.internal.series import download_series_poster, set_series_database_ids
-from app.internal.sources import download_series_logo
 from app.models.connection import Connection
 from app.models.series import Series
 from app.models.sync import Sync
 from app.schemas.sync import (
     NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync
 )
+from app.internal.series import add_series
+from app.models.sync import Sync
+from app.schemas.sync import (
+    NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync,
+)
+
 
 from modules.Debug import log
 
@@ -45,14 +47,20 @@ def sync_all(*, log: Logger = log) -> None:
 
 def add_sync(
         db: Session,
-        new_sync: Union[NewEmbySync, NewJellyfinSync, NewPlexSync,NewSonarrSync]
+        new_sync: Union[NewEmbySync, NewJellyfinSync, NewPlexSync,NewSonarrSync],
+        *,
+        log: Logger = log,
     ) -> Sync:
     """
-    Add the given sync to the database.
+    Add the given Sync to the database.
 
     Args:
-        db: SQLAlchemy database to query.
-        new_sync: New Sync object to add to the database.
+        db: Database to query for Templates and add the Sync to.
+        new_sync: New Sync definition to add to the database.
+        log: Logger for all log messages.
+
+    Returns:
+        Newly created Sync object.
     """
 
     # Verify all Templates exists, raise 404 if DNE
@@ -60,8 +68,12 @@ def add_sync(
     templates = get_all_templates(db, new_sync_dict)
 
     # Create DB entry from Pydantic model, add to database
-    sync = Sync(**new_sync_dict, templates=templates)
+    sync = Sync(**new_sync_dict)
     db.add(sync)
+    db.commit()
+
+    # Add Templates
+    sync.assign_templates(templates, log=log)
     db.commit()
 
     return sync
@@ -166,40 +178,8 @@ def run_sync(
     if not added:
         log.debug(f'{sync.log_str} No new Series synced')
 
-    # Process each newly added series
-    for series in added:
-        log.info(f'{sync.log_str} Added {series.name} ({series.year})')
-        Path(series.source_directory).mkdir(parents=True, exist_ok=True)
-        # Set Series ID's, download poster and logo
-        if background_tasks is None:
-            set_series_database_ids(series, db, log=log)
-            download_series_poster(db, series, log=log)
-            download_series_logo(series, log=log)
-            refresh_episode_data(db, series, log=log)
-        else:
-            background_tasks.add_task(
-                # Function
-                set_series_database_ids,
-                # Arguments
-                series, db, log=log,
-            )
-            background_tasks.add_task(
-                # Function
-                download_series_poster,
-                # Arguments
-                db, series, log=log,
-            )
-            background_tasks.add_task(
-                # Function
-                download_series_logo,
-                # Arguments
-                series, log=log,
-            )
-            background_tasks.add_task(
-                # Function
-                refresh_episode_data,
-                # Arguments
-                db, series, log=log
-            )
-
-    return added
+    # Process each newly added Series
+    return [
+        add_series(new_series, background_tasks, db, log=log)
+        for new_series in added
+    ]

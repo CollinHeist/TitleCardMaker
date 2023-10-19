@@ -82,9 +82,10 @@ criteria.
 Season 2 Episode 1 to something else. Save this change by clicking the
 :material-content-save: Save icon in the left-most column.
 
-12. Click the `Create Title Cards` again, and TCM should inform you that it is
-creating 1 card and deleting 1 card. Looking at the file, this Card is now made
-with the card type you _just_ selected, overriding any Template specifications.
+12. Click the `Create Title Cards` button again, and TCM should inform you that
+it i creating 1 card and deleting 1 card. Looking at the file, this Card is now
+made with the card type you _just_ selected, overriding any Template
+specifications.
 
     ??? question "Why did the Tier 1 Template not apply?"
 

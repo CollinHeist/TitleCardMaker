@@ -13,7 +13,9 @@ from sqlalchemy import func
 
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.database.session import Page
-from app.database.query import get_all_templates, get_font, get_interface, get_series
+from app.database.query import (
+    get_all_templates, get_font, get_interface, get_series
+)
 from app.internal.episodes import refresh_episode_data
 from app.internal.translate import translate_episode
 from app import models
@@ -173,13 +175,16 @@ def search_existing_series(
     Query all defined defined series by the given parameters. This
     performs an AND operation with the given conditions.
 
-    - Arguments: Search arguments to filter the results by.
+    - name: Name to fuzzy match the Series against.
+    - year: Year to exactly filter results by.
+    - monitored: Monitored status to filter results by.
+    - *_id: Object ID to filter results by.
     """
 
     # Generate conditions for the given arguments
     conditions = []
     if name is not None:
-        conditions.append(models.series.Series.name.contains(name))
+        conditions.append(models.series.Series.fuzzy_matches(name))
     if year is not None:
         conditions.append(models.series.Series.year==year)
     if monitored is not None:
@@ -268,11 +273,12 @@ def update_series_(
     if ((template_ids := update_series_dict.get('template_ids', None))
         not in (None, UNSPECIFIED)):
         if series.template_ids != template_ids:
-            series.templates = get_all_templates(db, update_series_dict)
+            templates = get_all_templates(db, update_series_dict)
+            series.assign_templates(templates, log=log)
             changed = True
 
     # Update each attribute of the object
-    for attr, value in update_series.dict().items():
+    for attr, value in update_series_dict.items():
         if value != UNSPECIFIED and getattr(series, attr) != value:
             log.debug(f'Series[{series_id}].{attr} = {value}')
             setattr(series, attr, value)

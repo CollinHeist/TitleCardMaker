@@ -7,6 +7,7 @@ from pydantic import PositiveFloat, root_validator, validator # pylint: disable=
 from app.schemas.base import (
     Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
 )
+from app.schemas.card import TitleCard
 from app.schemas.ids import EmbyID, IMDbID, JellyfinID, TMDbID, TVDbID, TVRageID
 from app.schemas.preferences import Style
 
@@ -143,6 +144,7 @@ class BatchUpdateEpisode(Base):
 """
 Return classes
 """
+
 class Episode(Base):
     id: int
     series_id: int
@@ -187,3 +189,4 @@ class Episode(Base):
 
     extras: Optional[dict[str, Any]]
     translations: dict[str, str]
+    card: list[TitleCard]

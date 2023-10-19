@@ -24,6 +24,7 @@ sync_router = APIRouter(
 
 @sync_router.post('/emby/new', tags=['Emby'], status_code=201)
 def create_new_emby_sync(
+        request: Request,
         new_sync: NewEmbySync = Body(...),
         db: Session = Depends(get_database),
     ) -> EmbySync:
@@ -33,11 +34,12 @@ def create_new_emby_sync(
     - new_sync: Sync definition to create.
     """
 
-    return add_sync(db, new_sync)
+    return add_sync(db, new_sync, log=request.state.log)
 
 
 @sync_router.post('/jellyfin/new', tags=['Jellyfin'], status_code=201)
 def create_new_jellyfin_sync(
+        request: Request,
         new_sync: NewJellyfinSync = Body(...),
         db: Session = Depends(get_database),
     ) -> JellyfinSync:
@@ -47,11 +49,12 @@ def create_new_jellyfin_sync(
     - new_sync: Sync definition to create.
     """
 
-    return add_sync(db, new_sync)
+    return add_sync(db, new_sync, log=request.state.log)
 
 
 @sync_router.post('/plex/new', tags=['Plex'], status_code=201)
 def create_new_plex_sync(
+        request: Request,
         new_sync: NewPlexSync = Body(...),
         db: Session = Depends(get_database),
     ) -> PlexSync:
@@ -61,11 +64,12 @@ def create_new_plex_sync(
     - new_sync: Sync definition to create.
     """
 
-    return add_sync(db, new_sync)
+    return add_sync(db, new_sync, log=request.state.log)
 
 
 @sync_router.post('/sonarr/new', tags=['Sonarr'], status_code=201)
 def create_new_sonarr_sync(
+        request: Request,
         new_sync: NewSonarrSync = Body(...),
         db: Session = Depends(get_database),
     ) -> SonarrSync:
@@ -75,7 +79,7 @@ def create_new_sonarr_sync(
     - new_sync: Sync definition to create.
     """
 
-    return add_sync(db, new_sync)
+    return add_sync(db, new_sync, log=request.state.log)
 
 
 @sync_router.patch('/{sync_id}', status_code=201)
@@ -103,8 +107,8 @@ def edit_sync(
     changed = False
     if (template_ids := getattr(update_sync, 'template_ids', None)) is not None:
         if template_ids != sync.template_ids:
-            sync.templates = get_all_templates(db, update_sync_dict)
-            log.debug(f'Sync[{sync.id}].template_ids = {template_ids}')
+            templates = get_all_templates(db, update_sync_dict)
+            sync.assign_templates(templates, log=log)
             changed = True
 
     # Update Sync itself

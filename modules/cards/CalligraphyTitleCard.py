@@ -3,8 +3,9 @@ from random import random
 from typing import Optional
 
 from modules.BaseCardType import (
-    BaseCardType, CardDescription, Extra, ImageMagickCommands,
+    BaseCardType, CardDescription, Dimensions, Extra, ImageMagickCommands,
 )
+from modules.EpisodeInfo2 import EpisodeInfo
 
 
 class CalligraphyTitleCard(BaseCardType):
@@ -43,6 +44,11 @@ class CalligraphyTitleCard(BaseCardType):
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
                 tooltip='Defaults to match the Font color.'
+            ), Extra(
+                name='Episode Text Font Size',
+                identifier='episode_text_font_size',
+                description='Size adjustment for the episode text',
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
             ), Extra(
                 name='Offset Title Toggle',
                 identifier='offset_titles',
@@ -97,7 +103,7 @@ class CalligraphyTitleCard(BaseCardType):
     DEFAULT_FONT_CASE = 'source'
     FONT_REPLACEMENTS = {}
 
-    """Characteristics of the episode text"""
+    """How to format episode text"""
     EPISODE_TEXT_FORMAT = 'Episode {episode_number_cardinal_title}'
 
     """Whether this CardType uses season titles for archival purposes"""
@@ -121,7 +127,7 @@ class CalligraphyTitleCard(BaseCardType):
         'font_size', 'font_color', 'font_interline_spacing',
         'font_interword_spacing', 'font_kerning', 'font_vertical_shift',
         'logo_file', 'add_texture', 'episode_text_color', 'logo_size',
-        'randomize_texture', 'separator', 'deep_blur',
+        'randomize_texture', 'separator', 'deep_blur', 'episode_text_font_size',
     )
 
     def __init__(self, *,
@@ -146,6 +152,7 @@ class CalligraphyTitleCard(BaseCardType):
             add_texture: bool = True,
             deep_blur_if_unwatched: bool = True,
             episode_text_color: str = TITLE_COLOR,
+            episode_text_font_size: float = 1.0,
             logo_size: float = 1.0,
             offset_titles: bool = True,
             randomize_texture: bool = True,
@@ -186,9 +193,35 @@ class CalligraphyTitleCard(BaseCardType):
         self.add_texture = add_texture
         self.deep_blur = blur and deep_blur_if_unwatched and not watched
         self.episode_text_color = episode_text_color
+        self.episode_text_font_size = episode_text_font_size
         self.logo_size = logo_size
         self.randomize_texture = randomize_texture
         self.separator = separator
+
+
+    @staticmethod
+    def SEASON_TEXT_FORMATTER(episode_info: EpisodeInfo) -> str:
+        """
+        Fallback season title formatter.
+
+        Args:
+            episode_info: Info of the Episode whose season text is being
+                determined.
+
+        Returns:
+            'Specials' if the season number is 0; otherwise the cardinal
+            version of the season number. If that's not possible, then
+            just 'Season {x}'.
+        """
+
+        if episode_info.season_number == 0:
+            return 'Specials'
+
+        try:
+            number = episode_info.word_set['season_number_cardinal_title']
+            return f'Season {number}'
+        except KeyError:
+            return f'Season {episode_info.season_number}'
 
 
     def __offset_title(self, title_text: str) -> str:
@@ -210,7 +243,8 @@ class CalligraphyTitleCard(BaseCardType):
         lines = title_text.splitlines()
 
         # Don't offset if the bottom line is much longer than the first
-        if len(lines[1]) > len(lines[0]) * 2:
+        if (len(lines[1]) > len(lines[0]) * 2
+            or len(lines[1]) > len(lines[0]) + 12):
             return title_text
 
         def limit(lower: int, value: int, upper: int) -> int:
@@ -260,14 +294,33 @@ class CalligraphyTitleCard(BaseCardType):
         ]
 
 
-    @property
-    def texture_commands(self) -> ImageMagickCommands:
+    def __get_logo_size(self) -> Dimensions:
         """
-        Subcommand to apply the texture image (if enabled).
+        Get the effective size of the logo as it is overlaid onto the
+        image.
 
         Returns:
-            List of ImageMagick commands.
+            Effective dimensions of the logo after having been scaled.
         """
+
+        # Get base dimensions of the logo (before resizing)
+        width, height = self.image_magick.get_image_dimensions(self.logo_file)
+
+        # -resize 2800x
+        scaled_w = 2800
+        scaled_h = height * (scaled_w / width)
+
+        # -resize x{750 * self.logo_size}>
+        if scaled_h > (max_height := 750 * self.logo_size):
+            downsize = max_height / scaled_h
+            return Dimensions(scaled_w * downsize, scaled_h * downsize)
+
+        return Dimensions(scaled_w, scaled_h)
+
+
+    @property
+    def texture_commands(self) -> ImageMagickCommands:
+        """Subcommand to apply the texture image (if enabled)."""
 
         # Not adding texture, return
         if not self.add_texture:
@@ -290,18 +343,13 @@ class CalligraphyTitleCard(BaseCardType):
             f'-gravity center',
             f'-compose multiply',
             f'-composite',
-            f'+compose',
+            f'-compose over',
         ]
 
 
     @property
     def logo_commands(self) -> ImageMagickCommands:
-        """
-        Subcommand to add the logo (and drop shadow) to the image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand to add the logo (and drop shadow) to the image."""
 
         # Logo not specified or does not exist, return empty commands
         if not self.logo_file or not self.logo_file.exists():
@@ -320,12 +368,7 @@ class CalligraphyTitleCard(BaseCardType):
 
     @property
     def title_text_commands(self) -> ImageMagickCommands:
-        """
-        Subcommand for adding title text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand for adding title text to the source image."""
 
         # No title text, or not being shown
         if len(self.title_text) == 0:
@@ -354,26 +397,32 @@ class CalligraphyTitleCard(BaseCardType):
 
     @property
     def index_text_commands(self) -> ImageMagickCommands:
-        """
-        Subcommands for adding index text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommands for adding index text to the source image."""
 
         # Return if not showing text
         if self.hide_season_text and self.hide_episode_text:
             return []
 
-        index_text = f'{self.season_text} {self.separator} {self.episode_text}'
         if self.hide_season_text:
             index_text = self.episode_text
         elif self.hide_season_text:
             index_text = self.season_text
+        else:
+            index_text = (
+                f'{self.season_text} {self.separator} {self.episode_text}'
+            )
 
         interline_spacing = -50 + self.font_interline_spacing
         kerning = 1.0 * self.font_kerning
-        size = 75 * self.font_size
+        size = 75 * self.episode_text_font_size
+
+        # Determine vertical offset - if no logo, place on top of image
+        if not self.logo_file or not self.logo_file.exists():
+            y = -750
+        # Logo is provided, position just above logo
+        else:
+            _, logo_height = self.__get_logo_size()
+            y = (-logo_height / 2) - 125 # 125px margin
 
         base_commands = [
             f'-background None',
@@ -385,7 +434,7 @@ class CalligraphyTitleCard(BaseCardType):
             f'label:"{index_text}"',
         ]
 
-        return self.__add_drop_shadow(base_commands, '95x2+0+12', 0, -500)
+        return self.__add_drop_shadow(base_commands, '95x2+0+12', 0, y)
 
 
     @staticmethod
@@ -408,6 +457,8 @@ class CalligraphyTitleCard(BaseCardType):
         if not custom_font:
             if 'episode_text_color' in extras:
                 extras['episode_text_color'] = CalligraphyTitleCard.TITLE_COLOR
+            if 'episode_text_font_size' in extras:
+                extras['episode_text_font_size'] = 1.0
 
 
     @staticmethod
@@ -475,7 +526,7 @@ class CalligraphyTitleCard(BaseCardType):
             ]
 
         command = ' '.join([
-            f'magick "{self.source_file.resolve()}"',
+            f'convert "{self.source_file.resolve()}"',
             # Resize and apply styles to source image
             *style_commands,
             # Add each layer

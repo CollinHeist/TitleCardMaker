@@ -1,17 +1,19 @@
-from collections import namedtuple
 from logging import Logger
+from os import environ
 from pathlib import Path
 from re import findall
 from shlex import split as command_split
 from subprocess import Popen, PIPE, TimeoutExpired
-from typing import Literal, Optional
+from typing import Literal, NamedTuple, Optional
 
 from imagesize import get as im_get
 
 from modules.Debug import log
 
 
-Dimensions = namedtuple('Dimensions', ('width', 'height'))
+class Dimensions(NamedTuple):
+    width: float
+    height: float
 
 
 class ImageMagickInterface:
@@ -52,7 +54,7 @@ class ImageMagickInterface:
 
 
     def __init__(self,
-            container: Optional[str] = 'ImageMagick',
+            container: Optional[str] = None,
             use_magick_prefix: bool = False,
             timeout: int = COMMAND_TIMEOUT_SECONDS,
         ) -> None:
@@ -68,8 +70,8 @@ class ImageMagickInterface:
         """
 
         # Definitions of this interface, i.e. whether to use docker and how
-        self.container = container
-        self.use_docker = bool(container)
+        self.container = environ.get('TCM_IM_DOCKER', container)
+        self.use_docker = bool(self.container)
 
         # Whether to prefix commands with "magick" or not
         self.prefix = 'magick ' if use_magick_prefix else ''
@@ -161,7 +163,7 @@ class ImageMagickInterface:
 
     def run_get_output(self, command: str) -> str:
         """
-        Wrapper for run(), but return the byte-decoded stdout.
+        Wrapper for `run()`, but return the byte-decoded stdout.
 
         Args:
             command: The command (as string) being executed.

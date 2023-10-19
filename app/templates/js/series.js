@@ -94,7 +94,7 @@ function getUpdateEpisodeObject(episodeId) {
 
 /*
  * Submit an API request to create the Title Card for the Episode with the given
- * ID.
+ * ID. If successful, the card data of the current page is reloaded.
  * 
  * @param {int} episodeId - ID of the Episode whose Card is being created.
  */
@@ -102,8 +102,10 @@ function createEpisodeCard(episodeId) {
   $.ajax({
     type: 'POST',
     url: `/api/cards/episode/${episodeId}`,
-    success: () => showInfoToast('Created Title Card'),
-    error: response => showErrorToast({title: 'Error Creating Title Card', response}),
+    success: () => {
+      showInfoToast('Created Title Card');
+      getCardData();
+    }, error: response => showErrorToast({title: 'Error Creating Title Card', response}),
   });
 }
 
@@ -121,7 +123,7 @@ function saveEpisodeConfig(episodeId) {
     contentType: 'application/json',
     data: JSON.stringify(updateEpisodeObject),
     success: () => {
-      $.toast({ class: 'blue info', title: 'Updated Episode'}),
+      showInfoToast('Updated Episode'),
       // Remove this ID from the array of edited Episodes
       editedEpisodeIds = editedEpisodeIds.filter(id => id !== episodeId);
     }, error: response => showErrorToast({title: 'Error Updating Episode', response}),
@@ -504,12 +506,10 @@ function initStyles() {
   refreshTheme();
 }
 
-let currentPage = 1;
-async function getFileData(page=currentPage) {
-  const sourceImageContainer = document.getElementById('source-images');
+let currentFilePage = 1;
+async function getFileData(page=currentFilePage) {
   const fileTemplate = document.getElementById('file-card-template');
   const rowTemplate = document.getElementById('file-row-template');
-  if (!sourceImageContainer || !fileTemplate || !rowTemplate) { return; }
   const allFiles = await fetch(`/api/sources/series/{{series.id}}?page=${page}&size=12`).then(resp => resp.json());
 
   // Some error occured, toast and exit
@@ -523,6 +523,7 @@ async function getFileData(page=currentPage) {
     return;
   }
 
+  // Update source image table
   const sources = allFiles.items.map(source => {
     const elementId = `file-episode${source.episode_id}`;
     {% if preferences.sources_as_table %}
@@ -550,6 +551,7 @@ async function getFileData(page=currentPage) {
       filesize.innerText = formatBytes(source.filesize, 1);
       filesize.dataset.sortValue = source.filesize;
       row.querySelector('[data-column="search-tmdb"]').classList.add('disabled');
+      row.querySelector('[data-column="search-tmdb"] i').classList.add('disabled');
     } else {
       filesize.innerText = 'Missing'; filesize.dataset.sortValue = 0;
       width.classList.add('error');
@@ -634,10 +636,25 @@ async function getFileData(page=currentPage) {
     return file;
     {% endif %}
   });
-  sourceImageContainer.replaceChildren(...sources);
+  document.getElementById('source-images').replaceChildren(...sources);
+
+  // Update source image previews
+  const sourceImages = allFiles.items.map(source => {
+    // Clone template
+    const image = document.getElementById('preview-image-template').content.cloneNode(true);
+    if (source.exists) {
+      image.querySelector('.dimmer .content').innerHTML = `<h4>Season ${source.season_number} Episode ${source.episode_number} (${source.source_file_name})</h4>`;
+      image.querySelector('img').src = source.source_url;
+    } else {
+      // ...
+    }
+
+    return image;
+  });
+  document.getElementById('source-image-previews').replaceChildren(...sourceImages);
 
   // Update pagination
-  currentPage = page;
+  currentFilePage = page;
   updatePagination({
     paginationElementId: 'file-pagination',
     navigateFunction: getFileData,
@@ -646,6 +663,7 @@ async function getFileData(page=currentPage) {
     amountVisible: isSmallScreen() ? 4 : 18,
   });
   refreshTheme();
+  $('#source-image-previews .image .dimmer').dimmer({transition: 'fade up', on: 'hover'});
 }
 
 async function getEpisodeData(page=1) {
@@ -793,6 +811,46 @@ async function getEpisodeData(page=1) {
   });
 }
 
+/*
+ * Submit an API request to load the given page of  Title Card previews.
+ * If successful, then the cards are loaded into the page under the
+ * appropriate element, and the pagination menu is updated.
+ */
+let currentCardPage = 1;
+function getCardData(page=currentCardPage) {
+  $.ajax({
+    type: 'GET',
+    url: `/api/cards/series/{{series.id}}?page=${page}&size=9`,
+    success: cards => {
+      const previewTemplate = document.getElementById('preview-image-template');
+      const previews = cards.items.map(card => {
+        const preview = previewTemplate.content.cloneNode(true);
+        // Fill out preview
+        preview.querySelector('.dimmer .content').innerHTML = `<h4>Season ${card.season_number} Episode ${card.episode_number}`;
+        const modifiedUrl = card.card_file.replace('{{preferences.card_directory}}', '/cards')
+        preview.querySelector('img').src = `${modifiedUrl}?${card.filesize}`;
+        return preview;
+      });
+      // Add elements to page
+      document.getElementById('card-previews').replaceChildren(...previews);
+
+      // Update pagination
+      currentCardPage = page;
+      updatePagination({
+        paginationElementId: 'card-pagination',
+        navigateFunction: getCardData,
+        page: cards.page,
+        pages: cards.pages,
+        amountVisible: isSmallScreen() ? 4 : 15,
+      });
+
+      // Refresh theme, initialize dimmers
+      refreshTheme();
+      $('#card-previews .image .dimmer').dimmer({transition: 'fade up', on: 'hover'});
+    }, error: response => showErrorToast({title: 'Error Getting Card Data', response}),
+  });
+}
+
 async function initAll() {
   // Get global availables for initializing dropdowns
   allStyles = await fetch('/api/available/styles').then(resp => resp.json());
@@ -804,11 +862,13 @@ async function initAll() {
   getLibraries();
   getEpisodeData();
   initStyles();
+  getCardData();
   getFileData();
   
   // Schedule recurring statistics query
   getStatistics();
   getStatisticsId = setInterval(getStatistics, 30000); // Refresh stats every 30s
+  setInterval(getCardData, 30000);
 
   // Open tab indicated by URL param
   const tab = window.location.hash.substring(1) || 'options';
@@ -1166,12 +1226,12 @@ function addTranslations() {
  * loading. If successful, the page is reloaded.
  */
 function importBlueprint(cardId, blueprint) {
-  // Turn on loading
+  // Indicate loading
   document.getElementById(cardId).classList.add('slow', 'double', 'blue', 'loading');
 
   // Get any URL's for Fonts to download
   let fontsToDownload = [];
-  blueprint.fonts.forEach(font => {
+  blueprint.json.fonts.forEach(font => {
     if (font.file_download_url) {
       fontsToDownload.push(font.file_download_url);
     }
@@ -1180,14 +1240,13 @@ function importBlueprint(cardId, blueprint) {
   // Submit API request to import blueprint
   $.ajax({
     type: 'PUT',
-    url: '/api/blueprints/import/series/{{series.id}}',
-    data: JSON.stringify(blueprint),
-    contentType: 'application/json',
+    url: `/api/blueprints/import/series/{{series.id}}/blueprint/${blueprint.id}`,
     success: () => {
-      showInfoToast('Blueprint Imported');
       if (fontsToDownload.length === 0) {
-        showInfoToast('Reloading page..');
+        showInfoToast({title: 'Blueprint Imported', message: 'Reloading page...'});
         setTimeout(() => location.reload(), 2000);
+      } else {
+        showInfoToast('Blueprint Imported');
       }
     }, error: response => showErrorToast({title: 'Error Importing Blueprint', response}),
     complete: () => document.getElementById(cardId).classList.remove('slow', 'double', 'blue', 'loading'),
@@ -1246,37 +1305,15 @@ async function queryBlueprints() {
   }
   // Blueprints available, create cards
   const blueprints = allBlueprints.map((blueprint, blueprintId) => {
-    // Clone template
-    const card = blueprintTemplate.content.cloneNode(true);
-    // Fill out card
-    card.querySelector('.card').id = `blueprint-id${blueprintId}`;
-    card.querySelector('img').src = blueprint.preview;
-    card.querySelector('[data-value="creator"]').innerText = blueprint.creator;
-    if (blueprint.fonts.length === 0) {
-      card.querySelector('[data-value="font-count"]').remove();
-    } else {
-      let text = `<b>${blueprint.fonts.length}</b> Named Font` + (blueprint.fonts.length > 1 ? 's' : '');
-      card.querySelector('[data-value="font-count"]').innerHTML = text;
-    }
-    if (blueprint.templates.length === 0) {
-      card.querySelector('[data-value="template-count"]').remove();
-    } else {
-      let text = `<b>${blueprint.templates.length}</b> Template` + (blueprint.templates.length > 1 ? 's' : '');
-      card.querySelector('[data-value="template-count"]').innerHTML = text;
-    }
-    const episode_count = Object.keys(blueprint.episodes).length
-    if (episode_count === 0) {
-      card.querySelector('[data-value="episode-count"]').remove();
-    } else {
-      let text = `<b>${episode_count}</b> Episode Override` + (episode_count > 1 ? 's' : '');
-      card.querySelector('[data-value="episode-count"]').innerHTML = text;
-    }
-    card.querySelector('[data-value="description"]').innerHTML = '<p>' + blueprint.description.join('</p><p>') + '</p>';
+    // Clone template, fill out card
+    let card = blueprintTemplate.content.cloneNode(true);
+    card = populateBlueprintCard(card, blueprint, `blueprint-id${blueprintId}`);
     // Assign import to button
     card.querySelector('a[data-action="import-blueprint"]').onclick = () => importBlueprint(`blueprint-id${blueprintId}`, blueprint);
     return card;
   });
   blueprintCards.replaceChildren(...blueprints);
+  $('[data-value="file-count"]').popup({inline: true});
 }
 
 /*
@@ -1297,9 +1334,24 @@ function exportBlueprint() {
         message: 'Verify any applicable Font licenses allow the Fonts to be shared.',
         displayTime: 15000,
       });
+
+      // Get database ID string for this Series
+      let databaseIds = [];
+      if ('{{series.imdb_id}}' !== 'None') { databaseIds.push('imdb:{{series.imdb_id}}'); }
+      if ('{{series.tmdb_id}}' !== 'None') { databaseIds.push('tmdb:{{series.tmdb_id}}'); }
+      if ('{{series.tvdb_id}}' !== 'None') { databaseIds.push('tmdb:{{series.tvdb_id}}'); }
+      const idStr = databaseIds.join(',');
+
+      // Get URL to pre-fill Blueprint form
+      let url = `series_year={{series.year}}&database_ids=${(idStr)}`
+      + `&series_name=${encodeURIComponent('{{series.name}}')}`
+      + `&title=[Blueprint] ${encodeURIComponent('{{series.name}}')}`;
+
       // Open window for Blueprint submission
       window.open(
-        'https://github.com/CollinHeist/TitleCardMaker-Blueprints/issues/new?assignees=CollinHeist&labels=blueprint&projects=&template=new_blueprint.yml&title=[Blueprint] {{series.name}}&series_name={{series.name}}&series_year={{series.year}}',
+        'https://github.com/CollinHeist/TitleCardMaker-Blueprints/issues/new?'
+        + `assignees=CollinHeist&labels=blueprint&template=new_blueprint.yaml`
+        + `&${url}`,
         '_blank'
       );
     }, error: response => showErrorToast({title: 'Error Exporting Blueprint', response}),
@@ -1308,8 +1360,8 @@ function exportBlueprint() {
 
 /*
  * Submit an API request to download the given source image URL for the
- * Episode with the given ID. If successful, the Series file data is
- * refreshed.
+ * Episode with the given ID. If successful, the Series file and Card
+ * data is refreshed.
  */
 function selectTmdbImage(episodeId, url) {
   // Create psuedo form for this URL
@@ -1326,6 +1378,7 @@ function selectTmdbImage(episodeId, url) {
     success: () => {
       showInfoToast('Updated source image');
       getFileData();
+      getCardData();
     }, error: response => showErrorToast({title: 'Error Updating Source Image', response}),
   });
 }
@@ -1559,8 +1612,8 @@ function getSourceImages() {
 
 /*
  * Submit an API request to initiate Card creation for this Series. This
- * disables the button while parsing, and if successful the Episode and
- * statistics are refreshed.
+ * disables the button while parsing, and if successful the Episode
+ * data, statistics, and current Card page is refreshed.
  */
 function createTitleCards() {
   $('.button[data-action="create-title-cards"]').toggleClass('disabled', true);
@@ -1571,6 +1624,7 @@ function createTitleCards() {
       showInfoToast('Starting to create Title Cards');
       getEpisodeData();
       getStatistics();
+      getCardData();
     }, error: response => showErrorToast({title: 'Error creating Title Cards', response}),
     complete: () => $('.button[data-action="create-title-cards"]').toggleClass('disabled', false),
   });
@@ -1619,6 +1673,7 @@ function deleteTitleCards(onSuccess) {
     success: response => {
       showInfoToast(`Deleted ${response.deleted} Cards`);
       if (onSuccess !== undefined) { onSuccess(); }
+      getCardData();
     }, error: response => showErrorToast({title: 'Error Deleting Title Cards', response}),
     complete: () => getStatistics(),
   });

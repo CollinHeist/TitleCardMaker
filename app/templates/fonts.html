@@ -117,7 +117,11 @@
               </div>
               <!-- Add replacement button -->
               <div class="field">
-                <div data-value="addReplacement" class="circular ui icon mini button">
+                <div data-action="populateReplacements" class="circular ui icon mini green button" data-tooltip="Analyze the Font for suggested character replacements">
+                  <i class="plus square outline icon"></i>
+                  Analyze Font Replacements
+                </div>
+                <div data-action="addReplacement" class="circular ui icon mini button">
                   <i class="plus square outline icon"></i>
                   Add Replacement
                 </div>
@@ -180,9 +184,13 @@
 
 <body onload="getAllFonts();">
   <div class="pusher">
-    <!-- Static header and sidebar loaded by external script -->
-    <div id="page-header"></div>
-    <div id="nav-menu"></div>
+    <!-- Static header and sidebar -->
+    <div id="page-header">
+      {% include "./header.html" %}
+    </div>
+    <div id="nav-menu">
+      {% include "./sidebar.html" %}
+    </div>
 
     <!-- Actual page content -->
     <div id="main-content" class="article">

@@ -8,6 +8,7 @@ Create Date: ${create_date}
 from alembic import op
 import sqlalchemy as sa
 ${imports if imports else ""}
+${"from modules.Debug import contextualize" if upgrades or downgrades else ""}
 
 from modules.Debug import contextualize
 
@@ -19,11 +20,22 @@ depends_on = ${repr(depends_on)}
 
 
 def upgrade() -> None:
+    % if upgrades:
     log = contextualize()
     log.debug(f'Upgrading SQL Schema to Version[{revision}]..')
-    ${upgrades if upgrades else "pass"}
+    ${upgrades}
     log.debug(f'Upgraded SQL Schema to Version[{revision}]')
+    % else:
+    pass
+    % endif
 
 
 def downgrade() -> None:
-    ${downgrades if downgrades else "pass"}
+    % if downgrades:
+    log = contextualize()
+    log.debug(f'Downgrading SQL Schema to Version[{down_revision}]..')
+    ${downgrades}
+    log.debug(f'Downgraded SQL Schema to Version[{down_revision}]')
+    % else:
+    pass
+    % endif

@@ -109,6 +109,10 @@ class UpdateNamedFont(UpdateBase):
 """
 Return classes
 """
+class FontAnalysis(Base):
+    replacements: dict[str, str] = {}
+    missing: list[str] = []
+
 class SeriesFont(BaseFont):
     replacements: dict[str, str]
     delete_missing: bool

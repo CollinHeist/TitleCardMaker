@@ -100,6 +100,14 @@ class TintedFrameTitleCard(BaseCardType):
                     'Scalar for how much to scale the size of the logo element'
                 ), tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
             ), Extra(
+                name='Logo Vertical Shift',
+                identifier='logo_vertical_shift',
+                description='Vertical shift to apply to the logo',
+                tooltip=(
+                    'Positive values to shift the logo down, negative values to'
+                    'shift it up. Unit is pixels. Default is <v>0.0</v>.'
+                ),
+            ), Extra(
                 name='Edge Blurring',
                 identifier='blur_edges',
                 description='Whether to blur the edges around the frame',
@@ -152,9 +160,9 @@ class TintedFrameTitleCard(BaseCardType):
         'font_size', 'font_color', 'font_interline_spacing',
         'font_interword_spacing', 'font_kerning', 'font_vertical_shift',
         'episode_text_color', 'separator', 'frame_color', 'logo', 'top_element',
-        'middle_element', 'bottom_element', 'logo_size', 'blur_edges',
-        'episode_text_font', 'frame_width', 'episode_text_font_size',
-        'episode_text_vertical_shift',
+        'middle_element', 'bottom_element', 'logo_size', 'logo_vertical_shift',
+        'blur_edges', 'episode_text_font', 'frame_width',
+        'episode_text_font_size', 'episode_text_vertical_shift',
     )
 
     def __init__(self, *,
@@ -186,6 +194,7 @@ class TintedFrameTitleCard(BaseCardType):
             bottom_element: Element = 'index',
             logo_file: Optional[Path] = None,
             logo_size: float = 1.0,
+            logo_vertical_shift: int = 0,
             blur_edges: bool = True,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
@@ -227,6 +236,7 @@ class TintedFrameTitleCard(BaseCardType):
         self.frame_color = frame_color
         self.frame_width = frame_width
         self.logo_size = logo_size
+        self.logo_vertical_shift = logo_vertical_shift
         self.middle_element = middle_element
         self.separator = separator
         self.top_element = top_element
@@ -237,9 +247,6 @@ class TintedFrameTitleCard(BaseCardType):
         """
         Subcommand to blur the outer frame of the source image (if
         indicated).
-
-        Returns:
-            List of ImageMagick Commands.
         """
 
         # Blurring is disabled (or being applied globally), return empty command
@@ -265,12 +272,7 @@ class TintedFrameTitleCard(BaseCardType):
 
     @property
     def title_text_commands(self) -> ImageMagickCommands:
-        """
-        Subcommand for adding title text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand for adding title text to the source image."""
 
         # No title text, or not being shown
         if (len(self.title_text) == 0
@@ -307,12 +309,7 @@ class TintedFrameTitleCard(BaseCardType):
 
     @property
     def index_text_commands(self) -> ImageMagickCommands:
-        """
-        Subcommand for adding index text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand for adding index text to the source image."""
 
         # If not showing index text, or all text is hidden, return
         if ((self.top_element != 'index' and self.bottom_element != 'index')
@@ -360,9 +357,6 @@ class TintedFrameTitleCard(BaseCardType):
         """
         Subcommand for adding the logo to the image if indicated by
         either extra (and the logo file exists).
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         # Logo not indicated or not available, return empty commands
@@ -381,6 +375,7 @@ class TintedFrameTitleCard(BaseCardType):
             vertical_shift = 700
         else:
             vertical_shift = 0
+        vertical_shift += self.logo_vertical_shift
 
         # Determine logo height
         if self.middle_element == 'logo':
@@ -412,9 +407,6 @@ class TintedFrameTitleCard(BaseCardType):
         """
         Subcommand to add the top of the frame, intersected by the
         selected element.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         # Coordinates used by multiple rectangles
@@ -483,9 +475,6 @@ class TintedFrameTitleCard(BaseCardType):
         """
         Subcommand to add the bottom of the frame, intersected by the
         selected element.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         # Coordinates used by multiple rectangles
@@ -561,9 +550,6 @@ class TintedFrameTitleCard(BaseCardType):
         image and the interior (unblurred) image. This box features a
         drop shadow. The top and bottom parts of the frame are
         optionally intersected by a index text, title text, or a logo.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         # Coordinates used by multiple rectangles
@@ -610,9 +596,6 @@ class TintedFrameTitleCard(BaseCardType):
         Subcommands to add the top-level mask which overlays all other
         elements of the image, even the frame. This mask can be used to
         have parts of the image appear to "pop out" of the frame.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         # Do not apply mask if stylized
@@ -655,6 +638,13 @@ class TintedFrameTitleCard(BaseCardType):
                     TintedFrameTitleCard.EPISODE_TEXT_COLOR
             if 'frame_color' in extras:
                 extras['frame_color'] = TintedFrameTitleCard.TITLE_COLOR
+            if 'episode_text_font' in extras:
+                extras['episode_text_font'] =\
+                    TintedFrameTitleCard.EPISODE_TEXT_FONT
+            if 'episode_text_font_size' in extras:
+                extras['episode_text_font_size'] = 1.0
+            if 'episode_text_vertical_shift' in extras:
+                extras['episode_text_vertical_shift'] = 0
 
 
     @staticmethod

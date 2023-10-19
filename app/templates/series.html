@@ -233,6 +233,11 @@
           <span data-value="font-count"><b>{x}</b> Named Font</span>
           <span data-value="template-count"><b>{x}</b> Template</span>
           <span data-value="episode-count"><b>{x}</b> Episode Overrides</span>
+          <span data-value="file-count"><b>{x}</b> Source Files</span>
+          <div class="ui mini uninvertible popup">
+            <div class="header">Imported Source Files</div>
+            <div class="content"></div>
+          </div>
         </div>
         <div data-value="description" class="description"><!-- <p>Description</p> --></div>
       </div>
@@ -264,6 +269,18 @@
     </div>
   </template>
 
+  <template id="preview-image-template">
+    <div class="ui image"> <!-- transition hidden -->
+      <div class="ui bottom dimmer">
+        <div class="content">
+          <h3>Season {x} Episode {y}</h3>
+              {file name}
+        </div>
+      </div>
+      <img loading="lazy">
+    </div>
+  </template>
+
   <template id="file-row-template">
     <tr class="center aligned"> 
       <td data-column="season_number" class="center aligned collapsing"></td>
@@ -286,9 +303,13 @@
 
 <body onload="initAll()">
   <div class="pusher">
-    <!-- Static header and sidebar loaded by external script -->
-    <div id="page-header"></div>
-    <div id="nav-menu"></div>
+    <!-- Static header and sidebar -->
+    <div id="page-header">
+      {% include "./header.html" %}
+    </div>
+    <div id="nav-menu">
+      {% include "./sidebar.html" %}
+    </div>
 
     <!-- Actual page content -->
     <div id="main-content" class="article">
@@ -490,47 +511,51 @@
               <!-- Episode Data Source -->
               <div class="field">
                 <label>Episode Data Source</label>
-                <div data-value="data_source_id" class="ui compact selection clearable dropdown" data-tooltip="Where to get episode data from" data-position="right center">
+                <div data-value="data_source_id" class="ui compact selection clearable dropdown">
                   <input name="data_source_id" type="hidden">
                   <i class="dropdown icon"></i>
                   <div class="default text"></div>
                   <div class="menu"><!-- Added asynchronously --></div>
                 </div>
+                <p class="help">Where to get Episode data from.</p>
               </div>
 
-              <div class="ui right aligned checkbox field" data-tooltip="Require episode titles to exactly match the episode data source" data-position="right center">
+              <div class="ui left aligned checkbox field">
+                <label>Match Titles</label>
                 {% if series.match_titles %}
                 <input name="match_titles" type="checkbox" checked="">
                 {% else %}
                 <input name="match_titles" type="checkbox">
                 {% endif %}
-                <label>Match Titles</label>
+                <p class="help">Whether to rename Episode titles if they differ from the Episode data source.</p>
               </div>
 
               <!-- Special Syncing -->
               <div class="ui field">
                 <label>Sync Specials</label>
-                <div data-value="sync_specials" class="ui compact selection clearable dropdown" data-tooltip="Whether to create cards for episodes of Season 0" data-position="right center">
+                <div data-value="sync_specials" class="ui compact selection clearable dropdown">
                   <input name="sync_specials" type="hidden">
                   <i class="dropdown icon"></i>
                   <div class="default text">Default</div>
                   <div class="menu"><!-- Added asynchronously --></div>
                 </div>
+                <p class="help">Whether to include Episodes from Season 0.</p>
               </div>
 
               <!-- Localized Image Skipping -->
               <div class="field">
                 <label>Ignore Localized Images</label>
-                <div data-value="skip_localized_images" class="ui compact selection clearable dropdown" data-tooltip="Whether to skip images with langauges (on TMDb)" data-position="right center">
+                <div data-value="skip_localized_images" class="ui compact selection clearable dropdown">
                   <input name="skip_localized_images" type="hidden">
                   <i class="dropdown icon"></i>
                   <div class="default text">Default</div>
                   <div class="menu"><!-- Added asynchronously --></div>
                 </div>
+                <p class="help">Whether to ignore images with assigned Languages (i.e. images with text).</p>
               </div>
 
               <!-- Card Directory -->
-              <div class="ui field" data-tooltip="Where to store title cards" data-position="top left">
+              <div class="ui field">
                 <label>Card Directory</label>
                 <div class="ui left icon fluid input">
                   {% if series.directory is none %}
@@ -544,16 +569,18 @@
                   {% endif %}
                   <i class="folder icon"></i>
                 </div>
+                <p class="help">Directory to store this Series' Title Cards.</p>
               </div>
 
               <!-- Filename Format -->
-              <div class="ui field" placeholder="Global Default" data-tooltip="Format of the title card file names" data-position="top left">
+              <div class="ui field" placeholder="Global Default">
                 <label>Filename Format</label>
                 {% if series.card_filename_format is none %}
                 <input name="card_filename_format" type="text" placeholder="Default">
                 {% else %}
                 <input name="card_filename_format" type="text" value="{{series.card_filename_format}}">
                 {% endif %}
+                <p class="help">Format of how to name this Series' Title Cards.</p>
               </div>
 
               <!-- Submit changes button -->
@@ -573,7 +600,7 @@
               <div class="sixteen wide column">
                 <div class="ui visible floating info message">
                   <i class="info circle icon"></i>
-                  Options are listed in increasing priority
+                  Options are listed in <b>increasing</b> priority.
                 </div>
 
                 <form id="card-config-form" class="ui compact form">
@@ -738,12 +765,13 @@
                   <!-- Hide season text -->
                   <div class="ui field">
                     <label>Hide Season Titles</label>
-                    <div data-value="hide_season_text" class="ui compact selection clearable dropdown" data-tooltip="Omit season text" data-position="right center">
+                    <div data-value="hide_season_text" class="ui compact selection clearable dropdown">
                       <input name="hide_season_text" type="hidden">
                       <i class="dropdown icon"></i>
                       <div class="default text">Default</div>
                       <div class="menu"></div>
                     </div>
+                    <p class="help">Remove the season text - e.g. "Season 1".</p>
                   </div>
     
                   <!-- Season titles -->
@@ -783,7 +811,7 @@
                   <!-- Hide episode text -->
                   <div class="ui field">
                     <label>Hide Episode Text</label>
-                    <div data-value="hide_episode_text" class="ui compact selection clearable dropdown" data-tooltip="Whether to hide episode text" data-position="right center">
+                    <div data-value="hide_episode_text" class="ui compact selection clearable dropdown">
                       <input name="hide_episode_text" type="hidden">
                       <i class="dropdown icon"></i>
                       <div class="default text">Default</div>
@@ -792,6 +820,7 @@
                         <div class="item">False</div>
                       </div>
                     </div>
+                    <p class="help">Remove the episode text - e.g. "Episode 1".</p>
                   </div>
     
                   <!-- Episode text format -->
@@ -989,12 +1018,19 @@
 
           <!-- Files Tab -->
           <div class="ui bottom attached tab segment" data-tab="files">
-            <div class="ui segment">
-              <span class="ui text">
-                Source images are located within <span class="ui blue text">{{series.source_directory}}</span>
-              </span>
+            <h2 class="ui dividing header">Title Cards</h2>
+            <div class="ui styled fluid accordion">
+              <div class="title">
+                <i class="dropdown icon"></i>
+                View Images
+              </div>
+              <div class="content">
+                <div id="card-previews" class="ui images"><!-- Added asynchrously --></div>
+                <div id="card-pagination" class="ui attached pagination menu"><!-- Added asynchrously --></div>
+              </div>
             </div>
-            <h3 class="ui dividing header">Source Images</h3>
+
+            <h2 class="ui dividing header">Source Images</h2>
             {% if preferences.sources_as_table %}
             <div class="ui scrolling long container">
               <table class="ui compact striped head stuck sortable unstackable scrolling long table">
@@ -1020,8 +1056,23 @@
             {% endif %}
             <div id="file-pagination" class="ui attached pagination menu"><!-- Added asynchrously --></div>
 
+            <div class="ui styled fluid accordion">
+              <div class="title">
+                <i class="dropdown icon"></i>
+                View Images
+              </div>
+              <div class="content">
+                <div id="source-image-previews" class="ui images"><!-- Added asynchrously --></div>
+              </div>
+            </div>
+
+            <div class="ui visible floating info message">
+              <i class="info circle icon"></i>
+              Source images are located within <span class="ui blue text">{{series.source_directory}}</span>
+            </div>
+
             <!-- Logo -->
-            <h3 class="ui dividing header">Logo</h3>
+            <h2 class="ui dividing header">Logo</h2>
             {% if preferences.use_tmdb %}
             <div class="ui blue tertiary button" onclick="browseLogos();">
               Browse
@@ -1034,7 +1085,7 @@
             <img id="logo" class="ui rounded image" src="/source/{{series.path_safe_name}}/logo.png" loading="lazy" onerror="this.remove();">
 
             <!-- Backdrop -->
-            <h3 class="ui dividing header">Backdrop</h3>
+            <h2 class="ui dividing header">Backdrop</h2>
             {% if preferences.use_tmdb %}
             <div class="ui blue tertiary button" onclick="browseBackdrops();">
               Browse
@@ -1109,7 +1160,7 @@
 
               <div id-type="TVDb" class="field">
                 {% if series.tvdb_id %}
-                <label>TVDb <a href="https://thetvdb.com/search?query={{series.tvdb_id}}" target="_blank"><i class="external alternate small icon"></i></a></label>
+                <label>TVDb <a href="https://www.thetvdb.com/dereferrer/series/{{series.tvdb_id}}" target="_blank"><i class="external alternate small icon"></i></a></label>
                 <input name="tvdb_id" type="text" placeholder="{{series.tvdb_id}}" value="{{series.tvdb_id}}">
                 {% else %}
                 <label>TVDb</label>

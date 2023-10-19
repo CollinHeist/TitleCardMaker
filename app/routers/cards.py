@@ -190,14 +190,20 @@ def create_cards_for_series(
 def get_series_cards(
         series_id: int,
         db: Session = Depends(get_database)
-    ) -> list[TitleCard]:
+    ) -> Page[TitleCard]:
     """
-    Get all TitleCards for the given Series.
+    Get all TitleCards for the given Series. Cards are returned in the
+    order of their release (e.g. season number, episode number).
 
     - series_id: ID of the Series to get the cards of.
     """
 
-    return db.query(models.card.Card).filter_by(series_id=series_id).all()
+    return paginate(
+        db.query(models.card.Card)\
+            .filter_by(series_id=series_id)\
+            .order_by(models.card.Card.season_number)\
+            .order_by(models.card.Card.episode_number)
+    )
 
 
 @card_router.get('/episode/{episode_id}', tags=['Episodes'],

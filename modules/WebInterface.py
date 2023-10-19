@@ -177,7 +177,7 @@ class WebInterface:
             if len(image) == 0:
                 raise ValueError(f'URL {image} returned no content error')
             if any(bad_content in image for bad_content in WebInterface.BAD_CONTENT):
-                raise ValueError(f'URL {image} returned (bad) malormed content')
+                raise ValueError(f'URL {image} returned malformed content')
 
             # Write content to file, return success
             destination.write_bytes(image)

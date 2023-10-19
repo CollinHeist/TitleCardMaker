@@ -8,6 +8,7 @@ from app.dependencies import (
     PlexInterface, PlexInterfaces, SonarrInterface, SonarrInterfaces,
     TMDbInterface, TMDbInterfaces,
 )
+from app.models.blueprint import Blueprint
 from app.models.card import Card
 from app.models.connection import Connection
 from app.models.episode import Episode
@@ -43,8 +44,8 @@ def _get_obj(
         is None.
 
     Raises:
-        HTTPException (404) if the Object cannot be found and
-        `raise_exc` is True.
+        HTTPException (404): The Object cannot be found and `raise_exc`
+            is True.
     """
 
     # No ID provided, return immediately
@@ -65,6 +66,21 @@ def _get_obj(
 
     # Object found, return it
     return obj
+
+
+def get_blueprint(
+        db: Session,
+        blueprint_id: int,
+        *,
+        raise_exc: bool = True
+    ) -> Optional[Blueprint]:
+    """
+    Get the Blueprint with the given ID from the given Database.
+
+    See `_get_obj` for all details.
+    """
+
+    return _get_obj(db, Blueprint, 'Blueprint', blueprint_id, raise_exc)
 
 
 def get_card(

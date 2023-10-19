@@ -1,19 +1,19 @@
-from datetime import datetime, timedelta
 from logging import Logger
 from pathlib import Path
 from re import compile as re_compile, sub as re_sub, IGNORECASE
 from time import sleep
 
 from fastapi import HTTPException
-from requests import get, JSONDecodeError
+from requests import get
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_preferences
+from app.models.blueprint import Blueprint, BlueprintSeries
 from app.models.episode import Episode
 from app.models.font import Font
 from app.models.series import Series
 from app.models.template import Template
-from app.schemas.blueprint import RemoteBlueprint, RemoteMasterBlueprint
+from app.schemas.blueprint import ExportBlueprint
 from app.schemas.episode import UpdateEpisode
 from app.schemas.font import NewNamedFont
 from app.schemas.series import NewTemplate, UpdateSeries
@@ -21,6 +21,7 @@ from app.schemas.series import NewTemplate, UpdateSeries
 from modules.CleanPath import CleanPath
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
+from modules.SeriesInfo import SeriesInfo
 from modules.TieredSettings import TieredSettings
 
 """
@@ -37,9 +38,6 @@ REPO_URL = 'https://github.com/CollinHeist/TitleCardMaker-Blueprints/raw/master'
 
 """URL under which all Blueprint subdirectories are located"""
 BLUEPRINTS_URL = f'{REPO_URL}/blueprints'
-
-"""URL to the master Blueprint file"""
-MASTER_BLUEPRINT_FILE = f'{REPO_URL}/master_blueprints.json'
 
 
 def delay_zip_deletion(zip_directory: Path, zip_file: Path) -> None:
@@ -90,12 +88,12 @@ def get_blueprint_folders(series_name: str) -> tuple[str, str]:
     """
 
     # Remove illegal path characters
-    clean_name = CleanPath.sanitize_name(series_name).lower()
+    clean_name = CleanPath.sanitize_name(series_name)
 
     # Remove prefix words like A/An/The
     sort_name = re_sub(r'^(a|an|the)(\s)', '', clean_name, flags=IGNORECASE)
 
-    return sort_name[0], clean_name
+    return sort_name[0].upper(), clean_name
 
 
 def generate_series_blueprint(
@@ -103,7 +101,7 @@ def generate_series_blueprint(
         raw_episode_data: list[EpisodeInfo],
         include_global_defaults: bool,
         include_episode_overrides: bool,
-    ) -> dict:
+    ) -> ExportBlueprint:
     """
     Generate the Blueprint for the given Series. This Blueprint can be
     imported to completely recreate a Series' (and all associated
@@ -205,7 +203,7 @@ def generate_series_blueprint(
         if template.font:
             export_obj['templates'][index]['font_id'] = fonts.index(template.font)
 
-    return export_obj
+    return ExportBlueprint(**export_obj)
 
 
 def get_blueprint_font_files(
@@ -238,149 +236,38 @@ def get_blueprint_font_files(
     return [Path(font.file) for font in all_fonts if font.file]
 
 
-_cache = {'content': [], 'expires': datetime.now()}
-def query_all_blueprints(
-        *,
-        log: Logger = log,
-    ) -> list[RemoteMasterBlueprint]:
-    """
-    Query for all Blueprints for all Series on GitHub. The content is
-    cached for up to 3 hours.
-
-    Args:
-        log: Logger for all log messages.
-
-    Returns:
-        List of RemoteMasterBlueprints for all Series.
-
-    Raises:
-        HTTPException (500): The mater Blueprint file cannot be decoded
-            as JSON.
-    """
-
-    # If cached content has expired, re-request and update cache
-    if _cache['expires'] <= datetime.now():
-        # Read the master Blueprints JSON file
-        response = get(MASTER_BLUEPRINT_FILE, timeout=30)
-
-        # If no file was found, raise 404
-        if response.status_code == 404:
-            log.error(f'No Master Blueprint file found')
-            raise HTTPException(
-                status_code=404,
-                detail=f'No master Blueprint file found'
-            )
-
-        # Find found, parse as JSON
-        try:
-            response_json = response.json()
-        except JSONDecodeError as e:
-            log.exception(f'Error prasing master Blueprint file - {e}', e)
-            raise HTTPException(
-                status_code=500,
-                detail=f'Unable to parse master Blueprint file'
-            ) from e
-
-        _cache['content'] = response_json
-        _cache['expires'] = datetime.now() + timedelta(hours=3)
-    else:
-        log.debug(f'Using cached Master Blueprint content')
-        response_json = _cache['content']
-
-    return response_json
-
-
 def query_series_blueprints(
-        series_full_name: str,
-        *,
-        log: Logger = log,
-    ) -> list[RemoteBlueprint]:
+        blueprint_db: Session,
+        series_info: SeriesInfo,
+    ) -> list[Blueprint]:
     """
-    Query for all RemoteBlueprints on GitHub for the given Series.
+    Get all Blueprints for the given Series.
 
     Args:
-        series_full_name: Full name of the Series whose Blueprints are
-            being queried.
-        log: Logger for all log messages.
+        blueprint_db: Database to the Blueprints to search.
+        series_info: Info of the Series whose Blueprints are being
+            searched.
 
     Returns:
-        List of RemoteBlueprints found for the given Series.
-
-    Raises:
-        HTTPException (500): The Blueprint file cannot be decoded as
-            JSON.
+        All defined Blueprints found for the given Series.
     """
 
-    # Get subfolder for this Series
-    letter, path_name = get_blueprint_folders(series_full_name)
-    subfolder = f'{letter}/{path_name}'
+    blueprint_series = blueprint_db.query(BlueprintSeries)\
+        .filter(series_info.filter_conditions(BlueprintSeries))\
+        .first()
 
-    # Read the JSON file of Blueprint definitions
-    blueprint_url = f'{BLUEPRINTS_URL}/{subfolder}/blueprints.json'
-    response = get(blueprint_url, timeout=30)
-
-    # If no file was found, there are no Blueprints for this Series, return
-    if response.status_code == 404:
-        log.debug(f'No blueprints.json file found at "{blueprint_url}"')
+    if blueprint_series is None:
         return []
 
-    try:
-        # Blueprint file found, parse as JSON
-        blueprints: list[dict] = response.json()
-    except JSONDecodeError as e:
-        log.exception(f'Error parsing Blueprints - {e}', e)
-        raise HTTPException(
-            status_code=500,
-            detail=f'Unable to parse Blueprints JSON',
-        ) from e
-
-    # Blueprints found, transform preview URLs and add ID
-    for blueprint_id, blueprint in enumerate(blueprints):
-        # Skip null Blueprints
-        if blueprint is None:
-            continue
-
-        blueprints[blueprint_id]['id'] = blueprint_id
-        preview_filename = blueprints[blueprint_id]['preview']
-        blueprints[blueprint_id]['preview'] = (
-            f'{BLUEPRINTS_URL}/{subfolder}/{blueprint_id}/{preview_filename}'
-        )
-
-    # Return all Blueprints, omitting nulls
-    return [blueprint for blueprint in blueprints if blueprint]
-
-
-def get_blueprint_by_id(
-        series: Series,
-        blueprint_id: int,
-        *,
-        log: Logger = log,
-    ) -> RemoteBlueprint:
-    """
-    Get the Blueprint with the given ID for the given Series.
-
-    Args:
-        series: Series whose Blueprints to query.
-        blueprint_id: ID of the Blueprint to return.
-        log: Logger for all log messages.
-    """
-
-    # Get all available Blueprints, return only one with matching ID
-    for blueprint in query_series_blueprints(series, log=log):
-        if blueprint['id'] == blueprint_id:
-            return blueprint
-
-    # No Blueprint with this ID, raise 404
-    raise HTTPException(
-        status_code=404,
-        detail=f'No Blueprint with ID {blueprint_id} exits for Series {series.full_name}'
-    )
+    return blueprint_db.query(Blueprint)\
+        .filter_by(series_id=blueprint_series.id)\
+        .all()
 
 
 def import_blueprint(
         db: Session,
         series: Series,
-        blueprint: RemoteBlueprint,
+        blueprint: Blueprint,
         *,
         log: Logger = log,
     ) -> None:
@@ -401,7 +288,7 @@ def import_blueprint(
 
     # Import Fonts
     font_map: dict[int, Font] = {}
-    for font_id, font in enumerate(blueprint.fonts):
+    for font_id, font in enumerate(blueprint.blueprint.fonts):
         # See if this Font already exists (match by name)
         if ((existing_font := db.query(Font).filter_by(name=font.name).first())
             is not None):
@@ -415,11 +302,11 @@ def import_blueprint(
         if getattr(font, 'file', None) is not None:
             file_url = f'{blueprint_folder}/{font.file}'
             response = get(file_url, timeout=30)
-            if response.status_code == 404:
-                log.error(f'Specified Font file does not exist at "{file_url}"')
+            if not response.ok:
+                log.error(f'Error downloading Font file from "{file_url}"')
                 raise HTTPException(
-                    status_code=404,
-                    detail=f'Blueprint Font file not found',
+                    status_code=response.status_code,
+                    detail=f'Font returned error - {response.reason}',
                 )
             font_content = response.content
 
@@ -447,7 +334,7 @@ def import_blueprint(
 
     # Import Templates
     template_map: dict[int, Template] = {}
-    for template_id, template in enumerate(blueprint.templates):
+    for template_id, template in enumerate(blueprint.blueprint.templates):
         # See if this Template already exists (match by name)
         existing_template = db.query(Template).filter_by(name=template.name)\
             .first()
@@ -458,7 +345,7 @@ def import_blueprint(
             break
 
         # Update Font ID from Font map if indicated
-        if template.font_id is not None:
+        if getattr(template, 'font_id', None) is not None:
             template.font_id = font_map[template.font_id].id
 
         # Create new Template model, add to database and store in map
@@ -473,16 +360,15 @@ def import_blueprint(
 
     # Assign updated Fonts and Templates to Series
     changed = False
-    series_blueprint = blueprint.series.dict()
+    series_blueprint = blueprint.blueprint.series.dict()
     if (new_font_id := series_blueprint.pop('font_id', None)) is not None:
         log.debug(f'Series[{series.id}].font_id = {font_map[new_font_id].id}')
         series.font = font_map[new_font_id]
         changed = True
 
     if (new_template_ids := series_blueprint.pop('template_ids', [])):
-        template_ids = [template_map[id_].id for id_ in new_template_ids]
-        log.debug(f'Series[{series.id}].template_ids = {template_ids}')
-        series.templates = [template_map[id_] for id_ in new_template_ids]
+        templates = [template_map[id_] for id_ in new_template_ids]
+        series.assign_templates(templates, log=log)
         changed = True
 
     # Update each attribute of the Series object based on import
@@ -494,7 +380,7 @@ def import_blueprint(
             changed = True
 
     # Import Episode overrides
-    for episode_key, episode_blueprint in blueprint.episodes.items():
+    for episode_key, episode_blueprint in blueprint.blueprint.episodes.items():
         # Identify indices for this override
         if (indices := EPISODE_REGEX.match(episode_key)) is None:
             log.error(f'Cannot identify index of Episode override "{episode_key}"')
@@ -523,9 +409,8 @@ def import_blueprint(
             changed = True
 
         if (new_template_ids := episode_dict.pop('template_ids', [])):
-            template_ids = [template_map[id_].id for id_ in new_template_ids]
-            log.debug(f'Episode[{episode.id}].template_ids = {template_ids}')
-            episode.templates = [template_map[id_] for id_ in new_template_ids]
+            templates = [template_map[id_] for id_ in new_template_ids]
+            episode.assign_templates(templates, log=log)
             changed = True
 
         # All other attributes
@@ -535,6 +420,11 @@ def import_blueprint(
                 log.debug(f'Episode[{episode.id}].{attr} = {value}')
                 setattr(episode, attr, value)
                 changed = True
+
+    # Add ID to imported set
+    preferences = get_preferences()
+    preferences.imported_blueprints.add(blueprint.id)
+    preferences.commit()
 
     # Commit changes to Database
     if changed:
