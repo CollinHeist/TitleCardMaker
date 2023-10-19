@@ -64,6 +64,8 @@ async function getAllSeries(page=undefined) {
 
     return clone;
   });
+  // $('.loading.container').css('display', 'none');
+  $('.loading.container').transition('fade out');
   document.getElementById('series-list').replaceChildren(...allSeriesCards);
   $('#series-list .card').transition({animation: 'scale', interval: 15});
   $('.progress').progress({duration: 2000});
