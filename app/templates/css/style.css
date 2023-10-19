@@ -53,7 +53,7 @@ body > div:first-of-type {
 }
 #tcm-logo {
   /* Pad the entire width of the sidebar */
-  flex: 0 0 109px;
+  flex: 0 0 94px; /* 0 0 109px */
   /* Center logo horizontally */
   justify-content: center;
 }
