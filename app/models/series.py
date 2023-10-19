@@ -10,7 +10,7 @@ from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy.orm import Mapped, object_session, relationship
-from thefuzz.fuzz import partial_ratio
+from thefuzz.fuzz import partial_token_sort_ratio as partial_ratio # partial_ratio
 
 from app.database.session import Base
 from app.dependencies import get_preferences
@@ -202,7 +202,25 @@ class Series(Base):
 
 
     @hybrid_method
-    def fuzzy_matches(self, other: str, threshold: int = 70) -> bool:
+    def diff_ratio(self, other: str) -> int:
+        """
+        
+        """
+
+        return partial_ratio(self.name.lower(), other.lower())
+
+
+    @diff_ratio.expression
+    def diff_ratio(cls: 'Series', other: str) -> int:
+        """
+        
+        """
+
+        return func.partial_ratio(func.lower(cls.name), other.lower())
+
+
+    @hybrid_method
+    def fuzzy_matches(self, other: str, threshold: int = 85) -> bool:
         """
         Determine whether the given name's fuzzy Levenshtein Distance
         exceeds the given match threshold.
@@ -220,7 +238,7 @@ class Series(Base):
         return partial_ratio(self.name.lower(), other.lower()) >= threshold
 
     @fuzzy_matches.expression
-    def fuzzy_matches(cls: 'Series', other: str, threshold: int = 70):
+    def fuzzy_matches(cls: 'Series', other: str, threshold: int = 85):
         """Class-expression of the `fuzzy_matches` method."""
 
         return func.partial_ratio(

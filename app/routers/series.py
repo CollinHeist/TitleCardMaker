@@ -9,7 +9,7 @@ from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_pagination import paginate as paginate_sequence
 from requests import get
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.database.session import Page
@@ -196,7 +196,10 @@ def search_existing_series(
     # Generate conditions for the given arguments
     conditions = []
     if name is not None:
-        conditions.append(models.series.Series.fuzzy_matches(name))
+        conditions.append(or_(
+            models.series.Series.name.contains(name),
+            models.series.Series.fuzzy_matches(name),
+        ))
     if year is not None:
         conditions.append(models.series.Series.year==year)
     if monitored is not None:
@@ -210,7 +213,13 @@ def search_existing_series(
             .join(models.series.Series.templates)\
             .filter(models.template.Template.id==template_id))
 
-    # Query by all given conditions
+    # Query by all given conditions - if by name, sort by str difference
+    if name is not None:
+        return paginate(
+            db.query(models.series.Series).filter(*conditions)\
+                .order_by(models.series.Series.diff_ratio(name))
+        )
+
     return paginate(
         db.query(models.series.Series).filter(*conditions)\
             .order_by(func.lower(models.series.Series.name))

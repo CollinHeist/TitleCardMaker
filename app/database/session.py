@@ -14,7 +14,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.event import listens_for
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from thefuzz.fuzz import partial_ratio
+from thefuzz.fuzz import partial_token_sort_ratio as partial_ratio # partial_ratio
 
 from app.models.preferences import Preferences
 
