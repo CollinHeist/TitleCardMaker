@@ -123,7 +123,7 @@ function saveEpisodeConfig(episodeId) {
     contentType: 'application/json',
     data: JSON.stringify(updateEpisodeObject),
     success: () => {
-      $.toast({ class: 'blue info', title: 'Updated Episode'}),
+      showInfoToast('Updated Episode'),
       // Remove this ID from the array of edited Episodes
       editedEpisodeIds = editedEpisodeIds.filter(id => id !== episodeId);
     }, error: response => showErrorToast({title: 'Error Updating Episode', response}),
