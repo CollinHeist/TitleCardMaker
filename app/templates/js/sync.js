@@ -372,6 +372,13 @@ async function initAll() {
       event.preventDefault();
       // Turn form into object, turning multi selects into arrays
       let form = new FormData(event.target);
+
+      // Verify interface ID is present
+      if (!form.get('interface_id') || !form.get('name')) {
+        showErrorToast({title: 'Connection and Sync Name are Required'});
+        return;
+      }
+
       let dataObj = {};
       for (let [name, value] of [...form.entries()]) {
         if (name.includes('_tags') || name.includes('_libraries') || name === 'template_ids') {
