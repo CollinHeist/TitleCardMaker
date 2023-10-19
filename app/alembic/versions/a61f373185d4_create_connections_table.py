@@ -29,7 +29,7 @@ from modules.Debug import contextualize
 
 # revision identifiers, used by Alembic.
 revision = 'a61f373185d4'
-down_revision = '4d7cb48238be'
+down_revision = '25490125daaf'
 branch_labels = None
 depends_on = None
 

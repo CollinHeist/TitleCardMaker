@@ -12,6 +12,15 @@ Manually perform DB migrations (to latest revision)
 >>> alembic upgrade head
 Manually downgrade DB to specific version
 >>> alembic downgrade <target-revision>
+
+Schema Version History (oldest to newest):
+- 693dd5aa47cd
+- 65fd10d8732e
+- 0233f2608d72
+- 5861246a49f3
+- 4d7cb48238be
+- 25490125daaf
+- a61f373185d4
 """
 
 # this is the Alembic Config object, which provides
