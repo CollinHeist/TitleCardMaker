@@ -49,7 +49,7 @@
           <p class="help">API key to authenticate communication.</p>
         </div>
 
-        <div class="ui required field">
+        <div class="ui required field" data-value="username">
           <label>Username</label>
           <div data-value="username" class="ui compact selection dropdown">
             <input type="hidden" name="username">
@@ -69,11 +69,7 @@
         <div class="ui eight wide field">
           <label>Filesize Limit</label>
           <input name="filesize_limit" type="text" value="5 Megabytes">
-          <p class="help">
-            Maximum file size of Title Cards to upload.
-            <br>
-            Title Cards larger than this will be compressed.
-          </p>
+          <p class="help">Compress Title Cards larger than this when uploading.</p>
         </div>
 
         <div class="ui error message"></div>
@@ -127,6 +123,7 @@
           <input name="use_ssl" type="checkbox">
           <p class="help">Connect with HTTPS instead of HTTP.</p>
         </div>
+        <br>
 
         <div data-value="integrate_with_pmm" class="ui left aligned checkbox field">
           <label>Integrate with Plex Meta Manager</label>
@@ -138,9 +135,7 @@
           <label>Filesize Limit</label>
           <input name="filesize_limit" type="text" value="5 Megabytes">
           <p class="help">
-            Maximum file size of Title Cards to upload.
-            <br>
-            Title Cards larger than this will be compressed.
+            Compress Title Cards larger than this when uploading.
             <br>
             Plex rejects all images larger than 10 Megabytes.
           </p>
@@ -199,9 +194,10 @@
         </div>
         <br>
 
-        <div data-value="downloaded_only" class="ui left aligned checkbox field" data-tooltip="Whether to ignore Episodes that are not downloaded">
+        <div data-value="downloaded_only" class="ui left aligned checkbox field">
           <input name="downloaded_only" type="checkbox">
           <label>Query Downloaded Episodes Only</label>
+          <p class="help">Only get data for Episodes which are downloaded.</p>
         </div>
 
         <div class="ui eight wide field" data-value="libraries">
@@ -215,29 +211,35 @@
             <i class="exclamation icon"></i>
             Libraries can be added <i>after</i> the Connection is created
           </div>
-          <div class="three equal width fields">
-            <div class="ui required library field" data-value="media_server">
-              <label>Media Server</label>
-              <!-- Added asychronously -->
-            </div>
+          <div class="ui segment">
 
-            <div class="library field" data-value="library_name">
-              <label>Library Name</label> 
-              <!-- Added asynchronously -->
+            <div class="three equal width fields">
+              <div class="ui required library field" data-value="media_server">
+                <label>Media Server</label>
+                <p class="help">Which Server this library is associated with.</p>
+                <!-- Added asychronously -->
+              </div>
+  
+              <div class="library field" data-value="library_name">
+                <label>Library Name</label>
+                <p class="help">Name of the library to assign.</p>
+                <!-- Added asynchronously -->
+              </div>
+              
+              <div class="library field" data-value="library_path">
+                <label>Path</label>
+                <p class="help">Root directory of this library.</p>
+                <!-- Added asynchronously -->
+              </div>
             </div>
-            
-            <div class="library field" data-value="library_path">
-              <label>Path</label>
-              <!-- Added asynchronously -->
+            <div class="circular ui icon mini button" data-action="add-library">
+              <i class="plus square outline icon"></i>
+              Add Library
             </div>
-          </div>
-          <div class="circular ui icon mini button" data-action="add-library">
-            <i class="plus square outline icon"></i>
-            Add Library
-          </div>
-          <div class="circular ui icon mini button" data-action="query-libraries" data-tooltip="Attempt to auto-detect Sonarr libraries">
-            <i class="search icon"></i>
-            Auto-fill Libraries
+            <div class="circular ui icon mini button" data-action="query-libraries" data-tooltip="Attempt to auto-detect Sonarr libraries">
+              <i class="search icon"></i>
+              Auto-fill Libraries
+            </div>
           </div>
         </div>
 
