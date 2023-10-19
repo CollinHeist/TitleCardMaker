@@ -4,7 +4,7 @@ from typing import Optional, Union
 from titlecase import titlecase
 
 from app.schemas.card import CardTypeDescription, Extra, TitleCharacteristics
-from modules.ImageMaker import ImageMaker
+from modules.ImageMaker import ImageMaker, Dimensions
 
 
 CardDescription = CardTypeDescription
