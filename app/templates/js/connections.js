@@ -754,13 +754,18 @@ function addConnection(connectionType) {
   let formId = `new-connection${tempFormId}`
   template.querySelector('form').id = formId;
   tempFormId++;
-  // Disable library fields
+
+  // Make minor adjustments
   if (connectionType === 'sonarr') {
-    template.querySelector('.info.message').classList.remove('visible');
+    // Disable library fields
     template.querySelector('.button[data-action="add-library"]').classList.add('disabled');
     template.querySelector('.button[data-action="query-libraries"]').classList.add('disabled');
   } else if (connectionType === 'tmdb') {
+    // Disable dropdown until added
     template.querySelector('.field[data-value="logo_language_priority"]').classList.add('disabled');
+  } else if (connectionType === 'emby' || connectionType === 'jellyfin') {
+    // Remove username dropdown until added
+    template.querySelector('.field[data-value="username"]').remove();
   }
   // Turn save button into create
   template.querySelector('button[data-action="save"] > .visible.content').innerText = 'Create';
