@@ -474,11 +474,13 @@ def reschedule_task(
             update_schedule.minutes = 10
 
         # Reschedule with modified interval
-        log.debug(f'Task[{job.id}] rescheduled via {update_schedule.dict()}')
+        update_dict = update_schedule.dict()
+        update_dict.pop('crontab', None) # Remove crontab arg
+        log.debug(f'Task[{job.id}] rescheduled via {update_dict}')
         job = scheduler.reschedule_job(
             task_id,
             trigger='interval',
-            **update_schedule.dict(),
+            **update_dict,
         )
 
     return _scheduled_task_from_job(job, preferences)
