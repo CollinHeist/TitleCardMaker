@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 from app.database.query import get_connection
 
 from app.dependencies import (
-    get_emby_interfaces, get_jellyfin_interfaces, get_plex_interfaces, get_preferences,
-    get_sonarr_interfaces, get_tmdb_interfaces,
+    get_emby_interfaces, get_jellyfin_interfaces, get_plex_interfaces,
+    get_preferences, get_sonarr_interfaces, get_tmdb_interfaces,
 )
 from app.models.connection import Connection
 from app.models.preferences import Preferences
@@ -109,6 +109,12 @@ def add_connection(
     # Update global use_ attribute
     preferences = get_preferences()
     setattr(preferences, f'use_{connection.interface_type.lower()}', True)
+
+    # Assign global EDS if unset
+    if preferences.episode_data_source is None:
+        preferences.episode_data_source = connection.id
+        log.info(f'Set global Episode Data Source to {connection.log_str}')
+        preferences.commit(log=log)
 
     # Update InterfaceGroup
     if connection.enabled:
