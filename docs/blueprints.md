@@ -4,11 +4,11 @@
 
     This documentation is actively being developed.
 
-_Blueprints_ can be viewed as Templates on :material-needle: steroids. These are
-ready-made collections of cards configurations that apply to a single Series.
-Blueprints allow for importing a pre-made customization for a Series, including
-any applicable Named Fonts, Templates, Series options, _and_ Episode-specific
-overrides.
+_Blueprints_ can be viewed as amped-up Templates. These are ready-made
+collections of cards configurations that apply to a single Series. Blueprints
+allow for importing a pre-made customization for a Series, including any
+associated Named Fonts, Templates, Series options, Episode-specific overrides,
+and custom source files.
 
 ??? example "Example"
 

@@ -1,18 +1,19 @@
-from collections import namedtuple
 from logging import Logger
 from os import environ
 from pathlib import Path
 from re import findall
 from shlex import split as command_split
 from subprocess import Popen, PIPE, TimeoutExpired
-from typing import Literal, Optional
+from typing import Literal, NamedTuple, Optional
 
 from imagesize import get as im_get
 
 from modules.Debug import log
 
 
-Dimensions = namedtuple('Dimensions', ('width', 'height'))
+class Dimensions(NamedTuple):
+    width: float
+    height: float
 
 
 class ImageMagickInterface:

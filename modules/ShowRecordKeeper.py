@@ -8,6 +8,7 @@ from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 from modules import global_objects
 from modules.PersistentDatabase import PersistentDatabase
+from modules.Version import Version
 
 
 class ShowRecordKeeper:
@@ -51,9 +52,9 @@ class ShowRecordKeeper:
         self.records = PersistentDatabase(self.RECORD_DATABASE)
 
         # Read version of record database
-        version = database_directory / self.DATABASE_VERSION
-        if version.exists():
-            self.version = version.read_text()
+        version_file = database_directory / self.DATABASE_VERSION
+        if version_file.exists():
+            self.version = Version(version_file.read_text())
         else:
             self.version = global_objects.pp.version
 
@@ -63,7 +64,7 @@ class ShowRecordKeeper:
             log.debug(f'Deleted show record database, was version {self.version}')
 
         # Write current version to file
-        version.write_text(global_objects.pp.version)
+        version_file.write_text(str(global_objects.pp.version))
 
         # Read and log length
         log.info(f'Read {len(self.records)} show records')

@@ -27,6 +27,7 @@ from modules.TautulliInterface import TautulliInterface
 from modules.Template import Template
 from modules.TitleCard import TitleCard
 from modules.TMDbInterface import TMDbInterface
+from modules.Version import Version
 from modules.YamlReader import YamlReader
 
 YamlWriterSet = namedtuple(
@@ -67,14 +68,14 @@ class PreferenceParser(YamlReader):
             is_docker: Whether executing within a Docker container.
 
         Raises:
-            SystemExit (1) if any required YAML options are missing from
-                `file`.
+            SystemExit (1): Any required YAML options are missing from
+            `file`.
         """
 
         # Initialize parent YamlReader object - errors are critical
         super().__init__(log_function=log.critical)
         self.valid = True
-        self.version = self.VERSION_FILE.read_text().strip()
+        self.version = Version(self.VERSION_FILE.read_text().strip())
         self.is_docker = is_docker
 
         # Store and read file
@@ -108,7 +109,7 @@ class PreferenceParser(YamlReader):
         self.validate_fonts = True
         self.season_folder_format = self.DEFAULT_SEASON_FOLDER_FORMAT
         self.sync_specials = True
-        self.supported_language_codes = []
+        self.supported_language_codes = ['en']
 
         self.archive_directory = None
         self.create_archive = False
@@ -484,6 +485,7 @@ class PreferenceParser(YamlReader):
             self.sync_specials = value
 
         if (value := self.get('options', 'language_codes', type_=list)) is not None:
+            value = set(value) | set(('en', ))
             if all(code in SUPPORTED_LANGUAGE_CODES for code in value):
                 self.supported_language_codes = value
             else:
