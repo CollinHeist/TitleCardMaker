@@ -208,6 +208,18 @@ def get_available_tmdb_translations() -> list[TranslationLanguage]:
     ]
 
 
+@availablility_router.get('/logo-languages', status_code=200)
+def get_available_tmdb_logo_languages() -> list[dict]:
+    """
+    Get the list of available TMDb logo languages.
+    """
+
+    return [
+        {'name': key, 'value': value}
+        for key, value in TMDbInterface.LANGUAGES.items()
+    ]
+
+
 @availablility_router.get('/libraries/emby', status_code=200, tags=['Emby'])
 def get_emby_libraries(
         emby_interface: EmbyInterface = Depends(require_emby_interface),
