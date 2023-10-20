@@ -213,7 +213,8 @@ def search_existing_series(
             db.query(models.series.Series)\
                 .join(models.template.SeriesTemplates.series)\
                 .filter(models.template.SeriesTemplates.template_id==template_id)\
-                .filter(*conditions)
+                .filter(*conditions)\
+                .order_by(models.series.Series.sort_name)
         )
 
     # Query by all given conditions - if by name, sort by str difference
@@ -225,7 +226,7 @@ def search_existing_series(
 
     return paginate(
         db.query(models.series.Series).filter(*conditions)\
-            .order_by(func.lower(models.series.Series.name))
+            .order_by(func.lower(models.series.Series.sort_name))
     )
 
 
