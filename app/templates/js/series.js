@@ -621,9 +621,7 @@ async function getFileData(page=currentFilePage) {
     const image = document.getElementById('preview-image-template').content.cloneNode(true);
     if (source.exists) {
       image.querySelector('.dimmer .content').innerHTML = `<h4>Season ${source.season_number} Episode ${source.episode_number} (${source.source_file_name})</h4>`;
-      image.querySelector('img').src = source.source_url;
-    } else {
-      // ...
+      image.querySelector('img').src = `${source.source_url}?${source.filesize}`;
     }
 
     return image;
