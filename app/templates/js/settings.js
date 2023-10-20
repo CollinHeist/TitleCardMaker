@@ -149,6 +149,9 @@ async function initAll() {
         source_directory: {
           rules: [{type: 'empty', prompt: 'Source directory is required'}]
         },
+        episode_data_source: {
+          rules: [{type: 'empty', prompt: 'Episode Data Source is required'}]
+        },
         image_source_priority: {
           rules: [{type: 'minCount[1]', prompt: 'Select at least one Connection'}]
         },
