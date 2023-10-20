@@ -3,7 +3,7 @@ from typing import Optional, Union
 
 from titlecase import titlecase
 
-from modules.ImageMaker import ImageMaker
+from modules.ImageMaker import ImageMaker, Dimensions
 
 
 ImageMagickCommands = list[str]
