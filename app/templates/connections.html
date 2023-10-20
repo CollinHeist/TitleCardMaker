@@ -28,13 +28,14 @@
     <div class="content">
       <form class="ui fluid form" form-type="emby">
         <div data-value="enabled" class="ui left aligned checkbox field">
-          <input name="enabled" type="checkbox" checked="">
+          <input name="enabled" type="checkbox">
           <label>Enabled</label>
         </div>
 
         <div class="ui required eight wide field">
           <label>Connection Name</label>
-          <input name="name" type="text" placeholder="My Server">
+          <input name="name" type="text" placeholder="Server">
+          <p class="help">Name of this Connection within TCM.</p>
         </div>
 
         <div class="ui required eight wide field">
@@ -97,18 +98,19 @@
     <div class="content">
       <form class="ui fluid form" form-type="plex">
         <div data-value="enabled" class="ui left aligned checkbox field">
-          <input name="enabled" type="checkbox" checked="">
           <label>Enabled</label>
+          <input name="enabled" type="checkbox">
         </div>
 
         <div class="ui required eight wide field">
           <label>Connection Name</label>
-          <input name="name" type="text" placeholder="Plex Server">
+          <input name="name" type="text" placeholder="Server">
+          <p class="help">Name of this Connection within TCM.</p>
         </div>
 
         <div class="ui required eight wide field">
           <label>URL</label>
-          <input name="url" type="text" placeholder="http://192.168.0.1:32400/">
+          <input name="url" type="text" placeholder="http://localhost:32400/">
           <p class="help">Host URL or IP Address of the server (including the port number).</p>
         </div>
 
@@ -166,18 +168,19 @@
     <div class="content">
       <form class="ui fluid form" form-type="sonarr">
         <div data-value="enabled" class="ui left aligned checkbox field">
-          <input name="enabled" type="checkbox" checked="">
           <label>Enabled</label>
+          <input name="enabled" type="checkbox">
         </div>
 
         <div class="ui required eight wide field">
           <label>Connection Name</label>
-          <input name="name" type="text" placeholder="Sonarr Server">
+          <input name="name" type="text" placeholder="Sonarr">
+          <p class="help">Name of this Connection within TCM.</p>
         </div>
 
         <div class="ui required eight wide field">
           <label>URL</label>
-          <input name="url" type="text" placeholder="http://192.168.0.1:8989/">
+          <input name="url" type="text" placeholder="http://localhost:8989/">
           <p class="help">Host URL or IP Address of the server (including the port number).</p>
         </div>
 
@@ -268,13 +271,14 @@
     <div class="content">
       <form class="ui fluid form" form-type="plex">
         <div data-value="enabled" class="ui left aligned checkbox field">
-          <input name="enabled" type="checkbox" checked="">
           <label>Enabled</label>
+          <input name="enabled" type="checkbox">
         </div>
 
         <div data-value="name" class="ui required eight wide field">
           <label>Connection Name</label>
-          <input name="name" type="text" placeholder="TMDb">
+          <input name="name" type="text" placeholder="TMDb" value="TMDb">
+          <p class="help">Name of this Connection within TCM.</p>
         </div>
 
         <div data-value="api_key" class="ui required eight wide field">
