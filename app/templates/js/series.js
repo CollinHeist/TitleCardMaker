@@ -175,7 +175,7 @@ async function initalizeSeriesConfig() {
           return {
             name: name,
             text: `${name} (${serverName})`,
-            value: `${interface}:${interface_id}:${name}`,
+            value: `${interface}::${interface_id}::${name}`,
             description: serverName,
             descriptionVertical: true,
             selected: {{series.libraries|safe}}.some(library => library.interface_id === interface_id && library.name === name),
@@ -1022,7 +1022,7 @@ async function initAll() {
       }
       if (key === 'libraries' && value != '') {
         libraries = value.split(',').map(libraryStr => {
-          const libraryData = libraryStr.split(':');
+          const libraryData = libraryStr.split('::');
           return {interface: libraryData[0], interface_id: libraryData[1], name: libraryData[2]};
         });
         form.delete('libraries');
