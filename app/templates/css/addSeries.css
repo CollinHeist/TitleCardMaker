@@ -22,7 +22,7 @@
 .card .multi.image {
   /* Make sure multi image backgrounds are scaled down */
   background-size: 100% 100% !important;
-  max-height: 225px;
+  /* max-height: 225px; */
 }
 .card .multi.image * {
   -webkit-transition: all 0.4s ease;
