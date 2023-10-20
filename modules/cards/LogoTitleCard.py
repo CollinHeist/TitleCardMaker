@@ -5,7 +5,6 @@ from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.CleanPath import CleanPath
 from modules.Debug import log
 
-SeriesExtra = Optional
 
 class LogoTitleCard(BaseCardType):
     """
@@ -78,14 +77,14 @@ class LogoTitleCard(BaseCardType):
             episode_number: int = 1,
             blur: bool = False,
             grayscale: bool = False,
-            logo: SeriesExtra[str] = None,
-            background: SeriesExtra[str] = 'black',
-            separator: SeriesExtra[str] = '•', 
-            stroke_color: SeriesExtra[str] = 'black',
-            omit_gradient: SeriesExtra[bool] = True,
-            use_background_image: SeriesExtra[bool] = False,
-            blur_only_image: SeriesExtra[bool] = False,
-            preferences: 'Preferences' = None,
+            logo: Optional[str] = None,
+            background: str = 'black',
+            separator: str = '•', 
+            stroke_color: str = 'black',
+            omit_gradient: bool = True,
+            use_background_image: bool = False,
+            blur_only_image: bool = False,
+            preferences: 'Preferences' = None, # type: ignore
             **unused,
         ) -> None:
         """
@@ -165,10 +164,6 @@ class LogoTitleCard(BaseCardType):
     @property
     def index_commands(self) -> ImageMagickCommands:
         """Subcommand for adding the index text to the source image."""
-
-        Returns:
-            List of ImageMagick commands.
-        """
 
         # Sub-command for adding season/episode text
         if self.hide_season_text:
