@@ -203,12 +203,7 @@ class LogoTitleCard(BaseCardType):
 
     @property
     def index_commands(self) -> ImageMagickCommands:
-        """
-        Subcommand for adding the index text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand for adding the index text to the source image."""
 
         # All index text is disabled, return blank command
         if self.hide_season_text and self.hide_episode_text:

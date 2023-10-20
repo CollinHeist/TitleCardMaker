@@ -141,13 +141,8 @@ class FrameTitleCard(BaseCardType):
 
 
     @property
-    def _title_font_attributes(self) -> list[str]:
-        """
-        Subcommands for the font attributes of title text.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+    def _title_font_attributes(self) -> ImageMagickCommands:
+        """Subcommands for the font attributes of title text."""
 
         title_size = 125 * self.font_size
         interline_spacing = -45 + self.font_interline_spacing
@@ -166,13 +161,8 @@ class FrameTitleCard(BaseCardType):
 
 
     @property
-    def _index_font_attributes(self) -> list[str]:
-        """
-        Subcommand for the font attributes of the index text.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+    def _index_font_attributes(self) -> ImageMagickCommands:
+        """Subcommand for the font attributes of the index text."""
 
         return [
             f'-background transparent',
@@ -187,9 +177,6 @@ class FrameTitleCard(BaseCardType):
         """
         Subcommand for adding all text. This includes the title, season,
         and episode text.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         # Command to add only the title to the source image

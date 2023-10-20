@@ -190,9 +190,6 @@ class AnimeTitleCard(BaseCardType):
         ImageMagick commands to implement the title text's global
         effects. Specifically the the font, kerning, fontsize, and
         southwest gravity.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         kerning = 2.0 * self.font_kerning
@@ -213,9 +210,6 @@ class AnimeTitleCard(BaseCardType):
     def __title_text_black_stroke(self) -> ImageMagickCommands:
         """
         ImageMagick commands to implement the title text's black stroke.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         # No stroke, return empty command
@@ -233,13 +227,7 @@ class AnimeTitleCard(BaseCardType):
 
     @property
     def __title_text_effects(self) -> ImageMagickCommands:
-        """
-        ImageMagick commands to implement the title text's standard
-        effects.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommands to implement the title text's standard effects."""
 
         return [
             f'-fill "{self.font_color}"',
@@ -251,11 +239,8 @@ class AnimeTitleCard(BaseCardType):
     @property
     def __series_count_text_global_effects(self) -> ImageMagickCommands:
         """
-        ImageMagick commands for global text effects applied to all
-        series count text (season/episode count and dot).
-
-        Returns:
-            List of ImageMagick commands.
+        Subcommands for global text effects applied to all series count
+        text (season/episode count and dot).
         """
 
         return [
@@ -270,11 +255,8 @@ class AnimeTitleCard(BaseCardType):
     @property
     def __series_count_text_black_stroke(self) -> ImageMagickCommands:
         """
-        ImageMagick commands for adding the necessary black stroke
-        effects to series count text.
-
-        Returns:
-            List of ImageMagick commands.
+        Subcommands for adding the necessary black stroke effects to
+        series count text.
         """
 
         return [
@@ -286,12 +268,7 @@ class AnimeTitleCard(BaseCardType):
 
     @property
     def title_text_command(self) -> ImageMagickCommands:
-        """
-        Subcommand for adding title text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommands for adding title text to the source image."""
 
         # Base offset for the title text
         base_offset = 175 + self.font_vertical_shift
@@ -331,9 +308,6 @@ class AnimeTitleCard(BaseCardType):
     def index_text_command(self) -> ImageMagickCommands:
         """
         Subcommand for adding the index text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         # Hiding all index text, return blank commands
