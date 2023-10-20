@@ -163,9 +163,8 @@ class LogoTitleCard(BaseCardType):
 
 
     @property
-    def index_command(self) -> ImageMagickCommands:
-        """
-        Subcommand for adding the index text to the source image.
+    def index_commands(self) -> ImageMagickCommands:
+        """Subcommand for adding the index text to the source image."""
 
         Returns:
             List of ImageMagick commands.

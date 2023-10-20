@@ -124,12 +124,7 @@ class OverlineTitleCard(BaseCardType):
 
     @property
     def gradient_commands(self) -> ImageMagickCommands:
-        """
-        Subcommand to add the gradient overlay to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand to add the gradient overlay to the image."""
 
         if self.omit_gradient:
             return []
@@ -142,12 +137,7 @@ class OverlineTitleCard(BaseCardType):
 
     @property
     def title_text_commands(self) -> ImageMagickCommands:
-        """
-        Subcommand for adding title text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand for adding title text to the image."""
 
         # No title text, or not being shown
         if len(self.title_text) == 0:
@@ -184,12 +174,7 @@ class OverlineTitleCard(BaseCardType):
 
     @property
     def index_text_commands(self) -> ImageMagickCommands:
-        """
-        Subcommands for adding index text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommands for adding index text to the source image."""
 
         # If not showing index text, return
         if self.hide_season_text and self.hide_episode_text:

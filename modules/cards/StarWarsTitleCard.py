@@ -109,12 +109,7 @@ class StarWarsTitleCard(BaseCardType):
 
     @property
     def title_text_command(self) -> ImageMagickCommands:
-        """
-        ImageMagick commands to add the episode title text to an image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommands to add the episode title text to an image."""
 
         size = 124 * self.font_size
         interline_spacing = 20 + self.font_interline_spacing
@@ -133,12 +128,7 @@ class StarWarsTitleCard(BaseCardType):
 
     @property
     def episode_text_command(self) -> ImageMagickCommands:
-        """
-        ImageMagick commands to add the episode text to an image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommands to add the episode text to an image."""
 
         # Hiding episode text, return blank command
         if self.hide_episode_text:

@@ -241,12 +241,7 @@ class ComicBookTitleCard(BaseCardType):
 
     @property
     def title_text_commands(self) -> ImageMagickCommands:
-        """
-        Get the ImageMagick commands required to add the title text.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommands required to add the title text."""
 
         # If no title text, return empty commands
         if len(self.title_text) == 0:
@@ -277,14 +272,7 @@ class ComicBookTitleCard(BaseCardType):
 
     @property
     def title_text_box_commands(self) -> ImageMagickCommands:
-        """
-        Get the ImageMagick commands required to add the title text box
-        (if indicated).
-
-        Returns:
-            List of ImageMagick comands. Empty list if title text is
-            hidden.
-        """
+        """Subcommands required to add the title text box."""
 
         # No index text, return empty commands
         if len(self.title_text) == 0:
@@ -360,13 +348,7 @@ class ComicBookTitleCard(BaseCardType):
 
     @property
     def index_text_commands(self) -> ImageMagickCommands:
-        """
-        Get the ImageMagick commands required to add the index text.
-
-        Returns:
-            List of ImageMagick comands. Empty list if all index text is
-            hidden.
-        """
+        """Subcommands required to add the index text."""
 
         # No index text, return empty commands
         if self.hide_season_text and self.hide_episode_text:
@@ -416,12 +398,8 @@ class ComicBookTitleCard(BaseCardType):
     @property
     def index_text_box_commands(self) -> ImageMagickCommands:
         """
-        Get the ImageMagick commands required to add the index text box
-        and the bottom fill rectangle (if indicated).
-
-        Returns:
-            List of ImageMagick comands. Empty list if all index text is
-            hidden.
+        Subcommands required to add the index text box and the bottom
+        fill rectangle.
         """
 
         # No index text, return empty commands

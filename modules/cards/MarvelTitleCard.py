@@ -130,12 +130,7 @@ class MarvelTitleCard(BaseCardType):
 
     @property
     def title_text_commands(self) -> ImageMagickCommands:
-        """
-        Subcommand for adding title text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand for adding title text to the source image."""
 
         # No title text, or not being shown
         if len(self.title_text) == 0:
@@ -312,12 +307,7 @@ class MarvelTitleCard(BaseCardType):
 
     @property
     def border_commands(self) -> ImageMagickCommands:
-        """
-        Subcommands to add the border to the image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommands to add the border to the image."""
 
         # Border is not being shown, skip
         if self.hide_border:
@@ -347,12 +337,7 @@ class MarvelTitleCard(BaseCardType):
 
     @property
     def bottom_border_commands(self) -> ImageMagickCommands:
-        """
-        Subcommands to add the bottom border to the image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommands to add the bottom border to the image."""
 
         rectangle = Rectangle(
             Coordinate(0, self.HEIGHT - self.text_box_height),

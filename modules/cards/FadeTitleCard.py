@@ -137,12 +137,7 @@ class FadeTitleCard(BaseCardType):
 
     @property
     def add_logo(self) -> ImageMagickCommands:
-        """
-        Subcommand to add the logo file to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand to add the logo file to the source image."""
 
         # No logo indicated, return blank command
         if self.logo is None or not self.logo.exists():
@@ -159,12 +154,7 @@ class FadeTitleCard(BaseCardType):
 
     @property
     def add_title_text(self) -> ImageMagickCommands:
-        """
-        Subcommand to add the title text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand to add the title text to the source image."""
 
         # No title, return blank command
         if len(self.title_text) == 0:
@@ -189,12 +179,7 @@ class FadeTitleCard(BaseCardType):
 
     @property
     def add_index_text(self) -> ImageMagickCommands:
-        """
-        Subcommand to add the index text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand to add the index text to the source image."""
 
         # No season or episode text, return blank command
         if len(self.index_text) == 0:

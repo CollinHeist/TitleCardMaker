@@ -116,12 +116,7 @@ class WhiteBorderTitleCard(BaseCardType):
 
     @property
     def title_text_commands(self) -> ImageMagickCommands:
-        """
-        Subcommand for adding title text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand for adding title text to the image."""
 
         # No title text
         if len(self.title_text) == 0:
@@ -150,12 +145,7 @@ class WhiteBorderTitleCard(BaseCardType):
 
     @property
     def index_text_commands(self) -> ImageMagickCommands:
-        """
-        Subcommand for adding index text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand for adding index text to the source image."""
 
         if self.hide_season_text and self.hide_episode_text:
             return []
