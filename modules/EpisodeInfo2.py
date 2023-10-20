@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Optional, Union
+from typing import Optional, TypedDict, Union
 
 from num2words import num2words
 from plexapi.video import Episode as PlexEpisode
@@ -11,6 +11,26 @@ from modules.Debug import log
 from modules.DatabaseInfoContainer import DatabaseInfoContainer
 from modules.Title import Title
 
+
+class EpisodeDatabaseIDs(TypedDict): # pylint: disable=missing-class-docstring
+    emby_id: int
+    imdb_id: str
+    jellyfin_id: str
+    tmdb_id: int
+    tvdb_id: int
+    tvrage_id: int
+
+class EpisodeCharacteristics(TypedDict, total=False): # pylint: disable=missing-class-docstring
+    season_number: int
+    episode_number: int
+    absolute_number: Optional[int]
+    absolute_episode_number: int
+    airdate: Optional[datetime]
+
+class EpisodeIndices(TypedDict): # pylint: disable=missing-class-docstring
+    season_number: int
+    episode_number: int
+    absolute_number: Optional[int]
 
 class WordSet(dict):
     """
@@ -229,10 +249,18 @@ class EpisodeInfo(DatabaseInfoContainer):
         present.
         """
 
+        # Get fallback absolute number
+        if self.absolute_number is None:
+            absolute_episode = self.episode_number
+        else:
+            absolute_episode = self.absolute_number
+
+        # Add words for the season, episode, absolute, and fallback abs numbers
         number_sets = (
             ('season_number', self.season_number),
             ('episode_number', self.episode_number),
-            ('absolute_number', self.absolute_number)
+            ('absolute_number', self.absolute_number),
+            ('absolute_episode_number', absolute_episode),
         )
 
         for lang in self.__languages:
@@ -289,7 +317,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     @property
-    def ids(self) -> dict[str, Any]:
+    def ids(self) -> EpisodeDatabaseIDs:
         """This object's ID's (as a dictionary)"""
 
         return {
@@ -303,7 +331,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     @property
-    def characteristics(self) -> dict[str, Union[int, str, None]]:
+    def characteristics(self) -> EpisodeCharacteristics:
         """
         Get the characteristics of this object for formatting.
 
@@ -313,17 +341,23 @@ class EpisodeInfo(DatabaseInfoContainer):
             ordinal form.
         """
 
+        if self.absolute_number is None:
+            effective_absolute = self.episode_number
+        else:
+            effective_absolute = self.absolute_number
+
         return {
             'season_number': self.season_number,
             'episode_number': self.episode_number,
             'absolute_number': self.absolute_number,
+            'absolute_episode_number': effective_absolute,
             'airdate': self.airdate,
             **self.word_set,
         }
 
 
     @property
-    def indices(self) -> dict[str, Optional[int]]:
+    def indices(self) -> EpisodeIndices:
         """This object's season/episode indices (as a dictionary)"""
 
         return {
