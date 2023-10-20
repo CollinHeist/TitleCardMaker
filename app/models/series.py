@@ -1,5 +1,5 @@
 from pathlib import Path
-from re import sub as re_sub, IGNORECASE
+from re import sub as regex_replace, IGNORECASE
 from typing import Any
 
 from sqlalchemy import (
@@ -20,11 +20,6 @@ from modules.SeriesInfo import SeriesInfo
 
 
 INTERNAL_ASSET_DIRECTORY = Path(__file__).parent.parent / 'assets'
-
-def regex_replace(pattern, replacement, string):
-    """Perform a Regex replacement with the given arguments"""
-
-    return re_sub(pattern, replacement, string, IGNORECASE)
 
 
 # pylint: disable=no-self-argument,comparison-with-callable
@@ -192,7 +187,9 @@ class Series(Base):
             removed.
         """
 
-        return regex_replace(r'^(a|an|the)(\s)', '', self.name.lower())
+        return regex_replace(
+            r'^(a|an|the)(\s)', '', self.name.lower(), flags=IGNORECASE
+        )
 
     @sort_name.expression
     def sort_name(cls: 'Series'):
