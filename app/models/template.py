@@ -1,7 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 from re import match as re_match
-from typing import Any, Optional
+from typing import Any, Callable, Literal, Optional, TypedDict
 
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, JSON
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -21,7 +21,7 @@ DATETIME_FORMAT = '%Y-%m-%d'
 Dictionary of Operation keywords to the corresponding Operation function
 """
 lower_str = lambda v: str(v).lower() # pylint: disable=unnecessary-lambda-assignment
-OPERATIONS = {
+OPERATIONS: dict[str, Callable[[Any, Any], bool]] = {
     'is true': lambda v, r: bool(v),
     'is false': lambda v, r: not bool(v),
     'is null': lambda v, r: v is None,
@@ -33,6 +33,7 @@ OPERATIONS = {
     'ends with': lambda v, r: lower_str(v).endswith(lower_str(r)),
     'does not end with': lambda v, r: not lower_str(v).endswith(lower_str(r)),
     'contains': lambda v, r: r in v,
+    'does not contain': lambda v, r: r not in v,
     'matches': lambda v, r: bool(re_match(r, v)),
     'does not match': lambda v, r: not bool(re_match(r, v)),
     'is less than': lambda v, r: float(v) < float(r),
@@ -99,6 +100,11 @@ class SyncTemplates(Base):
 """
 Table for the Template SQL objects themselves.
 """
+class Filter(TypedDict):
+    argument: Literal[ARGUMENT_KEYS]
+    operation: Literal[tuple(OPERATIONS.keys())]
+    reference: Optional[str]
+
 class Template(Base):
     """
     SQL Table that defines a Template. This contains Filters, Card
@@ -132,7 +138,11 @@ class Template(Base):
     episodes = association_proxy('_episodes', 'episode')
 
     name = Column(String, nullable=False)
-    filters = Column(MutableList.as_mutable(JSON), default=[], nullable=False)
+    filters: list[Filter] = Column(
+        MutableList.as_mutable(JSON),
+        default=[],
+        nullable=False,
+    )
 
     card_filename_format = Column(String, default=None)
     episode_data_source = Column(String, default=None)
