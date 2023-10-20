@@ -17,6 +17,8 @@ Modify Sync table:
   be tied to an existing Connection.
 Modify Template table:
 - Turn episode_data_source column into data_source column
+- Convert server-type specific library filter conditions into agnostic
+  library "contains" conditions
 
 Revision ID: a61f373185d4
 Revises: 4d7cb48238be
@@ -92,6 +94,7 @@ class Template(Base):
     id = sa.Column(sa.Integer, primary_key=True)
     # Existing Columns for migrating
     episode_data_source = sa.Column(sa.String)
+    filters = sa.Column(MutableList.as_mutable(sa.JSON), default=[], nullable=False)
     # New column(s)
     data_source_id = sa.Column(sa.Integer, sa.ForeignKey('connection.id'), default=None)
 
@@ -297,6 +300,35 @@ def upgrade() -> None:
 
         if template.data_source_id:
             log.debug(f'Initialized Template[{template.id}].data_source_id = {template.data_source_id}')
+
+    # Migrate Template library filter conditions
+    for template in session.query(Template).all():
+        for filter_ in template.filters:
+            arg, op_ = filter_['argument'], filter_['operation']
+            if not arg.startswith('Series Library Name'):
+                continue
+
+            # Convert Filter argument
+            filter_['argument'] = 'Series Library Names'
+            log.debug(f'Converting Template[{template.id}] Filter argument '
+                      f'"{arg}" to "Series Library Names"')
+
+            # Convert Filter operation to list-equivalent (or log if impossible)
+            if op_ == 'equals':
+                filter_['operation'] = 'contains'
+                log.debug(f'Converting Template[{template.id}] Filter '
+                          f'operation "{op_}" to "contains"')
+            elif op_ == 'does not equal':
+                filter_['operation'] = 'does not contain'
+                log.debug(f'Converting Template[{template.id}] Filter '
+                          f'operation "{op_}" to "does not contain"')
+            elif op_ in ('starts with', 'does not start with', 'matches',
+                         'does not match'):
+                log.error(f'Cannot convert Template[{template.id}] Filter '
+                          f'operation "{op_}"')
+            else:
+                log.warning(f'Not converting Template[{template.id}] Filter '
+                            f'operation "{op_}"')
 
     # Commit changes
     session.commit()

@@ -1,7 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 from re import match as re_match
-from typing import Any, Optional
+from typing import Any, Callable, Optional, TypedDict
 
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, JSON
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -21,7 +21,7 @@ DATETIME_FORMAT = '%Y-%m-%d'
 Dictionary of Operation keywords to the corresponding Operation function
 """
 lower_str = lambda v: str(v).lower() # pylint: disable=unnecessary-lambda-assignment
-OPERATIONS = {
+OPERATIONS: dict[str, Callable[[Any, Any], bool]] = {
     'is true': lambda v, r: bool(v),
     'is false': lambda v, r: not bool(v),
     'is null': lambda v, r: v is None,
@@ -47,10 +47,9 @@ OPERATIONS = {
 """Supported Argument keywords."""
 ARGUMENT_KEYS = (
     'Series Name', 'Series Year', 'Number of Seasons',
-    'Series Library Name (Emby)', 'Series Library Name (Jellyfin)',
-    'Series Library Name (Plex)', 'Series Logo', 'Episode is Watched',
-    'Season Number', 'Episode Number', 'Absolute Number', 'Episode Title',
-    'Episode Title Length', 'Episode Airdate',
+    'Series Library Names', 'Series Logo', 'Episode is Watched',
+    'Season Number', 'Episode Number', 'Absolute Number',
+    'Episode Title', 'Episode Title Length', 'Episode Airdate',
 )
 
 """
@@ -263,7 +262,6 @@ class Template(Base):
         Returns:
             True if the given objects meet all of Template's filter
             conditions, or if there are no filters. False otherwise.
-
         """
 
         # This Template has no filters, return True
@@ -271,14 +269,13 @@ class Template(Base):
             return True
 
         # Arguments for this Series and Episode
+        library_names = [library['name'] for library in series.libraries]
         SERIES_ARGUMENTS = {
             'Series Name': series.name,
             'Series Year': series.year,
-            'Number of Seasons': series.number_of_seasons,
-            'Series Library Name (Emby)': series.emby_library_name,
-            'Series Library Name (Jellyfin)': series.jellyfin_library_name,
-            'Series Library Name (Plex)': series.plex_library_name,
+            'Series Library Names': library_names,
             'Series Logo': series.get_logo_file(preferences.source_directory),
+            'Number of Seasons': series.number_of_seasons,
         }
         if episode is None:
             ARGUMENTS = SERIES_ARGUMENTS
