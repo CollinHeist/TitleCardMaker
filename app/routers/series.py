@@ -209,9 +209,12 @@ def search_existing_series(
     if sync_id is not None:
         conditions.append(models.series.Series.sync_id==sync_id)
     if template_id is not None:
-        return paginate(db.query(models.series.Series)\
-            .join(models.series.Series.templates)\
-            .filter(models.template.Template.id==template_id))
+        return paginate(
+            db.query(models.series.Series)\
+                .join(models.template.SeriesTemplates.series)\
+                .filter(models.template.SeriesTemplates.template_id==template_id)\
+                .filter(*conditions)
+        )
 
     # Query by all given conditions - if by name, sort by str difference
     if name is not None:
