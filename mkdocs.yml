@@ -1,5 +1,5 @@
 site_name: TitleCardMaker
-site_url: https://titlecardmaker.readthedocs.io
+site_url: https://titlecardmaker.readthedocs.io/en/latest/
 site_author: Collin Heist
 site_description: >-
   Automated title card creator for Plex, Emby, and Jellyfin.
