@@ -1,7 +1,7 @@
 ---
 title: Creating a Font
 description: >
-    An introduction to creating and using custom Fonts in TitleCardMaker.
+    An introduction to creating and using custom Fonts.
 ---
 
 # Creating a Font
