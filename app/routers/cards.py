@@ -83,7 +83,7 @@ def create_preview_card(
     card_settings = TieredSettings.new_settings(
         {'series_full_name': 'Test Series', 'season_number': 1, 'episode_number': 1},
         {'hide_season_text': False, 'hide_episode_text': False},
-        {'logo_file': preferences.INTERNAL_ASSET_DIRECTORY / 'logo512.png'},
+        {'logo_file': preferences.INTERNAL_ASSET_DIRECTORY / 'logo.png'},
         DefaultFont,
         preferences.card_properties,
         font_template_dict,
