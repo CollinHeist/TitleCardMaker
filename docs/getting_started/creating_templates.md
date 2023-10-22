@@ -1,3 +1,10 @@
+---
+title: Getting Started - Creating Templates
+description: >
+    An introduction to how Templates can be used to adjust the settings of
+    multiple Series at once.
+---
+
 # Creating Templates
 
 ## Background
@@ -17,7 +24,7 @@ apply these Templates automatically with a [Sync](./first_sync/index.md).
 
 ## Instructions
 
-1. Navigate to the Template page by clicking :fontawesome-solid-layer-group:
+1. Navigate to the Template page by clicking :fontawesome-regular-clone:
 `Templates` from the side navigation bar.
 
 2. Create a new Template by clicking the `Create a New Template` button.

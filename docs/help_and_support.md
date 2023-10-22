@@ -1,3 +1,9 @@
+---
+title: Issue Support
+description: >
+    How to get help an issue or make a suggestion.
+---
+
 # Help & Support
 
 Encountered an issue, found a typo, or have a feature suggestion? The best way

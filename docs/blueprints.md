@@ -1,3 +1,10 @@
+---
+title: ":fontawesome-solid-sitemap: Blueprints"
+description: >
+    Pre-made collections of Card configurations that include Fonts, Templates,
+    and card settings to be easily imported at the click of a button.
+---
+
 # Blueprints
 
 !!! warning "Under Construction"

@@ -1,3 +1,10 @@
+---
+title: Welcome to TitleCardMaker
+description: >
+    A program that automates the creation and customization of Title Cards for
+    use in personal media server services like Plex, Jellyfin, or Emby.
+---
+
 # Welcome to TitleCardMaker
 TitleCardMaker is a program and Docker container written in Python that
 automates the creation of customized title cards for use in personal media

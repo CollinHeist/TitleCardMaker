@@ -1,3 +1,9 @@
+---
+title: Getting Started - Creating Title Cards
+description: >
+    Wrapping up the tutorial with Title Card creation.
+---
+
 # Creating Title Cards
 
 ## Background
