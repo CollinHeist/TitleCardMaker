@@ -389,15 +389,15 @@ class LogoTitleCard(BaseCardType):
             f'convert',
             # Add background image or color
             *background_command,
+            # Optionally overlay gradient
+            *gradient_command,
+            # Apply style that is applicable to entire image
+            *style_command,
             # Overlay resized logo
             f'"{resized_logo.resolve()}"',
             f'-gravity north',
             f'-geometry "+0+{offset}"',
             f'-composite',
-            # Optionally overlay gradient
-            *gradient_command,
-            # Apply style that is applicable to entire image
-            *style_command,
             # Global title text options
             f'-gravity south',
             f'-font "{self.font_file}"',
