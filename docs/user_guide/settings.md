@@ -1,3 +1,9 @@
+---
+title: Settings
+description: >
+    In-depth descriptions of all global settings.
+---
+
 # Settings
 
 !!! warning "Under Construction"
