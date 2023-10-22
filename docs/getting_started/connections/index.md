@@ -1,7 +1,8 @@
 ---
 title: Configuring Connections
 description: >
-    Add connections to external services like Plex, Sonarr, Tautulli, or TMDb.
+    Add connections to external services like Emby, Jellyfin, Plex, Sonarr,
+    Tautulli, and TMDb.
 ---
 
 # Configuring Connections
