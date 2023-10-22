@@ -1,3 +1,10 @@
+---
+title: Importing from Version 1
+description: >
+    Importing YAML global settings and Series customizations from version 1
+    (the non-UI) of TitleCardMaker.
+---
+
 # Import TitleCardMaker YAML Settings
 ## Background
 

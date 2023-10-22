@@ -1,5 +1,5 @@
 ---
-title: Getting Started - The Scheduler
+title: The Scheduler
 description: >
     The basics of the schedulable Tasks which perform the primary duties of
     TitleCardMaker.

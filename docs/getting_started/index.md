@@ -1,3 +1,10 @@
+---
+title: Getting Started
+description: >
+    Acquaint yourself with the basics of TitleCardMaker - from installation to
+    Title Card creation.
+---
+
 # Getting Started
 
 This tutorial is designed to walk you through all of the basics of using

@@ -1,3 +1,10 @@
+---
+title: Connecting to Tautulli
+description: >
+    How to connect enable the Tautulli Integration in order to trigger immediate
+    Title Card creation when Episodes are watched or added to Plex.
+---
+
 # Tautulli
 
 !!! info "Optional Step"
@@ -21,6 +28,7 @@
     triggers for newly added content, not on watch-statuses.
 
 1. Click the `Create Notification Agent` button.
+
 2. In the launched window, enter the _root_ URL to your instance of Tautulli.
 
     ??? example "Example URL"
@@ -30,7 +38,9 @@
 
 3. Open the Tautull WebUI, and navigate to the Settings by clicking the 
 :fontawesome-solid-gears: Gear icon in the top right.
+
 4. From the left navigation bar, open the `Web Interface` settings.
+
 5. Scroll to the bottom, and ensure the `Enable API` checkbox is checked, then
 show and copy the generated API key.
 
@@ -41,12 +51,16 @@ show and copy the generated API key.
 
 6. Back within TitleCardMaker, paste the API key from Step 5 into the API key
 input box.
+
 7. Enter some descriptive name (or leave the default), and then click the
 `Create Agent` button.
+
 8. Open Plex (on a computer) and navigate to your server settings via the
 :material-wrench-outline: Wrench icon in the top right corner.
+
 9. From the left navigation bar, scroll down to `Library` under the `Settings`
 section and take note of your `Video Played Threshold` setting.
+
 10. Back in Tautulli, open the `General` settings from the sidebar, and find the
 `TV Episode Watched Percent` setting. Set this to 1-2% _higher_ than the Plex
 setting from Step 9.
@@ -62,3 +76,9 @@ setting from Step 9.
         seconds of finishing an Episode) - it is imperative that Tautulli
         triggers TCM to update a Title Card _after_ an Episode's watch-status
         has had time to update within Plex.
+
+Once created, you can close the box within TCM. Unlike the other Connections,
+your Tautulli connection details __will not__ are stored (and so will not
+appear) in TCM - this is because TCM only submits API requests to Tautulli which
+create an agent. Afterwards, it is Tautulli that sends data to TCM and so no
+active connection is required.

@@ -1,14 +1,22 @@
+---
+title: Syncing from Emby
+description: >
+    Creating a Sync to automatically add Series from Emby to TitleCardMaker.
+---
+
 # Syncing from Emby
 
 !!! note "Example Series"
 
-    For this tutorial, I'll be referring to _Better Call Saul_ and _Breaking
-    Bad_ as example Series. If you do not have either of these Series in your
-    Emby server, you can add them (and remove them later - or not, because
-    they're great shows :wink:), or just pick two entirely different Series.
+    I'll be referring to _Better Call Saul_ and _Breaking Bad_ as example
+    Series. If you do not have either of these Series in your Emby server, you
+    can add them (and remove them later - or not, because they're great shows
+    :wink:), or just pick two entirely different Series.
 
-1. For the purposes of this tutorial, we will be Syncing a subset of your Series
-by using a filter tag within Emby. Open Emby.
+For the purposes of this tutorial, we will be Syncing a subset of your Series
+by using a filter tag within Emby.
+
+1. Open Emby.
 
 2. Open _Better Call Saul_, and then click the "more data"
 :material-dots-horizontal: button, then click `Edit Metadata` for the Series.

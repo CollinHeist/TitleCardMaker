@@ -1,7 +1,7 @@
 ---
-title: Issue Support
+title: Help & Support
 description: >
-    How to get help an issue or make a suggestion.
+    How to get help with an issue or make a suggestion.
 ---
 
 # Help & Support

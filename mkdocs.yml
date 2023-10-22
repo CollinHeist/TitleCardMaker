@@ -57,9 +57,9 @@ plugins:
   
   # Enable social cards
   - social:
-      enabled: !ENV
+      enabled: !ENV [CI, false]
       cards_layout_options:
-        background_color: rgb(29, 29, 29) # rgb(46,48,61)
+        background_color: rgb(29, 29, 29)
 
 extra:
   # Social links on the footer
@@ -169,7 +169,7 @@ nav:
     - Fonts: user_guide/fonts.md
     # - Sync: user_guide/sync.md
     - Connections: user_guide/connections.md
-    # - Settings: user_guide/settings.md
+    - Settings: user_guide/settings.md
     # - Scheduler: user_guide/scheduler.md
     # - Importer: user_guide/importer.md
   - Card Types:

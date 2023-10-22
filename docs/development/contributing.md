@@ -1,3 +1,9 @@
+---
+title: Contributing
+description: >
+    Making contributions to the TitleCardMaker codebase or documentation.
+---
+
 # Contributing to TitleCardMaker
 
 Contributions are welcome for all parts of the project, including the front- and

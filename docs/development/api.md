@@ -1,3 +1,10 @@
+---
+title: The API
+description: >
+    Accessing the auto-generated, self-documented, and interactive
+    TitleCardMaker API.
+---
+
 # The API
 
 The TitleCardMaker API is auto-generated, documented, and fully interactable via

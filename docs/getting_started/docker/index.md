@@ -1,3 +1,10 @@
+---
+title: Docker Installation
+description: >
+    How to install TitleCardMaker (and all of the dependencies) inside a Docker 
+    container.
+---
+
 # Docker Installation
 
 Docker is a very convenient way of compartmentalizing a piece of software, in

@@ -1,5 +1,5 @@
 ---
-title: Getting Started - Creating a Font
+title: Creating a Font
 description: >
     An introduction to creating and using custom Fonts in TitleCardMaker.
 ---

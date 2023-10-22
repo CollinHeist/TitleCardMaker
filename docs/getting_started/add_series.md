@@ -1,5 +1,5 @@
 ---
-title: Getting Started - Adding a Series
+title: Manually Adding a Series
 description: >
     An introduction to manually adding a Series to TitleCardMaker.
 ---

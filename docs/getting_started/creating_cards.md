@@ -1,5 +1,5 @@
 ---
-title: Getting Started - Creating Title Cards
+title: Creating Title Cards
 description: >
     Wrapping up the tutorial with Title Card creation.
 ---
