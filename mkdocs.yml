@@ -8,20 +8,20 @@ repo_name: CollinHeist/TitleCardMaker
 repo_url: https://github.com/CollinHeist/TitleCardMaker
 
 theme:
-  logo: ./assets/logo512.png
+  logo: ./assets/logo_full.svg
   favicon: ./assets/favicon.ico
   name: material
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: blue
+      primary: black
       accent: red
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: blue
+      primary: black
       accent: red
       toggle:
         icon: material/brightness-4
@@ -56,7 +56,10 @@ plugins:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   
   # Enable social cards
-  - social
+  - social:
+      enabled: !ENV
+      cards_layout_options:
+        background_color: rgb(29, 29, 29) # rgb(46,48,61)
 
 extra:
   # Social links on the footer
@@ -163,7 +166,7 @@ nav:
     # - user_guide/index.md
     # - Series: user_guide/series.md
     # - Templates: user_guide/templates.md
-    # - Fonts: user_guide/fonts.md
+    - Fonts: user_guide/fonts.md
     # - Sync: user_guide/sync.md
     - Connections: user_guide/connections.md
     # - Settings: user_guide/settings.md

@@ -1,3 +1,10 @@
+---
+title: Getting Started - The Scheduler
+description: >
+    The basics of the schedulable Tasks which perform the primary duties of
+    TitleCardMaker.
+---
+
 # Rescheduling Tasks
 
 ## Background
@@ -49,5 +56,3 @@ Series".
 
     You have now successfully change the execution interval for a Task within
     TCM. This exact procedure can be followed to change _any_ Task interval.
-
-    For more detail on all the supported interval units, see [here](...).
