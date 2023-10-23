@@ -1,6 +1,7 @@
 from logging import Logger
 from time import sleep
 from typing import Optional, Union
+from app.schemas.series import NewSeries
 
 from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy.exc import OperationalError
@@ -166,19 +167,11 @@ def run_sync(
             db.commit()
             continue
 
-        # Create Series, add to database and immediately commit so any
-        # subsequent same-Series can be matched
-        series = Series(
-            name=series_info.name,
-            year=series_info.year,
-            sync=sync,
-            templates=sync.templates,
-            libraries=libraries,
-            **series_info.ids,
-        )
-        db.add(series)
-        db.commit()
-        added.append(series)
+        # Create NewSeries for this entry
+        added.append(NewSeries(
+            name=series_info.name, year=series_info.year, libraries=libraries,
+            **series_info.ids, sync_id=sync.id, template_ids=sync.template_ids,
+        ))
 
     # Nothing added, log
     if not added:
