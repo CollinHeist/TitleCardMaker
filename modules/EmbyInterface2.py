@@ -184,8 +184,8 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             itself.
         """
 
-        if series_info.has_id('emby_id', interface_id=self._interface_id):
-            return series_info.emby_id[self._interface_id]
+        if series_info.has_id('emby_id', self._interface_id, library_name):
+            return series_info.emby_id[self._interface_id, library_name]
 
         # Get ID of this library
         if (library_ids := self.libraries.get(library_name, None)) is None:
@@ -276,7 +276,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             return None
 
         # Set database ID's
-        series_info.set_emby_id(series['Id'], self._interface_id)
+        series_info.set_emby_id(series['Id'], self._interface_id, library_name)
         if (imdb_id := series['ProviderIds'].get('IMDB')):
             series_info.set_imdb_id(imdb_id)
         if (tmdb_id := series['ProviderIds'].get('Tmdb')):
@@ -546,11 +546,12 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 log.exception(f'Cannot parse airdate', e)
                 log.debug(f'Episode data: {episode}')
 
+            emby_id = f'{self._interface_id}:{library_name}:{episode.get("Id")}'
             episode_info = EpisodeInfo(
                 episode['Name'],
                 episode['ParentIndexNumber'],
                 episode['IndexNumber'],
-                emby_id=f'{self._interface_id}:{episode.get("Id")}',
+                emby_id=emby_id,
                 imdb_id=episode['ProviderIds'].get('Imdb'),
                 tmdb_id=episode['ProviderIds'].get('Tmdb'),
                 tvdb_id=episode['ProviderIds'].get('Tvdb'),

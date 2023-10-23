@@ -1,5 +1,5 @@
 from re import match, compile as re_compile
-from typing import Iterable, Optional, Union
+from typing import Optional, Union
 
 from plexapi.video import Show as PlexShow
 from sqlalchemy import and_, literal, or_
@@ -65,9 +65,9 @@ class SeriesInfo(DatabaseInfoContainer):
         # Parse arguments into attributes
         self.name = name
         self.year = year
-        self.emby_id = InterfaceID(emby_id, type_=str)
+        self.emby_id = InterfaceID(emby_id, type_=str, libraries=True)
         self.imdb_id = None
-        self.jellyfin_id = InterfaceID(jellyfin_id, type_=str)
+        self.jellyfin_id = InterfaceID(jellyfin_id, type_=str, libraries=True)
         self.sonarr_id = InterfaceID(sonarr_id, type_=int)
         self.tmdb_id = None
         self.tvdb_id = None
@@ -224,10 +224,17 @@ class SeriesInfo(DatabaseInfoContainer):
         self.full_clean_name =  CleanPath.sanitize_name(self.full_name)
 
 
-    def set_emby_id(self, emby_id: int, interface_id: int) -> None:
+    def set_emby_id(self,
+            emby_id: int,
+            interface_id: int,
+            library_name: str,
+        ) -> None:
         """Set this object's Emby ID - see `_update_attribute()`."""
 
-        self._update_attribute('emby_id', emby_id, interface_id=interface_id)
+        self._update_attribute(
+            'emby_id', emby_id,
+            interface_id=interface_id, library_name=library_name,
+        )
 
 
     def set_imdb_id(self, imdb_id: str) -> None:
@@ -236,11 +243,16 @@ class SeriesInfo(DatabaseInfoContainer):
         self._update_attribute('imdb_id', imdb_id, type_=str)
 
 
-    def set_jellyfin_id(self, jellyfin_id: str, interface_id: int) -> None:
+    def set_jellyfin_id(self,
+            jellyfin_id: str,
+            interface_id: int,
+            library_name: str,
+        ) -> None:
         """Set this object's Jellyfin ID - see `_update_attribute()`."""
 
         self._update_attribute(
-            'jellyfin_id', jellyfin_id, interface_id=interface_id
+            'jellyfin_id', jellyfin_id,
+            interface_id=interface_id, library_name=library_name,
         )
 
 

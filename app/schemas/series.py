@@ -205,9 +205,7 @@ class UpdateTemplate(BaseUpdate):
     extra_values: list[Any] = UNSPECIFIED
 
 class UpdateSeries(BaseUpdate):
-    name: constr(min_length=1) = UNSPECIFIED
     year: conint(ge=1900) = UNSPECIFIED
-
     template_ids: Optional[list[int]] = UNSPECIFIED
     font_id: Optional[int] = UNSPECIFIED
     sync_specials: Optional[bool] = UNSPECIFIED

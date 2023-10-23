@@ -151,9 +151,9 @@ class EpisodeInfo(DatabaseInfoContainer):
         self.airdate = airdate
 
         # Store default database ID's
-        self.emby_id = InterfaceID(emby_id, type_=int)
+        self.emby_id = InterfaceID(emby_id, type_=int, libraries=True)
         self.imdb_id = None
-        self.jellyfin_id = InterfaceID(jellyfin_id, type_=str)
+        self.jellyfin_id = InterfaceID(jellyfin_id, type_=str, libraries=True)
         self.tmdb_id = None
         self.tvdb_id = None
         self.tvrage_id = None
@@ -186,13 +186,13 @@ class EpisodeInfo(DatabaseInfoContainer):
         return f'S{self.season_number:02}E{self.episode_number:02}'
 
 
-    def __eq__(self, info: 'EpisodeInfo') -> bool:
+    def __eq__(self, other: 'EpisodeInfo') -> bool:
         """
         Returns whether the given EpisodeInfo object corresponds to the
         same entry (has the same season and episode index).
 
         Args:
-            info: EpisodeInfo object to compare.
+            other: EpisodeInfo object to compare.
 
         Returns:
             True if the season and episode number of the two objects
@@ -200,20 +200,24 @@ class EpisodeInfo(DatabaseInfoContainer):
         """
 
         # Verify the comparison is another EpisodeInfo object
-        if not isinstance(info, EpisodeInfo):
+        if not isinstance(other, EpisodeInfo):
             raise TypeError(
                 f'Can only compare equality between EpisodeInfo objects'
             )
 
         # ID matches are immediate equality
-        if self == info:
-            return True
+        for id_attr in ('emby_id', 'imdb_id', 'jellyfin_id', 'tmdb_id',
+                        'tvdb_id', 'tvrage_id'):
+            if (getattr(self, id_attr) is not None
+                and getattr(self, id_attr) == getattr(other, id_attr)):
+                log.debug(f'{self}.{id_attr} matched {self!r} {other!r}')
+                return True
 
         # Require title match
         return (
-            self.season_number == info.season_number
-            and self.episode_number == info.episode_number
-            and self.title.matches(info.title)
+            self.season_number == other.season_number
+            and self.episode_number == other.episode_number
+            and self.title.matches(other.title)
         )
 
 
@@ -329,10 +333,17 @@ class EpisodeInfo(DatabaseInfoContainer):
         }
 
 
-    def set_emby_id(self, emby_id: int, interface_id: int) -> None:
+    def set_emby_id(self,
+            emby_id: int,
+            interface_id: int,
+            library_name: str,
+        ) -> None:
         """Set the Emby ID of this object. See `_update_attribute()`."""
 
-        self._update_attribute('emby_id', emby_id, interface_id=interface_id)
+        self._update_attribute(
+            'emby_id', emby_id,
+            interface_id=interface_id, library_name=library_name,
+        )
 
 
     def set_imdb_id(self, imdb_id: str) -> None:
@@ -341,11 +352,16 @@ class EpisodeInfo(DatabaseInfoContainer):
         self._update_attribute('imdb_id', imdb_id, str)
 
 
-    def set_jellyfin_id(self, jellyfin_id: str, interface_id: int) -> None:
+    def set_jellyfin_id(self,
+            jellyfin_id: str,
+            interface_id: int,
+            library_name: str,
+        ) -> None:
         """Set the Jellyfin ID of this object. See `_update_attribute()`."""
 
         self._update_attribute(
-            'jellyfin_id', jellyfin_id, interface_id=interface_id
+            'jellyfin_id', jellyfin_id,
+            interface_id=interface_id, library_name=library_name,
         )
 
 
