@@ -28,6 +28,9 @@ class InterfaceGroup(Generic[_InterfaceID, _Interface],
     """
 
 
+    __slots__ = ('cls', 'interfaces')
+
+
     def __init__(self, cls: type[_Interface]) -> None:
         """
         Initialize this object as a group containing interfaces of
@@ -160,37 +163,6 @@ class InterfaceGroup(Generic[_InterfaceID, _Interface],
         return interface_group
 
 
-    def append_interface(self,
-            *args,
-            log: Logger = log,
-            **kwargs,
-        ) -> tuple[_InterfaceID, _Interface]:
-        """
-        Construct and add a new Interface object to this group. This
-        assigns a sequential interface ID.
-
-        Args:
-            args, kwargs: Any arguments to pass to the Interface
-                initialization.
-
-        Returns:
-            Tuple of the assigned interface ID and the Interface object
-            itself.
-        """
-
-        # Assign ID
-        if self.interfaces:
-            interface_id = max(self.interfaces) + 1
-        else:
-            interface_id = 0
-
-        # Construct Interface, store at ID
-        interface = self.cls(*args, **kwargs, interface_id=interface_id,log=log)
-        self.interfaces[interface_id] = interface
-
-        return interface_id, interface
-
-
     def initialize_interface(self,
             interface_id: _InterfaceID,
             interface_kwargs: dict,
@@ -210,30 +182,10 @@ class InterfaceGroup(Generic[_InterfaceID, _Interface],
             Initialized Interface.
         """
 
+        log.debug(f'Initializing {self.cls.__name__}[{interface_id}]')
         self.interfaces[interface_id] = self.cls(**interface_kwargs, log=log)
 
         return self.interfaces[interface_id]
-
-
-    def refresh_all(self,
-            interface_kwargs: list[dict],
-            *,
-            log: Logger = log,
-        ) -> None:
-        """
-        Reset and refresh all interfaces.
-
-        Args:
-            interface_kwargs: List of kwargs to pass to each interface
-                initialization. `'interface_id'` must be an included
-                keyword.
-            log: Logger for all log messages.
-        """
-
-        self.interfaces = {}
-        for kwargs in interface_kwargs:
-            interface_id = kwargs['interface_id']
-            self.interfaces[interface_id] = self.cls(**kwargs, log=log)
 
 
     def refresh(self,
