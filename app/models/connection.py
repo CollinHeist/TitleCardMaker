@@ -149,6 +149,15 @@ class Connection(Base):
                 'downloaded_only': self.downloaded_only,
                 'libraries': self.libraries,   
             }
+        
+        if self.interface_type == 'TMDb':
+            return {
+                'api_key': self.api_key,
+                'minimum_source_width': self.minimum_width,
+                'minimum_source_height': self.minimum_height,
+                # 'blacklist_threshold': ...,
+                'logo_language_priority': self.logo_language_priority,
+            }
 
 
     def determine_libraries(self,
