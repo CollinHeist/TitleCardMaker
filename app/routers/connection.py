@@ -11,10 +11,10 @@ from app.models.series import Series
 from app.models.sync import Sync
 from app.models.template import Template
 from app.schemas.connection import (
-    EmbyConnection, JellyfinConnection, NewEmbyConnection,
+    AnyConnection, EmbyConnection, JellyfinConnection, NewEmbyConnection,
     NewJellyfinConnection, NewPlexConnection, NewSonarrConnection, NewTMDbConnection,
     NewTautulliConnection, PlexConnection, PotentialSonarrLibrary,
-    ServerConnection, SonarrConnection, TMDbConnection, UpdateEmby,
+    SonarrConnection, TMDbConnection, UpdateEmby,
     UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb,
 )
 from modules.SonarrInterface2 import SonarrInterface
@@ -157,7 +157,7 @@ def enable_or_disable_connection_by_id(
         jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
         plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
         sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
-    ) -> ServerConnection:
+    ) -> AnyConnection:
     """
     Set the enabled/disabled status of the given connection.
 
@@ -202,7 +202,7 @@ def enable_or_disable_connection_by_id(
 @connection_router.get('/all', status_code=200)
 def get_all_connection_details(
         db: Session = Depends(get_database),
-    ) -> list[ServerConnection]:
+    ) -> list[AnyConnection]:
     """
     Get details for all defined Connections (of all types).
     """

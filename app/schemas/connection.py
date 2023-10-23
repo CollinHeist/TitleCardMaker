@@ -29,11 +29,7 @@ FilesizeUnit = Literal['Bytes', 'Kilobytes', 'Megabytes']
 FilesizeLimit = constr(regex=r'\d+\s+(Bytes|Kilobytes|Megabytes)')
 
 # Accepted TMDb 2-letter language codes
-TMDbLanguageCode = Literal[
-    'ar', 'bg', 'ca', 'cs', 'da', 'de', 'el', 'en', 'es', 'fa', 'fr', 'he',
-    'hu', 'id', 'it', 'ja', 'ko', 'my', 'pl', 'pt', 'ro', 'ru', 'sk', 'sr',
-    'th', 'tr', 'uk', 'vi', 'zh',
-]
+TMDbLanguageCode = Literal[TMDbInterface.LANGUAGE_CODES]
 
 """
 Base classes
@@ -48,7 +44,7 @@ class PotentialSonarrLibrary(SonarrLibrary):
 
 class BaseServer(Base):
     id: int
-    interface_type: ServerName
+    interface_type: InterfaceType
     enabled: bool
     name: str
     url: AnyUrl
@@ -118,9 +114,12 @@ class NewTMDbConnection(Base):
         width, height = str(v).split('x')
         if int(width) < 0 or int(height) < 0:
             raise ValueError(f'Minimum dimensions must be positive')
+        return v
 
     @validator('logo_language_priority', pre=True)
     def comma_separate_language_codes(cls, v):
+        if v == '':
+            return ['en']
         return [str(s).lower().strip() for s in v.split(',') if str(s).strip()]
 
 """
@@ -157,22 +156,17 @@ class UpdateTMDb(UpdateBase):
     @validator('minimum_dimensions')
     def validate_dimensions(cls, v):
         width, height = str(v).split('x')
-        if width < 0 or height < 0:
-            raise ValueError(f'Minimum dimensions must be positive')
+        if int(width) < 0 or int(height) < 0:
+            raise ValueError(f'Dimensions must be positive')
+        return v
 
     @validator('logo_language_priority', pre=True)
     def comma_separate_language_codes(cls, v):
-        return list(map(lambda s: str(s).lower().strip(), v.split(',')))
+        return list(map(lambda s: str(s).strip(), v.split(',')))
 
 """
 Return classes
 """
-class ServerConnection(BaseServer):
-    username: Optional[str]
-    filesize_limit: Optional[FilesizeLimit]
-    downloaded_only: bool
-    libraries: list[SonarrLibrary]
-
 class EmbyConnection(BaseServer):
     username: Optional[str]
     filesize_limit: FilesizeLimit
@@ -191,13 +185,18 @@ class SonarrConnection(BaseServer):
 
 class TMDbConnection(Base):
     id: int
-    interface: Literal['TMDb']
+    interface_type: Literal['TMDb'] = 'TMDb'
     enabled: bool
     name: str
     api_key: str
     minimum_dimensions: str
     skip_localized: bool
     logo_language_priority: list[TMDbLanguageCode]
+
+AnyConnection = Union[
+    EmbyConnection, JellyfinConnection, PlexConnection, SonarrConnection,
+    TMDbConnection,
+]
 
 """
 Sonarr Webhooks
