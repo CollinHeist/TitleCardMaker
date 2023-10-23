@@ -1,12 +1,14 @@
 from typing import Union
 
+from pydantic import PositiveInt
+
 from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request
 )
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 
-from app.database.query import get_card, get_episode, get_font, get_interface, get_series
+from app.database.query import get_card, get_connection, get_episode, get_font, get_interface, get_series
 from app.database.session import Page
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app import models
@@ -16,7 +18,7 @@ from app.internal.cards import (
     validate_card_type_model
 )
 from app.internal.episodes import refresh_episode_data
-from app.internal.series import load_episode_title_card
+from app.internal.series import load_all_series_title_cards, load_episode_title_card, load_series_title_cards
 from app.internal.sources import download_episode_source_image
 from app.internal.translate import translate_episode
 from app.models.episode import Episode
@@ -203,6 +205,66 @@ def get_series_cards(
             .filter_by(series_id=series_id)\
             .order_by(models.card.Card.season_number)\
             .order_by(models.card.Card.episode_number)
+    )
+
+
+@card_router.put('/series/{series_id}/load/all', status_code=200, tags=['Series'])
+def load_series_title_cards_into_all_libraries(
+        series_id: int,
+        request: Request,
+        reload: bool = Query(default=False),
+        db: Session = Depends(get_database),
+    ) -> None:
+    """
+    Load all of the given Series' Cards.
+
+    - series_id: ID of the Series whose Cards are being loaded.
+    - reload: Whether to "force" reload all Cards, even those that have
+    already been loaded. If false, only Cards that have not been loaded
+    previously (or that have changed) are loaded.
+    """
+
+    # Get this Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    load_all_series_title_cards(
+        series, db, force_reload=reload, log=request.state.log,
+    )
+
+
+@card_router.put('/series/{series_id}/load/library/{library_index}',
+                 status_code=200,
+                 tags=['Series'])
+def load_series_title_cards_into_library(
+        request: Request,
+        series_id: int,
+        library_index: int,
+        reload: bool = Query(default=False),
+        db: Session = Depends(get_database),
+    ) -> None:
+    """
+    
+    """
+
+    # Get this Series and Interface, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Get library with this index
+    try:
+        library = series.libraries[library_index]
+    except KeyError:
+        raise HTTPException(
+            status_code=404,
+            detail=f'No Library with index {library_index}',
+        )
+
+    # Get this Library's Connection, raise 404 if DNE
+    interface = get_interface(library['interface_id'], raise_exc=True)
+
+    # Load this Library's Cards
+    load_series_title_cards(
+        series, library['name'], library['interface_id'], db, interface,
+        reload, log=request.state.log,
     )
 
 

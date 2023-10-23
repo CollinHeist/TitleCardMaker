@@ -369,7 +369,7 @@ async function initalizeSeriesConfig() {
  */
 function queryTMDbPoster() {
   $.ajax({
-    type: 'PUT',
+    type: 'GET',
     url: '/api/series/{{series.id}}/poster/query',
     success: posterUrl => {
       if (posterUrl === null) {
@@ -1634,14 +1634,13 @@ function createTitleCards() {
  * Submit an API request to delete this Series' Title Cards. Series
  * statistics are re-queried if successful.
  * 
- * @param {string} mediaServer - Which server the cards are being loaded into.
+ * @param {int} libraryIndex - Library index number to load Title Cards into.
  * @param {bool} reload - Whether to force reload the cards.
  */
-function loadCards(mediaServer, reload) {
-  const endpoint = (reload ? 'reload/' : 'load/') + mediaServer;
+function loadCards(libraryIndex, reload=false) {
   $.ajax({
-    type: 'POST',
-    url:`/api/series/{{series.id}}/${endpoint}`,
+    type: 'PUT',
+    url:`/api/cards/series/{{series.id}}/load/library/${libraryIndex}?reload=${reload}`,
     success: () => {
       showInfoToast('Loaded Title Cards');
       getStatistics();

@@ -14,11 +14,7 @@ function getEpisodeDataSources() {
     url: '/api/settings/episode-data-source',
     success: sources => {
       $('.dropdown[data-value="episode_data_source"]').dropdown({
-        values: sources.map(({interface, interface_id, name, selected}) => {
-          // TMDb does not need to be matched to a Connection
-          if (interface === 'TMDb') {
-            return {name: 'TMDb', value: 0, selected};
-          }
+        values: sources.map(({interface_id, name, selected}) => {
           return {name, value: interface_id, selected};
         })
       });
@@ -37,10 +33,6 @@ function getImageSourcePriority() {
     success: sources => {
       $('#image-source-priority').dropdown({
         values: sources.map(({interface, interface_id, selected}) => {
-          // TMDb does not need to be matched to a Connection
-          if (interface === 'TMDb') {
-            return {name: 'TMDb', value: 0, selected};
-          }
           // Match this interface to a defined Connection (to get the name)
           for (let {id, name} of allConnections) {
             if (id === interface_id) {
@@ -180,25 +172,8 @@ async function initAll() {
       // Prep form
       let form = new FormData(event.target);
 
-      // Parse EDS
-      let episode_data_source = {interface: 'TMDb', interface_id: 0};
-      for (let {id, interface} of allConnections) {
-        if (id.toString() === form.get('episode_data_source')) {
-          episode_data_source = {interface_id: id, interface};
-          break;
-        }
-      }
-      form.delete('episode_data_source');
-
       // Parse ISP
-      const imageSourcePriority = form.get('image_source_priority').split(',').map(interfaceId => {
-        for (let {id, interface} of allConnections) {
-          if (id.toString() === interfaceId) {
-            return {interface_id: id, interface};
-          }
-        }
-        return {interface_id: interfaceId, interface: 'TMDb'};
-      });
+      const imageSourcePriority = form.get('image_source_priority').split(',');
       form.delete('image_source_priority');
 
       // Parse card exclusions
@@ -219,7 +194,6 @@ async function initAll() {
         url: '/api/settings/update',
         data: JSON.stringify({
           ...Object.fromEntries(form),
-          episode_data_source,
           image_source_priority: imageSourcePriority,
           excluded_card_types: excludedCardTypes,
         }),

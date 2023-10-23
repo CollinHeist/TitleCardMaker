@@ -315,31 +315,6 @@ def toggle_series_monitored_status(
     return series
 
 
-@series_router.post('/{series_id}/load/all', status_code=201,
-        tags=['Emby', 'Jellyfin', 'Plex'])
-def load_title_cards_into_all_servers(
-        series_id: int,
-        request: Request,
-        reload: bool = Query(default=False),
-        db: Session = Depends(get_database),
-    ) -> None:
-    """
-    Load all of the given Series' Cards.
-
-    - series_id: ID of the Series whose Cards are being loaded.
-    - reload: Whether to "force" reload all Cards, even those that have
-    already been loaded. If false, only Cards that have not been loaded
-    previously (or that have changed) are loaded.
-    """
-
-    # Get this Series, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
-
-    load_all_series_title_cards(
-        series, db, force_reload=reload, log=request.state.log,
-    )
-
-
 @series_router.post('/{series_id}/process', status_code=200)
 def process_series(
         background_tasks: BackgroundTasks,

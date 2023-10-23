@@ -388,61 +388,27 @@
             </div>
             <div class="ui divider"></div>
             <div class="ui vertical labeled icon fluid buttons">
-              {% if preferences.use_emby and series.emby_library_name %}
-              <button class="ui labeled icon button" onclick="loadCards('Emby');">
+              {% for library in series.libraries %}
+              <button class="ui labeled icon button" onclick="loadCards({{loop.index0}}, false);">
                 <i class="hdd outline icon"></i>
-                Load Cards into Emby
+                Load Cards ({{library.name}})
               </button>
-              <button class="ui labeled icon button" onclick="loadCards('Emby', true);">
+              <button class="ui labeled icon button" onclick="loadCards({{loop.index0}}, true);">
                 <i class="orange hdd outline icon"></i>
-                Force Reload Cards into Emby
+                Force Reload Cards ({{library.name}})
               </button>
-              {% elif (preferences.use_emby and not series.emby_library_name) or (not preferences.use_emby and series.emby_library_name) %}
-              <button class="ui disabled labeled icon button">
-                <i class="hdd outline icon"></i>
-                Reload Emby
+              {% if library.interface == 'Plex' %}
+              <button data-value="labels" class="ui labeled icon button" onclick="removePlexLabels({{loop.index0}});" data-tooltip="Remove any Episode labels which prevent TCM from grabbing Source Images from Plex">
+                <i class="red tags icon"></i>
+                Remove Episode Labels ({{library.name}})
               </button>
               {% endif %}
-                
-              {% if preferences.use_jellyfin and series.jellyfin_library_name %}
-              <button class="ui labeled icon button" onclick="loadCards('Jellyfin');">
-                <i class="hdd outline icon"></i>
-                Load Cards into Jellyfin
-              </button>
-              <button class="ui labeled icon button" onclick="loadCards('Jellyfin', true);">
-                <i class="orange hdd outline icon"></i>
-                Force Reload Cards into Jellyfin
-              </button>
-              {% elif (preferences.use_jellyfin and not series.jellyfin_library_name) or (not preferences.use_jellyfin and series.jellyfin_library_name) %}
-              <button class="ui disabled labeled icon button">
-                <i class="hdd outline icon"></i>
-                Load Cards into Jellyfin
-              </button>
-              {% endif %}
-
-              {% if preferences.use_plex and series.plex_library_name %}
-              <button class="ui labeled icon button" onclick="loadCards('Plex');">
-                <i class="hdd outline icon"></i>
-                Load Cards into Plex
-              </button>
-              <button class="ui labeled icon button" onclick="loadCards('Plex', true);">
-                <i class="orange hdd outline icon"></i>
-                Force Reload Cards into Plex
-              </button>
-              <button data-value="labels" class="ui labeled icon button" onclick="removePlexLabels(this);" data-tooltip="Remove any Episode labels which prevent TCM from grabbing Source Images from Plex">
-                <i class="tags icon"></i>
-                Remove Episode Labels
-              </button>
-              {% elif (preferences.use_plex and not series.plex_library_name) or (not preferences.use_plex and series.plex_library_name) %}
-              <button class="ui disabled labeled icon button">
-                <i class="hdd outline icon"></i>
-                Load Cards into Plex
-              </button>
-              {% endif %}
+              <div class="ui divider"></div>
+              {% endfor %}
             </div>
           </div>
           <div>
-            <div class="ui divider"></div>
+            <!-- <div class="ui divider"></div> -->
             <div class="ui vertical labeled icon fluid buttons">
               <button class="ui labeled icon negative button" onclick="deleteTitleCards();">
                 <i class="images outline icon"></i>
