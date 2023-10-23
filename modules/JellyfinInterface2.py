@@ -87,7 +87,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             ) from exc
 
         # Get user ID if indicated
-        if username is None:
+        if not username:
             self.user_id = None
         elif (user_id := self._get_user_id(username)) is not None:
             self.user_id = user_id
@@ -173,8 +173,9 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         """
 
         # If Series has Jellyfin ID, and not returning raw object, return
-        if series_info.has_id('jellyfin') and not raw_obj:
-            return series_info.jellyfin_id
+        if (not raw_obj
+            and series_info.has_id('jellyfin', interface_id=self._interface_id)):
+            return series_info.jellyfin_id[self._interface_id]
 
         # Get ID of this library
         if (library_id := self.libraries.get(library_name, None)) is None:
@@ -234,7 +235,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         """
 
         # If episode has a Jellyfin ID, return that
-        if episode_info.has_id('jellyfin'):
+        if episode_info.has_id('jellyfin', interface_id=self._interface_id):
             return episode_info.jellyfin_id
 
         # Query for this episode
@@ -331,7 +332,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             return None
 
         # Assign ID's
-        series_info.set_jellyfin_id(series['Id'])
+        series_info.set_jellyfin_id(series['Id'], self._interface_id)
         if (imdb_id := series['ProviderIds'].get('Imdb')):
             series_info.set_imdb_id(imdb_id)
         if (tmdb_id := series['ProviderIds'].get('Tmdb')):
@@ -565,7 +566,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
                 episode['ParentIndexNumber'],
                 episode['IndexNumber'],
                 imdb_id=episode['ProviderIds'].get('Imdb'),
-                jellyfin_id=episode.get('Id'),
+                jellyfin_id=f'{self._interface_id}:{episode.get("Id")}',
                 tmdb_id=episode['ProviderIds'].get('Tmdb'),
                 tvdb_id=episode['ProviderIds'].get('Tvdb'),
                 tvrage_id=episode['ProviderIds'].get('TvRage'),

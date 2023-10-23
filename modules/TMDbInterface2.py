@@ -222,7 +222,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             log: Logger for all log messages.
 
         Raises:
-            HTTPException (401) if the API key is invalid.
+            HTTPException (401): The API key is invalid.
         """
 
         super().__init__('TMDb', log=log)
