@@ -691,7 +691,7 @@ function initializeTMDb() {
         tmdbForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name}`;
         tmdbForm.querySelector('input[name="name"]').value = connection.name;
         tmdbForm.querySelector('input[name="api_key"]').value = connection.api_key;
-        tmdbForm.querySelector('input[name="minimum_resolution"]').value = connection.minimum_resolution;
+        tmdbForm.querySelector('input[name="minimum_dimensions"]').value = connection.minimum_dimensions;
         // Language priority later
         return tmdbForm;
       });
@@ -708,7 +708,7 @@ function initializeTMDb() {
           connection.ignore_localized ? 'check' : 'uncheck'
         );
         // Initialize logo language priority dropdown
-        $(`#connection#${connection.id} .dropdown[data-value="logo_language_priority"]`).dropdown({
+        $(`#connection${connection.id} .dropdown[data-value="logo_language_priority"]`).dropdown({
           values: availableLanguages.map(language => {
             return {
               name: language.name,
