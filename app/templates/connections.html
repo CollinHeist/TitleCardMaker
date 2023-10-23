@@ -28,7 +28,7 @@
     <div class="content">
       <form class="ui fluid form" form-type="emby">
         <div data-value="enabled" class="ui left aligned checkbox field">
-          <input name="enabled" type="checkbox">
+          <input name="enabled" type="checkbox" checked="">
           <label>Enabled</label>
         </div>
 
@@ -99,7 +99,7 @@
       <form class="ui fluid form" form-type="plex">
         <div data-value="enabled" class="ui left aligned checkbox field">
           <label>Enabled</label>
-          <input name="enabled" type="checkbox">
+          <input name="enabled" type="checkbox" checked="">
         </div>
 
         <div class="ui required eight wide field">
@@ -169,7 +169,7 @@
       <form class="ui fluid form" form-type="sonarr">
         <div data-value="enabled" class="ui left aligned checkbox field">
           <label>Enabled</label>
-          <input name="enabled" type="checkbox">
+          <input name="enabled" type="checkbox" checked="">
         </div>
 
         <div class="ui required eight wide field">
@@ -219,7 +219,7 @@
             <div class="three equal width fields">
               <div class="ui required library field" data-value="media_server">
                 <label>Media Server</label>
-                <p class="help">Which Server this library is associated with.</p>
+                <p class="help">Associated server.</p>
                 <!-- Added asychronously -->
               </div>
   
@@ -272,7 +272,7 @@
       <form class="ui fluid form" form-type="plex">
         <div data-value="enabled" class="ui left aligned checkbox field">
           <label>Enabled</label>
-          <input name="enabled" type="checkbox">
+          <input name="enabled" type="checkbox" checked="">
         </div>
 
         <div data-value="name" class="ui required eight wide field">
@@ -289,7 +289,7 @@
 
         <div data-value="minimum_dimensions" class="ui required four wide field">
           <label>Minimum Image Dimensions</label>
-          <input name="minimum_dimensions" type="text" placeholder="0x0" value="0x0">
+          <input name="minimum_dimensions" type="text" value="800x400">
           <p class="help">
             Minimum image resolution for source images from TMDb (in pixels) - enter as <b>width</b>x<b>height</b>.
           </p>
@@ -307,7 +307,7 @@
 
         <div data-value="logo_language_priority" class="ui required field">
           <label>Logo Language Priority</label>
-          <div data-value="logo_language_priority" class="ui compact selection dropdown">
+          <div data-value="logo_language_priority" class="ui compact multiple search selection dropdown">
             <input type="hidden" name="logo_language_priority">
             <i class="dropdown icon"></i>
             <div class="default text"></div>
