@@ -675,7 +675,7 @@ def update_episode_watch_statuses(
     for library in series.libraries:
         if (interface := get_interface(library['interface_id'])):
             interface.update_watched_statuses(
-                library, series.as_series_info, episodes, log=log,
+                library['name'], series.as_series_info, episodes, log=log,
             )
             break
 
