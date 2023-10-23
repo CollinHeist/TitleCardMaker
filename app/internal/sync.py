@@ -151,10 +151,16 @@ def run_sync(
         # If already exists in Database, update IDs and libraries then skip
         if existing:
             # Add any new libraries
-            existing.libraries += [
-                library for library in libraries
-                if library not in existing.libraries
-            ]
+            for new in libraries:
+                exists = any(
+                    new['interface_id'] == existing_library['interface_id']
+                    and new['name'] == existing_library['name']
+                    for existing_library in existing.libraries
+                )
+                if not exists:
+                    existing.libraries.append(new)
+                    log.debug(f'Added Library "{new["name"]}" to {existing.log_str}')
+
             # Update IDs
             existing.update_from_series_info(series_info)
             db.commit()
