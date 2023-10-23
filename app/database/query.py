@@ -209,8 +209,8 @@ def get_all_templates(
         indicated ID's.
 
     Raises:
-        HTTPException (404) if any of the indicated Templates do not
-        exist and `raise_exc` is True.
+        HTTPException (404): Any of the indicated Templates do not exist
+            and `raise_exc` is True.
     """
 
     if not (template_ids := obj_dict.pop('template_ids', [])):
@@ -266,7 +266,10 @@ def get_interface(
     if raise_exc:
         raise HTTPException(
             status_code=404,
-            detail=f'No Connection with ID {interface_id}'
+            detail=(
+                f'No Connection with {interface_id} - Connection might be '
+                f'disabled or invalid'
+            )
         )
 
     return None

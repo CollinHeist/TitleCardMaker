@@ -386,29 +386,29 @@
                 Create Title Cards
               </button>
             </div>
-            <div class="ui divider"></div>
+            <!-- Library-specific buttons -->
             <div class="ui vertical labeled icon fluid buttons">
               {% for library in series.libraries %}
+              <div class="ui mini horizontal divider">{{library.name}} - {{library.interface}}</div>
               <button class="ui labeled icon button" onclick="loadCards({{loop.index0}}, false);">
                 <i class="hdd outline icon"></i>
-                Load Cards ({{library.name}})
+                Load Cards
               </button>
               <button class="ui labeled icon button" onclick="loadCards({{loop.index0}}, true);">
                 <i class="orange hdd outline icon"></i>
-                Force Reload Cards ({{library.name}})
+                Force Reload Cards
               </button>
               {% if library.interface == 'Plex' %}
               <button data-value="labels" class="ui labeled icon button" onclick="removePlexLabels({{loop.index0}});" data-tooltip="Remove any Episode labels which prevent TCM from grabbing Source Images from Plex">
                 <i class="red tags icon"></i>
-                Remove Episode Labels ({{library.name}})
+                Remove Episode Labels
               </button>
               {% endif %}
-              <div class="ui divider"></div>
               {% endfor %}
             </div>
           </div>
           <div>
-            <!-- <div class="ui divider"></div> -->
+            <div class="ui divider"></div>
             <div class="ui vertical labeled icon fluid buttons">
               <button class="ui labeled icon negative button" onclick="deleteTitleCards();">
                 <i class="images outline icon"></i>
@@ -420,7 +420,6 @@
               </button>
             </div>
           </div>
-          
         </div>
 
         <!-- Data Tabs -->
@@ -438,19 +437,19 @@
           <div id="series-tabs" class="ui bottom attached tab segment" data-tab="options">
             <form id="series-config-form" class="ui compact form">
               <!-- Warning if Series is not found in various interfaces -->
-              {% if preferences.use_emby and series.emby_id is none %}
+              {% if preferences.use_emby and not series.emby_id %}
               <div class="ui visible floating warning message">
                 <i class="exclamation triangle icon"></i>
                 This Series has not been found in Emby.
               </div>
               {% endif %}
-              {% if preferences.use_jellyfin and series.jellyfin_id is none %}
+              {% if preferences.use_jellyfin and not series.jellyfin_id %}
               <div class="ui visible floating warning message">
                 <i class="exclamation triangle icon"></i>
                 This Series has not been found in Jellyfin.
               </div>
               {% endif %}
-              {% if preferences.use_sonarr and series.sonarr_id is none %}
+              {% if preferences.use_sonarr and not series.sonarr_id %}
               <div class="ui visible floating warning message">
                 <i class="exclamation triangle icon"></i>
                 This Series has not been found in Sonarr.
@@ -472,6 +471,11 @@
                   <div class="default text">None</div>
                   <div class="menu"><!-- Added asynchronousely --></div>
                 </div>
+                <p class="help">
+                  Libraries to load Title Cards into.
+                  <br>
+                  Queried and loaded in order.
+                </p>
               </div>
 
               <!-- Episode Data Source -->
