@@ -215,8 +215,8 @@ def get_available_tmdb_logo_languages() -> list[dict]:
     """
 
     return [
-        {'name': key, 'value': value}
-        for key, value in TMDbInterface.LANGUAGES.items()
+        {'name': label, 'value': language_code}
+        for language_code, label in TMDbInterface.LANGUAGES.items()
     ]
 
 
