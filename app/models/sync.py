@@ -1,3 +1,4 @@
+from logging import Logger
 from typing import Literal, TypedDict, Union
 
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, JSON
@@ -10,7 +11,7 @@ from sqlalchemy.orm import Mapped, object_session, relationship
 
 from app.database.session import Base
 from app.models.template import SyncTemplates, Template
-
+from modules.Debug import log
 
 
 SyncInterface = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr']
@@ -68,7 +69,7 @@ class Sync(Base):
     def assign_templates(self,
             templates: list[Template],
             *,
-            log
+            log: Logger = log,
         ) -> None:
         """
         Assign the given Templates to this Sync. This updates the

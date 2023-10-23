@@ -1,3 +1,4 @@
+from logging import Logger
 from pathlib import Path
 from re import sub as re_sub, IGNORECASE
 from typing import Any, Iterator, Literal, TypedDict, Union
@@ -10,6 +11,7 @@ from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy.orm import Mapped, object_session, relationship
+from modules.Debug import log
 from thefuzz.fuzz import partial_ratio
 
 from app.database.session import Base
@@ -139,7 +141,7 @@ class Series(Base):
     def assign_templates(self,
             templates: list[Template],
             *,
-            log
+            log: Logger = log,
         ) -> None:
         """
         Assign the given Templates to this Series. This updates the

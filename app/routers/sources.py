@@ -262,7 +262,7 @@ def get_existing_series_source_images(
             .order_by(models.episode.Episode.season_number,
                       models.episode.Episode.episode_number),
         transformer=lambda episodes: [
-            get_source_image(preferences, episode) for episode in episodes
+            get_source_image(episode) for episode in episodes
         ]
     )
 

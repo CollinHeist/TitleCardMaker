@@ -104,7 +104,7 @@ class Episode(Base):
     def assign_templates(self,
             templates: list[Template],
             *,
-            log
+            log: Logger = log,
         ) -> None:
         """
         Assign the given Templates to this Episode. This updates the

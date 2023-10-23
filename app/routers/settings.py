@@ -80,18 +80,19 @@ def get_image_source_priority(
 
     # Add all selected Connections
     sources, source_ids = [], []
-    for connection in preferences.image_source_priority:
-        isp_connection = db.query(Connection)\
-            .filter_by(id=connection['interface_id'])\
-            .first()
+    for interface_id in preferences.image_source_priority:
+        isp_connection = db.query(Connection).filter_by(id=interface_id).first()
         if isp_connection is None:
-            request.state.log.warning(f'No Connection with ID {connection["interface_id"]}')
+            request.state.log.warning(f'No Connection with ID {interface_id}')
             continue
 
-        source_ids.append(connection['interface_id'])
-        sources.append(
-            connection | {'selected': True, 'name': isp_connection.name}
-        )
+        source_ids.append(interface_id)
+        sources.append({
+            'interface': isp_connection.interface_type,
+            'interface_id': interface_id,
+            'name': isp_connection.name,
+            'selected': True,
+        })
 
     # Add remaining non-Sonarr Connections
     connections = db.query(Connection)\
