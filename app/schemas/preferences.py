@@ -1,10 +1,12 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import DirectoryPath, PositiveInt, constr, validator # pylint: disable=no-name-in-module
 
-from app.schemas.base import Base, InterfaceName, ImageSource, UpdateBase, UNSPECIFIED
+from app.schemas.base import (
+    Base, InterfaceName, ImageSource, UpdateBase, UNSPECIFIED
+)
 
 
 """
@@ -69,8 +71,8 @@ class UpdatePreferences(UpdateBase):
     card_height: PositiveInt = UNSPECIFIED
     card_filename_format: str = UNSPECIFIED
     card_extension: CardExtension = UNSPECIFIED
-    image_source_priority: list[ImageSourceOption] = UNSPECIFIED
-    episode_data_source: EpisodeDataSource = UNSPECIFIED
+    image_source_priority: list[int] = UNSPECIFIED
+    episode_data_source: int = UNSPECIFIED
     specials_folder_format: str = UNSPECIFIED
     season_folder_format: str = UNSPECIFIED
     sync_specials: bool = UNSPECIFIED
@@ -126,10 +128,8 @@ class Preferences(Base):
     card_height: PositiveInt
     card_filename_format: str
     card_extension: str
-    image_source_priority: list[ImageSourceOption]
-    # valid_image_sources: list[ImageSource]
-    episode_data_source: EpisodeDataSource
-    # valid_episode_data_sources: list[EpisodeDataSource]
+    image_source_priority: list[int]
+    episode_data_source: Optional[int]
     valid_image_extensions: list[str]
     specials_folder_format: str
     season_folder_format: str
