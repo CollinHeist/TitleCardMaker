@@ -175,10 +175,4 @@ EmbyInterfaces: InterfaceGroup[int, EmbyInterface] = InterfaceGroup(EmbyInterfac
 JellyfinInterfaces: InterfaceGroup[int, JellyfinInterface] = InterfaceGroup(JellyfinInterface)
 PlexInterfaces: InterfaceGroup[int, PlexInterface] = InterfaceGroup(PlexInterface)
 SonarrInterfaces: InterfaceGroup[int, SonarrInterface] = InterfaceGroup(SonarrInterface)
-TMDbInterfaceLocal: Optional[TMDbInterface] = None
-
-if PreferencesLocal.use_tmdb:
-    try:
-        TMDbInterfaceLocal = TMDbInterface(**PreferencesLocal.tmdb_arguments)
-    except Exception as e:
-        pass
+TMDbInterfaces: InterfaceGroup[int, TMDbInterface] = InterfaceGroup(TMDbInterface)

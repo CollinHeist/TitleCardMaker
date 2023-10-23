@@ -151,7 +151,7 @@ def update_connection(
     """
 
     # Get existing Connection
-    connection: Connection = get_connection(db, interface_id, raise_exc=True)
+    connection = get_connection(db, interface_id, raise_exc=True)
 
     # Update each attribute of the object
     changed = False
