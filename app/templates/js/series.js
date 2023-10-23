@@ -168,9 +168,25 @@ async function initalizeSeriesConfig() {
     type: 'GET',
     url: '/api/available/libraries/all',
     success: libraries => {
+      // Start library value list with those selected by the Series
+      let values = {{series.libraries|safe}}.map(library => {
+        return {
+          interface: library.interface,
+          interface_id: library.interface_id,
+          name: library.name,
+          selected: true
+        };
+      });
+      // Add each library not already added to the Series
+      libraries.forEach(({interface, interface_id, name}) => {
+        if (!(values.some(library => library.interface_id === interface_id && library.name === name))) {
+          values.push({interface, interface_id, name, selected: false});
+        }
+      });
+
       $('.dropdown[data-value="libraries"]').dropdown({
         placeholder: 'None',
-        values: libraries.map(({interface_id, interface, name}) => {
+        values: values.map(({interface, interface_id, name, selected}) => {
           const serverName = allConnections.filter(connection => connection.id === interface_id)[0].name || interface;
           return {
             name: name,
@@ -178,7 +194,7 @@ async function initalizeSeriesConfig() {
             value: `${interface}::${interface_id}::${name}`,
             description: serverName,
             descriptionVertical: true,
-            selected: {{series.libraries|safe}}.some(library => library.interface_id === interface_id && library.name === name),
+            selected: selected,
           };
         }),
       });

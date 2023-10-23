@@ -1,9 +1,10 @@
 from logging import Logger
 from typing import Union
 
+from fastapi import BackgroundTasks
 from sqlalchemy.orm import Session
-from app.database.query import get_connection
 
+from app.database.query import get_connection
 from app.dependencies import (
     get_emby_interfaces, get_jellyfin_interfaces, get_plex_interfaces,
     get_preferences, get_sonarr_interfaces, get_tmdb_interfaces,
@@ -61,16 +62,17 @@ def initialize_connections(
         # Set use_ toggle
         setattr(preferences, f'use_{interface_type.lower()}', bool(connections))
         toggle = getattr(preferences, f'use_{interface_type.lower()}')
-        log.debug(f'Preferences.use_{interface_type.lower()} = {toggle}')
 
         # Initialize an Interface for each Connection (if enabled)
         for connection in connections:
+            # Warn if disabled
             if not connection.enabled:
+                log.warning(f'Not initializing {connection.log_str} - disabled')
                 continue
 
             try:
                 interface_group.initialize_interface(
-                    connection.id, connection.interface_kwargs
+                    connection.id, connection.interface_kwargs, log=log,
                 )
                 log.debug(f'Initialized Connection to {connection.log_str}')
             except Exception as exc:
