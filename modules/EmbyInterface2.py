@@ -100,7 +100,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         # Get user ID
         self.user_id = None
-        if self.username is not None:
+        if self.username:
             if (user_id := self._get_user_id(username)) is None:
                 log.critical(f'Cannot identify ID of user "{username}"')
                 raise HTTPException(
