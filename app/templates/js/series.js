@@ -1117,11 +1117,11 @@ function toggleMonitorStatus() {
       if (response.monitored) {
         showInfoToast('Started Monitoring Series');
         $('#monitor-status span').toggleClass('red', false).toggleClass('green', true);
-        $('#monitor-status span')[0].innerHTML = '<i class="ui eye outline green icon"></i>Monitored';
+        $('#monitor-status span')[0].innerHTML = '<i class="ui eye outline green icon"></i>Monitored<p class="help">Click to unmonitor</p>';
       } else {
         showInfoToast('Stopped Monitoring Series');
         $('#monitor-status span').toggleClass('red', true).toggleClass('green', false);
-        $('#monitor-status span')[0].innerHTML = '<i class="ui eye slash outline red icon"></i>Unmonitored';
+        $('#monitor-status span')[0].innerHTML = '<i class="ui eye slash outline red icon"></i>Unmonitored<p class="help">Click to monitor</p>';
       }
       refreshTheme();
     }, error: response => showErrorToast({title: 'Error Changing Status', response}),
