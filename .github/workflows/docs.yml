@@ -31,6 +31,6 @@ jobs:
           path: ./mkdocs
           # ref: refs/heads/release
 
-      - run: cd mkdocs && python -m pip install .
+      - run: cd mkdocs && python -m pip install .[imaging]
 
       - run: mkdocs gh-deploy --force
