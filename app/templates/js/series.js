@@ -27,35 +27,6 @@ function getStatistics() {
   });
 }
 
-async function getLibraries() {
-  if (document.getElementById('emby-library') != null) {
-    const embyLibraries = await fetch('/api/available/libraries/emby').then(resp => resp.json());
-    $('#emby-library').dropdown({
-      values: embyLibraries.map(name => {
-        return {name: name, value: name, selected: name === '{{series.emby_library_name}}'};
-      })
-    });
-  }
-
-  if (document.getElementById('jellyfin-library') != null) {
-    const jellyfinLibraries = await fetch('/api/available/libraries/jellyfin').then(resp => resp.json());
-    $('#jellyfin-library').dropdown({
-      values: jellyfinLibraries.map(name => {
-        return {name: name, value: name, selected: name === '{{series.jellyfin_library_name}}'};
-      })
-    });
-  }
-
-  if (document.getElementById('plex-library') != null) {
-    const plexLibraries = await fetch('/api/available/libraries/plex').then(resp => resp.json());
-    $('#plex-library').dropdown({
-      values: plexLibraries.map(name => {
-        return {name: name, value: name, selected: name === '{{series.plex_library_name}}'};
-      })
-    });
-  }
-}
-
 let editedEpisodeIds = [];
 function getUpdateEpisodeObject(episodeId) {
   // Get all inputs for this episode
@@ -875,7 +846,6 @@ async function initAll() {
 
   // Initialize 
   initalizeSeriesConfig();
-  getLibraries();
   getEpisodeData();
   initStyles();
   getCardData();
