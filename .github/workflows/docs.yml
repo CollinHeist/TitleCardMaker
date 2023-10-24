@@ -27,7 +27,7 @@ jobs:
 
       - uses: actions/checkout@master
         with:
-          name: CollinHeist/mkdocs-material
+          repository: CollinHeist/mkdocs-material
           path: ./mkdocs
           # ref: refs/heads/release
 
