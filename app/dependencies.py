@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from logging import Logger
-from typing import Any, Iterator, Optional
+from typing import Any, Iterator, Optional, Union
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import HTTPException, Query, Request
@@ -25,7 +25,13 @@ from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
+"""Type for any generic interface"""
+AnyInterface = Union[
+    EmbyInterface, JellyfinInterface, PlexInterface, SonarrInterface,
+    TMDbInterface
+]
 
+"""Where to read/write the Blueprint SQL database file"""
 BLUEPRINT_DATABASE_FILE = Preferences.TEMPORARY_DIRECTORY / 'blueprints.db'
 
 
@@ -314,21 +320,6 @@ def require_sonarr_interface(interface_id: int = Query(...)) -> SonarrInterface:
     return _require_interface(SonarrInterfaces, interface_id, 'sonarr')
 
 
-def refresh_tmdb_interface(*, log: Logger = log) -> None:
-    """
-    Refresh the global interface to TMDb. This reinitializes and
-    overrides the object.
-
-    Args:
-        log: Logger for all log messages.
-    """
-
-    global TMDbInterfaceLocal
-    TMDbInterfaceLocal = TMDbInterface(
-        **get_preferences().tmdb_arguments, log=log
-    )
-
-
 def get_tmdb_interfaces() -> InterfaceGroup[int, TMDbInterface]:
     """
     Dependency to get all interfaces to TMDb.
@@ -366,3 +357,39 @@ def require_tmdb_interface(
             return interface
 
     return _require_interface(TMDbInterfaces, interface_id, 'tmdb')
+
+
+def require_interface(interface_id: int = Query(...)) -> AnyInterface:
+    """
+    Dependency to get the interface with the given ID. This adds
+    `interface_id` as a Query parameter.
+
+    Args:
+        interface_id: ID of the interface to get.
+
+    Returns:
+        Interface with the given ID as defined in the global
+        `InterfaceGroup` for the corresponding type.
+
+    Raises:
+        HTTPException (400): The interface cannot be communicated with.
+        HTTPException (404): There is no interface with the given ID.
+    """
+
+    groups = (
+        (EmbyInterfaces, 'Emby'), (JellyfinInterfaces, 'Jellyfin'),
+        (PlexInterfaces, 'Plex'), (SonarrInterfaces, 'Sonarr'),
+        (TMDbInterfaces, 'TMDb'),
+    )
+
+    for interface_group, name in groups:
+        try:
+            return _require_interface(interface_group, interface_id, name)
+        except HTTPException as exc:
+            if exc.status_code != 404:
+                raise exc
+
+    raise HTTPException(
+        status_code=404,
+        detail=f'No Connection with ID {interface_id}'
+    )
