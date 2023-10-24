@@ -25,6 +25,11 @@ jobs:
           restore-keys: |
             mkdocs-material-
 
-      - run: pip install "mkdocs-material[imaging]" 
+      - uses: actions/checkout@master
+        with:
+          name: CollinHeist/mkdocs-material
+          ref: refs/heads/release
+
+      - run: python -m pip install .
 
       - run: mkdocs gh-deploy --force
