@@ -10,7 +10,7 @@ from app.schemas.base import (
 from app.schemas.connection import TMDbLanguageCode
 from app.schemas.font import TitleCase
 from app.schemas.ids import * # pylint: disable=wildcard-import,unused-wildcard-import
-from app.schemas.preferences import EpisodeDataSource, Style
+from app.schemas.preferences import Style
 
 # Match absolute ranges (1-10), season numbers (1), episode ranges (s1e1-s1e10)
 SeasonTitleRange = constr(regex=r'^(\d+-\d+)|^(\d+)|^(s\d+e\d+-s\d+e\d+)$')

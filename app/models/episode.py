@@ -84,7 +84,7 @@ class Episode(Base):
     font_interword_spacing = Column(Integer, default=None)
     font_vertical_shift = Column(Integer, default=None)
 
-    emby_id = Column(Integer, default=None)
+    emby_id = Column(String, default=None)
     imdb_id = Column(String, default=None)
     jellyfin_id = Column(String, default=None)
     tmdb_id = Column(Integer, default=None)

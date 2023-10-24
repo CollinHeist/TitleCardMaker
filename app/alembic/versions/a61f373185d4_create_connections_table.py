@@ -1,24 +1,31 @@
 """Create Connections Table
 Create new Connections SQL table / Model
-- Turn existing connection details from global Preferences into Connection
-  objects which are assigned during SQL migration.
+- Turn existing connection details from global Preferences into
+  Connection objects which are assigned during SQL migration.
 Modify Loaded table:
 - Add new interface_id column tied to newly created Connection(s)
 - Remove media_server column
 Modify Series table:
-- Turn separate emby/jellyfin/plex _library_name columns into single libraries
-  column that is a JSON list object like
+- Turn separate emby/jellyfin/plex _library_name columns into single
+  libraries column that is a JSON list object like
   [{'media_server': (Emby/Jellyfin/Plex), 'interface_id': (int), 'name': (str)}]
-- Perform data migration of existing Series libraries into the above objects
+- Perform data migration of existing Series libraries into the above
+  objects
 - Remove emby_library_name, jellyfin_library_name, and plex_library_name
   columns
+- Migrate the emby_id, jellyfin_id, and sonarr_id columns into their new
+  multi-connection DatabaseID equivalents (i.e.
+  {interface_id}:{library}:{id}).
+Modify Episode table:
+- Migrate the emby_id, and jellyfin_id, columns into their new multi-
+  connection DatabaseID equivalents (i.e. {interface_id}:{library}:{id}).
 Modify Sync table:
-- Add new interface_id and connection columns / relationships as a Sync now must
-  be tied to an existing Connection.
+- Add new interface_id and connection columns / relationships as a Sync
+  now must be tied to an existing Connection.
 Modify Template table:
 - Turn episode_data_source column into data_source column
-- Convert server-type specific library filter conditions into agnostic
-  library "contains" conditions
+- Convert server-type specific library filter conditions into library
+  agnostic "contains" conditions
 
 Revision ID: a61f373185d4
 Revises: 4d7cb48238be
@@ -38,7 +45,7 @@ depends_on = None
 # Models necessary for data migration
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.mutable import MutableList
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Mapped, Session, relationship
 from app.database.session import PreferencesLocal
 
 Base = declarative_base()
@@ -66,6 +73,16 @@ class Connection(Base):
     skip_localized = sa.Column(sa.Boolean, default=True, nullable=False)
     logo_language_priority = sa.Column(MutableList.as_mutable(sa.JSON), default=[], nullable=False)
 
+class Episode(Base):
+    __tablename__ = 'episode'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    series_id = sa.Column(sa.Integer, sa.ForeignKey('series.id'))
+    emby_id = sa.Column(sa.String)
+    jellyfin_id = sa.Column(sa.String)
+
+    series = relationship('Series', back_populates='episodes')
+
 class Loaded(Base):
     __tablename__ = 'loaded'
 
@@ -84,9 +101,14 @@ class Series(Base):
     emby_library_name = sa.Column(sa.String)
     jellyfin_library_name = sa.Column(sa.String)
     plex_library_name = sa.Column(sa.String)
+    emby_id = sa.Column(sa.String)
+    jellyfin_id = sa.Column(sa.String)
+    sonarr_id = sa.Column(sa.String)
     # New column(s)
     libraries = sa.Column(MutableList.as_mutable(sa.JSON), default=[], nullable=False)
     data_source_id = sa.Column(sa.Integer, sa.ForeignKey('connection.id'), default=None)
+
+    episodes: Mapped[list[Episode]] = relationship(Episode, back_populates='series')
 
 class Template(Base):
     __tablename__ = 'template'
@@ -329,6 +351,52 @@ def upgrade() -> None:
             else:
                 log.warning(f'Not converting Template[{template.id}] Filter '
                             f'operation "{op_}"')
+
+    # Migrate Series and Episode Emby and Jellyfin IDs; and Series Sonarr IDs
+    for series in session.query(Series).all():
+        # Migratate {id} -> {interface_id}:{library_name}:{id}
+        if series.emby_id:
+            if series.emby_library_name and emby:
+                series.emby_id = f'{emby.id}:{series.emby_library_name}:{series.emby_id}'
+                log.debug(f'Migrated Series[{series.id}].emby_id = {series.emby_id}')
+            else:
+                series.emby_id = None
+                log.warning(f'Unable to migrate Series[{series.id}].emby_id')
+        # Migrate {id} -> {interface_id}:{library_name}:{id}
+        if series.jellyfin_id:
+            if series.jellyfin_library_name and jellyfin:
+                series.jellyfin_id = f'{jellyfin.id}:{series.jellyfin_library_name}:{series.jellyfin_id}'
+                log.debug(f'Migrated Series[{series.id}].jellyfin_id = {series.jellyfin_id}')
+            else:
+                series.jellyfin_id = None
+                log.warning(f'Unable to migrate Series[{series.id}].jellyfin_id')
+        # Migrate 0:{id} -> {interface_id}:{id}
+        if series.sonarr_id:
+            if sonarr:
+                series.sonarr_id = f'{sonarr.id}:{series.sonarr_id.split("-")[1]}'
+                log.debug(f'Migrated Series[{series.id}].sonarr_id = {series.sonarr_id}')
+            else:
+                series.sonarr_id = None
+                log.warning(f'Unable to migrate Series[{series.id}].sonarr_id')
+
+        # Migrate this Series' Episodes
+        for episode in series.episodes:
+            # Migratate {id} -> {interface_id}:{library_name}:{id}
+            if episode.emby_id:
+                if series.emby_library_name and emby:
+                    episode.emby_id = f'{emby.id}:{series.emby_library_name}:{episode.emby_id}'
+                    log.debug(f'Migrated Episode[{episode.id}].emby_id = {episode.emby_id}')
+                else:
+                    episode.emby_id = None
+                    log.warning(f'Unable to migrate Episode[{episode.id}].emby_id')
+            # Migratate {id} -> {interface_id}:{library_name}:{id}
+            if episode.jellyfin_id:
+                if series.jellyfin_library_name and jellyfin:
+                    episode.jellyfin_id = f'{jellyfin.id}:{series.jellyfin_library_name}:{episode.jellyfin_id}'
+                    log.debug(f'Migrated Episode[{episode.id}].jellyfin_id = {episode.jellyfin_id}')
+                else:
+                    episode.jellyfin_id = None
+                    log.warning(f'Unable to migrate Episode[{episode.id}].jellyfin_id')
 
     # Commit changes
     session.commit()

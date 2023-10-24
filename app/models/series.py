@@ -87,7 +87,7 @@ class Series(Base):
     match_titles = Column(Boolean, default=True, nullable=False)
 
     # Database arguments
-    emby_id = Column(Integer, default=None)
+    emby_id = Column(String, default=None)
     imdb_id = Column(String, default=None)
     jellyfin_id = Column(String, default=None)
     sonarr_id = Column(String, default=None)
