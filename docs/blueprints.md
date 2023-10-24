@@ -76,8 +76,8 @@ Series, Templates, or Fonts as you see fit. TitleCardMaker will not override
 your changes with the Blueprint settings unless you prompt it to do so by
 re-importing the Blueprint.
 
-![](./assets/blueprint_series_light.jpg#only-light){loading=lazy}
-![](./assets/blueprint_series_dark.jpg#only-dark){loading=lazy}
+![](./assets/blueprint_series_light.jpg#only-light)
+![](./assets/blueprint_series_dark.jpg#only-dark)
 
 ### Browsing
 
@@ -87,8 +87,8 @@ If you'd like to browse all available Blueprints, go to the new Series page
 
 This is covered in greater detail [here](./user_guide/new_series.md).
 
-![](./assets/blueprint_all_light.webp#only-light){loading=lazy}
-![](./assets/blueprint_all_dark.webp#only-dark){loading=lazy}
+![](./assets/blueprint_all_light.webp#only-light)
+![](./assets/blueprint_all_dark.webp#only-dark)
 
 ## Sharing your own Blueprint
 
