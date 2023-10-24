@@ -1,10 +1,16 @@
+from typing import Optional
+from pydantic import AnyUrl
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Response
 from requests import get
 from requests.exceptions import Timeout
+from sqlalchemy.orm import Session
 
-from app.dependencies import get_preferences
+from app.database.query import get_connection
+from app.dependencies import get_database, get_preferences, get_tmdb_interfaces
 from app.internal.auth import get_current_user
 from app.models.preferences import Preferences
+from modules.InterfaceGroup import InterfaceGroup
+from modules.TMDbInterface2 import TMDbInterface
 
 
 # Create sub router for all /proxy API requests
@@ -22,8 +28,8 @@ proxy_router = APIRouter(
     )
 def redirect_plex_url(
         url: str = Query(...),
-        interface_id: int = Query(default=0),
-        preferences: Preferences = Depends(get_preferences),
+        interface_id: int = Query(...),
+        db: Session = Depends(get_database),
     ) -> Response:
     """
     Get the content at the given URL for the Plex server. For example if
@@ -36,10 +42,18 @@ def redirect_plex_url(
     - interface_id: ID of the Plex Interface to redirect to.
     """
 
-    redirected_url = (
-        f'{preferences.plex_args[interface_id]["url"][:-1]}{url}?X-Plex-Token='
-        f'{preferences.plex_args[interface_id]["token"]}'
-    )
+    # Get Connection with this ID, raise 404 if DNE
+    connection = get_connection(db, interface_id, raise_exc=True)
+
+    # Do not end server URL in /
+    if connection.url.endswith('/'):
+        server_url = connection.url[:-1]
+    else:
+        server_url = connection.url
+
+    # Start redirect URL in /
+    url = url if url.startswith('/') else f'/{url}'
+    redirected_url = f'{server_url}{url}?X-Plex-Token={connection.api_key}'
 
     return Response(content=get(redirected_url, timeout=10).content)
 
@@ -51,9 +65,9 @@ def redirect_plex_url(
     )
 def redirect_sonarr_url(
         url: str = Query(...),
-        interface_id: int = Query(default=0),
+        interface_id: int = Query(...),
         SonarrAuth: str = Cookie(default=''),
-        preferences: Preferences = Depends(get_preferences),
+        db: Session = Depends(get_database),
     ) -> Response:
     """
     Get the content at the given URL for the Sonarr server. For example
@@ -67,9 +81,18 @@ def redirect_sonarr_url(
     - interface_id: ID of the Plex Interface to redirect to.
     """
 
-    base_url = preferences.sonarr_args[interface_id]["url"]
-    redirected_url = f'{base_url.scheme}://{base_url.host}:{base_url.port}{url}'
+    # Get Connection with this ID, raise 404 if DNE
+    connection = get_connection(db, interface_id, raise_exc=True)
 
+    # Do not end server URL in /
+    if connection.url.endswith('/'):
+        server_url = connection.url[:-1]
+    else:
+        server_url = connection.url
+
+    # Start redirect URL in /
+    url = url if url.startswith('/') else f'/{url}'
+    redirected_url = f'{server_url}{url}'
     # Query for content, ensure the local `SonarrAuth` cookies are
     # utilized in the request
     try:
