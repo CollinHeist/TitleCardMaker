@@ -546,22 +546,22 @@ def lookup_series(
         log: Logger = log,
     ) -> list[SearchResult]:
     """
-    _summary_
+    Get all the search results for the given name on the given
+    interface.
 
     Args:
-        db: _description_
-        interface: _description_
-        max_results: _description_. Defaults to 25.
-        log: _description_. Defaults to log.
+        db: Database to query for whether the Series exists or not.
+        interface: Interface to query for results.
+        max_results: Maximum number of results to return.
+        log: Logger for all log messages.
 
     Returns:
         Search results from the specified Interface for the given
         Series name.
     """
 
-    # Query Interface, only return max of 25 results TODO temporary?
-    results: list[SearchResult] = interface.query_series(name, log=log)
-    results = results[:max_results]
+    # Query Interface
+    results = interface.query_series(name, log=log)[:max_results]
 
     # Update added attribute(s)
     for result in results:
