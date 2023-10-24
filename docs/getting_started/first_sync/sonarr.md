@@ -1,11 +1,20 @@
+---
+title: Syncing from Sonarr
+description: >
+    Creating a Sync to automatically add Series from Sonarr to TitleCardMaker.
+---
+
 # Syncing from Sonarr
 
 !!! note "Example Series"
 
-    For this tutorial, we'll be using _Better Call Saul_ and _Breaking Bad_ as
-    example Series. If you do not have either of these Series in Sonarr, you can
-    add them (and remove them later - or not, because they're great shows), or
-    just pick two entirely different Series.
+    I'll be using _Better Call Saul_ and _Breaking Bad_ as example Series. If
+    you do not have either of these Series in Sonarr, you can add them (and
+    remove them later - or not, because they're great shows), or just pick two
+    entirely different Series.
+
+For the purposes of this tutorial, we will be Syncing a subset of your Series
+by using a filter tag within Sonarr.
 
 1. Open the Sonarr Web Interface.
 

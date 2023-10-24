@@ -1,9 +1,20 @@
+---
+title: Connecting to Emby
+description: >
+    How to connect TitleCardMaker to Sonarr and enable the new-Episode Webhook.
+---
+
 # Sonarr
 
 !!! info "Optional Step"
 
     This step is completely optional, and only those with Sonarr servers should
     continue.
+
+Although Sonarr can only serve as an
+[Episode Data Source](../../user_guide/settings.md#episode-data-source), it is
+typically much faster than the other alternatives (Emby, Jellyfin, Plex) and
+is _generally_ the recommended option for most users.
 
 ## Connecting
 

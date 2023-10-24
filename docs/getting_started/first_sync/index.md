@@ -1,3 +1,9 @@
+---
+title: Creating the First Sync
+description: >
+    Automatically adding Series to TitleCardMaker.
+---
+
 # Syncs
 
 Having manually added a Series to TitleCardMaker, it should be obvious this will

@@ -5,10 +5,10 @@ These tabs are accessible from the left-hand side of any page in TCM, and are
 as follows:
 
 - [Series](./series.md)
-- [Templates](./templates.md)
+<!-- - [Templates](./) -->
 - [Fonts](./fonts.md)
 - [Sync](./sync.md)
 - [Connections](./connections.md)
 - [Settings](./settings.md)
-- [Scheduler](./scheduler.md)
-- [Importer](./importer.md)
+<!-- - [Scheduler](./scheduler.md) -->
+<!-- - [Importer](./importer.md) -->

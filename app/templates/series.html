@@ -346,12 +346,15 @@
                 <span class="ui left floated green text">
                   <i class="ui eye outline green icon"></i>
                   Monitored
+                  <p class="help">Click to unmonitor</p>
+                </span>
                 {% else %}
                 <span class="ui left floated red text">
                   <i class="ui eye slash outline red icon"></i>
                   Unmonitored
-                {% endif %}
+                  <p class="help">Click to monitor</p>
                 </span>
+                {% endif %}
               </a>
             </div>
             <div id="card-progress" class="ui bottom attached progress">
@@ -362,7 +365,7 @@
           <!-- Series action bottons -->
           <div id="action-buttons">
             <button data-action="process" class="ui vertical labeled fluid icon blue button" onclick="processSeries();" data-tooltip="Refresh Episodes, query translations, download source images, and create Cards">
-              <i class="sitemap icon"></i>
+              <i class="step forward icon"></i>
               Process Series
             </button>
             <div class="ui divider"></div>

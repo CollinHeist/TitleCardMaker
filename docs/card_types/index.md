@@ -11,20 +11,6 @@ styling, and font, TitleCardMaker is designed to support multiple different
 types of Title Cards. These different types vary in more fundamental ways such
 as layout, text placement, and additional features.
 
-??? example "Example Card Types"
-
-    Below are two different card types created for the same Episode.
-
-    <figure markdown>
-        ![Star Wars](../assets/cardtype_example_starwars.jpg)
-        <figcaption>Star Wars</figcaption>
-    </figure>
-
-    <figure markdown>
-        ![Tinted Glass](../assets/cardtype_example_tintedglass.jpg)
-        <figcaption>Tinted Glass</figcaption>
-    </figure>
-
 There are three different categories of card types:
 
 Built-in

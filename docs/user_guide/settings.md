@@ -1,3 +1,9 @@
+---
+title: Settings
+description: >
+    In-depth descriptions of all global settings.
+---
+
 # Settings
 
 !!! warning "Under Construction"
@@ -171,9 +177,9 @@ This setting _can_ be overwritten with Templates, or per-Series.
 ### Image Source Priority
 
 Similar to the [Episode data source](#episode-data-source) option, this
-setting controls where TitleCardMaker should gather Images from. Unlike
-the Episode data source, multiple sources can be specified here, and the
-selected order does matter.
+setting controls where TitleCardMaker should gather images (this includes source
+images, logos, and posters) from. Unlike the Episode data source, multiple
+sources can be specified here, and the selected order does matter.
 
 TitleCardMaker, while searching for images, will try the listed sources
 _in order_ until a source image is found.

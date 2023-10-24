@@ -1,3 +1,10 @@
+---
+title: Installing TitleCardMaker Locally
+decription: >
+    How to install TitleCardMaker (and all of the dependencies) outside of a 
+    Docker container.
+---
+
 # Local Installation
 
 !!! warning "Linux Compatability"

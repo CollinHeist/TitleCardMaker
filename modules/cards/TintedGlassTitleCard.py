@@ -203,9 +203,6 @@ class TintedGlassTitleCard(BaseCardType):
         """
         Get the ImageMagick commands necessary to add the title text
         described by this card.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         font_size = 200 * self.font_size

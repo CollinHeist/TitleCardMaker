@@ -1,3 +1,9 @@
+---
+title: Creating a Font
+description: >
+    An introduction to creating and using custom Fonts.
+---
+
 # Creating a Font
 ## Background
 
@@ -84,4 +90,4 @@ then select the file we just downloaded.
     Although we did not use a majority of these font customizations, this is
     largely due to the specific font file we're using. Some fonts require a lot
     more tinkering to get the perfect look. All of the available options are
-    described [here](...).
+    described [here](../user_guide/fonts.md).

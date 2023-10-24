@@ -203,12 +203,7 @@ class LogoTitleCard(BaseCardType):
 
     @property
     def index_commands(self) -> ImageMagickCommands:
-        """
-        Subcommand for adding the index text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand for adding the index text to the source image."""
 
         # All index text is disabled, return blank command
         if self.hide_season_text and self.hide_episode_text:
@@ -394,15 +389,15 @@ class LogoTitleCard(BaseCardType):
             f'convert',
             # Add background image or color
             *background_command,
+            # Optionally overlay gradient
+            *gradient_command,
+            # Apply style that is applicable to entire image
+            *style_command,
             # Overlay resized logo
             f'"{resized_logo.resolve()}"',
             f'-gravity north',
             f'-geometry "+0+{offset}"',
             f'-composite',
-            # Optionally overlay gradient
-            *gradient_command,
-            # Apply style that is applicable to entire image
-            *style_command,
             # Global title text options
             f'-gravity south',
             f'-font "{self.font_file}"',

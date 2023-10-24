@@ -5,6 +5,12 @@
   overflow: scroll;
 }
 
+/* Do not allow disabled card description text to be selected */
+.disabled.card {
+  user-select: none;
+}
+
+/* Apply filter to disabled card images */
 .disabled.card img {
   filter: grayscale(50%) blur(0.8px);
 }
@@ -22,7 +28,7 @@
 .card .multi.image {
   /* Make sure multi image backgrounds are scaled down */
   background-size: 100% 100% !important;
-  max-height: 225px;
+  /* max-height: 225px; */
 }
 .card .multi.image * {
   -webkit-transition: all 0.4s ease;

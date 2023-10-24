@@ -155,9 +155,6 @@ class OlivierTitleCard(BaseCardType):
         """
         Get the ImageMagick commands to add the episode title text to an
         image.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         font_size = 124 * self.font_size
@@ -189,9 +186,6 @@ class OlivierTitleCard(BaseCardType):
         """
         Get the ImageMagick commands to add the episode prefix text to
         an image.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         # No episode prefix/text, return empty command
@@ -224,9 +218,6 @@ class OlivierTitleCard(BaseCardType):
         """
         Get the ImageMagick commands to add the episode number text to
         an image.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         # No episode text, return empty command

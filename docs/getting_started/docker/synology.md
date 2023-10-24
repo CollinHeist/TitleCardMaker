@@ -1,3 +1,9 @@
+---
+title: Synology Docker Installation
+description: >
+    Installing TitleCardMaker in a Docker container on Synology DSM.
+---
+
 # Synology DSM Docker Installation
 ## Background
 !!! info "Benefits of Docker"
@@ -63,14 +69,9 @@ select it and click `Launch`.
     === "Volume"
     
         1. Add one Folder, navigate to `/docker`, create a
-        `titlecardmaker` subfolder, and within that create and select a
-        `cards` folder.
-        2. In the mount path for `/docker/titlecardmaker/cards`, enter
-        `/config/cards/`.
-        3. Repeat a-b for `/docker/titlecardmaker/source` mounted to
-        `/config/source`.
-        4. Repeat a-b for `/docker/titlecardmaker/logs` mounted to
-        `/maker/logs`. Your setup should look like this:
+        `titlecardmaker` subfolder - e.g. `/docker/titlecardmaker/`.
+        2. In the mount path for `docker/titlecardmaker`, enter
+        `/config/`. Your setup should look like this:
 
         ![](../../assets/synology_volumes.jpg)
 

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from logging import Logger
 from os import environ
 from pathlib import Path
-from re import sub as re_sub
+from re import IGNORECASE, sub as re_sub
 from shutil import copy as file_copy
 from typing import Optional
 
@@ -15,7 +15,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.event import listens_for
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from thefuzz.fuzz import partial_ratio
+from thefuzz.fuzz import partial_token_sort_ratio as partial_ratio # partial_ratio
 
 from app.models.preferences import Preferences
 
@@ -111,6 +111,8 @@ def backup_data(*, log: Logger = log) -> tuple[Path, Path]:
 Register a custom Regex replacement function that can be used on this
 database.
 """
+def regex_replace(pattern: str, repl: str, string: str) -> str:
+    return re_sub(pattern, repl, string, flags=IGNORECASE)
 
 @listens_for(engine, 'connect')
 def register_custom_functions(
@@ -122,7 +124,7 @@ def register_custom_functions(
     function (`re_sub`) as `regex_replace`, as well as the
     `partial_ratio` fuzzy-string match function.
     """
-    dbapi_connection.create_function('regex_replace', 3, re_sub)
+    dbapi_connection.create_function('regex_replace', 3, regex_replace)
     dbapi_connection.create_function('partial_ratio', 2, partial_ratio)
 @listens_for(blueprint_engine, 'connect')
 def register_custom_functions_blueprints(
@@ -130,7 +132,7 @@ def register_custom_functions_blueprints(
         connection_record, # pylint: disable=unused-argument
     ) -> None:
     """When the engine is connected, register the `regex_replace` function"""
-    dbapi_connection.create_function('regex_replace', 3, re_sub)
+    dbapi_connection.create_function('regex_replace', 3, regex_replace)
 
 
 # Session maker for connecting to each database

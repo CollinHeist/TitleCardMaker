@@ -1,9 +1,15 @@
+---
+title: Manually Adding a Series
+description: >
+    An introduction to manually adding a Series to TitleCardMaker.
+---
+
 # Adding a Series
 ## Background
 
 Now that TitleCardMaker has established connections to all of your servers, it
-is time to begin the actual Title Card creation. This step is to showcase how
-Series can be _manually_ added to TCM. 
+is time to begin the actual Title Card creation. TCM will only create Cards for
+Series that have been added - this step is to showcase how to do this manually.
 
 !!! info "Automatically Adding Series"
 
@@ -32,6 +38,13 @@ Saul_ in the top search bar and click `Search`.
         If your default search connection is Emby, Jellyfin, or Plex and you
         don't have Better Call Saul in your server, you can choose a different
         connection, or just search TMDb.
+
+    ??? warning "Sonarr Posters Not Loading"
+
+        If the posters in your search results are not loading (all black), this
+        is a result of Sonarr rejecting TCM's API request to view the poster.
+        You can either disable authentication for local addresses within Sonarr
+        (if using TCM locally), or just ignore this.
 
 4. TCM will now query your selected connection for all Series that match that
 name. _Better Call Saul_ should be the first result. There are now two ways to

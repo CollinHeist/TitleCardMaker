@@ -143,9 +143,23 @@ async function initAll() {
       row.querySelector('td[data-column="runTask"] a').onclick = () => runTask(task.id);
     }
     row.querySelector('td[data-column="description"]').innerHTML = task.description;
-    // Fill out frequency or schedule row
+    // Fill out schedule row
     if (row.querySelector('td[data-column="schedule"]')) {
-      row.querySelector('td[data-column="schedule"]').innerHTML = `<span contenteditable="true">${task.crontab}</span>`;
+      // Add human-readable time
+      const span = row.querySelector('td[data-column="schedule"] span');
+      const scheduleStringRow = row.querySelector('td[data-column="schedule-string"]');
+      scheduleStringRow.innerText = cronstrue.toString(task.crontab);
+      // column.setAttribute('data-tooltip', cronstrue.toString(task.crontab));
+      // column.innerHTML = `<span contenteditable="true">${task.crontab}</span>`;
+      span.innerText = task.crontab;
+      // Update tooltip on edit
+      span.addEventListener('keyup', function() {
+      // column.addEventListener('keyup', function() {
+        const newCrontab = span.innerText;
+        scheduleStringRow.innerText = cronstrue.toString(newCrontab);
+        // column.setAttribute('data-tooltip', cronstrue.toString(newCrontab));
+      });
+    // Fill out frequency row
     } else {
       row.querySelector('td[data-column="frequency"]').innerHTML = `<span contenteditable="true">${timeFreqString(task.frequency)}</span>`;
     }

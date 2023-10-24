@@ -108,7 +108,8 @@ function getAllStatistics() {
         clone.querySelector('.label').innerText = unit;
         statisticsElement.appendChild(clone);
       });
-    }, error: response => showErrorToast({title: 'Error Querying Statistics', response}),
+    },
+    // error: response => showErrorToast({title: 'Error Querying Statistics', response}),
   });
 }
 

@@ -1,9 +1,20 @@
+---
+title: Connecting to Jellyfin
+description: >
+    How to connect TitleCardMaker to Jellyfin.
+---
+
 # :simple-jellyfin:{ .jellyfin } Jellyfin
 
 !!! info "Optional Step"
 
     This step is completely optional, and only those with Jellyfin media servers
     should continue.
+
+As a Media Server, Jellyfin can serve as an
+[Episode Data Source](../../user_guide/settings.md#episode-data-source),
+[Image Source](../../user_guide/settings.md#image-source-priority), and
+(obviously) as a location where Title Cards are uploaded to.
 
 1. Toggle the `Enable Jellyfin` checkbox.
 2. Enter the _root_ URL to your Jellyfin server (including the port).

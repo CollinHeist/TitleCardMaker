@@ -1,3 +1,9 @@
+---
+title: Global Settings
+description: >
+    Recommended global settings for new users.
+---
+
 # Settings
 For most users the default Settings can be left as-is. If you'd like to adjust
 these, additional detail can be found [here](../user_guide/settings.md).

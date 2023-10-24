@@ -35,10 +35,10 @@ thefuzz = "==0.20.0"
 
 [dev-packages]
 mkdocs = "*"
-mkdocs-material = "*"
 cairosvg = "*"
 pillow = "*"
 pylint = "*"
+mkdocs-material = {extras = ["imaging"], version = "*"}
 
 [requires]
 python_version = "3.11"

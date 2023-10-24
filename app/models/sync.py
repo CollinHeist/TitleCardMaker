@@ -15,7 +15,7 @@ from modules.Debug import log
 
 
 SyncInterface = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr']
-SonarrKwargs = TypedDict('SonarrKwargs',{
+SonarrKwargs = TypedDict('SonarrKwargs', {
     'required_tags': list[str], 'excluded_tags': list[str],
     'monitored_only': bool, 'downloaded_only': bool,
     'required_series_type': str, 'excluded_series_type': str,

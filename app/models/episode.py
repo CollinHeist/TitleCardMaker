@@ -16,6 +16,7 @@ from app.schemas.preferences import Style
 
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
+from modules.Debug import log
 
 
 class Episode(Base):

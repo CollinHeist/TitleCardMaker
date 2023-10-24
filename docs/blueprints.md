@@ -1,23 +1,29 @@
+---
+title: Blueprints
+description: >
+    Pre-made collections of Card customizations that includes Fonts, Templates,
+    and card settings.
+---
+
 # Blueprints
-
-!!! warning "Under Construction"
-
-    This documentation is actively being developed.
 
 _Blueprints_ can be viewed as amped-up Templates. These are ready-made
 collections of cards configurations that apply to a single Series. Blueprints
-allow for importing a pre-made customization for a Series, including any
-associated Named Fonts, Templates, Series options, Episode-specific overrides,
-and custom source files.
+allow for importing a pre-made customization for a Series, and can include any
+of the following:
 
-??? example "Example"
+- Named Fonts - _i.e. Fonts with files_
+- Templates
+- Series customizations
+- Episode customizations
+- Source files - _i.e. logos, masks, source images, etc._
+
+!!! example "Example"
 
     Don't want to spend an hour of your life combing through the Pokémon
     Wikipedia in order to determine which specific Episodes apply to which
     specific seasons? Blueprints allow you to just take the hour of my work and
     apply everything with the click of a button.
-
-    ![](./assets/example_blueprints.png)
 
 All Blueprints are hosted on the
 [companion repository](https://github.com/CollinHeist/TitleCardMaker-Blueprints/)
@@ -34,6 +40,10 @@ going to the _Blueprints_ tab on a Series' page.
 
 2. Viewing _all_ available Blueprints for _all_ Series. These are accessed by
 going to the new/add Series page.
+
+Some Blueprints will also have multiple preview images. This will be indicated
+by a slight animation when the preview is hovered over. Clicking on the image
+will then cycle through the available previews.
 
 ## Importing Blueprints
 
@@ -66,17 +76,19 @@ Series, Templates, or Fonts as you see fit. TitleCardMaker will not override
 your changes with the Blueprint settings unless you prompt it to do so by
 re-importing the Blueprint.
 
+![](./assets/blueprint_series_light.jpg#only-light)
+![](./assets/blueprint_series_dark.jpg#only-dark)
+
 ### Browsing
 
 If you'd like to browse all available Blueprints, go to the new Series page
 (the `/add` URL) and scroll down to the Blueprints section. After clicking
 `Browse Blueprints`, preview cards for each Blueprint will be shown.
 
-These can be sorted by release date and Series name. Each Blueprint can be
-imported (along with the associated Series _if_ it is not already in TCM), or
-hidden from this display. Once hidden, that Blueprint will no longer appear in
-the list (even after page reloads) - however it will still be present if you
-browse for Blueprints [by Series](#by-series).
+This is covered in greater detail [here](./user_guide/new_series.md).
+
+![](./assets/blueprint_all_light.webp#only-light)
+![](./assets/blueprint_all_dark.webp#only-dark)
 
 ## Sharing your own Blueprint
 

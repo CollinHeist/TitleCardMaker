@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 from modules.BaseCardType import BaseCardType, CardDescription
 
@@ -77,7 +77,7 @@ class TextlessTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> Literal[False]: # type: ignore
         """
         Determines whether the given font characteristics constitute a
         default or custom font.
@@ -94,7 +94,9 @@ class TextlessTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> Literal[False]:
         """
         Determines whether the given attributes constitute custom or
         generic season titles.
