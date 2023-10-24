@@ -1,3 +1,4 @@
+from logging import Logger
 from pathlib import Path
 from re import sub as regex_replace, IGNORECASE
 from typing import Any
@@ -16,6 +17,7 @@ from app.database.session import Base
 from app.dependencies import get_preferences
 from app.models.template import SeriesTemplates, Template
 from modules.CleanPath import CleanPath
+from modules.Debug import log
 from modules.SeriesInfo import SeriesInfo
 
 
@@ -123,7 +125,7 @@ class Series(Base):
     def assign_templates(self,
             templates: list[Template],
             *,
-            log
+            log: Logger = log,
         ) -> None:
         """
         Assign the given Templates to this Series. This updates the

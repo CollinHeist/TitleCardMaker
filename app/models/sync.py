@@ -1,3 +1,5 @@
+from logging import Logger
+
 from sqlalchemy import Boolean, Column, Integer, String, JSON
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
@@ -5,6 +7,7 @@ from sqlalchemy.orm import Mapped, object_session, relationship
 
 from app.database.session import Base
 from app.models.template import SyncTemplates, Template
+from modules.Debug import log
 
 
 class Sync(Base):
@@ -49,7 +52,7 @@ class Sync(Base):
     def assign_templates(self,
             templates: list[Template],
             *,
-            log
+            log: Logger = log,
         ) -> None:
         """
         Assign the given Templates to this Sync. This updates the

@@ -5,6 +5,12 @@
   overflow: scroll;
 }
 
+/* Do not allow disabled card description text to be selected */
+.disabled.card {
+  user-select: none;
+}
+
+/* Apply filter to disabled card images */
 .disabled.card img {
   filter: grayscale(50%) blur(0.8px);
 }
