@@ -1,4 +1,5 @@
 # Configuring Connections
+
 TitleCardMaker can communicate directly with Emby, Jellyfin, Plex,
 Sonarr, Tautulli, and TMDb to get episode data, download images, add
 translations, and load Title Cards.
