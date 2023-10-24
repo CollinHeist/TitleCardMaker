@@ -25,14 +25,13 @@ from app.internal.cards import (
 )
 from app.internal.series import (
     add_series, delete_series_and_episodes, download_series_poster,
-    load_all_series_title_cards, lookup_series,
+    lookup_series,
 )
 from app.internal.sources import download_episode_source_image
 from app.internal.auth import get_current_user
 from app.schemas.base import UNSPECIFIED
 from app.schemas.series import NewSeries, SearchResult, Series, UpdateSeries
 
-from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
 
@@ -205,24 +204,24 @@ def search_existing_series(
     )
 
 
-@series_router.get('/lookup/sonarr', status_code=200)
-def lookup_series_on_sonarr(
+@series_router.get('/lookup', status_code=200)
+def lookup_new_series(
         request: Request,
-        name: str = Query(...),
+        name: str = Query(..., min_length=1),
         db: Session = Depends(get_database),
-        sonarr_interace: SonarrInterface = Depends(require_sonarr_interface),
+        interface = Depends(require_interface),
     ) -> Page[SearchResult]:
     """
-    Look up the given Series name on Sonarr. Returned results are not
-    necessary already added to TCM - use the `/search` endpoint for
-    that.
+    Look up the given Series name on the indicated Interface. Returned
+    results are not necessary already added to TCM - use the `/search`
+    endpoint to query existing Series.
 
     - name: Series name or substring to look up.
-    - interface_id: ID of the Sonarr interface to query.
+    - interface_id: ID of the interface to query.
     """
 
     return paginate_sequence(
-        lookup_series(db, sonarr_interace, name, log=request.state.log)
+        lookup_series(db, interface, name, log=request.state.log)
     )
 
 
@@ -237,9 +236,7 @@ def get_series_config(
     - series_id: ID of the series to get the config of.
     """
 
-    series = get_series(db, series_id, raise_exc=True)
-
-    return series
+    return get_series(db, series_id, raise_exc=True)
 
 
 @series_router.patch('/{series_id}', status_code=200)
