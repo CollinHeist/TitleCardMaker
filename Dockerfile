@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Create pipenv image to convert Pipfile to requirements.txt
 FROM python:3.11-slim as pipenv
 
