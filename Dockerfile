@@ -51,6 +51,10 @@ RUN set -eux && \
 # Expose TCM Port
 EXPOSE 4242
 
+# Healthcheck command
+HEALTHCHECK --interval=5m --timeout=20s --start-period=3m --start-interval=10s \
+    CMD curl --fail http://localhost:4242/ || exit 1
+
 # Entrypoint
 CMD ["python3", "-m", "uvicorn", "app-main:app", "--host", "0.0.0.0", "--port", "4242"]
 ENTRYPOINT ["bash", "./start.sh"]
