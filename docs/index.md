@@ -1,8 +1,8 @@
 ---
 title: Welcome to TitleCardMaker
 description: >
-    A program that automates the creation and customization of Title Cards for
-    use in personal media server services like Plex, Jellyfin, or Emby.
+    Automate the creation and customization of Title Cards in Plex, Jellyfin, or
+    Emby.
 ---
 
 # Welcome to TitleCardMaker
