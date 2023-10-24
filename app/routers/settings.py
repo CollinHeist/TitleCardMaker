@@ -58,14 +58,12 @@ def get_global_episode_data_source(
     Get the list of Episode data sources.
     """
 
-    return [
-        {
-            'interface': connection.interface_type,
-            'interface_id': connection.id,
-            'name': connection.name,
-            'selected': preferences.episode_data_source == connection.id,
-        } for connection in db.query(Connection).all()
-    ]
+    return [{
+        'interface': connection.interface_type,
+        'interface_id': connection.id,
+        'name': connection.name,
+        'selected': preferences.episode_data_source == connection.id,
+    } for connection in db.query(Connection).all()]
 
 
 @settings_router.get('/image-source-priority')
