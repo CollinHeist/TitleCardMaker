@@ -596,7 +596,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         return [
             SearchResult(
                 name=result.title, year=result.year,
-                poster=f'/api/proxy/plex?url={result.thumb}',
+                poster=f'/api/proxy/plex?url={result.thumb}&interface_id={self._interface_id}',
                 overview=result.summary,
                 **parse_ids(result),
             ) for result in results

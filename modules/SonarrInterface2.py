@@ -302,17 +302,14 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
                 images: List of image types/URL's to parse for a poster.
 
             Returns:
-                Proxied URL for the poster, if provided. If no images
-                are provided or available, then `None` is returned.
+                Proxied URL for the poster, if provided. None if there
+                are no valid posters.
             """
-
-            if len(images) == 0:
-                return None
 
             for image in images:
                 if image['coverType'] == 'poster':
                     url = image['url'].rsplit('?', maxsplit=1)[0]
-                    return f'/api/proxy/sonarr?url={url}'
+                    return f'/api/proxy/sonarr?url={url}&interface_id={self.server_id}'
 
             return None
 
