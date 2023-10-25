@@ -365,7 +365,7 @@ class LogoTitleCard(BaseCardType):
             f'-fill "{self.font_color}"',
             f'-annotate +0+{vertical_shift} "{self.title_text}"',
             # Add episode or season+episode "image"
-            *self.index_command,
+            *self.index_commands,
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
