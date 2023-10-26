@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from modules.BaseCardType import ImageMagickCommands
 from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 
@@ -27,18 +28,8 @@ class GenreMaker(ImageMaker):
             output: Path,
             font_size: float = 1.0,
             borderless: bool = False,
-            omit_gradient: bool = False) -> None:
-        """
-        Construct a new instance of this object.
-
-        Args:
-            source: The source image to use for the genre card.
-            genre: The genre text to put on the genre card.
-            output: The output path to write the genre card to.
-            font_size: Scalar to apply to the title font size.
-            borderless: Whether to make the card as borderless or not.
-            omit_gradient: Whether to omit the gradient overlay or not.
-        """
+            omit_gradient: bool = False,
+        ) -> None:
 
         # Initialize parent object for the ImageMagickInterface
         super().__init__()
@@ -52,6 +43,36 @@ class GenreMaker(ImageMaker):
         self.omit_gradient = omit_gradient
 
 
+    @property
+    def gradient_commands(self) -> ImageMagickCommands:
+        """
+        ImageMagick subcommands to add the gradient overlay to the image
+        """
+
+        if self.omit_gradient:
+            return []
+
+        return [
+            f'"{self.__GENRE_GRADIENT.resolve()}"',
+            f'-gravity south',
+            f'-composite',
+        ]
+
+
+    @property
+    def border_commands(self) -> ImageMagickCommands:
+        """ImageMagick subcommands to add the border around the image"""
+
+        if self.borderless:
+            return []
+
+        return [
+            f'-gravity center',
+            f'-bordercolor white',
+            f'-border 27x27',
+        ]
+
+
     def create(self) -> None:
         """
         Create the genre card. This WILL overwrite the existing file if
@@ -61,22 +82,12 @@ class GenreMaker(ImageMaker):
 
         # If the source file doesn't exist, exit
         if not self.source.exists():
-            log.error(f'Cannot create genre card, "{self.source.resolve()}" '
+            log.error(f'Cannot create genre card - "{self.source.resolve()}" '
                       f'does not exist.')
             return None
 
         # Create the output directory and any necessary parents
         self.output.parent.mkdir(parents=True, exist_ok=True)
-
-        # Gradient command to either add/omit gradient
-        if self.omit_gradient:
-            gradient_command = []
-        else:
-            gradient_command = [
-                f'"{self.__GENRE_GRADIENT.resolve()}"',
-                f'-gravity south',
-                f'-composite',
-            ]
 
         # Command to create genre poster
         command = ' '.join([
@@ -87,16 +98,15 @@ class GenreMaker(ImageMaker):
             f'-gravity center',
             f'-extent "946x1446"',
             # Optionally add gradient
-            *gradient_command,
+            *self.gradient_commands,
             # Add border
-            f'-gravity center',
-            f'-bordercolor white',
-            f'-border 27x27' if not self.borderless else f'',
+            *self.border_commands,
             # Add genre text
             f'-font "{self.FONT.resolve()}"',
             f'-fill white',
             f'-pointsize {self.font_size * 159.0}',
             f'-kerning 2.25',
+            f'-interline-spacing -40',
             f'-annotate +0+564 "{self.genre}"',
             f'"{self.output.resolve()}"',
         ])

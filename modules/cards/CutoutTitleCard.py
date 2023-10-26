@@ -133,12 +133,7 @@ class CutoutTitleCard(BaseCardType):
 
     @property
     def title_text_commands(self) -> ImageMagickCommands:
-        """
-        Subcommand for adding title text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand for adding title text to the source image."""
 
         font_size = 50 * self.font_size
         font_kerning = 1 * self.font_kerning

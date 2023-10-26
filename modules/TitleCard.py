@@ -10,6 +10,7 @@ from modules.SeriesInfo import SeriesInfo
 
 # Built-in BaseCardType classes
 from modules.cards.AnimeTitleCard import AnimeTitleCard
+from modules.cards.CalligraphyTitleCard import CalligraphyTitleCard
 from modules.cards.ComicBookTitleCard import ComicBookTitleCard
 from modules.cards.CutoutTitleCard import CutoutTitleCard
 from modules.cards.DividerTitleCard import DividerTitleCard
@@ -61,6 +62,7 @@ class TitleCard:
         '4x3': FadeTitleCard,
         'anime': AnimeTitleCard,
         'blurred border': TintedFrameTitleCard,
+        'calligraphy': CalligraphyTitleCard,
         'comic book': ComicBookTitleCard,
         'cutout': CutoutTitleCard,
         'divider': DividerTitleCard,
@@ -124,12 +126,26 @@ class TitleCard:
             profile, **title_characteristics
         )
 
+        # Apply any custom title text formatting if supplied
+        if 'title_text_format' in extra_characteristics:
+            try:
+                self.converted_title = extra_characteristics['title_text_format'].format(
+                    title_text=self.converted_title,
+                    **self.episode.episode_info.characteristics,
+                    **extra_characteristics,
+                )
+            except Exception as exc:
+                log.error(f'Invalid title text format - {exc}')
+
         # Initialize this episode's CardType instance
         kwargs = {
             'source_file': episode.source,
             'card_file': episode.destination,
             'title_text': self.converted_title,
-            'season_text': profile.get_season_text(self.episode.episode_info),
+            'season_text': profile.get_season_text(
+                self.episode.episode_info,
+                getattr(self.episode.card_class, 'SEASON_TEXT_FORMATTER', None),
+            ),
             'episode_text': profile.get_episode_text(self.episode),
             'hide_season_text': profile.hide_season_title,
             'blur': episode.blur,
@@ -200,7 +216,7 @@ class TitleCard:
     def get_multi_output_filename(
             format_string: str,
             series_info: SeriesInfo,
-            multi_episode: 'MultiEpisode',                                      # type: ignore
+            multi_episode: 'MultiEpisode', # type: ignore
             media_directory: Path
         ) -> Path:
         """

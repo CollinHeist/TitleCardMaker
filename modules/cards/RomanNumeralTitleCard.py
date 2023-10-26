@@ -440,12 +440,7 @@ class RomanNumeralTitleCard(BaseCardType):
 
     @property
     def title_text_command(self) -> ImageMagickCommands:
-        """
-        Subcommand to add title text to the image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand to add title text to the image."""
 
         font_size = 150 * self.font_size
         interword_spacing = 40 + self.font_interword_spacing

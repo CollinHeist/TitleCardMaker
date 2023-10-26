@@ -1,45 +1,21 @@
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Optional
 
-from modules.BaseCardType import BaseCardType, ImageMagickCommands
-from modules.Debug import log
+from modules.BaseCardType import (
+    BaseCardType, Coordinate, ImageMagickCommands, Rectangle,
+)
 
 SeriesExtra = Optional
 Element = Literal['index', 'logo', 'omit', 'title']
 MiddleElement = Literal['logo', 'omit']
 
 
-@dataclass(repr=False)
-class Coordinate:
-    """Class that defines a single Coordinate on an x/y plane."""
-    x: float
-    y: float
-
-    def __str__(self) -> str:
-        return f'{self.x:.0f},{self.y:.0f}'
-
-
-@dataclass(repr=False)
-class Rectangle:
-    """Class that defines movable SVG rectangle."""
-    start: Coordinate
-    end: Coordinate
-
-    def __str__(self) -> str:
-        return f'rectangle {str(self.start)},{str(self.end)}'
-
-    def draw(self) -> str:
-        """Draw this Rectangle"""
-        return f'-draw "{str(self)}"'
-
-
 class TintedFrameTitleCard(BaseCardType):
     """
-    This class describes a CardType that produces title cards featuring
-    a rectangular frame with blurred content on the edges of the frame,
-    and unblurred content within. The frame itself can be intersected by
-    title text, index text, or a logo at the top and bottom.
+    CardType that produces title cards featuring a rectangular frame
+    with blurred content on the edges of the frame, and unblurred
+    content within. The frame itself can be intersected by title text,
+    index text, or a logo at the top and bottom.
     """
 
     """Directory where all reference files used by this card are stored"""
@@ -216,9 +192,6 @@ class TintedFrameTitleCard(BaseCardType):
         """
         Subcommand to blur the outer frame of the source image (if
         indicated).
-
-        Returns:
-            List of ImageMagick Commands.
         """
 
         # Blurring is disabled (or being applied globally), return empty command
@@ -244,12 +217,7 @@ class TintedFrameTitleCard(BaseCardType):
 
     @property
     def title_text_commands(self) -> ImageMagickCommands:
-        """
-        Subcommand for adding title text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand for adding title text to the source image."""
 
         # No title text, or not being shown
         if (len(self.title_text) == 0
@@ -286,12 +254,7 @@ class TintedFrameTitleCard(BaseCardType):
 
     @property
     def index_text_commands(self) -> ImageMagickCommands:
-        """
-        Subcommand for adding index text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand for adding index text to the source image."""
 
         # If not showing index text, or all text is hidden, return
         if ((self.top_element != 'index' and self.bottom_element != 'index')
@@ -339,9 +302,6 @@ class TintedFrameTitleCard(BaseCardType):
         """
         Subcommand for adding the logo to the image if indicated by
         either extra (and the logo file exists).
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         # Logo not indicated or not available, return empty commands
@@ -391,9 +351,6 @@ class TintedFrameTitleCard(BaseCardType):
         """
         Subcommand to add the top of the frame, intersected by the
         selected element.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         # Coordinates used by multiple rectangles
@@ -462,9 +419,6 @@ class TintedFrameTitleCard(BaseCardType):
         """
         Subcommand to add the bottom of the frame, intersected by the
         selected element.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         # Coordinates used by multiple rectangles
@@ -540,9 +494,6 @@ class TintedFrameTitleCard(BaseCardType):
         image and the interior (unblurred) image. This box features a
         drop shadow. The top and bottom parts of the frame are
         optionally intersected by a index text, title text, or a logo.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         # Coordinates used by multiple rectangles
@@ -589,9 +540,6 @@ class TintedFrameTitleCard(BaseCardType):
         Subcommands to add the top-level mask which overlays all other
         elements of the image, even the frame. This mask can be used to
         have parts of the image appear to "pop out" of the frame.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         # Do not apply mask if stylized

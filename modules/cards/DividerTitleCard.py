@@ -125,12 +125,7 @@ class DividerTitleCard(BaseCardType):
 
     @property
     def index_text_command(self) -> ImageMagickCommands:
-        """
-        Subcommand for adding the index text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand for adding the index text to the source image."""
 
         gravity = 'west' if self.title_text_position == 'left' else 'east'
 
@@ -157,12 +152,7 @@ class DividerTitleCard(BaseCardType):
 
     @property
     def title_text_command(self) -> ImageMagickCommands:
-        """
-        Subcommand for adding the title text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand for adding the title text to the source image."""
 
         # No title text, return blank commands
         if len(self.title_text) == 0:

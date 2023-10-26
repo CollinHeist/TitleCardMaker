@@ -112,12 +112,7 @@ class StandardTitleCard(BaseCardType):
 
     @property
     def index_commands(self) -> ImageMagickCommands:
-        """
-        Subcommand for adding the index text to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommand for adding the index text to the image."""
 
         if self.hide_season_text and self.hide_episode_text:
             return []
@@ -205,10 +200,7 @@ class StandardTitleCard(BaseCardType):
     @property
     def black_title_commands(self) -> ImageMagickCommands:
         """
-        Subcommand for adding the black stroke behind the title text.
-
-        Returns:
-            List of ImageMagick commands.
+        Subcommands for adding the black stroke behind the title text.
         """
 
         # Stroke disabled, return empty command

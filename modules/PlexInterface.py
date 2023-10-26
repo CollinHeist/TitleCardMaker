@@ -4,6 +4,7 @@ from re import IGNORECASE, compile as re_compile
 from sys import exit as sys_exit
 from typing import Any, Callable, Optional, Union
 
+from PIL import Image
 from plexapi.exceptions import PlexApiException
 from plexapi.server import PlexServer, NotFound, Unauthorized
 from plexapi.library import Library as PlexLibrary
@@ -78,6 +79,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     """How many failed episodes result in skipping a series"""
     SKIP_SERIES_THRESHOLD = 3
 
+    """EXIF data to write to images if PMM integration is enabled"""
+    EXIF_TAG = {'key': 0x4242, 'data': 'titlecard'}
+
     """Episode titles that indicate a placeholder and are to be ignored"""
     __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
 
@@ -127,7 +131,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             sys_exit(1)
 
         # Store integration
-        self.integrate_with_pmm_overlays = integrate_with_pmm_overlays
+        self.integrate_with_pmm = integrate_with_pmm_overlays
 
         # Create/read loaded card database
         self.__posters = PersistentDatabase(self.LOADED_POSTERS_DB)
@@ -225,11 +229,13 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         Get all libraries and their associated base directories.
 
         Args:
-            filer_libraries: List of library names to filter the return by.
+            filer_libraries: List of library names to filter the return
+                by.
 
         Returns:
-            Dictionary whose keys are the library names, and whose values are
-            the list of paths to that library's base directories.
+            Dictionary whose keys are the library names, and whose
+            values are the list of paths to that library's base
+            directories.
         """
 
         # Go through every library in this server
@@ -331,7 +337,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         ) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
-        have  already aired are returned.
+        have already aired are returned.
 
         Args:
             library_name: The name of the library containing the series.
@@ -428,16 +434,19 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             style_set: StyleSet,
         ) -> None:
         """
-        Modify the Episode objects according to the watched status of the
-        corresponding episodes within Plex, and the spoil status of the object.
-        If a loaded card needs its spoiler status changed, the card is deleted
-        and the loaded map is forced to reload that card.
+        Modify the Episode objects according to the watched status of
+        the corresponding episodes within Plex, and the spoil status of
+        the object. If a loaded card needs its spoiler status changed,
+        the card is deleted and the loaded map is forced to reload that
+        card.
 
         Args:
             library_name: The name of the library containing the series.
             series_info: The series to update.
-            episode_map: Dictionary of episode keys to Episode objects to modify
-            style_set: StyleSet object to update the style of the Episodes with.
+            episode_map: Dictionary of episode keys to Episode objects
+                to modify
+            style_set: StyleSet object to update the style of the
+                Episodes with.
         """
 
         # If no episodes, exit
@@ -609,7 +618,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             episode_info: The episode to get the source image of.
 
         Returns:
-            URL to the thumbnail of the given Episode. None if the episode DNE.
+            URL to the thumbnail of the given Episode. None if the
+            episode DNE.
         """
 
         # If the given library cannot be found, exit
@@ -659,7 +669,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             filepath: Path,
         ) -> None:
         """
-        Upload the given poster to the given Episode, retrying if it fails.
+        Upload the given poster to the given Episode, retrying if it
+        fails.
 
         Args:
             plex_object: The plexapi object to upload the file to.
@@ -667,6 +678,24 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         """
 
         plex_object.uploadPoster(filepath=filepath)
+
+
+    def __add_exif_tag(self, card: Path) -> None:
+        """
+        Add an EXIF tag to the given Card file. This adds "titlecard" at
+        0x4242, and overwrites the existing file.
+
+        Args:
+            card: Path to the Card file to modify.
+        """
+
+        # Create Image object, read EXIF data
+        card_image = Image.open(card)
+        exif = card_image.getexif()
+
+        # Add EXIF data, write modified file
+        exif[self.EXIF_TAG['key']] = self.EXIF_TAG['data']
+        card_image.save(card.resolve(), exif=exif)
 
 
     @catch_and_log('Error uploading title cards')
@@ -726,10 +755,17 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             if (card := self.compress_image(episode.destination)) is None:
                 continue
 
-            # Upload card to Plex, optionally remove Overlay label
+            # Upload card to Plex
             try:
+                # If integrating with PMM, add EXIF data
+                if self.integrate_with_pmm:
+                    self.__add_exif_tag(card)
+
+                # Upload card
                 self.__retry_upload(pl_episode, card.resolve())
-                if self.integrate_with_pmm_overlays:
+
+                # If integrating with PMM, remove label
+                if self.integrate_with_pmm:
                     pl_episode.removeLabel(['Overlay'])
             except Exception as e:
                 error_count += 1
@@ -766,9 +802,11 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         Set the season posters from the given set within Plex.
 
         Args:
-            library_name: Name of the library containing the series to update.
+            library_name: Name of the library containing the series to
+                update.
             series_info: The series to update.
-            season_poster_set: SeasonPosterSet with season posters to set.
+            season_poster_set: SeasonPosterSet with season posters to
+                set.
         """
 
         # If no posters to upload, skip
@@ -835,17 +873,19 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             rating_key: int,
         ) -> list[tuple[SeriesInfo, EpisodeInfo, str]]:
         """
-        Get all details for all episodes indicated by the given Plex rating key.
+        Get all details for all episodes indicated by the given Plex
+        rating key.
 
         Args:
             rating_key: Rating key used to fetch the item within Plex.
 
         Returns:
-            List of tuples of the SeriesInfo, EpisodeInfo, and the library name
-            corresponding to the given rating key. If the object associated with
-            the rating key is a show/season, then all contained episodes are
-            detailed. An empty list is returned if the item(s) associated with
-            the given key cannot be found.
+            List of tuples of the SeriesInfo, EpisodeInfo, and the
+            library name corresponding to the given rating key. If the
+            object associated with the rating key is a show/season, then
+            all contained episodes are detailed. An empty list is
+            returned if the item(s) associated with the given key cannot
+            be found.
         """
 
         try:
