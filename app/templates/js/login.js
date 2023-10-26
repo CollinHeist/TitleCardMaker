@@ -73,6 +73,15 @@ function submitForm() {
 
 // If enter is pressed in the password field, submit form
 $(document).ready(function() {
+  // If authentication is disabled, auto-redirect
+  {% if not require_auth %}
+  // Get redirect URL from the search params
+  const redirectURL = new URLSearchParams(window.location.search).get('redirect');
+  if (redirectURL) { window.location.href = redirectURL; }
+  else {             window.location.href = '/';         }
+  {% endif %}
+
+  // Assign keybindings
   $('#password').on('keydown', event => {
     if (event.keyCode === 13 || event.key === "Enter") { submitForm(); }
   });
