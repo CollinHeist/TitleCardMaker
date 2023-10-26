@@ -3,6 +3,8 @@ title: Welcome to TitleCardMaker
 description: >
     Automate the creation and customization of Title Cards for Plex, Jellyfin,
     and Emby.
+hide:
+    - navigation
 ---
 
 # Welcome to TitleCardMaker
@@ -11,23 +13,27 @@ description: >
 
     This documentation is actively being developed.
 
-TitleCardMaker is a program and Docker container written in Python that
-automates the creation of customized title cards for use in personal media
+TitleCardMaker (TCM) is a program and Docker container written in Python that
+automates the creation of customized Title Cards for use in personal media
 server services like Plex, Jellyfin, or Emby.
 
-??? question "What is a Title Card?"
+# What is a Title Card?
 
-    A Title Card is a thumbnail image for an Episode used to add a
-    unique look within a personal media server like Emby, Jellyfin, or
-    Plex. Some Series have "official" Title Cards featured in the
-    Episode itself.
+A Title Card is a thumbnail image for an Episode of television that can be used
+to add a unique look within a personal media server like Plex, Emby, or
+Jellyfin. Some Series have "official" Title Cards featured in the Episode
+itself. For example, the following Cards can both be automatically created with
+TitleCardMaker:
+
+![Tinted Frame](./assets/card_example0.jpg){width="48%"} ![Tinted Frame](./assets/card_example1.jpg){width="48%"}
 
 # Early Access
 
 !!! info "Availability of Early Access"
 
     While the TitleCardMaker Web UI is under development, it is only accessible
-    to project Sponsors.
+    to project Sponsors. If you are interested, see
+    [here](https://github.com/sponsors/CollinHeist).
 
 ## Downloading the Code
 
@@ -74,6 +80,8 @@ will now be downloaded into that directory.
     ??? example "Example"
 
         === ":material-linux: Linux"
+
+            <!-- termynal -->
 
             ```bash
             cd "~/Your/Install/Directory" # (1)!

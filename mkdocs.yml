@@ -27,13 +27,21 @@ theme:
         icon: material/brightness-4
         name: Switch to light mode
   features:
+    # Hide header after scrolling
+    # - header.autohide
     # SPA instant navigation
     - navigation.instant
+    # Show progress bar on slow connections
+    - navigation.instant.progress
     # Linked content tabs
     - content.tabs.link
+    # Update URL anchors with current location
+    - navigation.tracking
     # Navigation bar/menu
-    # - navigation.tabs
-    # - navigation.tabs.sticky
+    - navigation.tabs
+    - navigation.tabs.sticky
+    # Render table of contents as part of navbar
+    - toc.integrate
     # Back to top buttom
     - navigation.top
     # Add bottom next/previous nav buttons
@@ -100,8 +108,8 @@ markdown_extensions:
   # Icons
   # - attr_list
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
   # Code blocks
   - pymdownx.highlight:
