@@ -2,7 +2,7 @@ site_name: TitleCardMaker
 site_url: https://collinheist.github.io/TitleCardMaker/
 site_author: Collin Heist
 site_description: >-
-  Automated title card creator for Plex, Emby, and Jellyfin.
+  Automated Title Card creator for Plex, Emby, and Jellyfin.
 
 repo_name: CollinHeist/TitleCardMaker
 repo_url: https://github.com/CollinHeist/TitleCardMaker

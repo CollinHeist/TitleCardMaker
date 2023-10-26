@@ -129,6 +129,17 @@ class TitleCard:
             profile, **title_characteristics
         )
 
+        # Apply any custom title text formatting if supplied
+        if 'title_text_format' in extra_characteristics:
+            try:
+                self.converted_title = extra_characteristics['title_text_format'].format(
+                    title_text=self.converted_title,
+                    **self.episode.episode_info.characteristics,
+                    **extra_characteristics,
+                )
+            except Exception as exc:
+                log.error(f'Invalid title text format - {exc}')
+
         # Initialize this episode's CardType instance
         kwargs = {
             'source_file': episode.source,
