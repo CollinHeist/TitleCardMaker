@@ -1,5 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
+from app.dependencies import get_database
 from app.routers.auth import auth_router
 from app.routers.availability import availablility_router
 from app.routers.blueprint import blueprint_router
@@ -41,3 +44,24 @@ api_router.include_router(source_router)
 api_router.include_router(sync_router)
 api_router.include_router(template_router)
 api_router.include_router(translation_router)
+
+# Create ping API endpoint
+@api_router.get('/healthcheck')
+def health_check(
+        request: Request,
+        db: Session = Depends(get_database),
+    ) -> None:
+    """
+    Check the health of the TCM server by attempting to perform a dummy
+    database operation; raising an HTTPException (500) if a connection
+    cannot be established.
+    """
+
+    try:
+        db.execute(text('SELECT 1'))
+    except Exception as exc:
+        request.state.log.exception(f'Health check failed - {exc}', exc)
+        raise HTTPException(
+            status_code=500,
+            detail=f'Database returned some error - {exc}'
+        ) from exc
