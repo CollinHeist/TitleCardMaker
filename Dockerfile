@@ -37,24 +37,26 @@ ENV TCM_PREFERENCES=/config/preferences.yml \
     TCM_IS_DOCKER=TRUE \
     TZ=UTC
 
-# Delete setup files
-# Create user and group to run the container
-# Clean up apt cache
-RUN set -eux && \
+# Finalize setup
+RUN \
+    # Create user and group to run TCM
+    set -eux && \
     rm -f Pipfile Pipfile.lock && \
     groupadd -g 314 titlecardmaker && \
     useradd -u 314 -g 314 titlecardmaker && \
+    # Install imagemagick and curl (for healthcheck)
     apt-get update && \
-    apt-get install -y --no-install-recommends imagemagick libmagickcore-6.q16-6-extra && \
-    rm -rf /var/lib/apt/lists/* && \
-    cp modules/ref/policy.xml /etc/ImageMagick-6/policy.xml
+    apt-get install -y --no-install-recommends curl imagemagick libmagickcore-6.q16-6-extra && \
+    cp modules/ref/policy.xml /etc/ImageMagick-6/policy.xml && \
+    # Remove apt cache and setup files
+    rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/*
 
 # Expose TCM Port
 EXPOSE 4242
 
 # Healthcheck command
-HEALTHCHECK --interval=5m --timeout=20s --start-period=3m --start-interval=10s \
-    CMD curl --fail http://localhost:4242/ || exit 1
+HEALTHCHECK --interval=3m --timeout=10s --start-period=3m --start-interval=10s \
+    CMD curl --fail http://0.0.0.0:4242/api/healthcheck || exit 1
 
 # Entrypoint
 CMD ["python3", "-m", "uvicorn", "app-main:app", "--host", "0.0.0.0", "--port", "4242"]
