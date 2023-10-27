@@ -84,38 +84,28 @@ will now be downloaded into that directory.
             <!-- termynal -->
 
             ```bash
-            cd "~/Your/Install/Directory" # (1)!
+            cd "~/Your/Install/Directory"
             ```
-
-            1. Replace `~/Your/Install/Directory` with the path to the directory
-            from the above Step 2.
 
         === ":material-apple: MacOS"
 
             ```bash
-            cd "~/Your/Install/Directory" # (1)!
+            cd "~/Your/Install/Directory"
             ```
-
-            1. Replace `~/Your/Install/Directory` with the path to the directory
-            from the above Step 2.
 
         === ":material-powershell: Windows (Powershell)"
 
             ```bash
-            cd 'C:\Your\Install\Directory' <#(1)#>
+            cd 'C:\Your\Install\Directory'
             ```
-
-            1. Replace `~/Your/Install/Directory` with the path to the directory
-            from the above Step 2.
 
         === ":material-microsoft-windows: Windows (Non-Powershell)"
 
             ```bash
-            cd 'C:\Your\Install\Directory' # (1)!
+            cd 'C:\Your\Install\Directory'
             ```
 
-            1. Replace `~/Your/Install/Directory` with the path to the directory
-            from the above Step 2.
+        Replace the example path with the directory from Step 3 above.
 
 2. Within the main installation directory, create the required folder for 
 TCM - this is `config` - by executing the following command:

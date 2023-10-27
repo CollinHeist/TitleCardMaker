@@ -27,8 +27,6 @@ theme:
         icon: material/brightness-4
         name: Switch to light mode
   features:
-    # Hide header after scrolling
-    # - header.autohide
     # SPA instant navigation
     - navigation.instant
     # Show progress bar on slow connections
@@ -63,6 +61,9 @@ plugins:
   - search:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   
+  - termynal:
+      title: Command Line
+
   # Enable social cards
   - social:
       enabled: !ENV [CI, false]
@@ -146,8 +147,9 @@ nav:
     - Installation - Docker:
       - getting_started/docker/index.md
       - Docker: getting_started/docker/docker.md
-      - UnRAID: getting_started/docker/unraid.md
+      - Docker Compose: getting_started/docker/compose.md
       - Synology DSM: getting_started/docker/synology.md
+      - UnRAID: getting_started/docker/unraid.md
     - Installation - Local: getting_started/local.md
     - Importing YAML Settings: getting_started/import_settings.md
     - Configuring Connections:
