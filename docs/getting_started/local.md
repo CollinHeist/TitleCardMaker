@@ -3,6 +3,8 @@ title: Installing TitleCardMaker Locally
 decription: >
     How to install TitleCardMaker (and all of the dependencies) outside of a 
     Docker container.
+tags:
+    - Tutorial
 ---
 
 # Local Installation
@@ -123,7 +125,7 @@ pip3 install pipenv
 Then install the required libraries (dependencies) by executing:
 
 ```bash
-pipenv install 
+$ pipenv install
 ```
 
 !!! failure "Command Failure"
@@ -183,8 +185,14 @@ directory.
 With all the required packages and software installed, you are ready to launch
 TitleCardMaker. This can be done by executing the following command:
 
+<!-- termynal -->
 ```bash
-pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
+$ pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
+[DEBUG] Dumped Preferences to "[...]/TitleCardMaker/config/config.pickle"..
+INFO:     Started server process [4072]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:4242 (Press CTRL+C to quit)
 ```
 
 This launches the TitleCardMaker web interface, and you will be able to

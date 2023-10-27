@@ -2,6 +2,9 @@
 title: Creating Title Cards
 description: >
     Wrapping up the tutorial with Title Card creation.
+tags:
+    - Tutorial
+    - Title Cards
 ---
 
 # Creating Title Cards

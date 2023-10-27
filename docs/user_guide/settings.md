@@ -2,6 +2,8 @@
 title: Settings
 description: >
     In-depth descriptions of all global settings.
+tags:
+    - Global Settings
 ---
 
 # Settings

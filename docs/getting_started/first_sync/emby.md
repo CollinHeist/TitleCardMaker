@@ -2,6 +2,10 @@
 title: Syncing from Emby
 description: >
     Creating a Sync to automatically add Series from Emby to TitleCardMaker.
+tags:
+    - Tutorial
+    - Emby
+    - Sync
 ---
 
 # Syncing from Emby

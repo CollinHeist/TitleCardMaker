@@ -1,15 +1,16 @@
 site_name: TitleCardMaker
-site_url: https://collinheist.github.io/TitleCardMaker/
+site_url: https://titlecardmaker.com/
 site_author: Collin Heist
 site_description: >-
   Automated Title Card creator for Plex, Emby, and Jellyfin.
 
 repo_name: CollinHeist/TitleCardMaker
 repo_url: https://github.com/CollinHeist/TitleCardMaker
+edi_uri: edit/web-ui/docs/
 
 theme:
-  logo: ./assets/logo_full.svg
-  favicon: ./assets/favicon.ico
+  logo: ./assets/logo.svg
+  favicon: ./assets/favicon.svg
   name: material
   palette:
     - media: "(prefers-color-scheme: light)"
@@ -53,14 +54,15 @@ theme:
   font:
     text: Roboto
     code: Roboto Mono
-  icon:
-    logo: logo
+  # icon:
+  #   logo: ./assets/logo.svg
 
 plugins:
   # Enable site search
   - search:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   
+  # Enable animated code terminals
   - termynal:
       title: Command Line
 

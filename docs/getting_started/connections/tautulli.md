@@ -3,6 +3,9 @@ title: Connecting to Tautulli
 description: >
     How to enable the Tautulli Integration to trigger immediate Title Card
     creation when Episodes are watched on or added to Plex.
+tags:
+    - Tutorial
+    - Tautulli
 ---
 
 # Tautulli
