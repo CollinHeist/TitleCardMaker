@@ -57,11 +57,11 @@ class InterfaceID:
 
 
     def __init__(self,
+            /, 
             id_: Optional[str] = None,
-            /,
             *,
-            type_: Callable = str,
-            libraries: bool = False,
+            type_: Callable[[str], Any] = str,
+            uses_libraries: bool = False,
         ) -> None:
         """
         Construct a new InterfaceID object from the given ID string.
@@ -69,32 +69,30 @@ class InterfaceID:
         Args:
             id_: ID string to parse for interface ID pairs.
             type_: Callable for converting the type of each ID.
+            uses_libraries: Whether these types of IDs allow per-library
+                ID specification (in addition to per-interface).
         """
 
         self._type = type_
-        self._libraries = libraries
+        self._libraries = uses_libraries
 
         # No ID provided
         self._ids = {}
         if not id_:
             return None
 
-        if libraries:
-            for sub_id in id_.split(self.INTER_INTERFACE_KEY):
-                interface_id, library, id_ = self.LIBRARY_SUB_ID_REGEX.match(
-                    sub_id
-                ).groups()
-                interface_id = int(interface_id)
+        for sub_id in id_.split(self.INTER_INTERFACE_KEY):
+            id_vals = sub_id.split(self.INTER_ID_KEY)
+            interface_id = int(id_vals[0])
+            id_value = type(id_vals[-1])
+            if uses_libraries:
+                library = id_vals[1]
                 if interface_id in self._ids:
-                    self._ids[interface_id][library] = type_(id_)
+                    self._ids[interface_id][library] = id_value
                 else:
-                    self._ids[interface_id] = {library: type_(id_)}
-        else:
-            self._ids = {
-                int(substr.split(self.INTER_ID_KEY)[0]):
-                    type_(substr.split(self.INTER_ID_KEY)[1])
-                for substr in id_.split(self.INTER_INTERFACE_KEY)
-            }
+                    self._ids[interface_id] = {library: id_value}
+            else:
+                self._ids[interface_id] = id_value
 
         return None
 
@@ -272,11 +270,11 @@ class InterfaceID:
 
         if isinstance(other, str):
             other = InterfaceID(
-                other, type_=self._type, libraries=self._libraries
+                other, type_=self._type, uses_libraries=self._libraries
             )
 
         return_id = InterfaceID(
-            str(self), type_=self._type, libraries=self._libraries
+            str(self), type_=self._type, uses_libraries=self._libraries
         )
         for interface_id, sub_id in other._ids.items():
             if self._libraries:
