@@ -364,7 +364,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
 
         # Match to existing info
         for old_episode_info in episode_infos:
-            for new_episode_info in new_episode_infos:
+            for new_episode_info, _ in new_episode_infos:
                 if old_episode_info == new_episode_info:
                     # For each ID of this new EpisodeInfo, update old if upgrade
                     for id_type, id_ in new_episode_info.ids.items():
