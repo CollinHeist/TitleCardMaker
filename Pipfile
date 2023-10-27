@@ -38,6 +38,7 @@ mkdocs = "*"
 cairosvg = "*"
 pillow = "*"
 pylint = "*"
+termynal = "*"
 mkdocs-material = {extras = ["imaging"], version = "*"}
 
 [requires]

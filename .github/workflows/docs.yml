@@ -30,6 +30,6 @@ jobs:
           repository: CollinHeist/mkdocs-material
           path: ./mkdocs
 
-      - run: cd mkdocs && python -m pip install .[imaging] && python -m pip install -r ../docs/requirements.txt
+      - run: cd mkdocs && python -m pip install .[imaging] termynal==0.11.1
 
       - run: mkdocs gh-deploy --force
