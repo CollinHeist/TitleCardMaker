@@ -388,6 +388,12 @@ function initializeEmby() {
               });
             }, error: response => showErrorToast({title: `Error Querying ${connection.name} Usernames`, response}),
           });
+        } else if (connection.username) {
+          const dropdown = $(`#connection${connection.id} .dropdown[data-value="username"]`);
+          dropdown.toggleClass('disabled', true);
+          dropdown.dropdown({
+            values: [{name: connection.username, value: connection.username, selected: true}],
+          });
         }
         // SSL
         $(`#connection${connection.id} .checkbox[data-value="use_ssl"]`).checkbox(
@@ -464,6 +470,12 @@ function initializeJellyfin() {
                 }),
               });
             }, error: response => showErrorToast({title: `Error Querying ${connection.name} Usernames`, response}),
+          });
+        } else if (connection.username) {
+          const dropdown = $(`#connection${connection.id} .dropdown[data-value="username"]`);
+          dropdown.toggleClass('disabled', true);
+          dropdown.dropdown({
+            values: [{name: connection.username, value: connection.username, selected: true}],
           });
         }
         // SSL
