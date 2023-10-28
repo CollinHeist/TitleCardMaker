@@ -375,7 +375,7 @@ def load_all_series_title_cards(
         interface_id = library['interface_id']
         if (interface := get_interface(interface_id)):
             load_series_title_cards(
-                series, library, interface_id, db, interface,
+                series, library['name'], interface_id, db, interface,
                 force_reload=force_reload, log=log,
             )
         else:

@@ -69,10 +69,13 @@ def set_episode_ids(
 
     # Set ID's from all possible interfaces
     for library in series.libraries:
-        if (interface := get_interface(library['interface_id'])):
+        if (interface := get_interface(library['interface_id'], raise_exc=False)):
             interface.set_episode_ids(
                 library['name'], series.as_series_info, episode_infos, log=log,
             )
+        else:
+            log.debug(f'Skipping Library "{library["name"]}" - no applicable '
+                      f'interface')
 
     # Set from Sonarr and TMDb
     for _, interface in get_sonarr_interfaces():

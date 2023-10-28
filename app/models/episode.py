@@ -300,7 +300,7 @@ class Episode(Base):
         changed = False
         for id_type, id_ in info.ids.items():
             if id_ and getattr(self, id_type) != id_:
-                print(f'{self.log_str}.{id_type} | {getattr(self, id_type)} -> {id_}')
+                log.debug(f'{self.log_str}.{id_type} | {getattr(self, id_type)} -> {id_}')
                 setattr(self, id_type, id_)
                 changed = True
 
