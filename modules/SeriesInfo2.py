@@ -340,7 +340,6 @@ class SeriesInfo(DatabaseInfoContainer):
             id_str = str(self.jellyfin_id)
             id_conditions.append(SeriesModel.jellyfin_id.contains(id_str))
             id_conditions.append(literal(id_str).contains(SeriesModel.jellyfin_id))
-            id_conditions.append(SeriesModel.jellyfin_id==self.jellyfin_id)
         if self.sonarr_id and hasattr(SeriesModel, 'sonarr_id'):
             id_str = str(self.sonarr_id)
             id_conditions.append(SeriesModel.sonarr_id.contains(id_str))

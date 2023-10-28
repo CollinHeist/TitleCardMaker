@@ -374,7 +374,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             for new_episode_info, _ in new_episode_infos:
                 if old_episode_info == new_episode_info:
                     # For each ID of this new EpisodeInfo, update old if upgrade
-                    old_episode_info.copy_ids(new_episode_info)
+                    old_episode_info.copy_ids(new_episode_info, log=log)
                     break
 
 
@@ -668,7 +668,6 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             episode_id = self.__get_episode_id(
                 library_name, series_id, episode.as_episode_info
             )
-            log.debug(f'{episode.as_episode_info}.jellyfin_id[{self._interface_id}, {library_name}] = {episode_id}')
             if episode_id is None:
                 continue
 
