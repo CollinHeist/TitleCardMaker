@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from logging import Logger
 from re import IGNORECASE, compile as re_compile
 from typing import Any, Callable, Optional, Union
 
@@ -141,7 +142,7 @@ class InterfaceID:
         return self._ids.get(connection_id)
 
 
-    def __eq__(self, other: 'InterfaceID') -> bool:
+    def __eq__(self, other: Union[str, 'InterfaceID']) -> bool:
         """
         Evaluate the equality of two InterfaceID objects.
 
@@ -151,26 +152,27 @@ class InterfaceID:
         Returns:
             True if any IDs of the two IDs (of the same Interface ID)
             match. False otherwise.
-
-        Raises:
-            TypeError if `other` is not an InterfaceID object.
         """
+
+        # If string, convert to InterfaceID and compare
+        if isinstance(other, str):
+            return self == InterfaceID(
+                other, type_=self._type, libraries=self._libraries
+            )
 
         # Verify class comparison
         if not isinstance(other, self.__class__):
             raise TypeError(f'Can only compare like InterfaceID objects')
 
+        # Per-library IDs, compare each interface and library field
         if self._libraries:
             return any(
-                other[interface_id, library] == id_
-                for interface_id, sub_id in self._ids.items()
+                other[iid, library] == id_
+                for iid, sub_id in self._ids.items()
                 for library, id_ in sub_id.items()
             )
 
-        return any(
-            other[interface_id] == id_
-            for interface_id, id_ in self._ids.items()
-        )
+        return any(other[iid] == id_ for iid, id_ in self._ids.items())
 
 
     def __gt__(self, other: Union[str, 'InterfaceID']) -> bool:
@@ -190,10 +192,26 @@ class InterfaceID:
             not defined in `other`. False otherwise.
         """
 
+        # If a string, convert to InterfaceID and compare
         if isinstance(other, str):
-            return self > InterfaceID(other)
+            return self > InterfaceID(
+                other, type_=self._type, libraries=self._libraries
+            )
 
-        return set(self._ids) > set(other._ids)
+        # Per-library IDs, use nested comparison
+        if self._libraries:
+            return (
+                # If this object has any interfaces not present in other
+                any(key not in other._ids for key in self._ids)
+                # or this object has any libraries not present in other
+                or any(
+                    key not in other._ids[iid]
+                    for iid in self._ids
+                    for key in self._ids[iid]
+                )
+            )
+
+        return any(key not in other._ids for key in self._ids)
 
 
     def __lt__(self, other: Union[str, 'InterfaceID']) -> bool:
@@ -213,10 +231,26 @@ class InterfaceID:
             is defined in `other`. False otherwise.
         """
 
+        # If a string, convert to InterfaceID and compare
         if isinstance(other, str):
-            return self < InterfaceID(other)
+            return self < InterfaceID(
+                other, type_=self._type, libraries=self._libraries
+            )
 
-        return set(self._ids) < set(other._ids)
+        # Per-library IDs, use nested comparison
+        if self._libraries:
+            return (
+                # If this object has any interfaces not present in other
+                any(key not in self._ids for key in other._ids)
+                # or this object has any libraries not present in other
+                or any(
+                    key not in self._ids[iid]
+                    for iid in other._ids
+                    for key in other._ids[iid]
+                )
+            )
+
+        return any(key not in self._ids for key in other._ids)
 
 
     def __bool__(self) -> bool:
@@ -429,7 +463,7 @@ class DatabaseInfoContainer(ABC):
         )
 
 
-    def copy_ids(self, other: 'DatabaseInfoContainer') -> None:
+    def copy_ids(self, other: 'DatabaseInfoContainer', log: Logger = log) -> None:
         """
         Copy the database ID's from another DatabaseInfoContainer into
         this object. Only updating the more precise ID's (e.g. this
@@ -448,11 +482,11 @@ class DatabaseInfoContainer(ABC):
             # If this is an InterfaceID, combine
             if isinstance(getattr(self, attr), InterfaceID):
                 if getattr(other, attr) > getattr(self, attr):
-                    # log.debug(f'Merging {attr} <-- {getattr(self, attr)!r} + {getattr(other, attr)!r}')
+                    log.debug(f'Merging {attr} <-- {getattr(self, attr)!r} + {getattr(other, attr)!r}')
                     setattr(self, attr, getattr(self, attr) + getattr(other, attr))
             # Regular ID, copy if this info is missing
             elif not getattr(self, attr) and getattr(other, attr):
-                # log.debug(f'Copying {attr} <- {getattr(other, attr)}')
+                log.debug(f'Copying {attr} <- {getattr(other, attr)}')
                 setattr(self, attr, getattr(other, attr))
 
         return None

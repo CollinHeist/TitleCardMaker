@@ -159,7 +159,7 @@
       {% endif %}
       <td data-column="watched" data-type="boolean" class="center aligned collapsing"><!-- Icon --></td>
       {% if not preferences.simplified_data_table %}
-      {% if preferences.use_emby and series.emby_library_name %}
+      {% if preferences.use_emby %}
       <td data-column="emby_id" class="center aligned collapsing">
         <div class="ui transparent id input">
           <input name="emby_id" type="text" placeholder="-">
@@ -171,7 +171,7 @@
           <input name="imdb_id" type="text" placeholder="-">
         </div>
       </td>
-      {% if preferences.use_jellyfin and series.jellyfin_library_name %}
+      {% if preferences.use_jellyfin %}
       <td data-column="jellyfin_id" class="center aligned collapsing">
         <div class="ui transparent id input">
           <input name="jellyfin_id" type="text" placeholder="-">
@@ -948,11 +948,11 @@
                     {% endif %}
                     <th class="collapsing">Watched</th>
                     {% if not preferences.simplified_data_table %}
-                    {% if preferences.use_emby and series.emby_library_name %}
+                    {% if preferences.use_emby %}
                     <th class="collapsing">Emby<br>ID</th>
                     {% endif %}
                     <th class="collapsing">IMDb<br>ID</th>
-                    {% if preferences.use_jellyfin and series.jellyfin_library_name %}
+                    {% if preferences.use_jellyfin %}
                     <th class="collapsing">Jellyfin<br>ID</th>
                     {% endif %}
                     <th class="collapsing">TMDb<br>ID</th>
