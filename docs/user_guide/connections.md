@@ -2,6 +2,14 @@
 title: External Connections
 description: >
     Add connections to external services like Plex, Sonarr, Tautulli, or TMDb.
+tags:
+    - Authentication
+    - Emby
+    - Jellyfin
+    - Plex
+    - Sonarr
+    - Tautulli
+    - TMDb
 ---
 
 # Connections

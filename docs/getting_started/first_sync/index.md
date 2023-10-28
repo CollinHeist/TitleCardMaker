@@ -2,6 +2,8 @@
 title: Creating the First Sync
 description: >
     Automatically adding Series to TitleCardMaker.
+tags:
+    - Sync
 ---
 
 # Syncs

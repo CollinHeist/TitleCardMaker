@@ -16,3 +16,8 @@
 .red {
     color: #ef5552
 }
+
+/* Resize termynal windows */
+[data-termynal] {
+    padding: 40px 35px 35px !important;
+}

@@ -6,13 +6,13 @@ description: >
 
 # UnRAID Installation
 ## Background
+
 !!! info "Benefits of Docker"
 
-    For more info on the benefits of Docker, see [here](./docker.md#background).
+    For more info on the benefits of Docker, see [here](./index.md).
 
-For Synology DSM users, the built-in Docker manager can be used to
-easily set up TitleCardMaker with all the necessary Docker variables and
-paths.
+For Synology DSM users, the built-in Docker manager can be used to easily set up
+TitleCardMaker with all the necessary Docker variables and paths.
 
 ## Instructions
 
@@ -26,13 +26,12 @@ make your selection and continue.
 
     ??? tip "Choosing the Right Branch"
 
-        For most users, I recommend the default `master` branch. This
-        branch is updated with the most recent public release of
-        TitleCardMaker, and is the most stable option.
+        For most users, I recommend the default `latest` branch. This branch is
+        updated with the most recent public release of TitleCardMaker, and is
+        the most stable option.
 
-        For users who are okay with the ocassional bug, and would like
-        to test out features _as they are developed_, then choose the
-        `develop` tag.
+        For users who are okay with the occasional bug, and would like to test
+        out features _as they are developed_, then choose the `develop` tag.
 
 6. UnRAID will take you to the Docker template, where you can edit the
 details of the container as you'd like. There are four settings to take

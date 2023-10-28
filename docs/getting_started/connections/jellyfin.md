@@ -2,6 +2,9 @@
 title: Connecting to Jellyfin
 description: >
     How to connect TitleCardMaker to Jellyfin.
+tags:
+    - Tutorial
+    - Jellyfin
 ---
 
 # :simple-jellyfin:{ .jellyfin } Jellyfin

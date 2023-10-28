@@ -2,6 +2,10 @@
 title: Syncing from Sonarr
 description: >
     Creating a Sync to automatically add Series from Sonarr to TitleCardMaker.
+tags:
+    - Tutorial
+    - Sonarr
+    - Sync
 ---
 
 # Syncing from Sonarr

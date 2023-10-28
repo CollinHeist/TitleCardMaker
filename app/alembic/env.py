@@ -47,10 +47,6 @@ from app.models.user import User
 from app.database.session import Base
 target_metadata = Base.metadata
 
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
 from os import environ
 IS_DOCKER = environ.get('TCM_IS_DOCKER', 'false').lower() == 'true'
 

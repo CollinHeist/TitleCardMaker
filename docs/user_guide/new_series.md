@@ -2,6 +2,9 @@
 title: Series and Blueprint Browser
 description: >
     Manually add a Series or Blueprint to create Title Cards for.
+tags:
+    - Series
+    - Blueprints
 ---
 
 # Series and Blueprint Browser

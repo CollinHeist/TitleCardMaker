@@ -832,7 +832,8 @@ function getCardData(page=currentCardPage) {
       // Refresh theme, initialize dimmers
       refreshTheme();
       $('#card-previews .image .dimmer').dimmer({transition: 'fade up', on: 'hover'});
-    }, error: response => showErrorToast({title: 'Error Getting Card Data', response}),
+    },
+    // error: response => showErrorToast({title: 'Error Getting Card Data', response}),
   });
 }
 

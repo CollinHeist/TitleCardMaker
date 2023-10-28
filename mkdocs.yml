@@ -1,15 +1,16 @@
 site_name: TitleCardMaker
-site_url: https://collinheist.github.io/TitleCardMaker/
+site_url: https://titlecardmaker.com/
 site_author: Collin Heist
 site_description: >-
-  Automated title card creator for Plex, Emby, and Jellyfin.
+  Automated Title Card creator for Plex, Emby, and Jellyfin.
 
 repo_name: CollinHeist/TitleCardMaker
 repo_url: https://github.com/CollinHeist/TitleCardMaker
+edi_uri: edit/web-ui/docs/
 
 theme:
-  logo: ./assets/logo_full.svg
-  favicon: ./assets/favicon.ico
+  logo: ./assets/logo.svg
+  favicon: ./assets/favicon.svg
   name: material
   palette:
     - media: "(prefers-color-scheme: light)"
@@ -29,11 +30,17 @@ theme:
   features:
     # SPA instant navigation
     - navigation.instant
+    # Show progress bar on slow connections
+    - navigation.instant.progress
     # Linked content tabs
     - content.tabs.link
+    # Update URL anchors with current location
+    - navigation.tracking
     # Navigation bar/menu
-    # - navigation.tabs
-    # - navigation.tabs.sticky
+    - navigation.tabs
+    - navigation.tabs.sticky
+    # Render table of contents as part of navbar
+    - toc.integrate
     # Back to top buttom
     - navigation.top
     # Add bottom next/previous nav buttons
@@ -47,14 +54,18 @@ theme:
   font:
     text: Roboto
     code: Roboto Mono
-  icon:
-    logo: logo
+  # icon:
+  #   logo: ./assets/logo.svg
 
 plugins:
   # Enable site search
   - search:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   
+  # Enable animated code terminals
+  - termynal:
+      title: Command Line
+
   # Enable social cards
   - social:
       enabled: !ENV [CI, false]
@@ -138,8 +149,9 @@ nav:
     - Installation - Docker:
       - getting_started/docker/index.md
       - Docker: getting_started/docker/docker.md
-      - UnRAID: getting_started/docker/unraid.md
+      - Docker Compose: getting_started/docker/compose.md
       - Synology DSM: getting_started/docker/synology.md
+      - UnRAID: getting_started/docker/unraid.md
     - Installation - Local: getting_started/local.md
     - Importing YAML Settings: getting_started/import_settings.md
     - Configuring Connections:

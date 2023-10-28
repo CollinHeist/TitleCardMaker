@@ -2,6 +2,9 @@
 title: Global Settings
 description: >
     Recommended global settings for new users.
+tags:
+    - Tutorial
+    - Global Settings
 ---
 
 # Settings

@@ -2,6 +2,9 @@
 title: Connecting to Emby
 description: >
     How to connect TitleCardMaker to Emby.
+tags:
+    - Tutorial
+    - Emby
 ---
 
 # :material-emby:{.emby} Emby

@@ -2,6 +2,9 @@
 title: Connecting to Emby
 description: >
     How to connect TitleCardMaker to Sonarr and enable the new-Episode Webhook.
+tags:
+    - Tutorial
+    - Sonarr
 ---
 
 # Sonarr

@@ -2,6 +2,9 @@
 title: Creating a Font
 description: >
     An introduction to creating and using custom Fonts.
+tags:
+    - Tutorial
+    - Fonts
 ---
 
 # Creating a Font
