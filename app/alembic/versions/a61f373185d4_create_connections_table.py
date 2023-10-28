@@ -185,6 +185,7 @@ def upgrade() -> None:
             username=PreferencesLocal.emby_username,
         )
         session.add(emby)
+        session.commit()
         log.info(f'Created Emby Connection[{emby.id}]')
     if PreferencesLocal.jellyfin_url:
         jellyfin = Connection(
@@ -197,6 +198,7 @@ def upgrade() -> None:
             username=PreferencesLocal.jellyfin_username,
         )
         session.add(jellyfin)
+        session.commit()
         log.info(f'Created Jellyfin Connection[{jellyfin.id}]')
     if PreferencesLocal.plex_url:
         plex = Connection(
@@ -206,14 +208,14 @@ def upgrade() -> None:
             url=PreferencesLocal.plex_url,
             api_key=PreferencesLocal.plex_token,
             use_ssl=PreferencesLocal.plex_use_ssl,
-            username=PreferencesLocal.plex_username,
             integrate_with_pmm=PreferencesLocal.plex_integrate_with_pmm,
         )
         session.add(plex)
+        session.commit()
         log.info(f'Created Plex Connection[{plex.id}]')
     if PreferencesLocal.sonarr_url:
         sonarr = Connection(
-            interface='Sonarr',
+            interface_type='Sonarr',
             enabled=True,
             name='Sonarr Server',
             url=PreferencesLocal.sonarr_url,
@@ -222,16 +224,21 @@ def upgrade() -> None:
             downloaded_only=PreferencesLocal.sonarr_downloaded_only,
         )
         session.add(sonarr)
+        session.commit()
         log.info(f'Created Sonarr Connection[{sonarr.id}]')
     if PreferencesLocal.tmdb_api_key:
         tmdb = Connection(
             interface_type='TMDb',
             enabled=True,
             name='TMDb',
+            api_key=PreferencesLocal.tmdb_api_key,
             minimum_dimensions=f'{PreferencesLocal.tmdb_minimum_width}x{PreferencesLocal.tmdb_minimum_height}',
             skip_localized=PreferencesLocal.tmdb_skip_localized,
             logo_language_priority=PreferencesLocal.tmdb_logo_language_priority,
         )
+        session.add(tmdb)
+        session.commit()
+        log.info(f'Created TMDb Connection[{tmdb.id}]')
 
     # Migrate the global Episode data source and image source priorities
     if emby and PreferencesLocal.episode_data_source == 'Emby':
@@ -325,32 +332,47 @@ def upgrade() -> None:
 
     # Migrate Template library filter conditions
     for template in session.query(Template).all():
+        # Skip if no filters
+        if not template.filters:
+            continue
+
+        new_filters = []
         for filter_ in template.filters:
-            arg, op_ = filter_['argument'], filter_['operation']
+            arg, op_, ref = filter_['argument'], filter_['operation'], filter_['reference']
             if not arg.startswith('Series Library Name'):
+                new_filters.append(filter_)
                 continue
 
             # Convert Filter argument
-            filter_['argument'] = 'Series Library Names'
+            new_arg = 'Series Library Names'
             log.debug(f'Converting Template[{template.id}] Filter argument '
                       f'"{arg}" to "Series Library Names"')
 
             # Convert Filter operation to list-equivalent (or log if impossible)
             if op_ == 'equals':
-                filter_['operation'] = 'contains'
+                new_op = 'contains'
                 log.debug(f'Converting Template[{template.id}] Filter '
                           f'operation "{op_}" to "contains"')
             elif op_ == 'does not equal':
-                filter_['operation'] = 'does not contain'
+                new_op = 'does not contain'
                 log.debug(f'Converting Template[{template.id}] Filter '
                           f'operation "{op_}" to "does not contain"')
             elif op_ in ('starts with', 'does not start with', 'matches',
                          'does not match'):
-                log.error(f'Cannot convert Template[{template.id}] Filter '
-                          f'operation "{op_}"')
+                new_op = 'contains'
+                log.error(f'Cannot perfectly convert Template[{template.id}] '
+                          f'Filter operation "{op_}"')
             else:
+                new_op = op_
                 log.warning(f'Not converting Template[{template.id}] Filter '
                             f'operation "{op_}"')
+                continue
+   
+            new_filters.append({
+                'argument': new_arg, 'operation': new_op, 'reference': ref,
+            })
+
+        template.filters = new_filters
 
     # Migrate Series and Episode Emby and Jellyfin IDs; and Series Sonarr IDs
     for series in session.query(Series).all():
@@ -360,24 +382,30 @@ def upgrade() -> None:
                 series.emby_id = f'{emby.id}:{series.emby_library_name}:{series.emby_id}'
                 log.debug(f'Migrated Series[{series.id}].emby_id = {series.emby_id}')
             else:
-                series.emby_id = None
+                series.emby_id = ''
                 log.warning(f'Unable to migrate Series[{series.id}].emby_id')
+        else:
+            series.emby_id = ''
         # Migrate {id} -> {interface_id}:{library_name}:{id}
         if series.jellyfin_id:
             if series.jellyfin_library_name and jellyfin:
                 series.jellyfin_id = f'{jellyfin.id}:{series.jellyfin_library_name}:{series.jellyfin_id}'
                 log.debug(f'Migrated Series[{series.id}].jellyfin_id = {series.jellyfin_id}')
             else:
-                series.jellyfin_id = None
+                series.jellyfin_id = ''
                 log.warning(f'Unable to migrate Series[{series.id}].jellyfin_id')
+        else:
+            series.jellyfin_id = ''
         # Migrate 0:{id} -> {interface_id}:{id}
         if series.sonarr_id:
             if sonarr:
                 series.sonarr_id = f'{sonarr.id}:{series.sonarr_id.split("-")[1]}'
                 log.debug(f'Migrated Series[{series.id}].sonarr_id = {series.sonarr_id}')
             else:
-                series.sonarr_id = None
+                series.sonarr_id = ''
                 log.warning(f'Unable to migrate Series[{series.id}].sonarr_id')
+        else:
+            series.sonarr_id = ''
 
         # Migrate this Series' Episodes
         for episode in series.episodes:
@@ -387,16 +415,20 @@ def upgrade() -> None:
                     episode.emby_id = f'{emby.id}:{series.emby_library_name}:{episode.emby_id}'
                     log.debug(f'Migrated Episode[{episode.id}].emby_id = {episode.emby_id}')
                 else:
-                    episode.emby_id = None
+                    episode.emby_id = ''
                     log.warning(f'Unable to migrate Episode[{episode.id}].emby_id')
+            else:
+                episode.emby_id = ''
             # Migratate {id} -> {interface_id}:{library_name}:{id}
             if episode.jellyfin_id:
                 if series.jellyfin_library_name and jellyfin:
                     episode.jellyfin_id = f'{jellyfin.id}:{series.jellyfin_library_name}:{episode.jellyfin_id}'
                     log.debug(f'Migrated Episode[{episode.id}].jellyfin_id = {episode.jellyfin_id}')
                 else:
-                    episode.jellyfin_id = None
+                    episode.jellyfin_id = ''
                     log.warning(f'Unable to migrate Episode[{episode.id}].jellyfin_id')
+            else:
+                episode.jellyfin_id = ''
 
     # Commit changes
     session.commit()
