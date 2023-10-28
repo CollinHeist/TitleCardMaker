@@ -105,7 +105,7 @@ class Series(Base):
     jellyfin_id = sa.Column(sa.String)
     sonarr_id = sa.Column(sa.String)
     # New column(s)
-    libraries = sa.Column(MutableList.as_mutable(sa.JSON), default=[], nullable=False)
+    libraries = sa.Column(MutableList.as_mutable(sa.JSON), default=[])
     data_source_id = sa.Column(sa.Integer, sa.ForeignKey('connection.id'), default=None)
 
     episodes: Mapped[list[Episode]] = relationship(Episode, back_populates='series')
@@ -158,7 +158,7 @@ def upgrade() -> None:
 
     with op.batch_alter_table('series', schema=None) as batch_op:
         batch_op.add_column(sa.Column('data_source_id', sa.Integer(), nullable=True))
-        batch_op.add_column(sa.Column('libraries', sa.JSON(), nullable=False))
+        batch_op.add_column(sa.Column('libraries', sa.JSON(), server_default='[]'))
         batch_op.create_foreign_key('fk_connection_series', 'connection', ['data_source_id'], ['id'])
 
     with op.batch_alter_table('sync', schema=None) as batch_op:
