@@ -5,8 +5,8 @@ from re import match as re_match
 from typing import Literal, Optional, Union
 
 from pydantic import ( # pylint: disable=no-name-in-module
-    FilePath, PositiveFloat, PositiveInt, conint, constr, root_validator,
-    validator
+    Field, FilePath, PositiveFloat, PositiveInt, conint, constr, root_validator,
+    validator,
 )
 
 from app.schemas.base import Base, BetterColor, DictKey
@@ -115,7 +115,7 @@ class CalligraphyCardType(BaseCardTypeCustomFontAllText):
     font_color: BetterColor = CalligraphyTitleCard.TITLE_COLOR
     font_file: FilePath = CalligraphyTitleCard.TITLE_FONT
     logo_file: Path
-    watched: bool = False
+    watched: bool = Field(default=False, exclude=True)
     add_texture: bool = True
     deep_blur_if_unwatched: bool = True
     episode_text_color: Optional[BetterColor] = None
@@ -158,7 +158,7 @@ class ComicBookCardType(BaseCardTypeCustomFontAllText):
             lower, upper = map(float, re_match(RandomAngleRegex, val).groups())
 
             # Lower bound cannot be above upper bound
-            if lower > upper:
+            if lower >= upper:
                 raise ValueError(f'Lower bound must be below upper bound')
 
             return uniform(lower, upper)
@@ -456,7 +456,7 @@ class WhiteBorderCardType(BaseCardTypeCustomFontAllText):
     stroke_color: BetterColor = WhiteBorderTitleCard.STROKE_COLOR
     episode_text_color: BetterColor = WhiteBorderTitleCard.TITLE_COLOR
 
-LocalCardTypeModels = {
+LocalCardTypeModels: dict[str, Base] = {
     '4x3': FadeCardType,
     'anime': AnimeCardType,
     'blurred border': TintedFrameCardType,
