@@ -288,7 +288,9 @@ def import_blueprint(
 
     # Get subfolder for this Series
     letter, path_name = get_blueprint_folders(series.full_name)
-    blueprint_folder = f'{BLUEPRINTS_URL}/{letter}/{path_name}/{blueprint.id}'
+    blueprint_folder = (
+        f'{BLUEPRINTS_URL}/{letter}/{path_name}/{blueprint.blueprint_number}'
+    )
 
     # Import Fonts
     font_map: dict[int, Font] = {}
