@@ -29,7 +29,7 @@ def refresh_all_episode_data(*, log: Logger = log) -> None:
     the Database.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     try:
@@ -77,7 +77,7 @@ def set_episode_ids(
         series: Series of the Episodes whose ID's are being set.
         episodes: List of Episodes to set the ID's of.
         *_interface: Interface(s) to set ID's from.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     # Get corresponding EpisodeInfo object for this Episode
@@ -144,7 +144,7 @@ def get_all_episode_data(
         *_interface: Interface to potentially query for Episode data.
         raise_exc: (Keyword): Whether to raise any HTTPExceptions caused
             by disabled interfaces or missing libraries.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         List of tuples of the EpisodeInfo from the given Series' Episode
@@ -224,7 +224,7 @@ def refresh_episode_data(
         background_tasks: Optional BackgroundTasks queue to add the
             Episode ID assignment task to, if provided. If omitted then
             the assignment is done in a blocking manner.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Raises:
         HTTPException (404) if the Series Template DNE.
