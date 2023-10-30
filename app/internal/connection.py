@@ -156,7 +156,7 @@ def update_connection(
 
     # Update each attribute of the object
     changed = False
-    for attr, value in update_object.dict().items():
+    for attr, value in update_object.dict(exclude_defaults=True).items():
         if value != UNSPECIFIED and getattr(connection, attr) != value:
             log.debug(f'Connection[{interface_id}].{attr} = {value}')
             setattr(connection, attr, value)
@@ -169,5 +169,7 @@ def update_connection(
             interface_group.refresh(
                 interface_id, connection.interface_kwargs, log=log
             )
+        else:
+            interface_group.disable(interface_id)
 
     return connection

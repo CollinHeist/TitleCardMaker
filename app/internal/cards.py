@@ -2,6 +2,7 @@ from logging import Logger
 from pathlib import Path
 from time import sleep
 from typing import Any, Optional
+from app.schemas.base import Base
 
 from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy import or_
@@ -208,7 +209,7 @@ def validate_card_type_model(
         card_settings: dict,
         *,
         log: Logger = log,
-    ) -> tuple[Any, Any]:
+    ) -> tuple[type[BaseCardType], Base]:
     """
     Validate the given Card settings into the associated Pydantic model
     and BaseCardType class.
@@ -254,7 +255,7 @@ def create_card(
         db: Session,
         card_model: NewTitleCard,
         CardClass: BaseCardType,
-        CardTypeModel: Any,
+        CardTypeModel: Base,
         *,
         log: Logger = log,
     ) -> None:
