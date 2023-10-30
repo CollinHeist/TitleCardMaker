@@ -55,7 +55,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
             use_magick_prefix: Whether to use 'magick' command prefix.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # Intiialize parent classes
@@ -162,7 +162,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             series_info: The series being evaluated.
             raw_obj: Whether to return the raw object rather than just
                 the dictionary.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             None if the series is not found. The Jellyfin ID of the
@@ -312,7 +312,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         Args:
             library_name: The name of the library containing the series.
             series_info: Series to set the ID of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # If all possible ID's are defined
@@ -354,7 +354,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             library_name: The name of the library containing the series.
             series_info: Series to get the episodes of.
             infos: List of EpisodeInfo objects to set the ID's of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # Get all episodes for this series
@@ -366,13 +366,10 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         for old_episode_info in episode_infos:
             for new_episode_info, _ in new_episode_infos:
                 if old_episode_info == new_episode_info:
-                    # For each ID of this new EpisodeInfo, update old if upgrade
-                    for id_type, id_ in new_episode_info.ids.items():
-                        if (getattr(old_episode_info, id_type) is None
-                            and id_ is not None):
-                            setattr(old_episode_info, id_type, id_)
-                            log.debug(f'Set {old_episode_info}.{id_type}={id_}')
+                    old_episode_info.copy_ids(new_episode_info)
                     break
+
+        return None
 
 
     def query_series(self,
@@ -385,7 +382,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
 
         Args:
             query: Series name or substring to look up.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of SearchResults for the given query. Results are from
@@ -517,7 +514,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         Args:
             library_name: Name of the library containing the series.
             series_info: Series to get the episodes of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of tuples of the EpisodeInfo objects and the episode
@@ -594,7 +591,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             library_name: The name of the library containing the series.
             series_info: The series to update.
             episodes: List of Episode objects to update.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # If no episodes, exit
@@ -646,7 +643,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             series_info: SeriesInfo whose cards are being loaded.
             episode_and_cards: List of tuple of Episode and their
                 corresponding Card objects to load.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of tuples of the Episode and the corresponding Card
@@ -707,7 +704,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             library_name: Name of the library containing the series.
             series_info: The series whose episode is being queried.
             episode_info: The episode to get the source image of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             Bytes of the source image for the given Episode. None if the
@@ -755,7 +752,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         Args:
             library_name: Name of the library containing the series.
             series_info: The series to get the poster of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             URL to the poster for the given series. None if the library,
@@ -794,7 +791,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         Args:
             library_name: Name of the library containing the series.
             series_info: The series to get the logo of.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             Bytes of the logo for given series. None if the series does

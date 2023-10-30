@@ -48,7 +48,7 @@ either of these will navigate to the previous and next Series _alphabetically_
 from the current Series.
 
 If you click either arrow and the current page does not change _and_ the arrow
-becoems greyed out, then there is no next or previous Series.
+becomes greyed out, then there is no next or previous Series to navigate to.
 
 ## Monitoring
 
@@ -64,6 +64,23 @@ Episode titles, etc.
 
 The Tasks in [the scheduler](./scheduler.md) that are responsible for the
 above actions will skip all unmonitored Series.
+
+## Series Processing
+
+The `Process Series` button can be pressed to perform multiple Card operations
+at once, in the correct order. Pressing this button does the following:
+
+1. Refreshes all Episode data; then
+2. Looks for any missing Episode translations; then
+3. Download any missing Source Images; and finally
+4. Begins Title Card creation
+
+!!! tip "Recommendation"
+
+    Pressing this button is preferable to individually clicking each
+    corresponding button as TCM will wait for each step to finish _before_
+    moving on. Whereas if you pressed each button back-to-back, then TCM likely
+    will have not finished a step by the time it starts Title Card creation.
 
 ## Refresh Episode Data
 
@@ -85,12 +102,12 @@ present in the Episode data source __if__ [title matching](...) is enabled.
 !!! note "Scheduled Action"
 
     This action occurs automatically as part of the [Download Source
-    Images](./scheduler.md) Task __unless_ the Series is
+    Images](./scheduler.md) Task __unless the Series is
     [unmonitored](#monitoring)__.
 
 The `Download Source Images` button can be pressed to start a download of all
 Source Images for Episodes which do not already have images. It will __not__
-replace any existing images.
+replace any existing images, nor will it download any backdrops or logos.
 
 TCM will search for images in the order specified in your global [image source
 priority](./settings.md#image-source-priority). If the Series does not have
@@ -117,3 +134,34 @@ the Cards.
     make a change which would prompt new Cards, and then restart Card creation;
     TCM will create, delete, then re-create the Cards.
 
+## Title Card Loading
+
+!!! note "Scheduled Action"
+
+    This action occurs automatically as part of the
+    [Load Title Cards](./scheduler.md) Task. Title Cards are never automatically
+    force-reloaded.
+
+Below the `Create Title Cards` button will be multiple sets of grouped buttons
+which can be used to load all created Title Cards into the relevant library.
+
+Selecting `Load Cards` will load only _unloaded_ Title Cards into the associated
+Connection and library. This only affects Title Cards which were changed (and
+not re-loaded), or never loaded in the first place.
+
+Selecting `Force Reload Cards` will reload _all_ Title cards into the associated
+Connection and library. This is much slower than the `Load Cards` button, but
+can be used as needed - most commonly when the metadata of a Media Server is
+reset and previously loaded Title Cards are removed.
+
+## Remove Episode Labels
+
+TitleCardMaker looks for specific labels on Episodes within Plex to determine
+whether it is able to download Source Images from that Episode. This is done to
+avoid grabbing a "Source Image" which is actually a previously loaded Title
+Card, or some image with a PMM overlay applied.
+
+Alongside each Plex library will be a `Remove Episode Labels` button. This
+button can be pressed to remove the labels which TCM uses to track whether an
+Episode can provide a Source Image. This is applies to all Episodes of this
+Series within Plex.
