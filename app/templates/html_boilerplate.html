@@ -24,6 +24,10 @@
   $(document).ready(function() {
     // Show changelog if necessary
     notifyChanges('{{preferences.current_version}}');
+    {% if preferences.colorblind_mode %}
+    console.log('boop');
+    $('body').toggleClass('accessible', true);
+    {% endif %}
   });
 </script>
 

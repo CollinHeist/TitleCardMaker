@@ -41,9 +41,7 @@ function toggleTheme() {
 }
 
 $(document).ready(() => {
-  // Default theme is LIGHT, so if dark is indicated, toggle
-  // const siteTheme = window.localStorage.getItem('site-theme') || 'dark';
-  // if (siteTheme === 'dark') { refreshTheme(); }
+  // Refresh theme
   refreshTheme();
   // Highlight side bar icon of current page
   $(`#nav-menu a[href="${location.pathname}"]`).toggleClass('highlighted', true);

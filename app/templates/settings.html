@@ -338,17 +338,22 @@
               <i class="wrench icon"></i>
               Web Interface
             </h3>
-            <div class="eight wide field">
-              <label>Home Page Size</label>
-              <input type="number" name="home_page_size" placeholder="{{preferences.home_page_size}}" value="{{preferences.home_page_size}}">
-              <p class="help">How many Series per page to display on the home screen. Between 1-250.</p>
+
+            <div class="ui two fields">
+
+              <div class="eight wide field">
+                <label>Home Page Size</label>
+                <input type="number" name="home_page_size" placeholder="{{preferences.home_page_size}}" value="{{preferences.home_page_size}}">
+                <p class="help">How many Series per page to display on the home screen. Between 1-250.</p>
+              </div>
+  
+              <div class="eight wide field">
+                <label>Episode Data Table Page Size</label>
+                <input type="number" name="episode_data_page_size" placeholder="{{preferences.episode_data_page_size}}" value="{{preferences.episode_data_page_size}}">
+                <p class="help">How many Episodes per page to display in Episode data tables.</p>
+              </div>
             </div>
 
-            <div class="eight wide field">
-              <label>Episode Data Table Page Size</label>
-              <input type="number" name="episode_data_page_size" placeholder="{{preferences.episode_data_page_size}}" value="{{preferences.episode_data_page_size}}">
-              <p class="help">How many Episodes per page to display in Episode data tables.</p>
-            </div>
             <div class="ui checkbox field" data-value="simplified_data_table">
               <label>Simplified Episode Data Tables</label>
               {% if preferences.simplified_data_table %}
@@ -379,6 +384,17 @@
               <input name="sources_as_table" type="checkbox">
               {% endif %}
               <p class="help">Whether to display source image data in a table (instead of cards).</p>
+            </div>
+            <br>
+
+            <div class="ui checkbox field">
+              <label>Color-Impaired Mode</label>
+              {% if preferences.colorblind_mode %}
+              <input name="colorblind_mode" type="checkbox" checked="checked">
+              {% else %}
+              <input name="colorblind_mode" type="checkbox">
+              {% endif %}
+              <p class="help">Utilize alternate styling with more distinguished colors.</p>
             </div>
 
             <!-- Validation message -->

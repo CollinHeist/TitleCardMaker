@@ -87,7 +87,7 @@ class Preferences:
         'task_crontabs', 'simplified_data_table', 'home_page_size',
         'episode_data_page_size', 'stylize_unmonitored_posters',
         'sources_as_table', 'card_type_directory', 'local_card_types',
-        'imported_blueprints',
+        'imported_blueprints', 'colorblind_mode',
     )
 
 
@@ -249,6 +249,7 @@ class Preferences:
         self.episode_data_page_size = 50
         self.stylize_unmonitored_posters = False
         self.sources_as_table = False
+        self.colorblind_mode = False
 
 
     def read_file(self) -> Optional[object]:
