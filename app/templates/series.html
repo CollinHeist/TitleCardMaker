@@ -1080,19 +1080,21 @@
             <form id="series-ids-form" class="ui compact form">
               {% if preferences.use_emby %}
               <div id-type="Emby ID" class="field">
-                <label>Emby</label>
                 {% if series.emby_id %}
-                <input name="emby_id" type="text" placeholder="{{series.emby_id}}" value="{{series.emby_id}}">
+                <label>Emby</label>
+                <input name="emby_id" type="text" placeholder="None" value="{{series.emby_id}}">
                 {% else %}
+                <label>Emby</label>
                 <input name="emby_id" type="text" placeholder="N/A">
                 {% endif %}
+                <p class="help">Enter as {Interface ID}:{Library Name}:{ID} - can be multiple, comma-separated IDs.</p>
               </div>
               {% endif %}
 
               <div id-type="IMDb" class="field">
                 {% if series.imdb_id %}
                 <label>IMDb <a href="https://www.imdb.com/title/{{series.imdb_id}}" target="_blank"><i class="external alternate small icon"></i></a></label>
-                <input name="imdb_id" type="text" placeholder="{{series.imdb_id}}" value="{{series.imdb_id}}">
+                <input name="imdb_id" type="text" placeholder="None" value="{{series.imdb_id}}">
                 {% else %}
                 <label>IMDb</label>
                 <input name="imdb_id" type="text" placeholder="None">
@@ -1101,30 +1103,34 @@
 
               {% if preferences.use_jellyfin %}
               <div id-type="Jellyfin" class="field">
-                <label>Jellyfin</label>
                 {% if series.jellyfin_id %}
-                <input name="jellyfin_id" type="text" placeholder="{{series.jellyfin_id}}" value="{{series.jellyfin_id}}">
+                <label>Jellyfin</label>
+                <input name="jellyfin_id" type="text" placeholder="None" value="{{series.jellyfin_id}}">
                 {% else %}
+                <label>Jellyfin</label>
                 <input name="jellyfin_id" type="text" placeholder="None">
                 {% endif %}
+                <p class="help">Enter as {Interface ID}:{Library Name}:{ID} - can be multiple, comma-separated IDs.</p>
               </div>
               {% endif %}
 
               {% if preferences.use_sonarr %}
               <div id-type="Sonarr" class="field">
-                <label>Sonarr</label>
                 {% if series.sonarr_id %}
-                <input name="sonarr_id" type="text" placeholder="{{series.sonarr_id}}" value="{{series.sonarr_id}}">
+                <label>Sonarr</label>
+                <input name="sonarr_id" type="text" placeholder="None" value="{{series.sonarr_id}}">
                 {% else %}
+                <label>Sonarr</label>
                 <input name="sonarr_id" type="text" placeholder="None">
                 {% endif %}
+                <p class="help">Enter as {Interface ID}:{ID} - can be multiple, comma-separated IDs.</p>
               </div>
               {% endif %}
 
               <div id-type="TMDb" class="field">
                 {% if series.tmdb_id %}
                 <label>TMDb <a href="https://www.themoviedb.org/tv/{{series.tmdb_id}}" target="_blank"><i class="external alternate small icon"></i></a></label>
-                <input name="tmdb_id" type="text" placeholder="{{series.tmdb_id}}" value="{{series.tmdb_id}}">
+                <input name="tmdb_id" type="text" placeholder="None" value="{{series.tmdb_id}}">
                 {% else %}
                 <label>TMDb</label>
                 <input name="tmdb_id" type="text" placeholder="None">
@@ -1134,21 +1140,23 @@
               <div id-type="TVDb" class="field">
                 {% if series.tvdb_id %}
                 <label>TVDb <a href="https://www.thetvdb.com/dereferrer/series/{{series.tvdb_id}}" target="_blank"><i class="external alternate small icon"></i></a></label>
-                <input name="tvdb_id" type="text" placeholder="{{series.tvdb_id}}" value="{{series.tvdb_id}}">
+                <input name="tvdb_id" type="text" placeholder="None" value="{{series.tvdb_id}}">
                 {% else %}
                 <label>TVDb</label>
                 <input name="tvdb_id" type="text" placeholder="None">
                 {% endif %}
               </div>
 
+              {% if series.year < 2017 or series.tvrage_id %}
               <div id-type="TVRage" class="field">
                 <label>TVRage</label>
                 {% if series.tvrage_id %}
-                <input name="tvrage_id" type="text" placeholder="{{series.tvrage_id}}" value="{{series.tvrage_id}}">
+                <input name="tvrage_id" type="text" placeholder="None" value="{{series.tvrage_id}}">
                 {% else %}
                 <input name="tvrage_id" type="text" placeholder="None">
                 {% endif %}
               </div>
+              {% endif %}
 
               <button class="ui animated primary button" type="submit" form="series-ids-form">
                 <div class="visible content">Save</div>

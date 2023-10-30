@@ -185,7 +185,7 @@ def update_multiple_episode_configs(
 
         # Get this Episode, raise 404 if DNE
         episode = get_episode(db, update_obj.episode_id, raise_exc=True)
-        update_episode_dict = update_obj.update_episode.dict()
+        update_episode_dict = update_obj.update_episode.dict(exclude_defaults=True)
 
         # If any reference ID's were indicated, verify referenced object exists
         get_font(db, getattr(update_episode, 'font_id', None), raise_exc=True)
