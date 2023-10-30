@@ -51,6 +51,9 @@ theme:
     - content.code.copy
     # Code annotations
     - content.code.annotate
+    # Add "edit" and "view" docs actions
+    # - content.action.edit
+    # - content.action.view
   font:
     text: Roboto
     code: Roboto Mono
@@ -175,8 +178,8 @@ nav:
     - Creating Title Cards: getting_started/creating_cards.md
   - Blueprints: blueprints.md
   - User Guide:
-    # - user_guide/index.md
-    # - Series: user_guide/series.md
+    - user_guide/index.md
+    - Series: user_guide/series.md
     - Adding Series: user_guide/new_series.md
     # - Templates: user_guide/templates.md
     # - Fonts: user_guide/fonts.md
@@ -186,7 +189,7 @@ nav:
     # - Scheduler: user_guide/scheduler.md
     # - Importer: user_guide/importer.md
   - Card Types:
-    - card_types/index.md
+    # - card_types/index.md
     - Local: card_types/local.md
     #   - Anime: card_types/local/anime.md
     #   - Cutout: card_types/local/cutout.md
