@@ -33,13 +33,13 @@ class Episode(Base):
     font_id = Column(Integer, ForeignKey('font.id'))
     series_id = Column(Integer, ForeignKey('series.id'))
 
-    card = relationship(
+    cards = relationship(
         'Card',
         back_populates='episode',
         cascade='all, delete-orphan'
     )
     font = relationship('Font', back_populates='episodes')
-    series = relationship('Series', back_populates='episodes')
+    series: Mapped['Series'] = relationship('Series', back_populates='episodes')
     loaded = relationship(
         'Loaded',
         back_populates='episode',
