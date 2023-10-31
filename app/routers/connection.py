@@ -124,32 +124,10 @@ def add_tmdb_connection(
     )
 
 
-@connection_router.put('/tmdb/{status}', status_code=204)
-def enable_or_disable_tmdb(
-        request: Request,
-        status: Literal['enable', 'disable'],
-        preferences: Preferences = Depends(get_preferences),
-    ) -> None:
-    """
-    Set the enabled/disabled status of TMDb.
-
-    - status: Whether to enable or disable TMDb.
-    """
-
-    # Get contextual logger
-    log = request.state.log
-
-    preferences.use_tmdb = status == 'enable'
-    if preferences.use_tmdb:
-        refresh_tmdb_interface(log=log)
-
-    preferences.commit(log=log)
-
-
 @connection_router.put('/{connection}/{interface_id}/{status}')
 def enable_or_disable_connection_by_id(
         request: Request,
-        connection: Literal['emby', 'jellyfin', 'plex', 'sonarr'],
+        connection: Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
         interface_id: int,
         status: Literal['enable', 'disable'],
         db: Session = Depends(get_database),
@@ -157,6 +135,7 @@ def enable_or_disable_connection_by_id(
         jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
         plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
         sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
+        tmdb_interfaces: InterfaceGroup[int, TMDbInterface] = Depends(get_tmdb_interfaces),
     ) -> AnyConnection:
     """
     Set the enabled/disabled status of the given connection.
@@ -173,28 +152,20 @@ def enable_or_disable_connection_by_id(
     connection.enabled = status == 'enable'
     db.commit()
 
-    # If Interface was disabled, nothing else to do
-    if not connection.enabled:
-        emby_interfaces.disable(interface_id)
-        return connection
+    # Get applicable InterfaceGroup
+    group: InterfaceGroup = {
+        'emby': emby_interfaces, 'jellyfin': jellyfin_interfaces,
+        'plex': plex_interfaces, 'sonarr': sonarr_interfaces,
+        'tmdb': tmdb_interfaces,
+    }[connection]
 
-    # Refresh interface
-    if connection == 'emby':
-        emby_interfaces.refresh(
-            interface_id, connection.emby_kwargs, log=request.state.log,
+    # Refresh or disable interface within group
+    if connection.enabled:
+        group.refresh(
+            interface_id, connection.interface_kwargs, log=request.state.log
         )
-    elif connection == 'jellyfin':
-        jellyfin_interfaces.refresh(
-            interface_id, connection.jellyfin_kwargs, log=request.state.log,
-        )
-    elif connection == 'plex':
-        plex_interfaces.refresh(
-            interface_id, connection.plex_kwargs, log=request.state.log,
-        )
-    elif connection == 'sonarr':
-        sonarr_interfaces.refresh(
-            interface_id, connection.sonarr_kwargs, log=request.state.log,
-        )
+    else:
+        group.disable(interface_id)
 
     return connection
 
@@ -588,6 +559,7 @@ def check_tautulli_integration(
 def add_tautulli_integration(
         request: Request,
         tautulli_connection: NewTautulliConnection = Body(...),
+        plex_interface_id: int = Query(...),
     ) -> None:
     """
     Integrate Tautulli with TitleCardMaker by creating a Notification
@@ -604,7 +576,8 @@ def add_tautulli_integration(
     interface = TautulliInterface(
         tcm_url=url,
         tautulli_url=tautulli_connection.url,
-        api_key=tautulli_connection.api_key.get_secret_value(),
+        api_key=tautulli_connection.api_key,
+        plex_interface_id=plex_interface_id,
         use_ssl=tautulli_connection.use_ssl,
         agent_name=tautulli_connection.agent_name,
         log=request.state.log,

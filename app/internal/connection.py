@@ -1,7 +1,6 @@
 from logging import Logger
 from typing import Union
 
-from fastapi import BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app.database.query import get_connection
@@ -156,7 +155,7 @@ def update_connection(
 
     # Update each attribute of the object
     changed = False
-    for attr, value in update_object.dict().items():
+    for attr, value in update_object.dict(exclude_defaults=True).items():
         if value != UNSPECIFIED and getattr(connection, attr) != value:
             log.debug(f'Connection[{interface_id}].{attr} = {value}')
             setattr(connection, attr, value)
@@ -169,5 +168,7 @@ def update_connection(
             interface_group.refresh(
                 interface_id, connection.interface_kwargs, log=log
             )
+        else:
+            interface_group.disable(interface_id)
 
     return connection

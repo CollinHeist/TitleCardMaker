@@ -1408,13 +1408,15 @@ def import_cards(
             continue
 
         # Episode has an existing Card, skip if not forced
-        if episode.card and not force_reload:
+        # TODO evaluate w/ multi-conn
+        if episode.cards and not force_reload:
             log.debug(f'{series.log_str} {episode.log_str} has an associated Card - skipping')
             continue
 
         # Episode has card, delete if reloading
-        if episode.card and force_reload:
-            for card in episode.card:
+        # TODO evaluate w/ force-reload and multi-conn
+        if episode.cards and force_reload:
+            for card in episode.cards:
                 log.debug(f'{card.log_str} deleting record')
                 db.query(models.card.Card).filter_by(id=card.id).delete()
                 log.debug(f'{series.log_str} {episode.log_str} has associated Card - reloading')
@@ -1435,6 +1437,7 @@ def import_cards(
             episode_id=episode.id,
         )
 
+        # TODO revise w/ multi-conn
         card = add_card_to_database(db, title_card, card_settings['card_file'])
         log.debug(f'{series.log_str} {episode.log_str} Imported {image.resolve()}')
 

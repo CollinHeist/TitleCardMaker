@@ -1,7 +1,8 @@
 from logging import Logger
 from pathlib import Path
 from time import sleep
-from typing import Any, Optional
+from typing import Optional
+from app.schemas.base import Base
 
 from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy import or_
@@ -47,7 +48,7 @@ def create_all_title_cards(*, log: Logger = log) -> None:
             all_series = db.query(Series).all()
             for series in all_series:
                 # Set watch statuses of all Episodes
-                update_episode_watch_statuses(series, series.episodes, log=log)
+                get_watched_statuses(db, series, series.episodes, log=log)
 
                 # Create Cards for all Episodes
                 for episode in series.episodes:
@@ -208,7 +209,7 @@ def validate_card_type_model(
         card_settings: dict,
         *,
         log: Logger = log,
-    ) -> tuple[Any, Any]:
+    ) -> tuple[type[BaseCardType], Base]:
     """
     Validate the given Card settings into the associated Pydantic model
     and BaseCardType class.
@@ -254,7 +255,7 @@ def create_card(
         db: Session,
         card_model: NewTitleCard,
         CardClass: BaseCardType,
-        CardTypeModel: Any,
+        CardTypeModel: Base,
         *,
         log: Logger = log,
     ) -> None:
@@ -655,7 +656,8 @@ def create_episode_card(
     return None
 
 
-def update_episode_watch_statuses(
+def get_watched_statuses(
+        db: Session,
         series: Series,
         episodes: list[Episode],
         *,
@@ -671,13 +673,21 @@ def update_episode_watch_statuses(
         log: Logger for all log messages.
     """
 
-    # Try each library, stopping after first successful query
+    # Get statuses for each library of this Series
+    changed = False
     for library in series.libraries:
         if (interface := get_interface(library['interface_id'])):
-            interface.update_watched_statuses(
+            # Query statuses from connection
+            statuses = interface.get_watched_statuses(
                 library['name'], series.as_series_info, episodes, log=log,
             )
-            break
+
+            # Update Watched objects in db
+            for episode, watched in zip(episodes, statuses):
+                changed |= episode.add_watched_status(watched)
+
+    if changed:
+        db.commit()
 
     return None
 

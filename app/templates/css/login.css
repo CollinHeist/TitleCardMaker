@@ -8,6 +8,7 @@
 
   /* Same as fomantic ui red */
   --support-button-color: #db2828;
+  --red-mixin: 0%;
 }
 
 html {
@@ -31,15 +32,16 @@ body {
   /* width: 400px; */
   padding: 40px;
 
-  /* background: linear-gradient(20deg, rgba(25, 25, 25, 20%), rgb(53 203 227 / 20%)); */
-  background: linear-gradient(20deg, rgba(25, 25, 25, 20%), rgba(99, 145, 210, 20%));
+  --mixed-bg: color-mix(in srgb, rgba(255, 0, 0, 20%) var(--red-mixin, 0%), rgba(99, 145, 210, 20%));
+  background: linear-gradient(20deg, rgba(25, 25, 25, 20%), var(--mixed-bg));
   box-sizing: border-box;
   box-shadow: 0 15px 25px rgba(0, 0, 0, 0.6);
   border-radius: 10px;
 }
 
 /* Stylize logo */
-#login img {
+#login img,
+#login .svg-container {
   /* Center */
   margin-left: auto;
   margin-right: auto;
@@ -71,7 +73,7 @@ body {
   color: white;
   margin-bottom: 30px;
   border: none;
-  border-bottom: 1px solid white;
+  border-bottom: 1px solid color-mix(in srgb, red var(--red-mixin, 0%), white);
   outline: none;
   background: transparent;
 }
@@ -91,7 +93,7 @@ body {
 #login .text.field input:valid ~ label {
   top: -20px;
   left: 0;
-  color: var(--tcm-blue-color);
+  color: color-mix(in srgb, red var(--red-mixin, 0%), var(--tcm-blue-color));
   font-size: 12px;
 }
 
@@ -104,7 +106,7 @@ body {
   position: relative;
   display: inline-block;
   padding: 10px 20px;
-  color: var(--tcm-blue-color);
+  color: color-mix(in srgb, red var(--red-mixin, 0%), var(--tcm-blue-color));
   font-size: 16px;
   text-decoration: none;
   text-transform: uppercase;
@@ -143,4 +145,53 @@ body {
 #login .forgot:hover,
 #login .forgot:focus {
   color: crimson;
+}
+
+/* Animate logo */
+svg .svg-elem-1 {
+  fill: transparent;
+  -webkit-transition: fill 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) 0.2s;
+          transition: fill 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) 0.2s;
+}
+
+svg.active .svg-elem-1 {
+  /* fill: rgb(99, 145, 210); */
+  --layer-color: rgb(99, 145, 210);
+}
+
+svg .svg-elem-2 {
+  fill: transparent;
+  -webkit-transition: fill 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) 0.27s;
+          transition: fill 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) 0.27s;
+}
+
+svg.active .svg-elem-2 {
+  /* fill: rgb(255, 255, 255); */
+  --layer-color: white;
+}
+
+svg .svg-elem-3 {
+  fill: transparent;
+  -webkit-transition: fill 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) 0.34s;
+          transition: fill 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) 0.34s;
+}
+
+svg.active .svg-elem-3 {
+  /* fill: rgb(99, 145, 210); */
+  --layer-color: rgb(99, 145, 210);
+}
+
+svg .svg-elem-4 {
+  fill: transparent;
+  -webkit-transition: fill 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) 0.41000000000000003s;
+          transition: fill 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) 0.41000000000000003s;
+}
+
+svg.active .svg-elem-4 {
+  /* fill: rgb(255, 255, 255); */
+  --layer-color: white;
+}
+
+svg.active * {
+  fill: color-mix(in srgb, crimson var(--red-mixin, 0%), var(--layer-color));
 }

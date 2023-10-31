@@ -1,13 +1,13 @@
 from logging import Logger
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from sqlalchemy import (
     Boolean, Column, DateTime, Integer, Float, ForeignKey, String, JSON
 )
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
-from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy.orm import Mapped, object_session, relationship
 
 from app.database.session import Base
@@ -15,6 +15,7 @@ from app.models.template import EpisodeTemplates, Template
 from app.schemas.preferences import Style
 
 from modules.Debug import log
+from modules.EpisodeDataSource2 import WatchedStatus
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Debug import log
 
@@ -33,13 +34,13 @@ class Episode(Base):
     font_id = Column(Integer, ForeignKey('font.id'))
     series_id = Column(Integer, ForeignKey('series.id'))
 
-    card = relationship(
+    cards = relationship(
         'Card',
         back_populates='episode',
         cascade='all, delete-orphan'
     )
-    font = relationship('Font', back_populates='episodes')
-    series = relationship('Series', back_populates='episodes')
+    font: Mapped['Font'] = relationship('Font', back_populates='episodes')
+    series: Mapped['Series'] = relationship('Series', back_populates='episodes')
     loaded = relationship(
         'Loaded',
         back_populates='episode',
@@ -58,7 +59,11 @@ class Episode(Base):
 
     source_file = Column(String, default=None)
     card_file = Column(String, default=None)
-    watched = Column(Boolean, default=None)
+    watched_statuses: dict[int, dict[str, bool]] = Column(
+        MutableDict.as_mutable(JSON),
+        default={},
+        nullable=False
+    )
 
     season_number = Column(Integer, nullable=False)
     episode_number = Column(Integer, nullable=False)
@@ -183,7 +188,6 @@ class Episode(Base):
         return {
             'source_file': self.source_file,
             'card_file': self.card_file,
-            'watched': self.watched,
             'title': self.translations.get('preferred_title', self.title),
             'match_title': self.match_title,
             'auto_split_title': self.auto_split_title,
@@ -300,7 +304,7 @@ class Episode(Base):
         changed = False
         for id_type, id_ in info.ids.items():
             if id_ and getattr(self, id_type) != id_:
-                print(f'{self.log_str}.{id_type} | {getattr(self, id_type)} -> {id_}')
+                log.debug(f'{self.log_str}.{id_type} | {getattr(self, id_type)} -> {id_}')
                 setattr(self, id_type, id_)
                 changed = True
 
@@ -337,3 +341,43 @@ class Episode(Base):
         # Return full path for this source base and Series
         source_file = Path(source_directory) / series_directory / source_name
         return source_file.resolve()
+
+
+    @hybrid_method
+    def get_watched_status(self,
+            interface_id: int,
+            library_name: str,
+        ) -> Optional[bool]:
+        """
+        
+        """
+
+        return self.watched_statuses.get(interface_id, {}).get(library_name)
+
+
+    @hybrid_method
+    def add_watched_status(self, status: WatchedStatus, /) -> bool:
+        """
+        
+        """
+
+        # No watched status, skip
+        if not status.has_status:
+            return False
+
+        # If this interface has existing mappings
+        iid, lib = status.interface_id, status.library_name
+        if iid in self.watched_statuses:
+            # If this library has existing mappings, update and return diff
+            if lib in self.watched_statuses[iid]:
+                current = self.watched_statuses[iid][lib]
+                self.watched_statuses[iid][lib] = status.status
+                return current != status.status
+
+            # Library has no mappings, add
+            self.watched_statuses[iid][lib] = status.status
+            return True
+
+        # Interface has no mappings, add
+        self.watched_statuses[iid] = {lib: status.status}
+        return True

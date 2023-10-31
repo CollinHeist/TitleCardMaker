@@ -2,6 +2,10 @@
 title: Syncing from Plex
 description: >
     Creating a Sync to automatically add Series from Plex to TitleCardMaker.
+tags:
+    - Tutorial
+    - Plex
+    - Sync
 ---
 
 # Syncing from Plex

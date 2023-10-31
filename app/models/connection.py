@@ -93,7 +93,7 @@ class Connection(Base):
         if self.minimum_dimensions is None or self.interface_type != 'TMDb':
             return None
 
-        return self.minimum_dimensions.split('x')[0]
+        return int(self.minimum_dimensions.split('x')[0])
 
 
     @hybrid_property
@@ -105,7 +105,7 @@ class Connection(Base):
         if self.minimum_dimensions is None or self.interface_type != 'TMDb':
             return None
 
-        return self.minimum_dimensions.split('x')[1]
+        return int(self.minimum_dimensions.split('x')[1])
 
 
     @hybrid_property

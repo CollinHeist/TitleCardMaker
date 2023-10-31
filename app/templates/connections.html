@@ -100,6 +100,7 @@
         <div data-value="enabled" class="ui left aligned checkbox field">
           <label>Enabled</label>
           <input name="enabled" type="checkbox" checked="">
+          <p class="help">Disabled Connections cannot be interacted with by TitleCardMaker.</p>
         </div>
 
         <div class="ui required eight wide field">
@@ -130,7 +131,7 @@
         <div data-value="integrate_with_pmm" class="ui left aligned checkbox field">
           <label>Integrate with Plex Meta Manager</label>
           <input name="integrate_with_pmm" type="checkbox">
-          <p class="help">Whether to reset Plex Meta Manager overlays when uploading Title Cards.</p>
+          <p class="help">Whether to reset Plex Meta Manager overlays and add EXIF data when uploading Title Cards.</p>
         </div>
 
         <div class="ui eight wide field">
@@ -140,6 +141,21 @@
             Compress Title Cards larger than this when uploading.
             <br>
             Plex rejects all images larger than 10 Megabytes.
+          </p>
+        </div>
+
+        <div class="ui field">
+          <label>Tautulli Agent</label>
+          <button class="ui green animated button" data-action="tautulli" type="button">
+            <div class="visible content">Create Notification Agent</div>
+            <div class="hidden content">
+              <i class="right arrow icon"></i>
+            </div>
+          </button>
+          <p class="help">
+            Create a Notification Agent in Tautulli.
+            <br>
+            Once created, this does not need to be re-created.
           </p>
         </div>
 
@@ -419,13 +435,6 @@
         <!-- Added later -->
       </div>
 
-      <!-- Tautulli Integration -->
-      <h2 id="tautulli" class="ui dividing header">Tautulli</h2>
-      <button id="tautulli-agent-button" class="ui labeled icon blue button">
-        <i class="bell icon"></i>
-        Create Notification Agent
-      </button>
-
       <!-- TMDb Connections -->
       <h2 class="ui dividing header">TheMovieDatabase</h2>
       <button class="ui primary tertiary button" onclick="addConnection('tmdb');">
@@ -441,8 +450,6 @@
       <div class="header">Tautulli Notification Agent</div>
       <div class="content">
         <div class="ui compact floating visible info message">
-          <!-- <i class="info circle icon"></i>
-          <b>Info</b> -->
           <ul class="list">
             <li>A Tautulli Notification Agent can be used to immediately update Title Cards for newly added or recently watched Episodes.</li>
             <li>This bypasses the Scheduler, and is <i>highly</i> recommended for Plex users.</li>
@@ -451,22 +458,22 @@
         <form id="tautulli-agent-form" class="ui form">
           <div class="ui field">
             <label>Tautulli URL</label>
-            <input name="tautulli_url" placeholder="http://localhost:8181/">
+            <input name="url" placeholder="http://localhost:8181/">
           </div>
           
           <div class="ui field">
             <label>Tautulli API Key</label>
-            <input name="tautulli_api_key" type="password" placeholder="abcdef">
+            <input name="api_key" type="password" placeholder="abcdef">
           </div>
 
           <div class="ui left aligned checkbox field">
-            <input name="tautulli_use_ssl" type="checkbox" checked="">
             <label>Use SSL</label>
+            <input name="use_ssl" type="checkbox" checked="">
           </div>
 
           <div class="ui field">
             <label>Notification Agent Name</label>
-            <input name="tautulli_agent_name" value="Update TitleCardMaker" placeholder="Update TitleCardMaker">
+            <input name="agent_name" value="Update TitleCardMaker (v3)" placeholder="Update TitleCardMaker (v3)">
           </div>
           <div class="ui info message"></div>
         </form>

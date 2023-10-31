@@ -69,6 +69,45 @@ class SearchResult:
         return getattr(self.series_info, attribute)
 
 
+class WatchedStatus:
+    """
+    
+    """
+
+
+    __slots__ = ('interface_id', 'library_name', 'status')
+
+
+    def __init__(self,
+            interface_id: int,
+            library_name: Optional[str] = None,
+            watched: Optional[bool] = None,
+        ) -> None:
+        """
+        
+        """
+
+        self.interface_id = interface_id
+        self.library_name = library_name
+        self.status = watched
+
+
+    @property
+    def has_status(self) -> bool:
+        return self.status is not None
+
+
+    def as_db_entry(self) -> dict[int, dict[str, bool]]:
+        """
+        
+        """
+
+        if self.library_name is not None and self.status is not None:
+            return {self.interface_id: {self.library_name: self.status}}
+
+        return {}
+
+
 class EpisodeDataSource(ABC):
     """
     This class describes an abstract episode data source. Classes of
@@ -114,7 +153,7 @@ class EpisodeDataSource(ABC):
             series_info: SeriesInfo,
             *,
             log: Logger = log,
-        ) -> list[tuple[EpisodeInfo, Optional[bool]]]:
+        ) -> list[tuple[EpisodeInfo, WatchedStatus]]:
         """Get all the EpisodeInfo objects associated with the given series."""
 
         raise NotImplementedError

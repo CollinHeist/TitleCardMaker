@@ -3,6 +3,9 @@ title: Creating Templates
 description: >
     An introduction to how Templates can be used to adjust the settings of
     multiple Series at once.
+tags:
+    - Tutorial
+    - Templates
 ---
 
 # Creating Templates

@@ -4,6 +4,7 @@ from typing import Optional, Union
 from pathlib import Path
 
 from modules.Debug import log
+from modules.EpisodeDataSource2 import WatchedStatus
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.SeriesInfo import SeriesInfo
@@ -90,14 +91,14 @@ class MediaServer(ABC):
 
 
     @abstractmethod
-    def update_watched_statuses(self,
+    def get_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
             episodes: list['Episode'], # type: ignore
             *,
             log: Logger = log,
-        ) -> None:
-        """Abstract method to update watched statuses of Episode objects."""
+        ) -> list[WatchedStatus]:
+        """Method to get the watched statuses of Episodes."""
         raise NotImplementedError
 
 

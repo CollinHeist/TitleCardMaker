@@ -1,7 +1,5 @@
 from typing import Union
 
-from pydantic import PositiveInt
-
 from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request
 )
@@ -14,7 +12,7 @@ from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard
 from app import models
 from app.internal.auth import get_current_user
 from app.internal.cards import (
-    create_episode_card, delete_cards, update_episode_watch_statuses,
+    create_episode_card, delete_cards, get_watched_statuses,
     validate_card_type_model
 )
 from app.internal.episodes import refresh_episode_data
@@ -173,7 +171,7 @@ def create_cards_for_series(
     series = get_series(db, series_id, raise_exc=True)
 
     # Set watch statuses of the Episodes
-    update_episode_watch_statuses(series, series.episodes, log=log)
+    get_watched_statuses(db, series, series.episodes, log=log)
     db.commit()
 
     # Create each associated Episode's Card
@@ -373,8 +371,8 @@ def create_card_for_episode(
     episode = get_episode(db, episode_id, raise_exc=True)
 
     # Set watch status of the Episode
-    update_episode_watch_statuses(
-        episode.series, [episode], log=request.state.log,
+    get_watched_statuses(
+        db, episode.series, [episode], log=request.state.log,
     )
 
     # Create Card for this Episode
@@ -386,14 +384,14 @@ def create_cards_for_plex_rating_keys(
         request: Request,
         plex_rating_keys: Union[int, list[int]] = Body(...),
         db: Session = Depends(get_database),
-        # TODO evaluate if Tautulli can pass query param
         plex_interface: PlexInterface = Depends(require_plex_interface),
     ) -> None:
     """
     Create the Title Card for the item associated with the given Plex
     Rating Key. This item can be a Show, Season, or Episode. This
     endpoint does NOT require an authenticated User so that Tautulli can
-    trigger this without any credentials.
+    trigger this without any credentials. The `interface_id` of the
+    appropriate Plex Connection must be passed via a Query parameter.
 
     - plex_rating_keys: Unique keys within Plex that identifies the item
     to remake the card of.
@@ -457,9 +455,7 @@ def create_cards_for_plex_rating_keys(
             continue
 
         # Update Episode watched status
-        if episode.watched != watched_status:
-            episode.watched = watched_status
-            db.commit()
+        get_watched_statuses(db, episode.series, [episode], log=log)
 
         # Look for source, add translation, create card if source exists
         image = download_episode_source_image(db, episode, log=log)
@@ -480,7 +476,7 @@ def create_cards_for_plex_rating_keys(
         # Refresh this Episode so that relational Card objects are
         # updated, preventing stale (deleted) Cards from being used in
         # the Loaded asset evaluation. Not sure why this is required
-        # because SQLAlchemy SHOULD update child objects when the DELETE
+        # because SQLAlchemy should update child objects when the DELETE
         # is committed; but this does not happen.
         db.refresh(episode)
 
@@ -563,9 +559,6 @@ def create_cards_for_sonarr_webhook(
                 log.info(f'Cannot find Episode for {series_info} {episode_info}')
                 return None
 
-        # Assume Episode is unwatched
-        episode.watched = False
-
         # Look for source, add translation, create Card if source exists
         image = download_episode_source_image(db, episode, log=log)
         translate_episode(db, episode, log=log)
@@ -577,7 +570,7 @@ def create_cards_for_sonarr_webhook(
         # Refresh this Episode so that relational Card objects are
         # updated, preventing stale (deleted) Cards from being used in
         # the Loaded asset evaluation. Not sure why this is required
-        # because SQLAlchemy SHOULD update child objects when the DELETE
+        # because SQLAlchemy should update child objects when the DELETE
         # is committed; but this does not happen.
         db.refresh(episode)
 

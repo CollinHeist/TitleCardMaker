@@ -3,6 +3,8 @@ title: Welcome to TitleCardMaker
 description: >
     Automate the creation and customization of Title Cards for Plex, Jellyfin,
     and Emby.
+hide:
+    - navigation
 ---
 
 # Welcome to TitleCardMaker
@@ -11,23 +13,27 @@ description: >
 
     This documentation is actively being developed.
 
-TitleCardMaker is a program and Docker container written in Python that
-automates the creation of customized title cards for use in personal media
+TitleCardMaker (TCM) is a program and Docker container written in Python that
+automates the creation of customized Title Cards for use in personal media
 server services like Plex, Jellyfin, or Emby.
 
-??? question "What is a Title Card?"
+# What is a Title Card?
 
-    A Title Card is a thumbnail image for an Episode used to add a
-    unique look within a personal media server like Emby, Jellyfin, or
-    Plex. Some Series have "official" Title Cards featured in the
-    Episode itself.
+A Title Card is a thumbnail image for an Episode of television that can be used
+to add a unique look within a personal media server like Plex, Emby, or
+Jellyfin. Some Series have "official" Title Cards featured in the Episode
+itself. For example, the following Cards can both be automatically created with
+TitleCardMaker:
+
+![Tinted Frame](./assets/card_example0.jpg){width="48%"} ![Tinted Frame](./assets/card_example1.jpg){width="48%"}
 
 # Early Access
 
 !!! info "Availability of Early Access"
 
     While the TitleCardMaker Web UI is under development, it is only accessible
-    to project Sponsors.
+    to project Sponsors. If you are interested, see
+    [here](https://github.com/sponsors/CollinHeist).
 
 ## Downloading the Code
 
@@ -68,6 +74,7 @@ clone the repository with:
 will now be downloaded into that directory.
 
 ## Running TitleCardMaker
+### Setup
 
 1. Navigate to the installation directory within the command line.
 
@@ -75,39 +82,31 @@ will now be downloaded into that directory.
 
         === ":material-linux: Linux"
 
-            ```bash
-            cd "~/Your/Install/Directory" # (1)!
-            ```
+            <!-- termynal -->
 
-            1. Replace `~/Your/Install/Directory` with the path to the directory
-            from the above Step 2.
+            ```bash
+            cd "~/Your/Install/Directory"
+            ```
 
         === ":material-apple: MacOS"
 
             ```bash
-            cd "~/Your/Install/Directory" # (1)!
+            cd "~/Your/Install/Directory"
             ```
-
-            1. Replace `~/Your/Install/Directory` with the path to the directory
-            from the above Step 2.
 
         === ":material-powershell: Windows (Powershell)"
 
             ```bash
-            cd 'C:\Your\Install\Directory' <#(1)#>
+            cd 'C:\Your\Install\Directory'
             ```
-
-            1. Replace `~/Your/Install/Directory` with the path to the directory
-            from the above Step 2.
 
         === ":material-microsoft-windows: Windows (Non-Powershell)"
 
             ```bash
-            cd 'C:\Your\Install\Directory' # (1)!
+            cd 'C:\Your\Install\Directory'
             ```
 
-            1. Replace `~/Your/Install/Directory` with the path to the directory
-            from the above Step 2.
+        Replace the example path with the directory from Step 3 above.
 
 2. Within the main installation directory, create the required folder for 
 TCM - this is `config` - by executing the following command:
@@ -178,6 +177,8 @@ to them.
 
     The Docker container is the recommended method.
 
+### Launching the Interface
+
 === ":material-docker: Docker"
 
     1. Build the Docker container, and label it `titlecardmaker`, by
@@ -210,146 +211,108 @@ to them.
     2. Determine your timezone, a full list is available
     [here](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). You
     will want to take note of the text in the _TZ Identifer_ column - e.g.
-    `America/Los_Angeles`. Store this in a variable called `TZ` like so (using
-    _your_ timezone, not the example below):
+    `America/Los_Angeles` - for the next step.
+
+    3. Launch the Docker container by executing the following command - make
+    sure to replace `America/Los_Angeles` with _your_ timezone from the previous
+    step.
 
         === ":material-linux: Linux"
 
             ```bash
-            TZ="America/Los_Angeles"
+            docker run -itd \ # (1)!
+                --net="bridge" \ # (2)!
+                -v "$(pwd)/config/":"/config/" \ # (3)!
+                -e TZ="America/Los_Angeles" \ # (4)!
+                -p 4242:4242 \ # (5)!
+                titlecardmaker
             ```
+
+            1. Launch the container in the background.
+            2. Ensure that TCM has access to the ports of your other Docker
+            containers.
+            3. Make your current directory available inside the container.
+            4. Set the internal timezone equal to your local timezone.
+            5. Make the TCM WebUI accessible at port 4242 on your machine.
 
         === ":material-apple: MacOS"
 
             ```bash
-            TZ="America/Los_Angeles"
+            docker run -itd \ # (1)!
+                --net="bridge" \ # (2)!
+                -v "$(pwd)/config/":"/config/" \ # (3)!
+                -e TZ="America/Los_Angeles" \ # (4)!
+                -p 4242:4242 \ # (5)!
+                titlecardmaker
             ```
+
+            1. Launch the container in the background.
+            2. Ensure that TCM has access to the ports of your other Docker
+            containers.
+            3. Make your current directory available inside the container.
+            4. Set the internal timezone equal to your local timezone.
+            5. Make the TCM WebUI accessible at port 4242 on your machine.
 
         === ":material-powershell: Windows (Powershell)"
 
             ```bash
-            $env:TZ = "America/Los_Angeles"
+            docker run -itd ` # (1)!
+                --net="bridge" ` # (2)!
+                -v "$(pwd)\config":"/config/" ` # (3)!
+                -e TZ="America/Los_Angeles" ` # (4)!
+                -p 4242:4242 ` # (5)!
+                titlecardmaker
             ```
+
+            1. Launch the container in the background.
+            2. Ensure that TCM has access to the ports of your other Docker
+            containers.
+            3. Make your current directory available inside the container.
+            4. Set the internal timezone equal to your local timezone.
+            5. Make the TCM WebUI accessible at port 4242 on your machine.
 
         === ":material-microsoft-windows: Windows (Non-Powershell)"
 
             ```bash
-            set TZ="America/Los_Angeles"
-            ```
-
-    3. Launch the Docker container by executing the following command:
-
-        === ":material-linux: Linux"
-
-            ```bash
-            docker run -itd \
-                --net="bridge" \
-                -v "$(pwd)/config/":"/config/" \
-                -e TZ="$TZ" \
-                -p 4242:4242 \
+            docker run -itd ^ # (1)!
+                --net="bridge" ^ # (2)!
+                -v "%cd%\config":"/config/" ^ # (3)!
+                -e TZ="America/Los_Angeles" ^ # (4)!
+                -p 4242:4242 ^ # (5)!
                 titlecardmaker
             ```
 
-        === ":material-apple: MacOS"
-
-            ```bash
-            docker run -itd \
-                --net="bridge" \
-                -v "$(pwd)/config/":"/config/" \
-                -e TZ="$TZ" \
-                -p 4242:4242 \
-                titlecardmaker
-            ```
-
-        === ":material-powershell: Windows (Powershell)"
-
-            ```bash
-            docker run -itd `
-                --net="bridge" `
-                -v "$(pwd)\config":"/config/" `
-                -e TZ="$env:TZ" `
-                -p 4242:4242 `
-                titlecardmaker
-            ```
-
-        === ":material-microsoft-windows: Windows (Non-Powershell)"
-
-            ```bash
-            docker run -itd ^
-                --net="bridge" ^
-                -v "%cd%\config":"/config/" ^
-                -e TZ=%TZ% ^
-                -p 4242:4242 ^
-                titlecardmaker
-            ```
-
-        ??? question "What does this command do?"
-
-            This does a few things:
-
-            1. Launches the container in the background.
-            2. Makes the TCM ports available to other Docker containers.
-            3. The `-v` commands make your directories accessible inside the
-            container.
-            4. The `-e TZ..` command defines your timezone inside the container.
-            5. Exposes the _internal_ `4242` port outside the container, so that
-            you can access it on your machine.
-
-    !!! success "Success"
-
-        TitleCardMaker is now accessible at the `http://0.0.0.0:4242` or
-        `http://localhost:4242/` URL.
+            1. Launch the container in the background.
+            2. Ensure that TCM has access to the ports of your other Docker
+            containers.
+            3. Make your current directory available inside the container.
+            4. Set the internal timezone equal to your local timezone.
+            5. Make the TCM WebUI accessible at port 4242 on your machine.
 
 === ":material-language-python: Non-Docker"
 
-    4. Run the following command to install the required Python packages and
-    launch the TCM interface.
+    Run the following command to install the required Python packages and launch
+    the TCM interface.
 
-        === ":material-linux: Linux"
+    <div class="termy" data-termynal="" data-ty-macos="" data-ty-title="Command Line"><a href="#" data-terminal-control="" style="visibility: hidden;">fast →</a><span data-ty="input" data-ty-prompt="$" style="visibility: visible;">pipenv install; pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242</span><span data-ty="" style="visibility: visible;">[DEBUG] Dumped Preferences to "[...]/TitleCardMaker/config/config.pickle"..<br>INFO:     Started server process [17385]<br>INFO:     Waiting for application startup.<br>INFO:     Application startup complete.<br>INFO:     Uvicorn running on http://0.0.0.0:4242 (Press CTRL+C to quit)<br></span><a href="#" data-terminal-control="">restart ↻</a></div>
 
-            ```bash
-            pipenv install;
-            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
-            ```
+!!! success "Success"
 
-        === ":material-apple: MacOS"
+    TitleCardMaker is now accessible at the `http://0.0.0.0:4242` or
+    `http://localhost:4242/` URL.
 
-            ```bash
-            pipenv install;
-            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
-            ```
+??? failure "Interface not accessible?"
 
-        === ":material-powershell: Windows (Powershell)"
+    If your log shows
 
-            ```bash
-            pipenv install;
-            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
-            ```
-
-        === ":material-microsoft-windows: Windows (Non-Powershell)"
-
-            ```bash
-            pipenv install;
-            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
-            ```
-
-    !!! success "Success"
-
-        TitleCardMaker is now accessible at the `http://0.0.0.0:4242` or
-        `http://localhost:4242/` URL.
-
-    ??? failure "Interface not accessible?"
-
-        If your log shows
-
-        ```log
-        INFO:     Application startup complete.
-        ```
-        
-        And neither the `http://0.0.0.0:4242` or `http://localhost:4242` URL
-        loads into the TCM UI, then replace the `0.0.0.0` part of the previous
-        command with your _local_ IP address - e.g. `192.168.0.10`. If you still
-        have issues, reach out on the Discord.
+    ```log
+    INFO:     Application startup complete.
+    ```
+    
+    And neither the `http://0.0.0.0:4242`, `http://localhost:4242`, or your
+    local IP address URL load into the TCM UI, then replace the `0.0.0.0` part
+    of the previous command with your _local_ IP address - e.g. `192.168.0.10`.
+    If you still have issues, reach out on the Discord.
 
 # Getting Started
 !!! info "Detailed Tutorial"

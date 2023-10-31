@@ -9,7 +9,9 @@ from tmdbapis.objs.reload import Episode as TMDbEpisode, Movie as TMDbMovie
 from tmdbapis.objs.image import Still as TMDbStill
 
 from modules.Debug import log
-from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult
+from modules.EpisodeDataSource2 import (
+    EpisodeDataSource, SearchResult, WatchedStatus
+)
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
 from modules.PersistentDatabase import PersistentDatabase
@@ -204,6 +206,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             blacklist_threshold: int = BLACKLIST_THRESHOLD,
             logo_language_priority: list[LANGUAGE_CODES] = ['en'],
             *,
+            interface_id: int = 0,
             log: Logger = log,
         ) -> None:
         """
@@ -232,9 +235,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         self.minimum_source_height = minimum_source_height
         self.blacklist_threshold = blacklist_threshold
         self.logo_language_priority = logo_language_priority
-
-        # Create/read blacklist database
-        self.__blacklist = PersistentDatabase(self.__BLACKLIST_DB)
+        self._interface_id = interface_id
 
         # Create API object, validate key
         try:
@@ -245,6 +246,10 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 status_code=401,
                 detail=f'Invalid API Key'
             ) from e
+
+        # Create/read blacklist database
+        self.__blacklist = PersistentDatabase(self.__BLACKLIST_DB)
+
         self.activate()
 
 
@@ -524,7 +529,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             series_info: SeriesInfo,
             *,
             log: Logger = log,
-        ) -> list[tuple[EpisodeInfo, Optional[bool]]]:
+        ) -> list[tuple[EpisodeInfo, WatchedStatus]]:
         """
         Gets all episode info for the given series. Only episodes that
         have  already aired are returned.
@@ -580,7 +585,10 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 )
 
                 # Create EpisodeInfo for this episode, add to list
-                all_episodes.append((episode_info, None))
+                all_episodes.append((
+                    episode_info,
+                    WatchedStatus(self._interface_id)
+                ))
 
         return all_episodes
 

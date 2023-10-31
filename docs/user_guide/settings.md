@@ -2,6 +2,8 @@
 title: Settings
 description: >
     In-depth descriptions of all global settings.
+tags:
+    - Global Settings
 ---
 
 # Settings
@@ -46,8 +48,8 @@ below.
 
         | Setting | Recommended Value |
         | ---: |  :--- |
-        | Card Directory | ./cards/ |
-        | Source Directory | ./source/ |
+        | Card Directory | ./config/cards/ |
+        | Source Directory | ./config/source/ |
         | Episode Data Source | Sonarr | 
         | Image Source Priority | `TMDb` `Plex` `Emby` `Jellyfin` |
         | Sync Specials | Unchecked |

@@ -52,9 +52,9 @@ class NewEpisode(Base):
     font_vertical_shift: Optional[int] = None
 
     airdate: Optional[datetime] = None
-    emby_id: EmbyID = None
+    emby_id: EmbyID = ''
     imdb_id: IMDbID = None
-    jellyfin_id: JellyfinID = None
+    jellyfin_id: JellyfinID = ''
     tmdb_id: TMDbID = None
     tvdb_id: TVDbID = None
     tvrage_id: TVRageID = None
@@ -104,9 +104,9 @@ class UpdateEpisode(UpdateBase):
     font_vertical_shift: Optional[int] = UNSPECIFIED
 
     airdate: Optional[datetime] = UNSPECIFIED
-    emby_id: EmbyID = UNSPECIFIED
+    emby_id: Optional[EmbyID] = UNSPECIFIED
     imdb_id: IMDbID = UNSPECIFIED
-    jellyfin_id: JellyfinID = UNSPECIFIED
+    jellyfin_id: Optional[JellyfinID] = UNSPECIFIED
     tmdb_id: TMDbID = UNSPECIFIED
     tvdb_id: TVDbID = UNSPECIFIED
     tvrage_id: TVRageID = UNSPECIFIED
@@ -128,8 +128,16 @@ class UpdateEpisode(UpdateBase):
         if len(val) != len(set(val)):
             raise ValueError('Template IDs must be unique')
         return val
+    
+    @root_validator(pre=False)
+    def convert_null_ids_to_empty_strings(cls, values):
+        if 'emby_id' in values and values['emby_id'] == None:
+            values['emby_id'] = ''
+        if 'jellyfin_id' in values and values['jellyfin_id'] == None:
+            values['jellyfin_id'] = ''
+        return values
 
-    @root_validator
+    @root_validator(pre=False)
     def validate_paired_lists(cls, values):
         return validate_argument_lists_to_dict(
             values, 'extras',
@@ -189,4 +197,4 @@ class Episode(Base):
 
     extras: Optional[dict[str, Any]]
     translations: dict[str, str]
-    card: list[TitleCard]
+    cards: list[TitleCard]

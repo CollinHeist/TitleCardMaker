@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from modules.DatabaseInfoContainer import InterfaceID
 
 from modules.Debug import log
-from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult
+from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult, WatchedStatus
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
 from modules.MediaServer2 import MediaServer, SourceImage
@@ -499,7 +499,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             series_info: SeriesInfo,
             *,
             log: Logger = log,
-        ) -> list[tuple[EpisodeInfo, Optional[bool]]]:
+        ) -> list[tuple[EpisodeInfo, WatchedStatus]]:
         """
         Gets all episode info for the given series. Only episodes that
         have already aired are returned.
@@ -510,7 +510,8 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             log: Logger for all log messages.
 
         Returns:
-            List of EpisodeInfo objects for this series.
+            List of tuples of EpisodeInfo and WatchStatus objects for
+            this series.
         """
 
         # Find series
@@ -561,20 +562,25 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
             # Add to list
             if episode_info is not None:
-                all_episodes.append(
-                    (episode_info, episode.get('UserData', {}).get('Played'))
-                )
+                all_episodes.append((
+                    episode_info,
+                    WatchedStatus(
+                        self._interface_id,
+                        library_name,
+                        episode.get('UserData', {}).get('Played')
+                    )
+                ))
 
         return all_episodes
 
 
-    def update_watched_statuses(self,
+    def get_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
             episodes: list['Episode'], # type: ignore
             *,
             log: Logger = log,
-        ) -> None:
+        ) -> list[WatchedStatus]:
         """
         Modify the Episodes' watched attribute according to the watched
         status of the corresponding episodes within Emby.
@@ -588,12 +594,12 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         # If no episodes, exit
         if len(episodes) == 0:
-            return None
+            return []
 
         # Find series, exit if not found
         emby_id = self.__get_series_id(library_name, series_info, log=log)
         if emby_id is None:
-            return None
+            return []
 
         # Query for all episodes of this series
         response = self.session.get(
@@ -602,14 +608,19 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         )
 
         # Go through each episode in Emby, update Episode status/card
+        statuses = []
         for emby_episode in response['Items']:
             for episode in episodes:
                 if (emby_episode['ParentIndexNumber'] == episode.season_number
                     and emby_episode["IndexNumber"] == episode.episode_number):
-                    episode.watched = emby_episode['UserData']['Played']
+                    statuses.append(WatchedStatus(
+                        self._interface_id,
+                        library_name,
+                        emby_episode['UserData']['Played'],
+                    ))
                     break
 
-        return None
+        return statuses
 
 
     def load_title_cards(self,

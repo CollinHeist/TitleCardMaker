@@ -3,6 +3,9 @@ title: Blueprints
 description: >
     Pre-made collections of Card customizations that includes Fonts, Templates,
     and card settings.
+tags:
+    - Series
+    - Blueprints
 ---
 
 # Blueprints

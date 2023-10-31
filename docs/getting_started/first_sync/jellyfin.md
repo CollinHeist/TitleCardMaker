@@ -2,6 +2,10 @@
 title: Syncing from Jellyfin
 description: >
     Creating a Sync to automatically add Series from Jellyfin to TitleCardMaker.
+tags:
+    - Tutorial
+    - Jellyfin
+    - Sync
 ---
 
 # Syncing from Jellyfin

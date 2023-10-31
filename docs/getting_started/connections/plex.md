@@ -2,6 +2,9 @@
 title: Connecting to Plex
 description: >
     How to connect TitleCardMaker to Plex.
+tags:
+    - Tutorial
+    - Plex
 ---
 
 # :material-plex:{ .plex } Plex

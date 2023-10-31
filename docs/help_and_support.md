@@ -2,6 +2,9 @@
 title: Help & Support
 description: >
     How to get help with an issue or make a suggestion.
+hide:
+    - navigation
+    - toc
 ---
 
 # Help & Support

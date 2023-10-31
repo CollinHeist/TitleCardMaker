@@ -207,15 +207,15 @@ function addFormValidation() {
  * Add form validation to the Tautulli integration form, and assign the
  * API request to the form submission.
  */
-function initializeTautulliForm() {
+function initializeTautulliForm(plexInterfaceId) {
   // Add form validation
   $('#tautulli-agent-form').form({
     on: 'blur',
     inline: true,
     fields: {
-      tautulli_url: ['empty'],
-      tautulli_api_key: ['empty'],
-      tautulli_agent_name: {
+      url: ['empty'],
+      api_key: ['empty'],
+      agent_name: {
         optional: true,
         value: ['minLength[1]'],
       },
@@ -231,19 +231,20 @@ function initializeTautulliForm() {
     $('#tautulli-agent-modal button').toggleClass('loading', true);
     $.ajax({
       type: 'POST',
-      url: '/api/connection/tautulli/integrate',
+      url: `/api/connection/tautulli/integrate?plex_interface_id=${plexInterfaceId}`,
       data: JSON.stringify(data),
       contentType: 'application/json',
       success: () => {
         // Show toast, disable 
         $.toast({
           class: 'blue info',
-          title: `Created "${data.tautulli_agent_name}" Notification Agent`,
+          title: `Created "${data.agent_name}" Notification Agent`,
           displayTime: 5000,
         });
         $('#tautulli-agent-modal button').toggleClass('disabled', true);
+        $(`#connection${plexInterfaceId} .button[data-action="tautulli"]`).toggleClass('disabled', true);
       }, error: response => showErrorToast({title: 'Error Creating Notification Agent', response}),
-      complete: () => $('#tautulli-agent-modal button').toggleClass('loading', false)
+      complete: () => $('#tautulli-agent-modal button').toggleClass('loading', false),
     });
   });
 }
@@ -388,6 +389,12 @@ function initializeEmby() {
               });
             }, error: response => showErrorToast({title: `Error Querying ${connection.name} Usernames`, response}),
           });
+        } else if (connection.username) {
+          const dropdown = $(`#connection${connection.id} .dropdown[data-value="username"]`);
+          dropdown.toggleClass('disabled', true);
+          dropdown.dropdown({
+            values: [{name: connection.username, value: connection.username, selected: true}],
+          });
         }
         // SSL
         $(`#connection${connection.id} .checkbox[data-value="use_ssl"]`).checkbox(
@@ -465,6 +472,12 @@ function initializeJellyfin() {
               });
             }, error: response => showErrorToast({title: `Error Querying ${connection.name} Usernames`, response}),
           });
+        } else if (connection.username) {
+          const dropdown = $(`#connection${connection.id} .dropdown[data-value="username"]`);
+          dropdown.toggleClass('disabled', true);
+          dropdown.dropdown({
+            values: [{name: connection.username, value: connection.username, selected: true}],
+          });
         }
         // SSL
         $(`#connection${connection.id} .checkbox[data-value="use_ssl"]`).checkbox(
@@ -533,6 +546,13 @@ function initializePlex() {
         $(`#connection${connection.id} .checkbox[data-value="integrate_with_pmm"]`).checkbox(
           connection.integrate_with_pmm ? 'check' : 'uncheck'
         );
+        // Assign appropriate Tautulli modal form launch to button
+        $(`#connection${connection.id} .button[data-action="tautulli"]`).on('click', () => {
+          initializeTautulliForm(connection.id);
+          $('#tautulli-agent-modal')
+            .modal({blurring: true})
+            .modal('show');
+        });
         // Assign save function to button
         $(`#connection${connection.id} form`).on('submit', (event) => {
           event.preventDefault();
@@ -811,11 +831,4 @@ async function initAll() {
   $('.ui.accordion').accordion();
 
   initializeAuthForm();
-  initializeTautulliForm();
-
-  // Attach Tautlli modal to button
-  $('#tautulli-agent-modal')
-    .modal({blurring: true})
-    .modal('attach events', '#tautulli-agent-button', 'show')
-    .modal('setting', 'transition', 'fade up');
 }

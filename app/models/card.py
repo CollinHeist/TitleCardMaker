@@ -20,9 +20,9 @@ class Card(Base):
     # Referencial arguments
     id = Column(Integer, primary_key=True, index=True)
     series_id = Column(Integer, ForeignKey('series.id'))
-    series = relationship('Series', back_populates='cards')
     episode_id = Column(Integer, ForeignKey('episode.id'))
-    episode = relationship('Episode', back_populates='card')
+    series = relationship('Series', back_populates='cards')
+    episode = relationship('Episode', back_populates='cards')
     loaded = relationship(
         'Loaded',
         back_populates='card',
