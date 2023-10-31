@@ -290,6 +290,7 @@ class Template(Base):
             ARGUMENTS = SERIES_ARGUMENTS
         else:
             ARGUMENTS = SERIES_ARGUMENTS | {
+                # TODO modify
                 'Episode is Watched': episode.watched,
                 'Season Number': episode.season_number,
                 'Episode Number': episode.episode_number,

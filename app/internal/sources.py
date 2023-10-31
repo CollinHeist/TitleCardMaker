@@ -121,18 +121,15 @@ def resolve_source_settings(episode: Episode) -> tuple[Style, Path]:
         return watched_style, episode.get_source_file(
             preferences.source_directory, series.path_safe_name, watched_style
         )
-    # Episode watch status is unset, use unwatched style
-    if episode.watched is None:
-        return unwatched_style, episode.get_source_file(
-            preferences.source_directory, series.path_safe_name, unwatched_style
-        )
+
     # Episode is watched, use watched style
+    # TODO modify
     if episode.watched:
         return watched_style, episode.get_source_file(
             preferences.source_directory, series.path_safe_name, watched_style
         )
 
-    # Episode is unwatched, use unwatched style
+    # Watch status is unset or Episode is unwatched, use unwatched style
     return unwatched_style, episode.get_source_file(
         preferences.source_directory, series.path_safe_name, unwatched_style
     )

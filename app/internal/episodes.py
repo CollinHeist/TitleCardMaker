@@ -14,6 +14,7 @@ from app.models.episode import Episode
 from app.models.series import Series
 
 from modules.Debug import log
+from modules.EpisodeDataSource2 import WatchedStatus
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.TieredSettings import TieredSettings
 
@@ -102,7 +103,7 @@ def get_all_episode_data(
         *,
         raise_exc: bool = True,
         log: Logger = log,
-    ) -> list[tuple[EpisodeInfo, Optional[bool]]]:
+    ) -> list[tuple[EpisodeInfo, WatchedStatus]]:
     """
     Get all EpisodeInfo for the given Series from it's indicated Episode
     data source.
@@ -115,9 +116,9 @@ def get_all_episode_data(
 
     Returns:
         List of tuples of the EpisodeInfo from the given Series' episode
-        data source and whether that Episode has been watched (or None
-        of that cannot be determined). If the data cannot be queried and
-        `raise_exc` is False, then an empty list is returned.
+        data source and the WatchedStatus for that Episode. If the data
+        cannot be queried and `raise_exc` is False, then an empty list
+        is returned.
 
     Raises:
         HTTPException (404): A Series Template does not exist.
@@ -134,7 +135,7 @@ def get_all_episode_data(
     )
 
     # Raise 409 if cannot communicate with the Series' Episode data source
-    if (interface := get_interface(interface_id)) is None:
+    if (interface := get_interface(interface_id, raise_exc=False)) is None:
         if raise_exc:
             raise HTTPException(
                 status_code=409,
@@ -143,6 +144,7 @@ def get_all_episode_data(
         return []
 
     # Sonarr and TMDb do not have libraries, query separately
+    # TODO modify to return a WatchStatus object
     if interface.INTERFACE_TYPE in ('Sonarr', 'TMDb'):
         return interface.get_all_episodes(None, series.as_series_info, log=log)
 
@@ -158,7 +160,7 @@ def get_all_episode_data(
 
     # Get Episodes from the Series' first (primary) library
     return interface.get_all_episodes(
-        libraries[0], series.as_series_info, log=log
+        libraries[0][1], series.as_series_info, log=log
     )
 
 
@@ -221,7 +223,7 @@ def refresh_episode_data(
                 title=episode_info.title.full_title,
                 **episode_info.indices,
                 **episode_info.ids,
-                watched=watched,
+                watched_statuses=watched.as_db_entry,
                 airdate=episode_info.airdate,
             )
             db.add(episode)
@@ -234,21 +236,17 @@ def refresh_episode_data(
                 existing.match_title
                 or (existing.match_title is None and series.match_titles)
             )
-            add = False
             if (do_title_match
                 and existing.title != episode_info.title.full_title):
                 existing.title = episode_info.title.full_title
                 log.debug(f'{series.log_str} {existing.log_str} Updating title')
-                changed, add = True, True
+                changed = True
+                episodes.append(existing)
 
             # Update watched status
-            if watched is not None and existing.watched != watched:
+            if episode.add_watched_status(watched):
                 log.debug(f'{series.log_str} {existing.log_str} Updating watched status')
-                existing.watched = watched
-                changed, add = True, True
-
-            if add:
-                episodes.append(existing)
+                changed = True
 
     # Set Episode ID's for all new Episodes as background task or directly
     if background_tasks is None:

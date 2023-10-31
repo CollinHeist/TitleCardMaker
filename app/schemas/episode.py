@@ -197,4 +197,4 @@ class Episode(Base):
 
     extras: Optional[dict[str, Any]]
     translations: dict[str, str]
-    card: list[TitleCard]
+    cards: list[TitleCard]

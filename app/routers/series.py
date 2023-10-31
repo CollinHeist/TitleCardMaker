@@ -21,7 +21,7 @@ from app.internal.translate import translate_episode
 from app import models
 from app.internal.cards import (
     create_episode_card, refresh_remote_card_types,
-    update_episode_watch_statuses
+    get_watched_statuses
 )
 from app.internal.series import (
     add_series, delete_series_and_episodes, download_series_poster,
@@ -377,7 +377,7 @@ def process_series(
         )
 
     # Update watch statuses
-    update_episode_watch_statuses(series, series.episodes, log=log)
+    get_watched_statuses(db, series, series.episodes, log=log)
     db.commit()
 
     # Begin Card creation - use BackgroundTasks
