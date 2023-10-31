@@ -7,7 +7,7 @@ from typing import Any, Literal, Optional
 from fastapi import HTTPException
 
 from modules.Debug import log
-from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult
+from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult, WatchedStatus
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
 from modules.SeriesInfo2 import SeriesInfo
@@ -336,7 +336,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             series_info: SeriesInfo,
             *,
             log: Logger = log,
-        ) -> list[tuple[EpisodeInfo, Optional[bool]]]:
+        ) -> list[tuple[EpisodeInfo, WatchedStatus]]:
         """
         Gets all episode info for the given series. Only episodes that
         have  already aired are returned.
@@ -411,7 +411,10 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
 
             # Add to episode list
             if episode_info is not None:
-                all_episode_info.append((episode_info, None))
+                all_episode_info.append((
+                    episode_info,
+                    WatchedStatus(self.server_id),
+                ))
 
         # If any episodes had TVDb ID's of 0, then warn user to refresh series
         if has_bad_ids:

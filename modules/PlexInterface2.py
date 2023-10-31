@@ -18,7 +18,7 @@ from requests.exceptions import (
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 
 from modules.Debug import log
-from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult
+from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult, WatchedStatus
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
 from modules.MediaServer2 import MediaServer, SourceImage
@@ -356,7 +356,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             series_info: SeriesInfo,
             *,
             log: Logger = log,
-        ) -> list[tuple[EpisodeInfo, Optional[bool]]]:
+        ) -> list[tuple[EpisodeInfo, WatchedStatus]]:
         """
         Gets all episode info for the given series. Only episodes that
         have  already aired are returned.
@@ -401,19 +401,26 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
             # Create a new EpisodeInfo, add to list
             episode_info = EpisodeInfo.from_plex_episode(plex_episode)
-            all_episodes.append((episode_info, plex_episode.isWatched))
+            all_episodes.append((
+                episode_info,
+                WatchedStatus(
+                    self._interface_id,
+                    library_name,
+                    plex_episode.isWatched,
+                ),
+            ))
 
         return all_episodes
 
 
-    @catch_and_log('Error updating watched statuses')
-    def update_watched_statuses(self,
+    @catch_and_log('Error getting watched statuses')
+    def get_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
             episodes: list['Episode'], # type: ignore
             *,
             log: Logger = log,
-        ) -> None:
+        ) -> list[WatchedStatus]:
         """
         Modify the Episodes' watched attribute according to the watched
         status of the corresponding episodes within Plex.
@@ -427,27 +434,32 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         # If no episodes, exit
         if len(episodes) == 0:
-            return None
+            return []
 
         # If the given library cannot be found, exit
         if not (library := self.__get_library(library_name, log=log)):
             log.warning(f'Cannot find library "{library_name}" of {series_info}')
-            return None
+            return []
 
         # If the given series cannot be found in this library, exit
         if not (series := self.__get_series(library, series_info, log=log)):
             log.warning(f'Cannot find {series_info} in library "{library}"')
-            return None
+            return []
 
         # Go through each episode within Plex and update Episode spoiler status
+        statuses = []
         for plex_episode in series.episodes(container_size=500):
             for episode in episodes:
                 if (plex_episode.parentIndex == episode.season_number
                     and plex_episode.index == episode.episode_number):
-                    episode.watched = plex_episode.isWatched
+                    statuses.append(WatchedStatus(
+                        self._interface_id,
+                        library_name,
+                        plex_episode.isWatched,
+                    ))
                     break
 
-        return None
+        return statuses
 
 
     @catch_and_log("Error setting series ID's")

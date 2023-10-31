@@ -6,7 +6,7 @@ from typing import Optional, Union
 from fastapi import HTTPException
 
 from modules.Debug import log
-from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult
+from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult, WatchedStatus
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
 from modules.MediaServer2 import MediaServer, SourceImage
@@ -510,7 +510,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             series_info: SeriesInfo,
             *,
             log: Logger = log,
-        ) -> list[tuple[EpisodeInfo, Optional[bool]]]:
+        ) -> list[tuple[EpisodeInfo, WatchedStatus]]:
         """
         Gets all episode info for the given series. Only episodes that
         have  already aired are returned.
@@ -574,20 +574,25 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
 
             # Add to list
             if episode_info is not None:
-                all_episodes.append(
-                    (episode_info, episode.get('UserData', {}).get('Played'))
-                )
+                all_episodes.append((
+                    episode_info,
+                    WatchedStatus(
+                        self._interface_id,
+                        library_name,
+                        episode.get('UserData', {}).get('Played'),
+                    )
+                ))
 
         return all_episodes
 
 
-    def update_watched_statuses(self,
+    def get_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
             episodes: list['Episode'], # type: ignore
             *,
             log: Logger = log,
-        ) -> None:
+        ) -> list[WatchedStatus]:
         """
         Modify the Episodes' watched attribute according to the watched
         status of the corresponding episodes within Jellyfin.
@@ -601,13 +606,13 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
 
         # If no episodes, exit
         if len(episodes) == 0:
-            return None
+            return []
 
         # Find this series
         series_id = self.__get_series_id(library_name, series_info, log=log)
         if series_id is None:
             log.warning(f'Series not found in Jellyfin {series_info!r}')
-            return None
+            return []
 
         # Query for all episodes of this series
         response = self.session.get(
@@ -615,7 +620,8 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             params={'UserId': self.user_id} | self.__params
         )
 
-        # Go through each episode in Jellyfin, update Episode status/card
+        # Go through each episode in Jellyfin, determine watched status
+        statuses = []
         for jellyfin_episode in response['Items']:
             # Skip episodes without episode or season numbers
             if (jellyfin_episode.get('IndexNumber', None) is None
@@ -624,13 +630,16 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
 
             for episode in episodes:
                 if (jellyfin_episode['ParentIndexNumber']==episode.season_number
-                    and jellyfin_episode["IndexNumber"]==episode.episode_number):
-                    if (jellyfin_episode.get('UserData', {}).get('Played')
-                        is not None):
-                        episode.watched = jellyfin_episode['UserData']['Played']
+                    and jellyfin_episode["IndexNumber"]==episode.episode_number
+                    and jellyfin_episode.get('UserData', {}).get('Played') is not None):
+                        statuses.append(WatchedStatus(
+                            self._interface_id,
+                            library_name,
+                            jellyfin_episode['UserData']['Played']
+                        ))
                         break
 
-        return None
+        return statuses
 
 
     def load_title_cards(self,
