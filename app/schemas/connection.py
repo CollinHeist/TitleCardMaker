@@ -98,7 +98,7 @@ class NewSonarrConnection(BaseNewServer):
     libraries: list[SonarrLibrary] = []
 
 class NewTautulliConnection(BaseNewServer):
-    agent_name: str
+    agent_name: str = 'Update TitleCardMaker (v3)'
 
 class NewTMDbConnection(Base):
     name: str = 'TMDb'

@@ -146,7 +146,7 @@
 
         <div class="ui field">
           <label>Tautulli Agent</label>
-          <button class="ui green animated button" data-action="tautulli">
+          <button class="ui green animated button" data-action="tautulli" type="button">
             <div class="visible content">Create Notification Agent</div>
             <div class="hidden content">
               <i class="right arrow icon"></i>
@@ -458,22 +458,22 @@
         <form id="tautulli-agent-form" class="ui form">
           <div class="ui field">
             <label>Tautulli URL</label>
-            <input name="tautulli_url" placeholder="http://localhost:8181/">
+            <input name="url" placeholder="http://localhost:8181/">
           </div>
           
           <div class="ui field">
             <label>Tautulli API Key</label>
-            <input name="tautulli_api_key" type="password" placeholder="abcdef">
+            <input name="api_key" type="password" placeholder="abcdef">
           </div>
 
           <div class="ui left aligned checkbox field">
-            <input name="tautulli_use_ssl" type="checkbox" checked="">
             <label>Use SSL</label>
+            <input name="use_ssl" type="checkbox" checked="">
           </div>
 
           <div class="ui field">
             <label>Notification Agent Name</label>
-            <input name="tautulli_agent_name" value="Update TitleCardMaker" placeholder="Update TitleCardMaker">
+            <input name="agent_name" value="Update TitleCardMaker (v3)" placeholder="Update TitleCardMaker (v3)">
           </div>
           <div class="ui info message"></div>
         </form>

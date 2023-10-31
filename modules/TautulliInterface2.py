@@ -19,7 +19,7 @@ class TautulliInterface(WebInterface, Interface):
     INTERFACE_TYPE = 'Tautulli'
 
     """Default configurations for the notification agent(s)"""
-    DEFAULT_AGENT_NAME = 'Update TitleCardMaker'
+    DEFAULT_AGENT_NAME = 'Update TitleCardMaker (v3)'
 
     """Agent ID for a Webhook"""
     AGENT_ID = 25
@@ -29,6 +29,7 @@ class TautulliInterface(WebInterface, Interface):
             tcm_url: str,
             tautulli_url: str,
             api_key: str,
+            plex_interface_id: int,
             use_ssl: bool = True,
             agent_name: str = DEFAULT_AGENT_NAME,
             *,
@@ -57,8 +58,7 @@ class TautulliInterface(WebInterface, Interface):
 
         # Get correct TCM URL
         tcm_url = tcm_url if tcm_url.endswith('/') else f'{tcm_url}/'
-        self.tcm_url = f'{tcm_url}api/cards/key'
-
+        self.tcm_url = f'{tcm_url}api/cards/key?interface_id={plex_interface_id}'
         # Get correct Tautulli URL
         tautulli_url = tautulli_url if tautulli_url.endswith('/') else f'{tautulli_url}/'
         if tautulli_url.endswith('/api/v2/'):

@@ -559,6 +559,7 @@ def check_tautulli_integration(
 def add_tautulli_integration(
         request: Request,
         tautulli_connection: NewTautulliConnection = Body(...),
+        plex_interface_id: int = Query(...),
     ) -> None:
     """
     Integrate Tautulli with TitleCardMaker by creating a Notification
@@ -575,7 +576,8 @@ def add_tautulli_integration(
     interface = TautulliInterface(
         tcm_url=url,
         tautulli_url=tautulli_connection.url,
-        api_key=tautulli_connection.api_key.get_secret_value(),
+        api_key=tautulli_connection.api_key,
+        plex_interface_id=plex_interface_id,
         use_ssl=tautulli_connection.use_ssl,
         agent_name=tautulli_connection.agent_name,
         log=request.state.log,
