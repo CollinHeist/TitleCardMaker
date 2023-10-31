@@ -1,4 +1,4 @@
-"""Create Connections Table
+"""Support multiple interface connections
 Create new Connections SQL table / Model
 - Turn existing connection details from global Preferences into
   Connection objects which are assigned during SQL migration.
@@ -19,6 +19,10 @@ Modify Series table:
 Modify Episode table:
 - Migrate the emby_id, and jellyfin_id, columns into their new multi-
   connection DatabaseID equivalents (i.e. {interface_id}:{library}:{id}).
+- Add new watched_statuses column which contains a dictionary mapping
+interface IDs -> library names -> watched statuses
+- Remove the watched column
+- Migrate old watched column into new watched_statuses objects
 Modify Sync table:
 - Add new interface_id and connection columns / relationships as a Sync
   now must be tied to an existing Connection.
@@ -44,7 +48,7 @@ depends_on = None
 
 # Models necessary for data migration
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.ext.mutable import MutableList
+from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy.orm import Mapped, Session, relationship
 from app.database.session import PreferencesLocal
 
@@ -78,10 +82,13 @@ class Episode(Base):
 
     id = sa.Column(sa.Integer, primary_key=True)
     series_id = sa.Column(sa.Integer, sa.ForeignKey('series.id'))
+    series = relationship('Series', back_populates='episodes')
     emby_id = sa.Column(sa.String)
     jellyfin_id = sa.Column(sa.String)
-
-    series = relationship('Series', back_populates='episodes')
+    # New column
+    watched_statuses = sa.Column(MutableDict.as_mutable(sa.JSON), default={}, nullable=False)
+    # Existing column to be removed
+    watched = sa.Column(sa.Boolean)
 
 class Loaded(Base):
     __tablename__ = 'loaded'
@@ -150,6 +157,9 @@ def upgrade() -> None:
     )
     with op.batch_alter_table('connection', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_connection_id'), ['id'], unique=False)
+
+    with op.batch_alter_table('episode', schema=None) as batch_op:
+        batch_op.add_column(sa.Column('watched_statuses', sa.JSON(), server_default='{}', nullable=False))
 
     with op.batch_alter_table('loaded', schema=None) as batch_op:
         batch_op.add_column(sa.Column('library_name', sa.String(), nullable=True))
@@ -374,6 +384,24 @@ def upgrade() -> None:
 
         template.filters = new_filters
 
+    # Migrate Episode watched statuses into new objects
+    for series in session.query(Series).all():
+        # Skip Series with no or >1 library
+        if len(series.libraries) == 0:
+            continue
+        if len(series.libraries) > 1:
+            log.debug(f'Cannot migrate Episode watched statuses for Series[{series.id}]')
+            continue
+
+        for episode in series.episodes:
+            if episode.watched is not None:
+                episode.watched_statuses = {
+                    series.libraries[0]['interface_id']: {
+                        series.libraries[0]['name']: episode.watched,
+                    },
+                }
+        log.debug(f'Initialized Series[{series.id}] Episode.watched_statuses')
+
     # Migrate Series and Episode Emby and Jellyfin IDs; and Series Sonarr IDs
     for series in session.query(Series).all():
         # Migratate {id} -> {interface_id}:{library_name}:{id}
@@ -436,6 +464,9 @@ def upgrade() -> None:
     # Drop columns once migration is completed
     with op.batch_alter_table('loaded', schema=None) as batch_op:
         batch_op.drop_column('media_server')
+
+    with op.batch_alter_table('episode', schema=None) as batch_op:
+        batch_op.drop_column('watched')
 
     with op.batch_alter_table('series', schema=None) as batch_op:
         batch_op.drop_column('emby_library_name')

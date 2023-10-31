@@ -1,7 +1,5 @@
 from typing import Union
 
-from pydantic import PositiveInt
-
 from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request
 )

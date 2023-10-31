@@ -1,7 +1,6 @@
 from logging import Logger
 from typing import Union
 
-from fastapi import BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app.database.query import get_connection
