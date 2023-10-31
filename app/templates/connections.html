@@ -144,6 +144,21 @@
           </p>
         </div>
 
+        <div class="ui field">
+          <label>Tautulli Agent</label>
+          <button class="ui green animated button" data-action="tautulli">
+            <div class="visible content">Create Notification Agent</div>
+            <div class="hidden content">
+              <i class="right arrow icon"></i>
+            </div>
+          </button>
+          <p class="help">
+            Create a Notification Agent in Tautulli.
+            <br>
+            Once created, this does not need to be re-created.
+          </p>
+        </div>
+
         <div class="ui error message"></div>
         <button class="ui primary animated button" type="submit" data-action="save">
           <div class="visible content">Save Changes</div>
@@ -420,13 +435,6 @@
         <!-- Added later -->
       </div>
 
-      <!-- Tautulli Integration -->
-      <h2 id="tautulli" class="ui dividing header">Tautulli</h2>
-      <button id="tautulli-agent-button" class="ui labeled icon blue button">
-        <i class="bell icon"></i>
-        Create Notification Agent
-      </button>
-
       <!-- TMDb Connections -->
       <h2 class="ui dividing header">TheMovieDatabase</h2>
       <button class="ui primary tertiary button" onclick="addConnection('tmdb');">
@@ -442,8 +450,6 @@
       <div class="header">Tautulli Notification Agent</div>
       <div class="content">
         <div class="ui compact floating visible info message">
-          <!-- <i class="info circle icon"></i>
-          <b>Info</b> -->
           <ul class="list">
             <li>A Tautulli Notification Agent can be used to immediately update Title Cards for newly added or recently watched Episodes.</li>
             <li>This bypasses the Scheduler, and is <i>highly</i> recommended for Plex users.</li>
