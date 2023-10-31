@@ -16,8 +16,8 @@ When a Series is clicked on via the home page or the search bar, you will access
 the Series page (at `/series/{series_id}`) where all Series-level options, Title
 Card customizations, files, and actions can be viewed.
 
-![Series Page](../assets/series_light.webp#only-light)
-![Series Page](../assets/series_dark.webp#only-dark)
+![Series Page](../assets/series_light.webp#only-light){.no-lightbox}
+![Series Page](../assets/series_dark.webp#only-dark){.no-lightbox}
 
 This page is separated into two sections - the _actions_ (on the left), and the
 _options_ (on the right).

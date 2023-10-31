@@ -10,8 +10,6 @@ tags:
 
 # Rescheduling Tasks
 
-## Background
-
 TitleCardMaker runs all core tasks on schedulable intervals. The default
 intervals for each task is typically sufficient for most use-cases, but TCM
 allows these to be adjusted to any arbitrary interval.
@@ -34,10 +32,8 @@ allows these to be adjusted to any arbitrary interval.
     | Refresh user Card Types | 1 day |
     | Set Series ID's | 1 day |
 
-For this part of the tutorial, we'll be adjusting the interval for how often
-all Syncs are run. 
-
-## Instructions
+For this part of the tutorial, we'll be adjusting the interval for how often all
+Syncs are run. 
 
 1. Navigate to the Scheduler page by clicking :fontawesome-solid-stopwatch:
 `Scheduler` from the side navigation bar.

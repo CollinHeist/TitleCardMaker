@@ -12,10 +12,9 @@ tags:
 
     This documentation is actively being developed.
 
-## Background
-From the left-hand navigation menu, Global Settings can be accessed and
-set. Settings listed here are the _global_ defaults for TitleCardMaker,
-but many can be overwritten for a specific Series.
+From the left-hand navigation menu, Global Settings can be accessed and set.
+Settings listed here are the _global_ defaults for TitleCardMaker, but many can
+be overwritten for a specific Series.
 
 ## Recommended Settings
 TitleCardMaker's default settings are typically the recommended settings
@@ -110,10 +109,10 @@ subfolder created for it, under which cards will be created.
 
         When installed locally, this setting can be whatever is most-
         convenient. It is very common to specify a `cards` directory
-        within your local installation directory, e.g. `./cards/`.
+        within your local installation directory, e.g. `./config/cards/`.
         However, this is not required. In this instance, if the Series
         `Breaking Bad` were added to TitleCardMaker, I'd expect to find
-        all associated Title Cards under the `./cards/Breaking Bad
+        all associated Title Cards under the `./config/cards/Breaking Bad
         (2008)/` directory.
 
 This directory __does not__ need to align with your Media folders (where
@@ -145,10 +144,10 @@ images (and logos) will be added.
 
         When installed locally, this setting can be whatever is most-
         convenient. It is very common to specify a `source` directory
-        within your local installation directory, e.g. `./source/`.
+        within your local installation directory, e.g. `./config/source/`.
         However, this is not required. In this instance, if the Series
         `Breaking Bad` were added to TitleCardMaker, I'd expect to find
-        all associated source images (and logos) under the `./source/
+        all associated source images (and logos) under the `./config/source/
         Breaking Bad (2008)/` directory.
 
 ---

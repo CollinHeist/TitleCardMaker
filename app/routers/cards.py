@@ -212,9 +212,10 @@ def get_series_cards(
 
     return paginate(
         db.query(models.card.Card)\
+            .join(models.episode.Episode)\
             .filter_by(series_id=series_id)\
-            .order_by(models.card.Card.season_number)\
-            .order_by(models.card.Card.episode_number)
+            .order_by(models.episode.Episode.season_number)\
+            .order_by(models.episode.Episode.episode_number)
     )
 
 

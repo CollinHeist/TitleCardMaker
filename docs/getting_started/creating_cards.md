@@ -9,6 +9,10 @@ tags:
 
 # Creating Title Cards
 
+!!! warning "Under Construction"
+
+    This documentation is actively being developed.
+
 There has been a lot of preamble, but the core of TitleCardMaker is making
 Title Cards. We'll be creating Title Cards in order to showcase the effects of
 our Templates, as well as show how these Cards can be further customized.
@@ -31,8 +35,8 @@ Episodes.
     !!! note "Scheduled Task"
 
         Refreshing Episode data happens automatically as a
-        [scheduled task](./scheduler.md), __unless__ the Series is marked as
-        `Unmonitored`.
+        [scheduled task](../user_guide/scheduler.md), __unless__ the Series is
+        marked as `Unmonitored`.
 
 3. Open the "Episode Data" tab - there should now be either 62 or 80 Episodes,
 depending on whether you have turned on or off the Specials syncing.
@@ -66,8 +70,8 @@ Source Images` button on the left-hand side.
     !!! note "Scheduled Task"
 
         Downloading Source Images happens automatically as a
-        [scheduled task](./scheduler.md), __unless__ the Series is marked as
-        `Unmonitored`.
+        [scheduled task](../user_guide/scheduler.md), __unless__ the Series is
+        marked as `Unmonitored`.
 
 Now that TCM has started downloading Source Images, we are ready to create Title
 Cards.

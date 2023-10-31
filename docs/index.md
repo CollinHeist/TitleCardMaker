@@ -25,7 +25,7 @@ Jellyfin. Some Series have "official" Title Cards featured in the Episode
 itself. For example, the following Cards can both be automatically created with
 TitleCardMaker:
 
-![Tinted Frame](./assets/card_example0.jpg){width="48%"} ![Tinted Frame](./assets/card_example1.jpg){width="48%"}
+![Tinted Frame](./assets/card_example0.jpg){width="48%"} ![Anime](./assets/card_example1.jpg){width="48%"}
 
 # Early Access
 
