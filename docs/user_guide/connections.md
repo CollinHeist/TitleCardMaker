@@ -18,8 +18,6 @@ tags:
 
     This documentation is actively being developed.
 
-## Background
-
 The Connections page is where all _external_ connections are defined. Currently
 this is the following:
 
@@ -116,3 +114,23 @@ username and password as `admin` and `password`.
 
 [^1]: All API endpoint require authorization _except_ the Tautulli and Sonarr
 integrations, as these services are not capable of authenticating themselves.
+
+## :material-emby:{.emby} Emby Media Servers
+
+...
+
+## :simple-jellyfin:{ .jellyfin } Jellyfin Media Servers
+
+...
+
+## :material-plex:{ .plex } Plex Media Servers
+
+...
+
+## Sonarr
+
+...
+
+## Tautulli
+
+## :simple-themoviedatabase:{.tmdb} TheMovieDatabase

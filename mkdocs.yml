@@ -64,6 +64,11 @@ plugins:
   # Enable site search
   - search:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+
+  - glightbox:
+      width: 65%
+      skip_classes:
+        - no-lightbox
   
   # Enable animated code terminals
   - termynal:
@@ -164,6 +169,7 @@ nav:
       - Plex: getting_started/connections/plex.md
       - Sonarr: getting_started/connections/sonarr.md
       - Tautulli: getting_started/connections/tautulli.md
+      - TMDb: getting_started/connections/tmdb.md
     - Global Settings: getting_started/settings.md
     - Creating a Font: getting_started/custom_font.md
     - Creating Templates: getting_started/creating_templates.md
