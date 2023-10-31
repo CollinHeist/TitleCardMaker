@@ -64,23 +64,8 @@
     <div id="main-content" class="article">
       <div id="statistics" class="ui small statistics"><!-- Added asynchronously --></div>
 
+      <!-- Sort buttons -->
       <div id="toolbar">
-        <!-- Add new Series -->
-        <div id="add-series" class="ui compact blue inverted menu" tabindex="0" onkeypress="if(event.key == 'Enter') {window.location.href = '/add'}">
-          <a class="blue item" href="/add">
-            <i class="plus icon"></i>
-            New Series
-          </a>
-        </div>
-
-        <!-- <div class="ui compact blue inverted menu">
-          <a class="blue item">
-            <i class="edit outline icon"></i>
-            Editor
-          </a>
-        </div> -->
-
-        <!-- Sort buttons -->
         <div class="ui compact blue inverted menu" tabindex="0">
           <a class="item" title="Sort titles by ID" onclick="sortSeries(this, 'id')">
             <i id="sort-by-id" class="sort icon"></i>

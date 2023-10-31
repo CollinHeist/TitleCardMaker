@@ -8,6 +8,26 @@
 
   /* Same as fomantic ui red */
   --support-button-color: #db2828;
+
+  /* Accessibility colors */
+  --accessible-red-color: #ff203b;
+  --accessible-green-color: #1256ff;
+  --accessible-blue-color: rgb(26, 133, 255);
+  --accessible-orange-color: rgb(212, 17, 89);
+}
+
+/* Accessibility coloring */
+body.accessible .ui .red.bar {
+  background-color: var(--accessible-red-color) !important;
+}
+body.accessible .ui .green.bar {
+  background-color: var(--accessible-green-color) !important;
+}
+body.accessible .ui .blue.bar {
+  background-color: var(--accessible-blue-color) !important;
+}
+body.accessible .ui .orange.bar {
+  background-color: var(--accessible-orange-color) !important;
 }
 
 /* Fix header in place, lock window positioning */

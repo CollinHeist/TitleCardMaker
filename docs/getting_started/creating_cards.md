@@ -9,8 +9,6 @@ tags:
 
 # Creating Title Cards
 
-## Background
-
 There has been a lot of preamble, but the core of TitleCardMaker is making
 Title Cards. We'll be creating Title Cards in order to showcase the effects of
 our Templates, as well as show how these Cards can be further customized.
@@ -21,8 +19,8 @@ our Templates, as well as show how these Cards can be further customized.
     Those who decided to Sync a Series __other than__ _Breaking Bad_ can still
     follow these steps, just apply them to whatever Series you chose.
 
-## Instructions
-### Episode Data
+## Episode Data
+
 1. Go to the _Breaking Bad_ Series configuration page - you can quickly access
 it by searching for the title in the top left search bar (next to the TCM logo).
 
@@ -39,7 +37,7 @@ Episodes.
 3. Open the "Episode Data" tab - there should now be either 62 or 80 Episodes,
 depending on whether you have turned on or off the Specials syncing.
 
-### Source Images
+## Source Images
 
 4. Open the "Files" tab. This tab shows image information for all Source Images
 for each Episode of the Series. Since we just added _Breaking Bad_, all images
@@ -74,11 +72,11 @@ Source Images` button on the left-hand side.
 Now that TCM has started downloading Source Images, we are ready to create Title
 Cards.
 
-### Title Cards
+## Title Cards
 
-1. Click the `Create Title Cards` button on the left-hand side.
+8. Click the `Create Title Cards` button on the left-hand side.
 
-9. After TCM has created a few Cards, go to your file browser.
+9. After TCM has created a few Cards, go to "Files" tab under Title Cards.
 
 10. You'll see that Title Cards in Seasons 1 and 2 were created using our
 Standard card type, as this was the higher priority (first) Template "Tier 1 -
@@ -87,14 +85,12 @@ Season Number < 3. All other Title Cards were created with the lower priority
 (second) Template "Tier 0 - Tinted Frame" as they do not meet the Filter
 criteria.
 
-11. Back within TCM, go to the "Episode Data" tab and change the card type of
-Season 2 Episode 1 to something else. Save this change by clicking the
-:material-content-save: Save icon in the left-most column.
+11. Back in the "Episode Data" tab and change the card type of Season 2 Episode
+1 to something else. Save this change by clicking the :material-content-save:
+Save icon in the left-most column.
 
-12. Click the `Create Title Cards` button again, and TCM should inform you that
-it i creating 1 card and deleting 1 card. Looking at the file, this Card is now
-made with the card type you _just_ selected, overriding any Template
-specifications.
+12. Click the `Create Title Cards` button again. This Card is now made with the
+the card type you _just_ selected, overriding any Template specifications.
 
     ??? question "Why did the Tier 1 Template not apply?"
 

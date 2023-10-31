@@ -51,6 +51,9 @@ theme:
     - content.code.copy
     # Code annotations
     - content.code.annotate
+    # Add "edit" and "view" docs actions
+    # - content.action.edit
+    # - content.action.view
   font:
     text: Roboto
     code: Roboto Mono
@@ -61,6 +64,11 @@ plugins:
   # Enable site search
   - search:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+
+  - glightbox:
+      width: 65%
+      skip_classes:
+        - no-lightbox
   
   # Enable animated code terminals
   - termynal:
@@ -161,6 +169,7 @@ nav:
       - Plex: getting_started/connections/plex.md
       - Sonarr: getting_started/connections/sonarr.md
       - Tautulli: getting_started/connections/tautulli.md
+      - TMDb: getting_started/connections/tmdb.md
     - Global Settings: getting_started/settings.md
     - Creating a Font: getting_started/custom_font.md
     - Creating Templates: getting_started/creating_templates.md
@@ -175,8 +184,8 @@ nav:
     - Creating Title Cards: getting_started/creating_cards.md
   - Blueprints: blueprints.md
   - User Guide:
-    # - user_guide/index.md
-    # - Series: user_guide/series.md
+    - user_guide/index.md
+    - Series: user_guide/series.md
     - Adding Series: user_guide/new_series.md
     # - Templates: user_guide/templates.md
     # - Fonts: user_guide/fonts.md
@@ -186,7 +195,7 @@ nav:
     # - Scheduler: user_guide/scheduler.md
     # - Importer: user_guide/importer.md
   - Card Types:
-    - card_types/index.md
+    # - card_types/index.md
     - Local: card_types/local.md
     #   - Anime: card_types/local/anime.md
     #   - Cutout: card_types/local/cutout.md

@@ -63,9 +63,9 @@ will then cycle through the available previews.
 ### By Series
 
 To import a Blueprint for a Series, simply open the Series' page and then open
-the _Blueprints_ tab. Click `Search for Blueprints`, and TCM will look for any
-available Blueprints for this Series. If any are available, a preview card will
-show the details.
+the _Blueprints_ tab. Click `Search`, and TCM will look for any available
+Blueprints for this Series. If any are available, a preview will show the
+details.
 
 On this card will be a preview of the Blueprint, as well as what customizations
 will be imported. This can be any number of Fonts, Templates, or Episode
@@ -79,8 +79,8 @@ Series, Templates, or Fonts as you see fit. TitleCardMaker will not override
 your changes with the Blueprint settings unless you prompt it to do so by
 re-importing the Blueprint.
 
-![](./assets/blueprint_series_light.jpg#only-light)
-![](./assets/blueprint_series_dark.jpg#only-dark)
+![](./assets/blueprint_series_light.jpg#only-light){.no-lightbox}
+![](./assets/blueprint_series_dark.jpg#only-dark){.no-lightbox}
 
 ### Browsing
 
@@ -90,8 +90,8 @@ If you'd like to browse all available Blueprints, go to the new Series page
 
 This is covered in greater detail [here](./user_guide/new_series.md).
 
-![](./assets/blueprint_all_light.webp#only-light)
-![](./assets/blueprint_all_dark.webp#only-dark)
+![](./assets/blueprint_all_light.webp#only-light){.no-lightbox}
+![](./assets/blueprint_all_dark.webp#only-dark){.no-lightbox}
 
 ## Sharing your own Blueprint
 

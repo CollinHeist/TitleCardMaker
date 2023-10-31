@@ -35,47 +35,54 @@
           <form id="import-cards-form" class="ui form">
             <div class="ui eight wide field">
               <label>Series</label>
-              <div data-value="series_id" class="ui search multiple selection dropdown" data-tooltip="Series to import the Cards into">
+              <div data-value="series_id" class="ui search multiple selection dropdown">
                 <input name="series_id" type="hidden">
                 <div class="text"></div>
                 <i class="dropdown icon"></i>
                 <div class="menu"></div>
               </div>
+              <p class="help">Series to import the Title Cards into.</p>
             </div>
 
             <div data-value="image_extension" class="ui field">
               <label>Card Extension</label>
-              <div data-value="image_extension" class="ui compact search selection dropdown" data-tooltip="File extension of Cards to search for" data-position="right center">
+              <div data-value="image_extension" class="ui compact search selection dropdown">
                 <input name="image_extension" type="hidden">
                 <div class="default text">.jpg</div>
                 <i class="dropdown icon"></i>
                 <div class="menu"></div>
               </div>
+              <p class="help">File extension of Title Cards to search for.</p>
             </div>
 
             <div data-value="directory" class="ui eight wide field">
               <label>Card Directory</label>
-              <div data-value="directory" class="ui right icon input" data-tooltip="Directory to search for Cards">
+              <div data-value="directory" class="ui right icon input">
                 <input name="directory" type="text" placeholder="Series Default">
                 <i class="folder outline icon"></i>
               </div>
-            </div>
-            <div class="ui visible compact floating info message">
-              <i class="info circle icon"></i>
-              When importing Cards for multiple Series, only each default Card Directory is searched.
+              <p class="help">
+                Directory to search for Title Cards within.
+                <br>
+                When importing Title Cards for multiple Series, only the <i>default</i> directories are searched.
+                <br>
+                Title Cards must be named like <b>SxxEyy</b> so that the season and episode numbers can be detected.
+              </p>
             </div>
 
             <div data-value="force_reload" class="ui inline field">
-              <div data-value="force_reload" class="ui checked checkbox" data-tooltip="Do not import Episodes that TCM has already created Cards for" data-position="right center">
-                <input type="checkbox" class="hidden" checked="">
+              <div data-value="force_reload" class="ui checked checkbox">
                 <label>Skip Episodes with existing Cards</label>
+                <input type="checkbox" class="hidden" checked="">
+                <p class="help">Whether to import Cards for Episodes which <b>already</b> have Title Cards.</p>
               </div>
             </div>
 
             <div class="ui inline field">
-              <div data-value="load_afterwards" class="ui checked checkbox" data-tooltip="Whether to load the title cards after importing them" data-position="right center">
-                <input type="checkbox" class="hidden" checked="">
+              <div data-value="load_afterwards" class="ui checked checkbox">
                 <label>Load Title Cards</label>
+                <input type="checkbox" class="hidden" checked="">
+                <p class="help">Whether to load the Title Cards into all assigned libraries after importing.</p>
               </div>
             </div>
 

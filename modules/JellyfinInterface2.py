@@ -373,9 +373,10 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         for old_episode_info in episode_infos:
             for new_episode_info, _ in new_episode_infos:
                 if old_episode_info == new_episode_info:
-                    # For each ID of this new EpisodeInfo, update old if upgrade
                     old_episode_info.copy_ids(new_episode_info, log=log)
                     break
+
+        return None
 
 
     def query_series(self,

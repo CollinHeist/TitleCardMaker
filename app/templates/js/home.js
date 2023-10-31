@@ -32,7 +32,8 @@ async function getAllSeries(page=undefined) {
     topDiv.setAttribute('data-series-year', series.year);
     // Poster
     const img = clone.querySelector('img');
-    img.src = series.small_poster_url; img.alt = `Poster for ${series.name}`;
+    img.src = `${series.small_poster_url}?${series.name[0]}${series.year}`;
+    img.alt = `Poster for ${series.name}`;
     // Grayscale if unmonitored (and enabled)
     {% if preferences.stylize_unmonitored_posters %}
     if (!series.monitored) { img.classList.add('unmonitored'); }
