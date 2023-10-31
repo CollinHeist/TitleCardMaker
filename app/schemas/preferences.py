@@ -9,6 +9,7 @@ from pydantic import (
 from pydantic.error_wrappers import ValidationError
 
 from app.schemas.base import Base, UpdateBase, UNSPECIFIED
+from modules.TMDbInterface2 import TMDbInterface
 
 
 """
@@ -33,11 +34,7 @@ Style = Literal[
     'blur unique', 'grayscale unique', 'blur grayscale unique',
 ]
 
-LanguageCode = Literal[
-    'ar', 'bg', 'ca', 'cs', 'da', 'de', 'el', 'en', 'es', 'fa', 'fr', 'he',
-    'hu', 'id', 'it', 'ja', 'ko', 'my', 'pl', 'pt', 'ro', 'ru', 'sk', 'sr',
-    'th', 'tr', 'uk', 'vi', 'zh',
-]
+LanguageCode = Literal[TMDbInterface.LANGUAGE_CODES]
 
 """
 Creation classes
@@ -204,7 +201,7 @@ class UpdateTMDb(UpdateBase):
         if isinstance(v, list):
             return v
         elif isinstance(v, str):
-            return list(map(lambda s: str(s).lower().strip(), v.split(',')))
+            return list(map(lambda s: str(s).strip(), v.split(',')))
         raise ValueError
 
 """
