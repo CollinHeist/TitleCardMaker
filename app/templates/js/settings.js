@@ -18,6 +18,20 @@ async function getImageSourcePriority() {
   });
 }
 
+function getLanguageCodes() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/settings/languages',
+    success: languages => {
+      $('.dropdown[data-value="language_codes"]').dropdown({
+        placeholder: 'English',
+        values: languages,
+      })
+    },
+    error: response => showErrorToast({title: 'Error Querying Translation Languages', response}),
+  });
+}
+
 async function initCardTypeDropdowns() {
   // Load filtered types into default card type dropdown
   const allCards = await loadCardTypes({
@@ -66,6 +80,7 @@ function updatePreviewTitleCard(allCards, previewCardType) {
 function initAll() {
   getEpisodeDataSources();
   getImageSourcePriority();
+  getLanguageCodes();
 
   // Filled in later
   let allCards = [];
@@ -134,6 +149,7 @@ function initAll() {
       let form = new FormData(event.target);
       const imageSourcePriority = form.get('image_source_priority') === '' ? [] : form.get('image_source_priority').split(',');
       const excludedCardTypes = (form.get('excluded_card_types') === '') ? [] : form.get('excluded_card_types').split(',');
+      const languageCodes = form.get('language_codes') === '' ? [] : form.get('language_codes').split(',');
       form.delete('image_source_priority'); form.delete('excluded_card_types');
       for (const [key, value] of [...form.entries()]) {
         if (value === '') { form.delete(key); }
@@ -150,6 +166,7 @@ function initAll() {
           ...Object.fromEntries(form),
           image_source_priority: imageSourcePriority,
           excluded_card_types: excludedCardTypes,
+          language_codes: languageCodes,
         }),
         contentType: 'application/json',
         success: () => showInfoToast('Updated Settings'),

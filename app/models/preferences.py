@@ -81,7 +81,7 @@ class Preferences:
         'sonarr_api_key', 'sonarr_use_ssl', 'sonarr_downloaded_only',
         'sonarr_libraries', 'use_tmdb', 'tmdb_api_key', 'tmdb_minimum_width',
         'tmdb_minimum_height', 'tmdb_skip_localized', 'tmdb_download_logos',
-        'tmdb_logo_language_priority', 'supported_language_codes',
+        'tmdb_logo_language_priority', 'language_codes',
         'use_magick_prefix', 'current_version', 'available_version',
         'blacklisted_blueprints', 'advanced_scheduling', 'require_auth',
         'task_crontabs', 'simplified_data_table', 'home_page_size',
@@ -240,7 +240,7 @@ class Preferences:
         self.tmdb_download_logos = True
         self.tmdb_logo_language_priority = ['en']
 
-        self.supported_language_codes = []
+        self.language_codes: list[str] = []
         self.use_magick_prefix = False
         self.blacklisted_blueprints: set[int] = set()
         self.imported_blueprints: set[int] = set()

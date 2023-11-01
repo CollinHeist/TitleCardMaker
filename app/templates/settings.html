@@ -135,13 +135,17 @@
               </div>
               <div class="field">
                 <label>Translation Languages</label>
-                <div id="language_codes" class="ui compact multiple selection dropdown">
+                <div data-value="language_codes" class="ui compact multiple selection dropdown">
                   <input name="language_codes" type="hidden">
                   <i class="dropdown icon"></i>
-                  <div class="default text">Languages</div>
+                  <div class="default text">English</div>
                   <div class="menu"><!-- Added asynchronousely --></div>
                 </div>
-                <p class="help">Languages to make translated version of numbers available in.</p>
+                <p class="help">
+                  Languages to make translated version of numbers available in.
+                  <br>
+                  Not all languages support both Cardinal and Ordinal versions of all numbers.
+                </p>
               </div>
             </div>
 

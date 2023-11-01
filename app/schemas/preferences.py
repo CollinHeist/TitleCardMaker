@@ -2,6 +2,7 @@
 from pathlib import Path
 from typing import Literal, Optional
 
+from num2words import CONVERTER_CLASSES
 from pydantic import (
     AnyUrl, DirectoryPath, Field, NonNegativeInt, PositiveInt, SecretStr,
     constr, root_validator, validator
@@ -35,6 +36,7 @@ Style = Literal[
 ]
 
 LanguageCode = Literal[TMDbInterface.LANGUAGE_CODES]
+TextLanguageCodes = Literal[tuple(CONVERTER_CLASSES.keys())]
 
 """
 Creation classes
@@ -56,9 +58,6 @@ class EpisodeDataSourceToggle(ToggleOption):
     ...
 
 class ImageSourceToggle(ToggleOption):
-    ...
-
-class LanguageToggle(ToggleOption):
     ...
 
 EpisodeDataSource = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr', 'TMDb']
@@ -93,6 +92,7 @@ class UpdatePreferences(UpdateBase):
     specials_folder_format: str = UNSPECIFIED
     season_folder_format: str = UNSPECIFIED
     sync_specials: bool = UNSPECIFIED
+    language_codes: list[TextLanguageCodes] = UNSPECIFIED
     simplified_data_table: bool = UNSPECIFIED
     default_card_type: CardTypeIdentifier = UNSPECIFIED
     excluded_card_types: list[CardTypeIdentifier] = UNSPECIFIED
@@ -222,6 +222,7 @@ class Preferences(Base):
     specials_folder_format: str
     season_folder_format: str
     sync_specials: bool
+    language_codes: list[TextLanguageCodes]
     simplified_data_table: bool
     is_docker: bool
     default_card_type: CardTypeIdentifier
