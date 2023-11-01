@@ -1,9 +1,8 @@
-from collections import namedtuple
 from datetime import datetime, timedelta
 from logging import Logger, LoggerAdapter
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, NamedTuple, Optional, Union
 
 from fastapi import HTTPException
 from PIL import Image
@@ -18,7 +17,9 @@ from requests.exceptions import (
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 
 from modules.Debug import log
-from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult, WatchedStatus
+from modules.EpisodeDataSource2 import (
+    EpisodeDataSource, SearchResult, WatchedStatus
+)
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
 from modules.MediaServer2 import MediaServer, SourceImage
@@ -27,10 +28,10 @@ from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
 
-EpisodeDetails = namedtuple(
-    'EpisodeDetails',
-    ('series_info', 'episode_info', 'watched_status')
-)
+class EpisodeDetails(NamedTuple): # pylint: disable=missing-class-docstring
+    series_info: SeriesInfo
+    episode_info: EpisodeInfo
+    watched_status: WatchedStatus
 
 
 def catch_and_log(
@@ -843,12 +844,12 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             log: Logger for all log messages.
 
         Returns:
-            List of tuples of the library name, SeriesInfo, EpisodeInfo,
-            and the episode watch status corresponding to the given
-            rating key. If the object associated with the rating key is
-            a show/season, then all contained episodes are detailed.
-            An empty list is returned if the item(s) associated with the
-            given key cannot be found.
+            List of tuples of the SeriesInfo, EpisodeInfo, and the watch
+            status corresponding to the given rating key. If the object
+            associated with the rating key is a show or season, then all
+            contained episodes are detailed. An empty list is returned
+            if the item(s) associated with the given key cannot be
+            found.
         """
 
         try:
@@ -862,7 +863,11 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 return [EpisodeDetails(
                     series_info,
                     EpisodeInfo.from_plex_episode(ep),
-                    ep.isWatched
+                    WatchedStatus(
+                        self._interface_id,
+                        entry.librarySectionTitle, # entry.parent TODO evaluate
+                        ep.isWatched,
+                    )
                 ) for ep in entry.episodes()]
 
             # Season, return all episodes in season
@@ -873,7 +878,11 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 return [EpisodeDetails(
                     series_info,
                     EpisodeInfo.from_plex_episode(ep),
-                    ep.isWatched
+                    WatchedStatus(
+                        self._interface_id,
+                        ep.librarySectionTitle, # TODO double check
+                        ep.isWatched,
+                    ),
                 ) for ep in entry.episodes()]
 
             # Episode, return just that
@@ -884,13 +893,17 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 return [EpisodeDetails(
                     series_info,
                     EpisodeInfo.from_plex_episode(entry),
-                    entry.isWatched,
+                    WatchedStatus(
+                        self._interface_id,
+                        entry.librarySectionTitle, # TODO double check
+                        entry.isWatched,
+                    ),
                 )]
 
             log.warning(f'Item with rating key {rating_key} has no episodes')
             return []
         except NotFound:
-            log.error(f'No item with rating key {rating_key} exists')
+            log.warning(f'No item with rating key {rating_key} exists')
         except (ValueError, AssertionError):
             log.warning(f'Item with rating key {rating_key} has no year')
         except Exception as e:
