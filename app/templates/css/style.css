@@ -16,6 +16,10 @@
   --accessible-orange-color: rgb(212, 17, 89);
 }
 
+body {
+  background-color: #1b1c1d;
+}
+
 /* Accessibility coloring */
 body.accessible .ui .red.bar {
   background-color: var(--accessible-red-color) !important;
