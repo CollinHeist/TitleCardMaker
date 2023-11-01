@@ -2,13 +2,14 @@ from typing import Optional, Union
 
 from app.dependencies import get_preferences
 from app.models.episode import Episode
-from app.models.series import Series
+from app.models.series import Library, Series
 from app.models.template import Template
 
 
 def get_effective_series_template(
         series: Series,
         episode: Optional[Episode] = None,
+        library: Optional[Library] = None,
         *,
         as_dict: bool = False
     ) -> Union[dict, Optional[Template]]:
@@ -31,7 +32,7 @@ def get_effective_series_template(
     # Evaluate each Series Template
     preferences = get_preferences()
     for template in series.templates:
-        if template.meets_filter_criteria(preferences, series, episode):
+        if template.meets_filter_criteria(preferences, series, episode, library):
             return template.__dict__ if as_dict else template
 
     return {} if as_dict else None
@@ -39,7 +40,8 @@ def get_effective_series_template(
 
 def get_effective_episode_template(
         series: Series,
-        episode: Episode
+        episode: Episode,
+        library: Optional[Library] = None,
     ) -> Optional[Template]:
     """
     Get the effective Episode Template for the given Series and Episode.
@@ -58,7 +60,7 @@ def get_effective_episode_template(
     # Evaluate each Episode Template
     preferences = get_preferences()
     for template in episode.templates:
-        if template.meets_filter_criteria(preferences, series, episode):
+        if template.meets_filter_criteria(preferences, series, episode, library):
             return template
 
     return None
@@ -66,7 +68,8 @@ def get_effective_episode_template(
 
 def get_effective_templates(
         series: Series,
-        episode: Optional[Episode] = None
+        episode: Optional[Episode] = None,
+        library: Optional[Library] = None,
     ) -> tuple[Optional[Template], Optional[Template]]:
     """
     Get the effective Series and Episode Templates for the given Series
@@ -88,7 +91,34 @@ def get_effective_templates(
 
     # No Episode OR Episode has no Templates, return Series Template and None
     if episode is None or not episode.templates:
-        return get_effective_series_template(series, episode), None
+        return get_effective_series_template(series, episode, library), None
 
     # Episode defines Templates, return None and Episode Template
-    return None, get_effective_episode_template(series, episode)
+    return None, get_effective_episode_template(series, episode, library)
+
+
+def get_all_effective_templates(
+        series: Series,
+        episode: Episode,
+    ) -> list[tuple[Optional[Template], Optional[Template]]]:
+    """
+    _summary_
+
+    Args:
+        series: _description_
+        episode: _description_. Defaults to None.
+
+    Returns:
+        _description_
+    """
+
+    if not episode.templates:
+        return [
+            (get_effective_series_template(series, episode, library), None)
+            for library in series.libraries
+        ]
+
+    return [
+        (None, get_effective_episode_template(series, episode, library))
+        for library in series.libraries
+    ]

@@ -27,7 +27,7 @@ from app.internal.series import (
     add_series, delete_series_and_episodes, download_series_poster,
     lookup_series,
 )
-from app.internal.sources import download_episode_source_image
+from app.internal.sources import download_episode_source_images
 from app.internal.auth import get_current_user
 from app.schemas.base import UNSPECIFIED
 from app.schemas.series import NewSeries, SearchResult, Series, UpdateSeries
@@ -361,7 +361,7 @@ def process_series(
     for episode in series.episodes:
         background_tasks.add_task(
             # Function
-            download_episode_source_image,
+            download_episode_source_images,
             # Arguments
             db, episode, raise_exc=False, log=log,
         )

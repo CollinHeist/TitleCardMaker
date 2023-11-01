@@ -14,7 +14,7 @@ from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard
 from app.internal.auth import get_current_user
 from app.internal.cards import delete_cards
 from app.internal.sources import (
-    get_source_image, download_episode_source_image, download_series_logo,
+    get_source_image, download_episode_source_images, download_series_logo,
     process_svg_logo,
 )
 from app import models
@@ -57,7 +57,7 @@ def download_series_source_images(
     for episode in series.episodes:
         background_tasks.add_task(
             # Function
-            download_episode_source_image,
+            download_episode_source_images,
             # Arguments
             db, episode, raise_exc=False, log=request.state.log,
         )
@@ -139,7 +139,7 @@ def download_episode_source_image_(
         request: Request,
         # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
-    ) -> Optional[str]:
+    ) -> list[str]:
     """
     Download a Source image for the given Episode. This uses the most
     relevant image source indicated by the appropriate
@@ -154,7 +154,7 @@ def download_episode_source_image_(
     # Get the Episode with this ID, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
 
-    return download_episode_source_image(
+    return download_episode_source_images(
         db, episode, raise_exc=True, log=request.state.log,
     )
 

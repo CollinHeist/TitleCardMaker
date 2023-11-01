@@ -463,12 +463,12 @@ def create_cards_for_plex_rating_keys(
             continue
 
         # Update Episode watched status
-        get_watched_statuses(db, episode.series, [episode], log=log)
+        episode.add_watched_status(watched_status)
 
         # Look for source, add translation, create card if source exists
-        image = download_episode_source_image(db, episode, log=log)
+        images = download_episode_source_images(db, episode, log=log)
         translate_episode(db, episode, log=log)
-        if image is None:
+        if not images:
             log.info(f'{episode.log_str} has no source image - skipping')
             continue
         create_episode_card(db, None, episode, log=log)
@@ -568,9 +568,9 @@ def create_cards_for_sonarr_webhook(
                 return None
 
         # Look for source, add translation, create Card if source exists
-        image = download_episode_source_image(db, episode, log=log)
+        images = download_episode_source_images(db, episode, log=log)
         translate_episode(db, episode, log=log)
-        if image is None:
+        if not images:
             log.info(f'{episode.log_str} has no source image - skipping')
             return None
         create_episode_card(db, None, episode, log=log)

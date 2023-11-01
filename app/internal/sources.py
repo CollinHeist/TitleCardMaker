@@ -39,7 +39,7 @@ def download_all_source_images(*, log: Logger = log) -> None:
                 # Download source image for all Episodes
                 for episode in series.episodes:
                     try:
-                        download_episode_source_image(db, episode, log=log)
+                        download_episode_source_images(db, episode, log=log)
                     except HTTPException:
                         log.warning(f'{series.log_str} {episode.log_str} '
                                     f'Skipping source selection')
@@ -80,7 +80,7 @@ def download_all_series_logos(*, log: Logger = log) -> None:
         log.exception(f'Failed to download series logos', exc)
 
 
-def resolve_source_settings(episode: Episode) -> tuple[Style, Path]:
+def resolve_source_settings(episode: Episode) -> list[tuple[Style, Path]]:
     """
     Get the Episode style and source file for the given Episode.
 
@@ -132,7 +132,7 @@ def resolve_source_settings(episode: Episode) -> tuple[Style, Path]:
 
     # Watch status is unset or Episode is unwatched, use unwatched style
     return unwatched_style, episode.get_source_file(
-        preferences.source_directory, series.path_safe_name, unwatched_style
+        preferences.source_directory, unwatched_style
     )
 
 
@@ -268,13 +268,13 @@ def download_series_logo(
     return None
 
 
-def download_episode_source_image(
+def download_episode_source_images(
         db: Session,
         episode: Episode,
         raise_exc: bool = False,
         *,
         log: Logger = log,
-    ) -> Optional[str]:
+    ) -> list[str]:
     """
     Download the source image for the given Episode.
 
@@ -285,8 +285,7 @@ def download_episode_source_image(
         log: Logger for all log messages.
 
     Returns:
-        The URI to the Episode source image. If one cannot be
-        downloaded, None is returned instead.
+        List of URIs to the Episode source images.
 
     Raises:
         HTTPException (400): The image cannot be downloaded.

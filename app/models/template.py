@@ -10,6 +10,7 @@ from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy.orm import relationship
 
 from app.database.session import Base
+from app.schemas.connection import ServerName
 from modules.Debug import log
 
 
@@ -47,7 +48,9 @@ OPERATIONS: dict[str, Callable[[Any, Any], bool]] = {
 """Supported Argument keywords."""
 ARGUMENT_KEYS = (
     'Series Name', 'Series Year', 'Number of Seasons',
-    'Series Library Names', 'Series Logo', 'Episode is Watched',
+    'Series Library Names', 'Series Logo',
+    # 'Episode is Watched'
+    'Episode Watched Status',
     'Season Number', 'Episode Number', 'Absolute Number',
     'Episode Title', 'Episode Title Length', 'Episode Airdate',
 )
@@ -102,6 +105,11 @@ class Filter(TypedDict): # pylint: disable=missing-class-docstring
     argument: Literal[ARGUMENT_KEYS]
     operation: Literal[tuple(OPERATIONS.keys())]
     reference: Optional[str]
+
+class Library(TypedDict): # pylint: disable=missing-class-docstring
+    interface: ServerName
+    interface_id: int
+    name: str
 
 class Template(Base):
     """
@@ -258,7 +266,8 @@ class Template(Base):
     def meets_filter_criteria(self,
             preferences: 'Preferences', # type: ignore
             series: 'Series', # type: ignore
-            episode: Optional['Episode'] = None # type: ignore
+            episode: Optional['Episode'] = None, # type: ignore
+            library: Optional[Library] = None,
         ) -> bool:
         """
         Determine whether the given Series and Episode meet this
@@ -267,6 +276,8 @@ class Template(Base):
         Args:
             series: Series whose arguments can be evaluated.
             episode: Episode whose arguments can be evaluated.
+            library: Which library of the Series these criteria are
+                being evaluated under.
 
         Returns:
             True if the given objects meet all of Template's filter
@@ -290,8 +301,7 @@ class Template(Base):
             ARGUMENTS = SERIES_ARGUMENTS
         else:
             ARGUMENTS = SERIES_ARGUMENTS | {
-                # TODO modify
-                'Episode is Watched': episode.watched,
+                # 'Episode is Watched': episode.watched_statuses,
                 'Season Number': episode.season_number,
                 'Episode Number': episode.episode_number,
                 'Absolute Number': episode.absolute_number,
@@ -299,6 +309,10 @@ class Template(Base):
                 'Episode Title Length': len(episode.title),
                 'Episode Airdate': episode.airdate,
             }
+            if library:
+                ARGUMENTS['Episode Watched Status'] =episode.get_watched_status(
+                    library['interface_id'], library['name'],
+                )
 
         # Evaluate each condition of this Template's filter
         for condition in self.filters:
