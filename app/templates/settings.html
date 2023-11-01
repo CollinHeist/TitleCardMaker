@@ -332,6 +332,22 @@
                   </div>
                 </div>
               </div>
+
+              <div class="ui checkbox field">
+                <label>Multi-Library Filename Support</label>
+                {% if preferences.library_unique_cards %}
+                <input name="library_unique_cards" type="checkbox" checked="">
+                {% else %}
+                <input name="library_unique_cards" type="checkbox">
+                {% endif %}
+                <p class="help">
+                  Whether to add a unique Library identifier to Title Card filenames when a Series has multiple libraries.
+                  <br>
+                  This allows library-specific Title Cards - i.e. Server A's Card having a different style than Server B.
+                  <br>
+                  Users whose Series are only part of a single library, or who do not use watch-status specific styling, should leave this disabled.
+                </p>
+              </div>
             </div>
 
             <h3 class="ui horizontal divider header">

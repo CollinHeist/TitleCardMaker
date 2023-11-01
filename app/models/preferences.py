@@ -5,7 +5,7 @@ from typing import Any, Optional
 
 from pickle import dump, load
 
-from app.schemas.base import UNSPECIFIED, MediaServer
+from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import CardExtension
 
 from modules.BaseCardType import BaseCardType
@@ -64,7 +64,7 @@ class Preferences:
         'task_crontabs', 'simplified_data_table', 'home_page_size',
         'episode_data_page_size', 'stylize_unmonitored_posters',
         'sources_as_table', 'card_type_directory', 'local_card_types',
-        'imported_blueprints', 'colorblind_mode',
+        'imported_blueprints', 'colorblind_mode', 'library_unique_cards',
         # Arguments required only for the Connection data migrations
         'emby_url', 'emby_api_key', 'emby_username', 'emby_use_ssl',
         'emby_filesize_limit_number', 'emby_filesize_limit_unit',
@@ -166,6 +166,7 @@ class Preferences:
         self.card_width = TitleCard.DEFAULT_WIDTH
         self.card_height = TitleCard.DEFAULT_HEIGHT
         self.card_filename_format = self.DEFAULT_CARD_FILENAME_FORMAT
+        self.library_unique_cards = False
         self.card_extension = self.DEFAULT_CARD_EXTENSION
 
         self.image_source_priority: list[int] = []
