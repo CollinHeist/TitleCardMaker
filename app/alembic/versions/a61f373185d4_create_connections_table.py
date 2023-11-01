@@ -480,7 +480,7 @@ def upgrade() -> None:
     # Commit changes to Preferences
     PreferencesLocal.commit(log=log)
 
-    log.info(f'Upgraded SQL Schema to Version[{revision}]')
+    log.debug(f'Upgraded SQL Schema to Version[{revision}]')
 
 
 def downgrade() -> None:

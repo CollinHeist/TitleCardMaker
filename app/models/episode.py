@@ -1,13 +1,13 @@
 from logging import Logger
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from sqlalchemy import (
     Boolean, Column, DateTime, Integer, Float, ForeignKey, String, JSON
 )
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
-from sqlalchemy.ext.mutable import MutableDict, MutableList
+from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import Mapped, object_session, relationship
 
 from app.database.session import Base
@@ -298,7 +298,7 @@ class Episode(Base):
             Whether this object was changed.
         """
 
-        info = self.as_episode_info
+        info: EpisodeInfo = self.as_episode_info
         info.copy_ids(other)
 
         changed = False
@@ -313,8 +313,7 @@ class Episode(Base):
 
     @hybrid_method
     def get_source_file(self,
-            source_directory: str,
-            series_directory: str,
+            source_directory: Union[str, Path],
             style: Style,
         ) -> Path:
         """
@@ -339,8 +338,42 @@ class Episode(Base):
                 source_name = f's{self.season_number}e{self.episode_number}.jpg'
 
         # Return full path for this source base and Series
-        source_file = Path(source_directory) / series_directory / source_name
-        return source_file.resolve()
+        return (
+            Path(source_directory) / self.series.path_safe_name / source_name
+        ).resolve()
+    
+
+    @hybrid_property
+    def watch_status_bools(self) -> list[bool]:
+        """
+        _summary_
+
+        Returns:
+            _description_
+        """
+
+        return [
+            status
+            for _, interface in self.watched_statuses.items()
+            for _, status in interface.values()
+        ]
+
+
+    @hybrid_property
+    def watched_statuses_flat(self) -> dict[str, bool]:
+        """
+        _summary_
+
+        Returns:
+            _description_
+        """
+
+        statuses = {}
+        for _, interface in self.watched_statuses.items():
+            for library_name, status in interface.items():
+                statuses[library_name] = status
+
+        return statuses
 
 
     @hybrid_method

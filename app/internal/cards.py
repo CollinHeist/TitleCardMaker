@@ -299,12 +299,12 @@ def resolve_card_settings(
         log: Logger for all log messages.
 
     Returns:
-        List of CardAction strings if some error occured in setting
-        resolution; or the settings themselves as a dictionary.
+        The resolved Card settings as a dictionary.
     """
 
     # Get effective Template for this Series and Episode
     series = episode.series
+    # TODO library specific..
     series_template, episode_template = get_effective_templates(series, episode)
     series_template_dict, episode_template_dict = {}, {}
     if series_template is not None:
@@ -498,7 +498,6 @@ def resolve_card_settings(
     if card_settings.get('source_file', None) is None:
         card_settings['source_file'] = episode.get_source_file(
             preferences.source_directory,
-            series.path_safe_name,
             card_settings['watched_style' if watched else 'unwatched_style'],
         )
     else:
