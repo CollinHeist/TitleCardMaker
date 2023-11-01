@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 from app.database.query import get_all_templates, get_font, get_sync
 
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
-from app import models
 from app.internal.cards import refresh_remote_card_types
 from app.internal.episodes import refresh_episode_data
 from app.internal.sources import download_series_logo
@@ -79,34 +78,40 @@ def load_all_media_servers(*, log: Logger = log) -> None:
         with next(get_database()) as db:
             # Get all Series
             for series in db.query(Series).all():
-                # Get the primary Media Server to load cards into
-                if series.emby_library_name is not None:
-                    media_server = 'Emby'
-                elif series.jellyfin_library_name is not None:
-                    media_server = 'Jellyfin'
-                elif series.plex_library_name is not None:
-                    media_server = 'Plex'
                 # Skip this Series if it has no library
-                else:
+                if (series.emby_library_name is None
+                    and series.jellyfin_library_name is None
+                    and series.plex_library_name is None):
                     log.debug(f'{series.log_str} has no Library, not loading Title Cards')
                     continue
 
-                # Load Title Cards for this Series
-                try:
-                    load_series_title_cards(
-                        series, media_server, db, get_emby_interface(),
-                        get_jellyfin_interface(), get_plex_interface(), log=log,
-                    )
-                except HTTPException:
-                    log.warning(f'{series.log_str} Skipping Title Card loading')
-                    continue
-                except OperationalError:
-                    if (retries := retries + 1) > 10:
-                        log.warning(f'Database is very busy - stopping Task')
-                        break
+                # Get the Media Servers to load cards into
+                servers = []
+                if series.emby_library_name is not None:
+                    servers.append('Emby')
+                if series.jellyfin_library_name is not None:
+                    servers.append('Jellyfin')
+                if series.plex_library_name is not None:
+                    servers.append('Plex')
 
-                    log.debug(f'Database is busy, sleeping..')
-                    sleep(30)
+                # Load Title Cards for each server of this Series
+                for server in servers:
+                    try:
+                        load_series_title_cards(
+                            series, server, db, get_emby_interface(),
+                            get_jellyfin_interface(), get_plex_interface(),
+                            log=log,
+                        )
+                    except HTTPException:
+                        log.warning(f'{series.log_str} Skipping Title Card loading')
+                        continue
+                    except OperationalError:
+                        if (retries := retries + 1) > 10:
+                            log.warning(f'Database is very busy - stopping Task')
+                            break
+
+                        log.debug(f'Database is busy, sleeping..')
+                        sleep(30)
     except Exception as e:
         log.exception(f'Failed to load Title Cards', e)
 

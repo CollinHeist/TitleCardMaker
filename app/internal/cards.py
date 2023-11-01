@@ -14,6 +14,7 @@ from app import models
 from app.models.card import Card
 from app.models.episode import Episode
 from app.models.preferences import Preferences
+from app.schemas.base import Base
 from app.schemas.font import DefaultFont
 from app.schemas.card import NewTitleCard
 from app.schemas.card_type import LocalCardTypeModels
@@ -262,7 +263,7 @@ def create_card(
         preferences: Preferences,
         card_model: NewTitleCard,
         CardClass: BaseCardType,
-        CardTypeModel: Any,
+        CardTypeModel: Base,
         *,
         log: Logger = log,
     ) -> None:
