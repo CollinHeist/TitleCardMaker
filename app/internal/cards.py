@@ -218,7 +218,7 @@ def validate_card_type_model(
         card_settings: dict,
         *,
         log: Logger = log,
-    ) -> tuple[Any, Any]:
+    ) -> tuple[type[BaseCardType], Base]:
     """
     Validate the given Card settings into the associated Pydantic model
     and BaseCardType class.

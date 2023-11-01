@@ -10,6 +10,7 @@ from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import Mapped, object_session, relationship
 
+from app.dependencies import get_preferences
 from app.database.session import Base
 from app.models.template import EpisodeTemplates, Template
 from app.schemas.preferences import Style
@@ -270,6 +271,7 @@ class Episode(Base):
             tvdb_id=self.tvdb_id,
             tvrage_id=self.tvrage_id,
             airdate=self.airdate,
+            languages=get_preferences().language_codes,
         )
 
 
