@@ -193,6 +193,15 @@ html.ios body {
 }
 
 /* Mobile formatting */
+@media only screen and (hover: none) and (pointer: coarse) {
+  /* Prevent iOS auto-zoom on input focus (happens for font sizes <16px) */
+  input:focus,
+  select:focus,
+  textarea:focus {
+    font-size: 16px !important;
+  }
+}
+
 @media (max-width: 768px) {
   /* Remove fixed width on logo */
   #tcm-logo {
