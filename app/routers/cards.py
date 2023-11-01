@@ -6,7 +6,9 @@ from fastapi import (
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 
-from app.database.query import get_card, get_connection, get_episode, get_font, get_interface, get_series
+from app.database.query import (
+    get_card, get_episode, get_font, get_interface, get_series
+)
 from app.database.session import Page
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app import models
@@ -16,8 +18,11 @@ from app.internal.cards import (
     validate_card_type_model
 )
 from app.internal.episodes import refresh_episode_data
-from app.internal.series import load_all_series_title_cards, load_episode_title_card, load_series_title_cards
-from app.internal.sources import download_episode_source_image
+from app.internal.series import (
+    load_all_series_title_cards, load_episode_title_card,
+    load_series_title_cards
+)
+from app.internal.sources import download_episode_source_images
 from app.internal.translate import translate_episode
 from app.models.episode import Episode
 from app.models.series import Series
@@ -241,7 +246,15 @@ def load_series_title_cards_into_library(
         db: Session = Depends(get_database),
     ) -> None:
     """
-    
+    Load the Title Cards for the given Series into the library with the
+    given index.
+
+    - series_id: ID of the Series whose Cards are being loaded.
+    - library_index: Index in Series' library list of the library to
+    load the Cards into.
+    - reload: Whether to "force" reload all Cards, even those that have
+    already been loaded. If false, only Cards that have not been loaded
+    previously (or that have changed) are loaded.
     """
 
     # Get this Series and Interface, raise 404 if DNE
@@ -250,11 +263,11 @@ def load_series_title_cards_into_library(
     # Get library with this index
     try:
         library = series.libraries[library_index]
-    except KeyError:
+    except KeyError as exc:
         raise HTTPException(
             status_code=404,
             detail=f'No Library with index {library_index}',
-        )
+        ) from exc
 
     # Get this Library's Connection, raise 404 if DNE
     interface = get_interface(library['interface_id'], raise_exc=True)
@@ -268,17 +281,19 @@ def load_series_title_cards_into_library(
 
 @card_router.get('/episode/{episode_id}', tags=['Episodes'],
                  dependencies=[Depends(get_current_user)])
-def get_episode_card(
+def get_episode_cards(
         episode_id: int,
         db: Session = Depends(get_database),
-    ) -> list[TitleCard]:
+    ) -> Page[TitleCard]:
     """
     Get all TitleCards for the given Episode.
 
     - episode_id: ID of the Episode to get the cards of.
     """
 
-    return db.query(models.card.Card).filter_by(episode_id=episode_id).all()
+    return paginate(
+        db.query(models.card.Card).filter_by(episode_id=episode_id).all()
+    )
 
 
 @card_router.delete('/series/{series_id}', status_code=200, tags=['Series'],
