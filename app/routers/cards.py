@@ -337,10 +337,10 @@ def delete_title_card(
         db: Session = Depends(get_database)
     ) -> CardActions:
     """
-    Delete the TitleCard with the given ID. Return a list of the
-    deleted file(s).
+    Delete the Title Card with the given ID. Also removes the associated
+    Loaded object (if it exists).
 
-    - card_id: ID of the TitleCard to delete.
+    - card_id: ID of the Title Card to delete.
     """
 
     # Create Queries for Cards of this Episode
@@ -376,13 +376,13 @@ def create_card_for_episode(
     )
 
     # Create Card for this Episode
-    create_episode_card(db,None, episode, log=request.state.log)
+    create_episode_card(db, None, episode, log=request.state.log)
 
 
 @card_router.post('/key', tags=['Plex', 'Tautulli'], status_code=200)
 def create_cards_for_plex_rating_keys(
         request: Request,
-        plex_rating_keys: Union[int, list[int]] = Body(...),
+        key: int = Body(...),
         db: Session = Depends(get_database),
         plex_interface: PlexInterface = Depends(require_plex_interface),
     ) -> None:
@@ -400,23 +400,16 @@ def create_cards_for_plex_rating_keys(
     # Get contextual logger
     log = request.state.log
 
-    # Convert to list if only a single key was provided
-    if isinstance(plex_rating_keys, int):
-        plex_rating_keys = [plex_rating_keys]
-
     # Get details of each key from Plex, raise 404 if not found/invalid
-    details = []
-    for key in plex_rating_keys:
-        if len(deets := plex_interface.get_episode_details(key, log=log)) == 0:
-            raise HTTPException(
-                status_code=404,
-                detail=f'Rating key {key} is invalid'
-            )
-        log.debug(f'Identified {len(deets)} entries from RatingKey={key}')
-        details += deets
+    if len(details := plex_interface.get_episode_details(key, log=log)) == 0:
+        raise HTTPException(
+            status_code=404,
+            detail=f'Rating key {key} is invalid'
+        )
+    log.debug(f'Identified {len(details)} entries from RatingKey={key}')
 
     # Process each set of details
-    episodes_to_load = []
+    episodes_to_load: list[Episode] = []
     for series_info, episode_info, watched_status in details:
         # Find all matching Episodes
         episodes = db.query(Episode)\

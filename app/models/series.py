@@ -24,10 +24,10 @@ from modules.SeriesInfo2 import SeriesInfo
 
 
 # Return type of the library iterator
-Library = TypedDict(
-    'Library',
-    {'interface': ServerName, 'interface_id': int, 'name': str}
-)
+class Library(TypedDict): # pylint: disable=missing-class-docstring
+    interface: ServerName
+    interface_id: int
+    name: str
 
 INTERNAL_ASSET_DIRECTORY = Path(__file__).parent.parent / 'assets'
 
