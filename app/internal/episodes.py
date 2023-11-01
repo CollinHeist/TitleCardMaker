@@ -49,6 +49,8 @@ def refresh_all_episode_data(*, log: Logger = log) -> None:
                         get_jellyfin_interface(), get_plex_interface(),
                         get_sonarr_interface(), get_tmdb_interface(), log=log,
                     )
+                except HTTPException as exc:
+                    log.exception(f'Skipping {series.log_str}', exc)
                 except OperationalError:
                     log.debug(f'Database is busy, sleeping..')
                     sleep(30)
@@ -175,6 +177,7 @@ def get_all_episode_data(
         'TMDb': tmdb_interface,
     }.get(episode_data_source, None)
     if interface is None:
+        log.error(f'Unable to communicate with {episode_data_source}')
         if raise_exc:
             raise HTTPException(
                 status_code=409,
