@@ -100,9 +100,14 @@
   margin-bottom: 10px;
 }
 
-/* Add spacing between pagination menu and series cards */
 #pagination {
+  /* Add spacing between pagination menu and series cards */
   margin-top: 25px;
+  /* Wrap pagination if wider than screen */
+  max-width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
 }
 
 /* START OF TEST */
