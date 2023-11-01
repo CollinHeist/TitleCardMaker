@@ -10,7 +10,6 @@ from sqlalchemy.orm import Session
 from app.database.query import get_all_templates, get_font, get_interface, get_sync
 
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
-from app import models
 from app.internal.cards import refresh_remote_card_types
 from app.internal.episodes import refresh_episode_data
 from app.internal.sources import download_series_logo
@@ -37,7 +36,6 @@ def set_all_series_ids(*, log: Logger = log) -> None:
     """
 
     try:
-        # Get the Database
         with next(get_database()) as db:
             # Get all Series
             changed = False
@@ -174,7 +172,6 @@ def download_series_poster(
         if series.poster_url != poster_url:
             series.poster_url = poster_url
             db.commit()
-            log.debug(f'Series[{series.id}] Poster already exists, using {path.resolve()}')
         return None
 
     # Download poster from Media Server if possible
@@ -383,8 +380,6 @@ def load_all_series_title_cards(
                 status_code=409,
                 detail=f'Unable to communicate with Connection {interface_id}',
             )
-
-    return None
 
 
 def load_episode_title_card(

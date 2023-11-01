@@ -71,6 +71,7 @@ class UpdatePreferences(UpdateBase):
     card_height: PositiveInt = UNSPECIFIED
     card_filename_format: str = UNSPECIFIED
     card_extension: CardExtension = UNSPECIFIED
+    library_unique_cards: bool = UNSPECIFIED
     image_source_priority: list[int] = UNSPECIFIED
     episode_data_source: int = UNSPECIFIED
     specials_folder_format: str = UNSPECIFIED
@@ -93,8 +94,10 @@ class UpdatePreferences(UpdateBase):
             v.format(
                 series_name='test', series_full_name='test (2000)',
                 year=2000, title='Test Title', season_number=1, episode_number=1,
-                absolute_number=1, emby_id='abc123', imdb_id='tt1234',
-                jellyfin_id='abc123', tmdb_id=123, tvdb_id=123, tvrage_id=123,
+                absolute_number=1, absolute_episode_number=1,
+                emby_id='0:TV:abc123', imdb_id='tt1234',
+                jellyfin_id='0:TV:abc123', tmdb_id=123, tvdb_id=123,
+                tvrage_id=123,
             )
         except KeyError as exc:
             raise ValueError(
@@ -129,6 +132,7 @@ class Preferences(Base):
     card_height: PositiveInt
     card_filename_format: str
     card_extension: str
+    library_unique_cards: bool
     image_source_priority: list[int]
     episode_data_source: Optional[int]
     valid_image_extensions: list[str]

@@ -56,7 +56,7 @@ def translate_episode(
         series_template: Template of the Series that can define
             translations.
         episode: Episode to translate and add translations to.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     # Get the Series and Episode Template

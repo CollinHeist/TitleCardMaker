@@ -94,6 +94,7 @@ def resolve_source_settings(episode: Episode) -> tuple[Style, Path]:
 
     # Get effective Template for this Series and Episode
     series = episode.series
+    # TODO library specific..
     series_template, episode_template = get_effective_templates(series, episode)
 
     # Resolve styles
@@ -300,6 +301,7 @@ def download_episode_source_image(
         return f'/source/{series.path_safe_name}/{source_file.name}'
 
     # Get effective Templates
+    # TODO library specific..
     series_template, episode_template = get_effective_templates(series, episode)
 
     # Get source image settings

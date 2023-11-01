@@ -342,11 +342,7 @@ async def set_episode_source_image(
         content = uploaded_file
 
     # Get Episode source file
-    file = episode.get_source_file(
-        preferences.source_directory,
-        episode.series.path_safe_name,
-        'unique',
-    )
+    file = episode.get_source_file(preferences.source_directory, 'unique')
 
     # If file already exists, warn about overwriting
     if file.exists():

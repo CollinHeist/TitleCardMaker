@@ -20,8 +20,7 @@ def get_effective_series_template(
         series: Series whose Templates are being evaluated.
         episode: Episode that can be used in the Template Condition
             evaluation.
-        as_dict: (Keyword) Whether to return the dictionary of the given
-            Template.
+        as_dict: Whether to return the dictionary of the given Template.
 
     Returns:
         The first Template of the given Series whose Conditions are all
