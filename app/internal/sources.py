@@ -278,7 +278,7 @@ def download_series_logo(
             continue
 
         # If logo is an svg, convert
-        if logo.endswith('.svg'):
+        if isinstance(logo, str) and logo.endswith('.svg'):
             return process_svg_logo(
                 logo, series, logo_file, imagemagick_interface, log=log
             )
