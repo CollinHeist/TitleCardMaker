@@ -160,7 +160,10 @@ class Preferences:
         """
 
         for attr, value in state.items():
-            setattr(self, attr, value)
+            try:
+                setattr(self, attr, value)
+            except AttributeError:
+                pass
 
 
     def __initialize_defaults(self) -> None:
