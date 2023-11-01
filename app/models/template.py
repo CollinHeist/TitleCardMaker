@@ -98,7 +98,7 @@ class SyncTemplates(Base):
 """
 Table for the Template SQL objects themselves.
 """
-class Filter(TypedDict):
+class Filter(TypedDict): # pylint: disable=missing-class-docstring
     argument: Literal[ARGUMENT_KEYS]
     operation: Literal[tuple(OPERATIONS.keys())]
     reference: Optional[str]

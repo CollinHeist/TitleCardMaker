@@ -144,7 +144,6 @@ def get_all_episode_data(
         return []
 
     # Sonarr and TMDb do not have libraries, query separately
-    # TODO modify to return a WatchStatus object
     if interface.INTERFACE_TYPE in ('Sonarr', 'TMDb'):
         return interface.get_all_episodes(None, series.as_series_info, log=log)
 

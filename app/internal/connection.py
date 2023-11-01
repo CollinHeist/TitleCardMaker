@@ -20,11 +20,11 @@ from modules.Debug import log
 from modules.InterfaceGroup import InterfaceGroup
 
 
-NewConnection = Union[
+_NewConnection = Union[
     NewEmbyConnection, NewJellyfinConnection, NewPlexConnection,
     NewSonarrConnection, NewTMDbConnection,
 ]
-UpdateConnection = Union[
+_UpdateConnection = Union[
     UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb
 ]
 
@@ -79,7 +79,7 @@ def initialize_connections(
 
 def add_connection(
         db: Session,
-        new_connection: NewConnection,
+        new_connection: _NewConnection,
         interface_group: InterfaceGroup,
         *,
         log: Logger = log,
@@ -129,7 +129,7 @@ def update_connection(
         db: Session,
         interface_id: int,
         interface_group: InterfaceGroup,
-        update_object: UpdateConnection,
+        update_object: _UpdateConnection,
         *,
         log: Logger = log,
     ) -> Preferences:

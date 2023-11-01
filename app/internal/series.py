@@ -7,7 +7,9 @@ from fastapi import BackgroundTasks, HTTPException
 from requests import get
 from sqlalchemy.exc import InvalidRequestError, OperationalError
 from sqlalchemy.orm import Session
-from app.database.query import get_all_templates, get_font, get_interface, get_sync
+from app.database.query import (
+    get_all_templates, get_font, get_interface, get_sync
+)
 
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.cards import refresh_remote_card_types

@@ -120,14 +120,14 @@ def resolve_source_settings(episode: Episode) -> tuple[Style, Path]:
     if (('art' in watched_style and 'art' in unwatched_style)
         or ('unique' in watched_style and 'unique' in unwatched_style)):
         return watched_style, episode.get_source_file(
-            preferences.source_directory, series.path_safe_name, watched_style
+            preferences.source_directory, watched_style
         )
 
     # Episode is watched, use watched style
     # TODO modify
     if episode.watched:
         return watched_style, episode.get_source_file(
-            preferences.source_directory, series.path_safe_name, watched_style
+            preferences.source_directory, watched_style
         )
 
     # Watch status is unset or Episode is unwatched, use unwatched style

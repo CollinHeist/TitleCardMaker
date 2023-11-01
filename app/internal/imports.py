@@ -19,8 +19,9 @@ from app.models.preferences import Preferences
 from app.schemas.base import UNSPECIFIED
 from app.schemas.card import NewTitleCard
 from app.schemas.connection import (
-    NewEmbyConnection, NewJellyfinConnection, NewPlexConnection, NewSonarrConnection, NewTMDbConnection,
-    UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb,
+    NewEmbyConnection, NewJellyfinConnection, NewPlexConnection,
+    NewSonarrConnection, NewTMDbConnection, UpdateEmby, UpdateJellyfin,
+    UpdatePlex, UpdateSonarr, UpdateTMDb,
 )
 from app.schemas.font import NewNamedFont
 from app.schemas.preferences import (
