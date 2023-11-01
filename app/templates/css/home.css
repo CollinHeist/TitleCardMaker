@@ -103,11 +103,13 @@
 #pagination {
   /* Add spacing between pagination menu and series cards */
   margin-top: 25px;
-  /* Wrap pagination if wider than screen */
-  max-width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  flex-direction: row;
+  @media only screen and (hover: none) and (pointer: coarse) {
+    /* On mobile, wrap pagination if wider than screen */
+    max-width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+  }
 }
 
 /* START OF TEST */

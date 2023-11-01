@@ -289,8 +289,9 @@ def get_suggested_font_replacements(
     bad, replacements = [], {}
     for char in missing:
         # Remove any unicode non-spacing combining marks - e.g. é -> ´e -> e
-        replacement = ''.join(ch for ch in normalize('NFD', char)
-                              if unicode_category(ch) != 'Mn')
+        replacement = ''.join(
+            ch for ch in normalize('NFD', char) if unicode_category(ch) != 'Mn'
+        )
 
         # See if there is a common replacement for this
         if (replacement in missing

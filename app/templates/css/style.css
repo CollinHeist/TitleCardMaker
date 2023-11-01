@@ -71,6 +71,9 @@ body > div:first-of-type {
   justify-content: flex-end;
   flex-grow: 1;
   margin-right: 25px;
+  @media (max-width: 768px) {
+    margin-right: unset;
+  }
 }
 #page-header > [data-position="right"] >* {
   margin-right: 10px;
@@ -103,6 +106,11 @@ body {
 /* Remove outline from logo */
 #tcm-logo img {
   max-height: 50px;
+  @media (max-width: 768px) {
+    /* Remove fixed width on logo */
+    width: unset;
+    flex: 0 0 70px;
+  }
 }
 #tcm-logo, #tcm-logo:hover {
   box-shadow: none;
@@ -158,6 +166,10 @@ input ~ input {
   /* Add glow effect */
   border-radius: 0.25em;
   box-shadow: 0 0 1.1em 0 var(--support-button-color);
+  @media (max-width: 768px) {
+    /* Hide support button on mobile */
+    display: none;
+  }
 }
 /* Don't leave any additional margin */
 #support-button .button {
@@ -208,15 +220,15 @@ html.ios body {
 
 @media (max-width: 768px) {
   /* Remove fixed width on logo */
-  #tcm-logo {
+  /* #tcm-logo {
     width: unset;
     flex: 0 0 70px;
-  }
+  } */
 
   /* Remove extra right margin for header buttons */
-  #page-header > [data-position="right"] {
+  /* #page-header > [data-position="right"] {
     margin-right: unset;
-  }
+  } */
 
   /* Do not use absolute positioning, let items stack themselves */
   #page-header > div {
@@ -224,9 +236,9 @@ html.ios body {
   }
 
   /* Hide support button on mobile */
-  #support-button {
+  /* #support-button {
     display: none;
-  }
+  } */
 
   /* Shrink search input */
   #header-search input {

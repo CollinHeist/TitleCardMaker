@@ -468,7 +468,7 @@
             <a class="item" data-tab="blueprints">Blueprints</a>
             <a class="item" data-tab="episodes">Episode Data</a>
             <a class="item" data-tab="files">Files</a>
-            <a class="item" data-tab="ids">Database ID's</a>
+            <a class="item" data-tab="ids">Database IDs</a>
           </div>
           
           <!-- Configuration tab -->
@@ -647,6 +647,7 @@
                       <div class="default text">None</div>
                       <div class="menu"><!-- Added asynchrously --></div>
                     </div>
+                    <p class="help">Templates are evaluated in the order they are specified.</p>
                   </div>
 
                   <div class="ui divider"></div>
@@ -665,7 +666,7 @@
 
                     <div class="field">
                       <label>Font <a data-value="font-link"><i class="external alternate small icon"></i></a></label>
-                      <div data-value="fonts" class="ui very long clearable selection search dropdown" data-tooltip="Font to apply to this series (overrides any Template Font)">
+                      <div data-value="fonts" class="ui very long clearable selection search dropdown">
                         <input name="font_id" type="hidden">
                         <i class="dropdown icon"></i>
                         <div class="default text">Default</div>
@@ -1136,15 +1137,16 @@
             </div>
           </div>
 
-          <!-- Database ID's Tab -->
+          <!-- Database IDs Tab -->
           <div class="ui bottom attached tab segment" data-tab="ids">
             <form id="series-ids-form" class="ui compact form">
               {% if preferences.use_emby %}
               <div id-type="Emby ID" class="field">
-                <label>Emby</label>
                 {% if series.emby_id %}
+                <label>Emby</label>
                 <input name="emby_id" type="text" placeholder="{{series.emby_id}}" value="{{series.emby_id}}">
                 {% else %}
+                <label>Emby</label>
                 <input name="emby_id" type="text" placeholder="N/A">
                 {% endif %}
               </div>
@@ -1173,12 +1175,14 @@
 
               {% if preferences.use_sonarr %}
               <div id-type="Sonarr" class="field">
-                <label>Sonarr</label>
                 {% if series.sonarr_id %}
+                <label>Sonarr</label>
                 <input name="sonarr_id" type="text" placeholder="{{series.sonarr_id}}" value="{{series.sonarr_id}}">
                 {% else %}
+                <label>Sonarr</label>
                 <input name="sonarr_id" type="text" placeholder="None">
                 {% endif %}
+                <p class="help">Prefix Sonarr ID with <code>0-</code>. For example: <code>0-123</code>.</p>
               </div>
               {% endif %}
 
@@ -1202,6 +1206,7 @@
                 {% endif %}
               </div>
 
+              {% if series.year < 2017 %}
               <div id-type="TVRage" class="field">
                 <label>TVRage</label>
                 {% if series.tvrage_id %}
@@ -1210,6 +1215,7 @@
                 <input name="tvrage_id" type="text" placeholder="None">
                 {% endif %}
               </div>
+              {% endif %}
 
               <button class="ui animated primary button" type="submit" form="series-ids-form">
                 <div class="visible content">Save</div>
