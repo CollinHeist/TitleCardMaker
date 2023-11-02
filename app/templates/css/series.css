@@ -7,6 +7,21 @@
   min-height: 200px;
 }
 
+#card-count > span {
+  /* Indicate stats can be clicked to refresh */
+  cursor: pointer;
+  /* Pulsate once when refreshing */
+  animation: pulsate 800ms cubic-bezier(.46,.03,.52,.96) 1;
+}
+@keyframes pulsate {
+  0%, 100% { 
+    opacity: 1.0;
+  }
+  50% { 
+    opacity: 0;
+  }
+}
+
 /* Remove minimum width on progress bar */
 #card-progress .bar {
   min-width: 0;

@@ -10,7 +10,7 @@ function getStatistics() {
     success: statistics => {
       // Update card count text
       const [cardStat, episodeStat] = statistics;
-      $('#card-count')[0].innerHTML = `<i class="image outline icon"></i><span class="ui text">${cardStat.value} Cards / ${episodeStat.value} Episodes</span>`;
+      $('#card-count')[0].innerHTML = `<i class="image outline icon"></i><span class="ui pulsate text" onclick="getStatistics();">${cardStat.value} Cards / ${episodeStat.value} Episodes</span>`;
       
       // Update progress bar
       let cardVal = Math.min(cardStat.value, episodeStat.value);
@@ -792,7 +792,7 @@ async function getEpisodeData(page=1) {
  * appropriate element, and the pagination menu is updated.
  */
 let currentCardPage = 1;
-function getCardData(page=currentCardPage) {
+function getCardData(page=currentCardPage, transition=false) {
   $.ajax({
     type: 'GET',
     url: `/api/cards/series/{{series.id}}?page=${page}&size=9`,
@@ -801,13 +801,25 @@ function getCardData(page=currentCardPage) {
       const previews = cards.items.map(card => {
         const preview = previewTemplate.content.cloneNode(true);
         // Fill out preview
-        preview.querySelector('.dimmer .content').innerHTML = `<h4>Season ${card.season_number} Episode ${card.episode_number}`;
+        // Start hidden if transitioning
+        if (transition) {
+          preview.querySelector('.image').classList.add('transition', 'hidden');
+        }
+        preview.querySelector('.dimmer .content').innerHTML = `<h4>Season ${card.episode.season_number} Episode ${card.episode.episode_number}`;
         const modifiedUrl = card.card_file.replace('{{preferences.card_directory}}', '/cards')
         preview.querySelector('img').src = `${modifiedUrl}?${card.filesize}`;
         return preview;
       });
       // Add elements to page
-      document.getElementById('card-previews').replaceChildren(...previews);
+      if (transition) {
+        $('#card-previews .image').transition({transition: 'fade out', interval: 20});
+        setTimeout(() => {
+          document.getElementById('card-previews').replaceChildren(...previews);
+          $('#card-previews .image').transition({transition: 'fade out', interval: 20});
+        }, 500);
+      } else {
+        document.getElementById('card-previews').replaceChildren(...previews);
+      }
 
       // Update pagination
       currentCardPage = page;
@@ -843,8 +855,8 @@ async function initAll() {
   
   // Schedule recurring statistics query
   getStatistics();
-  getStatisticsId = setInterval(getStatistics, 30000); // Refresh stats every 30s
-  setInterval(getCardData, 30000);
+  getStatisticsId = setInterval(getStatistics, 60000); // Refresh stats every 30s
+  setInterval(getCardData, 60000);
 
   // Open tab indicated by URL param
   const tab = window.location.hash.substring(1) || 'options';

@@ -472,7 +472,7 @@
           </div>
           
           <!-- Configuration tab -->
-          <div id="series-tabs" class="ui bottom attached tab segment" data-tab="options">
+          <div id="series-tabs" class="ui bottom attached tab active segment" data-tab="options">
             <form id="series-config-form" class="ui compact form">
               <!-- Warning if Series is not found in various interfaces -->
               {% if preferences.use_emby and series.emby_id is none %}
@@ -628,14 +628,14 @@
           </div>
 
           <!-- Card Configuration -->
-          <div class="ui bottom attached tab segment active" data-tab="card-config">
+          <div class="ui bottom attached tab segment" data-tab="card-config">
             <div class="ui stackable grid">
               <!-- Card config  -->
               <div class="sixteen wide column">
-                <div class="ui visible floating info message">
+                <!-- <div class="ui visible floating info message">
                   <i class="info circle icon"></i>
                   Options are listed in <b>increasing</b> priority.
-                </div>
+                </div> -->
 
                 <form id="card-config-form" class="ui compact form">
                   <!-- Templates -->
@@ -1054,6 +1054,12 @@
           <!-- Files Tab -->
           <div class="ui bottom attached tab segment" data-tab="files">
             <h2 class="ui dividing header">Title Cards</h2>
+
+            <button onclick="getCardData(undefined, true);" class="ui blue tertiary button" data-tooltip="Refresh Previews">
+              <i class="redo icon"></i>
+              Refresh
+            </button>
+
             <div class="ui styled fluid accordion">
               <div class="title">
                 <i class="dropdown icon"></i>
