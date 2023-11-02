@@ -9,7 +9,7 @@ from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_pagination import paginate as paginate_sequence
 from requests import get
 from sqlalchemy.orm import Session
-from sqlalchemy import func, or_
+from sqlalchemy import and_, func, or_
 
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.database.session import Page
@@ -92,7 +92,7 @@ def get_previous_series(
         db: Session = Depends(get_database),
     ) -> Optional[Series]:
     """
-    Get the previous alphabetically sorted Series.
+    Get the previous Series (sorted alphabetically, year, then by ID).
 
     - series_id: ID of the reference Series.
     """
@@ -102,8 +102,14 @@ def get_previous_series(
 
     # pylint: disable=no-value-for-parameter,no-member
     return db.query(models.series.Series)\
-        .filter(models.series.Series.comes_before(series.sort_name))\
-        .order_by(models.series.Series.sort_name.desc())\
+        .filter(
+            models.series.Series.id != series_id,
+            or_(models.series.Series.comes_before(series.sort_name),
+                and_(models.series.Series.sort_name == series.sort_name,
+                     models.series.Series.year < series.year)))\
+        .order_by(models.series.Series.sort_name.desc(),
+                  models.series.Series.year.desc(),
+                  models.series.Series.id.desc())\
         .first()
 
 
@@ -113,7 +119,7 @@ def get_next_series(
         db: Session = Depends(get_database),
     ) -> Optional[Series]:
     """
-    Get the next alphabetically sorted Series.
+    Get the next Series (sorted alphabetically, year, then by ID).
 
     - series_id: ID of the reference Series.
     """
@@ -121,9 +127,16 @@ def get_next_series(
     # Get the reference Series
     series = get_series(db, series_id, raise_exc=True)
 
+    # pylint: disable=no-value-for-parameter,no-member
     return db.query(models.series.Series)\
-        .filter(models.series.Series.comes_after(series.sort_name))\
-        .order_by(models.series.Series.sort_name)\
+        .filter(
+            models.series.Series.id != series_id,
+            or_(models.series.Series.comes_after(series.sort_name),
+                and_(models.series.Series.sort_name == series.sort_name,
+                     models.series.Series.year > series.year)))\
+        .order_by(models.series.Series.sort_name,
+                  models.series.Series.year,
+                  models.series.Series.id)\
         .first()
 
 
