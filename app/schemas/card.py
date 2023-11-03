@@ -169,3 +169,4 @@ class TitleCard(Base):
     source_file: str
     card_file: str
     filesize: int
+    model_json: dict

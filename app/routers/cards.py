@@ -108,11 +108,8 @@ def create_preview_card(
         case_func = CardClass.CASE_FUNCTIONS[card_settings['font_title_case']]
     card_settings['title_text'] = case_func(card_settings['title_text'])
 
-    CardClass, CardTypeModel = validate_card_type_model(
-        preferences, card_settings, log=log,
-    )
-
     # Delete output if it exists, then create Card
+    CardClass, CardTypeModel = validate_card_type_model(card_settings, log=log)
     output.unlink(missing_ok=True)
     card_maker = CardClass(**CardTypeModel.dict(), preferences=preferences)
     card_maker.create()

@@ -276,9 +276,14 @@ class Episode(Base):
 
 
     @hybrid_method
+    def has_source_file(self, style: Style = 'unique') -> bool:
+        """Whether this Episode's Source File exists."""
+
+        return self.get_source_file(style).exists()
+
+
+    @hybrid_method
     def get_source_file(self,
-            source_directory: str,
-            series_directory: str,
             style: Style,
         ) -> Path:
         """
@@ -286,9 +291,6 @@ class Episode(Base):
         attributes.
 
         Args:
-            source_directory: Root Source directory for all Series.
-            series_directory: Series source directory for this specific
-                Series.
             style: Effective Style for this episode.
 
         Returns:
@@ -303,5 +305,6 @@ class Episode(Base):
                 source_name = f's{self.season_number}e{self.episode_number}.jpg'
 
         # Return full path for this source base and Series
-        source_file = Path(source_directory) / series_directory / source_name
-        return source_file.resolve()
+        return (get_preferences().source_directory \
+            / self.series.path_safe_name \
+            / source_name).resolve()

@@ -1280,7 +1280,7 @@ def import_cards(
 
         # Get finalized Card settings for this Episode, override card file
         try:
-            card_settings = resolve_card_settings(preferences, episode, log=log)
+            card_settings = resolve_card_settings(episode, log=log)
         except HTTPException as e:
             log.exception(f'{series.log_str} {episode.log_str} Cannot import '
                           f'Card - settings are invalid {e}', e)

@@ -222,7 +222,6 @@ def add_card_to_database(
 
 
 def validate_card_type_model(
-        preferences: Preferences,
         card_settings: dict,
         *,
         log: Logger = log,
@@ -232,17 +231,16 @@ def validate_card_type_model(
     and BaseCardType class.
 
     Args:
-        preferences: Preferences to query the BaseCardType class from.
         card_settings: Dictionary of Card settings.
         log: Logger for all log messages.
 
     Returns:
-        Tuple of the `BaseCardType` class (which can be used to create
-        the card) and the Pydantic model of that card.
+        Tuple of the `BaseCardType` class (to create the card) and the
+        Pydantic model of that card (to validate the card parameters).
     """
 
     # Initialize class of the card type being created
-    CardClass = preferences.get_card_type_class(
+    CardClass = get_preferences().get_card_type_class(
         card_settings['card_type'], log=log
     )
     if CardClass is None:
@@ -303,7 +301,6 @@ def create_card(
 
 
 def resolve_card_settings(
-        preferences: Preferences,
         episode: Episode,
         *,
         log: Logger = log,
@@ -313,7 +310,6 @@ def resolve_card_settings(
     all global, Series, and Template overrides.
 
     Args:
-        preferences: Preferences with the default global settings.
         episode: Episode whose Card settings are being resolved.
         log: Logger for all log messages.
 
@@ -343,6 +339,7 @@ def resolve_card_settings(
         series_font_dict = series_template.font.card_properties
 
     # Resolve all settings from global -> Episode
+    preferences = get_preferences()
     card_settings = TieredSettings.new_settings(
         {'hide_season_text': False, 'hide_episode_text': False},
         DefaultFont,
@@ -515,8 +512,6 @@ def resolve_card_settings(
     # Add source file
     if card_settings.get('source_file', None) is None:
         card_settings['source_file'] = episode.get_source_file(
-            preferences.source_directory,
-            series.path_safe_name,
             card_settings['watched_style' if watched else 'unwatched_style'],
         )
     else:
@@ -609,22 +604,20 @@ def create_episode_card(
     # Resolve Card settings
     series = episode.series
     try:
-        card_settings = resolve_card_settings(preferences, episode, log=log)
+        card_settings = resolve_card_settings(episode, log=log)
     except HTTPException as e:
         if raise_exc:
             raise e
         return None
+
+    # Get a validated card class, and card type Pydantic model
+    CardClass, CardTypeModel = validate_card_type_model(card_settings, log=log)
 
     # Create NewTitleCard object for these settings
     card = NewTitleCard(
         **card_settings,
         series_id=series.id,
         episode_id=episode.id,
-    )
-
-    # Get a validated card class, and card type Pydantic model
-    CardClass, CardTypeModel = validate_card_type_model(
-        preferences, card_settings, log=log,
     )
 
     # Create Card parent directories if needed

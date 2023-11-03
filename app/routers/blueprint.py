@@ -211,7 +211,7 @@ async def export_series_blueprint_as_zip(
 
     # Copy preview into main zip directory
     if card_file is None:
-        log.debug(f'No applicable Title Cards found for preview')
+        log.warning(f'No applicable Title Cards found for preview')
     else:
         copy_file(card_file, zip_dir / f'preview{card_file.suffix}')
         log.debug(f'Copied "{card_file}" into zip directory')

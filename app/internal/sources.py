@@ -9,11 +9,10 @@ from sqlalchemy.orm import Session
 
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.templates import get_effective_templates
-from app import models
+from app.models.episode import Episode
+from app.models.series import Series
 from app.schemas.card import SourceImage
-from app.schemas.episode import Episode
 from app.schemas.preferences import Preferences, Style
-from app.schemas.series import Series
 
 from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
@@ -36,7 +35,7 @@ def download_all_source_images(*, log: Logger = log) -> None:
         with next(get_database()) as db:
             # Get all Series
             failures = 0
-            for series in db.query(models.series.Series).all():
+            for series in db.query(Series).all():
                 # Skip if Series is unmonitored
                 if not series.monitored:
                     log.debug(f'{series.log_str} is not monitored, skipping')
@@ -74,7 +73,7 @@ def download_all_series_logos(*, log: Logger = log) -> None:
         # Get the Database
         with next(get_database()) as db:
             # Get all Series
-            all_series = db.query(models.series.Series).all()
+            all_series = db.query(Series).all()
             for series in all_series:
                 # If Series is unmonitored, skip
                 if not series.monitored:
@@ -136,24 +135,14 @@ def resolve_source_settings(
     # Styles are the same, Episode watch status does not matter
     if (('art' in watched_style and 'art' in unwatched_style)
         or ('unique' in watched_style and 'unique' in unwatched_style)):
-        return watched_style, episode.get_source_file(
-            preferences.source_directory, series.path_safe_name, watched_style
-        )
-    # Episode watch status is unset, use unwatched style
-    if episode.watched is None:
-        return unwatched_style, episode.get_source_file(
-            preferences.source_directory, series.path_safe_name, unwatched_style
-        )
-    # Episode is watched, use watched style
-    if episode.watched:
-        return watched_style, episode.get_source_file(
-            preferences.source_directory, series.path_safe_name, watched_style
-        )
+        return watched_style, episode.get_source_file(watched_style)
 
-    # Episode is unwatched, use unwatched style
-    return unwatched_style, episode.get_source_file(
-        preferences.source_directory, series.path_safe_name, unwatched_style
-    )
+    # Watch status is unset, or Episode is unwatched, use unwatched style
+    if episode.watched is None or not episode.watched:
+        return unwatched_style, episode.get_source_file(unwatched_style)
+
+    # Episode is watched, use watched style
+    return watched_style, episode.get_source_file(watched_style)
 
 
 def process_svg_logo(
@@ -446,7 +435,7 @@ def get_source_image(
             directory from.
         imagemagick_interface: ImageMagickInterface to query the image
             dimensions from.
-        episode: Episode of the SourceImage.
+        episode: Episode of the Source Image.
 
     Returns:
         Details of the Source Image for the given Episode.
