@@ -62,7 +62,7 @@ class InterfaceID:
             id_: Optional[str] = None,
             *,
             type_: Callable[[str], Any] = str,
-            uses_libraries: bool = False,
+            libraries: bool = False,
         ) -> None:
         """
         Construct a new InterfaceID object from the given ID string.
@@ -70,12 +70,12 @@ class InterfaceID:
         Args:
             id_: ID string to parse for interface ID pairs.
             type_: Callable for converting the type of each ID.
-            uses_libraries: Whether these types of IDs allow per-library
-                ID specification (in addition to per-interface).
+            libraries: Whether these types of IDs allow per-library ID
+                specification (in addition to per-interface).
         """
 
         self._type = type_
-        self._libraries = uses_libraries
+        self._libraries = libraries
 
         # No ID provided
         self._ids = {}
@@ -85,8 +85,8 @@ class InterfaceID:
         for sub_id in id_.split(self.INTER_INTERFACE_KEY):
             id_vals = sub_id.split(self.INTER_ID_KEY)
             interface_id = int(id_vals[0])
-            id_value = type(id_vals[-1])
-            if uses_libraries:
+            id_value = type_(id_vals[-1])
+            if libraries:
                 library = id_vals[1]
                 if interface_id in self._ids:
                     self._ids[interface_id][library] = id_value
@@ -204,8 +204,7 @@ class InterfaceID:
                 # or this object has any libraries not present in other
                 or any(
                     key not in other._ids[iid]
-                    for iid in self._ids
-                    for key in self._ids[iid]
+                    for iid, key in self._ids.items()
                 )
             )
 
@@ -304,11 +303,11 @@ class InterfaceID:
 
         if isinstance(other, str):
             other = InterfaceID(
-                other, type_=self._type, uses_libraries=self._libraries
+                other, type_=self._type, libraries=self._libraries
             )
 
         return_id = InterfaceID(
-            str(self), type_=self._type, uses_libraries=self._libraries
+            str(self), type_=self._type, libraries=self._libraries
         )
         for interface_id, sub_id in other._ids.items():
             if self._libraries:

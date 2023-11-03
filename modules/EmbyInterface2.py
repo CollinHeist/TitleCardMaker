@@ -651,7 +651,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             # Skip episodes without Emby ID's (e.g. not in Emby)
             if (emby_id := episode.emby_id) is None:
                 continue
-            interface_id = InterfaceID(episode.emby_id, type_=str)
+            interface_id = InterfaceID(episode.emby_id,type_=str,libraries=True)
             if (emby_id := interface_id[self._interface_id]) is None:
                 continue
 
