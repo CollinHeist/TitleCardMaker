@@ -24,10 +24,24 @@
   $(document).ready(function() {
     // Show changelog if necessary
     notifyChanges('{{preferences.current_version}}');
+    // Turn on accessible colormode if enabled
     {% if preferences.colorblind_mode %}
-    console.log('boop');
     $('body').toggleClass('accessible', true);
     {% endif %}
+    // Update link for this page's external documentation link
+    let docSite = '';
+    console.log(location.pathname);
+    if      (location.pathname === '/') { }
+    else if (location.pathname.startsWith('/series')) { docSite = '/user_guide/series/'; }
+    else if (location.pathname === '/add')  { docSite = '/user_guide/new_series'; }
+    else if (location.pathname === '/card-templates') { }
+    else if (location.pathname === '/fonts') {  }
+    else if (location.pathname === '/sync') { }
+    else if (location.pathname === '/settings') { docSite = '/user_guide/settings/'; }
+    else if (location.pathname === '/connections') { docSite = '/user_guide/connections/'; }
+    else if (location.pathname === '/scheduler') { }
+    else if (location.pathname === '/import') { }
+    document.getElementById('documentation-link').href = `https://titlecardmaker.com/${docSite}`;
   });
 </script>
 
