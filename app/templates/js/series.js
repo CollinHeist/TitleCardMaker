@@ -119,7 +119,7 @@ function saveEpisodeConfig(episodeId) {
   const updateEpisodeObject = getUpdateEpisodeObject(episodeId);
   $.ajax({
     type: 'PATCH',
-    url: `/api/episodes/${episodeId}`,
+    url: `/api/episodes/episode/${episodeId}`,
     contentType: 'application/json',
     data: JSON.stringify(updateEpisodeObject),
     success: () => {
@@ -387,7 +387,7 @@ function editEpisodeExtras(episode) {
   // Assign functions to add/delete translation buttons
   $('#episode-extras-modal .button[data-delete-field="translations"]').off('click').on('click', () => {
     deleteObject({
-      url: `/api/episodes/${episode.id}`,
+      url: `/api/episodes/episode/${episode.id}`,
       dataObject: {translations: {}},
       label: 'Translations',
       deleteElements: '#episode-extras-modal .field[data-value="translations"] input',
@@ -415,7 +415,7 @@ function editEpisodeExtras(episode) {
   // Assign functions to delete extra buttons
   $('#episode-extras-modal .button[data-delete-field="extras"]').off('click').on('click', () => {
     deleteObject({
-      url: `/api/episodes/${episode.id}`,
+      url: `/api/episodes/episode/${episode.id}`,
       dataObject: {extra_keys: null, extra_values: null},
       label: 'Extras',
       deleteElements: '#episode-extras-modal .field[data-value="extras"] .field',
@@ -439,7 +439,7 @@ function editEpisodeExtras(episode) {
     }
     $.ajax({
       type: 'PATCH',
-      url: `/api/episodes/${episode.id}`,
+      url: `/api/episodes/episode/${episode.id}`,
       data: JSON.stringify(data),
       contentType: 'application/json',
       success: updatedEpisode => {
@@ -651,7 +651,7 @@ async function getEpisodeData(page=1) {
   if (rowTemplate === null) { return; }
 
   // Get page of episodes via API
-  const episodeData = await fetch(`/api/episodes/{{series.id}}/all?size={{preferences.episode_data_page_size}}&page=${page}`).then(resp => resp.json());
+  const episodeData = await fetch(`/api/episodes/series/{{series.id}}/all?size={{preferences.episode_data_page_size}}&page=${page}`).then(resp => resp.json());
   if (episodeData === null || episodeData.items.length === 0) { return; }
   const episodes = episodeData.items;
 
@@ -1169,7 +1169,7 @@ function refreshEpisodeData() {
   $('#refresh > i').toggleClass('loading', true);
   $.ajax({
     type: 'POST',
-    url: '/api/episodes/{{series.id}}/refresh',
+    url: '/api/episodes/series/{{series.id}}/refresh',
     success: () => {
       showInfoToast('Refreshed Episode Data');
       getEpisodeData();
@@ -1710,7 +1710,7 @@ function deleteAllEpisodes() {
 function deleteEpisode(id) {
   $.ajax({
     type: 'DELETE',
-    url: `/api/episodes/${id}`,
+    url: `/api/episodes/episode/${id}`,
     success: () => {
       showInfoToast('Deleted Episode');
       // Remove this Episode's data row and file
