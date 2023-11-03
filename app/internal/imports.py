@@ -1424,6 +1424,7 @@ def import_cards(
 
         # Get finalized Card settings for this Episode, override card file
         try:
+            # TODO eval w/ library?
             card_settings = resolve_card_settings(episode, log=log)
         except HTTPException as e:
             log.exception(f'{series.log_str} {episode.log_str} Cannot import '

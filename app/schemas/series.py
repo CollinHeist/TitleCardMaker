@@ -72,10 +72,10 @@ class BaseSeries(BaseConfig):
     font_interword_spacing: Optional[int] = None
     font_vertical_shift: Optional[int] = None
 
-    emby_id: EmbyID = None
+    emby_id: EmbyID = ''
     imdb_id: IMDbID = None
-    jellyfin_id: JellyfinID = None
-    sonarr_id: SonarrID = None
+    jellyfin_id: JellyfinID = ''
+    sonarr_id: SonarrID = ''
     tmdb_id: TMDbID = None
     tvdb_id: TVDbID = None
     tvrage_id: TVRageID = None

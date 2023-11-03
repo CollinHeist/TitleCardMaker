@@ -14,7 +14,7 @@ from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard
 from app import models
 from app.internal.auth import get_current_user
 from app.internal.cards import (
-    create_episode_card, delete_cards, get_watched_statuses,
+    create_episode_cards, delete_cards, get_watched_statuses,
     validate_card_type_model
 )
 from app.internal.episodes import refresh_episode_data
@@ -182,7 +182,7 @@ def create_cards_for_series(
     # Create each associated Episode's Card
     for episode in series.episodes:
         try:
-            create_episode_card(db, background_tasks, episode, log=log)
+            create_episode_cards(db, background_tasks, episode, log=log)
         except HTTPException as e:
             log.exception(f'{series.log_str} {episode.log_str} Card creation '
                           f'failed - {e.detail}', e)
@@ -391,7 +391,7 @@ def create_card_for_episode(
     )
 
     # Create Card for this Episode
-    create_episode_card(db, None, episode, log=request.state.log)
+    create_episode_cards(db, None, episode, log=request.state.log)
 
 
 @card_router.post('/key', tags=['Plex', 'Tautulli'], status_code=200)
@@ -471,7 +471,7 @@ def create_cards_for_plex_rating_keys(
         if not images:
             log.info(f'{episode.log_str} has no source image - skipping')
             continue
-        create_episode_card(db, None, episode, log=log)
+        create_episode_cards(db, None, episode, log=log)
 
         # Add this Series to list of Series to load
         if episode.series.plex_library_name is None:
@@ -565,15 +565,15 @@ def create_cards_for_sonarr_webhook(
                 ).first()
             if not episode:
                 log.info(f'Cannot find Episode for {series_info} {episode_info}')
-                return None
+                continue
 
         # Look for source, add translation, create Card if source exists
         images = download_episode_source_images(db, episode, log=log)
         translate_episode(db, episode, log=log)
         if not images:
             log.info(f'{episode.log_str} has no source image - skipping')
-            return None
-        create_episode_card(db, None, episode, log=log)
+            continue
+        create_episode_cards(db, None, episode, log=log)
 
         # Refresh this Episode so that relational Card objects are
         # updated, preventing stale (deleted) Cards from being used in
@@ -584,10 +584,14 @@ def create_cards_for_sonarr_webhook(
 
         # Reload into all associated libraries
         for library in series.libraries:
-            interface = get_interface(library['interface_id'])
-            load_episode_title_card(
-                episode, db, library['name'], library['interface_id'], interface,
-                attempts=6, log=log,
-            )
+            if (interface := get_interface(library['interface_id'], raise_exc=False)):
+                load_episode_title_card(
+                    episode, db, library['name'], library['interface_id'], interface,
+                    attempts=6, log=log,
+                )
+            else:
+                log.debug(f'Not loading {series_info} {episode_info} into '
+                          f'library "{library["name"]}" - no valid Connection')
+                continue
 
     return None

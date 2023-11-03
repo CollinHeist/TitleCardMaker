@@ -20,7 +20,7 @@ from app.internal.episodes import refresh_episode_data
 from app.internal.translate import translate_episode
 from app import models
 from app.internal.cards import (
-    create_episode_card, refresh_remote_card_types,
+    create_episode_cards, refresh_remote_card_types,
     get_watched_statuses
 )
 from app.internal.series import (
@@ -384,7 +384,7 @@ def process_series(
     for episode in series.episodes:
         background_tasks.add_task(
             # Function
-            create_episode_card,
+            create_episode_cards,
             # Arguments
             db, background_tasks, episode, raise_exc=False, log=log
         )

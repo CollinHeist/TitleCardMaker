@@ -212,7 +212,7 @@ class Episode(Base):
             'episode_tmdb_id': self.tmdb_id,
             'episode_tvdb_id': self.tvdb_id,
             'episode_tvrage_id': self.tvrage_id,
-            **self.as_episode_info.characteristics,
+            **self.as_episode_info.characteristics, # pylint : disable=no-member
         }
 
 

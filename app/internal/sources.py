@@ -11,7 +11,7 @@ from app.database.query import get_interface
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.templates import get_effective_templates
 from app.models.episode import Episode
-from app.models.series import Series
+from app.models.series import Library, Series
 from app.schemas.card import SourceImage
 from app.schemas.preferences import Style
 
@@ -80,7 +80,10 @@ def download_all_series_logos(*, log: Logger = log) -> None:
         log.exception(f'Failed to download series logos', exc)
 
 
-def resolve_source_settings(episode: Episode) -> list[tuple[Style, Path]]:
+def resolve_source_settings(
+        episode: Episode,
+        library: Optional[Library] = None,
+    ) -> tuple[Style, Path]:
     """
     Get the Episode style and source file for the given Episode.
 
@@ -94,8 +97,9 @@ def resolve_source_settings(episode: Episode) -> list[tuple[Style, Path]]:
 
     # Get effective Template for this Series and Episode
     series = episode.series
-    # TODO library specific..
-    series_template, episode_template = get_effective_templates(series, episode)
+    series_template, episode_template = get_effective_templates(
+        series, episode, library,
+    )
 
     # Resolve styles
     preferences = get_preferences()
@@ -134,6 +138,28 @@ def resolve_source_settings(episode: Episode) -> list[tuple[Style, Path]]:
     return unwatched_style, episode.get_source_file(
         preferences.source_directory, unwatched_style
     )
+
+
+def resolve_all_source_settings(episode: Episode) -> list[tuple[Style, Path]]:
+    """
+    Get all the style and source files for the given Episode. This
+    evaluates source settings for all libraries of the parent Series.
+
+    Args:
+        episode: Episode being evaluated.
+
+    Returns:
+        List of tuples of the effective Style and the Path to the source
+        file for the given Episode.
+    """
+
+    if episode.series.libraries:
+        return [
+            resolve_source_settings(episode, library)
+            for library in episode.series.libraries
+        ]
+
+    return [resolve_source_settings(episode)]
 
 
 def process_svg_logo(
@@ -268,11 +294,12 @@ def download_series_logo(
     return None
 
 
-def download_episode_source_images(
+def download_episode_source_image(
         db: Session,
         episode: Episode,
-        raise_exc: bool = False,
+        library: Optional[Library] = None,
         *,
+        raise_exc: bool = False,
         log: Logger = log,
     ) -> list[str]:
     """
@@ -292,7 +319,7 @@ def download_episode_source_images(
     """
 
     # Determine Episode style and source file
-    style, source_file = resolve_source_settings(episode)
+    style, source_file = resolve_source_settings(episode, library)
 
     # If source already exists, return that
     series: Series = episode.series
@@ -300,8 +327,9 @@ def download_episode_source_images(
         return f'/source/{series.path_safe_name}/{source_file.name}'
 
     # Get effective Templates
-    # TODO library specific..
-    series_template, episode_template = get_effective_templates(series, episode)
+    series_template, episode_template = get_effective_templates(
+        series, episode, library,
+    )
 
     # Get source image settings
     preferences = get_preferences()
@@ -378,12 +406,47 @@ def download_episode_source_images(
     return None
 
 
-def get_source_image(episode: Episode) -> SourceImage:
+def download_episode_source_images(
+        db: Session,
+        episode: Episode,
+        *,
+        raise_exc: bool = False,
+        log: Logger = log,
+    ) -> list[str]:
     """
-    Get the SourceImage details for the given objects.
+    Download all Source Images for the given Episode.
 
     Args:
-        episode: Episode of the SourceImage.
+        db: Database to update.
+        episode: Episode whose Source Images are being downloaded.
+        raise_exc: Whether to raise any HTTPExceptions.
+        log: Logger for all log messages.
+
+    Returns:
+        List of URIs to the Episode source images.
+
+    Raises:
+        HTTPException (400): An image cannot be downloaded.
+    """
+
+    if episode.series.libraries:
+        return [
+            download_episode_source_image(
+                db, episode, library, raise_exc=raise_exc, log=log
+            ) for library in episode.series.libraries
+        ]
+
+    return [download_episode_source_image(
+        db, episode, None, raise_exc=raise_exc, log=log
+    )]
+
+
+def get_source_image(episode: Episode) -> SourceImage:
+    """
+    Get the SourceImage details for the given Episode. This only evalutes
+
+    Args:
+        episode: Episode of the Source Image.
 
     Returns:
         Details of the Source Image for the given Episode.

@@ -15,7 +15,7 @@ from app.internal.templates import get_effective_templates
 from app import models
 from app.models.card import Card
 from app.models.episode import Episode
-from app.models.series import Series
+from app.models.series import Library, Series
 from app.schemas.font import DefaultFont
 from app.schemas.card import NewTitleCard
 from app.schemas.card_type import LocalCardTypeModels
@@ -42,9 +42,9 @@ def create_all_title_cards(*, log: Logger = log) -> None:
 
     try:
         # Get the Database
-        failures = 0
         with next(get_database()) as db:
             # Get all Series
+            failures = 0
             all_series = db.query(Series).all()
             for series in all_series:
                 # Set watch statuses of all Episodes
@@ -53,7 +53,9 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                 # Create Cards for all Episodes
                 for episode in series.episodes:
                     try:
-                        create_episode_card(db, None, episode, log=log)
+                        create_episode_cards(
+                            db, None, episode, raise_exc=False, log=log
+                        )
                     except HTTPException as e:
                         if e.status_code != 404:
                             log.warning(f'{series.log_str} {episode.log_str} - skipping Card')
@@ -64,6 +66,10 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                         failures += 1
                         log.debug(f'Database is busy, sleeping..')
                         sleep(30)
+
+                # Stop if failed too many times
+                if failures > 10:
+                    break
     except Exception as e:
         log.exception(f'Failed to create title cards', e)
 
@@ -81,20 +87,19 @@ def remove_duplicate_cards(*, log: Logger = log) -> None:
     try:
         # Get the Database
         with next(get_database()) as db:
-            # Get all Episodes
-            all_episodes: list[Episode] = db.query(Episode).all()
-
             # Go through each Episode, find any duplicate cards
+            # TODO evaluate what to do post multi-conn
             changed = False
-            for episode in all_episodes:
-                # Look for any Cards with this Episode ID
-                cards = db.query(Card).filter_by(episode_id=episode.id).all()
-                if len(cards) > 1:
-                    log.info(f'Identified duplicate Cards for {episode.log_str}')
-                    for delete_card in cards[:-1]:
-                        db.delete(delete_card)
-                        log.debug(f'Deleted duplicate {delete_card.log_str}')
-                        changed = True
+            # all_episodes: list[Episode] = db.query(Episode).all()
+            # for episode in all_episodes:
+            #     # Look for any Cards with this Episode ID
+            #     cards = db.query(Card).filter_by(episode_id=episode.id).all()
+            #     if len(cards) > 1:
+            #         log.info(f'Identified duplicate Cards for {episode.log_str}')
+            #         for delete_card in cards[:-1]:
+            #             db.delete(delete_card)
+            #             log.debug(f'Deleted duplicate {delete_card.log_str}')
+            #             changed = True
 
             # Delete any cards w/o Series or Episode IDs
             unlinked_cards = db.query(Card)\
@@ -287,6 +292,7 @@ def create_card(
 
 def resolve_card_settings(
         episode: Episode,
+        library: Optional[Library] = None,
         *,
         log: Logger = log,
     ) -> dict:
@@ -304,8 +310,9 @@ def resolve_card_settings(
 
     # Get effective Template for this Series and Episode
     series = episode.series
-    # TODO library specific..
-    series_template, episode_template = get_effective_templates(series, episode)
+    series_template, episode_template = get_effective_templates(
+        series, episode, library
+    )
     series_template_dict, episode_template_dict = {}, {}
     if series_template is not None:
         series_template_dict = series_template.card_properties
@@ -534,10 +541,13 @@ def resolve_card_settings(
     # If an explicit card file was indicated, use it vs. default
     try:
         if card_settings.get('card_file', None) is None:
+            card_settings['title'] = card_settings['title'].replace('\\n', '')
             filename = CleanPath.sanitize_name(
                 card_settings['card_filename_format'].format(**card_settings)
             )
-            card_settings['title'] = card_settings['title'].replace('\\n', '')
+            # Add library identifier if indicated
+            if library is not None and preferences.library_unique_cards:
+                filename += f'{library["interface_id"]}:{library["name"]}'
             card_settings['card_file'] = series_directory \
                 / preferences.get_folder_format(episode_info) \
                 / filename
@@ -567,19 +577,21 @@ def create_episode_card(
         db: Session,
         background_tasks: Optional[BackgroundTasks],
         episode: Episode,
+        library: Optional[Library],
         *,
         raise_exc: bool = True,
         log: Logger = log,
     ) -> None:
     """
-    Create the Title Card for the given Episode.
+    Create the singular Title Card for the given Episode in the given
+    library.
 
     Args:
         db: Database to query and update.
         background_tasks: Optional BackgroundTasks to queue card
             creation within.
-        episode: Episode whose Card is being created.
-        raise_exc: Whether to raise or ignore any HTTPExceptions.
+        episode: Episode whose Cards are being created.
+        raise_exc: Whether to raise any HTTPExceptions.
         log: Logger for all log messages.
 
     Raises:
@@ -590,7 +602,7 @@ def create_episode_card(
     # Resolve Card settings
     series = episode.series
     try:
-        card_settings = resolve_card_settings(episode, log=log)
+        card_settings = resolve_card_settings(episode, library, log=log)
     except HTTPException as exc:
         if raise_exc:
             raise exc
@@ -609,7 +621,7 @@ def create_episode_card(
     # Create Card parent directories if needed
     card_settings['card_file'].parent.mkdir(parents=True, exist_ok=True)
 
-    # Inner function to begin card creation as a background task, or immediately
+    # Inner function to begin card creation as a background task or immediately
     def _start_card_creation():
         if background_tasks is None:
             create_card(db, card, CardClass, CardTypeModel, log=log)
@@ -625,8 +637,18 @@ def create_episode_card(
         _start_card_creation()
         return None
 
-    # Existing card doesn't match, delete and remake
+    # Existing card file doesn't exist anymore, remove from db and recreate
     existing_card = existing_card[0]
+    if not existing_card.exists:
+        log.debug(f'{series.log_str} {episode.log_str} Card not found - creating')
+        db.delete(existing_card)
+        db.commit()
+
+        # Create new card
+        _start_card_creation()
+        return None
+
+    # Existing card doesn't match, delete and remake
     if any(str(val) != str(getattr(card, attr))
            for attr, val in existing_card.comparison_properties.items()):
         for attr, val in existing_card.comparison_properties.items():
@@ -643,16 +665,43 @@ def create_episode_card(
         _start_card_creation()
         return None
 
-    # Existing card file doesn't exist anymore, remove from db and recreate
-    if not Path(existing_card.card_file).exists():
-        log.debug(f'{series.log_str} {episode.log_str} Card not found - creating')
-        db.delete(existing_card)
-        db.commit()
-
-        # Create new card
-        _start_card_creation()
-
     return None
+
+
+def create_episode_cards(
+        db: Session,
+        background_tasks: Optional[BackgroundTasks],
+        episode: Episode,
+        *,
+        raise_exc: bool = True,
+        log: Logger = log,
+    ) -> None:
+    """
+    Create all the Title Card for the given Episode.
+
+    Args:
+        db: Database to query and update.
+        background_tasks: Optional BackgroundTasks to queue card
+            creation within.
+        episode: Episode whose Cards are being created.
+        raise_exc: Whether to raise any HTTPExceptions.
+        log: Logger for all log messages.
+
+    Raises:
+        HTTPException: If the card settings are invalid and `raise_exc`
+            is True.
+    """
+
+    if episode.series.libraries:
+        for library in episode.series.libraries:
+            create_episode_card(
+                db, background_tasks, episode, library,
+                raise_exc=raise_exc, log=log
+            )
+    else:
+        create_episode_card(
+            db, background_tasks, episode, None, raise_exc=raise_exc, log=log
+        )
 
 
 def get_watched_statuses(
@@ -663,8 +712,8 @@ def get_watched_statuses(
         log: Logger = log,
     ) -> None:
     """
-    Update the watch statuses of all Episodes for the given Series. Only
-    the first library (with a valid Interface) is queried.
+    Update the watch statuses of the given Episodes for the given
+    Series. This queries all libraries of this Series.
 
     Args:
         series: Series whose Episodes are being updated.
@@ -687,8 +736,6 @@ def get_watched_statuses(
 
     if changed:
         db.commit()
-
-    return None
 
 
 def delete_cards(

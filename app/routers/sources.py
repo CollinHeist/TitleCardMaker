@@ -134,16 +134,16 @@ def download_series_logo_(
 
 
 @source_router.post('/episode/{episode_id}', status_code=200)
-def download_episode_source_image_(
+def download_episode_source_images_(
         episode_id: int,
         request: Request,
         # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
     ) -> list[str]:
     """
-    Download a Source image for the given Episode. This uses the most
+    Download the Source Images for the given Episode. This uses the most
     relevant image source indicated by the appropriate
-    image_source_priority attrbute. Returns URI to the source image
+    image_source_priority attrbute. Returns URIs to the source image
     resource.
 
     - episode_id: ID of the Episode to download a Source image of.
@@ -268,7 +268,7 @@ def get_existing_series_source_images(
 
 
 @source_router.get('/episode/{episode_id}', status_code=200)
-def get_existing_episode_source_images(
+def get_existing_episode_source_image(
         episode_id: int,
         db: Session = Depends(get_database),
     ) -> SourceImage:

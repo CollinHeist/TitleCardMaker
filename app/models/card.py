@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy import Boolean, Column, Float, Integer, String, ForeignKey, JSON
@@ -66,6 +67,13 @@ class Card(Base):
         """
 
         return f'Card[{self.id}] "{self.card_file}"'
+    
+
+    @hybrid_property
+    def exists(self) -> bool:
+        """Whether the Card file for this object exists."""
+
+        return Path(self.card_file).exists()
 
 
     @hybrid_property
