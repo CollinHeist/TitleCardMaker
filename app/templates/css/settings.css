@@ -1,8 +1,3 @@
-/* Add hover effect to header to indicate about section toggle */
-h1 {
-  cursor: pointer;
-}
-
 /* Excluded card types have reduced opacity, strikethrough and italic effects */
 #excluded-card-types .menu .active.item {
   opacity: 30%;
