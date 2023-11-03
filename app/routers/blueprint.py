@@ -174,14 +174,19 @@ async def export_series_blueprint_as_zip(
 
     # Get preview image for this Series - use first non-stylized existing Card
     cards = db.query(models.card.Card)\
-        .filter_by(series_id=series_id, blur=False, grayscale=False)\
-        .filter(models.card.Card.season_number>0)\
-        .order_by(models.card.Card.season_number,
-                  models.card.Card.episode_number)\
+        .join(models.episode.Episode)\
+        .filter(models.card.Card.series_id==series_id,
+                models.episode.Episode.season_number>0)\
+        .order_by(models.episode.Episode.season_number,
+                  models.episode.Episode.episode_number)\
         .all()
-
     card_file = None
     for card in cards:
+        # Skip Cards that are blurred or grayscale
+        if (card.model_json.get('blur', False)
+            or card.model_json.get('grayscale', False)):
+            continue
+        # First Card whose file exists
         if (this_card_file := Path(card.card_file)).exists():
             card_file = this_card_file
             break
@@ -205,7 +210,9 @@ async def export_series_blueprint_as_zip(
         copy_file(font_zip, zip_dir / 'fonts.zip')
 
     # Copy preview into main zip directory
-    if card_file is not None:
+    if card_file is None:
+        log.debug(f'No applicable Title Cards found for preview')
+    else:
         copy_file(card_file, zip_dir / f'preview{card_file.suffix}')
         log.debug(f'Copied "{card_file}" into zip directory')
 

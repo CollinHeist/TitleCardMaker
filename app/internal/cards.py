@@ -190,6 +190,7 @@ def refresh_remote_card_types(
 def add_card_to_database(
         db: Session,
         card_model: NewTitleCard,
+        CardTypeModel: Base,
         card_file: Path,
     ) -> Card:
     """
@@ -206,7 +207,14 @@ def add_card_to_database(
     """
 
     card_model.filesize = card_file.stat().st_size
-    card = Card(**card_model.dict())
+    card = Card(
+        **card_model.dict(),
+        model_json={
+            key: str(val)
+            for key, val in
+            CardTypeModel.dict(exclude_defaults=True).items()
+        }
+    )
     db.add(card)
     db.commit()
 
@@ -286,7 +294,7 @@ def create_card(
 
     # If file exists, card was created successfully - add to database
     if (card_file := CardTypeModel.card_file).exists():
-        card = add_card_to_database(db, card_model, card_file)
+        card = add_card_to_database(db, card_model, CardTypeModel, card_file)
         log.info(f'Created {card.log_str}')
     # Card file does not exist, log failure
     else:
@@ -637,32 +645,47 @@ def create_episode_card(
     if not existing_card:
         _start_card_creation()
         return None
-
-    # Existing card doesn't match, delete and remake
     existing_card = existing_card[0]
-    if any(str(val) != str(getattr(card, attr))
-           for attr, val in existing_card.comparison_properties.items()):
-        for attr, val in existing_card.comparison_properties.items():
-            if str(val) != str(getattr(card, attr)):
-                log.debug(f'Card[{existing_card.id}].{attr} | {val} -> {getattr(card, attr)}')
-                break
-        # Delete existing card file, remove from database
+
+    # Function to get the existing val
+    def _get_existing(attribute: str) -> Any:
+        return existing_card.model_json.get(
+            attribute,
+            CardTypeModel.__fields__[attribute].default,
+        )
+
+    # Existing Card file doesn't exist anymore, remove from db and recreate
+    if not existing_card.exists:
+        log.debug(f'{series.log_str} {episode.log_str} Card not found - creating')
+        db.delete(existing_card)
+        db.commit()
+        _start_card_creation()
+        return None
+
+    # Determine if this Card is different than existing Card
+    different = (
+        # Different card type
+        card.card_type != existing_card.card_type
+        # New Card defines a different value than the old Card
+        or any(str(new_val) != str(_get_existing(attr))
+            for attr, new_val in
+            CardTypeModel.dict(exclude_defaults=True).items()
+            # Skip randomized attributes
+            if not attr.endswith('_rotation_angle')
+        )
+        # Old Card defines an attribute not defined by new Card
+        or any(
+            attr not in CardTypeModel.dict()
+            for attr in existing_card.model_json
+        )
+    )
+
+    # If different, delete existing file, remove from database, create Card
+    if different:
         log.debug(f'{series.log_str} {episode.log_str} Card config changed - recreating')
         Path(existing_card.card_file).unlink(missing_ok=True)
         db.delete(existing_card)
         db.commit()
-
-        # Create new card
-        _start_card_creation()
-        return None
-
-    # Existing card file doesn't exist anymore, remove from db and recreate
-    if not Path(existing_card.card_file).exists():
-        log.debug(f'{series.log_str} {episode.log_str} Card not found - creating')
-        db.delete(existing_card)
-        db.commit()
-
-        # Create new card
         _start_card_creation()
 
     return None
