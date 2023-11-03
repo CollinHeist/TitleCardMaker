@@ -17,10 +17,14 @@ TitleCardMaker with all the necessary Docker variables and paths.
 ## Instructions
 
 1. Navigate to the UnRAID WebGUI home page for your server.
+
 2. Select the `APPS` tab from the top toolbar.
-3. In the search bar, search for `titlecardmaker`
+
+3. In the search bar, search for `titlecardmaker`.
+
 4. Click the first result, and in the actions (just below the container
 name), click `Install`.
+
 5. You will be prompted to choose which branch (or _tag_) to install,
 make your selection and continue.
 
@@ -73,6 +77,7 @@ note of, all other settings can be adjusted within TitleCardMaker.
             get the ID's of.
 
 7. After finalizing your settings, select `Apply`.
+
 8. UnRAID will begin downloading the Docker container. After it's
 finished, go back to the `DOCKER` tab, click the newly created
 TitleCardMaker container, and then select `WebUI` from the dropdown.
