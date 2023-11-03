@@ -46,7 +46,13 @@
         <div data-value="require_auth" class="ui left aligned checkbox field">
           <label>Require Authentication</label>
           <input type="checkbox">
-          <p class="help">Whether to require a username and password to access TCM.</p>
+          <p class="help">
+            Whether to require a username and password to access TCM.
+            {% if not preferences.require_auth %}
+            <br>
+            When first enabled a temporary username (<b>admin</b>) and password (<b>password</b>) will be created.
+            {% endif %}
+          </p>
         </div>
 
         <form id="auth-settings" class="ui fluid form">
@@ -58,7 +64,7 @@
 
             <div class="ui four wide field">
               <label>Password</label>
-              <input name="password" type="password" placeholder="hunter2">
+              <input name="password" type="password" class="private">
             </div>
           </div>
 
