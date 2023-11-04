@@ -187,6 +187,30 @@ def refresh_remote_card_types(
             preferences.remote_card_types[card_identifier] =card_type.card_class
 
 
+def _card_type_model_to_json(model: Base) -> dict:
+    """
+    Convert the given Pydantic card type model to JSON (dict) for
+    comparison and storing in the Card.model_json Column.
+
+    Args:
+        model: Pydantic model to convert.
+
+    Returns:
+        JSON conversion of the model (as a dict). All default variables
+        are excluded, as well as the `source_file` and `card_file`
+        variables.
+    """
+
+    return {
+        key: str(val.name) if isinstance(val, Path) else str(val)
+        for key, val in
+        model.dict(
+            exclude_defaults=True,
+            exclude={'source_file', 'card_file'},
+        ).items()
+    }
+
+
 def add_card_to_database(
         db: Session,
         card_model: NewTitleCard,
@@ -209,11 +233,7 @@ def add_card_to_database(
     card_model.filesize = card_file.stat().st_size
     card = Card(
         **card_model.dict(),
-        model_json={
-            key: str(val)
-            for key, val in
-            CardTypeModel.dict(exclude_defaults=True).items()
-        }
+        model_json=_card_type_model_to_json(CardTypeModel),
     )
     db.add(card)
     db.commit()
@@ -656,21 +676,18 @@ def create_episode_card(
         return None
 
     # Determine if this Card is different than existing Card
+    new_model_json = _card_type_model_to_json(CardTypeModel)
     different = (
         # Different card type
         card.card_type != existing_card.card_type
         # New Card defines a different value than the old Card
         or any(str(new_val) != str(_get_existing(attr))
-            for attr, new_val in
-            CardTypeModel.dict(exclude_defaults=True).items()
+            for attr, new_val in new_model_json.items()
             # Skip randomized attributes
             if not attr.endswith('_rotation_angle')
         )
         # Old Card defines an attribute not defined by new Card
-        or any(
-            attr not in CardTypeModel.dict()
-            for attr in existing_card.model_json
-        )
+        or any(attr not in new_model_json for attr in existing_card.model_json)
     )
 
     # If different, delete existing file, remove from database, create Card

@@ -432,7 +432,7 @@ def load_series_title_cards(
                 card_id=loaded_card.id,
                 filesize=loaded_card.filesize,
             ))
-            log.debug(f'{series.log_str} {loaded_episode.log_str} Loaded {card.log_str}')
+            log.debug(f'{series.log_str} {loaded_episode.log_str} Loaded {loaded_card.log_str}')
         except InvalidRequestError:
             log.warning(f'Error creating Loaded asset for {loaded_episode.log_str} {card.log_str}')
             continue

@@ -109,12 +109,11 @@ class PreviewTitleCard(UpdateBase):
 class NewTitleCard(Base):
     series_id: int
     episode_id: int
-    source_file: str
     card_file: str
     filesize: Optional[int] = None
     card_type: str
 
-    @validator('source_file', 'card_file', pre=True)
+    @validator('card_file', pre=True)
     def convert_paths_to_str(cls, v):
         return str(v)
 
@@ -166,7 +165,6 @@ class TitleCard(Base):
     series_id: int
     episode_id: int
     episode: EpisodeData
-    source_file: str
     card_file: str
     filesize: int
     model_json: dict

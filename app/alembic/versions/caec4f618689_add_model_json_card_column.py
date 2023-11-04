@@ -4,7 +4,8 @@ Modify Card table:
 - Remove the hide_season_text, font_file, season_number, font_kerning, blur,
 grayscale, extras, font_vertical_shift, episode_text, title_text, season_text,
 hide_episode_text, absolute_number, font_stroke_width, font_interline_spacing,
-font_interword_spacing, episode_number, font_size, and font_color columns.
+font_interword_spacing, episode_number, font_size, font_color, and source_file
+columns.
 - Performs a data migration on the `model_json` Column as a JSON serialization
 of the Pydantic Card model associated with the given Card object.
 
@@ -16,10 +17,10 @@ Create Date: 2023-10-29 17:47:41.469202
 from pathlib import Path
 from alembic import op
 import sqlalchemy as sa
+from modules.Debug import contextualize
 
 from app.dependencies import get_preferences
 from modules.CleanPath import CleanPath
-from modules.Debug import contextualize
 
 # revision identifiers, used by Alembic.
 revision = 'caec4f618689'
@@ -38,7 +39,7 @@ Base = declarative_base()
 class Card(Base):
     __tablename__ = 'card'
 
-    # sa.Columns not being modified
+    # Columns not being modified
     id = sa.Column(sa.Integer, primary_key=True, index=True)
     series_id = sa.Column(sa.Integer, sa.ForeignKey('series.id'))
     series = relationship('Series', back_populates='cards')
@@ -47,9 +48,9 @@ class Card(Base):
     card_file = sa.Column(sa.String, nullable=False)
     filesize = sa.Column(sa.Integer)
     card_type = sa.Column(sa.String, nullable=False)
-    # New sa.Column for migration
+    # New Column for migration
     model_json = sa.Column(MutableDict.as_mutable(sa.JSON), default={}, nullable=False)
-    # Old sa.Columns for migration
+    # Old Columns for migration
     title_text = sa.Column(sa.String, nullable=False)
     season_text = sa.Column(sa.String, nullable=False)
     hide_season_text = sa.Column(sa.Boolean, nullable=False)
@@ -123,9 +124,12 @@ def upgrade() -> None:
         # Write this model into model_json column
         # Convert any Path objects into their string equivalents
         card.model_json = {
-            key: str(val)
+            key: str(val.name) if isinstance(val, Path) else str(val)
             for key, val in
-            card_model.dict(exclude_defaults=True).items()
+            card_model.dict(
+                exclude_defaults=True,
+                exclude={'source_file', 'card_file'},
+            ).items()
         }
 
     # Commit changes
@@ -152,6 +156,7 @@ def upgrade() -> None:
         batch_op.drop_column('episode_number')
         batch_op.drop_column('font_size')
         batch_op.drop_column('font_color')
+        batch_op.drop_column('source_file')
 
     log.debug(f'Upgraded SQL Schema to Version[{revision}]')
 
@@ -182,5 +187,6 @@ def downgrade() -> None:
         batch_op.add_column(sa.Column('season_number', sa.INTEGER(), nullable=False))
         batch_op.add_column(sa.Column('font_file', sa.VARCHAR(), nullable=False))
         batch_op.add_column(sa.Column('hide_season_text', sa.BOOLEAN(), nullable=False))
+        batch_op.add_column(sa.Column('source_file', sa.VARCHAR(), nullable=False))
 
     log.debug(f'Downgraded SQL Schema to Version[{down_revision}]')

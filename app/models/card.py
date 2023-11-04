@@ -29,7 +29,6 @@ class Card(Base):
         foreign_keys='Loaded.card_id',
     )
 
-    source_file = Column(String, nullable=False)
     card_file = Column(String, nullable=False)
     filesize = Column(Integer)
 
