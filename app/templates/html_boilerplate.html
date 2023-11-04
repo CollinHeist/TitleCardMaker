@@ -30,7 +30,6 @@
     {% endif %}
     // Update link for this page's external documentation link
     let docSite = '';
-    console.log(location.pathname);
     if      (location.pathname === '/') { }
     else if (location.pathname.startsWith('/series')) { docSite = '/user_guide/series/'; }
     else if (location.pathname === '/add')  { docSite = '/user_guide/new_series'; }

@@ -1,7 +1,7 @@
 ---
-title: Series Page
+title: Series
 description: >
-    
+    All Series-specific customizations and actions.
 tags:
     - Series
 ---
