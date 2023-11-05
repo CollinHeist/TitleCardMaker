@@ -204,7 +204,7 @@ async function getAllFonts() {
     template.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${fontObj.name}`;
     template.querySelector('input[name="name"]').value = fontObj.name;
     const file = template.querySelector('label[data-value="file"]');
-    file.innerText = fontObj.file_name === null ? 'Font' : `Font (${fontObj.file_name})`;
+    file.innerText = fontObj.file_name === null ? 'File' : `File (${fontObj.file_name})`;
     if (fontObj.color !== null) {
       template.querySelector('input[name="color"]').value = fontObj.color;
     }
