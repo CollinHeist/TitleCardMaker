@@ -51,40 +51,12 @@ function addSeries(result, resultElementId) {
 }
 
 /*
- * Submit the API requests to add the Series indicated by the given
- * result, and then import the given Blueprint to that Series.
- */
-function addSeriesImportBlueprint(result, blueprintId, resultElementId) {
-  $('#add-series-modal form').toggleClass('loading', true);
-  // Create Series
-  $.ajax({
-    type: 'POST',
-    url: '/api/series/new',
-    data: JSON.stringify(generateNewSeriesObject(result)),
-    contentType: 'application/json',
-    success: series => {
-      document.getElementById(resultElementId).classList.add('disabled');
-      showInfoToast(`Added Series "${series.name}"`);
-      // API request to import blueprint
-      $.ajax({
-        type: 'PUT',
-        url: `/api/blueprints/import/series/${series.id}/blueprint/${blueprintId}`,
-        contentType: 'application/json',
-        success: () => showInfoToast('Blueprint Imported'),
-        error: response => showErrorToast({title: 'Error Importing Blueprint', response}),
-      });
-    }, error: response => showErrorToast({title: 'Error adding Series', response}),
-    complete: () => $('#add-series-modal').modal('hide'),
-  });
-}
-
-/*
  * Submit an API request to import the given global Blueprint - creating
  * the associated Series if it does not exist.
  */
 function importBlueprint(blueprintId, elementId) {
   $.ajax({
-    type: 'PUT',
+    type: 'POST',
     url: `/api/blueprints/import/blueprint/${blueprintId}`,
     success: series => {
       showInfoToast(`Imported Blueprint to "${series.full_name}"`);
@@ -113,7 +85,7 @@ async function queryBlueprints(result, resultElementId) {
     let card = blueprintTemplate.content.cloneNode(true);
     card = populateBlueprintCard(card, blueprint, `series-blueprint-id${blueprintId}`);
     // Assign function to import button
-    card.querySelector('a[data-action="import-blueprint"]').onclick = () => addSeriesImportBlueprint(result, blueprint.id, resultElementId);
+    card.querySelector('a[data-action="import-blueprint"]').onclick = () => importBlueprint(blueprint.id, resultElementId);
     return card;
   });
   blueprintResults.replaceChildren(...blueprintCards);

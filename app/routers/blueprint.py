@@ -390,7 +390,7 @@ def query_blueprints_by_info(
     return query_series_blueprints(blueprint_db, series_info)
 
 
-@blueprint_router.put('/import/blueprint/{blueprint_id}', status_code=201)
+@blueprint_router.post('/import/blueprint/{blueprint_id}', status_code=201)
 def import_blueprint_and_series(
         background_tasks: BackgroundTasks,
         request: Request,
