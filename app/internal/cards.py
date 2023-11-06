@@ -64,8 +64,7 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                         )
                     except HTTPException as e:
                         if e.status_code != 404:
-                            log.warning(f'{series.log_str} {episode.log_str} - skipping Card')
-                            log.debug(f'Exception: {e}')
+                            log.exception(f'{series.log_str} {episode.log_str} - skipping Card', e)
                     except OperationalError:
                         if failures > 10:
                             break
