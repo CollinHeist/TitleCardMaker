@@ -1,7 +1,7 @@
 ---
 title: Integrating Local Card Types
 description: >
-    How to add and integrate local card type Python files within TitleCardMaker.
+    How to add and integrate local card type Python files.
 ---
 
 # Local Card Types

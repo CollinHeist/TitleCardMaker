@@ -1,5 +1,5 @@
 ---
-title: Settings
+title: Global Settings
 description: >
     In-depth descriptions of all global settings.
 tags:
@@ -86,49 +86,46 @@ below.
 | Season Folder Format | :octicons-x-16:{.red} | Format of the folder name for all other Title Cards. |
 
 ## Root Folders
-The root folders listed here serve as the primary asset directories for
-both Title Card and Source images. If using Docker, it is important
-that both of these directories are accessible _outside_ of the Container.
+The root folders listed here serve as the primary asset directories for both
+Title Card and Source images. If using Docker, it is importan that both of these
+directories are accessible _outside_ of the Container.
 
 ### Card Directory
-The root folder for all Title Cards created by TitleCardMaker. Within
-this directory, each Series added to TitleCardMaker will have a
-subfolder created for it, under which cards will be created.
+The root folder for all Title Cards created by TitleCardMaker. Within this
+directory, each Series added to TitleCardMaker will have a subfolder created for
+it, under which cards will be created.
 
 ??? example
 
     === "Docker"
 
         For Docker setups, the recommended settings for this is
-        `/config/cards`. In this instance, if the Series `Breaking Bad`
-        were added to TitleCardMaker, I'd expect to find all associated
-        Title Cards under the `/config/cards/Breaking Bad (2008)/`
-        directory.
+        `/config/cards`. In this instance, if the Series `Breaking Bad` were
+        added to TitleCardMaker, I'd expect to find all associated Title Cards
+        under the `/config/cards/Breaking Bad (2008)/` directory.
 
     === "Non-Docker"
 
-        When installed locally, this setting can be whatever is most-
-        convenient. It is very common to specify a `cards` directory
-        within your local installation directory, e.g. `./config/cards/`.
-        However, this is not required. In this instance, if the Series
-        `Breaking Bad` were added to TitleCardMaker, I'd expect to find
-        all associated Title Cards under the `./config/cards/Breaking Bad
-        (2008)/` directory.
+        When installed locally, this setting can be whatever is most-convenient.
+        It is very common to specify a `cards` directory within your local
+        installation directory, e.g. `./config/cards/`. However, this is not
+        required. In this instance, if the Series `Breaking Bad` were added to
+        TitleCardMaker, I'd expect to find all associated Title Cards under the
+        `./config/cards/Breaking Bad (2008)/` directory.
 
-This directory __does not__ need to align with your Media folders (where
-your media files are kept), as TCM loads the Title Cards directly into
-your Media Server, bypassing any "local media" matching.
+This directory __does not__ need to align with your Media folders (where your
+media files are kept), as TCM loads the Title Cards directly into your Media
+Server, bypassing any "local media" matching.
 
 ### Source Directory
-The root folder for all source images downloaded and used by 
-TitleCardMaker. Within this directory, each Series added to
-TitleCardMaker will have a subfolder created for it, under which source
-images (and logos) will be added.
+The root folder for all source images downloaded and used by TitleCardMaker.
+Within this directory, each Series added to TitleCardMaker will have a subfolder
+created for it, under which source images (and logos) will be added.
 
 ??? question "What's a Source Image?"
 
-    A source image is the (typically) textless input images which text
-    or effects are added on top of (by TCM) to create a Title Card.
+    A source image is the (typically) textless input images which text or
+    effects are added on top of (by TCM) to create a Title Card.
 
 ??? example
 
@@ -154,10 +151,10 @@ images (and logos) will be added.
 
 ## Episode Data
 ### Episode Data Source
-So that Episode data (e.g. numbers, titles, airdates, etc.) does not 
-have to be manually entered, TitleCardMaker needs to source Episode data
-from some external source. Any enabled Connection _can_ be used as an
-Episode Data source - however, there are some differences between each.
+So that Episode data (e.g. numbers, titles, airdates, etc.) does not have to be
+manually entered, TitleCardMaker needs to source Episode data from some external
+source. Any enabled Connection _can_ be used as an Episode Data source -
+however, there are some differences between each.
 
 ??? info "Differences in Episode Data Sources"
 
@@ -187,27 +184,26 @@ _in order_ until a source image is found.
 
 ??? tip "Recommended Setting"
 
-    For __a vast majority__ of users, specifying TMDb and then your
-    Media Servers (so `TMDb` `Plex` `...`) is recommended. This is
-    because TMDb has a much wider variety of image availability, and is
-    typically much higher quality than the auto-scraped images from your
-    Media Server.
+    For __a vast majority__ of users, specifying TMDb and then your Media
+    Servers (so `TMDb` `Plex`, etc.) is recommended. This is  because TMDb has a
+    much wider variety of image availability, and is typically much higher
+    quality than the auto-scraped images from your Media Server.
 
 ### Sync Specials
 
 Whether to ignore Episodes from Season 0 by default.
 
-Many Series have "bonus" content like behind the scenes, featurettes,
-shorts, commercials, etc. listed under Season 0 as _Specials_. If you
-would like TCM to ignore these when grabbing Episode data from your
-specified Episode data source, then uncheck this setting.
+Many Series have "bonus" content like behind the scenes, featurettes, shorts,
+commercials, etc. listed under Season 0 as _Specials_. If you would like TCM to
+ignore these when grabbing Episode data from you specified Episode data source,
+then uncheck this setting.
 
 This setting _can_ be overwritten with Templates, or per-Series.
 
 ??? note "Manually Adding Specials"
 
-    Even if this setting is disabled (so Specials are ignored), Episodes
-    can still be added manually.
+    Even if this setting is disabled (so Specials are ignored), Episodes can
+    still be added manually.
 
 ## Title Cards
 ### Default Card Type

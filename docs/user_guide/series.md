@@ -1,12 +1,12 @@
 ---
-title: Series
+title: Series Page
 description: >
     All Series-specific customizations and actions.
 tags:
     - Series
 ---
 
-# :material-television: Series
+# Series
 
 !!! warning "Under Construction"
 
