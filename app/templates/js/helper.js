@@ -1,18 +1,25 @@
 function toggleNavMenu() {
-  const navMenu = document.getElementById('nav-menu');
-  const mainContent = document.getElementById('main-content');
-  if (navMenu.style.display === 'none') {
-    // Currently hidden, show
-    navMenu.style.display = 'block';
-    mainContent.style.removeProperty('padding-left');
+  // On mobile toggle the nav menu; on desktop go home
+  console.log(window.screen.availHeight);
+  if (isSmallScreen()) {
+    const navMenu = document.getElementById('nav-menu');
+    const mainContent = document.getElementById('main-content');
+    if (navMenu.style.display === 'none') {
+      // Currently hidden, show
+      navMenu.style.display = 'block';
+      mainContent.style.removeProperty('padding-left');
+    } else {
+      navMenu.style.display = 'none';
+      mainContent.style.paddingLeft = '15px';
+    }
   } else {
-    navMenu.style.display = 'none';
-    mainContent.style.paddingLeft = '15px';
+    // Not on mobile, go to home page
+    window.location.href = '/';
   }
 }
 
 function isSmallScreen() {
-  return window.screen.availHeight < 768;
+  return window.screen.availWidth < 768;
 }
 
 function formatBytes(bytes, decimals = 2) {
