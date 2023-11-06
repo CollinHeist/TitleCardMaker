@@ -98,11 +98,15 @@ def translate_episode(
             series.as_series_info, episode.as_episode_info, language_code,
             log=log,
         )
-        if translation is not None:
-            episode.translations[data_key] = translation
-            log.info(f'{series.log_str} {episode.log_str} translated '
-                     f'{language_code} -> "{translation}" -> {data_key}')
-            changed = True
+        if translation is None:
+            log.debug(f'{series.log_str} {episode.log_str} - no translation '
+                      f'available for "{language_code}"')
+            continue
+
+        episode.translations[data_key] = translation
+        log.info(f'{series.log_str} {episode.log_str} translated '
+                    f'{language_code} -> "{translation}" -> {data_key}')
+        changed = True
 
     # If any translations were added, commit updates to database
     if changed:
