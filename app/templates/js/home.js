@@ -131,9 +131,21 @@ let sortStates = {
 }
 
 function sortSeries(elem, sortBy) {
-  // Get all card elements
+  // Update sort state property
   let {state, allStates} = sortStates[sortBy];
   let {sortState} = allStates[state];
   window.localStorage.setItem('series-sort-order', sortState);
+
+  // Re-query current page
   getAllSeries();
+
+  // Wait for rotation to finish, then change icon state
+  document.getElementById(elem.firstElementChild.id).classList.toggle('rotate');
+  setTimeout(() => {
+    sortStates[sortBy].state = (sortStates[sortBy].state + 1) % 2;
+    let {icon} = sortStates[sortBy].allStates[sortStates[sortBy].state];
+    elem.firstElementChild.className = icon;
+    // Update local storage for sort setting
+    window.localStorage.setItem('series-sort-order', sortState);
+  }, 500); // Timeout set to match the transition duration
 }

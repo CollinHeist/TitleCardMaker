@@ -1,6 +1,5 @@
 function toggleNavMenu() {
   // On mobile toggle the nav menu; on desktop go home
-  console.log(window.screen.availHeight);
   if (isSmallScreen()) {
     const navMenu = document.getElementById('nav-menu');
     const mainContent = document.getElementById('main-content');
