@@ -20,6 +20,11 @@
     color: #ef5552
 }
 
+/* Stylize footer donate link */
+.md-social__link[title="Donate"] > svg {
+    fill: crimson;
+}
+
 /* Resize termynal windows */
 [data-termynal] {
     padding: 40px 35px 35px !important;
