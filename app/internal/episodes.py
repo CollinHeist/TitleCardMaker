@@ -249,7 +249,7 @@ def refresh_episode_data(
         series.sync_specials,
     )
 
-    # Filter episodes
+    # Filter Episodes
     changed, episodes = False, []
     for episode_info, watched in all_episodes:
         # Skip specials if indicated
@@ -257,7 +257,7 @@ def refresh_episode_data(
             log.debug(f'{series.log_str} Skipping {episode_info} - not syncing specials')
             continue
 
-        # Check if this episode exists in the database currently
+        # Check if this Episode exists in the database currently
         existing = db.query(models.episode.Episode)\
             .filter_by(
                 series_id=series.id,

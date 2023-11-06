@@ -506,26 +506,25 @@ def create_cards_for_sonarr_webhook(
 
     # Series is not found, exit
     if series is None:
-        log.info(f'Cannot find Series for {series_info}')
+        log.info(f'Cannot find Series {series_info}')
         return None
 
-    # Find each Episode in the payload
-    for episode in webhook.episodes:
-        episode_info = EpisodeInfo(
-            title=episode.title,
-            season_number=episode.seasonNumber,
-            episode_number=episode.episodeNumber,
-        )
+    def _find_episode(episode_info: EpisodeInfo) -> Optional[Episode]:
+        """Attempt to find the associated Episode up to three times."""
+        for _ in range(3):
+            # Search for this Episode
+            episode = db.query(Episode)\
+                .filter(Episode.series_id==series.id,
+                        episode_info.filter_conditions(Episode))\
+                .first()
 
-        # Find this Episode
-        episode = db.query(Episode)\
-            .filter(
-                Episode.series_id==series.id,
-                episode_info.filter_conditions(Episode),
-            ).first()
+            # Episode exists, return it
+            if episode:
+                return episode
 
-        # Refresh data and look for Episode again
-        if episode is None:
+            # Sleep and re-query Episode data
+            log.debug(f'Cannot find Episode, waiting..')
+            sleep(30)
             refresh_episode_data(
                 db, preferences, series, emby_interface=emby_interface,
                 jellyfin_interface=jellyfin_interface,
@@ -534,14 +533,21 @@ def create_cards_for_sonarr_webhook(
                 tmdb_interface=tmdb_interface,
                 log=log,
             )
-            episode = db.query(Episode)\
-                .filter(
-                    Episode.series_id==series.id,
-                    episode_info.filter_conditions(Episode)
-                ).first()
-            if not episode:
-                log.info(f'Cannot find Episode for {series_info} {episode_info}')
-                return None
+
+        return None
+
+    # Find each Episode in the payload
+    for webhook_episode in webhook.episodes:
+        episode_info = EpisodeInfo(
+            title=webhook_episode.title,
+            season_number=webhook_episode.seasonNumber,
+            episode_number=webhook_episode.episodeNumber,
+        )
+
+        # Find this Episode
+        if (episode := _find_episode(episode_info)) is None:
+            log.info(f'Cannot find Episode for {series_info} {episode_info}')
+            return None
 
         # Assume Episode is unwatched
         episode.watched = False
