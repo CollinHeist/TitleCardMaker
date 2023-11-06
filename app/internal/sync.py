@@ -188,7 +188,6 @@ def run_sync(
             excluded_tags=sync.excluded_tags,
             log=log,
         )
-
         for series_info, library in all_series:
             # Look for existing series, add if DNE
             existing = db.query(models.series.Series)\
