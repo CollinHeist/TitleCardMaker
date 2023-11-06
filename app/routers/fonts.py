@@ -262,18 +262,37 @@ def get_suggested_font_replacements(
     if font.file_name is None:
         return FontAnalysis()
 
-    # Get any titles associated with this Font - look at all Episodes
-    # using this Font; all Episodes of all Series using this Font; all
-    # Episodes using a Template using this Font; and all Episodes of all
-    # Series using a Template that use this Font
+    # Get any titles associated with this Font - look at Episodes using this
+    # Font; translated titles of Episodes using this Font; Episodes of Series
+    # using this Font; translated titles of Episodes of Series using this Font;
+    # Episodes using a Template using this Font; translated titles of Episodes
+    # using a Template using this Font; Episodes of Series using a Template
+    # using this Font; and translated titles of Episodes of Series using a
+    # Template using this Font
     titles = set(episode.title for episode in font.episodes) \
+        | set(translation for episode in font.episodes
+                          for key, translation in episode.translations.items()
+                          if key == 'preferred_title') \
         | set(episode.title for series in font.series
                             for episode in series.episodes) \
+        | set(translation for series in font.series
+                          for episode in series.episodes
+                          for key, translation in episode.translations.items()
+                          if key == 'preferred_title') \
         | set(episode.title for template in font.templates
                             for episode in template.episodes) \
+        | set(translation for template in font.templates
+                          for episode in template.episodes
+                          for key, translation in episode.translations.items()
+                          if key == 'preferred_title') \
         | set(episode.title for template in font.templates
                             for series in template.series
-                            for episode in series.episodes)
+                            for episode in series.episodes) \
+        | set(translation for template in font.templates
+                          for series in template.series
+                          for episode in series.episodes
+                          for key, translation in episode.translations.items()
+                          if key == 'preferred_title')
 
     # Get all (non-whitespace) letters in these titles, add base printables
     title_letters = set(''.join(titles).lower()) | set(''.join(titles).upper())
