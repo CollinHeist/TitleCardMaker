@@ -271,7 +271,7 @@ def update_episode_config(
             changed = True
 
     # Update each attribute of the object
-    for attr, value in update_episode.dict().items():
+    for attr, value in update_episode_dict.items():
         if value != UNSPECIFIED and getattr(episode, attr) != value:
             log.debug(f'Episode[{episode_id}].{attr} = {value}')
             setattr(episode, attr, value)
