@@ -6,7 +6,6 @@ description: >
 ---
 
 # Import TitleCardMaker YAML Settings
-## Background
 
 !!! note "Applicability"
 
@@ -16,8 +15,6 @@ description: >
 For users migrating to the Web UI from TCM v1 (the command-line interface), some
 of the following configuration steps _can_ be skipped by importing your
 Preferences YAML file.
-
-## Instructions
 
 1. In the TitleCardMaker Web Interface, open the `Importer` from the left-hand
 side navigation bar.

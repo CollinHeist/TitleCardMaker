@@ -91,6 +91,7 @@ Title Card and Source images. If using Docker, it is importan that both of these
 directories are accessible _outside_ of the Container.
 
 ### Card Directory
+
 The root folder for all Title Cards created by TitleCardMaker. Within this
 directory, each Series added to TitleCardMaker will have a subfolder created for
 it, under which cards will be created.

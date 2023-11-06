@@ -10,8 +10,6 @@ tags:
 
 # Creating Templates
 
-## Background
-
 Templates are a critical component of quickly customizing your TitleCardMaker
 setup. A Template contains a set of customized settings, and any number of
 Templates can be assigned to a Sync, Series, or Episode.
@@ -20,12 +18,10 @@ For this tutorial we'll be creating two Templates with opposing settings, use
 Filters to control when these Templates are applied, and in a later step we'll
 apply these Templates automatically with a [Sync](./first_sync/index.md).
 
-!!! tip "Templates versus Global Settings"
+!!! note "Setting Priority"
         
     Template settings always take priority over any global settings, __unless__
-    the Template value is _unset_ - e.g. left blank.
-
-## Instructions
+    the Template value is _unset_ - i.e. left blank.
 
 1. Navigate to the Template page by clicking :fontawesome-regular-clone:
 `Templates` from the side navigation bar.
