@@ -21,7 +21,7 @@
 }
 
 /* Stylize footer donate link */
-.md-social__link[title="Donate"] > svg {
+.md-social__link[title="Become a Sponsor"] > svg {
     fill: crimson;
 }
 

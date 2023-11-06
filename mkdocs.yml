@@ -90,9 +90,9 @@ extra:
       link: https://discord.gg/bJ3bHtw8wH
       name: TitleCardMaker Discord
     - icon: fontawesome/solid/heart
-      class: md-social__link heart
-      link: 'https://github.com/sponsors/CollinHeist'
-      name: Donate
+      class: md-social__link
+      link: https://github.com/sponsors/CollinHeist
+      name: Become a Sponsor
 
 
 extra_css:
