@@ -34,7 +34,7 @@ EPISODE_REGEX = re_compile(
 )
 
 """Root URL of the Blueprint Repository"""
-REPO_URL = 'https://github.com/CollinHeist/TitleCardMaker-Blueprints/raw/master'
+REPO_URL = 'https://github.com/TitleCardMaker/Blueprints/raw/master'
 
 """URL under which all Blueprint subdirectories are located"""
 BLUEPRINTS_URL = f'{REPO_URL}/blueprints'

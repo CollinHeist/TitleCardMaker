@@ -1327,8 +1327,8 @@ function exportBlueprint() {
 
       // Open window for Blueprint submission
       window.open(
-        'https://github.com/CollinHeist/TitleCardMaker-Blueprints/issues/new?'
-        + `assignees=CollinHeist&labels=blueprint&template=new_blueprint.yaml`
+        'https://github.com/TitleCardMaker/Blueprints/issues/new?'
+        + 'assignees=CollinHeist&labels=blueprint&template=new_blueprint.yaml'
         + `&${url}`,
         '_blank'
       );
