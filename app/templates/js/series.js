@@ -1317,7 +1317,7 @@ function exportBlueprint() {
       let databaseIds = [];
       if ('{{series.imdb_id}}' !== 'None') { databaseIds.push('imdb:{{series.imdb_id}}'); }
       if ('{{series.tmdb_id}}' !== 'None') { databaseIds.push('tmdb:{{series.tmdb_id}}'); }
-      if ('{{series.tvdb_id}}' !== 'None') { databaseIds.push('tmdb:{{series.tvdb_id}}'); }
+      if ('{{series.tvdb_id}}' !== 'None') { databaseIds.push('tvdb:{{series.tvdb_id}}'); }
       const idStr = databaseIds.join(',');
 
       // Get URL to pre-fill Blueprint form
