@@ -441,7 +441,7 @@ def import_blueprint(
         log.debug(f'Downloaded Source image from "{file_url}"')
 
         if response.content:
-            source_file: Path = series.source_directory / filename
+            source_file: Path = Path(series.source_directory) / filename
             source_file.write_bytes(response.content)
             log.debug(f'Wrote {len(response.content)} bytes to "{filename}"')
 
