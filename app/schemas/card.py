@@ -107,36 +107,13 @@ class PreviewTitleCard(UpdateBase):
 
 
 class NewTitleCard(Base):
-    # Meta fields
     series_id: int
     episode_id: int
-    # Required fields
-    source_file: str
     card_file: str
-    card_type: str
     filesize: Optional[int] = None
-    title_text: str
-    season_text: str
-    hide_season_text: bool
-    episode_text: str
-    hide_episode_text: bool
-    font_file: str
-    font_color: str
-    font_size: float
-    font_kerning: float
-    font_stroke_width: float
-    font_interline_spacing: int
-    font_interword_spacing: int
-    font_vertical_shift: int
-    blur: bool
-    grayscale: bool
-    # Optional fields
-    extras: dict[str, str] = {}
-    season_number: int = 1
-    episode_number: int = 1
-    absolute_number: int = 1
+    card_type: str
 
-    @validator('source_file', 'card_file', pre=True)
+    @validator('card_file', pre=True)
     def convert_paths_to_str(cls, v):
         return str(v)
 
@@ -178,33 +155,16 @@ class CardActions(Base):
     imported: int = 0
     invalid: int = 0
 
+class EpisodeData(Base):
+    season_number: int
+    episode_number: int
+    absolute_number: Optional[int] = None
+
 class TitleCard(Base):
-    # Meta fields
     id: int
     series_id: int
     episode_id: int
-    # Required fields
-    source_file: str
+    episode: EpisodeData
     card_file: str
-    card_type: str
     filesize: int
-    title_text: str
-    season_text: str
-    hide_season_text: bool
-    episode_text: str
-    hide_episode_text: bool
-    font_file: str
-    font_color: str
-    font_size: float
-    font_kerning: float
-    font_stroke_width: float
-    font_interline_spacing: int
-    font_interword_spacing: int
-    font_vertical_shift: int
-    blur: bool
-    grayscale: bool
-    extras: dict[str, str] = {}
-    # Optional fields
-    season_number: int = 1
-    episode_number: int = 1
-    absolute_number: int = 1
+    model_json: dict

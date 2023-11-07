@@ -201,7 +201,7 @@ def refresh_episode_data(
         series.sync_specials,
     )
 
-    # Filter episodes
+    # Filter Episodes
     changed, episodes = False, []
     for episode_info, watched in all_episodes:
         # Skip specials if indicated

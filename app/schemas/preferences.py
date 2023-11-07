@@ -7,6 +7,11 @@ from pydantic import DirectoryPath, PositiveInt, constr, validator # pylint: dis
 from app.schemas.base import (
     Base, InterfaceName, ImageSource, UpdateBase, UNSPECIFIED
 )
+from num2words import CONVERTER_CLASSES
+from pydantic import DirectoryPath, PositiveInt, constr, validator
+
+from app.schemas.base import Base, UpdateBase, UNSPECIFIED
+from modules.TMDbInterface2 import TMDbInterface
 
 
 """
@@ -21,6 +26,9 @@ Style = Literal[
     'art', 'art blur', 'art grayscale', 'art blur grayscale', 'unique',
     'blur unique', 'grayscale unique', 'blur grayscale unique',
 ]
+
+LanguageCode = Literal[TMDbInterface.LANGUAGE_CODES]
+TextLanguageCodes = Literal[tuple(CONVERTER_CLASSES.keys())]
 
 """
 Creation classes
@@ -47,8 +55,9 @@ class EpisodeDataSourceToggle(Base):
 class ImageSourceToggle(EpisodeDataSourceToggle):
     ...
 
-class LanguageToggle(ToggleOption):
-    ...
+EpisodeDataSource = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr', 'TMDb']
+ImageSource = Literal['Emby', 'Jellyfin', 'Plex', 'TMDb']
+MediaServer = Literal['Emby', 'Jellyfin', 'Plex']
 
 """
 Base classes
@@ -77,6 +86,7 @@ class UpdatePreferences(UpdateBase):
     specials_folder_format: str = UNSPECIFIED
     season_folder_format: str = UNSPECIFIED
     sync_specials: bool = UNSPECIFIED
+    language_codes: list[TextLanguageCodes] = UNSPECIFIED
     simplified_data_table: bool = UNSPECIFIED
     default_card_type: CardTypeIdentifier = UNSPECIFIED
     excluded_card_types: list[CardTypeIdentifier] = UNSPECIFIED
@@ -139,6 +149,7 @@ class Preferences(Base):
     specials_folder_format: str
     season_folder_format: str
     sync_specials: bool
+    language_codes: list[TextLanguageCodes]
     simplified_data_table: bool
     is_docker: bool
     default_card_type: CardTypeIdentifier

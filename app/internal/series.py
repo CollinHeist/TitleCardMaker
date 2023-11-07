@@ -85,7 +85,6 @@ def load_all_media_servers(*, log: Logger = log) -> None:
                     if (retries := retries + 1) > 10:
                         log.warning(f'Database is very busy - stopping Task')
                         break
-
                     log.debug(f'Database is busy, sleeping..')
                     sleep(30)
     except Exception as e:

@@ -112,6 +112,7 @@ function initializeAuthForm() {
     success: username => {
       if (username !== null) {
         $('#auth-settings input[name="username"]')[0].value = username;
+        $('#auth-settings input[name="password"]')[0].value = 'fake password';
       }
     }, error: response => {
       showErrorToast({title: 'Error Querying Authorized Users', response});

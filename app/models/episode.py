@@ -1,6 +1,6 @@
 from logging import Logger
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from sqlalchemy import (
     Boolean, Column, DateTime, Integer, Float, ForeignKey, String, JSON
@@ -10,6 +10,7 @@ from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import Mapped, object_session, relationship
 
+from app.dependencies import get_preferences
 from app.database.session import Base
 from app.models.template import EpisodeTemplates, Template
 from app.schemas.preferences import Style
@@ -78,8 +79,8 @@ class Episode(Base):
     season_text = Column(String, default=None)
     hide_episode_text = Column(Boolean, default=None)
     episode_text = Column(String, default=None)
-    unwatched_style = Column(String, default=None)
-    watched_style = Column(String, default=None)
+    unwatched_style: Optional[Style] = Column(String, default=None)
+    watched_style: Optional[Style] = Column(String, default=None)
 
     font_color = Column(String, default=None)
     font_size = Column(Float, default=None)
@@ -275,6 +276,7 @@ class Episode(Base):
             tvdb_id=self.tvdb_id,
             tvrage_id=self.tvrage_id,
             airdate=self.airdate,
+            languages=get_preferences().language_codes,
         )
 
 
@@ -311,19 +313,19 @@ class Episode(Base):
         return changed
 
 
+    def has_source_file(self, style: Style = 'unique') -> bool:
+        """Whether this Episode's Source File exists."""
+
+        return self.get_source_file(style).exists()
+
+
     @hybrid_method
-    def get_source_file(self,
-            source_directory: Union[str, Path],
-            style: Style,
-        ) -> Path:
+    def get_source_file(self, style: Style) -> Path:
         """
         Get the source file for this Episode based on the given
         attributes.
 
         Args:
-            source_directory: Root Source directory for all Series.
-            series_directory: Series source directory for this specific
-                Series.
             style: Effective Style for this episode.
 
         Returns:
@@ -338,10 +340,11 @@ class Episode(Base):
                 source_name = f's{self.season_number}e{self.episode_number}.jpg'
 
         # Return full path for this source base and Series
-        return (
-            Path(source_directory) / self.series.path_safe_name / source_name
+        return (get_preferences().source_directory \
+            / self.series.path_safe_name \
+            / source_name
         ).resolve()
-    
+
 
     @hybrid_property
     def watch_status_bools(self) -> list[bool]:

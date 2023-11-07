@@ -65,7 +65,6 @@ async function getAllSeries(page=undefined) {
 
     return clone;
   });
-  // $('.loading.container').css('display', 'none');
   $('.loading.container').transition('fade out');
   document.getElementById('series-list').replaceChildren(...allSeriesCards);
   $('#series-list .card').transition({animation: 'scale', interval: 15});
@@ -132,29 +131,16 @@ let sortStates = {
 }
 
 function sortSeries(elem, sortBy) {
-  // Get all card elements
-  let cardList = $(".card");
+  // Update sort state property
   let {state, allStates} = sortStates[sortBy];
   let {sortState} = allStates[state];
+  window.localStorage.setItem('series-sort-order', sortState);
 
-  cardList.sort((a, b) => {
-    switch (sortState) {
-      case 'id-asc': return $(a).data('series-id')-$(b).data('series-id');
-      case 'id-desc': return $(b).data('series-id')-$(a).data('series-id');
-      case 'a-z': return String($(a).data('series-sort-name')).localeCompare(String($(b).data('series-sort-name')));
-      case 'z-a': return String($(b).data('series-sort-name')).localeCompare(String($(a).data('series-sort-name')));
-      case 'year-asc': return $(a).data('series-year')-$(b).data('series-year');
-      case 'year-desc': return $(b).data('series-year')-$(a).data('series-year');
-      default: return 0;
-    }
-  });
-  // Return newly sorted list
-  $("#series-list").append(cardList);
-
-  // Rotate icon
-  document.getElementById(elem.firstElementChild.id).classList.toggle('rotate');
+  // Re-query current page
+  getAllSeries();
 
   // Wait for rotation to finish, then change icon state
+  document.getElementById(elem.firstElementChild.id).classList.toggle('rotate');
   setTimeout(() => {
     sortStates[sortBy].state = (sortStates[sortBy].state + 1) % 2;
     let {icon} = sortStates[sortBy].allStates[sortStates[sortBy].state];

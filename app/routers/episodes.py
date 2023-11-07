@@ -64,7 +64,7 @@ def add_new_episode(
     return episode
 
 
-@episodes_router.get('/{episode_id}', status_code=200)
+@episodes_router.get('/episode/{episode_id}', status_code=200)
 def get_episode_by_id(
         episode_id: int,
         db: Session = Depends(get_database),
@@ -79,7 +79,7 @@ def get_episode_by_id(
     return episode
 
 
-@episodes_router.delete('/{episode_id}', status_code=204)
+@episodes_router.delete('/episode/{episode_id}', status_code=204)
 def delete_episode(
         request: Request,
         episode_id: int,
@@ -138,7 +138,7 @@ def delete_all_series_episodes(
     return deleted
 
 
-@episodes_router.post('/{series_id}/refresh', status_code=201)
+@episodes_router.post('/series/{series_id}/refresh', status_code=201)
 def refresh_episode_data_(
         background_tasks: BackgroundTasks,
         request: Request,
@@ -218,7 +218,7 @@ def update_multiple_episode_configs(
     return episodes
 
 
-@episodes_router.patch('/{episode_id}', status_code=200)
+@episodes_router.patch('/episode/{episode_id}', status_code=200)
 def update_episode_config(
         request: Request,
         episode_id: int,
@@ -253,7 +253,7 @@ def update_episode_config(
             changed = True
 
     # Update each attribute of the object
-    for attr, value in update_episode.dict().items():
+    for attr, value in update_episode_dict.items():
         if value != UNSPECIFIED and getattr(episode, attr) != value:
             log.debug(f'Episode[{episode_id}].{attr} = {value}')
             setattr(episode, attr, value)
@@ -269,7 +269,7 @@ def update_episode_config(
     return episode
 
 
-@episodes_router.get('/{series_id}/all', status_code=200, tags=['Series'])
+@episodes_router.get('/series/{series_id}/all', status_code=200, tags=['Series'])
 def get_all_series_episodes(
         series_id: int,
         order_by: Literal['index', 'absolute', 'id'] = 'index',

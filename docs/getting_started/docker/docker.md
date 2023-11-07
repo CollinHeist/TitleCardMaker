@@ -148,6 +148,7 @@ command.
         -e PUID=100 \
         -e TZ="America/Los_Angeles" \
         -p 4242:4242 \
+        --name "TitleCardMaker" \
         titlecardmaker:latest
     ```
 
@@ -165,6 +166,7 @@ command.
         -e PUID=100 \
         -e TZ="America/Los_Angeles" \
         -p 4242:4242 \
+        --name "TitleCardMaker" \
         titlecardmaker:latest
     ```
 
@@ -179,6 +181,7 @@ command.
         -v "$(pwd)":"/config/" `
         -e TZ="America/Los_Angeles" `
         -p 4242:4242 `
+        --name "TitleCardMaker" `
         titlecardmaker:latest
     ```
 
@@ -193,6 +196,7 @@ command.
         -v "%cd%":"/config/" ^
         -e TZ="America/Los_Angeles" ^
         -p 4242:4242 ^
+        --name "TitleCardMaker" ^
         titlecardmaker:latest
     ```
 

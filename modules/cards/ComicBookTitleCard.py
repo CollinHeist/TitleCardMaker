@@ -119,12 +119,12 @@ class ComicBookTitleCard(BaseCardType):
             ), Extra(
                 name='Title Textbox Fill Color',
                 identifier='text_box_fill_color',
-                description='Fill color of the text box for the title text',
+                description='Fill color of the text box for the title text.',
             ), Extra(
                 name='Title Textbox Edge Color',
                 identifier='text_box_edge_color',
                 description='Edge color of all text boxes',
-                tooltip='Defaults to matching the Font color',
+                tooltip='Defaults to matching the Font color.',
             ), Extra(
                 name='Title Text Rotation Angle',
                 identifier='title_text_rotation_angle',
@@ -150,20 +150,24 @@ class ComicBookTitleCard(BaseCardType):
             ), Extra(
                 name='Banner Fill Color',
                 identifier='banner_fill_color',
-                description='Fill color for both the title and episode text banners',
+                description=(
+                    'Fill color for both the title and episode text banners'
+                ),
             ), Extra(
                 name='Title Banner Vertical Shift',
                 identifier='title_banner_shift',
-                description='Additional vertical shift to apply to the title text banner',
-                tooltip=(
+                description=(
+                    'Additional vertical shift to apply to the title text banner'
+                ), tooltip=(
                     'Positive values shift the banner up, negative values '
                     'shift the banner down. Unit is pixels.'
                 ),
             ), Extra(
                 name='Index Banner Vertical Shift',
                 identifier='index_banner_shift',
-                description='Additional vertical shift to apply to the index text banner',
-                tooltip=(
+                description=(
+                    'Additional vertical shift to apply to the index text banner'
+                ), tooltip=(
                     'Positive values shift the banner up, negative values '
                     'shift the banner down. Unit is pixels.'
                 ),

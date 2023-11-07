@@ -34,7 +34,7 @@ EPISODE_REGEX = re_compile(
 )
 
 """Root URL of the Blueprint Repository"""
-REPO_URL = 'https://github.com/CollinHeist/TitleCardMaker-Blueprints/raw/master'
+REPO_URL = 'https://github.com/TitleCardMaker/Blueprints/raw/master'
 
 """URL under which all Blueprint subdirectories are located"""
 BLUEPRINTS_URL = f'{REPO_URL}/blueprints'
@@ -310,6 +310,7 @@ def import_blueprint(
                     status_code=response.status_code,
                     detail=f'Font returned error - {response.reason}',
                 )
+            log.debug(f'Downloaded Font file from "{file_url}"')
             font_content = response.content
 
         # Create new Font model, add to database and store in map
@@ -422,6 +423,23 @@ def import_blueprint(
                 log.debug(f'Episode[{episode.id}].{attr} = {value}')
                 setattr(episode, attr, value)
                 changed = True
+
+    # Import Source Images
+    for filename in series_blueprint.pop('source_files', []):
+        file_url = f'{blueprint_folder}/{filename}'
+        response = get(file_url, timeout=30)
+        if not response.ok:
+            log.error(f'Error downloading Source Image from "{file_url}"')
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=f'Font returned error - {response.reason}',
+            )
+        log.debug(f'Downloaded Source image from "{file_url}"')
+
+        if response.content:
+            source_file: Path = Path(series.source_directory) / filename
+            source_file.write_bytes(response.content)
+            log.debug(f'Wrote {len(response.content)} bytes to "{filename}"')
 
     # Add ID to imported set
     preferences = get_preferences()

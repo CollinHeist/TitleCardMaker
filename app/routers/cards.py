@@ -1,4 +1,4 @@
-from typing import Union
+from time import sleep
 
 from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request
@@ -29,8 +29,8 @@ from app.models.series import Series
 from app.schemas.card import CardActions, TitleCard, PreviewTitleCard
 from app.schemas.connection import SonarrWebhook
 from app.schemas.font import DefaultFont
-from modules.EpisodeInfo2 import EpisodeInfo
 
+from modules.EpisodeInfo2 import EpisodeInfo
 from modules.PlexInterface2 import PlexInterface
 from modules.SeriesInfo import SeriesInfo
 from modules.TieredSettings import TieredSettings
@@ -110,9 +110,8 @@ def create_preview_card(
         case_func = CardClass.CASE_FUNCTIONS[card_settings['font_title_case']]
     card_settings['title_text'] = case_func(card_settings['title_text'])
 
-    CardClass, CardTypeModel = validate_card_type_model(card_settings, log=log)
-
     # Delete output if it exists, then create Card
+    CardClass, CardTypeModel = validate_card_type_model(card_settings, log=log)
     output.unlink(missing_ok=True)
     card_maker = CardClass(**CardTypeModel.dict(), preferences=preferences)
     card_maker.create()
@@ -205,9 +204,10 @@ def get_series_cards(
 
     return paginate(
         db.query(models.card.Card)\
-            .filter_by(series_id=series_id)\
-            .order_by(models.card.Card.season_number)\
-            .order_by(models.card.Card.episode_number)
+            .filter(models.card.Card.series_id == series_id)\
+            .join(models.episode.Episode)\
+            .order_by(models.episode.Episode.season_number)\
+            .order_by(models.episode.Episode.episode_number)
     )
 
 
@@ -537,35 +537,44 @@ def create_cards_for_sonarr_webhook(
 
     # Series is not found, exit
     if series is None:
-        log.info(f'Cannot find Series for {series_info}')
+        log.info(f'Cannot find Series {series_info}')
+        return None
+
+    def _find_episode(episode_info: EpisodeInfo) -> Optional[Episode]:
+        """Attempt to find the associated Episode up to three times."""
+        for _ in range(3):
+            # Search for this Episode
+            episode = db.query(Episode)\
+                .filter(Episode.series_id==series.id,
+                        episode_info.filter_conditions(Episode))\
+                .first()
+
+            # Episode exists, return it
+            if episode:
+                return episode
+            
+            # Sleep and re-query Episode data
+            log.debug(f'Cannot find Episode, waiting..')
+            sleep(30)
+            refresh_episode_data(db, series, log=log)
+
         return None
 
     # Find each Episode in the payload
-    for episode in webhook.episodes:
+    for webhook_episode in webhook.episodes:
         episode_info = EpisodeInfo(
-            title=episode.title,
-            season_number=episode.seasonNumber,
-            episode_number=episode.episodeNumber,
+            title=webhook_episode.title,
+            season_number=webhook_episode.seasonNumber,
+            episode_number=webhook_episode.episodeNumber,
         )
 
         # Find this Episode
-        episode = db.query(Episode)\
-            .filter(
-                Episode.series_id==series.id,
-                episode_info.filter_conditions(Episode),
-            ).first()
+        if (episode := _find_episode(episode_info)) is None:
+            log.info(f'Cannot find Episode for {series_info} {episode_info}')
+            return None
 
-        # Refresh data and look for Episode again
-        if episode is None:
-            refresh_episode_data(db, series,log=log)
-            episode = db.query(Episode)\
-                .filter(
-                    Episode.series_id==series.id,
-                    episode_info.filter_conditions(Episode)
-                ).first()
-            if not episode:
-                log.info(f'Cannot find Episode for {series_info} {episode_info}')
-                continue
+        # Assume Episode is unwatched
+        episode.watched = False
 
         # Look for source, add translation, create Card if source exists
         images = download_episode_source_images(db, episode, log=log)

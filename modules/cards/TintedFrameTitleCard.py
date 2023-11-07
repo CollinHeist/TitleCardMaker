@@ -40,7 +40,7 @@ class TintedFrameTitleCard(BaseCardType):
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the season and episode text',
-                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
             ), Extra(
                 name='Episode Text Vertical Shift',
                 identifier='episode_text_vertical_shift',
@@ -51,7 +51,9 @@ class TintedFrameTitleCard(BaseCardType):
             ), Extra(
                 name='Separator Character',
                 identifier='separator',
-                description='Character that separates the season and episode text',
+                description=(
+                    'Character that separates the season and episode text'
+                ),
             ), Extra(
                 name='Frame Color',
                 identifier='frame_color',
@@ -91,14 +93,14 @@ class TintedFrameTitleCard(BaseCardType):
                     'Either <v>index</v> to display the season and episode '
                     'text, <v>logo</v> to display the logo, <v>omit</v> to not '
                     'display anything, or <v>title</v> to display the title '
-                    'text. Default is <v>index</v>'
+                    'text. Default is <v>index</v>.'
                 ),
             ), Extra(
                 name='Logo Size',
                 identifier='logo_size',
                 description=(
                     'Scalar for how much to scale the size of the logo element'
-                ), tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
+                ), tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
             ), Extra(
                 name='Logo Vertical Shift',
                 identifier='logo_vertical_shift',

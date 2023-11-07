@@ -10,7 +10,7 @@ function getStatistics() {
     success: statistics => {
       // Update card count text
       const [cardStat, episodeStat] = statistics;
-      $('#card-count')[0].innerHTML = `<i class="image outline icon"></i><span class="ui text">${cardStat.value} Cards / ${episodeStat.value} Episodes</span>`;
+      $('#card-count')[0].innerHTML = `<i class="image outline icon"></i><span class="ui pulsate text" onclick="getStatistics();">${cardStat.value} Cards / ${episodeStat.value} Episodes</span>`;
       
       // Update progress bar
       let cardVal = Math.min(cardStat.value, episodeStat.value);
@@ -90,7 +90,7 @@ function saveEpisodeConfig(episodeId) {
   const updateEpisodeObject = getUpdateEpisodeObject(episodeId);
   $.ajax({
     type: 'PATCH',
-    url: `/api/episodes/${episodeId}`,
+    url: `/api/episodes/episode/${episodeId}`,
     contentType: 'application/json',
     data: JSON.stringify(updateEpisodeObject),
     success: () => {
@@ -384,7 +384,7 @@ function deleteObject(args) {
 
 function editEpisodeExtras(episode) {
   // Clear existing values
-  $('#episode-extras-modal .field > .field').remove();
+  $('#episode-extras-modal .field > .field, #episode-extras-modal .fields > .field > input').remove();
   // Add existing translations
   for (let [data_key, value] of Object.entries(episode.translations)) {
     const newKey = document.createElement('input');
@@ -397,7 +397,7 @@ function editEpisodeExtras(episode) {
   // Assign functions to add/delete translation buttons
   $('#episode-extras-modal .button[data-delete-field="translations"]').off('click').on('click', () => {
     deleteObject({
-      url: `/api/episodes/${episode.id}`,
+      url: `/api/episodes/episode/${episode.id}`,
       dataObject: {translations: {}},
       label: 'Translations',
       deleteElements: '#episode-extras-modal .field[data-value="translations"] input',
@@ -425,7 +425,7 @@ function editEpisodeExtras(episode) {
   // Assign functions to delete extra buttons
   $('#episode-extras-modal .button[data-delete-field="extras"]').off('click').on('click', () => {
     deleteObject({
-      url: `/api/episodes/${episode.id}`,
+      url: `/api/episodes/episode/${episode.id}`,
       dataObject: {extra_keys: null, extra_values: null},
       label: 'Extras',
       deleteElements: '#episode-extras-modal .field[data-value="extras"] .field',
@@ -449,7 +449,7 @@ function editEpisodeExtras(episode) {
     }
     $.ajax({
       type: 'PATCH',
-      url: `/api/episodes/${episode.id}`,
+      url: `/api/episodes/episode/${episode.id}`,
       data: JSON.stringify(data),
       contentType: 'application/json',
       success: updatedEpisode => {
@@ -661,7 +661,7 @@ async function getEpisodeData(page=1) {
   if (rowTemplate === null) { return; }
 
   // Get page of episodes via API
-  const episodeData = await fetch(`/api/episodes/{{series.id}}/all?size={{preferences.episode_data_page_size}}&page=${page}`).then(resp => resp.json());
+  const episodeData = await fetch(`/api/episodes/series/{{series.id}}/all?size={{preferences.episode_data_page_size}}&page=${page}`).then(resp => resp.json());
   if (episodeData === null || episodeData.items.length === 0) { return; }
   const episodes = episodeData.items;
 
@@ -802,7 +802,7 @@ async function getEpisodeData(page=1) {
  * appropriate element, and the pagination menu is updated.
  */
 let currentCardPage = 1;
-function getCardData(page=currentCardPage) {
+function getCardData(page=currentCardPage, transition=false) {
   $.ajax({
     type: 'GET',
     url: `/api/cards/series/{{series.id}}?page=${page}&size=9`,
@@ -811,13 +811,25 @@ function getCardData(page=currentCardPage) {
       const previews = cards.items.map(card => {
         const preview = previewTemplate.content.cloneNode(true);
         // Fill out preview
-        preview.querySelector('.dimmer .content').innerHTML = `<h4>Season ${card.season_number} Episode ${card.episode_number}`;
+        // Start hidden if transitioning
+        if (transition) {
+          preview.querySelector('.image').classList.add('transition', 'hidden');
+        }
+        preview.querySelector('.dimmer .content').innerHTML = `<h4>Season ${card.episode.season_number} Episode ${card.episode.episode_number}`;
         const modifiedUrl = card.card_file.replace('{{preferences.card_directory}}', '/cards')
         preview.querySelector('img').src = `${modifiedUrl}?${card.filesize}`;
         return preview;
       });
       // Add elements to page
-      document.getElementById('card-previews').replaceChildren(...previews);
+      if (transition) {
+        $('#card-previews .image').transition({transition: 'fade out', interval: 20});
+        setTimeout(() => {
+          document.getElementById('card-previews').replaceChildren(...previews);
+          $('#card-previews .image').transition({transition: 'fade out', interval: 20});
+        }, 500);
+      } else {
+        document.getElementById('card-previews').replaceChildren(...previews);
+      }
 
       // Update pagination
       currentCardPage = page;
@@ -852,8 +864,8 @@ async function initAll() {
   
   // Schedule recurring statistics query
   getStatistics();
-  getStatisticsId = setInterval(getStatistics, 30000); // Refresh stats every 30s
-  setInterval(getCardData, 30000);
+  getStatisticsId = setInterval(getStatistics, 60000); // Refresh stats every 30s
+  setInterval(getCardData, 60000);
 
   // Open tab indicated by URL param
   const tab = window.location.hash.substring(1) || 'options';
@@ -1176,7 +1188,7 @@ function refreshEpisodeData() {
   $('#refresh > i').toggleClass('loading', true);
   $.ajax({
     type: 'POST',
-    url: '/api/episodes/{{series.id}}/refresh',
+    url: '/api/episodes/series/{{series.id}}/refresh',
     success: () => {
       showInfoToast('Refreshed Episode Data');
       getEpisodeData();
@@ -1324,7 +1336,7 @@ function exportBlueprint() {
       let databaseIds = [];
       if ('{{series.imdb_id}}' !== 'None') { databaseIds.push('imdb:{{series.imdb_id}}'); }
       if ('{{series.tmdb_id}}' !== 'None') { databaseIds.push('tmdb:{{series.tmdb_id}}'); }
-      if ('{{series.tvdb_id}}' !== 'None') { databaseIds.push('tmdb:{{series.tvdb_id}}'); }
+      if ('{{series.tvdb_id}}' !== 'None') { databaseIds.push('tvdb:{{series.tvdb_id}}'); }
       const idStr = databaseIds.join(',');
 
       // Get URL to pre-fill Blueprint form
@@ -1334,8 +1346,8 @@ function exportBlueprint() {
 
       // Open window for Blueprint submission
       window.open(
-        'https://github.com/CollinHeist/TitleCardMaker-Blueprints/issues/new?'
-        + `assignees=CollinHeist&labels=blueprint&template=new_blueprint.yaml`
+        'https://github.com/TitleCardMaker/Blueprints/issues/new?'
+        + 'assignees=CollinHeist&labels=blueprint&template=new_blueprint.yaml'
         + `&${url}`,
         '_blank'
       );
@@ -1716,7 +1728,7 @@ function deleteAllEpisodes() {
 function deleteEpisode(id) {
   $.ajax({
     type: 'DELETE',
-    url: `/api/episodes/${id}`,
+    url: `/api/episodes/episode/${id}`,
     success: () => {
       showInfoToast('Deleted Episode');
       // Remove this Episode's data row and file

@@ -70,7 +70,11 @@
         <div class="ui eight wide field">
           <label>Filesize Limit</label>
           <input name="filesize_limit" type="text" value="5 Megabytes">
-          <p class="help">Compress Title Cards larger than this when uploading.</p>
+          <p class="help">
+            Maximum file size of Title Cards to upload.
+            <br>
+            Title Cards larger than this will be compressed.
+          </p>
         </div>
 
         <div class="ui error message"></div>
@@ -131,14 +135,20 @@
         <div data-value="integrate_with_pmm" class="ui left aligned checkbox field">
           <label>Integrate with Plex Meta Manager</label>
           <input name="integrate_with_pmm" type="checkbox">
-          <p class="help">Whether to reset Plex Meta Manager overlays and add EXIF data when uploading Title Cards.</p>
+          <p class="help">
+            Whether to remove the <b>Overlay</b> label after uploading Title Cards.
+            <br>
+            This also prevents TCM from grabbing Source Images with overlays applied.
+          </p>
         </div>
 
         <div class="ui eight wide field">
           <label>Filesize Limit</label>
           <input name="filesize_limit" type="text" value="5 Megabytes">
           <p class="help">
-            Compress Title Cards larger than this when uploading.
+            Maximum file size of Title Cards to upload.
+            <br>
+            Title Cards larger than this will be compressed.
             <br>
             Plex rejects all images larger than 10 Megabytes.
           </p>
@@ -372,7 +382,13 @@
         <div data-value="require_auth" class="ui left aligned checkbox field">
           <label>Require Authentication</label>
           <input type="checkbox">
-          <p class="help">Whether to require a username and password to access TCM.</p>
+          <p class="help">
+            Whether to require a username and password to access TCM.
+            {% if not preferences.require_auth %}
+            <br>
+            When first enabled a temporary username (<b>admin</b>) and password (<b>password</b>) will be created.
+            {% endif %}
+          </p>
         </div>
 
         <form id="auth-settings" class="ui fluid form">
@@ -384,7 +400,7 @@
 
             <div class="ui four wide field">
               <label>Password</label>
-              <input name="password" type="password" placeholder="hunter2">
+              <input name="password" type="password" class="private">
             </div>
           </div>
 
@@ -444,6 +460,8 @@
         <!-- Added later -->
       </div>
     </div>
+
+    <!-- Modals -->
 
     <div id="tautulli-agent-modal" class="ui small modal">
       <i class="close icon"></i>

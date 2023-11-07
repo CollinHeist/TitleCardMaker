@@ -15,7 +15,6 @@ tags:
     requirement for TitleCardMaker. In this case the
     [Docker installation](./docker/index.md) is required.
 
-## Background
 Installing TitleCardMaker locally, instead of in a Docker container,
 requires a few additional pieces of software, these are:
 
@@ -28,8 +27,7 @@ requires a few additional pieces of software, these are:
 The installation of these, as well as TitleCardMaker itself, will be covered
 below.
 
-## Instructions
-### Installing Python
+## Installing Python
 
 ??? note "Python Already Installed?"
 
@@ -66,7 +64,7 @@ below.
     during installation.
     3. Enable PowerShell scripts by following [these](https://windowsloop.com/enable-powershell-scripts-execution-windows-10) instructions.
 
-### Installing git
+## Installing git
 
 ??? note "Git Already Installed?"
 
@@ -105,7 +103,7 @@ below.
     the command line and also from 3rd-party software" option is selected.
 
 
-### Upgrading Pip
+## Upgrading Pip
 
 Execute the following command:
 
@@ -113,7 +111,7 @@ Execute the following command:
 python3 -m pip install --upgrade pip
 ```
 
-### Installing Pipenv
+## Installing Pipenv
 
 TitleCardMaker uses `pipenv` to install the external Python libraries that are
 required. Install pipenv by executing the following command:
@@ -137,7 +135,7 @@ $ pipenv install
     python3 -m pipenv install
     ```
 
-### Installing ImageMagick
+## Installing ImageMagick
 
 ImageMagick is the image manipulation and creation library that TCM uses to
 create the Title Cards.
@@ -180,7 +178,7 @@ magick logo: logo.gif
 This should create a `logo.gif` file of the ImageMagick wizard in that
 directory.
 
-### Launching TitleCardMaker
+## Launching TitleCardMaker
 
 With all the required packages and software installed, you are ready to launch
 TitleCardMaker. This can be done by executing the following command:

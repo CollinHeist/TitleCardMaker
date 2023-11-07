@@ -333,7 +333,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                         and not all(t.lower() in tags for t in required_tags)):
                         continue
                     if (excluded_tags
-                        and not all(t.lower() in tags for t in excluded_tags)):
+                        and any(t.lower() in tags for t in excluded_tags)):
                         continue
 
                 # Skip show if it has no year

@@ -2,20 +2,20 @@ from logging import Logger
 from pathlib import Path
 from time import sleep
 from typing import Optional
-from app.schemas.base import Base
 
 from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy import or_
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Query, Session
-from app.database.query import get_interface
 
+from app.database.query import get_interface
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.templates import get_effective_templates
-from app import models
 from app.models.card import Card
 from app.models.episode import Episode
 from app.models.series import Library, Series
+from app.models.template import Template
+from app.schemas.base import Base
 from app.schemas.font import DefaultFont
 from app.schemas.card import NewTitleCard
 from app.schemas.card_type import LocalCardTypeModels
@@ -58,8 +58,7 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                         )
                     except HTTPException as e:
                         if e.status_code != 404:
-                            log.warning(f'{series.log_str} {episode.log_str} - skipping Card')
-                            log.debug(f'Exception: {e}')
+                            log.exception(f'{series.log_str} {episode.log_str} - skipping Card', e)
                     except OperationalError:
                         if failures > 10:
                             break
@@ -157,9 +156,9 @@ def refresh_remote_card_types(
     # Get all card types globally, from Templates, Series, and Episodes
     preferences = get_preferences()
     card_identifiers = {preferences.default_card_type} \
-        | _get_unique_card_types(models.template.Template) \
+        | _get_unique_card_types(Template) \
         | _get_unique_card_types(Series) \
-        | _get_unique_card_types(models.episode.Episode)
+        | _get_unique_card_types(Episode)
 
     # Reset loaded remote file(s)
     if reset:
@@ -184,9 +183,34 @@ def refresh_remote_card_types(
             preferences.remote_card_types[card_identifier] =card_type.card_class
 
 
+def _card_type_model_to_json(model: Base) -> dict:
+    """
+    Convert the given Pydantic card type model to JSON (dict) for
+    comparison and storing in the Card.model_json Column.
+
+    Args:
+        model: Pydantic model to convert.
+
+    Returns:
+        JSON conversion of the model (as a dict). All default variables
+        are excluded, as well as the `source_file` and `card_file`
+        variables.
+    """
+
+    return {
+        key: str(val.name) if isinstance(val, Path) else str(val)
+        for key, val in
+        model.dict(
+            exclude_defaults=True,
+            exclude={'source_file', 'card_file'},
+        ).items()
+    }
+
+
 def add_card_to_database(
         db: Session,
         card_model: NewTitleCard,
+        CardTypeModel: Base,
         card_file: Path,
     ) -> Card:
     """
@@ -203,7 +227,10 @@ def add_card_to_database(
     """
 
     card_model.filesize = card_file.stat().st_size
-    card = Card(**card_model.dict())
+    card = Card(
+        **card_model.dict(),
+        model_json=_card_type_model_to_json(CardTypeModel),
+    )
     db.add(card)
     db.commit()
 
@@ -224,11 +251,8 @@ def validate_card_type_model(
         log: Logger for all log messages.
 
     Returns:
-        Tuple of the `BaseCardType` class (which can be used to create
-        the card) and the Pydantic model of that card.
-
-    Raises:
-        HTTPException (400): The indicated card settings are invalid.
+        Tuple of the `BaseCardType` class (to create the card) and the
+        Pydantic model of that card (to validate the card parameters).
     """
 
     # Initialize class of the card type being created
@@ -282,7 +306,7 @@ def create_card(
 
     # If file exists, card was created successfully - add to database
     if (card_file := CardTypeModel.card_file).exists():
-        card = add_card_to_database(db, card_model, card_file)
+        card = add_card_to_database(db, card_model, CardTypeModel, card_file)
         log.info(f'Created {card.log_str}')
     # Card file does not exist, log failure
     else:
@@ -504,7 +528,6 @@ def resolve_card_settings(
     # Add source file
     if card_settings.get('source_file', None) is None:
         card_settings['source_file'] = episode.get_source_file(
-            preferences.source_directory,
             card_settings['watched_style' if watched else 'unwatched_style'],
         )
     else:
@@ -608,15 +631,15 @@ def create_episode_card(
             raise exc
         return None
 
+    # Get a validated card class, and card type Pydantic model
+    CardClass, CardTypeModel = validate_card_type_model(card_settings, log=log)
+
     # Create NewTitleCard object for these settings
     card = NewTitleCard(
         **card_settings,
         series_id=series.id,
         episode_id=episode.id,
     )
-
-    # Get a validated card class, and card type Pydantic model
-    CardClass, CardTypeModel = validate_card_type_model(card_settings, log=log)
 
     # Create Card parent directories if needed
     card_settings['card_file'].parent.mkdir(parents=True, exist_ok=True)
@@ -636,34 +659,45 @@ def create_episode_card(
     if not existing_card:
         _start_card_creation()
         return None
-
-    # Existing card file doesn't exist anymore, remove from db and recreate
     existing_card = existing_card[0]
+
+    # Function to get the existing val
+    def _get_existing(attribute: str) -> Any:
+        return existing_card.model_json.get(
+            attribute,
+            CardTypeModel.__fields__[attribute].default,
+        )
+
+    # Existing Card file doesn't exist anymore, remove from db and recreate
     if not existing_card.exists:
         log.debug(f'{series.log_str} {episode.log_str} Card not found - creating')
         db.delete(existing_card)
         db.commit()
-
-        # Create new card
         _start_card_creation()
         return None
 
-    # Existing card doesn't match, delete and remake
-    if any(str(val) != str(getattr(card, attr))
-           for attr, val in existing_card.comparison_properties.items()):
-        for attr, val in existing_card.comparison_properties.items():
-            if str(val) != str(getattr(card, attr)):
-                log.debug(f'Card[{existing_card.id}].{attr} | {val} -> {getattr(card, attr)}')
-                break
-        # Delete existing card file, remove from database
+    # Determine if this Card is different than existing Card
+    new_model_json = _card_type_model_to_json(CardTypeModel)
+    different = (
+        # Different card type
+        card.card_type != existing_card.card_type
+        # New Card defines a different value than the old Card
+        or any(str(new_val) != str(_get_existing(attr))
+            for attr, new_val in new_model_json.items()
+            # Skip randomized attributes
+            if not attr.endswith('_rotation_angle')
+        )
+        # Old Card defines an attribute not defined by new Card
+        or any(attr not in new_model_json for attr in existing_card.model_json)
+    )
+
+    # If different, delete existing file, remove from database, create Card
+    if different:
         log.debug(f'{series.log_str} {episode.log_str} Card config changed - recreating')
         Path(existing_card.card_file).unlink(missing_ok=True)
         db.delete(existing_card)
         db.commit()
-
-        # Create new card
         _start_card_creation()
-        return None
 
     return None
 

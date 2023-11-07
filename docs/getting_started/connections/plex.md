@@ -34,3 +34,6 @@ input box.
 5. If you use Plex Meta Manager episode overlays, toggle the `Integrate with
 Plex Meta Manager` checkbox.
 6. Click the `Save Changes` button.
+
+I also recommend setting up the [Tautulli Connection](./tautulli.md) while here,
+if you have Tautulli installed.

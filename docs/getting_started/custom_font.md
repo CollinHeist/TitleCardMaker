@@ -8,7 +8,6 @@ tags:
 ---
 
 # Creating a Font
-## Background
 
 One main feature of TitleCardMaker is the ability to customize the fonts used on
 title cards. This can provide an extra level of style and cohesion to your
@@ -26,8 +25,6 @@ For this tutorial we'll create be creating a named font for Better Call Saul
 that look like this (in particular the font used for the __title text__ `Nacho`):
 
 ![Example Custom Font](../assets/custom_font_preview.jpg)
-
-## Instructions
 
 1. Navigate to the font page by clicking :fontawesome-solid-font: `Fonts` from
 the side navigation bar.

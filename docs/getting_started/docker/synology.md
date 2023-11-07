@@ -5,7 +5,7 @@ description: >
 ---
 
 # Synology DSM Docker Installation
-## Background
+
 !!! info "Benefits of Docker"
 
     For more info on the benefits of Docker, see [here](./index.md).
@@ -13,8 +13,6 @@ description: >
 For Synology DSM users, the available Docker manager can be used to
 easily set up TitleCardMaker with all the necessary Docker variables and
 paths.
-
-## Instructions
 
 !!! note "Directory Assumptions"
 
@@ -93,17 +91,20 @@ select it and click `Launch`.
             This will be added later. # TODO
 
 9. Hit `Apply`, `Next`, then `Apply` again.
-10. _If_ you have a Firewall established, do the following:
 
-    1. Launch `Control Center`.
-    2. Go to the `Firewall` tab.
-    3. Select `Edit Rules` for your current profile.
-    4. Hit `Create`.
-    5. For Ports, toggle `Select from a list of built-in applications`, then
-    find and enable the TitleCardMaker Docker container.
-    6. Ensure the Source IP is All, and the Action is Allow.
-    7. Make sure this new rule is _above_ any base `Deny` action(s).
-    8. Hit `OK`.
+## Firewall
+
+_If_ you have a Firewall established, do the following:
+
+1. Launch `Control Center`.
+2. Go to the `Firewall` tab.
+3. Select `Edit Rules` for your current profile.
+4. Hit `Create`.
+5. For Ports, toggle `Select from a list of built-in applications`, then
+find and enable the TitleCardMaker Docker container.
+6. Ensure the Source IP is All, and the Action is Allow.
+7. Make sure this new rule is _above_ any base `Deny` action(s).
+8. Hit `OK`.
 
 !!! success "Success"
 

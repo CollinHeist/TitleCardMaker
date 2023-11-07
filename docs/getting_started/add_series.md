@@ -8,7 +8,6 @@ tags:
 ---
 
 # Adding a Series
-## Background
 
 Now that TitleCardMaker has established connections to all of your servers, it
 is time to begin the actual Title Card creation. TCM will only create Cards for
@@ -19,8 +18,6 @@ Series that have been added - this step is to showcase how to do this manually.
     Manually adding Series is not the typical use-case for TCM, as adding an
     entire server's worth of Series would be extremely tedious. Automatically
     adding Series is covered in [the next step](./first_sync/index.md).
-
-## Instructions
 
 1. Navigate back to the TitleCardMaker homepage - this can be done by clicking
 :fontawesome-solid-tv: `Series` from the side navigation bar, or hitting

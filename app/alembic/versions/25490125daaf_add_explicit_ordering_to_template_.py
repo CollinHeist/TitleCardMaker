@@ -129,7 +129,7 @@ def upgrade() -> None:
             if association:
                 association.order = index
         if series.templates:
-            log.debug(f'Migrated Series[{series.id}] Template orders')
+            log.debug(f'Migrated Series[{series.id}] Template ordering')
     for episode in session.query(Episode).all():
         for index, template in enumerate(episode.templates):
             association = session.query(EpisodeTemplates)\
@@ -139,7 +139,7 @@ def upgrade() -> None:
             if association:
                 association.order = index
         if episode.templates:
-            log.debug(f'Migrated Episode[{episode.id}] Template orders')
+            log.debug(f'Migrated Episode[{episode.id}] Template ordering')
     for sync in session.query(Sync).all():
         for index, template in enumerate(sync.templates):
             association = session.query(SyncTemplates)\
@@ -149,7 +149,7 @@ def upgrade() -> None:
             if association:
                 association.order = index
         if sync.templates:
-            log.debug(f'Migrated Sync[{sync.id}] Template order')
+            log.debug(f'Migrated Sync[{sync.id}] Template ordering')
 
     # Commit changes
     session.commit()

@@ -55,7 +55,8 @@ RUN \
 EXPOSE 4242
 
 # Healthcheck command
-HEALTHCHECK --interval=3m --timeout=10s --start-period=3m --start-interval=10s \
+# Add --start-interval=10s back in when merged in Docker v24/v25
+HEALTHCHECK --interval=3m --timeout=10s --start-period=3m \
     CMD curl --fail http://0.0.0.0:4242/api/healthcheck || exit 1
 
 # Entrypoint

@@ -1,7 +1,7 @@
 ---
-title: Series and Blueprint Browser
+title: Adding Series and Blueprints
 description: >
-    Manually add a Series or Blueprint to create Title Cards for.
+    Manually adding a Series or Blueprint.
 tags:
     - Series
     - Blueprints
@@ -37,8 +37,8 @@ Connection to search. The default is to search your global
 [Episode data source](./settings.md#episode-data-source), but it is largely
 irrelevant which Connection you browse (as TCM uses them all). Click `Search`.
 
-![Browsing Series](../assets/add_series_light.png#only-light)
-![Browsing Series](../assets/add_series_dark.png#only-dark)
+![Browsing Series](../assets/add_series_light.png#only-light){.no-lightbox}
+![Browsing Series](../assets/add_series_dark.png#only-dark){.no-lightbox}
 
 !!! note "Unclickable Results"
 
@@ -79,8 +79,8 @@ _which_ Blueprints are displayed:
 - Only show Blueprints for Series which you have already added to TCM
 - Display Blueprints which you have already imported
 
-![](../assets/blueprint_all_light.webp#only-light)
-![](../assets/blueprint_all_dark.webp#only-dark)
+![](../assets/blueprint_all_light.webp#only-light){.no-lightbox}
+![](../assets/blueprint_all_dark.webp#only-dark){.no-lightbox}
 
 There are two actions for each Blueprint:
 

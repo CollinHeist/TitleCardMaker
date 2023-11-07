@@ -29,10 +29,9 @@ of the following:
     apply everything with the click of a button.
 
 All Blueprints are hosted on the
-[companion repository](https://github.com/CollinHeist/TitleCardMaker-Blueprints/)
-and anyone can (and is encouraged to!) submit a Blueprint for availability
-across all of TCM. This process is described
-[below](#sharing-your-own-blueprint).
+[companion repository](https://github.com/TitleCardMaker/Blueprints/) and anyone
+can (and is encouraged to!) submit a Blueprint for availability across all of
+TCM. This process is described [below](#sharing-your-own-blueprint).
 
 ## Viewing Blueprints
 
@@ -106,7 +105,7 @@ as easy as possible.
 
     - [x] Export your Blueprint within the TCM UI.
     - [x] Choose an effective preview image.
-    - [x] [Create an issue](https://github.com/CollinHeist/TitleCardMaker-Blueprints/issues/new?assignees=CollinHeist&labels=blueprint&projects=&template=new_blueprint.yml&title=%5BBlueprint%5D+)
+    - [x] [Create an issue](https://github.com/TitleCardMaker/Blueprints/issues/new?assignees=CollinHeist&labels=blueprint&projects=&template=new_blueprint.yaml&title=%5BBlueprint%5D+)
     on the Blueprints repository (this should be started for you).
     - [x] Fill out the issue form's required data:
         - [x] Series name, year, your username, and the blueprint description
@@ -124,11 +123,15 @@ it's page in TitleCardMaker, and then go to the _Blueprints_ tab. Click the
 
 1. If the Series (or any linked Templates) have a Named Font -  __this includes
 those linked directly to Episodes__ - it will copy any Font files;
+
 2. Search for and copy the first available[^1] Title Card for the Series;
+
 3. Convert the Series, Templates, Fonts, and Episode customizations into a
 Blueprint "object" written as JSON.
+
 4. All of the above data is bundled (and sub-bundled) into a `.zip` file and
 downloaded through your browser.
+
 5. Finally, TCM will open a new tab to GitHub and begin filling out the
 Blueprint submission form (if you are logged in).
 
@@ -180,8 +183,8 @@ if the author's license is listed as open and/or free for public
             "fonts": [
                 {
                     "name": "Better Call Saul",
-                    "file": "script-casual-normal.ttf", // (1)
-                    "file_download_url": "https://www.google.com/" // (2)
+                    "file": "script-casual-normal.ttf", // (1)!
+                    "file_download_url": "https://www.google.com/" // (2)!
                 }
             ]
         }
@@ -200,7 +203,7 @@ if the author's license is listed as open and/or free for public
 With this Blueprint, the next (and final) step is to submit it to the Blueprints
 repository.
 
-1. Open a [new issue](https://github.com/CollinHeist/TitleCardMaker-Blueprints/issues/new?assignees=CollinHeist&labels=blueprint&projects=&template=new_blueprint.yml&title=%5BBlueprint%5D+)
+1. Open a [new issue](https://github.com/TitleCardMaker/Blueprints/issues/new?assignees=CollinHeist&labels=blueprint&projects=&template=new_blueprint.yaml&title=%5BBlueprint%5D+)
 on the Blueprints GitHub repository - this should have been started for you.
 
 2. Fill out the form with the relevant information.

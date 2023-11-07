@@ -305,7 +305,9 @@ class Series(Base):
     def source_directory(self) -> str:
         """Path-safe source subdirectory for this Series."""
 
-        return str(CleanPath(get_preferences().source_directory) / self.path_safe_name)
+        return str(
+            CleanPath(get_preferences().source_directory) / self.path_safe_name
+        )
 
 
     @hybrid_property

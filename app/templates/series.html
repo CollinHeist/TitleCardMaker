@@ -433,11 +433,11 @@
             <a class="item" data-tab="blueprints">Blueprints</a>
             <a class="item" data-tab="episodes">Episode Data</a>
             <a class="item" data-tab="files">Files</a>
-            <a class="item" data-tab="ids">Database ID's</a>
+            <a class="item" data-tab="ids">Database IDs</a>
           </div>
           
           <!-- Configuration tab -->
-          <div id="series-tabs" class="ui bottom attached tab segment" data-tab="options">
+          <div id="series-tabs" class="ui bottom attached tab active segment" data-tab="options">
             <form id="series-config-form" class="ui compact form">
               <!-- Warning if Series is not found in various interfaces -->
               {% if preferences.use_emby and not series.emby_id %}
@@ -567,14 +567,14 @@
           </div>
 
           <!-- Card Configuration -->
-          <div class="ui bottom attached tab segment active" data-tab="card-config">
+          <div class="ui bottom attached tab segment" data-tab="card-config">
             <div class="ui stackable grid">
               <!-- Card config  -->
               <div class="sixteen wide column">
-                <div class="ui visible floating info message">
+                <!-- <div class="ui visible floating info message">
                   <i class="info circle icon"></i>
                   Options are listed in <b>increasing</b> priority.
-                </div>
+                </div> -->
 
                 <form id="card-config-form" class="ui compact form">
                   <!-- Templates -->
@@ -586,6 +586,7 @@
                       <div class="default text">None</div>
                       <div class="menu"><!-- Added asynchrously --></div>
                     </div>
+                    <p class="help">Templates are evaluated in the order they are specified.</p>
                   </div>
 
                   <div class="ui divider"></div>
@@ -604,7 +605,7 @@
 
                     <div class="field">
                       <label>Font <a data-value="font-link"><i class="external alternate small icon"></i></a></label>
-                      <div data-value="fonts" class="ui very long clearable selection search dropdown" data-tooltip="Font to apply to this series (overrides any Template Font)">
+                      <div data-value="fonts" class="ui very long clearable selection search dropdown">
                         <input name="font_id" type="hidden">
                         <i class="dropdown icon"></i>
                         <div class="default text">Default</div>
@@ -992,6 +993,12 @@
           <!-- Files Tab -->
           <div class="ui bottom attached tab segment" data-tab="files">
             <h2 class="ui dividing header">Title Cards</h2>
+
+            <button onclick="getCardData(undefined, true);" class="ui blue tertiary button" data-tooltip="Refresh Previews">
+              <i class="redo icon"></i>
+              Refresh
+            </button>
+
             <div class="ui styled fluid accordion">
               <div class="title">
                 <i class="dropdown icon"></i>
@@ -1075,7 +1082,7 @@
             </div>
           </div>
 
-          <!-- Database ID's Tab -->
+          <!-- Database IDs Tab -->
           <div class="ui bottom attached tab segment" data-tab="ids">
             <form id="series-ids-form" class="ui compact form">
               {% if preferences.use_emby %}

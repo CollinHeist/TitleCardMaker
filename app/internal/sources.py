@@ -30,6 +30,7 @@ def download_all_source_images(*, log: Logger = log) -> None:
         # Get the Database
         with next(get_database()) as db:
             # Get all Series
+            failures = 0
             for series in db.query(Series).all():
                 # Skip if Series is unmonitored
                 if not series.monitored:
@@ -275,7 +276,7 @@ def download_series_logo(
             continue
 
         # If logo is an svg, convert
-        if logo.endswith('.svg'):
+        if isinstance(logo, str) and logo.endswith('.svg'):
             return process_svg_logo(logo, series, logo_file, log=log)
 
         # Logo is png and valid, download

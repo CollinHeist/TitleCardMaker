@@ -6,7 +6,7 @@ description: >
 hide:
     - navigation
 ---
-
+<script src="../../javascripts/home.js" defer></script>
 # Welcome to TitleCardMaker
 
 !!! warning "Under Construction"
@@ -25,7 +25,7 @@ Jellyfin. Some Series have "official" Title Cards featured in the Episode
 itself. For example, the following Cards can both be automatically created with
 TitleCardMaker:
 
-![Tinted Frame](./assets/card_example0.jpg){width="48%"} ![Tinted Frame](./assets/card_example1.jpg){width="48%"}
+![Tinted Frame](./assets/card_example0.jpg){id="preview0" width="48%"} ![Anime](./assets/card_example1.jpg){id="preview1" width="48%"}
 
 # Early Access
 
@@ -181,8 +181,8 @@ to them.
 
 === ":material-docker: Docker"
 
-    1. Build the Docker container, and label it `titlecardmaker`, by
-    executing the following command:
+    1. Build the Docker image under the label `titlecardmaker`, by executing the
+    following command:
 
         === ":material-linux: Linux"
 
@@ -213,9 +213,9 @@ to them.
     will want to take note of the text in the _TZ Identifer_ column - e.g.
     `America/Los_Angeles` - for the next step.
 
-    3. Launch the Docker container by executing the following command - make
-    sure to replace `America/Los_Angeles` with _your_ timezone from the previous
-    step.
+    3. Create (and launch) the Docker container by executing the following
+    command - make sure to replace `America/Los_Angeles` with _your_ timezone
+    from the previous step.
 
         === ":material-linux: Linux"
 
@@ -225,6 +225,7 @@ to them.
                 -v "$(pwd)/config/":"/config/" \ # (3)!
                 -e TZ="America/Los_Angeles" \ # (4)!
                 -p 4242:4242 \ # (5)!
+                --name "TitleCardMaker" \ # (6)!
                 titlecardmaker
             ```
 
@@ -234,6 +235,7 @@ to them.
             3. Make your current directory available inside the container.
             4. Set the internal timezone equal to your local timezone.
             5. Make the TCM WebUI accessible at port 4242 on your machine.
+            6. Name the container TitleCardMaker.
 
         === ":material-apple: MacOS"
 
@@ -243,6 +245,7 @@ to them.
                 -v "$(pwd)/config/":"/config/" \ # (3)!
                 -e TZ="America/Los_Angeles" \ # (4)!
                 -p 4242:4242 \ # (5)!
+                --name "TitleCardMaker" \ # (6)!
                 titlecardmaker
             ```
 
@@ -252,6 +255,7 @@ to them.
             3. Make your current directory available inside the container.
             4. Set the internal timezone equal to your local timezone.
             5. Make the TCM WebUI accessible at port 4242 on your machine.
+            6. Name the container TitleCardMaker.
 
         === ":material-powershell: Windows (Powershell)"
 
@@ -261,6 +265,7 @@ to them.
                 -v "$(pwd)\config":"/config/" ` # (3)!
                 -e TZ="America/Los_Angeles" ` # (4)!
                 -p 4242:4242 ` # (5)!
+                --name "TitleCardMaker" ` # (6)!
                 titlecardmaker
             ```
 
@@ -270,6 +275,7 @@ to them.
             3. Make your current directory available inside the container.
             4. Set the internal timezone equal to your local timezone.
             5. Make the TCM WebUI accessible at port 4242 on your machine.
+            6. Name the container TitleCardMaker.
 
         === ":material-microsoft-windows: Windows (Non-Powershell)"
 
@@ -279,6 +285,7 @@ to them.
                 -v "%cd%\config":"/config/" ^ # (3)!
                 -e TZ="America/Los_Angeles" ^ # (4)!
                 -p 4242:4242 ^ # (5)!
+                --name "TitleCardMaker" ^ # (6)!
                 titlecardmaker
             ```
 
@@ -288,6 +295,7 @@ to them.
             3. Make your current directory available inside the container.
             4. Set the internal timezone equal to your local timezone.
             5. Make the TCM WebUI accessible at port 4242 on your machine.
+            6. Name the container TitleCardMaker.
 
 === ":material-language-python: Non-Docker"
 
