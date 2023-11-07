@@ -72,6 +72,7 @@ All Fonts have the following options which can be adjusted:
 - [Name](#name)
 - [File](#file)
 - [Color](#color)
+- [Text Case](#text-case)
 - [Size](#size)
 - [Kerning](#kerning)
 - [Stroke Width](#stroke-width)
@@ -136,6 +137,23 @@ and color names.
     access this by opening `Digital Color Meter` from Spotlight. It will show
     you the RGB values of any pixel on screen, and these can be directly entered
     into an `rgb()` color code.
+
+### Text Case
+
+How to format the title text in the Card - i.e. upper or lowercase. This can be
+one of the following:
+
+| Case | Description |
+| :---: | :--- |
+| Default | Use the Card type's default case |
+| Blank | Remove all title text |
+| Lowercase | Make all text lowercase |
+| Source | Use the title as it appears in the [Episode Data Source](./settings.md#episode-data-source) |
+| Title | Apply title case logic (like in a book title) |
+| Uppercase | Make all text uppercase |
+
+Generally, leaving this as _Default_ or _Source_ is recommended, but it is often
+quite Font and Card type dependent.
 
 ### Size
 
