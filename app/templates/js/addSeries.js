@@ -55,12 +55,13 @@ function addSeries(result, resultElementId) {
  * the associated Series if it does not exist.
  */
 function importBlueprint(blueprintId, elementId) {
+  $(`#${elementId}`).toggleClass('loading', true).toggleClass('transition', false);
   $.ajax({
     type: 'POST',
     url: `/api/blueprints/import/blueprint/${blueprintId}`,
     success: series => {
       showInfoToast(`Imported Blueprint to "${series.full_name}"`);
-      document.getElementById(elementId).classList.add('disabled');
+      $(`#${elementId}`).toggleClass('loading', false).toggleClass('disabled', true);
     }, error: response => showErrorToast({title: 'Error Importing Blueprint', response}),
   });
 }
