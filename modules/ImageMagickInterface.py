@@ -11,7 +11,7 @@ from imagesize import get as im_get
 from modules.Debug import log
 
 
-class Dimensions(NamedTuple):
+class Dimensions(NamedTuple): # pylint: disable=missing-class-docstring
     width: float
     height: float
 
@@ -40,9 +40,6 @@ class ImageMagickInterface:
 
     """Temporary file location for svg -> png conversion"""
     TEMPORARY_SVG_FILE = TEMP_DIR / 'temp_logo.svg'
-
-    """Temporary file location for image filesize reduction"""
-    TEMPORARY_COMPRESS_FILE = TEMP_DIR / 'temp_compress.jpg'
 
     """Characters that must be escaped in commands"""
     __REQUIRED_ESCAPE_CHARACTERS = ('"', '`', '%')
@@ -372,40 +369,3 @@ class ImageMagickInterface:
 
         self.print_command_history()
         return None
-
-
-    def reduce_file_size(self, image: Path, quality: int = 90) -> Path:
-        """
-        Reduce the file size of the given image.
-
-        Args:
-            image: Path to the image to reduce the file size of.
-            quality: Quality of the reduction. 100 being no reduction, 0
-                being complete reduction. Passed to ImageMagick -quality.
-
-        Returns:
-            Path to the created image.
-        """
-
-        # Verify quality is 0-100
-        if (quality := int(quality)) not in range(0, 100):
-            return None
-
-        # If image DNE, warn and return
-        if not image.exists():
-            log.warning(f'Cannot reduce file size of non-existent image '
-                        f'"{image.resolve()}"')
-            return None
-
-        # Downsample and reduce quality of source image
-        command = ' '.join([
-            f'convert',
-            f'"{image.resolve()}"',
-            f'-sampling-factor 4:2:0',
-            f'-quality {quality}%',
-            f'"{self.TEMPORARY_COMPRESS_FILE.resolve()}"',
-        ])
-
-        self.run(command)
-
-        return self.TEMPORARY_COMPRESS_FILE

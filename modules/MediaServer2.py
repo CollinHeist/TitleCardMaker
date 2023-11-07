@@ -3,10 +3,11 @@ from logging import Logger
 from typing import Optional, Union
 from pathlib import Path
 
+from PIL import Image
+
 from modules.Debug import log
 from modules.EpisodeDataSource2 import WatchedStatus
 from modules.EpisodeInfo2 import EpisodeInfo
-from modules.ImageMagickInterface import ImageMagickInterface
 from modules.SeriesInfo import SeriesInfo
 
 
@@ -29,21 +30,16 @@ class MediaServer(ABC):
 
 
     @abstractmethod
-    def __init__(self,
-            filesize_limit: Optional[int],
-            use_magick_prefix: bool,
-        ) -> None:
+    def __init__(self, filesize_limit: Optional[int]) -> None:
         """
         Initialize an instance of this object.
         
         Args:
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
-            use_magick_prefix: Whether to use 'magick' command prefix.
         """
 
         self.filesize_limit = filesize_limit
-        self._magick = ImageMagickInterface(use_magick_prefix=use_magick_prefix)
 
 
     def compress_image(self,
@@ -56,7 +52,7 @@ class MediaServer(ABC):
 
         Args:
             image: Path to the image to compress.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             Path to the compressed image, or None if the image could not
@@ -71,19 +67,23 @@ class MediaServer(ABC):
             or image.stat().st_size <= self.filesize_limit):
             return image
 
-        # Start with a quality of 90%, decrement by 5% each time
-        quality = 95
+        # Start with a quality of 95%, decrement by 5% each time
+        quality = 100
         small_image = image
 
         # Compress the given image until below the filesize limit
-        while small_image.stat().st_size > self.filesize_limit:
+        while quality > 0 and small_image.stat().st_size > self.filesize_limit:
             # Process image, exit if cannot be reduced
             quality -= 5
-            small_image = self._magick.reduce_file_size(image, quality)
-            if small_image is None:
-                log.warning(f'Cannot reduce filesize of "{image.resolve()}" '
-                            f'below limit')
-                return None
+            # TODO Verify if need to resize with .resize((W, H))
+            Image.open(small_image)\
+                .save(small_image, optimize=True, quality=quality)
+
+        # If still above the limit, warn and return
+        if small_image.stat().st_size > self.filesize_limit:
+            log.warning(f'Cannot reduce filesize of "{image.resolve()}" below '
+                        f'limit')
+            return None
 
         # Compression successful, log and return intermediate image
         log.debug(f'Compressed "{image.resolve()}" at {quality}% quality')

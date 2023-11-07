@@ -98,7 +98,6 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             use_ssl: bool = True,
             integrate_with_pmm: bool = False,
             filesize_limit: int = 10485760,
-            use_magick_prefix: bool = False,
             *,
             interface_id: int = 0,
             log: Logger = log,
@@ -114,12 +113,11 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 uploads.
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
-            use_magick_prefix: Whether to use 'magick' command prefix.
             interface_id: ID of this interface.
             log: Logger for all log messages.
         """
 
-        super().__init__(filesize_limit, use_magick_prefix)
+        super().__init__(filesize_limit)
 
         # Create Session for caching HTTP responses
         self._interface_id = interface_id

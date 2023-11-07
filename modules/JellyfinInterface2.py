@@ -38,7 +38,6 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             username: Optional[str] = None,
             use_ssl: bool = True,
             filesize_limit: Optional[int] = None,
-            use_magick_prefix: bool = False,
             *,
             interface_id: int = 0,
             log: Logger = log,
@@ -54,13 +53,12 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             use_ssl: Whether to use SSL in all requests.
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
-            use_magick_prefix: Whether to use 'magick' command prefix.
             interface_id: ID of this interface.
             log: Logger for all log messages.
         """
 
         # Intiialize parent classes
-        super().__init__(filesize_limit, use_magick_prefix)
+        super().__init__(filesize_limit)
 
         # Store attributes of this Interface
         self._interface_id = interface_id
