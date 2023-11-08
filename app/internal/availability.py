@@ -30,7 +30,7 @@ def get_latest_version(
             cannot be determined.
     """
     # TODO remove placeholder when repo is public [pylint: disable=unreachable]
-    return Version(f'v2.0-alpha.6.0')
+    return Version(f'v2.0-alpha.7.0')
     try:
         response = req_get(
             'https://api.github.com/repos/CollinHeist/'

@@ -26,9 +26,7 @@
     <div id="main-content" class="article">
       <div class="ui stackable grid">
         <div id="settings" class="sixteen wide column">
-          <h1 class="ui header" onclick="$('#about').toggleClass('hidden')" data-tooltip="Click to view info about TCM" data-position="bottom left">
-            Settings
-          </h1>
+          <h1 class="ui header">Settings</h1>
           {% if preferences.available_version is not none and preferences.available_version > preferences.current_version %}
           <div class="ui floating compact info message">
             <i class="info circle icon"></i>
@@ -36,35 +34,6 @@
           </div>
           <br>
           {% endif %}
-
-          <!-- About info -->
-          <div id="about" class="ui compact floating hidden info message">
-            <div class="header">
-              About
-            </div>
-            <div class="ui divided list">
-              <div class="item">
-                <div class="ui blue horizontal label">Current Version</div>
-                {{preferences.current_version}}
-              </div>
-              <div class="item">
-                <div class="ui blue horizontal label">Available Version</div>
-                {{preferences.available_version}}
-              </div>
-              <div class="item">
-                <div class="ui blue horizontal label">Execution Mode</div>
-                {% if preferences.is_docker %}
-                Docker
-                {% else %}
-                Standalone
-                {% endif %}
-              </div>
-              <div class="item">
-                <div class="ui blue horizontal label">Changelog</div>
-                <a onclick="notifyChanges('{{preferences.current_version}}', true);">View</a>
-              </div>
-            </div>
-          </div>
 
           <form id="settings-form" class="ui fluid form">
             <!-- Folder Settings -->
@@ -413,6 +382,36 @@
               </div>
             </button>
           </form>
+
+          <!-- System info -->
+          <div class="ui divider"></div>
+          <div class="system info">
+            <div class="ui blue info label">
+              Current Version
+              <div class="detail">{{preferences.current_version}}</div>
+            </div>
+  
+            <div class="ui blue info label">
+              Available Version
+              <div class="detail">{{preferences.available_version}}</div>
+            </div>
+  
+            <div class="ui blue info label">
+              Execution Mode
+              <div class="detail">
+                {% if preferences.is_docker %}
+                Docker
+                {% else %}
+                Standalone
+                {% endif %}
+              </div>
+            </div>
+  
+            <div class="ui blue info label">
+              Changelog
+              <a onclick="notifyChanges('{{preferences.current_version}}', true);">View</a>
+            </div>
+          </div>
         </div>
       </div>
     </div>

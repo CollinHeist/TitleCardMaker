@@ -1,6 +1,6 @@
 const changeLog = [
   {
-    version: 'v2.0-alpha.6.1',
+    version: 'v2.0-alpha.7.0',
     changelog: `
   <h2>Major Changes</h2>
   <div class="ui ordered list">
@@ -34,7 +34,7 @@ const changeLog = [
     <div class="item">Added ability to analyze custom Font files and make character replacement suggestions
       <div class="list">
         <div class="item">New <i>Analyze Font Replacements</i> button which performs an analysis of the Font for missing characters and makes suggestions for replacements (and warns about irreplaceable characters)</div>
-        <div class="item">Suggestions now look to decompose Unicode characters in their normalized equivalents when searching for replacements - e.g. if <b>é</b> is missing, it look look for <b>e</b>, then <b>E</b>, etc.</div>
+        <div class="item">Suggestions now look to decompose Unicode characters in their normalized equivalents when searching for replacements - e.g. if <b>é</b> is missing, it will look for <b>É</b>, <b>e</b>, then <b>E</b>, etc.</div>
         <div class="item">Font analysis now looks at <i>empty</i> glyphs in addition to missing glyphs - this should catch instances where the Font was created with blank spaces instead of the glyph being omitted</div>
         <div class="item">The analysis looks at the titles and translations of all Episodes associated with (even by proxy) the Font</div>
       </div>
@@ -100,6 +100,7 @@ const changeLog = [
     <div class="item">Add header button which links to the relevant documentation page</div>
     <div class="item">Modify the sidebar toggle logic - clicking the logo will return to home page if you are not on mobile</div>
     <div class="item">Add a loading indicator to Blueprint elements while being imported</div>
+    <div class="item">Revise changelog to utilize accordions to make navigation easier</div>
   </div>
   <h2>Minor Fixes</h2>
   <div class="ui ordered list">
@@ -293,7 +294,7 @@ const changeLog = [
   <div class="item">Correctly detect hidden episode text in Olivier card</div>
   <div class="item">Refer to the web-ui branch of the CardTypes repository for all RemoteFile objects</div>
   <div class="item">Handle more instances of busy databases in scheduled Tasks</div>
-  <div class="item">Handle explicit newlines (<b>\n</b>) in titles for preview card creation</div>
+  <div class="item">Handle explicit newlines (<b>\\n</b>) in titles for preview card creation</div>
 </div>`
   },
   {
@@ -429,17 +430,29 @@ function notifyChanges(currentVersion, forceDisplay=false) {
     // Subsequent versions were previously notified; changelog is complete
     if (!forceDisplay && v_gt_v(last, versionToNumber(version))) { break; }
     // Version not notified, add to changelog
-    changes += `<h1 class="ui top attached inverted blue header">${version}</h1><div class="ui attached segment">${changelog}</div>`;
+    changes += `
+<div class="ui styled fluid accordion">
+  <div class="title">
+    <i class="dropdown icon"></i>
+    ${version}
+  </div>
+  <div class="content">
+    ${changelog}
+  </div>
+</div>`;
+    // changes += `<h1 class="ui top attached inverted blue header">${version}</h1><div class="ui attached segment">${changelog}</div>`;
   }
 
   // Changes to display, show modal
   if (changes) {
     $.modal({
       title: 'Changelog',
-      class: 'uninvertible',
+      class: 'uninvertible large',
       closeIcon: true,
       content: changes,
+      classContent: 'internal scrolling',
     }).modal('show');
+    $('.ui.accordion').accordion();
   }
 
   // Changelog displayed, update local storage
