@@ -24,6 +24,7 @@ from app.models.episode import Episode
 from app.models.series import Series
 from app.schemas.card import CardActions, TitleCard, PreviewTitleCard
 from app.schemas.connection import SonarrWebhook
+from app.schemas.episode import Episode as EpisodeSchema
 from app.schemas.font import DefaultFont
 from modules.EpisodeInfo2 import EpisodeInfo
 
@@ -590,3 +591,14 @@ def create_cards_for_sonarr_webhook(
             )
 
     return None
+
+
+@card_router.get('/missing')
+def get_missing_cards(
+        db: Session = Depends(get_database),
+    ) -> Page[EpisodeSchema]:
+    """
+    Get all the Episodes that do not have any associated Cards.
+    """
+
+    return paginate(db.query(models.episode.Episode).filter(~Episode.card.any()))
