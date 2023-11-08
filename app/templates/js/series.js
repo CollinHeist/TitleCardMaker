@@ -635,7 +635,7 @@ async function getFileData(page=currentFilePage) {
     navigateFunction: getFileData,
     page: allFiles.page,
     pages: allFiles.pages,
-    amountVisible: isSmallScreen() ? 4 : 18,
+    amountVisible: isSmallScreen() ? 6 : 18,
   });
   refreshTheme();
   $('#source-image-previews .image .dimmer').dimmer({transition: 'fade up', on: 'hover'});
@@ -782,7 +782,7 @@ async function getEpisodeData(page=1) {
     navigateFunction: getEpisodeData,
     page: episodeData.page,
     pages: episodeData.pages,
-    amountVisible: isSmallScreen() ? 4 : 18,
+    amountVisible: isSmallScreen() ? 6 : 18,
   });
 }
 
@@ -793,9 +793,10 @@ async function getEpisodeData(page=1) {
  */
 let currentCardPage = 1;
 function getCardData(page=currentCardPage, transition=false) {
+  const pageSize = isSmallScreen() ? 3 : 12;
   $.ajax({
     type: 'GET',
-    url: `/api/cards/series/{{series.id}}?page=${page}&size=9`,
+    url: `/api/cards/series/{{series.id}}?page=${page}&size=${pageSize}`,
     success: cards => {
       const previewTemplate = document.getElementById('preview-image-template');
       const previews = cards.items.map(card => {
@@ -828,7 +829,7 @@ function getCardData(page=currentCardPage, transition=false) {
         navigateFunction: getCardData,
         page: cards.page,
         pages: cards.pages,
-        amountVisible: isSmallScreen() ? 4 : 15,
+        amountVisible: isSmallScreen() ? 6 : 15,
       });
 
       // Refresh theme, initialize dimmers
