@@ -98,8 +98,15 @@ def upgrade() -> None:
 
     # Initialize model_json for each Card
     for card in session.query(Card).all():
+        # Delete Card if no associated Series
+        if card.series is None:
+            log.debug(f'Card[{card.id}] has no associated Series - deleting')
+            session.delete(card)
+            continue
+
+        # Delete Card if there is no associated model
         if card.card_type not in LocalCardTypeModels:
-            log.warning(f'Cannot initialize Card[{card.id}].model_json - deleting Card')
+            log.debug(f'Cannot initialize Card[{card.id}].model_json - deleting')
             session.delete(card)
             continue
 
@@ -116,7 +123,7 @@ def upgrade() -> None:
                 logo_file=logo_file,
             )
         except Exception as exc:
-            log.warning(f'Cannot initialize Card[{card.id}].model_json - deleting Card')
+            log.debug(f'Cannot initialize Card[{card.id}].model_json - deleting')
             log.debug(f'Exception: {exc}')
             session.delete(card)
             continue
