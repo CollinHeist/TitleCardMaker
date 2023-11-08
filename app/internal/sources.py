@@ -94,15 +94,12 @@ def download_all_series_logos(*, log: Logger = log) -> None:
 
 
 def resolve_source_settings(
-        preferences: Preferences,
         episode: Episode,
     ) -> tuple[Style, Path]:
     """
     Get the Episode style and source file for the given Episode.
 
     Args:
-        preferences: Preferences whose global style settings to use in
-            Style resolution.
         episode: Episode being evaluated.
 
     Returns:
@@ -115,6 +112,7 @@ def resolve_source_settings(
     series_template, episode_template = get_effective_templates(series, episode)
 
     # Resolve styles
+    preferences = get_preferences()
     watched_style = TieredSettings.resolve_singular_setting(
         preferences.default_watched_style,
         getattr(series_template, 'watched_style', None),
@@ -319,7 +317,7 @@ def download_episode_source_image(
     """
 
     # Determine Episode style and source file
-    style, source_file = resolve_source_settings(preferences, episode)
+    style, source_file = resolve_source_settings(episode)
 
     # If source already exists, return that
     series: Series = episode.series
@@ -423,7 +421,6 @@ def download_episode_source_image(
 
 
 def get_source_image(
-        preferences: Preferences,
         imagemagick_interface: Optional[ImageMagickInterface],
         episode: Episode,
     ) -> SourceImage:
@@ -431,8 +428,6 @@ def get_source_image(
     Get the SourceImage details for the given objects.
 
     Args:
-        preferences: Preferences to reference the global source
-            directory from.
         imagemagick_interface: ImageMagickInterface to query the image
             dimensions from.
         episode: Episode of the Source Image.
@@ -442,7 +437,7 @@ def get_source_image(
     """
 
     # Determine Episode (style not used) source file
-    _, source_file = resolve_source_settings(preferences, episode)
+    _, source_file = resolve_source_settings(episode)
 
     # All sources have these details
     source = {

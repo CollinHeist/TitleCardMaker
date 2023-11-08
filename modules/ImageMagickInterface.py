@@ -218,7 +218,7 @@ class ImageMagickInterface:
         if not image.exists():
             return Dimensions(0, 0)
 
-        return im_get(image)
+        return Dimensions(*im_get(image))
 
 
     def get_text_dimensions(self,
