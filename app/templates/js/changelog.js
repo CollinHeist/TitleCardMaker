@@ -2,144 +2,144 @@ const changeLog = [
   {
     version: 'v2.0-alpha.7.0',
     changelog: `
-  <h2>Major Changes</h2>
-  <div class="ui ordered list">
-    <div class="item">Use new logo
-      <div class="list">
-        <img style="background: rgb(28, 28, 28); border-radius: 0.4em;" width="50%" src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker/web-ui/app/assets/logo.png">
-      </div>
+<h2>Major Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Use new logo
+    <div class="list">
+      <img style="background: rgb(28, 28, 28); border-radius: 0.4em;" width="50%" src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker/web-ui/app/assets/logo.png">
     </div>
-    <div class="item">Major documentation revisions
-      <div class="list">
-        <div class="item">Relocate all v2 documentation to <a href="https://titlecardmaker.com" target="_blank">titlecardmaker.com</a></div>
-        <div class="item">Create dynamic auto-generated "social cards" for richer link previews in Discord (and other site) - for example:</div>
-        <div class="item"><img width="50%" src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker/gh-pages/assets/images/social/blueprints.png"></div>
-        <div class="item">Use site-wide banner for navigation, move table of contents to sidebar (more room for content)</div>
-        <div class="item">Add various pages (including starter Docker and Docker compose pages)</div>
-      </div>
-    </div>
-    <div class="item">Various Blueprint improvements
-      <div class="list">
-        <div class="item">Allow multiple preview files on all Blueprints - hovering over the preview will show a small animation indicating >1 preview file which can be cycled through by clicking</div>
-        <div class="item">Allow arbitrary files to be added to Blueprints. These files are then downloaded into the relevant Source directory when imported</div>
-        <div class="item">Add toggle to the Blueprint browser to only show Blueprints for Series which you have already added to TCM</div>
-        <div class="item">Add toggle to the Blueprint browser to exclude Blueprints which have already been imported (does not work retroactively)</div>
-        <div class="item">Limit the height of Blueprint description fields</div>
-        <div class="item">Add pre-populated database IDs to Blueprint issue forms (when opened via the UI)</div>
-        <div class="item">Relocate repository to TitleCardMaker organization - now at <a href="https://github.com/TitleCardMaker/Blueprints" target="_blank">TitleCardMaker/Blueprints</a></div>
-      </div>
-    </div>
-    <div class="item">Use "fuzzy" string matching in search toolbar (using Levenshtein Distance between strings)</div>
-    <div class="item">View Title Cards and Source Images within the UI (on the Files tab of a Series' page)</div>
-    <div class="item">Added ability to analyze custom Font files and make character replacement suggestions
-      <div class="list">
-        <div class="item">New <b>Analyze Font Replacements</b> button which performs an analysis of the Font for missing characters and makes suggestions for replacements (and warns about irreplaceable characters)</div>
-        <div class="item">Suggestions now look to decompose Unicode characters in their normalized equivalents when searching for replacements - e.g. if <b>é</b> is missing, it will look for <b>É</b>, <b>e</b>, then <b>E</b>, etc.</div>
-        <div class="item">Font analysis now looks at empty glyphs in addition to missing glyphs - this should catch instances where the Font was created with blank spaces instead of the glyph being omitted</div>
-        <div class="item">The analysis looks at the titles and translations of all Episodes associated with (even by proxy) the Font</div>
-      </div>
-    </div>
-    <div class="item">Allow for card-type specific generic season title specification
-      <div class="list">
-        <div class="item">Cards can define a <b>SEASON_TEXT_FORMATTER</b> attribute of type <b>Callable[[EpisodeInfo], str]</b> to change the season title text when there is no customization</div>
-      </div>
-    </div>
-    <div class="item">Various front-end changes
-      <div class="list">
-        <div class="item">Make the background color on dark mode slightly darker</div>
-        <div class="item">Move the Connections, Scheduler, and Import tabs under the Settings tab on the side bar</div>
-        <div class="item">Create new Add Series tab under the home page on the side bar (and remove floating button)</div>
-        <div class="item">Add animated loading logo when waiting for Series to load on the home page</div>
-      </div>
-    </div>
-    <div class="item">Add new <b>absolute_episode_number</b> variable which can be used in variable formats (e.g. episode text formats) and is the absolute number <i>if available</i>, and the episode number if not</div>
-    <div class="item">Add new human readable cron expressions to the Scheduler table (in advanced scheduler mode) - e.g. <b>20 */10 * * *</b> is described as <b>At 20 minutes past the hour, every 10 hours</b></div>
-    <div class="item">Add healthcheck command, and API endpoint, to Docker container</div>
-    <div class="item">Automatically perform backups of the database and global options before attempting any SQL schema migrations</div>
   </div>
-  <h2>Major Fixes </h2>
-  <div class="ui ordered list">
-    <div class="item">Correctly utilize Template ordering
-      <div class="list">
-        <div class="item">The SQL template relationships <i>were</i> utilizing implicit ordering by Template ID, but if a non-sequential Template order was applied to a Sync/Series/Episode, then the order would constantly be reset</div>
-        <div class="item">Update SQL schema to <b>25490125daaf</b> which adds an explicit <b>order</b> column to all many-to-many association tables</div>
-        <div class="item">Correctly initialize Sync Template dropdowns with the correct order of Template specifications</div>
-      </div>
+  <div class="item">Major documentation revisions
+    <div class="list">
+      <div class="item">Relocate all v2 documentation to <a href="https://titlecardmaker.com" target="_blank">titlecardmaker.com</a></div>
+      <div class="item">Create dynamic auto-generated "social cards" for richer link previews in Discord (and other site) - for example:</div>
+      <div class="item"><img width="50%" src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker/gh-pages/assets/images/social/blueprints.png"></div>
+      <div class="item">Use site-wide banner for navigation, move table of contents to sidebar (more room for content)</div>
+      <div class="item">Add various pages (including starter Docker and Docker compose pages)</div>
     </div>
-    <div class="item">Allow force-resetting of passwords by specifying the <b>TCM_DISABLE_AUTH</b> environment variable while booting to avoid potential lockouts</div>
-    <div class="item">Fix name mismatches when importing Blueprints causing duplicate Series entries (matching is now done with database IDs)</div>
-    <div class="item">Use hashed image URLs for source images so they properly reload when modified</div>
-    <div class="item">Fix Episode ID assignment in Jellyfin</div>
-    <div class="item">Correctly load Title Cards into multiple servers when Series has more than one library</div>
-    <div class="item">Correctly apply Plex Sync exclusion tags</div>
   </div>
-  <h2>Minor Changes</h2>
-  <div class="ui ordered list">
-    <div class="item">Relocate the y-position of the index text on the Calligraphy card. It is now dynamic with the logo height</div>
-    <div class="item">Paginate the <b>/api/cards/series/{series_id}</b> API endpoint</div>
-    <div class="item">Minor visual changes to the login page
-      <div class="list">
-        <div class="item">Add logo above login header</div>
-        <div class="item">Add link to new <a href="https://titlecardmaker.com/user_guide/connections/#forgotten-login" target="_blank">forgotten password</a> instructions</div>
-      </div>
+  <div class="item">Various Blueprint improvements
+    <div class="list">
+      <div class="item">Allow multiple preview files on all Blueprints - hovering over the preview will show a small animation indicating >1 preview file which can be cycled through by clicking</div>
+      <div class="item">Allow arbitrary files to be added to Blueprints. These files are then downloaded into the relevant Source directory when imported</div>
+      <div class="item">Add toggle to the Blueprint browser to only show Blueprints for Series which you have already added to TCM</div>
+      <div class="item">Add toggle to the Blueprint browser to exclude Blueprints which have already been imported (does not work retroactively)</div>
+      <div class="item">Limit the height of Blueprint description fields</div>
+      <div class="item">Add pre-populated database IDs to Blueprint issue forms (when opened via the UI)</div>
+      <div class="item">Relocate repository to TitleCardMaker organization - now at <a href="https://github.com/TitleCardMaker/Blueprints" target="_blank">TitleCardMaker/Blueprints</a></div>
     </div>
-    <div class="item">Modified "help" tooltips on various pages to not use popups but instead inline help text - this looks better and makes this info always visible (even on mobile)</div>
-    <div class="item">Only keep backups for up to 3 weeks</div>
-    <div class="item">Add connection-thematic-specific coloring to Sync elements</div>
-    <div class="item">Start loading Font preview when directed from Font link</div>
-    <div class="item">Sleep 30 seconds between attempts to load Episode Cards via API endpoints (Tautulli, Sonarr, excplit) - up from 15
-    <div class="item">Add new "does not contain" Template Filter condition - can be used for strings and list variables</div>
-    <div class="item">Change Template sidebar icon to not conflict with new logo</div>
-    <div class="item">Add help text to the (un)monitor button below Series posters (was hoverable tooltip)</div>
-    <div class="item">Also open Series search bar by pressing <kbd class="ui label">/</kbd> key</div>
-    <div class="item">Auto-redirect from login page if authentication is disabled</div>
-    <div class="item">Add global "colorblind" accessibility option to utilize more distinct colors (primarily in progress bars)</div>
-    <div class="item">Add global option for enabled language codes to allow specification of translated numbers (i.e. Season and Episode text)</div>
-    <div class="item">Refresh (and animate the reloading of) Card statistics when clicked </div>
-    <div class="item">Query Series statistics every 60 seconds (increased from 30)</div>
-    <div class="item">Add header button which links to the current page's relevant documentation if available</div>
-    <div class="item">Modify the sidebar toggle logic - clicking the logo will return to home page if you are not on mobile</div>
-    <div class="item">Add a loading indicator to Blueprint elements while being imported</div>
-    <div class="item">Revise changelog to utilize accordions to make navigation easier</div>
-    <div class="item">Add a note to the Sync page if no Connections are defined</div>
   </div>
-  <h2>Minor Fixes</h2>
-  <div class="ui ordered list">
-    <div class="item">Handle non-404 errors when downloading Font files from Blueprints</div>
-    <div class="item">Handle permission errors for root folders creation when starting TCM</div>
-    <div class="item">Left-align Blueprint actions on mobile</div>
-    <div class="item">Remove temporary title-match logging when evaluating EpisodeInfo comparisons</div>
-    <div class="item">Add default <b>TZ</b> of <b>UTC</b> to Docker build</div>
-    <div class="item">Add missing placeholder text to some card type dropdowns</div>
-    <div class="item">Change default season text on Calligraphy card to <b>Season {season_number_cardinal}</b> - e.g. <b>Season One</b> (was <b>Season 1</b>)</div>
-    <div class="item">Limit length of file name path components of cards, folders, etc. to 254 characters (could be exceeded if the title was included in the filename)</div>
-    <div class="item">Correctly utilize Card <i>type</i> default Font replacements in Title Card creation</div>
-    <div class="item">Return Series search results by the Series <i>sort</i> name (so case and special character-agnostic)</div>
-    <div class="item">Properly clear new Sync forms after creation</div>
-    <div class="item">Do not show error toasts when statistics cannot be queried on the home page</div>
-    <div class="item">Correctly handle all supported TMDb language codes (was using outdated list)</div>
-    <div class="item">Correct logo downloading from Emby and Jellyfin</div>
-    <div class="item">Wrap pagination menus on the home page on mobile to avoid overflow</div>
-    <div class="item">Do not auto-zoom into text boxes on mobile (particularly iOS) by dynamically adjusting font size to 16px when selected</div>
-    <div class="item">Properly color the "outside page" background in some mobile browsers</div>
-    <div class="item">Handle explicitly raised errors (caused by bad Episode data sources) in Refresh Episode Data task</div>
-    <div class="item">Properly handle deleting attributes from the Preferences model without resetting object</div>
-    <div class="item">Correct next/previous navigation between same-named Series</div>
-    <div class="item">Correctly set <i>Options</i> tab as active tab by default to avoid flicker when loading page</div>
-    <div class="item">Only remake Cards for changes to attributes which are actually reflected in the selected Card's card type model
-      <div class="list">
-        <div class="item">Remove individual variable columns of the Card SQL table; instead store generic <b>model_json</b> data</div>
-        <div class="item">Update SQL schema to <b>caec4f618689</b> to convert existing Card objects</div>
-        <div class="item">Non-builtin Cards will be remade after migration</div>
-      </div>
+  <div class="item">Use "fuzzy" string matching in search toolbar (using Levenshtein Distance between strings)</div>
+  <div class="item">View Title Cards and Source Images within the UI (on the Files tab of a Series' page)</div>
+  <div class="item">Added ability to analyze custom Font files and make character replacement suggestions
+    <div class="list">
+      <div class="item">New <b>Analyze Font Replacements</b> button which performs an analysis of the Font for missing characters and makes suggestions for replacements (and warns about irreplaceable characters)</div>
+      <div class="item">Suggestions now look to decompose Unicode characters in their normalized equivalents when searching for replacements - e.g. if <b>é</b> is missing, it will look for <b>É</b>, <b>e</b>, then <b>E</b>, etc.</div>
+      <div class="item">Font analysis now looks at empty glyphs in addition to missing glyphs - this should catch instances where the Font was created with blank spaces instead of the glyph being omitted</div>
+      <div class="item">The analysis looks at the titles and translations of all Episodes associated with (even by proxy) the Font</div>
     </div>
-    <div class="item">Re-query the current page of Series when the sort order is changed on the home page</div>
-    <div class="item">Do not submit separate API requests for adding a Series and importing a Blueprint in one operation</div>
-    <div class="item">Reflect global un/watched style settings in Template previews</div>
-    <div class="item">Attempt to refresh Episode data up to three times in Sonarr webhook API endpoints (for when your EDS is a Media Server and is slow to refresh)</div>
-    <div class="item">Properly detect mobile devices in JS</div>
-    <div class="item">Correctly clear Episode translations in Episode modals</div>
-  </div>`
+  </div>
+  <div class="item">Allow for card-type specific generic season title specification
+    <div class="list">
+      <div class="item">Cards can define a <b>SEASON_TEXT_FORMATTER</b> attribute of type <b>Callable[[EpisodeInfo], str]</b> to change the season title text when there is no customization</div>
+    </div>
+  </div>
+  <div class="item">Various front-end changes
+    <div class="list">
+      <div class="item">Make the background color on dark mode slightly darker</div>
+      <div class="item">Move the Connections, Scheduler, and Import tabs under the Settings tab on the side bar</div>
+      <div class="item">Create new Add Series tab under the home page on the side bar (and remove floating button)</div>
+      <div class="item">Add animated loading logo when waiting for Series to load on the home page</div>
+    </div>
+  </div>
+  <div class="item">Add new <b>absolute_episode_number</b> variable which can be used in variable formats (e.g. episode text formats) and is the absolute number <i>if available</i>, and the episode number if not</div>
+  <div class="item">Add new human readable cron expressions to the Scheduler table (in advanced scheduler mode) - e.g. <b>20 */10 * * *</b> is described as <b>At 20 minutes past the hour, every 10 hours</b></div>
+  <div class="item">Add healthcheck command, and API endpoint, to Docker container</div>
+  <div class="item">Automatically perform backups of the database and global options before attempting any SQL schema migrations</div>
+</div>
+<h2>Major Fixes</h2>
+<div class="ui ordered list">
+  <div class="item">Correctly utilize Template ordering
+    <div class="list">
+      <div class="item">The SQL template relationships <i>were</i> utilizing implicit ordering by Template ID, but if a non-sequential Template order was applied to a Sync/Series/Episode, then the order would constantly be reset</div>
+      <div class="item">Update SQL schema to <b>25490125daaf</b> which adds an explicit <b>order</b> column to all many-to-many association tables</div>
+      <div class="item">Correctly initialize Sync Template dropdowns with the correct order of Template specifications</div>
+    </div>
+  </div>
+  <div class="item">Allow force-resetting of passwords by specifying the <b>TCM_DISABLE_AUTH</b> environment variable while booting to avoid potential lockouts</div>
+  <div class="item">Fix name mismatches when importing Blueprints causing duplicate Series entries (matching is now done with database IDs)</div>
+  <div class="item">Use hashed image URLs for source images so they properly reload when modified</div>
+  <div class="item">Fix Episode ID assignment in Jellyfin</div>
+  <div class="item">Correctly load Title Cards into multiple servers when Series has more than one library</div>
+  <div class="item">Correctly apply Plex Sync exclusion tags</div>
+</div>
+<h2>Minor Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Relocate the y-position of the index text on the Calligraphy card. It is now dynamic with the logo height</div>
+  <div class="item">Paginate the <b>/api/cards/series/{series_id}</b> API endpoint</div>
+  <div class="item">Minor visual changes to the login page
+    <div class="list">
+      <div class="item">Add logo above login header</div>
+      <div class="item">Add link to new <a href="https://titlecardmaker.com/user_guide/connections/#forgotten-login" target="_blank">forgotten password</a> instructions</div>
+    </div>
+  </div>
+  <div class="item">Modified "help" tooltips on various pages to not use popups but instead inline help text - this looks better and makes this info always visible (even on mobile)</div>
+  <div class="item">Only keep backups for up to 3 weeks</div>
+  <div class="item">Add connection-thematic-specific coloring to Sync elements</div>
+  <div class="item">Start loading Font preview when directed from Font link</div>
+  <div class="item">Sleep 30 seconds between attempts to load Episode Cards via API endpoints (Tautulli, Sonarr, excplit) - up from 15</div>
+  <div class="item">Add new "does not contain" Template Filter condition - can be used for strings and list variables</div>
+  <div class="item">Change Template sidebar icon to not conflict with new logo</div>
+  <div class="item">Add help text to the (un)monitor button below Series posters (was hoverable tooltip)</div>
+  <div class="item">Also open Series search bar by pressing <kbd class="ui label">/</kbd> key</div>
+  <div class="item">Auto-redirect from login page if authentication is disabled</div>
+  <div class="item">Add global "colorblind" accessibility option to utilize more distinct colors (primarily in progress bars)</div>
+  <div class="item">Add global option for enabled language codes to allow specification of translated numbers (i.e. Season and Episode text)</div>
+  <div class="item">Refresh (and animate the reloading of) Card statistics when clicked </div>
+  <div class="item">Query Series statistics every 60 seconds (increased from 30)</div>
+  <div class="item">Add header button which links to the current page's relevant documentation if available</div>
+  <div class="item">Modify the sidebar toggle logic - clicking the logo will return to home page if you are not on mobile</div>
+  <div class="item">Add a loading indicator to Blueprint elements while being imported</div>
+  <div class="item">Revise changelog to utilize accordions to make navigation easier</div>
+  <div class="item">Add a note to the Sync page if no Connections are defined</div>
+</div>
+<h2>Minor Fixes</h2>
+<div class="ui ordered list">
+  <div class="item">Handle non-404 errors when downloading Font files from Blueprints</div>
+  <div class="item">Handle permission errors for root folders creation when starting TCM</div>
+  <div class="item">Left-align Blueprint actions on mobile</div>
+  <div class="item">Remove temporary title-match logging when evaluating EpisodeInfo comparisons</div>
+  <div class="item">Add default <b>TZ</b> of <b>UTC</b> to Docker build</div>
+  <div class="item">Add missing placeholder text to some card type dropdowns</div>
+  <div class="item">Change default season text on Calligraphy card to <b>Season {season_number_cardinal}</b> - e.g. <b>Season One</b> (was <b>Season 1</b>)</div>
+  <div class="item">Limit length of file name path components of cards, folders, etc. to 254 characters (could be exceeded if the title was included in the filename)</div>
+  <div class="item">Correctly utilize Card <i>type</i> default Font replacements in Title Card creation</div>
+  <div class="item">Return Series search results by the Series <i>sort</i> name (so case and special character-agnostic)</div>
+  <div class="item">Properly clear new Sync forms after creation</div>
+  <div class="item">Do not show error toasts when statistics cannot be queried on the home page</div>
+  <div class="item">Correctly handle all supported TMDb language codes (was using outdated list)</div>
+  <div class="item">Correct logo downloading from Emby and Jellyfin</div>
+  <div class="item">Wrap pagination menus on the home page on mobile to avoid overflow</div>
+  <div class="item">Do not auto-zoom into text boxes on mobile (particularly iOS) by dynamically adjusting font size to 16px when selected</div>
+  <div class="item">Properly color the "outside page" background in some mobile browsers</div>
+  <div class="item">Handle explicitly raised errors (caused by bad Episode data sources) in Refresh Episode Data task</div>
+  <div class="item">Properly handle deleting attributes from the Preferences model without resetting object</div>
+  <div class="item">Correct next/previous navigation between same-named Series</div>
+  <div class="item">Correctly set <i>Options</i> tab as active tab by default to avoid flicker when loading page</div>
+  <div class="item">Only remake Cards for changes to attributes which are actually reflected in the selected Card's card type model
+    <div class="list">
+      <div class="item">Remove individual variable columns of the Card SQL table; instead store generic <b>model_json</b> data</div>
+      <div class="item">Update SQL schema to <b>caec4f618689</b> to convert existing Card objects</div>
+      <div class="item">Non-builtin Cards will be remade after migration</div>
+    </div>
+  </div>
+  <div class="item">Re-query the current page of Series when the sort order is changed on the home page</div>
+  <div class="item">Do not submit separate API requests for adding a Series and importing a Blueprint in one operation</div>
+  <div class="item">Reflect global un/watched style settings in Template previews</div>
+  <div class="item">Attempt to refresh Episode data up to three times in Sonarr webhook API endpoints (for when your EDS is a Media Server and is slow to refresh)</div>
+  <div class="item">Properly detect mobile devices in JS</div>
+  <div class="item">Correctly clear Episode translations in Episode modals</div>
+</div>`
   },
   {
     version: 'v2.0-alpha.6.0',
@@ -422,26 +422,19 @@ function notifyChanges(currentVersion, forceDisplay=false) {
   const lastVersion =  window.localStorage.getItem('version') || 'v2.0-alpha.5.2';
   if (!forceDisplay && currentVersion === lastVersion) { return; }
 
-  // This version hasn't been displayed
-  const last = versionToNumber(lastVersion);
-
-  let changes = '';
+  let changes = '<div class="ui styled fluid accordion">';
   for (let {version, changelog} of changeLog) {
-    // Subsequent versions were previously notified; changelog is complete
-    if (!forceDisplay && v_gt_v(last, versionToNumber(version))) { break; }
     // Version not notified, add to changelog
     changes += `
-<div class="ui styled fluid accordion">
-  <div class="title">
-    <i class="dropdown icon"></i>
-    ${version}
-  </div>
-  <div class="content">
-    ${changelog}
-  </div>
+<div class="title">
+  <i class="dropdown icon"></i>
+  ${version}
+</div>
+<div class="content">
+  ${changelog}
 </div>`;
-    // changes += `<h1 class="ui top attached inverted blue header">${version}</h1><div class="ui attached segment">${changelog}</div>`;
   }
+  changes += '</div>'
 
   // Changes to display, show modal
   if (changes) {
