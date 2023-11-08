@@ -803,7 +803,7 @@ function getCardData(page=currentCardPage, transition=false) {
         const preview = previewTemplate.content.cloneNode(true);
         // Fill out preview
         // Start hidden if transitioning
-        if (transition) {
+        if (transition && !isSmallScreen()) {
           preview.querySelector('.image').classList.add('transition', 'hidden');
         }
         preview.querySelector('.dimmer .content').innerHTML = `<h4>Season ${card.episode.season_number} Episode ${card.episode.episode_number}`;
@@ -812,7 +812,7 @@ function getCardData(page=currentCardPage, transition=false) {
         return preview;
       });
       // Add elements to page
-      if (transition) {
+      if (transition && !isSmallScreen()) {
         $('#card-previews .image').transition({transition: 'fade out', interval: 20});
         setTimeout(() => {
           document.getElementById('card-previews').replaceChildren(...previews);
