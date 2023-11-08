@@ -5,6 +5,7 @@ from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request
 )
 from fastapi_pagination.ext.sqlalchemy import paginate
+from sqlalchemy import not_
 from sqlalchemy.orm import Session
 
 from app.database.query import get_card, get_episode, get_font, get_series
@@ -601,4 +602,9 @@ def get_missing_cards(
     Get all the Episodes that do not have any associated Cards.
     """
 
-    return paginate(db.query(models.episode.Episode).filter(~Episode.card.any()))
+    return paginate(
+        db.query(Episode)\
+            .filter(not_(Episode.id.in_(
+                db.query(models.card.Card.episode_id).distinct()
+            )))
+    )
