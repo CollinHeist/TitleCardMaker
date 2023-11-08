@@ -33,9 +33,9 @@ const changeLog = [
     <div class="item">View Title Cards and Source Images within the UI (on the Files tab of a Series' page)</div>
     <div class="item">Added ability to analyze custom Font files and make character replacement suggestions
       <div class="list">
-        <div class="item">New <i>Analyze Font Replacements</i> button which performs an analysis of the Font for missing characters and makes suggestions for replacements (and warns about irreplaceable characters)</div>
+        <div class="item">New <b>Analyze Font Replacements</b> button which performs an analysis of the Font for missing characters and makes suggestions for replacements (and warns about irreplaceable characters)</div>
         <div class="item">Suggestions now look to decompose Unicode characters in their normalized equivalents when searching for replacements - e.g. if <b>é</b> is missing, it will look for <b>É</b>, <b>e</b>, then <b>E</b>, etc.</div>
-        <div class="item">Font analysis now looks at <i>empty</i> glyphs in addition to missing glyphs - this should catch instances where the Font was created with blank spaces instead of the glyph being omitted</div>
+        <div class="item">Font analysis now looks at empty glyphs in addition to missing glyphs - this should catch instances where the Font was created with blank spaces instead of the glyph being omitted</div>
         <div class="item">The analysis looks at the titles and translations of all Episodes associated with (even by proxy) the Font</div>
       </div>
     </div>
@@ -46,7 +46,7 @@ const changeLog = [
     </div>
     <div class="item">Various front-end changes
       <div class="list">
-        <div class="item">Make the background color on dark mode <i>slightly</i> darker</div>
+        <div class="item">Make the background color on dark mode slightly darker</div>
         <div class="item">Move the Connections, Scheduler, and Import tabs under the Settings tab on the side bar</div>
         <div class="item">Create new Add Series tab under the home page on the side bar (and remove floating button)</div>
         <div class="item">Add animated loading logo when waiting for Series to load on the home page</div>
@@ -54,7 +54,7 @@ const changeLog = [
     </div>
     <div class="item">Add new <b>absolute_episode_number</b> variable which can be used in variable formats (e.g. episode text formats) and is the absolute number <i>if available</i>, and the episode number if not</div>
     <div class="item">Add new human readable cron expressions to the Scheduler table (in advanced scheduler mode) - e.g. <b>20 */10 * * *</b> is described as <b>At 20 minutes past the hour, every 10 hours</b></div>
-    <div class="item">Add healthcheck command (and API endpoint) to Docker container</div>
+    <div class="item">Add healthcheck command, and API endpoint, to Docker container</div>
     <div class="item">Automatically perform backups of the database and global options before attempting any SQL schema migrations</div>
   </div>
   <h2>Major Fixes </h2>
@@ -66,7 +66,7 @@ const changeLog = [
         <div class="item">Correctly initialize Sync Template dropdowns with the correct order of Template specifications</div>
       </div>
     </div>
-    <div class="item">Allow force-resetting of passwords by specifying the <b>TCM_DISABLE_AUTH</b> environment variable while booting (to avoid potential lockouts)</div>
+    <div class="item">Allow force-resetting of passwords by specifying the <b>TCM_DISABLE_AUTH</b> environment variable while booting to avoid potential lockouts</div>
     <div class="item">Fix name mismatches when importing Blueprints causing duplicate Series entries (matching is now done with database IDs)</div>
     <div class="item">Use hashed image URLs for source images so they properly reload when modified</div>
     <div class="item">Fix Episode ID assignment in Jellyfin</div>
@@ -75,7 +75,7 @@ const changeLog = [
   </div>
   <h2>Minor Changes</h2>
   <div class="ui ordered list">
-    <div class="item">Relocate the y-position of the index text on the Calligraphy card (now dynamic with the logo height)</div>
+    <div class="item">Relocate the y-position of the index text on the Calligraphy card. It is now dynamic with the logo height</div>
     <div class="item">Paginate the <b>/api/cards/series/{series_id}</b> API endpoint</div>
     <div class="item">Minor visual changes to the login page
       <div class="list">
@@ -83,24 +83,25 @@ const changeLog = [
         <div class="item">Add link to new <a href="https://titlecardmaker.com/user_guide/connections/#forgotten-login" target="_blank">forgotten password</a> instructions</div>
       </div>
     </div>
-    <div class="item">Modified "help" tooltips on various pages to not use popups but instead inline help text - </div>this looks better and makes this info always visible (even on mobile)
+    <div class="item">Modified "help" tooltips on various pages to not use popups but instead inline help text - this looks better and makes this info always visible (even on mobile)</div>
     <div class="item">Only keep backups for up to 3 weeks</div>
     <div class="item">Add connection-thematic-specific coloring to Sync elements</div>
     <div class="item">Start loading Font preview when directed from Font link</div>
-    <div class="item">Sleep 30 seconds between attempts to load Episode Cards via API endpoints (Tautulli, Sonarr, </div>explicit) - up from 15
-    <div class="item">Add new "does not contain" Template Filter condition - can be used for strings and list </div>variables
-    <div class="item">Change Template sidebar icon (to not conflict with new logo)</div>
+    <div class="item">Sleep 30 seconds between attempts to load Episode Cards via API endpoints (Tautulli, Sonarr, excplit) - up from 15
+    <div class="item">Add new "does not contain" Template Filter condition - can be used for strings and list variables</div>
+    <div class="item">Change Template sidebar icon to not conflict with new logo</div>
     <div class="item">Add help text to the (un)monitor button below Series posters (was hoverable tooltip)</div>
-    <div class="item">Also open Series searchbar by pressing <b>/</b> key</div>
+    <div class="item">Also open Series search bar by pressing <kbd class="ui label">/</kbd> key</div>
     <div class="item">Auto-redirect from login page if authentication is disabled</div>
     <div class="item">Add global "colorblind" accessibility option to utilize more distinct colors (primarily in progress bars)</div>
     <div class="item">Add global option for enabled language codes to allow specification of translated numbers (i.e. Season and Episode text)</div>
     <div class="item">Refresh (and animate the reloading of) Card statistics when clicked </div>
     <div class="item">Query Series statistics every 60 seconds (increased from 30)</div>
-    <div class="item">Add header button which links to the relevant documentation page</div>
+    <div class="item">Add header button which links to the current page's relevant documentation if available</div>
     <div class="item">Modify the sidebar toggle logic - clicking the logo will return to home page if you are not on mobile</div>
     <div class="item">Add a loading indicator to Blueprint elements while being imported</div>
     <div class="item">Revise changelog to utilize accordions to make navigation easier</div>
+    <div class="item">Add a note to the Sync page if no Connections are defined</div>
   </div>
   <h2>Minor Fixes</h2>
   <div class="ui ordered list">
@@ -112,14 +113,13 @@ const changeLog = [
     <div class="item">Add missing placeholder text to some card type dropdowns</div>
     <div class="item">Change default season text on Calligraphy card to <b>Season {season_number_cardinal}</b> - e.g. <b>Season One</b> (was <b>Season 1</b>)</div>
     <div class="item">Limit length of file name path components of cards, folders, etc. to 254 characters (could be exceeded if the title was included in the filename)</div>
-    <div class="item">Add a note to the Sync page if no Connections are defined</div>
     <div class="item">Correctly utilize Card <i>type</i> default Font replacements in Title Card creation</div>
     <div class="item">Return Series search results by the Series <i>sort</i> name (so case and special character-agnostic)</div>
     <div class="item">Properly clear new Sync forms after creation</div>
     <div class="item">Do not show error toasts when statistics cannot be queried on the home page</div>
     <div class="item">Correctly handle all supported TMDb language codes (was using outdated list)</div>
     <div class="item">Correct logo downloading from Emby and Jellyfin</div>
-    <div class="item">Wrap pagination menus on the home page on mobile (avoid overflow)</div>
+    <div class="item">Wrap pagination menus on the home page on mobile to avoid overflow</div>
     <div class="item">Do not auto-zoom into text boxes on mobile (particularly iOS) by dynamically adjusting font size to 16px when selected</div>
     <div class="item">Properly color the "outside page" background in some mobile browsers</div>
     <div class="item">Handle explicitly raised errors (caused by bad Episode data sources) in Refresh Episode Data task</div>
