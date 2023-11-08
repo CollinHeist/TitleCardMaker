@@ -422,8 +422,12 @@ function notifyChanges(currentVersion, forceDisplay=false) {
   const lastVersion =  window.localStorage.getItem('version') || 'v2.0-alpha.5.2';
   if (!forceDisplay && currentVersion === lastVersion) { return; }
 
-  let changes = '<div class="ui styled fluid accordion">';
+  // This version hasn't been displayed
+  const last = versionToNumber(lastVersion);
+
+  let changes = '<div class="ui styled fluid uninvertible accordion">';
   for (let {version, changelog} of changeLog) {
+    if (!forceDisplay && v_gt_v(last, versionToNumber(version))) { break; }
     // Version not notified, add to changelog
     changes += `
 <div class="title">
@@ -437,7 +441,7 @@ function notifyChanges(currentVersion, forceDisplay=false) {
   changes += '</div>'
 
   // Changes to display, show modal
-  if (changes) {
+  if (changes && changes !== '<div class="ui styled fluid uninvertible accordion">') {
     $.modal({
       title: 'Changelog',
       class: 'uninvertible large',
