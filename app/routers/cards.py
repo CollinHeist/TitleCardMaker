@@ -136,7 +136,7 @@ def get_all_title_cards(db: Session = Depends(get_database)) -> Page[TitleCard]:
     return paginate(db.query(models.card.Card))
 
 
-@card_router.get('/{card_id}', status_code=200,
+@card_router.get('/card/{card_id}', status_code=200,
                  dependencies=[Depends(get_current_user)])
 def get_title_card(
         card_id: int,
