@@ -44,17 +44,21 @@ note of, all other settings can be adjusted within TitleCardMaker.
     1. The `Source Directory`. This is where TitleCardMaker will keep
     all source images used in Title Card creation. The default path is
     recommended.
+
     2. The `Log Directory`. This is where TitleCardMaker will write log
     files, which can aid in debugging or monitoring the health of
     TitleCardMaker behind the scenes. The default path is recommended.
+
     3. The `Card Directory`. This is where TitleCardMaker will create
     the actual title card files. The default path is recommended.
+
     4. The `Group ID` (`GID`). This _needs_ to be valid group ID on your
     host UnRAID system that has both Read and Write access to the above
-    directories. This is commonly `99`.
+    directories. This is commonly `100`.
+
     5. The `User ID` (`UID`). This _needs_ to be a valid user ID on your
     host UnRAID system that has both Read and Write access to the above
-    directories. This is commonly `100`.
+    directories. This is commonly `99`.
 
         ??? question "Why Specify a User and Group?"
 

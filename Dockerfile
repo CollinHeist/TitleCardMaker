@@ -42,8 +42,8 @@ RUN \
     # Create user and group to run TCM
     set -eux && \
     rm -f Pipfile Pipfile.lock && \
-    groupadd -g 314 titlecardmaker && \
-    useradd -u 314 -g 314 titlecardmaker && \
+    groupadd -g 100 titlecardmaker && \
+    useradd -u 99 -g 100 titlecardmaker && \
     # Install imagemagick and curl (for healthcheck)
     apt-get update && \
     apt-get install -y --no-install-recommends curl imagemagick libmagickcore-6.q16-6-extra && \
