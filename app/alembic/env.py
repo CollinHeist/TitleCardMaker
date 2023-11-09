@@ -21,7 +21,7 @@ Schema Version History (oldest to newest):
 - 4d7cb48238be | Replace Font.file with Font.file_name
 - 25490125daaf | Add explicit ordering to Templates
 - caec4f618689 | Turn Card attributes into Card.model_json
-- a61f373185d4
+- a61f373185d4 | Add support for multiple Connections
 """
 
 # this is the Alembic Config object, which provides
