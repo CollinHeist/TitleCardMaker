@@ -355,7 +355,7 @@ function initializeEmby() {
         embyForm.querySelector('.title').id = `connection${connection.id}-title`;
         embyForm.querySelector('.content').id = `connection${connection.id}`;
         // Enable later
-        embyForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name}`;
+        embyForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name} <span class="right floated">${connection.id}</span>`;
         embyForm.querySelector('input[name="name"]').value = connection.name;
         embyForm.querySelector('input[name="url"]').value = connection.url;
         embyForm.querySelector('input[name="api_key"]').value = connection.api_key;
@@ -438,7 +438,7 @@ function initializeJellyfin() {
         jellyfinForm.querySelector('.title').id = `connection${connection.id}-title`;
         jellyfinForm.querySelector('.content').id = `connection${connection.id}`;
         // Enable later
-        jellyfinForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name}`;
+        jellyfinForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name} <span class="right floated">${connection.id}</span>`;
         jellyfinForm.querySelector('input[name="name"]').value = connection.name;
         jellyfinForm.querySelector('input[name="url"]').value = connection.url;
         jellyfinForm.querySelector('input[name="api_key"]').value = connection.api_key;
@@ -521,7 +521,7 @@ function initializePlex() {
         plexForm.querySelector('.title').id = `connection${connection.id}-title`;
         plexForm.querySelector('.content').id = `connection${connection.id}`;
         // Enable later
-        plexForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name}`;
+        plexForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name} <span class="right floated">${connection.id}</span>`;
         plexForm.querySelector('input[name="name"]').value = connection.name;
         plexForm.querySelector('input[name="url"]').value = connection.url;
         plexForm.querySelector('input[name="api_key"]').value = connection.api_key;
@@ -594,7 +594,7 @@ function initializeSonarr() {
         sonarrForm.querySelector('.title').id = `connection${connection.id}-title`;
         sonarrForm.querySelector('.content').id = `connection${connection.id}`;
         // Enable later
-        sonarrForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name}`;
+        sonarrForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name} <span class="right floated">${connection.id}</span>`;
         sonarrForm.querySelector('input[name="name"]').value = connection.name;
         sonarrForm.querySelector('input[name="url"]').value = connection.url;
         sonarrForm.querySelector('input[name="api_key"]').value = connection.api_key;
@@ -709,7 +709,7 @@ function initializeTMDb() {
         tmdbForm.querySelector('.title').id = `connection${connection.id}-title`;
         tmdbForm.querySelector('.content').id = `connection${connection.id}`;
         // Enable later
-        tmdbForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name}`;
+        tmdbForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name} <span class="right floated">${connection.id}</span>`;
         tmdbForm.querySelector('input[name="name"]').value = connection.name;
         tmdbForm.querySelector('input[name="api_key"]').value = connection.api_key;
         tmdbForm.querySelector('input[name="minimum_dimensions"]').value = connection.minimum_dimensions;
@@ -781,6 +781,9 @@ function addConnection(connectionType) {
     // Disable library fields
     template.querySelector('.button[data-action="add-library"]').classList.add('disabled');
     template.querySelector('.button[data-action="query-libraries"]').classList.add('disabled');
+  } else if (connectionType === 'plex') {
+    // Disable Tautulli button
+    template.querySelector('.button[data-action="tautulli"]').classList.add('disabled');
   } else if (connectionType === 'tmdb') {
     // Disable dropdown until added
     template.querySelector('.field[data-value="logo_language_priority"]').classList.add('disabled');

@@ -97,6 +97,7 @@ class WatchedStatus:
         return self.status is not None
 
 
+    @property
     def as_db_entry(self) -> dict[int, dict[str, bool]]:
         """
         

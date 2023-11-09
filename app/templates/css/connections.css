@@ -1,6 +1,6 @@
 /* Add vertical padding around button */
 form > *:last-child {
-  padding-top: 1em !important;
+  /* padding-top: 1em !important; */
 }
 
 /* Reduce margin between adjacent user fields */
@@ -28,4 +28,16 @@ input.private:not(:hover,:focus) {
 /* Equal padding on Sonarr library fields */
 .dropdown ~ .dropdown {
   margin-top: 4px !important;
+}
+
+/* Right-float spans inside accordion titles */
+.accordion > .title {
+  display: flex;
+  justify-content: space-between;
+}
+.accordion > .title > .right.floated {
+  flex: 1;
+  text-align: right;
+  /* Reduce opacity of right floated text */
+  opacity: 50%;
 }

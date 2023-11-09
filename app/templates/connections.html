@@ -34,7 +34,7 @@
 
         <div class="ui required eight wide field">
           <label>Connection Name</label>
-          <input name="name" type="text" placeholder="Server">
+          <input name="name" type="text" value="Server">
           <p class="help">Name of this Connection within TCM.</p>
         </div>
 
@@ -109,7 +109,7 @@
 
         <div class="ui required eight wide field">
           <label>Connection Name</label>
-          <input name="name" type="text" placeholder="Server">
+          <input name="name" type="text" value="Plex">
           <p class="help">Name of this Connection within TCM.</p>
         </div>
 
@@ -200,7 +200,7 @@
 
         <div class="ui required eight wide field">
           <label>Connection Name</label>
-          <input name="name" type="text" placeholder="Sonarr">
+          <input name="name" type="text" value="Sonarr">
           <p class="help">Name of this Connection within TCM.</p>
         </div>
 
@@ -224,8 +224,8 @@
         <br>
 
         <div data-value="downloaded_only" class="ui left aligned checkbox field">
-          <input name="downloaded_only" type="checkbox">
           <label>Query Downloaded Episodes Only</label>
+          <input name="downloaded_only" type="checkbox">
           <p class="help">Only get data for Episodes which are downloaded.</p>
         </div>
 
@@ -238,7 +238,7 @@
           </p>
           <div class="ui compact floating visible warning message">
             <i class="exclamation icon"></i>
-            Libraries can be added <i>after</i> the Connection is created
+            Libraries must be added after the Connection is created.
           </div>
           <div class="ui segment">
 
@@ -303,7 +303,7 @@
 
         <div data-value="name" class="ui required eight wide field">
           <label>Connection Name</label>
-          <input name="name" type="text" placeholder="TMDb" value="TMDb">
+          <input name="name" type="text" value="TMDb">
           <p class="help">Name of this Connection within TCM.</p>
         </div>
 
