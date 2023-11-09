@@ -21,7 +21,6 @@
 /* Make unmonitored posters grayscale/blur */
 .card img.unmonitored {
   filter: grayscale(100%) blur(4px);
-  /* filter: blur(4px); */
 }
 
 /* Do not round edges of progress bars */

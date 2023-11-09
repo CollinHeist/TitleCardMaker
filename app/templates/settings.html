@@ -26,9 +26,7 @@
     <div id="main-content" class="article">
       <div class="ui stackable grid">
         <div id="settings" class="sixteen wide column">
-          <h1 class="ui header">
-            Settings
-          </h1>
+          <h1 class="ui header">Settings</h1>
           {% if preferences.available_version is not none and preferences.available_version > preferences.current_version %}
           <div class="ui floating compact info message">
             <i class="info circle icon"></i>
@@ -401,17 +399,19 @@
             </button>
           </form>
 
+          <!-- System info -->
           <div class="ui divider"></div>
+          <div class="system info">
             <div class="ui blue label">
               Current Version
               <div class="detail">{{preferences.current_version}}</div>
             </div>
-            
+  
             <div class="ui blue label">
               Available Version
               <div class="detail">{{preferences.available_version}}</div>
             </div>
-            
+  
             <div class="ui blue label">
               Execution Mode
               <div class="detail">
@@ -422,7 +422,7 @@
                 {% endif %}
               </div>
             </div>
-            
+  
             <div class="ui blue label">
               Changelog
               <a onclick="notifyChanges('{{preferences.current_version}}', true);">View</a>

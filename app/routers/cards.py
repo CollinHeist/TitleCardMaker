@@ -4,6 +4,7 @@ from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request
 )
 from fastapi_pagination.ext.sqlalchemy import paginate
+from sqlalchemy import not_
 from sqlalchemy.orm import Session
 
 from app.database.query import (
@@ -28,6 +29,7 @@ from app.models.episode import Episode
 from app.models.series import Series
 from app.schemas.card import CardActions, TitleCard, PreviewTitleCard
 from app.schemas.connection import SonarrWebhook
+from app.schemas.episode import Episode as EpisodeSchema
 from app.schemas.font import DefaultFont
 
 from modules.EpisodeInfo2 import EpisodeInfo
@@ -138,7 +140,7 @@ def get_all_title_cards(db: Session = Depends(get_database)) -> Page[TitleCard]:
     return paginate(db.query(models.card.Card))
 
 
-@card_router.get('/{card_id}', status_code=200,
+@card_router.get('/card/{card_id}', status_code=200,
                  dependencies=[Depends(get_current_user)])
 def get_title_card(
         card_id: int,
@@ -604,3 +606,19 @@ def create_cards_for_sonarr_webhook(
                 continue
 
     return None
+
+
+@card_router.get('/missing')
+def get_missing_cards(
+        db: Session = Depends(get_database),
+    ) -> Page[EpisodeSchema]:
+    """
+    Get all the Episodes that do not have any associated Cards.
+    """
+
+    return paginate(
+        db.query(Episode)\
+            .filter(not_(Episode.id.in_(
+                db.query(models.card.Card.episode_id).distinct()
+            )))
+    )

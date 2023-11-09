@@ -80,6 +80,10 @@ plugins:
       cards_layout_options:
         background_color: rgb(29, 29, 29)
 
+# Hooks
+hooks:
+  - docs/overrides/hooks/shortcodes.py
+
 extra:
   # Social links on the footer
   social:

@@ -14,7 +14,7 @@ tags:
 
 From the left-hand navigation menu, Global Settings can be accessed and set.
 Settings listed here are the _global_ defaults for TitleCardMaker, but many can
-be overwritten for a specific Series.
+be overwritten within an Episode, Series, or Template.
 
 ## Recommended Settings
 TitleCardMaker's default settings are typically the recommended settings
@@ -92,6 +92,8 @@ directories are accessible _outside_ of the Container.
 
 ### Card Directory
 
+<!-- md:overwritable Series  -->
+
 The root folder for all Title Cards created by TitleCardMaker. Within this
 directory, each Series added to TitleCardMaker will have a subfolder created for
 it, under which cards will be created.
@@ -152,6 +154,9 @@ created for it, under which source images (and logos) will be added.
 
 ## Episode Data
 ### Episode Data Source
+
+<!-- md:overwritable Series, Template -->
+
 So that Episode data (e.g. numbers, titles, airdates, etc.) does not have to be
 manually entered, TitleCardMaker needs to source Episode data from some external
 source. Any enabled Connection _can_ be used as an Episode Data source -
@@ -170,8 +175,6 @@ however, there are some differences between each.
     The speed of a Media Server as an Episode data source will vary wildy with
     both the number of Episodes for a given Series, as well as the overall size
     of your database.
-
-This setting _can_ be overwritten with Templates, or per-Series.
 
 ### Image Source Priority
 
@@ -192,6 +195,8 @@ _in order_ until a source image is found.
 
 ### Sync Specials
 
+<!-- md:overwritable Series, Template -->
+
 Whether to ignore Episodes from Season 0 by default.
 
 Many Series have "bonus" content like behind the scenes, featurettes, shorts,
@@ -199,20 +204,52 @@ commercials, etc. listed under Season 0 as _Specials_. If you would like TCM to
 ignore these when grabbing Episode data from you specified Episode data source,
 then uncheck this setting.
 
-This setting _can_ be overwritten with Templates, or per-Series.
-
 ??? note "Manually Adding Specials"
 
     Even if this setting is disabled (so Specials are ignored), Episodes can
     still be added manually.
 
+### Translation Languages
+
+Depending on the Card and your indicated episode text format or season titles,
+TCM can add spelled versions of a number to a Title Card - e.g.
+`Season One - Episode Four`. If you would like this text translated into a non-
+English language, the language(s) you would like to make available should be
+selected here.
+
+After selecting any number of languages here, the language code can be appended
+to the end of a cardinal or ordinal variable to use the translated version of
+that text. See the following example for details.
+
+??? example "Example"
+
+    If I would like my Title Card's text to be in French (fr) or Esperanto (eo)
+    then I would select both of those languages in the dropdown. Now, within a
+    Template or Series I can specify the _Episode Text Format_ (or season title)
+    as `Épisode {episode_number_cardinal_fr}` or
+    `{episode_number_ordinal_eo} Epizodo` and my Card's episode text would read
+    as `Épisode un` (Episode One) or `unua Epizodo` (First Episode).
+
+!!! tip "Cardinal vs. Ordinal Mnemonic"
+
+    An easy way to remember whether you want the cardinal or ordinal text is
+    that ++c++ardinal starts with a ++c++ like ++c++ount - so one, two, three,
+    etc.; while ++o++ordinal starts with ++o++ like ++o++rder - so first,
+    second, third, etc.
+
+This is purely to make these languages _available_ for use - you will still need
+to actually change your Card settings to reflect them. This setting __does not__
+change Episode titles; that requires [translations](...).
+
+---
+
 ## Title Cards
 ### Default Card Type
 
+<!-- md:overwritable Episode, Series, Template -->
+
 The global default card type for all Title Cards. Any instances where the card
 type is left _unspecified_ will use this card type.
-
-This setting _can_ be overwritten with Templates, per-Series, or per-Episode.
 
 ??? warning "Missing Card Types?"
 
@@ -224,19 +261,21 @@ Any number of card types to exclude from any card type dropdowns. This is purely
 a cosmetic selector, and is intended to make finding your desired card easier if
 you find there are specific types you intend to never use.
 
-### Watched Episode Style
+### Watched and Unwatched Episode Styles
 
-The default style for all Episodes that are **watched** in their indicated
-Media Server.
+<!-- md:overwritable Episode, Series, Template -->
 
-This setting _can_ be overwritten with Templates, per-Series, or per-Episode.
+The default style for all Episodes that are **watched** or **unwatched** in
+their indicated Media Server.
 
-### Unwatched Episode Style
+For a visual example of each available style, click the :octicons-question-16:
+icon next to either dropdown.
 
-The default style for all Episodes that are **unwatched** in their indicated
-Media Server.
+!!! note "Relevant User"
 
-This setting _can_ be overwritten with Templates, per-Series, or per-Episode.
+    The watched statuses for Emby and Jellyfin can be adjusted in the Connection
+    configuration, but the watched statuses of a Plex Media Server will
+    __always__ come from the server admin.
 
 ### Card Dimensions
 
@@ -249,6 +288,8 @@ increased for the opposite effect.
     TCM will not stop you from setting a non-standard (non-16:9) aspect ratio,
     but your created Title Cards __will__ be cropped when loaded into your
     Media Server.
+
+---
 
 ## File Naming
 ### Card Extension
@@ -278,10 +319,12 @@ default is because of the ubiquity of JPEG images.
 
 ### Filename Format
 
+<!-- md:overwritable Series -->
+
 The format / naming convention of how to name the Title Card files. This is a
 _format_, and will be applied to each individual Title Card. This format can
-contain _variable_ data (wrapped in `{}` curly braces) that is evaluated for
-each Title Card.
+contain variable data (wrapped in `{}` curly braces) that is evaluated for each
+Title Card.
 
 A full list of the available variables are listed below.
 
@@ -349,7 +392,8 @@ A full list of the available variables are listed below.
 
 ??? example "TRaSH Naming Convention"
 
-    If you follow the [TRaSH](https://trash-guides.info/Sonarr/Sonarr-recommended-naming-scheme/)
+    If you follow the
+    [TRaSH](https://trash-guides.info/Sonarr/Sonarr-recommended-naming-scheme/)
     recommended naming scheme, you can use the following setting:
 
     ```
@@ -362,8 +406,56 @@ A full list of the available variables are listed below.
 
 ### Specials Folder Format
 
+...
+
 ### Season Folder Format
 
-^([^{]*(?:{(?:season|episode|absolute)_number(?::\d+)?})*)+$
+...
+
+---
+
+## Web Interface
+
+### Home Page Size
+
+How many Series to display on the home screen. Larger values will result in
+longer load times. Must be between 1 and 250.
+
+### Episode Data Table Page Size
+
+How many Episodes per page to display in Episode data tables. These are the
+tables accessed on a [Series page](./series.md) in the _Episode Data_ tab.
+
+### Simplified Episode Data Tables
+
+Whether to hide Advanced (uncommonly edited) columns from Episode data tables.
+This is purely a visual toggle inted to make navigation easier, and any existing
+customizations, whether they were entered beforehand or are imported from a
+[Blueprint](../blueprints.md) are still applied.
+
+### Stylize Unmonitored Series Posters
+
+Whether to apply different styling to the posters of unmonitored Series on the
+home screen. This is to make differentiating between the two easier when
+navigating the home screen.
+
+Stylized posters have a blurred grayscale effect applied.
+
+### Source Image Data Display
+
+On the _Files_ tab of the [Series](./series.md) page, source image data can be
+presented as "card" elements or inside a table. The same information and actions
+are available in either view.
+
+### Color Impaired Mode
+
+Accessibility feature to utilize an alternate coloring which makes certain
+color combinations more distinguishable for those with color impairments.
+
+!!! note "Accessibility Feedback"
+
+    If you have feedback or suggestions on improving the accessibility of the
+    project, please reach out on the [Discord](https://discord.gg/bJ3bHtw8wH) or
+    [GitHub](https://github.com/TitleCardMaker/TitleCardMaker-WebUI/).
 
 [^1]: This can be toggled on/off.

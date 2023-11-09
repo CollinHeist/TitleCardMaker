@@ -30,3 +30,11 @@
     width: 100%;
   }
 }
+
+/* Reduce opacity of system info labels */
+.system.info .label:not(.inverted) {
+  background-color: color-mix(in srgb, #2185d0, transparent) !important;
+}
+.system.info .inverted.label {
+  background-color: color-mix(in srgb, #54c8ff, transparent) !important;
+}

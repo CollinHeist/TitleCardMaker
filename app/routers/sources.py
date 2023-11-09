@@ -5,6 +5,7 @@ from fastapi import (
     UploadFile,
 )
 from fastapi_pagination.ext.sqlalchemy import paginate
+from PIL import Image, ImageOps
 from requests import get
 from sqlalchemy.orm import Session
 
@@ -248,7 +249,6 @@ def get_all_series_backdrops_on_tmdb(
 def get_existing_series_source_images(
         series_id: int,
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences),
     ) -> Page[SourceImage]:
     """
     Get the SourceImage details for the given Series.
@@ -278,7 +278,7 @@ def get_existing_episode_source_image(
     - episode_id: ID of the Episode to get the details of.
     """
 
-    # Get the Episode and Series with this ID, raise 404 if DNE
+    # Get the Episode with this ID, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
 
     return get_source_image(episode)
@@ -291,7 +291,6 @@ async def set_episode_source_image(
         url: Optional[str] = Form(default=None),
         file: Optional[UploadFile] = None,
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences),
     ) -> SourceImage:
     """
     Set the Source Image for the given Episode. If there is an existing

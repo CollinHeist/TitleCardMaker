@@ -105,8 +105,9 @@
 /* Desktop only formatting */
 @media (min-width: 768px) {
   /* Limit card size to 33% */
-  #source-images .card {
-    max-width: calc(33% - 1em);
+  .tab[data-tab="files"] .accordion .image,
+  .tab[data-tab="files"] .cards .card {
+    max-width: calc(32% - 1em);
   }
 }
 
@@ -131,10 +132,6 @@
 img[data-action="browse-tmdb"] {
   height: 14px;
   padding-right: 3px;
-}
-
-.tab[data-tab="files"] .accordion .image {
-  width: 32%;
 }
 
 /* Add padding between images on TMDb image browser */
