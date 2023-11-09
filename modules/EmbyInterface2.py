@@ -12,7 +12,7 @@ from modules.EpisodeDataSource2 import (
 )
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
-from modules.MediaServer2 import MediaServer, SourceImage
+from modules.MediaServer2 import _Card, _Episode, MediaServer, SourceImage
 from modules.SeriesInfo2 import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
@@ -123,7 +123,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         Returns:
             User ID hexstring associated with the given username. None
-            if the  username was not found.
+            if the username was not found.
         """
 
         # Query for list of all users on this server
@@ -176,6 +176,8 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         Args:
             library_name: Name of the library containing the series.
             series_info: The series being evaluated.
+            raw_obj: Whether to return the raw object from the `/Items`
+                endpoint (rather than just the series ID).
             log: Logger for all log messages.
 
         Returns:
@@ -577,7 +579,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
     def get_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
-            episodes: list['Episode'], # type: ignore
+            episodes: list[_Episode],
             *,
             log: Logger = log,
         ) -> list[WatchedStatus]:
@@ -626,10 +628,10 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
     def load_title_cards(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_and_cards: list[tuple['Episode', 'Card']], # type: ignore
+            episode_and_cards: list[tuple[_Episode, _Card]],
             *,
             log: Logger = log,
-        ) -> list[tuple['Episode', 'Card']]: # type: ignore
+        ) -> list[tuple[_Episode, _Card]]:
         """
         Load the title cards for the given Series and Episodes.
 
@@ -639,6 +641,9 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             episode_and_cards: List of tuple of Episode and their
                 corresponding Card objects to load.
             log: Logger for all log messages.
+
+        Returns:
+            List of tuple of Episode and Card pairs which were loaded.
         """
 
         # If series has no Emby ID, or no episodes, exit

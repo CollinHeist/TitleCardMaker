@@ -6,10 +6,12 @@ from typing import Optional, Union
 from fastapi import HTTPException
 
 from modules.Debug import log
-from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult, WatchedStatus
+from modules.EpisodeDataSource2 import (
+    EpisodeDataSource, SearchResult, WatchedStatus
+)
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
-from modules.MediaServer2 import MediaServer, SourceImage
+from modules.MediaServer2 import _Card, _Episode, MediaServer, SourceImage
 from modules.SeriesInfo2 import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
@@ -588,7 +590,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
     def get_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
-            episodes: list['Episode'], # type: ignore
+            episodes: list[_Episode],
             *,
             log: Logger = log,
         ) -> list[WatchedStatus]:
@@ -644,10 +646,10 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
     def load_title_cards(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_and_cards: list[tuple['Episode', 'Card']], # type: ignore
+            episode_and_cards: list[tuple[_Episode, _Card]],
             *,
             log: Logger = log,
-        ) -> list[tuple['Episode', 'Card']]: # type: ignore
+        ) -> list[tuple[_Episode, _Card]]:
         """
         Load the title cards for the given Series and Episodes.
 

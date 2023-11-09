@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from logging import Logger
-from typing import Optional, Union
+from typing import Optional, TypeVar, Union
 from pathlib import Path
 
 from PIL import Image
@@ -11,6 +11,8 @@ from modules.EpisodeInfo2 import EpisodeInfo
 from modules.SeriesInfo import SeriesInfo
 
 
+_Card = TypeVar('_Card')
+_Episode = TypeVar('_Episode')
 SourceImage = Union[str, bytes, None]
 
 
@@ -94,7 +96,7 @@ class MediaServer(ABC):
     def get_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
-            episodes: list['Episode'], # type: ignore
+            episodes: list[_Episode],
             *,
             log: Logger = log,
         ) -> list[WatchedStatus]:
@@ -106,10 +108,10 @@ class MediaServer(ABC):
     def load_title_cards(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_and_cards: list[tuple['Episode', 'Card']], # type: ignore
+            episode_and_cards: list[tuple[_Episode, _Card]],
             *,
             log: Logger = log,
-        ) -> None:
+        ) -> list[tuple[_Episode, _Card]]:
         """Abstract method to load title cards within this MediaServer."""
         raise NotImplementedError
 
