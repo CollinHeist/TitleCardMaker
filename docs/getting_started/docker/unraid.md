@@ -5,16 +5,14 @@ description: >
 ---
 
 # UnRAID Installation
-## Background
 
 !!! info "Benefits of Docker"
 
     For more info on the benefits of Docker, see [here](./index.md).
 
-For Synology DSM users, the built-in Docker manager can be used to easily set up
-TitleCardMaker with all the necessary Docker variables and paths.
-
-## Instructions
+On UnRAID, the Communnity Apps store can be used to load a template for
+configuring and launching TitleCardMaker  with all the necessary Docker
+variables and paths.
 
 1. Navigate to the UnRAID WebGUI home page for your server.
 
