@@ -22,6 +22,16 @@
   }
 }
 
+#action-buttons .divider[data-interface="Emby"] span[data-value="interface-type"] {
+  color: #4CAF50;
+}
+#action-buttons .divider[data-interface="Jellyfin"] span[data-value="interface-type"] {
+  color: rgb(108,119,199);
+}
+#action-buttons .divider[data-interface="Plex"] span[data-value="interface-type"] {
+  color: rgb(226,179,61);
+}
+
 /* Remove minimum width on progress bar */
 #card-progress .bar {
   min-width: 0;

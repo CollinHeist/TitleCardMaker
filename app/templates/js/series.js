@@ -1652,13 +1652,15 @@ function createTitleCards() {
  * Submit an API request to delete this Series' Title Cards. Series
  * statistics are re-queried if successful.
  * 
- * @param {int} libraryIndex - Library index number to load Title Cards into.
+ * @param {int} interfaceId - ID of the library's interface.
+ * @param {str} libraryName - Name of the library to load cards into.
  * @param {bool} reload - Whether to force reload the cards.
  */
-function loadCards(libraryIndex, reload=false) {
+function loadCards(interfaceId, libraryName, reload=false) {
+  const params = `?interface_id=${interfaceId}&library_name=${libraryName}&reload=${reload}`;
   $.ajax({
     type: 'PUT',
-    url:`/api/cards/series/{{series.id}}/load/library/${libraryIndex}?reload=${reload}`,
+    url:`/api/cards/series/{{series.id}}/load/library${params}`,
     success: () => {
       showInfoToast('Loaded Title Cards');
       getStatistics();
@@ -1788,15 +1790,15 @@ function navigateSeries(next_or_previous) {
 /*
  * Submit an API request to remove the TCM/PMM labels from this Series in Plex.
  * 
- * @param {HTMLElement} buttonElement - Element to disable to signify it's been
- * clicked.
+ * @param {int} interfaceId - ID of the library's interface.
+ * @param {str} libraryName - Name of the library to load cards into.
  */
-function removePlexLabels(buttonElement) {  
+function removePlexLabels(interfaceId, libraryName) {  
   // Submit API request
-  buttonElement.classList.add('disabled');
+  const params = `?interface_id=${interfaceId}&library_name=${libraryName}`;
   $.ajax({
     type: 'DELETE',
-    url: `/api/series/{{series.id}}/plex-labels`,
+    url: `/api/series/{{series.id}}/plex-labels/library${params}`,
     success: () => showInfoToast('Removed Labels'),
     error: response => showErrorToast({title: 'Error Removing Labels', response}),
   });

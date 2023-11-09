@@ -237,13 +237,14 @@ def load_series_title_cards_into_all_libraries(
     )
 
 
-@card_router.put('/series/{series_id}/load/library/{library_index}',
+@card_router.put('/series/{series_id}/load/library',
                  status_code=200,
                  tags=['Series'])
 def load_series_title_cards_into_library(
         request: Request,
         series_id: int,
-        library_index: int,
+        interface_id: int = Query(...),
+        library_name: str = Query(...),
         reload: bool = Query(default=False),
         db: Session = Depends(get_database),
     ) -> None:
@@ -261,22 +262,11 @@ def load_series_title_cards_into_library(
 
     # Get this Series and Interface, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
-
-    # Get library with this index
-    try:
-        library = series.libraries[library_index]
-    except KeyError as exc:
-        raise HTTPException(
-            status_code=404,
-            detail=f'No Library with index {library_index}',
-        ) from exc
-
-    # Get this Library's Connection, raise 404 if DNE
-    interface = get_interface(library['interface_id'], raise_exc=True)
+    interface = get_interface(interface_id, raise_exc=True)
 
     # Load this Library's Cards
     load_series_title_cards(
-        series, library['name'], library['interface_id'], db, interface,
+        series, library_name, interface_id, db, interface,
         reload, log=request.state.log,
     )
 

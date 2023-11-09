@@ -403,7 +403,39 @@ def process_series(
         )
 
 
-@series_router.delete('/{series_id}/plex-labels', status_code=204)
+@series_router.delete('/{series_id}/plex-labels/library', status_code=204)
+def remove_series_labels(
+        request: Request,
+        series_id: int,
+        interface_id: int = Query(...),
+        library_name: str = Query(...),
+        labels: list[str] = Query(default=['TCM', 'Overlay']),
+        db: Session = Depends(get_database),
+    ) -> None:
+    """
+    Remove the given labels from the given Series' Episodes within Plex.
+    This can be used to reset PMM overlays.
+
+    - series_id: ID of the Series whose Episode labels are being remove.
+    - interface_id: ID of the Interface whose library is being removed.
+    - library_name: Name of the library to remove labels from.
+    - labels: Any labels to remove.
+    """
+
+    # Get this Series and Interface, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+    interface: PlexInterface = get_interface(interface_id, raise_exc=True)
+
+    # Remove labels from specified library
+    interface.remove_series_labels(
+        library_name, series.as_series_info, labels,
+        log=request.state.log
+    )
+
+    return None
+
+
+@series_router.delete('/{series_id}/plex-labels/all', status_code=204)
 def remove_series_labels(
         request: Request,
         series_id: int,
@@ -411,8 +443,9 @@ def remove_series_labels(
         db: Session = Depends(get_database),
     ) -> None:
     """
-    Remove the given labels from the given Series' Episodes within Plex.
-    This can be used to reset PMM overlays.
+    Remove the given labels from the given Series' Episodes within all
+    of the Series' assigned Plex libraries. This can be used to reset
+    PMM overlays.
 
     - series_id: ID of the Series whose Episode labels are being remove.
     - labels: Any labels to remove.
