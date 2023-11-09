@@ -1,4 +1,8 @@
-"""Modify Font file
+"""
+Modify Font table
+- Add new file_name Column
+- Remove file Column
+- Perform data migration of existing Font filenames
 
 Revision ID: 4d7cb48238be
 Revises: 5861246a49f3

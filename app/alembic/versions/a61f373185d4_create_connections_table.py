@@ -32,7 +32,7 @@ Modify Template table:
   agnostic "contains" conditions
 
 Revision ID: a61f373185d4
-Revises: 4d7cb48238be
+Revises: caec4f618689
 Create Date: 2023-09-28 12:56:59.752356
 """
 # pylint: disable
@@ -42,7 +42,7 @@ from modules.Debug import contextualize
 
 # revision identifiers, used by Alembic.
 revision = 'a61f373185d4'
-down_revision = '25490125daaf'
+down_revision = 'caec4f618689'
 branch_labels = None
 depends_on = None
 

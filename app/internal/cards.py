@@ -283,7 +283,7 @@ def validate_card_type_model(
 def create_card(
         db: Session,
         card_model: NewTitleCard,
-        CardClass: BaseCardType,
+        CardClass: type[BaseCardType],
         CardTypeModel: Base,
         *,
         log: Logger = log,
@@ -799,7 +799,7 @@ def delete_cards(
     for card in card_query.all():
         if (card_file := Path(card.card_file)).exists():
             card_file.unlink()
-            log.debug(f'Delete "{card_file.resolve()}" card')
+            log.debug(f'Deleted "{card_file.resolve()}" Card')
             deleted.append(str(card_file))
 
     # Delete from database

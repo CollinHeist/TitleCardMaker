@@ -14,12 +14,13 @@ Manually downgrade DB to specific version
 >>> alembic downgrade <target-revision>
 
 Schema Version History (oldest to newest):
-- 693dd5aa47cd
-- 65fd10d8732e
-- 0233f2608d72
-- 5861246a49f3
-- 4d7cb48238be
-- 25490125daaf
+- 693dd5aa47cd | Initialize tables
+- 65fd10d8732e | Add User table
+- 0233f2608d72 | Add interword spacing
+- 5861246a49f3 | Change default of Font.interword_spacing
+- 4d7cb48238be | Replace Font.file with Font.file_name
+- 25490125daaf | Add explicit ordering to Templates
+- caec4f618689 | Turn Card attributes into Card.model_json
 - a61f373185d4
 """
 
