@@ -1,31 +1,59 @@
+:root {
+  --badge-color: #526cfe1a;
+}
+
 /* Logo colors */
 .emby {
-    color: #4CAF50
+  color: #4CAF50
 }
 .jellyfin {
-    color: rgb(108,119,199);
+  color: rgb(108,119,199);
 }
 .plex {
-    color: rgb(226,179,61);
+  color: rgb(226,179,61);
 }
 .tmdb {
-    color: rgb(1, 180, 228);
+  color: rgb(1, 180, 228);
 }
 
 /* Generic icon colors */
 .green {
-    color: #4cae4f
+  color: #4cae4f
 }
 .red {
-    color: #ef5552
+  color: #ef5552
 }
 
 /* Stylize footer donate link */
 .md-social__link[title="Become a Sponsor"] > svg {
-    fill: crimson;
+  fill: crimson;
 }
 
 /* Resize termynal windows */
 [data-termynal] {
-    padding: 40px 35px 35px !important;
+  padding: 40px 35px 35px !important;
+}
+
+.md-typeset .mdx-badge {
+  font-size: 1.0em;
+}
+
+.md-typeset .mdx-badge--right {
+  float: right;
+  margin-left: 0.35em;
+}
+.md-typeset .mdx-badge__icon {
+  padding: 4px;
+  background: var(--badge-color, var(--md-accent-fg-color--transparent));
+  border-start-start-radius: 2px;
+  border-end-start-radius: 2px;
+}
+.md-typeset .mdx-badge__icon:last-child {
+  border-radius: 2px;
+}
+.md-typeset .mdx-badge__text {
+  padding: 4px 6px;
+  border-start-end-radius: 2px;
+  border-end-end-radius: 2px;
+  box-shadow: 0 0 0 1px inset var(--badge-color, var(--md-accent-fg-color--transparent));
 }
