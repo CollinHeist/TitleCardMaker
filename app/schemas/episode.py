@@ -25,7 +25,6 @@ class NewEpisode(Base):
 
     source_file: Optional[str] = None
     card_file: Optional[str] = None
-    watched: Optional[bool] = None
 
     season_number: int = 1
     episode_number: int = 1
@@ -77,7 +76,6 @@ class UpdateEpisode(UpdateBase):
 
     source_file: Optional[str] = UNSPECIFIED
     card_file: Optional[str] = UNSPECIFIED
-    watched: Optional[bool] = UNSPECIFIED
 
     season_number: int = UNSPECIFIED
     episode_number: int = UNSPECIFIED
@@ -128,7 +126,7 @@ class UpdateEpisode(UpdateBase):
         if len(val) != len(set(val)):
             raise ValueError('Template IDs must be unique')
         return val
-    
+
     @root_validator(pre=False)
     def convert_null_ids_to_empty_strings(cls, values):
         if 'emby_id' in values and values['emby_id'] == None:
@@ -161,7 +159,6 @@ class Episode(Base):
 
     source_file: Optional[str]
     card_file: Optional[str]
-    watched: Optional[bool]
 
     season_number: int
     episode_number: int

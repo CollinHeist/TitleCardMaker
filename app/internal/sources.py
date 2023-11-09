@@ -124,21 +124,15 @@ def resolve_source_settings(
     # Styles are the same, Episode watch status does not matter
     if (('art' in watched_style and 'art' in unwatched_style)
         or ('unique' in watched_style and 'unique' in unwatched_style)):
-        return watched_style, episode.get_source_file(
-            preferences.source_directory, watched_style
-        )
+        return watched_style, episode.get_source_file(watched_style)
 
     # Episode is watched, use watched style
-    # TODO modify
-    if episode.watched:
-        return watched_style, episode.get_source_file(
-            preferences.source_directory, watched_style
-        )
+    if (library and
+        episode.get_watched_status(library['interface_id'],library['name'])):
+        return watched_style, episode.get_source_file(watched_style)
 
     # Watch status is unset or Episode is unwatched, use unwatched style
-    return unwatched_style, episode.get_source_file(
-        preferences.source_directory, unwatched_style
-    )
+    return unwatched_style, episode.get_source_file(unwatched_style)
 
 
 def resolve_all_source_settings(episode: Episode) -> list[tuple[Style, Path]]:

@@ -290,10 +290,10 @@ def load_series_title_cards(
     changed, episodes_to_load = False, []
     for episode in series.episodes:
         # Only load if Episode has a Card
-        if not episode.card:
+        if not episode.cards:
             log.debug(f'{series.log_str} {episode.log_str} - no associated Card')
             continue
-        card = episode.card[0]
+        card = episode.cards[0]
 
         # Find previously loaded Card
         previously_loaded = db.query(Loaded)\
