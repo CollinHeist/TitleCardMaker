@@ -1,16 +1,15 @@
 from base64 import b64encode
 from datetime import datetime
 from logging import Logger
-from typing import Optional, Union
+from typing import Iterator, Optional, Union
 
 from fastapi import HTTPException
-from modules.DatabaseInfoContainer import InterfaceID
 
 from modules.Debug import log
 from modules.EpisodeDataSource2 import (
     EpisodeDataSource, SearchResult, WatchedStatus
 )
-from modules.EpisodeInfo2 import EpisodeInfo
+from modules.EpisodeInfo2 import EmbyEpisodeDict, EpisodeInfo
 from modules.Interface import Interface
 from modules.MediaServer2 import _Card, _Episode, MediaServer, SourceImage
 from modules.SeriesInfo2 import SeriesInfo
@@ -227,11 +226,61 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
             # Go through all items and match name and type, setting database IDs
             for result in response['Items']:
-                if (result['Type'] == 'Series'
-                    and series_info.matches(result['Name'])):
-                    return result if raw_obj else result['Id']
+                if result['Type'] == 'Series':
+                    this_series = SeriesInfo.from_emby_info(
+                        result, library_name, self._interface_id
+                    )
+                    if series_info == this_series:
+                        return result if raw_obj else result['Id']
 
         # Not found on server
+        return None
+
+
+    def __get_episodes(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            *,
+            log: Logger = log,
+        ) -> Iterator[EmbyEpisodeDict]:
+        """
+        Iterate through all the episodes associated with the given
+        series.
+
+        Args:
+            library_name: The name of the library containing the series.
+            series_info: Series to get the episodes of.
+
+        Yields:
+            Dictionary of episode data as returned by the
+            `/Shows/{id}/Episodes` API endpoint.
+        """
+
+        # Find series
+        emby_id = self.__get_series_id(library_name, series_info, log=log)
+        if emby_id is None:
+            log.warning(f'Series not found in Emby {series_info!r}')
+            return None
+
+        # Get all episodes for this series
+        response = self.session.get(
+            f'{self.url}/Shows/{emby_id}/Episodes',
+            params=self.__params | {
+                'UserId': self.user_id,
+                'Fields': 'ProviderIds'
+            }
+        )
+
+        # Parse each returned episode into EpisodeInfo object
+        for episode in response['Items']:
+            # Skip episodes without episode or season numbers
+            if (episode.get('IndexNumber', None) is None
+                or episode.get('ParentIndexNumber', None) is None):
+                log.debug(f'Series {series_info} episode is missing index data')
+                continue
+
+            yield episode
+
         return None
 
 
@@ -477,15 +526,12 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 # Process each returned Series
                 for series in response['Items']:
                     try:
-                        ids = series.get('ProviderIds', {})
-                        series_info = SeriesInfo(
-                            series['Name'], None,
-                            emby_id=f'{self._interface_id}:{series["Id"]}',
-                            imdb_id=ids.get('IMDB'),
-                            tmdb_id=ids.get('Tmdb'),
-                            tvdb_id=ids.get('Tvdb'),
-                        )
-                        all_series.append((series_info, library))
+                        all_series.append((
+                            SeriesInfo.from_emby_info(
+                                series, self._interface_id, library
+                            ),
+                            library
+                        ))
                     except ValueError:
                         log.error(f'Series {series["Name"]} is missing a year')
                         continue
@@ -516,64 +562,17 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             this series.
         """
 
-        # Find series
-        emby_id = self.__get_series_id(library_name, series_info, log=log)
-        if emby_id is None:
-            log.warning(f'Series not found in Emby {series_info!r}')
-            return []
-
-        # Get all episodes for this series
-        response = self.session.get(
-            f'{self.url}/Shows/{emby_id}/Episodes',
-            params={
-                'UserId': self.user_id, 'Fields': 'ProviderIds'
-            } | self.__params
-        )
-
-        # Parse each returned episode into EpisodeInfo object
-        all_episodes = []
-        for episode in response['Items']:
-            # Skip episodes without episode or season numbers
-            if (episode.get('IndexNumber', None) is None
-                or episode.get('ParentIndexNumber', None) is None):
-                log.debug(f'Series {series_info} episode is missing index data')
-                continue
-
-            # Parse airdate for this episode
-            airdate = None
-            try:
-                airdate = datetime.strptime(
-                    episode['PremiereDate'], self.AIRDATE_FORMAT
+        return [
+            (
+                EpisodeInfo.from_emby_info(episode),
+                WatchedStatus(
+                    self._interface_id,
+                    library_name,
+                    episode.get('UserData', {}).get('Played')
                 )
-            except Exception as e:
-                log.exception(f'Cannot parse airdate', e)
-                log.debug(f'Episode data: {episode}')
-
-            emby_id = f'{self._interface_id}:{library_name}:{episode.get("Id")}'
-            episode_info = EpisodeInfo(
-                episode['Name'],
-                episode['ParentIndexNumber'],
-                episode['IndexNumber'],
-                emby_id=emby_id,
-                imdb_id=episode['ProviderIds'].get('Imdb'),
-                tmdb_id=episode['ProviderIds'].get('Tmdb'),
-                tvdb_id=episode['ProviderIds'].get('Tvdb'),
-                tvrage_id=episode['ProviderIds'].get('TvRage'),
-                airdate=airdate,
-            )
-
-            # Add to list
-            if episode_info is not None:
-                all_episodes.append((
-                    episode_info,
-                    WatchedStatus(
-                        self._interface_id,
-                        library_name,
-                        episode.get('UserData', {}).get('Played')
-                    )
-                ))
-
-        return all_episodes
+            ) for episode in
+            self.__get_episodes(library_name, series_info, log=log)
+        ]
 
 
     def get_watched_statuses(self,
@@ -598,27 +597,14 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         if len(episodes) == 0:
             return []
 
-        # Find series, exit if not found
-        emby_id = self.__get_series_id(library_name, series_info, log=log)
-        if emby_id is None:
-            return []
-
-        # Query for all episodes of this series
-        response = self.session.get(
-            f'{self.url}/Shows/{emby_id}/Episodes',
-            params={'UserId': self.user_id} | self.__params
-        )
-
-        # Go through each episode in Emby, update Episode status/card
         statuses = []
-        for emby_episode in response['Items']:
-            for episode in episodes:
-                if (emby_episode['ParentIndexNumber'] == episode.season_number
-                    and emby_episode["IndexNumber"] == episode.episode_number):
+        for episode in self.__get_episodes(library_name, series_info, log=log):
+            for this_episode in episodes:
+                if episode == this_episode:
                     statuses.append(WatchedStatus(
                         self._interface_id,
                         library_name,
-                        emby_episode['UserData']['Played'],
+                        episode['UserData']['Played'],
                     ))
                     break
 
@@ -652,32 +638,34 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         # Load each episode and card
         loaded = []
-        for episode, card in episode_and_cards:
-            # Skip episodes without Emby ID's (e.g. not in Emby)
-            if (emby_id := episode.emby_id) is None:
-                continue
-            interface_id = InterfaceID(episode.emby_id,type_=str,libraries=True)
-            if (emby_id := interface_id[self._interface_id]) is None:
-                continue
+        for emby_ep in self.__get_episodes(library_name, series_info, log=log):
+            # Create EpisodeInfo object for this episode
+            emby_info = EpisodeInfo.from_emby_info(
+                emby_ep, self._interface_id, library_name
+            )
+            emby_id = emby_info.emby_id[self._interface_id, library_name]
 
-            # Shrink image if necessary, skip if cannot be compressed
-            if (image := self.compress_image(card.card_file, log=log)) is None:
-                continue
+            # Iterate through all the given episodes/cards, upload to match
+            for episode, card in episode_and_cards:
+                if episode.as_episode_info == emby_info:
+                    # Shrink image if necessary, skip if cannot be compressed
+                    if (image := self.compress_image(card.card_file, log=log)) is None:
+                        continue
 
-            # Submit POST request for image upload on Base64 encoded image
-            card_base64 = b64encode(image.read_bytes())
-            try:
-                self.session.session.post(
-                    url=f'{self.url}/Items/{emby_id}/Images/Primary',
-                    headers={'Content-Type': 'image/jpeg'},
-                    params=self.__params,
-                    data=card_base64,
-                )
-                loaded.append((episode, card))
-            except Exception as e:
-                log.exception(f'Unable to upload {image.resolve()} to '
-                              f'{series_info}', e)
-                continue
+                    # Submit POST request for image upload on Base64 encoded image
+                    card_base64 = b64encode(image.read_bytes())
+                    try:
+                        self.session.session.post(
+                            url=f'{self.url}/Items/{emby_id}/Images/Primary',
+                            headers={'Content-Type': 'image/jpeg'},
+                            params=self.__params,
+                            data=card_base64,
+                        )
+                        loaded.append((episode, card))
+                    except Exception as e:
+                        log.exception(f'Unable to upload {image.resolve()} to '
+                                    f'{series_info}', e)
+                    break
 
         # Log load operations to user
         if loaded:
