@@ -696,24 +696,28 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             returned.
         """
 
-        # Find series, exit if not found
-        emby_id = self.__get_series_id(library_name, series_info, log=log)
-        if emby_id is None:
-            log.warning(f'Episode {episode_info} not found in Emby')
-            return None
+        for episode in self.__get_episodes(library_name, series_info, log=log):
+            emby_episode = EpisodeInfo.from_emby_info(
+                episode, self._interface_id, library_name
+            )
+            if emby_episode == episode_info:
+                emby_id = emby_episode.emby_id[self._interface_id, library_name]
 
-        # Get the source image for this episode
-        response = self.session.session.get(
-            f'{self.url}/Items/{emby_id}/Images/Primary',
-            params={'Quality': 100} | self.__params,
-        ).content
+                # Get the source image for this episode
+                response = self.session.session.get(
+                    f'{self.url}/Items/{emby_id}/Images/Primary',
+                    params={'Quality': 100} | self.__params,
+                ).content
 
-        # Check if valid content was returned
-        if b'does not have an image of type' in response:
-            log.warning(f'Episode {episode_info} has no source images')
-            return None
+                # Check if valid content was returned
+                if b'does not have an image of type' in response:
+                    log.warning(f'Episode {episode_info} has no source images')
+                    return None
 
-        return response
+                return response
+
+        log.warning(f'Episode {episode_info} not found in Emby')
+        return None
 
 
     def get_series_poster(self,
