@@ -145,16 +145,48 @@ class SeriesInfo(DatabaseInfoContainer):
 
 
     @staticmethod
+    def from_emby_info(
+            info: dict,
+            interface_id: int,
+            library_name: str,
+        ) -> 'SeriesInfo':
+        """
+        Create a SeriesInfo object from the given emby series data (from
+        the `/Items/` endpoint).
+
+        Args:
+            info: Dictionary of series info.
+            interface_id: ID of the Emby interface whose data is being
+                parsed.
+            library_name: Name of the library associated with this
+                Series.
+
+        Returns:
+            SeriesInfo object defining the given data.
+        """
+
+        return SeriesInfo(
+            name=info['Name'],
+            year=info.get('ProductionYear'),
+            emby_id=f'{interface_id}:{library_name}:{info["Id"]}',
+            imdb_id=info.get('ProviderIds', {}).get('IMDB'),
+            tmdb_id=info.get('ProviderIds', {}).get('Tmdb'),
+            tvdb_id=info.get('ProviderIds', {}).get('Tvdb'),
+            tvrage_id=info.get('ProviderIds', {}).get('TvRage'),
+        )
+
+
+    @staticmethod
     def from_plex_show(plex_show: PlexShow) -> 'SeriesInfo':
         """
-        Create a SeriesInfo object from a plexapi Show object.
+        Create a SeriesInfo object from a `plexapi.video.Show` object.
 
         Args:
             plex_show: Show to create an object from. Any available
                 GUID's are utilized.
 
         Returns:
-            SeriesInfo object encapsulating the given show.
+            SeriesInfo object defining the given show.
         """
 
         # Create SeriesInfo for this show

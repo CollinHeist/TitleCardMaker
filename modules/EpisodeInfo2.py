@@ -12,7 +12,26 @@ from modules.DatabaseInfoContainer import DatabaseInfoContainer, InterfaceID
 from modules.Title import Title
 
 
-class EpisodeDatabaseIDs(TypedDict): # pylint: disable=missing-class-docstring
+# pylint: disable=missing-class-docstring
+class UserData(TypedDict):
+    Played: Optional[bool]
+
+class EmbyProviderIDs(TypedDict):
+    Imdb: Optional[str]
+    Tmdb: Optional[int]
+    Tvdb: Optional[int]
+    TvRage: Optional[int]
+
+class EmbyEpisodeDict(TypedDict):
+    Name: str
+    ParentIndexNumber: int
+    IndexNumber: int
+    Id: int
+    ProviderIds: EmbyProviderIDs
+    PremiereDate: str
+    UserData: UserData
+
+class EpisodeDatabaseIDs(TypedDict):
     emby_id: int
     imdb_id: str
     jellyfin_id: str
@@ -20,17 +39,18 @@ class EpisodeDatabaseIDs(TypedDict): # pylint: disable=missing-class-docstring
     tvdb_id: int
     tvrage_id: int
 
-class EpisodeCharacteristics(TypedDict, total=False): # pylint: disable=missing-class-docstring
+class EpisodeCharacteristics(TypedDict, total=False):
     season_number: int
     episode_number: int
     absolute_number: Optional[int]
     absolute_episode_number: int
     airdate: Optional[datetime]
 
-class EpisodeIndices(TypedDict): # pylint: disable=missing-class-docstring
+class EpisodeIndices(TypedDict):
     season_number: int
     episode_number: int
     absolute_number: Optional[int]
+# pylint: enable=missing-class-docstring
 
 class WordSet(dict):
     """
@@ -127,8 +147,8 @@ class WordSet(dict):
 class EpisodeInfo(DatabaseInfoContainer):
     """
     This class describes static information about an Episode, such as
-    the season, episode, and absolute number, as well as the various
-    ID's associated with it.
+    the season, episode, and absolute number, as well as the various IDs
+    associated with it.
     """
 
     __slots__ = (
@@ -272,9 +292,53 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     @staticmethod
+    def from_emby_info(
+            info: EmbyEpisodeDict,
+            interface_id: int,
+            library_name: str,
+        ) -> 'EpisodeInfo':
+        """
+        Create an EpisodeInfo object from the given emby episode data.
+
+        Args:
+            info: Dictionary of episode info.
+            interface_id: ID of the Emby interface whose data is being
+                parsed.
+            library_name: Name of the library associated with this
+                Series.
+
+        Returns:
+            EpisodeInfo object defining the given data.
+        """
+
+        # Parse airdate
+        airdate = None
+        try:
+            airdate = datetime.strptime(
+                info['PremiereDate'], '%Y-%m-%dT%H:%M:%S.%f000000Z'
+            )
+        except Exception as e:
+            log.exception(f'Cannot parse airdate', e)
+            log.debug(f'Episode data: {info}')
+
+        return EpisodeInfo(
+            info['Name'],
+            info['ParentIndexNumber'],
+            info['IndexNumber'],
+            emby_id=f'{interface_id}:{library_name}:{info["Id"]}',
+            imdb_id=info['ProviderIds'].get('Imdb'),
+            tmdb_id=info['ProviderIds'].get('Tmdb'),
+            tvdb_id=info['ProviderIds'].get('Tvdb'),
+            tvrage_id=info['ProviderIds'].get('TvRage'),
+            airdate=airdate,
+        )
+
+
+    @staticmethod
     def from_plex_episode(plex_episode: PlexEpisode) -> 'EpisodeInfo':
         """
-        Create an EpisodeInfo object from a plexapi Episode object.
+        Create an EpisodeInfo object from a `plexapi.video.Episode`
+        object.
 
         Args:
             plex_episode: Episode to create an object from. Any

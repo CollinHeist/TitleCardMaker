@@ -355,13 +355,13 @@ class DatabaseInfoContainer(ABC):
 
         # Verify class comparison
         if not isinstance(other, self.__class__):
-            raise TypeError(f'Can only compare like DatabaseInfoContainers')
+            raise TypeError(f'Can only compare like {self.__class__.__name__} objects')
 
         return any(
-            attr.endswith('_id')
-            and getattr(self, attr, None) is not None
+            getattr(self, attr, None) is not None
             and getattr(self, attr, None) == getattr(other, attr, None)
             for attr in self.__slots__
+            if attr.endswith('_id')
         )
 
 
