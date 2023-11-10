@@ -5,9 +5,10 @@ from re import match as re_match
 from typing import Literal, Optional, Union
 
 from pydantic import ( # pylint: disable=no-name-in-module
-    Field, FilePath, PositiveFloat, PositiveInt, conint, constr, root_validator,
+    FilePath, PositiveFloat, PositiveInt, conint, constr, root_validator,
     validator,
 )
+from pydantic.color import Color
 
 from app.schemas.base import Base, BetterColor, DictKey
 from modules.cards.AnimeTitleCard import AnimeTitleCard
@@ -453,6 +454,7 @@ class WhiteBorderCardType(BaseCardTypeCustomFontAllText):
     font_file: FilePath = WhiteBorderTitleCard.TITLE_FONT
     omit_gradient: bool = False
     separator: str = '•'
+    border_color: BetterColor = 'white'
     stroke_color: BetterColor = WhiteBorderTitleCard.STROKE_COLOR
     episode_text_color: BetterColor = WhiteBorderTitleCard.TITLE_COLOR
 
