@@ -132,17 +132,24 @@ function createPageElement(pageNumber, pageText, active = false, navigateFunctio
 }
 
 function updatePagination(args) {
-  const {
+  let {
     paginationElementId = () => {},
     navigateFunction = () => {},
     page = 1,
     pages = 1,
-    amountVisible = 5,
+    amountVisible = undefined,
     hideIfSinglePage = false,
   } = args;
 
   // Remove existing pagination links
   $(`#${paginationElementId} a`).remove();
+
+  // If amount visible is not fixed, then determine via width
+  if (amountVisible === undefined) {
+    let totalWidth = document.getElementById(paginationElementId).offsetWidth;
+    let pageWidth = page + 10 > 100 ? 56.25 : 48.25;
+    amountVisible = Math.floor(totalWidth / pageWidth);
+  }
 
   // Add no links if only one page
   if (pages === 1) {
@@ -268,7 +275,6 @@ async function queryAvailableExtras() {
 /*
  * Initialize the extra key dropdowns with all available options.
  */
-
 let popups = {};
 async function initializeExtraDropdowns(
     value,

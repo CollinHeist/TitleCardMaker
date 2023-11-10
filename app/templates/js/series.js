@@ -655,7 +655,7 @@ async function getFileData(page=currentFilePage) {
     navigateFunction: getFileData,
     page: allFiles.page,
     pages: allFiles.pages,
-    amountVisible: isSmallScreen() ? 6 : 18,
+    amountVisible: isSmallScreen() ? 6 : 15,
   });
   refreshTheme();
   $('#source-image-previews .image .dimmer').dimmer({transition: 'fade up', on: 'hover'});
