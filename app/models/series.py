@@ -428,6 +428,7 @@ class Series(Base):
             tmdb_id=self.tmdb_id,
             tvdb_id=self.tvdb_id,
             tvrage_id=self.tvrage_id,
+            match_titles=self.match_titles,
         )
 
 
