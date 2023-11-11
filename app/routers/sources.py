@@ -186,17 +186,21 @@ def download_episode_source_image_(
 
 
 @source_router.get('/episode/{episode_id}/browse', status_code=200)
-def get_all_episode_source_images_on_tmdb(
+def get_all_episode_source_images(
         request: Request,
         episode_id: int,
         db: Session = Depends(get_database),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
     ) -> list[TMDbImage]:
     """
     Get all Source Images on TMDb for the given Episode.
 
     - episode_id: ID of the Episode to get the Source Images of.
     """
+
+    # Get the Episode, raise 404 if DNE
+    episode = get_episode(db, episode_id, raise_exc=True)
 
     # If no TMDb connection, raise 409
     if tmdb_interface is None:
@@ -205,24 +209,35 @@ def get_all_episode_source_images_on_tmdb(
             detail=f'No connection to TMDb'
         )
 
-    # Get the Episode, raise 404 if DNE
-    episode = get_episode(db, episode_id, raise_exc=True)
-
     # Determine title matching
     if episode.match_title is not None:
         match_title = episode.match_title
     else:
         match_title = episode.series.match_titles
 
-    # Get all source images
-    source_images = tmdb_interface.get_all_source_images(
+    # Get all Source Images from TMDb
+    tmdb_images = tmdb_interface.get_all_source_images(
         episode.series.as_series_info,
         episode.as_episode_info,
         match_title=match_title,
         bypass_blacklist=True,
         log=request.state.log,
-    )
-    return [] if source_images is None else source_images
+    ) or []
+
+    # Get Source Image from Plex if possible
+    plex_images = []
+    if plex_interface and episode.series.plex_library_name:
+        plex_image_url = plex_interface.get_source_image(
+            episode.series.plex_library_name,
+            episode.series.as_series_info,
+            episode.as_episode_info,
+            proxy_url=True,
+            log=log,
+        )
+        if plex_image_url:
+            plex_images = [{'url': plex_image_url}]
+
+    return tmdb_images + plex_images
 
 
 @source_router.get('/series/{series_id}/logo/browse', status_code=200)

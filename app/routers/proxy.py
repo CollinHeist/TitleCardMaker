@@ -42,7 +42,8 @@ def redirect_plex_url(
         )
 
     redirected_url = (
-        f'{preferences.plex_url[:-1]}{url}?X-Plex-Token={preferences.plex_token}'
+        f'{preferences.plex_url[:-1]}{url}'
+        f'?X-Plex-Token={preferences.plex_token}'
     )
 
     return Response(content=get(redirected_url, timeout=10).content)

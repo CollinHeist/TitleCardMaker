@@ -8,7 +8,6 @@ from pydantic import ( # pylint: disable=no-name-in-module
     FilePath, PositiveFloat, PositiveInt, conint, constr, root_validator,
     validator,
 )
-from pydantic.color import Color
 
 from app.schemas.base import Base, BetterColor, DictKey
 from modules.cards.AnimeTitleCard import AnimeTitleCard

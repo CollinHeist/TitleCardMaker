@@ -592,9 +592,9 @@ async function getFileData(page=currentFilePage) {
       row.querySelector('[data-column="mirror"] i').classList.add('disabled');
     }
     // Launch TMDb browse modal when TMDb logo is clicked
-    const tmdbLogo = row.querySelector('[data-action="browse-tmdb"]');
+    const tmdbLogo = row.querySelector('[data-action="browse-sources"]');
     if (tmdbLogo !== null) {
-      tmdbLogo.onclick = () => browseTmdbImages(source.episode_id, elementId);
+      tmdbLogo.onclick = () => browseSourceImages(source.episode_id, elementId);
     }
     // Launch upload source modal when upload icon is clicked
     row.querySelector('i[data-action="upload"]').onclick = () => uploadEpisodeSource(source.episode_id);
@@ -607,9 +607,9 @@ async function getFileData(page=currentFilePage) {
     file.querySelector('[data-value="index"]').innerHTML = `Season ${source.season_number} Episode ${source.episode_number}`;
     file.querySelector('[data-value="path"]').innerHTML = source.source_file_name;
     // Launch TMDb browse modal when TMDb logo is clicked
-    const tmdbLogo = file.querySelector('[data-action="browse-tmdb"]');
+    const tmdbLogo = file.querySelector('[data-action="browse-sources"]');
     if (tmdbLogo !== null) {
-      tmdbLogo.onclick = () => browseTmdbImages(source.episode_id, elementId);
+      tmdbLogo.onclick = () => browseSourceImages(source.episode_id, elementId);
     }
     // Launch upload source modal when upload icon is clicked
     file.querySelector('i[data-action="upload"]').onclick = () => uploadEpisodeSource(source.episode_id);
@@ -1441,27 +1441,26 @@ function downloadSeriesBackdrop(url) {
 }
 
 /*
- * Submit an API request to browse the available TMDb images for the
- * given Episode. 
+ * Submit an API request to browse the available Source Images for the
+ * given Episode.
  */
-function browseTmdbImages(episodeId, cardElementId) {
+function browseSourceImages(episodeId, cardElementId) {
   document.getElementById(cardElementId).classList.add('loading');
   $.ajax({
     type: 'GET',
     url: `/api/sources/episode/${episodeId}/browse`,
     success: images => {
-      if (images === null) {
-        showErrorToast({title: 'Unable to Query TMDb'});
-      } else {
-        // Images returned, add to browse modal
-        const imageElements = images.map(({url, width, height}, index) => {
-          const location = index % 2 ? 'right' : 'left';
-          return `<a class="ui image" onclick="selectTmdbImage(${episodeId}, '${url}')"><div class="ui blue ${location} ribbon label">${width}x${height}</div><img src="${url}"/></a>`;
-        });
-        $('#browse-tmdb-modal .content .images')[0].innerHTML = imageElements.join('');
-        $('#browse-tmdb-modal').modal('show');
-      }
-    }, error: response => showErrorToast({title: 'Unable to Query TMDb', response}),
+      // Images returned, add to browse modal
+      const imageElements = images.map(({url, width, height}, index) => {
+        const location = index % 2 ? 'right' : 'left';
+        if (width === null || height === null) {
+          return `<a class="ui image" onclick="selectTmdbImage(${episodeId}, '${url}')"><div class="ui yellow ${location} ribbon label">Plex</div><img src="${url}"/></a>`;
+        }
+        return `<a class="ui image" onclick="selectTmdbImage(${episodeId}, '${url}')"><div class="ui blue ${location} ribbon label">${width}x${height}</div><img src="${url}"/></a>`;
+      });
+      $('#browse-tmdb-modal .content .images')[0].innerHTML = imageElements.join('');
+      $('#browse-tmdb-modal').modal('show');
+    }, error: response => showErrorToast({title: 'Unable to Query Images', response}),
     complete: () => document.getElementById(cardElementId).classList.remove('loading'),
   });
 }

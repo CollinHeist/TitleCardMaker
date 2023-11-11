@@ -131,8 +131,8 @@ class TMDbLanguage(Base):
 
 class TMDbImage(Base):
     url: str
-    width: int
-    height: int
+    width: Optional[int] = None
+    height: Optional[int] = None
     language: Optional[TMDbLanguage] = None
 
 class SourceImage(Base):
