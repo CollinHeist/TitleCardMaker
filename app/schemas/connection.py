@@ -1,5 +1,5 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
-from typing import Any
+from typing import Any, Optional
 
 from app.schemas.base import Base
 
@@ -37,6 +37,8 @@ class WebhookEpisode(Base):
     seasonNumber: int
     title: str
     seriesId: int
+    # Added in v4.0.0.717 (https://github.com/Sonarr/Sonarr/pull/6151)
+    tvdbId: Optional[int] = None
 
 class SonarrWebhook(Base):
     series: WebhookSeries
