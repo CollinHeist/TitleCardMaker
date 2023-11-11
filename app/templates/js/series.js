@@ -94,7 +94,8 @@ function getUpdateEpisodeObject(episodeId) {
 
 /*
  * Submit an API request to create the Title Card for the Episode with the given
- * ID. If successful, the card data of the current page is reloaded.
+ * ID. If successful, the card data of the current page is reloaded and the
+ * Episode's row marking is removed
  * 
  * @param {int} episodeId - ID of the Episode whose Card is being created.
  */
@@ -105,6 +106,7 @@ function createEpisodeCard(episodeId) {
     success: () => {
       showInfoToast('Created Title Card');
       getCardData();
+      $(`#episode-id${episodeId}`).toggleClass('left red marked', false);
     }, error: response => showErrorToast({title: 'Error Creating Title Card', response}),
   });
 }
@@ -525,6 +527,7 @@ function mirrorSourceImage(episodeId) {
       showInfoToast('Mirrored Source Image');
       getFileData();
       getCardData();
+      $(`#episode-id${episodeId}`).toggleClass('left red marked', true);
     },
     error: response => showErrorToast({title: 'Error Mirroring Source Image', response}),
   });
@@ -694,6 +697,8 @@ async function getEpisodeData(page=1) {
     // Set row ID
     row.querySelector('tr').id = `episode-id${episode.id}`;
     row.querySelector('tr').dataset.episodeId = episode.id;
+    // Add red mark if no Card is present
+    if (episode.card.length == 0) { row.querySelector('tr').classList.add('left', 'red', 'marked'); }
     // Assign functions to onclick of <a> element
     row.querySelector('td[data-column="create"] a').onclick = () => createEpisodeCard(episode.id);
     row.querySelector('td[data-column="edit"] a').onclick = () => saveEpisodeConfig(episode.id);
@@ -1714,7 +1719,7 @@ function deleteAllEpisodes() {
     url: '/api/episodes/series/{{series.id}}',
     success: response => {
       showInfoToast(`Deleted ${response.length} Episodes`);
-      getEpisodeData();
+      $('#episode-data-table tr').remove();
       getFileData();
       getStatistics();
     }, error: response => showErrorToast({title: 'Error Deleting Episodes', response}),
