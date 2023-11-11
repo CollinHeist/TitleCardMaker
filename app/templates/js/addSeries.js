@@ -13,19 +13,32 @@ function addPlaceholders(element, amount=10, placeholderElementId='result-placeh
  * Create a NewSeries object for the given result.
  */
 function generateNewSeriesObject(result) {
+  // Comma separate Template IDs
   const template_string = $('#add-series-modal .dropdown[data-value="template_ids"]').dropdown('get value');
   const template_ids = template_string === '' ? [] : template_string.split(',');
+  
+  // Parse libraries
+  const libraries = $('#add-series-modal .dropdown[data-value="libraries"]')
+    .dropdown('get value')
+    .split(',')
+    .map(libraryStr => {
+      const libraryData = libraryStr.split('::');
+      return {
+        interface: libraryData[0],
+        interface_id: libraryData[1],
+        name: libraryData[2]
+      };
+    });
+
   return {
     name: result.name,
     year: result.year,
     template_ids: template_ids,
-    emby_library_name: $('#add-series-modal input[name="emby_library_name"]').val() || null,
-    jellyfin_library_name: $('#add-series-modal input[name="jellyfin_library_name"]').val() || null,
-    plex_library_name: $('#add-series-modal input[name="plex_library_name"]').val() || null,
-    emby_id: result.emby_id,
+    libraries: libraries,
+    emby_id: result.emby_id || '',
     imdb_id: result.imdb_id,
-    jellyfin_id: result.jellyfin_id,
-    sonarr_id: result.sonarr_id,
+    jellyfin_id: result.jellyfin_id || '',
+    sonarr_id: result.sonarr_id || '',
     tmdb_id: result.tmdb_id,
     tvdb_id: result.tvdb_id,
     tvrage_id: result.tvrage_id,
