@@ -352,6 +352,11 @@ function initializeEmby() {
       // Add accordions for each Connection
       const embyForms = connections.map(connection => {
         const embyForm = embyTemplate.content.cloneNode(true);
+
+        if ({{preferences.invalid_connections|safe}}.includes(connection.id)) {
+          embyForm.querySelector('.title').classList.add('invalid');
+        }
+        
         embyForm.querySelector('.title').id = `connection${connection.id}-title`;
         embyForm.querySelector('.content').id = `connection${connection.id}`;
         // Enable later
@@ -435,6 +440,9 @@ function initializeJellyfin() {
       // Add accordions for each Connection
       const jellyfinForms = connections.map(connection => {
         const jellyfinForm = jellyfinTemplate.content.cloneNode(true);
+        if ({{preferences.invalid_connections|safe}}.includes(connection.id)) {
+          jellyfinForm.querySelector('.title').classList.add('invalid');
+        }
         jellyfinForm.querySelector('.title').id = `connection${connection.id}-title`;
         jellyfinForm.querySelector('.content').id = `connection${connection.id}`;
         // Enable later
@@ -518,6 +526,9 @@ function initializePlex() {
       // Add accordions for each Connection
       const plexForms = connections.map(connection => {
         const plexForm = plexTemplate.content.cloneNode(true);
+        if ({{preferences.invalid_connections|safe}}.includes(connection.id)) {
+          plexForm.querySelector('.title').classList.add('invalid');
+        }
         plexForm.querySelector('.title').id = `connection${connection.id}-title`;
         plexForm.querySelector('.content').id = `connection${connection.id}`;
         // Enable later
@@ -589,6 +600,9 @@ function initializeSonarr() {
       // Add accordions for each Connection
       const sonarrForms = connections.map(connection => {
         const sonarrForm = sonarrTemplate.content.cloneNode(true);
+        if ({{preferences.invalid_connections|safe}}.includes(connection.id)) {
+          sonarrForm.querySelector('.title').classList.add('invalid');
+        }
         // Remove warning
         sonarrForm.querySelector('.warning.message').remove();
         sonarrForm.querySelector('.title').id = `connection${connection.id}-title`;
@@ -706,6 +720,9 @@ function initializeTMDb() {
       // Add accordions for each Connection
       const tmdbForms = connections.map(connection => {
         const tmdbForm = tmdbTemplate.content.cloneNode(true);
+        if ({{preferences.invalid_connections|safe}}.includes(connection.id)) {
+          tmdbForm.querySelector('.title').classList.add('invalid');
+        }
         tmdbForm.querySelector('.title').id = `connection${connection.id}-title`;
         tmdbForm.querySelector('.content').id = `connection${connection.id}`;
         // Enable later

@@ -74,7 +74,11 @@ def initialize_connections(
                 )
                 log.debug(f'Initialized Connection to {connection.log_str}')
             except Exception as exc:
+                preferences.invalid_connections.append(connection.id)
                 log.exception(f'Error initializing {connection.log_str} - {exc}', exc)
+
+    if preferences.invalid_connections:
+        log.debug(f'Disabled Connections {preferences.invalid_connections}')
 
 
 def add_connection(
@@ -118,9 +122,13 @@ def add_connection(
 
     # Update InterfaceGroup
     if connection.enabled:
-        interface_group.initialize_interface(
-            connection.id, connection.interface_kwargs, log=log
-        )
+        try:
+            interface_group.initialize_interface(
+                connection.id, connection.interface_kwargs, log=log
+            )
+        except Exception as exc:
+            preferences.invalid_connections.append(connection.id)
+            raise exc
 
     return connection
 
@@ -164,11 +172,21 @@ def update_connection(
     # If any values were changed, commit to database
     if changed:
         db.commit()
+        preferences = get_preferences()
         if connection.enabled:
-            interface_group.refresh(
-                interface_id, connection.interface_kwargs, log=log
-            )
+            try:
+                interface_group.refresh(
+                    interface_id, connection.interface_kwargs, log=log
+                )
+                if interface_id in preferences.invalid_connections:
+                    preferences.invalid_connections.remove(interface_id)
+            except Exception as exc:
+                if interface_id not in preferences.invalid_connections:
+                    preferences.invalid_connections.append(interface_id)
+                raise exc
         else:
             interface_group.disable(interface_id)
+            if interface_id in preferences.invalid_connections:
+                preferences.invalid_connections.remove(interface_id)
 
     return connection

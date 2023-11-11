@@ -45,7 +45,7 @@ class Preferences:
     """Attributes whose values should be ignored when loading from file"""
     __read_only = (
         'is_docker', 'file', 'asset_directory', 'card_type_directory',
-        'remote_card_types', 'local_card_types',
+        'remote_card_types', 'local_card_types', 'invalid_connections',
     )
 
     __slots__ = (
@@ -65,6 +65,7 @@ class Preferences:
         'episode_data_page_size', 'stylize_unmonitored_posters',
         'sources_as_table', 'card_type_directory', 'local_card_types',
         'imported_blueprints', 'colorblind_mode', 'library_unique_cards',
+        'invalid_connections',
         # Arguments required only for the Connection data migrations
         'emby_url', 'emby_api_key', 'emby_username', 'emby_use_ssl',
         'emby_filesize_limit_number', 'emby_filesize_limit_unit',
@@ -132,8 +133,9 @@ class Preferences:
         # not be loaded at runtime; which could cause an error when
         # unpickling
         return {
-            attr: getattr(self, attr) for attr in self.__slots__
-            if attr not in ('remote_card_types', 'local_card_types')
+            attr: getattr(self, attr)
+            for attr in self.__slots__
+            if attr not in self.__read_only
         }
 
 
@@ -188,6 +190,7 @@ class Preferences:
         self.default_watched_style = 'unique'
         self.default_unwatched_style = 'unique'
 
+        self.invalid_connections: list[int] = []
         self.use_emby = False
         self.use_jellyfin = False
         self.use_plex = False
@@ -377,19 +380,6 @@ class Preferences:
 
         return {
             'use_magick_prefix': self.use_magick_prefix,
-        }
-
-
-    @property
-    def tmdb_arguments(self) -> dict[str, Any]:
-        """Arguments for initializing a TMDbInterface"""
-
-        return {
-            'api_key': str(self.tmdb_api_key),
-            'minimum_source_width': self.tmdb_minimum_width,
-            'minimum_source_height': self.tmdb_minimum_height,
-            'blacklist_threshold': 3, # TODO add variable
-            'logo_language_priority': self.tmdb_logo_language_priority,
         }
 
 

@@ -463,6 +463,11 @@ def delete_connection(
     except KeyError:
         pass
 
+    # Remove from invalid Connection list
+    preferences.invalid_connections = [
+        id_ for id_ in preferences.invalid_connections if id_ != interface_id
+    ]
+
     # Delete any linked Syncs
     for sync in db.query(Sync).filter_by(interface_id=interface_id).all():
         log.info(f'Deleting {sync.log_str}')

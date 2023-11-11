@@ -136,6 +136,7 @@ def get_all_episode_data(
 
     # Raise 409 if cannot communicate with the Series' Episode data source
     if (interface := get_interface(interface_id, raise_exc=False)) is None:
+        log.error(f'Unable to communicate with Connection[{interface_id}]')
         if raise_exc:
             raise HTTPException(
                 status_code=409,
@@ -149,12 +150,12 @@ def get_all_episode_data(
 
     # Verify Series has an associated Library if EDS is a media server
     if not (libraries := list(series.get_libraries(interface_id))):
+        log.error(f'Series does not have a Library for Connection[{interface_id}]')
         if raise_exc:
             raise HTTPException(
                 status_code=409,
                 detail=f'Series does not have a Library for Connection[{interface_id}]'
             )
-        log.error(f'Series does not have a Library for Connection[{interface_id}]')
         return []
 
     # Get Episodes from the Series' first (primary) library
@@ -243,8 +244,9 @@ def refresh_episode_data(
                 episodes.append(existing)
 
             # Update watched status
-            if episode.add_watched_status(watched):
+            if existing.add_watched_status(watched):
                 log.debug(f'{series.log_str} {existing.log_str} Updating watched status')
+                log.debug(f'{existing.watched_statuses=}')
                 changed = True
 
     # Set Episode ID's for all new Episodes as background task or directly

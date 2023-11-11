@@ -41,3 +41,8 @@ input.private:not(:hover,:focus) {
   /* Reduce opacity of right floated text */
   opacity: 50%;
 }
+
+/* Color invalid connections */
+.accordion > .invalid.title {
+  color: red !important;
+}
