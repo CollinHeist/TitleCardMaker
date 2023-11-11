@@ -60,7 +60,7 @@ class Episode(Base):
 
     source_file = Column(String, default=None)
     card_file = Column(String, default=None)
-    watched_statuses: dict[int, dict[str, bool]] = Column(
+    watched_statuses: dict[str, bool] = Column(
         MutableDict.as_mutable(JSON),
         default={},
         nullable=False
@@ -347,36 +347,24 @@ class Episode(Base):
 
 
     @hybrid_property
-    def watch_status_bools(self) -> list[bool]:
-        """
-        _summary_
-
-        Returns:
-            _description_
-        """
-
-        return [
-            status
-            for _, interface in self.watched_statuses.items()
-            for _, status in interface.values()
-        ]
-
-
-    @hybrid_property
     def watched_statuses_flat(self) -> dict[str, bool]:
         """
-        _summary_
+        Get a mapping of library names to watched statuses for this
+        Episode.
+
+        >>> ep.watched_statuses = {'1:TV': True, '2:Anime': False}
+        >>> ep.watched_statuses_flat
+        {'TV': True, 'Anime': False}
 
         Returns:
-            _description_
+            Flatten dictionary of watched statuses for each defined
+            library name.
         """
 
-        statuses = {}
-        for _, interface in self.watched_statuses.items():
-            for library_name, status in interface.items():
-                statuses[library_name] = status
-
-        return statuses
+        return {
+            key.split(':', maxsplit=1): watched
+            for key, watched in self.watched_statuses
+        }
 
 
     @hybrid_method
@@ -385,35 +373,44 @@ class Episode(Base):
             library_name: str,
         ) -> Optional[bool]:
         """
-        
+        Get this Episode's watched status for the given library.
+
+        Args:
+            interface_id: ID of the interface associated with the
+                library.
+            library_name: Name of the library whose status to query.
+
+        Returns:
+            Whether this Episode has been watched within the given
+            library. If there is no defined watched status, None is
+            returned.
         """
 
-        return self.watched_statuses.get(interface_id, {}).get(library_name)
+        return self.watched_statuses.get(f'{interface_id}:{library_name}')
 
 
     @hybrid_method
     def add_watched_status(self, status: WatchedStatus, /) -> bool:
         """
-        
+        Add the given WatchedStatus to this Episodes watched statuses.
+
+        Args:
+            status: The WatchedStatus to update this object with.
+
+        Returns:
+            Whether this Episode's watched status was modified.
         """
 
         # No watched status, skip
         if not status.has_status:
             return False
 
-        # If this interface has existing mappings
-        iid, lib = status.interface_id, status.library_name
-        if iid in self.watched_statuses:
-            # If this library has existing mappings, update and return diff
-            if lib in self.watched_statuses[iid]:
-                current = self.watched_statuses[iid][lib]
-                self.watched_statuses[iid][lib] = status.status
-                return current != status.status
-
-            # Library has no mappings, add
-            self.watched_statuses[iid][lib] = status.status
-            return True
+        # Watched status defined, update existing mapping
+        if (key := status.db_key) in self.watched_statuses:
+            current = self.watched_statuses.get(key)
+            self.watched_statuses[key] = status.status
+            return current != status.status
 
         # Interface has no mappings, add
-        self.watched_statuses[iid] = {lib: status.status}
+        self.watched_statuses[key] = status.status
         return True
