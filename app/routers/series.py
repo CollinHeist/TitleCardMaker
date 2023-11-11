@@ -369,6 +369,10 @@ def process_series(
     log.debug(f'{series.log_str} Started refreshing Episode data')
     refresh_episode_data(db, series, log=log)
 
+    # Update watch statuses
+    get_watched_statuses(db, series, series.episodes, log=log)
+    db.commit()
+
     # Begin downloading Source images - use BackgroundTasks
     log.debug(f'{series.log_str} Started downloading source images')
     for episode in series.episodes:
@@ -389,11 +393,8 @@ def process_series(
             db, episode, log=log,
         )
 
-    # Update watch statuses
-    get_watched_statuses(db, series, series.episodes, log=log)
-    db.commit()
-
     # Begin Card creation - use BackgroundTasks
+    log.debug(f'{series.log_str} Starting Card creation')
     for episode in series.episodes:
         background_tasks.add_task(
             # Function
