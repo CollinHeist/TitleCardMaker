@@ -194,7 +194,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             log: Logger for all log messages.
 
         Returns:
-            The Series associated with this SeriesInfo object.
+            The series associated with this SeriesInfo object.
         """
 
         # Try by IMDb ID
@@ -287,23 +287,19 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         Get all series within Plex, as filtered by the given arguments.
 
         Args:
-            filter_libraries: Optional list of library names to filter
-                returned list by. If provided, only series that are
-                within a given library are returned.
-            excluded_libraries: Optional list of library names to filter
-                returned list by. If provided, only series that are not
-                within a given library are returned.
-            required_tags: Optional list of tags to filter return by. If
-                provided, only series with all the given tags are
-                returned.
-            excluded_tags: Optional list of tags to filter return by. If
-                provided, series with any of the given tags are not
-                returned.
+            required_libraries: Library names that a series must be
+                present in to be returned.
+            excluded_libraries: Library names that a series cannot be
+                present in to be returned.
+            required_tags: Tags that a series must have all of in order
+                to be returned.
+            excluded_tags: Tags that a series cannot have any of in
+                order to be returned.
             log: Logger for all log messages.
 
         Returns:
-            List of tuples whose elements are the SeriesInfo of the
-            series, and its corresponding library name.
+            List of tuples of the filtered series info and their
+            corresponding library names.
         """
 
         # Temporarily override request timeout to 240s (4 min)
@@ -317,9 +313,8 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 continue
 
             # If filtering libraries, skip library if unspecified
-            if required_libraries and library.title not in required_libraries:
-                continue
-            if excluded_libraries and library.title in excluded_libraries:
+            if ((required_libraries and library.title not in required_libraries)
+                or (excluded_libraries and library.title in excluded_libraries)):
                 continue
 
             # Get all Shows in this library

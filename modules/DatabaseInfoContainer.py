@@ -203,8 +203,9 @@ class InterfaceID:
                 any(key not in other._ids for key in self._ids)
                 # or this object has any libraries not present in other
                 or any(
-                    key not in other._ids[iid]
-                    for iid, key in self._ids.items()
+                    library not in other._ids[iid]
+                    for iid, libraries in self._ids.items()
+                    for library in libraries
                 )
             )
 
@@ -241,9 +242,9 @@ class InterfaceID:
                 any(key not in self._ids for key in other._ids)
                 # or this object has any libraries not present in other
                 or any(
-                    key not in self._ids[iid]
-                    for iid in other._ids
-                    for key in other._ids[iid]
+                    library not in self._ids[iid]
+                    for iid, libraries in other._ids.items()
+                    for library in libraries
                 )
             )
 
@@ -483,7 +484,6 @@ class DatabaseInfoContainer(ABC):
                     setattr(self, attr, getattr(self, attr) + getattr(other, attr))
             # Regular ID, copy if this info is missing
             elif not getattr(self, attr) and getattr(other, attr):
-                log.debug(f'Copying {attr} <- {getattr(other, attr)}')
                 setattr(self, attr, getattr(other, attr))
 
         return None

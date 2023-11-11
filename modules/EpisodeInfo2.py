@@ -1,4 +1,5 @@
 from datetime import datetime
+from logging import Logger
 from typing import Optional, TypedDict, Union
 
 from num2words import num2words
@@ -327,6 +328,53 @@ class EpisodeInfo(DatabaseInfoContainer):
             info['IndexNumber'],
             emby_id=f'{interface_id}:{library_name}:{info["Id"]}',
             imdb_id=info['ProviderIds'].get('Imdb'),
+            tmdb_id=info['ProviderIds'].get('Tmdb'),
+            tvdb_id=info['ProviderIds'].get('Tvdb'),
+            tvrage_id=info['ProviderIds'].get('TvRage'),
+            airdate=airdate,
+        )
+
+
+    @staticmethod
+    def from_jellyfin_info(
+            info: EmbyEpisodeDict,
+            interface_id: int,
+            library_name: str,
+            *,
+            log: Logger = log,
+        ) -> 'EpisodeInfo':
+        """
+        Create an EpisodeInfo object from the given Jellyfin episode
+        data.
+
+        Args:
+            info: Dictionary of episode info.
+            interface_id: ID of the Jellyfin interface whose data is
+                being parsed.
+            library_name: Name of the library associated with this
+                Series.
+            log: Logger for all log messages.
+
+        Returns:
+            EpisodeInfo object defining the given data.
+        """
+
+        # Parse airdate
+        airdate = None
+        try:
+            airdate = datetime.strptime(
+                info['PremiereDate'], '%Y-%m-%dT%H:%M:%S.%f000000Z'
+            )
+        except Exception as e:
+            log.exception(f'Cannot parse airdate', e)
+            log.debug(f'Episode data: {info}')
+
+        return EpisodeInfo(
+            info['Name'],
+            info['ParentIndexNumber'],
+            info['IndexNumber'],
+            imdb_id=info['ProviderIds'].get('Imdb'),
+            jellyfin_id=f'{interface_id}:{library_name}:{info["Id"]}',
             tmdb_id=info['ProviderIds'].get('Tmdb'),
             tvdb_id=info['ProviderIds'].get('Tvdb'),
             tvrage_id=info['ProviderIds'].get('TvRage'),

@@ -405,7 +405,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 overview=result.get('Overview', 'No overview available'),
                 poster=f'{self.url}/Items/{result["Id"]}/Images/Primary?quality=75',
                 imdb_id=result.get('ProviderIds', {}).get('IMDB'),
-                jellyfin_id=f'{self._interface_id}:{result["Id"]}',
+                jellyfin_id=f'{self._interface_id}:{result["Id"]}', # TODO update for emby + library name
                 tmdb_id=result.get('ProviderIds', {}).get('Tmdb'),
                 tvdb_id=result.get('ProviderIds', {}).get('Tvdb'),
                 tvrage_id=result.get('ProviderIds', {}).get('TvRage'),
@@ -461,23 +461,19 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         Get all series within Emby, as filtered by the given libraries.
 
         Args:
-            filter_libraries: Optional list of library names to filter
-                returned list by. If provided, only series that are
-                within a given library are returned.
-            excluded_libraries: Optional list of library names to filter
-                returned list by. If provided, only series that are not
-                within a given library are returned.
-            required_tags: Optional list of tags to filter return by. If
-                provided, only series with all the given tags are
-                returned.
-            excluded_tags: Optional list of tags to filter return by. If
-                provided, series with any of the given tags are not
-                returned.
+            required_libraries: Library names that a series must be
+                present in to be returned.
+            excluded_libraries: Library names that a series cannot be
+                present in to be returned.
+            required_tags: Tags that a series must have all of in order
+                to be returned.
+            excluded_tags: Tags that a series cannot have any of in
+                order to be returned.
             log: Logger for all log messages.
 
         Returns:
-            List of tuples whose elements are the SeriesInfo and its
-            corresponding library name.
+            List of tuples of the filtered series info and their
+            corresponding library names.
         """
 
         # Temporarily override request timeout to 240s (4 min)

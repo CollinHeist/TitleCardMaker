@@ -71,7 +71,14 @@ class SearchResult:
 
 class WatchedStatus:
     """
-    
+    This object defines a single watched status within a specific
+    interface (Connection) and library. For example:
+
+    >>> status = WatchedStatus(1, 'TV Shows', True)
+
+    When associated with an Episode, this indicates that the Episode has
+    been watched (True) in the 'TV Shows' library of the interface /
+    Connection with ID 1.
     """
 
 
@@ -84,7 +91,14 @@ class WatchedStatus:
             watched: Optional[bool] = None,
         ) -> None:
         """
-        
+        Initialize this WatchedStatus for the given library details.
+
+        Args:
+            interface_id: ID of the interface associated with this
+                status.
+            library_name: Name of the library associated with this
+                status.
+            watched: The actual watched status.
         """
 
         self.interface_id = interface_id
@@ -92,19 +106,34 @@ class WatchedStatus:
         self.status = watched
 
 
+    def __repr__(self) -> str:
+        """Returns an unambiguous string representation of the object."""
+
+        return f'<WatchedStatus {self.interface_id}:{self.library_name}:{self.status}>'
+
+
+    @property
+    def db_key(self) -> str:
+        """
+        The key which this object should be stored at in the Episode
+        database.
+        """
+
+        return f'{self.interface_id}:{self.library_name}'
+
     @property
     def has_status(self) -> bool:
+        """Whether this watched status is defined (i.e. not `None`)."""
+
         return self.status is not None
 
 
     @property
-    def as_db_entry(self) -> dict[int, dict[str, bool]]:
-        """
-        
-        """
+    def as_db_entry(self) -> dict[str, dict[str, bool]]:
+        """SQL database representatin of this status."""
 
         if self.library_name is not None and self.status is not None:
-            return {self.interface_id: {self.library_name: self.status}}
+            return {self.db_key: self.status}
 
         return {}
 

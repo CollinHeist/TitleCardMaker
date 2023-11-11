@@ -237,7 +237,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
 
         # If episode has a Jellyfin ID, return that
         if episode_info.has_id('jellyfin', self._interface_id, library_name):
-            return episode_info.jellyfin_id
+            return episode_info.jellyfin_id[self._interface_id, library_name]
 
         # Query for this episode
         response = self.session.get(
@@ -403,7 +403,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
                 'recursive': True,
                 'includeItemTypes': 'Series',
                 'searchTerm': query,
-                'fields': 'ProviderIds,Overview',
+                'fields': 'ParentId,ProviderIds,Overview',
                 'enableImages': False,
             },
         )
@@ -411,16 +411,16 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         return [
             SearchResult(
                 name=result['Name'],
-                year=result['ProductionYear'], # get_year(result['PremiereDate'])
+                year=result['ProductionYear'],
                 ongoing=result['Status'] == 'Continuing',
                 overview=result.get('Overview', 'No overview available'),
                 poster=f'{self.url}/Items/{result["Id"]}/Images/Primary?quality=75',
                 imdb_id=result.get('ProviderIds', {}).get('Imdb'),
-                # jellyfin_id=f'{self._interface_id}:{}' result['Id'],
                 tmdb_id=result.get('ProviderIds', {}).get('Tmdb'),
                 tvdb_id=result.get('ProviderIds', {}).get('Tvdb'),
                 tvrage_id=result.get('ProviderIds', {}).get('TvRage'),
-            ) for result in search_results['Items']
+            )
+            for result in search_results['Items']
             if 'PremiereDate' in result
         ]
 
@@ -438,16 +438,19 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         libraries and tags.
 
         Args:
-            filter_libraries: Optional list of library names to filter
-                returned list by. If provided, only series that are
-                within a given library are returned.
-            required_tags: Optional list of tags to filter return by. If
-                provided, only series with all the given tags are
-                returned.
+            required_libraries: Library names that a series must be
+                present in to be returned.
+            excluded_libraries: Library names that a series cannot be
+                present in to be returned.
+            required_tags: Tags that a series must have all of in order
+                to be returned.
+            excluded_tags: Tags that a series cannot have any of in
+                order to be returned.
+            log: Logger for all log messages.
 
         Returns:
-            List of tuples whose elements are the SeriesInfo of the
-            series, and its corresponding library name.
+            List of tuples of the filtered series info and their
+            corresponding library names.
         """
 
         # Temporarily override request timeout to 240s (4 min)
@@ -487,18 +490,12 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
                 if any(tag in series.get('Tags') for tag in excluded_tags):
                     continue
 
-                jellyfin_id = f'{self._interface_id}:{library}:{series["Id"]}'
-                series_info = SeriesInfo(
-                    series['Name'],
-                    datetime.strptime(series['PremiereDate'],
-                                      self.AIRDATE_FORMAT).year,
-                    imdb_id=series.get('ProviderIds', {}).get('Imdb'),
-                    jellyfin_id=jellyfin_id,
-                    tmdb_id=series.get('ProviderIds', {}).get('Tmdb'),
-                    tvdb_id=series.get('ProviderIds', {}).get('Tvdb'),
-                    tvrage_id=series.get('ProviderIds', {}).get('TvRage'),
-                )
-                all_series.append((series_info, library))
+                all_series.append((
+                    SeriesInfo.from_jellyfin_info(
+                        series, self._interface_id, library
+                    ),
+                    library
+                ))
 
         # Reset request timeout
         self.REQUEST_TIMEOUT = 30
@@ -549,40 +546,16 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
                 log.debug(f'Series {series_info} episode is missing index data')
                 continue
 
-            # Parse airdate for this episode
-            airdate = None
-            if 'PremiereDate' in episode:
-                try:
-                    airdate = datetime.strptime(
-                        episode['PremiereDate'], self.AIRDATE_FORMAT
-                    )
-                except Exception as e:
-                    log.exception(f'Cannot parse airdate', e)
-                    log.debug(f'Episode data: {episode}')
-
-            jellfin_id = f'{self._interface_id}:{library_name}:{episode["Id"]}'
-            episode_info = EpisodeInfo(
-                episode['Name'],
-                episode['ParentIndexNumber'],
-                episode['IndexNumber'],
-                imdb_id=episode['ProviderIds'].get('Imdb'),
-                jellyfin_id=jellfin_id,
-                tmdb_id=episode['ProviderIds'].get('Tmdb'),
-                tvdb_id=episode['ProviderIds'].get('Tvdb'),
-                tvrage_id=episode['ProviderIds'].get('TvRage'),
-                airdate=airdate,
-            )
-
-            # Add to list
-            if episode_info is not None:
-                all_episodes.append((
-                    episode_info,
-                    WatchedStatus(
-                        self._interface_id,
-                        library_name,
-                        episode.get('UserData', {}).get('Played'),
-                    )
-                ))
+            all_episodes.append((
+                EpisodeInfo.from_jellyfin_info(
+                    episode, self._interface_id, library_name,
+                ),
+                WatchedStatus(
+                    self._interface_id,
+                    library_name,
+                    episode.get('UserData', {}).get('Played'),
+                )
+            ))
 
         return all_episodes
 

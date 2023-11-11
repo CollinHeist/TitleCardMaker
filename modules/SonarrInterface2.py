@@ -212,7 +212,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
 
 
     def set_series_ids(self,
-            library_name: Any,
+            library_name: str,
             series_info: SeriesInfo,
             *,
             log: Logger = log,

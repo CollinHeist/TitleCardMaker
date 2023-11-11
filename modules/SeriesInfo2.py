@@ -1,3 +1,4 @@
+from datetime import datetime
 from re import match, compile as re_compile
 from typing import Optional, Union
 
@@ -169,7 +170,41 @@ class SeriesInfo(DatabaseInfoContainer):
             name=info['Name'],
             year=info.get('ProductionYear'),
             emby_id=f'{interface_id}:{library_name}:{info["Id"]}',
-            imdb_id=info.get('ProviderIds', {}).get('IMDB'),
+            imdb_id=info.get('ProviderIds', {}).get('Imdb'),
+            tmdb_id=info.get('ProviderIds', {}).get('Tmdb'),
+            tvdb_id=info.get('ProviderIds', {}).get('Tvdb'),
+            tvrage_id=info.get('ProviderIds', {}).get('TvRage'),
+        )
+
+
+    @staticmethod
+    def from_jellyfin_info(
+            info: dict,
+            interface_id: int,
+            library_name: str,
+        ) -> 'SeriesInfo':
+        """
+        Create a SeriesInfo object from the given Jellyfin series data
+        (from the `/Items/` endpoint).
+
+        Args:
+            info: Dictionary of series info.
+            interface_id: ID of the Jellyfin interface whose data is
+                being parsed.
+            library_name: Name of the library associated with this
+                Series.
+
+        Returns:
+            SeriesInfo object defining the given data.
+        """
+
+        AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f000000Z'
+
+        return SeriesInfo(
+            info['Name'],
+            datetime.strptime(info['PremiereDate'], AIRDATE_FORMAT).year,
+            emby_id=f'{interface_id}:{library_name}:{info["Id"]}',
+            imdb_id=info.get('ProviderIds', {}).get('Imdb'),
             tmdb_id=info.get('ProviderIds', {}).get('Tmdb'),
             tvdb_id=info.get('ProviderIds', {}).get('Tvdb'),
             tvrage_id=info.get('ProviderIds', {}).get('TvRage'),
