@@ -212,6 +212,7 @@ def add_card_to_database(
         card_model: NewTitleCard,
         CardTypeModel: Base,
         card_file: Path,
+        library: Optional[Library],
     ) -> Card:
     """
     Add the given Card to the Database.
@@ -221,17 +222,24 @@ def add_card_to_database(
         card_model: NewTitleCard model being added to the Database.
         card_file: Path to the Card associated with the given model
             being added to the Database.
+        library: Library the Card is associated with.
 
     Returns:
         Created Card entry within the Database.
     """
 
+    # Add Card to database
     card_model.filesize = card_file.stat().st_size
     card = Card(
         **card_model.dict(),
         model_json=_card_type_model_to_json(CardTypeModel),
     )
     db.add(card)
+
+    # Add library details if provided
+    if library:
+        card.interface_id = library['interface_id']
+        card.library_name = library['name']
     db.commit()
 
     return card
@@ -285,6 +293,7 @@ def create_card(
         card_model: NewTitleCard,
         CardClass: type[BaseCardType],
         CardTypeModel: Base,
+        library: Optional[Library],
         *,
         log: Logger = log,
     ) -> None:
@@ -297,16 +306,19 @@ def create_card(
         CardClass: Class to initialize for Card creation.
         CardTypeModel: Pydantic model for this Card to pass the
             attributes of to the CardClass.
+        library: Library associated with Card.
         log: Logger for all log messages.
     """
 
-    # Create card
+    # Create Card
     card_maker = CardClass(**CardTypeModel.dict(),preferences=get_preferences())
     card_maker.create()
 
     # If file exists, card was created successfully - add to database
     if (card_file := CardTypeModel.card_file).exists():
-        card = add_card_to_database(db, card_model, CardTypeModel, card_file)
+        card = add_card_to_database(
+            db, card_model, CardTypeModel, card_file, library
+        )
         log.info(f'Created {card.log_str}')
     # Card file does not exist, log failure
     else:
@@ -509,15 +521,18 @@ def resolve_card_settings(
                     detail=f'Invalid episode text format - missing data {e}',
                 ) from e
 
-    # Turn styles into boolean style toggles
-    if (watched := card_settings.get('watched')) is not None:
-        prefix = 'watched' if watched else 'unwatched'
-        style = card_settings[f'{prefix}_style']
+    # Set style independent of watched status if both styles match
+    watched = None
+    if card_settings['watched_style'] == card_settings['unwatched_style']:
+        style = card_settings['watched_style']
         card_settings['blur'] = 'blur' in style
         card_settings['grayscale'] = 'grayscale' in style
-    # Indeterminate watch status, set styles if both styles match
-    elif card_settings['watched_style'] == card_settings['unwatched_style']:
-        style = card_settings['watched_style']
+    # Turn styles into boolean style toggles
+    elif (library and
+        (watched := episode.get_watched_status(library['interface_id'],
+                                              library['name'])) is not None):
+        prefix = 'watched' if watched else 'unwatched'
+        style = card_settings[f'{prefix}_style']
         card_settings['blur'] = 'blur' in style
         card_settings['grayscale'] = 'grayscale' in style
     # Indeterminate watch status, cannot determine styles
@@ -548,7 +563,7 @@ def resolve_card_settings(
     if (CardClass.USES_UNIQUE_SOURCES
         and not card_settings['source_file'].exists()):
         log.debug(f'{series.log_str} {episode.log_str} Card source image '
-                    f'({card_settings["source_file"]}) is missing')
+                    f'({card_settings["source_file"].name}) is missing')
         raise HTTPException(
             status_code=404,
             detail=f'Cannot create Card - missing source image',
@@ -568,9 +583,9 @@ def resolve_card_settings(
             filename = CleanPath.sanitize_name(
                 card_settings['card_filename_format'].format(**card_settings)
             )
-            # Add library identifier if indicated
+            # Add library-specific identifier to filename if indicated
             if library is not None and preferences.library_unique_cards:
-                filename += f'{library["interface_id"]}:{library["name"]}'
+                filename += f' [{library["interface"]} {library["name"]}]'
             card_settings['card_file'] = series_directory \
                 / preferences.get_folder_format(episode_info) \
                 / filename
@@ -647,19 +662,29 @@ def create_episode_card(
     # Inner function to begin card creation as a background task or immediately
     def _start_card_creation():
         if background_tasks is None:
-            create_card(db, card, CardClass, CardTypeModel, log=log)
+            create_card(db, card, CardClass, CardTypeModel, library, log=log)
         else:
             background_tasks.add_task(
                 create_card,
-                db, card, CardClass, CardTypeModel, log=log,
+                db, card, CardClass, CardTypeModel, library, log=log,
             )
 
-    # No existing card, create and add to database
-    existing_card: list[Card] = episode.card
+    # No existing Card, create and add to database
+    if library:
+        existing_card = db.query(Card)\
+            .filter_by(episode_id=episode.id,
+                       interface_id=library['interface_id'],
+                       library_name=library['name'])\
+            .first()
+    else:
+        existing_card = db.query(Card)\
+            .filter_by(episode_id=episode.id,
+                       interface_id=None,
+                       library_name=None)\
+            .first()
     if not existing_card:
         _start_card_creation()
         return None
-    existing_card = existing_card[0]
 
     # Function to get the existing val
     def _get_existing(attribute: str) -> Any:
@@ -681,14 +706,14 @@ def create_episode_card(
     different = (
         # Different card type
         card.card_type != existing_card.card_type
+        # Old Card defines an attribute not defined by new Card
+        or any(attr not in new_model_json for attr in existing_card.model_json)
         # New Card defines a different value than the old Card
         or any(str(new_val) != str(_get_existing(attr))
             for attr, new_val in new_model_json.items()
             # Skip randomized attributes
             if not attr.endswith('_rotation_angle')
         )
-        # Old Card defines an attribute not defined by new Card
-        or any(attr not in new_model_json for attr in existing_card.model_json)
     )
 
     # If different, delete existing file, remove from database, create Card
