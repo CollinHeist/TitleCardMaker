@@ -56,14 +56,14 @@ function getLibraries() {
     type: 'GET',
     url: '/api/available/libraries/all',
     success: libraries => {
-      const emby = libraries.filter(({media_server}) => media_server === 'Emby').map(({name}) => {
-        return {name, selected: false};
+      const emby = libraries.filter(({interface}) => interface === 'Emby').map(({name}) => {
+        return {name, value: name, selected: false};
       });
-      const jellyfin = libraries.filter(({media_server}) => media_server === 'Jellyfin').map(({name}) => {
-        return {name, selected: false};
+      const jellyfin = libraries.filter(({interface}) => interface === 'Jellyfin').map(({name}) => {
+        return {name, value: name, selected: false};
       });
-      const plex = libraries.filter(({media_server}) => media_server === 'Plex').map(({name}) => {
-        return {name, selected: false};
+      const plex = libraries.filter(({interface}) => interface === 'Plex').map(({name}) => {
+        return {name, value: name, selected: false};
       });
 
       $('#emby-sync-form .dropdown[data-value="required_libraries"]').dropdown({
