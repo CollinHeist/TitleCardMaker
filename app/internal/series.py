@@ -289,13 +289,19 @@ def load_series_title_cards(
     # Get list of Episodes to reload
     changed, episodes_to_load = False, []
     for episode in series.episodes:
+        # Get associated Card
+        card = db.query(Card)\
+            .filter_by(episode_id=episode.id,
+                       interface_id=interface_id,
+                       library_name=library_name)\
+            .first()
+
         # Only load if Episode has a Card
-        if not episode.cards:
+        if not card:
             log.debug(f'{series.log_str} {episode.log_str} - no associated Card')
             continue
-        card = episode.cards[0]
 
-        # Find previously loaded Card
+        # Find existing associated Loaded object
         previously_loaded = db.query(Loaded)\
             .filter_by(card_id=card.id,
                        interface_id=interface_id,
@@ -306,7 +312,7 @@ def load_series_title_cards(
             episodes_to_load.append((episode, card))
             continue
 
-        # There is a previously loaded card, delete loaded entry, reload
+        # There is a previously loaded Card, delete entry, reload
         if (force_reload
             or (previously_loaded.first() is not None
                 and previously_loaded.first().filesize != card.filesize)):
