@@ -23,6 +23,7 @@ class Connection(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
+    cards = relationship('Card', back_populates='connection')
     loaded = relationship('Loaded', back_populates='connection')
     series = relationship('Series', back_populates='data_source')
     syncs = relationship('Sync', back_populates='connection')

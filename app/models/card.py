@@ -19,8 +19,11 @@ class Card(Base):
 
     # Referencial arguments
     id = Column(Integer, primary_key=True, index=True)
+    interface_id = Column(Integer, ForeignKey('connection.id'))
     series_id = Column(Integer, ForeignKey('series.id'))
     episode_id = Column(Integer, ForeignKey('episode.id'))
+
+    connection = relationship('Connection', back_populates='cards')
     series = relationship('Series', back_populates='cards')
     episode = relationship('Episode', back_populates='cards')
     loaded = relationship(
@@ -31,6 +34,7 @@ class Card(Base):
 
     card_file = Column(String, nullable=False)
     filesize = Column(Integer)
+    library_name = Column(String, default=None)
 
     card_type = Column(String, nullable=False)
     model_json = Column(MutableDict.as_mutable(JSON), default={}, nullable=False)
@@ -48,12 +52,5 @@ class Card(Base):
     @hybrid_property
     def exists(self) -> bool:
         """Whether the Card file for this object exists."""
-
-        return Path(self.card_file).exists()
-
-
-    @hybrid_property
-    def exists(self) -> bool:
-        """Whether this Card file exists."""
 
         return Path(self.card_file).exists()

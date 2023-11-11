@@ -2,9 +2,15 @@
 Create new Connections SQL table / Model
 - Turn existing connection details from global Preferences into
   Connection objects which are assigned during SQL migration.
+Modify Card table:
+- Add new interface_id and library_name columns
+- Perform data migration of existing Card objects and attempt to associate them
+  with an existing/newly created Connection from the parent Series.
 Modify Loaded table:
 - Add new interface_id column tied to newly created Connection(s)
 - Remove media_server column
+- Perform data migration on existing Loaded assets and attempt to associate them
+  with an existing/newly created Connection from the parent Series.
 Modify Series table:
 - Turn separate emby/jellyfin/plex _library_name columns into single
   libraries column that is a JSON list object like
@@ -54,6 +60,18 @@ from app.database.session import PreferencesLocal
 
 Base = declarative_base()
 
+class Card(Base):
+    __tablename__ = 'card'
+
+    id = sa.Column(sa.Integer, primary_key=True, index=True)
+    # Existing columns
+    series_id = sa.Column(sa.Integer, sa.ForeignKey('series.id'))
+    episode_id = sa.Column(sa.Integer, sa.ForeignKey('episode.id'))
+    loaded = relationship('Loaded', back_populates='card')
+    # New Column(s)
+    interface_id = sa.Column(sa.Integer, sa.ForeignKey('connection.id'))
+    library_name = sa.Column(sa.String, default=None)
+
 class Connection(Base):
     __tablename__ = 'connection'
 
@@ -95,9 +113,15 @@ class Loaded(Base):
 
     id = sa.Column(sa.Integer, primary_key=True)
     # Existing Columns for migrating
+    card_id = sa.Column(sa.Integer, sa.ForeignKey('card.id'))
+    episode_id = sa.Column(sa.Integer, sa.ForeignKey('episode.id'))
+    series_id = sa.Column(sa.Integer, sa.ForeignKey('series.id'))
     media_server = sa.Column(sa.String, nullable=False)
+    card = relationship('Card', back_populates='loaded')
+    series = relationship('Series', back_populates='loaded')
     # New column(s)
     interface_id = sa.Column(sa.Integer, sa.ForeignKey('connection.id'))
+    library_name = sa.Column(sa.String, default=None)
 
 class Series(Base):
     __tablename__ = 'series'
@@ -111,11 +135,11 @@ class Series(Base):
     emby_id = sa.Column(sa.String)
     jellyfin_id = sa.Column(sa.String)
     sonarr_id = sa.Column(sa.String)
+    episodes: Mapped[list[Episode]] = relationship(Episode, back_populates='series')
+    loaded: Mapped[list[Loaded]] = relationship(Loaded, back_populates='series')
     # New column(s)
     libraries = sa.Column(MutableList.as_mutable(sa.JSON), default=[])
     data_source_id = sa.Column(sa.Integer, sa.ForeignKey('connection.id'), default=None)
-
-    episodes: Mapped[list[Episode]] = relationship(Episode, back_populates='series')
 
 class Template(Base):
     __tablename__ = 'template'
@@ -157,6 +181,11 @@ def upgrade() -> None:
     )
     with op.batch_alter_table('connection', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_connection_id'), ['id'], unique=False)
+
+    with op.batch_alter_table('card', schema=None) as batch_op:
+        batch_op.add_column(sa.Column('interface_id', sa.Integer(), nullable=True))
+        batch_op.add_column(sa.Column('library_name', sa.String(), nullable=True))
+        batch_op.create_foreign_key('fk_connection_card', 'connection', ['interface_id'], ['id'])
 
     with op.batch_alter_table('episode', schema=None) as batch_op:
         batch_op.add_column(sa.Column('watched_statuses', sa.JSON(), server_default='{}', nullable=False))
@@ -276,14 +305,40 @@ def upgrade() -> None:
     PreferencesLocal.image_source_priority = isp
     log.debug(f'Migrated Global Image Source Priority to {isp}')
 
-    # Migrate Loaded media_server into interface_id
+    # Migrate Loaded interface_id and library_name
     for loaded in session.query(Loaded).all():
+        # Delete unassociated Loaded objects
+        if not loaded.series or not loaded.episode_id:
+            log.debug(f'Loaded[{loaded.id}] has no parent Series/Episode - deleting')
+            session.delete(loaded)
+            continue
+        # Migrate columns from associated Series' library
         if loaded.media_server == 'Emby' and emby:
             loaded.interface_id = emby.id
+            if loaded.series.emby_library_name:
+                loaded.library_name = loaded.series.emby_library_name
         elif loaded.media_server == 'Jellyfin' and jellyfin:
             loaded.interface_id = jellyfin.id
+            if loaded.series.jellyfin_library_name:
+                loaded.library_name = loaded.series.jellyfin_library_name
         elif loaded.media_server == 'Plex' and plex:
             loaded.interface_id = plex.id
+            if loaded.series.plex_library_name:
+                loaded.library_name = loaded.series.plex_library_name
+    log.debug(f'Migrated Loaded.interface_id and Loaded.library_name')
+
+    # Migrate Card interface_id and library_name
+    for card in session.query(Card).all():
+        # Delete unassociated Card objects
+        if not card.series_id or not card.episode_id:
+            log.debug(f'Card[{card.id}] has no parent Series/Episode - deleting')
+            session.delete(card)
+            continue
+        # Migrate columns from associated Loaded object
+        if card.loaded:
+            card.interface_id = card.loaded[0].interface_id
+            card.library_name = card.loaded[0].library_name
+    log.debug(f'Migrated Card.interface_id and Card.library_name')
 
     # Migrate Series *_library_name into libraries list
     for series in session.query(Series).all():
@@ -390,17 +445,15 @@ def upgrade() -> None:
         if len(series.libraries) == 0:
             continue
         if len(series.libraries) > 1:
-            log.debug(f'Cannot migrate Episode watched statuses for Series[{series.id}]')
+            log.debug(f'Cannot migrate Episode watched statuses for Series[{series.id}] - has conflicting libraries')
             continue
 
         for episode in series.episodes:
             if episode.watched is not None:
-                episode.watched_statuses = {
-                    series.libraries[0]['interface_id']: {
-                        series.libraries[0]['name']: episode.watched,
-                    },
-                }
-        log.debug(f'Initialized Series[{series.id}] Episode.watched_statuses')
+                library = series.libraries[0]
+                key = f'{library["interface_id"]}:{library["name"]}'
+                episode.watched_statuses = {key: episode.watched}
+    log.debug(f'Initialized Episode.watched_statuses')
 
     # Migrate Series and Episode Emby and Jellyfin IDs; and Series Sonarr IDs
     for series in session.query(Series).all():
@@ -484,6 +537,11 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    with op.batch_alter_table('card', schema=None) as batch_op:
+        batch_op.drop_constraint('fk_connection_card', type_='foreignkey')
+        batch_op.drop_column('library_name')
+        batch_op.drop_column('interface_id')
+
     with op.batch_alter_table('loaded', schema=None) as batch_op:
         batch_op.add_column(sa.Column('media_server', sa.VARCHAR(), nullable=False))
         batch_op.drop_constraint('fk_connection_loaded', type_='foreignkey')
