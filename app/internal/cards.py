@@ -4,7 +4,7 @@ from time import sleep
 from typing import Optional
 
 from fastapi import BackgroundTasks, HTTPException
-from sqlalchemy import or_
+from sqlalchemy import and_, or_
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Query, Session
 
@@ -102,7 +102,8 @@ def remove_duplicate_cards(*, log: Logger = log) -> None:
 
             # Delete any cards w/o Series or Episode IDs
             unlinked_cards = db.query(Card)\
-                .filter(or_(Card.series_id == None, Card.episode_id == None)) # pylint: disable=singleton-comparison
+                .filter(or_(Card.series_id.is_(None),
+                            Card.episode_id.is_(None)))
             if unlinked_cards.count():
                 log.info(f'Deleting {unlinked_cards.count()} unlinked Cards')
                 unlinked_cards.delete()
@@ -669,19 +670,26 @@ def create_episode_card(
                 db, card, CardClass, CardTypeModel, library, log=log,
             )
 
-    # No existing Card, create and add to database
+    # Find existing Card
     if library:
+        # Look for Card associated with this library OR no library (if
+        # the library was just added to the Series)
         existing_card = db.query(Card)\
-            .filter_by(episode_id=episode.id,
-                       interface_id=library['interface_id'],
-                       library_name=library['name'])\
+            .filter(Card.episode_id==episode.id,
+                    or_(and_(Card.interface_id==library['interface_id'],
+                             Card.library_name==library['name']),
+                        and_(Card.interface_id.is_(None),
+                             Card.library_name.is_(None))))\
             .first()
     else:
+        # No library, find Episode Card without a library
         existing_card = db.query(Card)\
-            .filter_by(episode_id=episode.id,
-                       interface_id=None,
-                       library_name=None)\
+            .filter(Card.episode_id==episode.id,
+                    Card.interface_id.is_(None),
+                    Card.library_name.is_(None))\
             .first()
+
+    # No existing Card, begin creation
     if not existing_card:
         _start_card_creation()
         return None
