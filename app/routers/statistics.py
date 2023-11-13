@@ -33,7 +33,7 @@ def get_all_statistics(
     episode_count = db.query(models.episode.Episode).count()
     card_count = db.query(models.card.Card).count()
 
-    # Get and format total asset size
+    # Get and format total asset size | pylint: disable=not-callable
     asset_size = db.query(models.card.Card)\
         .with_entities(func.sum(models.card.Card.filesize))\
         .scalar()
@@ -78,7 +78,7 @@ def get_series_statistics(
     # Verify Series exists
     get_series(db, series_id, raise_exc=True)
 
-    # Count the Episodes, Cards, and total asset size
+    # Count the Episodes, Cards, and total asset size | pylint: disable=not-callable
     episode_count = db.query(models.episode.Episode)\
         .filter_by(series_id=series_id).count()
     card_count = db.query(models.card.Card)\

@@ -203,7 +203,15 @@ class Series(Base):
     @hybrid_method
     def diff_ratio(self, other: str) -> int:
         """
-        
+        Return the ratio of the most similar substring as a number
+        between 0 and 100 but sorting the token before comparing.
+
+        Args:
+            other: String to compare against this Series' name.
+
+        Returns:
+            Difference ratio of the given string and this name. 0 being
+            no match, 100 being perfect match.
         """
 
         return partial_ratio(self.name.lower(), other.lower())
@@ -211,9 +219,7 @@ class Series(Base):
 
     @diff_ratio.expression
     def diff_ratio(cls: 'Series', other: str) -> int:
-        """
-        
-        """
+        """Class expression of `diff_ratio` property."""
 
         return func.partial_ratio(func.lower(cls.name), other.lower())
 

@@ -13,7 +13,7 @@ from app.models.font import Font
 from app.models.preferences import Preferences
 from app.models.series import Series
 from app.models.template import Template
-from app.schemas.blueprint import ExportBlueprint, RemoteBlueprint
+from app.schemas.blueprint import ExportBlueprint
 from app.schemas.episode import UpdateEpisode
 from app.schemas.font import NewNamedFont
 from app.schemas.series import NewTemplate, UpdateSeries

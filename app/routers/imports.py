@@ -341,7 +341,6 @@ def import_cards_for_series(
         request: Request,
         series_id: int,
         card_directory: ImportCardDirectory = Body(...),
-        preferences: Preferences = Depends(get_preferences),
         db: Session = Depends(get_database)
     ) -> None:
     """
@@ -357,9 +356,8 @@ def import_cards_for_series(
     series = get_series(db, series_id, raise_exc=True)
 
     import_cards(
-        db, preferences, series, card_directory.directory,
-        card_directory.image_extension, card_directory.force_reload,
-        log=request.state.log,
+        db, series, card_directory.directory, card_directory.image_extension,
+        card_directory.force_reload, log=request.state.log,
     )
 
 
@@ -368,7 +366,6 @@ def import_cards_for_series(
 def import_cards_for_multiple_series(
         request: Request,
         card_import: MultiCardImport = Body(...),
-        preferences: Preferences = Depends(get_preferences),
         db: Session = Depends(get_database)
     ) -> None:
     """
@@ -386,7 +383,6 @@ def import_cards_for_multiple_series(
 
         # Import Cards for this Series
         import_cards(
-            db, preferences, series, None, card_import.image_extension,
-            card_import.force_reload,
-            log=request.state.log,
+            db, series, None, card_import.image_extension,
+            card_import.force_reload, log=request.state.log,
         )

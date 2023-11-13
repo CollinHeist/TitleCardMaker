@@ -60,7 +60,7 @@ def enable_or_disable_connection(
         if preferences.use_tmdb:
             refresh_tmdb_interface(log=log)
 
-    preferences.commit(log=log)
+    preferences.commit()
 
 
 @connection_router.get('/emby', status_code=200)

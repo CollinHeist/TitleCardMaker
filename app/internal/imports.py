@@ -8,7 +8,7 @@ from ruamel.yaml import YAML
 from sqlalchemy.orm import Session
 
 from app.dependencies import refresh_imagemagick_interface
-from app.internal.cards import add_card_to_database, resolve_card_settings
+from app.internal.cards import add_card_to_database, resolve_card_settings, validate_card_type_model
 from app.internal.connection import update_connection
 from app import models
 from app.models.preferences import Preferences
@@ -468,7 +468,7 @@ def parse_emby(
         filesize_limit_unit=limit_unit,
     ))
     preferences.use_emby = True
-    preferences.commit(log=log)
+    preferences.commit()
 
     return update_connection(preferences, update_emby, 'emby', log=log)
 
@@ -517,7 +517,7 @@ def parse_jellyfin(
         filesize_limit_unit=limit_unit,
     )
     preferences.use_jellyfin = True
-    preferences.commit(log=log)
+    preferences.commit()
 
     return update_connection(preferences, update_jellyfin, 'jellyfin', log=log)
 
@@ -569,7 +569,7 @@ def parse_plex(
         filesize_limit_unit=limit_unit,
     ))
     preferences.use_plex = True
-    preferences.commit(log=log)
+    preferences.commit()
 
     return update_connection(preferences, update_plex, 'plex', log=log)
 
@@ -612,7 +612,7 @@ def parse_sonarr(
         use_ssl=_get(sonarr, 'verify_ssl', default=UNSPECIFIED),
     ))
     preferences.use_sonarr = True
-    preferences.commit(log=log)
+    preferences.commit()
 
     return update_connection(preferences, update_sonarr, 'sonarr', log=log)
 
@@ -672,7 +672,7 @@ def parse_tmdb(
         ),
     ))
     preferences.use_tmdb = True
-    preferences.commit(log=log)
+    preferences.commit()
 
     return update_connection(preferences, update_tmdb, 'tmdb', log=log)
 
@@ -1209,7 +1209,6 @@ def parse_series(
 
 def import_cards(
         db: Session,
-        preferences: Preferences,
         series: Series,
         directory: Optional[Path],
         image_extension: CardExtension,
@@ -1224,7 +1223,6 @@ def import_cards(
 
     Args:
         db: Database to query for existing Cards.
-        preferences: Preferences for resolving the Card settings.
         series: Series whose Cards are being imported.
         directory: Directory to search for Cards to import. If omitted,
             then the Series default card directory is used.
@@ -1263,20 +1261,23 @@ def import_cards(
 
         # No associated Episode, skip
         if episode is None:
-            log.warning(f'{series.log_str} No associated Episode for {image.resolve()} - skipping')
+            log.warning(f'{series.log_str} No associated Episode for '
+                        f'{image.resolve()} - skipping')
             continue
 
         # Episode has an existing Card, skip if not forced
         if episode.card and not force_reload:
-            log.debug(f'{series.log_str} {episode.log_str} has an associated Card - skipping')
+            log.debug(f'{series.log_str} {episode.log_str} has an associated '
+                      f'Card - skipping')
             continue
 
-        # Episode has card, delete if reloading
-        if episode.card and force_reload:
+        # Episode has Card, delete if reloading
+        if force_reload and episode.card:
             for card in episode.card:
                 log.debug(f'{card.log_str} deleting record')
                 db.query(models.card.Card).filter_by(id=card.id).delete()
-                log.debug(f'{series.log_str} {episode.log_str} has associated Card - reloading')
+                log.debug(f'{series.log_str} {episode.log_str} has associated '
+                          f'Card - reloading')
 
         # Get finalized Card settings for this Episode, override card file
         try:
@@ -1286,6 +1287,9 @@ def import_cards(
                           f'Card - settings are invalid {e}', e)
             continue
 
+        # Get a validated card class, and card type Pydantic model
+        _, CardTypeModel = validate_card_type_model(card_settings, log=log)
+
         # Card is valid, create and add to Database
         card_settings['card_file'] = image
         title_card = NewTitleCard(
@@ -1294,7 +1298,9 @@ def import_cards(
             episode_id=episode.id,
         )
 
-        card = add_card_to_database(db, title_card, card_settings['card_file'])
+        card = add_card_to_database(
+            db, title_card, CardTypeModel, card_settings['card_file']
+        )
         log.debug(f'{series.log_str} {episode.log_str} Imported {image.resolve()}')
 
     return None

@@ -200,7 +200,7 @@ class UpdateTMDb(UpdateBase):
         # Split comma separated language codes into list of codes
         if isinstance(v, list):
             return v
-        elif isinstance(v, str):
+        if isinstance(v, str):
             return list(map(lambda s: str(s).strip(), v.split(',')))
         raise ValueError
 

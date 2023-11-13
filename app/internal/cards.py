@@ -105,7 +105,8 @@ def remove_duplicate_cards(*, log: Logger = log) -> None:
 
             # Delete any cards w/o Series or Episode IDs
             unlinked_cards = db.query(Card)\
-                .filter(or_(Card.series_id == None, Card.episode_id == None)) # pylint: disable=singleton-comparison
+                .filter(or_(Card.series_id.is_(None),
+                            Card.episode_id.is_(None)))
             if unlinked_cards.count():
                 log.info(f'Deleting {unlinked_cards.count()} unlinked Cards')
                 unlinked_cards.delete()
@@ -679,14 +680,14 @@ def create_episode_card(
     different = (
         # Different card type
         card.card_type != existing_card.card_type
+        # Old Card defines an attribute not defined by new Card
+        or any(attr not in new_model_json for attr in existing_card.model_json)
         # New Card defines a different value than the old Card
         or any(str(new_val) != str(_get_existing(attr))
             for attr, new_val in new_model_json.items()
             # Skip randomized attributes
             if not attr.endswith('_rotation_angle')
         )
-        # Old Card defines an attribute not defined by new Card
-        or any(attr not in new_model_json for attr in existing_card.model_json)
     )
 
     # If different, delete existing file, remove from database, create Card
@@ -722,7 +723,8 @@ def update_episode_watch_statuses(
 
     if series.emby_library_name is not None:
         if emby_interface is None:
-            log.warning(f'{series.log_str} Cannot query watch statuses - no Emby connection')
+            log.warning(f'{series.log_str} Cannot query watch statuses - no '
+                        f'Emby connection')
         else:
             emby_interface.update_watched_statuses(
                 series.emby_library_name,
@@ -731,7 +733,8 @@ def update_episode_watch_statuses(
             )
     elif series.jellyfin_library_name is not None:
         if jellyfin_interface is None:
-            log.warning(f'{series.log_str} Cannot query watch statuses - no Jellyfin connection')
+            log.warning(f'{series.log_str} Cannot query watch statuses - no '
+                        f'Jellyfin connection')
         else:
             jellyfin_interface.update_watched_statuses(
                 series.jellyfin_library_name,
@@ -741,7 +744,8 @@ def update_episode_watch_statuses(
             )
     elif series.plex_library_name is not None:
         if plex_interface is None:
-            log.warning(f'{series.log_str} Cannot query watch statuses - no Plex connection')
+            log.warning(f'{series.log_str} Cannot query watch statuses - no '
+                        f'Plex connection')
         else:
             plex_interface.update_watched_statuses(
                 series.plex_library_name,

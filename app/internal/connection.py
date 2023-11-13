@@ -67,6 +67,6 @@ def update_connection(
 
     # Commit changes
     if changed:
-        preferences.commit(log=log)
+        preferences.commit()
 
     return preferences

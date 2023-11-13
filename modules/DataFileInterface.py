@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Iterator
 from yaml import safe_load, dump
 
 from modules import global_objects
@@ -94,7 +94,7 @@ class DataFileInterface:
             dump({'data': yaml}, file_handle, allow_unicode=True, width=100)
 
 
-    def read(self) -> tuple[dict[str, Any], set[str]]:
+    def read(self) -> Iterator[tuple[dict[str, Any], set[str]]]:
         """
         Read the data file for this object, yielding each valid row.
 
@@ -197,8 +197,10 @@ class DataFileInterface:
         return entry
 
 
-    def add_data_to_entry(self, episode_info: EpisodeInfo,
-                          **new_data: dict[str, Any]) -> None:
+    def add_data_to_entry(self,
+            episode_info: EpisodeInfo,
+            **new_data: dict[str, Any],
+        ) -> None:
         """
         Add any generic data to the YAML entry associated with this
         EpisodeInfo.
