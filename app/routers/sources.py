@@ -19,7 +19,7 @@ from app.internal.sources import (
     process_svg_logo, resolve_source_settings
 )
 from app import models
-from app.schemas.card import SourceImage, TMDbImage
+from app.schemas.card import SourceImage, ExternalSourceImage
 
 from modules.WebInterface import WebInterface
 
@@ -192,7 +192,7 @@ def get_all_episode_source_images(
         db: Session = Depends(get_database),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
         plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-    ) -> list[TMDbImage]:
+    ) -> list[ExternalSourceImage]:
     """
     Get all Source Images on TMDb for the given Episode.
 
@@ -246,7 +246,7 @@ def get_all_series_logos_on_tmdb(
         series_id: int,
         db: Session = Depends(get_database),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
-    ) -> list[TMDbImage]:
+    ) -> list[ExternalSourceImage]:
     """
     Get a list of all the logos available for the specified Series on
     TMDb.
@@ -279,13 +279,16 @@ def get_all_series_backdrops_on_tmdb(
         series_id: int,
         db: Session = Depends(get_database),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
-    ) -> list[TMDbImage]:
+    ) -> list[ExternalSourceImage]:
     """
     Get a list of all the backdrops available for the specified Series
     on TMDb.
 
     - series_id: ID of the Series whose backdrops are being requested.
     """
+
+    # Get the Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
 
     # If no TMDb connection, raise 409
     if tmdb_interface is None:
@@ -294,16 +297,12 @@ def get_all_series_backdrops_on_tmdb(
             detail=f'No connection to TMDb'
         )
 
-    # Get the Series, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
-
     # Get all backdrops
-    backdrops = tmdb_interface.get_all_backdrops(
+    return tmdb_interface.get_all_backdrops(
         series.as_series_info,
         bypass_blacklist=True,
         log=request.state.log,
-    )
-    return [] if backdrops is None else backdrops
+    ) or []
 
 
 @source_router.get('/series/{series_id}', status_code=200)
@@ -323,9 +322,10 @@ def get_existing_series_source_images(
             .filter_by(series_id=series_id)\
             .order_by(models.episode.Episode.season_number,
                       models.episode.Episode.episode_number),
-        transformer=lambda episodes: [get_source_image(
-            imagemagick_interface, episode
-        ) for episode in episodes]
+        transformer=lambda episodes: [
+            get_source_image(imagemagick_interface, episode)
+            for episode in episodes
+        ]
     )
 
 
