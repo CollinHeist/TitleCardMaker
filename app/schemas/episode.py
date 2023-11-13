@@ -129,9 +129,9 @@ class UpdateEpisode(UpdateBase):
 
     @root_validator(pre=False)
     def convert_null_ids_to_empty_strings(cls, values):
-        if 'emby_id' in values and values['emby_id'] == None:
+        if 'emby_id' in values and values['emby_id'] is None:
             values['emby_id'] = ''
-        if 'jellyfin_id' in values and values['jellyfin_id'] == None:
+        if 'jellyfin_id' in values and values['jellyfin_id'] is None:
             values['jellyfin_id'] = ''
         return values
 

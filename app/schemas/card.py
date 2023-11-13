@@ -168,3 +168,4 @@ class TitleCard(Base):
     card_file: str
     filesize: int
     model_json: dict
+    library_name: Optional[str] = None

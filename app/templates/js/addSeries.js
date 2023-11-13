@@ -18,17 +18,19 @@ function generateNewSeriesObject(result) {
   const template_ids = template_string === '' ? [] : template_string.split(',');
   
   // Parse libraries
-  const libraries = $('#add-series-modal .dropdown[data-value="libraries"]')
-    .dropdown('get value')
-    .split(',')
-    .map(libraryStr => {
-      const libraryData = libraryStr.split('::');
-      return {
-        interface: libraryData[0],
-        interface_id: libraryData[1],
-        name: libraryData[2]
-      };
-    });
+  const library_vals = $('#add-series-modal .dropdown[data-value="libraries"]').dropdown('get value');
+  let libraries = [];
+  if (library_vals) {
+    libraries = library_vals.split(',')
+      .map(libraryStr => {
+        const libraryData = libraryStr.split('::');
+        return {
+          interface: libraryData[0],
+          interface_id: libraryData[1],
+          name: libraryData[2]
+        };
+      });
+  }
 
   return {
     name: result.name,
