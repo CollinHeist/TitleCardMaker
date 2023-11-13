@@ -349,6 +349,7 @@ def download_episode_source_image(
             continue
 
         # Try each library of each media servers
+        source_image = None
         if interface.INTERFACE_TYPE in ('Emby', 'Jellyfin', 'Plex'):
             for _, library in series.get_libraries(interface_id):
                 source_image = interface.get_source_image(
@@ -381,6 +382,8 @@ def download_episode_source_image(
         # If no source image was returned, increment attempts counter
         if source_image is None:
             episode.image_source_attempts[interface.INTERFACE_TYPE] += 1
+            log.debug(f'{episode!r} failed to download Source Image from '
+                      f'Connection[{interface_id}] {interface.INTERFACE_TYPE}')
             db.commit()
             continue
 

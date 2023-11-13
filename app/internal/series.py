@@ -533,7 +533,7 @@ def add_series(
         # Function
         refresh_episode_data,
         # Arguments
-        db, series, log=log,
+        db, series, background_tasks=background_tasks, log=log,
     )
 
     return series

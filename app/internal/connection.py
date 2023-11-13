@@ -72,13 +72,12 @@ def initialize_connections(
                 interface_group.initialize_interface(
                     connection.id, connection.interface_kwargs, log=log,
                 )
-                log.debug(f'Initialized Connection to {connection.log_str}')
             except Exception as exc:
                 preferences.invalid_connections.append(connection.id)
                 log.exception(f'Error initializing {connection.log_str} - {exc}', exc)
 
     if preferences.invalid_connections:
-        log.debug(f'Disabled Connections {preferences.invalid_connections}')
+        log.debug(f'Disabled Connection(s) {preferences.invalid_connections}')
 
 
 def add_connection(
