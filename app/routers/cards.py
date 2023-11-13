@@ -209,7 +209,8 @@ def get_series_cards(
             .filter(models.card.Card.series_id == series_id)\
             .join(models.episode.Episode)\
             .order_by(models.episode.Episode.season_number)\
-            .order_by(models.episode.Episode.episode_number)
+            .order_by(models.episode.Episode.episode_number)\
+            .order_by(models.card.Card.library_name)
     )
 
 
