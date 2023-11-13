@@ -836,7 +836,15 @@ function getCardData(page=currentCardPage, transition=false) {
         if (transition && !isSmallScreen()) {
           preview.querySelector('.image').classList.add('transition', 'hidden');
         }
-        preview.querySelector('.dimmer .content').innerHTML = `<h4>Season ${card.episode.season_number} Episode ${card.episode.episode_number}`;
+        {% if preferences.library_unique_cards %}
+        if (card.library_name) {
+          preview.querySelector('.dimmer .content').innerHTML = `<h5>Season ${card.episode.season_number} Episode ${card.episode.episode_number} (${card.library_name})</h5>`;
+        } else {
+          preview.querySelector('.dimmer .content').innerHTML = `<h5>Season ${card.episode.season_number} Episode ${card.episode.episode_number}</h5>`;
+        }
+        {% else %}
+        preview.querySelector('.dimmer .content').innerHTML = `<h5>Season ${card.episode.season_number} Episode ${card.episode.episode_number}</h5>`;
+        {% endif %}
         const modifiedUrl = card.card_file.replace('{{preferences.card_directory}}', '/cards')
         preview.querySelector('img').src = `${modifiedUrl}?${card.filesize}`;
         return preview;
