@@ -51,7 +51,7 @@ ARGUMENT_KEYS = (
     'Series Library Name (Emby)', 'Series Library Name (Jellyfin)',
     'Series Library Name (Plex)', 'Series Logo', 'Episode is Watched',
     'Season Number', 'Episode Number', 'Absolute Number', 'Episode Title',
-    'Episode Title Length', 'Episode Airdate',
+    'Episode Title Length', 'Episode Airdate', 'Episode Extras',
 )
 
 """
@@ -300,6 +300,7 @@ class Template(Base):
                 'Episode Title': episode.title,
                 'Episode Title Length': len(episode.title),
                 'Episode Airdate': episode.airdate,
+                'Episode Extras': episode.extras,
             }
 
         # Evaluate each condition of this Template's filter
