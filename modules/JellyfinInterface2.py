@@ -535,6 +535,12 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             } | self.__params
         )
 
+        # Invalid return, exit
+        if not isinstance(response, dict) or 'Items' not in response:
+            log.warning(f'Jellyfin returned bad Episode data')
+            log.debug(f'{response=}')
+            return []
+
         # Parse each returned episode into EpisodeInfo object
         all_episodes = []
         for episode in response['Items']:
