@@ -831,6 +831,7 @@ function getCardData(page=currentCardPage, transition=false) {
         if (transition && !isSmallScreen()) {
           preview.querySelector('.image').classList.add('transition', 'hidden');
         }
+        preview.querySelector('img').onclick = () => createEpisodeCard(card.episode_id);
         preview.querySelector('.dimmer .content').innerHTML = `<h4>Season ${card.episode.season_number} Episode ${card.episode.episode_number}`;
         const modifiedUrl = card.card_file.replace('{{preferences.card_directory}}', '/cards')
         preview.querySelector('img').src = `${modifiedUrl}?${card.filesize}`;
