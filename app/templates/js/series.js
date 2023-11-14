@@ -708,7 +708,7 @@ async function getEpisodeData(page=1) {
     row.querySelector('tr').id = `episode-id${episode.id}`;
     row.querySelector('tr').dataset.episodeId = episode.id;
     // Add red mark if no Card is present
-    if (episode.card.length == 0) { row.querySelector('tr').classList.add('left', 'red', 'marked'); }
+    if (episode.cards.length == 0) { row.querySelector('tr').classList.add('left', 'red', 'marked'); }
     // Assign functions to onclick of <a> element
     row.querySelector('td[data-column="create"] a').onclick = () => createEpisodeCard(episode.id);
     row.querySelector('td[data-column="edit"] a').onclick = () => saveEpisodeConfig(episode.id);

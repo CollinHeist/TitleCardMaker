@@ -1,3 +1,8 @@
+/* Ensure content takes up full size */
+#main-content {
+  height: 100vh;
+}
+
 /* Format menu bar */
 #main-content .menu:not(.pagination) {
   box-shadow: 1px 1px 10px -3px rgba(252, 252, 252, 0.8)
@@ -41,8 +46,12 @@ table td[data-row="name"] .content {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* When in select mode, highlight selected rows */
 #series-table tr.selected {
   background-color: rgba(255, 227, 0, 0.29);
+}
+table .dropdown[data-value="libraries"] .active.item {
+  color: crimson !important; 
 }
 
 /* Do not round edges of progress bars */

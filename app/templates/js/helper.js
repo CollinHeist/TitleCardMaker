@@ -1,3 +1,16 @@
+/**
+ * @typedef {Object} DropdownValue
+ * @property {string} name - Name of the value as it appears in the dropdown.
+ * @property {string} value - Value which will be listed in the dropdown's
+ * input.
+ * @property {bool} selected - Whether this value is selected within the
+ * dropdown.
+ */
+
+/**
+ * Toggle the side navigation menu. If on mobile, then the menu is toggled,
+ * if on desktop, then this redirects to the home page.
+ */
 function toggleNavMenu() {
   // On mobile toggle the nav menu; on desktop go home
   if (isSmallScreen()) {
@@ -17,10 +30,38 @@ function toggleNavMenu() {
   }
 }
 
+/*
+ * Debounce the given function with the given timeout. The minimum interval
+ * between calls to the return of this function will be `timeout` ms.
+ * @arg {function} func - Function to debounce.
+ * @arg {Number} [timeout] - Minimum interval between calls to `func`.
+ * @returns {function} Debounced version of `func`.
+ */ 
+function debounce(func, timeout = 850){
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { func.apply(this, args); }, timeout);
+  };
+}
+
+/**
+ * Determine whether this device is technically a small screen.
+ * @returns {bool} Whether this device screen is small, and mobile
+ * formatting should apply.
+ */
 function isSmallScreen() {
   return window.screen.availWidth < 768;
 }
 
+/**
+ * Format the given number of bytes into a human-readable string.
+ * @example
+ * formatBytes(1.25e6, 2); // '1.19 MiB'
+ * @param {number} bytes - Byte amount to forma.
+ * @param {number} [decimals] - Number of decimal places to display.
+ * @returns {string} Formatted string.
+ */
 function formatBytes(bytes, decimals = 2) {
   if (!+bytes) return '0 B'
 
@@ -33,6 +74,13 @@ function formatBytes(bytes, decimals = 2) {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
 
+/**
+ * Format the given FastAPI response object into a single string.
+ * @param {Object} errorResponse - AJAX response from to format.
+ * @param {string|Object} errorResponse.detail - Details of the FastAPI error to
+ * add to the return.
+ * @returns {string} Formatted string representation of the given response.
+ */
 function formatFastAPIError(errorResponse) {
   // No response or details
   if (!errorResponse || !errorResponse.detail) {
@@ -63,8 +111,17 @@ function formatFastAPIError(errorResponse) {
   return formattedErrors.join('\n');
 }
 
-function showErrorToast(args) {
-  const {title, message, response, displayTime=10000} = args;
+/**
+ * Show an error toast. Equivalent to `$.toast({class: 'error', ...args})`
+ * @param {Object} args - Arguments for the toast creation.
+ * @param {string} args.title - Title of the toast.
+ * @param {string} args.message - Message of the toast - only displayed if
+ * args.response is undefined.
+ * @param {*} args.response - Response object to format in the message text.
+ * @param {number} [args.displayTime=1000] - How long (in ms) to display the toast.
+ */
+function showErrorToast({title, message, response, displayTime=1000}) {
+  // const {title, message, response, displayTime=10000} = args;
   if (response === undefined) {
     $.toast({
       class: 'error',
@@ -82,11 +139,19 @@ function showErrorToast(args) {
   }
 }
 
+/**
+ * Show an error toast. Equivalent to `$.toast({class: 'blue info', ...args})`
+ * @param {string|Object} args - Toast title or arguments
+ * @param {string} [args.title] - Title of the toast.
+ * @param {string} [args.message] - Message of the toast - only displayed if
+ * args.response is undefined.
+ * @param {number} [args.displayTime=1000] - How long (in ms) to display the toast.
+ */
 function showInfoToast(args) {
   if (typeof args === 'string') {
     $.toast({class: 'blue info', title: args});
   } else {
-    const {title, message, displayTime} = args;
+    const {title, message, displayTime=1000} = args;
     $.toast({
       class: 'blue info',
       title: title,
@@ -96,6 +161,16 @@ function showInfoToast(args) {
   }
 }
 
+/**
+ * Get the list of template values (for a $.dropdown) based on the given
+ * IDs.
+ * @param {Array<int>} activeIds - Template IDs which are active and to include
+ * in the return.
+ * @param {Array<Object>} availableTemplates - List of all the available
+ * Template objects which should be filtered.
+ * @returns {Array<DropdownValue>} List of values which can be used in the 
+ * dropdown initialization for the given Template IDs.
+ */
 function getActiveTemplates(activeIds, availableTemplates) {
   let values = [];
   // Add all active Template values
@@ -123,6 +198,16 @@ function getActiveTemplates(activeIds, availableTemplates) {
   return values;
 }
 
+/**
+ * 
+ * @param {int} pageNumber - Page number of the element to create.
+ * @param {string} pageText - Text to display within the element.
+ * @param {bool} active - Whether this element should be created as active
+ * and disabled.
+ * @param {function} navigateFunction - Function to call when this element
+ * is clicked.
+ * @returns {HTMLElement} Created element for use in a pagination menu.
+ */
 function createPageElement(pageNumber, pageText, active = false, navigateFunction) {
   let element = document.createElement('a');
   element.className = active ? 'active disabled item' : 'item';
@@ -258,8 +343,9 @@ async function downloadFileBlob(filename, blob) {
   document.body.removeChild(downloadLink);
 }
 
-/*
- *
+/**
+ * Submit an API request to get all the available extras and populate the
+ * allExtras, cardTypeSet, and cardTypes variables.
  */
 let allExtras, cardTypeSet, cardTypes;
 async function queryAvailableExtras() {
@@ -272,7 +358,7 @@ async function queryAvailableExtras() {
   }
 }
 
-/*
+/**
  * Initialize the extra key dropdowns with all available options.
  */
 let popups = {};
@@ -343,6 +429,96 @@ async function initializeExtraDropdowns(
       $selectedItem.closest('.field').find('.popup .header').text(text);
       $selectedItem.closest('.field').find('.popup .description').html(popups[value]);
     }
+  });
+}
+
+function _updateSeriesConfig(seriesId, data) {
+  $.ajax({
+    type: 'PATCH',
+    url: `/api/series/${seriesId}`,
+    data: JSON.stringify(data),
+    contentType: 'application/json',
+    success: () => showInfoToast('Updated Series'),
+    error: response => showErrorToast({title: 'Error Updating Series', response}),
+  });
+}
+const updateSeriesConfig = debounce((...args) => _updateSeriesConfig(...args));
+
+/*
+ * Query for all the globally available Connections and Libraries. This updates
+ * the global variables. Only re-queries if not initialized.
+ */
+let _allLibraries, _allConnections;
+async function queryLibraries() {
+  if (_allConnections === undefined) {
+    _allConnections = await fetch('/api/connection/all')
+      .then(resp => resp.json());
+  }
+  if (_allLibraries === undefined) {
+    _allLibraries = await fetch('/api/available/libraries/all')
+      .then(resp => resp.json());
+  }
+}
+
+/*
+ *
+ */
+async function initializeLibraryDropdowns(
+    selectedLibraries,
+    dropdownElements,
+    clearable=true,
+    useLabels=true) {
+  // Only re-query for libraries if not initialized
+  if (_allLibraries === undefined || _allConnections === undefined) {
+    await queryLibraries();
+  }
+
+  // Start library value list with those selected by the Series
+  const dropdownValues = selectedLibraries.map(library => {
+    return {
+      interface: library.interface,
+      interface_id: library.interface_id,
+      name: library.name,
+      selected: true
+    };
+  });
+
+  // Add each library not already selected
+  _allLibraries.forEach(({interface, interface_id, name}) => {
+    if (!(dropdownValues.some(library => library.interface_id === interface_id && library.name === name))) {
+      dropdownValues.push({interface, interface_id, name, selected: false});
+    }
+  });
+
+  // Initialize dropdown
+  dropdownElements.dropdown({
+    placeholder: 'None',
+    clearable,
+    useLabels,
+    values: dropdownValues.map(({interface, interface_id, name, selected}) => {
+      const serverName = _allConnections.filter(connection => connection.id === interface_id)[0].name || interface;
+      return {
+        name: name,
+        text: `${name} (${serverName})`,
+        value: `${interface}::${interface_id}::${name}`,
+        description: serverName,
+        descriptionVertical: true,
+        selected: selected,
+      };
+    }),
+    onChange: function(value, text, $selectedItem) {
+      // Current value of the library dropdown
+      let libraries = [];
+      if (value) {
+        libraries = value.split(',').map(libraryStr => {
+          const libraryData = libraryStr.split('::');
+          return {interface: libraryData[0], interface_id: libraryData[1], name: libraryData[2]};
+        });
+      }
+      // Get series ID
+      const seriesId = $selectedItem.closest('tr').data('id');
+      updateSeriesConfig(seriesId, {libraries});
+    },
   });
 }
 

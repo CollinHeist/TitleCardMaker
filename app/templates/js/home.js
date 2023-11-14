@@ -94,6 +94,10 @@ function toggleSeriesSelection(seriesId) {
   }
 }
 
+/*
+ * Navigate to the Series page for the Series with the given ID. This only
+ * navigates the page if no Series are selected.
+ */
 function openSeries(seriesId) {
   if (selectedSeries.length === 0) {
     window.location.href = `/series/${seriesId}`;
@@ -132,6 +136,7 @@ async function getAllSeries(page=undefined) {
     let rows = allSeries.map(series => {
       // Get row template
       const row = template.content.cloneNode(true);
+      row.querySelector('tr').dataset.id = series.id;
       row.querySelector('tr').id = `series-id${series.id}`;
       // Make row red / yellow depending on Card count
       if (series.card_count === 0) { row.querySelector('td').classList.add('left', 'red', 'marked'); }
@@ -149,6 +154,7 @@ async function getAllSeries(page=undefined) {
       if (!series.monitored) { poster.classList.add('unmonitored'); }
       {% endif %}
       row.querySelector('td[data-row="year"').innerText = series.year;
+      row.querySelector('td[data-row="libraries"]').dataset.sortValue = series.libraries.length;
       // libraries later
       row.querySelector('td[data-row="card_count"] a').onclick = () => refreshCardData(series.id);
       row.querySelector('td[data-row="card_count"] span[data-value="card_count"]').innerText = `${series.card_count} / ${series.episode_count} Cards`;
@@ -166,10 +172,21 @@ async function getAllSeries(page=undefined) {
 
       return row;
     });
+    // Hide loader
     $('.loading.container').transition('fade out');
+    // Add rows
     document.getElementById('series-table').replaceChildren(...rows);
     $('#series-table tr').transition({animation: 'scale', interval: 25});
     $('.progress').progress({duration: 2000});
+    // Initialize library dropdowns
+    allSeries.forEach(async (series) => {
+      await initializeLibraryDropdowns(
+        series.libraries,
+        $(`#series-id${series.id} .dropdown[data-value="libraries"]`),
+        false,
+        false,
+      );
+    })
   } else {
     const template = document.getElementById('series-template');
     let allSeriesCards = allSeries.map(series => {
