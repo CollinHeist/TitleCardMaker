@@ -29,7 +29,8 @@ that look like this (in particular the font used for the __title text__ `Nacho`)
 1. Navigate to the font page by clicking :fontawesome-solid-font: `Fonts` from
 the side navigation bar.
 
-2. Create a new font by clicking the `Create New Font` button.
+2. Create a new font by clicking the
+<span class="example md-button">Create New Font</span> button.
 
 3. Expand the created font by clicking the accordion called "Custom Font".
 
@@ -72,9 +73,10 @@ the side navigation bar.
 7. Download [this font](https://fontmeme.com/fonts/script1-script-casual-font/).
 
 8. In the "Font" file input, click `Browse` (or your Browser equivalent) and
-then select the file we just downloaded.
+then select the file you just downloaded.
 
-9. Click `Save Changes` to save your changes and upload the file.
+9. Click <span class="example md-button">Save Changes</span> to save your
+changes _and_ upload the file.
 
     !!! note "The Font File"
     

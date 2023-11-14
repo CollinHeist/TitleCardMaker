@@ -101,8 +101,8 @@ guidance on how to enter your library paths.
             | TV | K:\TV |
             | TV (4K) | K:\TV 4K |
 
-8. After entering all the necessary library paths, click the `Save Changes`
-button.
+8. After entering all the necessary library paths, click
+<span class="example md-button">Save Changes</span>.
 
 ## Webhook Integration
 

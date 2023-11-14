@@ -28,9 +28,9 @@ our Templates, as well as show how these Cards can be further customized.
 1. Go to the _Breaking Bad_ Series configuration page - you can quickly access
 it by searching for the title in the top left search bar (next to the TCM logo).
 
-2. Just below the poster is a set of action buttons. Click the `Refresh Episode
-Data` button. TCM will now query your global Episode Data Source for new
-Episodes.
+2. Just below the poster is a set of action buttons. Click the
+<span class="example md-button">Refresh Episode Data</span> button. TCM will now
+query your global Episode Data Source for new Episodes.
 
     !!! note "Scheduled Task"
 
@@ -64,8 +64,9 @@ and store it inside the Source Image directory. Download any image.
 6. Close the image browser. The file for that Episode should now be filled in
 with Source Image information.
 
-7. To tell TCM to _automatically_ gather Source Images, click the `Download
-Source Images` button on the left-hand side.
+7. To tell TCM to _automatically_ gather Source Images, click the
+<span class="example md-button">Download Source Images</span> button on the
+left-hand side.
 
     !!! note "Scheduled Task"
 
@@ -78,7 +79,8 @@ Cards.
 
 ## Title Cards
 
-8. Click the `Create Title Cards` button on the left-hand side.
+8. Click <span class="example md-button">Create Title Cards</span> on the
+left-hand side.
 
 9. After TCM has created a few Cards, go to "Files" tab under Title Cards.
 
@@ -93,8 +95,9 @@ criteria.
 1 to something else. Save this change by clicking the :material-content-save:
 Save icon in the left-most column.
 
-12. Click the `Create Title Cards` button again. This Card is now made with the
-the card type you _just_ selected, overriding any Template specifications.
+12. Click <span class="example md-button">Create Title Cards</span> again. This
+Card is now made with the the card type you _just_ selected, overriding any
+Template specifications.
 
     ??? question "Why did the Tier 1 Template not apply?"
 
@@ -121,3 +124,6 @@ the card type you _just_ selected, overriding any Template specifications.
     the example Series, but instead _all_ (or large portions) of your Series.
     Review [Creating the First Sync](./first_sync/index.md) for a reminder on
     how to create Syncs.
+
+    See the [User Guide](../user_guide/index.md) for detailed guides on each
+    part of TCM.

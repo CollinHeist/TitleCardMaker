@@ -37,7 +37,7 @@ the generated API key.
         mean who would steal a free API key?).
 
 3. Back in TCM, on the Connections page, scroll down towards the bottom and
-click the `Add Connection` button beneath _TheMovieDatabase_.
+click the <span class="example md-button">Add Connection</span> button beneath _TheMovieDatabase_.
 
 4. Paste your API key from Step 2 into the API Key input box.
 
@@ -59,7 +59,7 @@ you truly don't care about image quality, you can enter `0x0`.
         UI, have no minimum resolution.
 
 6. Check `Ignore Localized Images` so that TCM rejects Source Images which have
-assigned languages.
+assigned languages[^1].
 
 7. Click `Create`.
 
@@ -73,3 +73,6 @@ select these in the order you which TCM to grab logos in.
         English logos are available.
 
         This is recommended for users who have Anime libraries.
+
+[^1]: For more details, see
+[here](../../user_guide/connections.md#simple-themoviedatabasetmdb-themoviedatabase).

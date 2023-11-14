@@ -20,6 +20,7 @@ As a Media Server, Plex can serve as an
 (obviously) as a location where Title Cards are uploaded to.
 
 1. Toggle the `Enable Plex` checkbox.
+
 2. Enter the _root_ URL of your Plex server (including the port).
 
     ??? example "Example URL"
@@ -29,11 +30,14 @@ As a Media Server, Plex can serve as an
 
 3. Follow [these instructions](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/) and copy the
 X-Plex-Token value.
+
 4. Back within TitleCardMaker, paste the X-Plex-Token from Step 3 into the Token
 input box.
+
 5. If you use Plex Meta Manager episode overlays, toggle the `Integrate with
 Plex Meta Manager` checkbox.
-6. Click the `Save Changes` button.
+
+6. Click <span class="example md-button">Save Changes</span>.
 
 I also recommend setting up the [Tautulli Connection](./tautulli.md) while here,
 if you have Tautulli installed.

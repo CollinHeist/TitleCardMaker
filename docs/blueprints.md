@@ -10,16 +10,16 @@ tags:
 
 # Blueprints
 
-_Blueprints_ can be viewed as amped-up Templates. These are ready-made
-collections of cards configurations that apply to a single Series. Blueprints
-allow for importing a pre-made customization for a Series, and can include any
-of the following:
+_Blueprints_ can be viewed as amped-up [Templates](./user_guide/templates.md).
+These are ready-made collections of cards configurations that apply to a single
+Series. Blueprints allow for importing a pre-made customization for a Series,
+and can include any of the following:
 
 - Named Fonts - _i.e. Fonts with files_
 - Templates
 - Series customizations
 - Episode customizations
-- Source files - _i.e. logos, masks, source images, etc._
+- Source files - _i.e. logos, masks, Source Images, etc._
 
 !!! example "Example"
 
@@ -61,17 +61,18 @@ will then cycle through the available previews.
 
 ### By Series
 
-To import a Blueprint for a Series, simply open the Series' page and then open
-the _Blueprints_ tab. Click `Search`, and TCM will look for any available
-Blueprints for this Series. If any are available, a preview will show the
-details.
+To import a Blueprint for a Series, simply open the
+[Series' page](./user_guide/series.md) and then open the _Blueprints_ tab. Click
+`Search`, and TCM will look for any available Blueprints for this Series. If any
+are available, a preview will show the details.
 
 On this card will be a preview of the Blueprint, as well as what customizations
 will be imported. This can be any number of Fonts, Templates, or Episode
 overrides.
 
 After picking the Blueprint you like, simply click :material-cloud-download:
-`Import` and TCM will grab and apply the Blueprint for you.
+`Import` and TCM will download and apply the Blueprint for you. Once it is
+completed, the page will refresh.
 
 Once a Blueprint has been imported, you are free to make any edits to the
 Series, Templates, or Fonts as you see fit. TitleCardMaker will not override
@@ -119,7 +120,8 @@ as easy as possible.
 
 Once you've customized a Series' Cards to :pinched_fingers: _perfection_, open
 it's page in TitleCardMaker, and then go to the _Blueprints_ tab. Click the
-:fontawesome-solid-file-export: `Export` button, and TCM will do a few things:
+<span class="example md-button">:fontawesome-solid-file-export: Export</span>
+button, and TCM will do a few things:
 
 1. If the Series (or any linked Templates) have a Named Font -  __this includes
 those linked directly to Episodes__ - it will copy any Font files;
@@ -230,7 +232,7 @@ File_ field.
             This is required because GitHub only allows directly uploading files
             of specific extensions, and Font extensions are not on that list.
 
-5. Click the _Submit new issue_ button.
+5. Click the  _Submit new issue_ button.
 
 !!! success "Success"
 
