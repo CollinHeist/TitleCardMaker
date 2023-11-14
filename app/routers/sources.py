@@ -166,6 +166,7 @@ def get_all_episode_source_images(
         episode_id: int,
         db: Session = Depends(get_database),
         tmdb_interface: TMDbInterface = Depends(require_tmdb_interface),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
     ) -> list[ExternalSourceImage]:
     """
     Get all Source Images on TMDb for the given Episode.
@@ -191,19 +192,19 @@ def get_all_episode_source_images(
         log=request.state.log,
     ) or []
 
-    # Get Source Image from Plex if possible
+    # Get Source Images from Plex if possible
     plex_images = []
-    # TODO update w/ multi-conn
-    if plex_interface and episode.series.plex_library_name:
-        plex_image_url = plex_interface.get_source_image(
-            episode.series.plex_library_name,
-            episode.series.as_series_info,
-            episode.as_episode_info,
-            proxy_url=True,
-            log=log,
-        )
-        if plex_image_url:
-            plex_images = [{'url': plex_image_url}]
+    for interface_id, library_name in episode.series.libraries:
+        if (plex_interface := plex_interfaces[interface_id]):
+            url = plex_interface.get_source_image(
+                library_name,
+                episode.series.as_series_info,
+                episode.as_episode_info,
+                proxy_url=True,
+                log=log,
+            )
+            if url:
+                plex_images.append({'url': url})
 
     return tmdb_images + plex_images
 
