@@ -671,7 +671,10 @@ def create_episode_card(
             )
 
     # Find existing Card
-    if library:
+    # Library unique mode is disabled, look for any Card for this Episode
+    if not get_preferences().library_unique_cards or not library:
+        existing_card = db.query(Card).filter_by(episode_id=episode.id).first()
+    elif library:
         # Look for Card associated with this library OR no library (if
         # the library was just added to the Series)
         existing_card = db.query(Card)\
@@ -681,13 +684,13 @@ def create_episode_card(
                         and_(Card.interface_id.is_(None),
                              Card.library_name.is_(None))))\
             .first()
-    else:
-        # No library, find Episode Card without a library
-        existing_card = db.query(Card)\
-            .filter(Card.episode_id==episode.id,
-                    Card.interface_id.is_(None),
-                    Card.library_name.is_(None))\
-            .first()
+    # else:
+    #     # No library, find Episode Card without a library
+    #     existing_card = db.query(Card)\
+    #         .filter(Card.episode_id==episode.id,
+    #                 Card.interface_id.is_(None),
+    #                 Card.library_name.is_(None))\
+    #         .first()
 
     # No existing Card, begin creation
     if not existing_card:
@@ -748,7 +751,7 @@ def create_episode_cards(
 
     Args:
         db: Database to query and update.
-        background_tasks: Optional BackgroundTasks to queue card
+        background_tasks: Optional BackgroundTasks to queue Card
             creation within.
         episode: Episode whose Cards are being created.
         raise_exc: Whether to raise any HTTPExceptions.
@@ -759,11 +762,20 @@ def create_episode_cards(
             is True.
     """
 
+    # If parent Series has multiple libraries
     if episode.series.libraries:
-        for library in episode.series.libraries:
+        # In library unique mode, create Card for each library
+        if get_preferences().library_unique_cards:
+            for library in episode.series.libraries:
+                create_episode_card(
+                    db, background_tasks, episode, library,
+                    raise_exc=raise_exc, log=log
+                )
+        # Only create Card for primary library
+        else:
             create_episode_card(
-                db, background_tasks, episode, library,
-                raise_exc=raise_exc, log=log
+                db, background_tasks, episode, episode.series.libraries[0],
+                raise_exc=raise_exc, log=log,
             )
     else:
         create_episode_card(
@@ -792,14 +804,9 @@ def get_watched_statuses(
     changed = False
     for library in series.libraries:
         if (interface := get_interface(library['interface_id'])):
-            # Query statuses from connection
-            statuses = interface.get_watched_statuses(
+            changed |= interface.update_watched_statuses(
                 library['name'], series.as_series_info, episodes, log=log,
             )
-
-            # Update Watched objects in db
-            for episode, watched in zip(episodes, statuses):
-                changed |= episode.add_watched_status(watched)
 
     if changed:
         db.commit()
