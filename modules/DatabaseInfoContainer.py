@@ -322,6 +322,26 @@ class InterfaceID:
         return return_id
 
 
+    def delete_interface_id(self, connection_id: ConnectionID, /) -> bool:
+        """
+        Delete all the IDs associated with the given connection ID.
+
+        Args:
+            connection_id: ID of the Connection whose IDs are being
+                deleted.
+
+        Returns:
+            Whether this object was modified.
+        """
+
+        # Connection has IDs, delete
+        if connection_id in self._ids:
+            del self._ids[connection_id]
+            return True
+
+        return False
+
+
 class DatabaseInfoContainer(ABC):
     """
     This class describes an abstract base class for all Info objects

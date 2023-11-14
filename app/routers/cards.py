@@ -303,7 +303,7 @@ def delete_series_title_cards(
     - series_id: ID of the Series whose TitleCards to delete.
     """
 
-    # Create Queries for Cards of this Series
+    # Create queries for Cards of this Series
     card_query = db.query(models.card.Card).filter_by(series_id=series_id)
     loaded_query = db.query(models.loaded.Loaded).filter_by(series_id=series_id)
 

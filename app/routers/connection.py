@@ -503,6 +503,14 @@ def delete_connection(
         preferences.episode_data_source = db.query(Connection).first()
         log.warning(f'Reset global Episode data source')
 
+    # Remove from Series and Episode database IDs
+    for series in db.query(Series).all():
+        if series.remove_interface_ids(interface_id):
+            log.debug(f'Removed Series IDs from {series!r}')
+    for episode in db.query(Episode).all():
+        if episode.remove_interface_ids(interface_id):
+            log.debug(f'Removed Episode IDs from {episode!r}')
+
     # Delete Connection
     db.delete(connection)
     log.info(f'Deleting {connection.log_str}')

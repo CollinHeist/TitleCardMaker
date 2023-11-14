@@ -116,6 +116,9 @@ class Series(Base):
     extras = Column(MutableDict.as_mutable(JSON), default=None)
 
 
+    def __repr__(self) -> str:
+        return f'Series[{self.id}] {self.full_name}'
+
     # Columns from relationships
     @hybrid_property
     def episode_ids(self) -> list[int]:
@@ -465,9 +468,42 @@ class Series(Base):
         changed = False
         for id_type, id_ in info.ids.items():
             if id_ and getattr(self, id_type) != id_:
-                print(f'{self.log_str}.{id_type} | {getattr(self, id_type)} -> {id_}')
+                # print(f'{self.log_str}.{id_type} | {getattr(self, id_type)} -> {id_}')
                 setattr(self, id_type, id_)
                 changed = True
+
+        return changed
+    
+
+    @hybrid_method
+    def remove_interface_ids(self, interface_id: int) -> bool:
+        """
+        Remove any database IDs associated with the given interface /
+        Connection ID. This can update the `emby_id`, `jellyfin_id`, and
+        the `sonarr_id` attributes.
+
+        Args:
+            interface_id: ID of the interface whose IDs are being
+                removed.
+
+        Returns:
+            Whether any ID attributes of this Episode were modified.
+        """
+
+        # Get SeriesInfo representation
+        series_info: SeriesInfo = self.as_series_info
+
+        # Delete from each InterfaceID
+        changed = False
+        if series_info.emby_id.delete_interface_id(interface_id):
+            self.emby_id = str(series_info.emby_id)
+            changed = True
+        if series_info.jellyfin_id.delete_interface_id(interface_id):
+            self.jellyfin_id = str(series_info.jellyfin_id)
+            changed = True
+        if series_info.sonarr_id.delete_interface_id(interface_id):
+            self.sonarr_id = str(series_info.sonarr_id)
+            changed = True
 
         return changed
 

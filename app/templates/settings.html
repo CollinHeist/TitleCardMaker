@@ -301,7 +301,7 @@
                   <div class="field">
                     <label>Season Folder Format</label>
                     <input type="text" name="season_folder_format" placeholder="{{preferences.season_folder_format}}" value="{{preferences.season_folder_format}}">
-                    <p class="help">Format of all the non-specials Title Card subfolders. {season_number} is the season number variable.</p>
+                    <p class="help">Format of all the non-special Title Card subfolders. {season_number} is the season number variable.</p>
                   </div>
                 </div>
               </div>
@@ -314,11 +314,11 @@
                 <input name="library_unique_cards" type="checkbox">
                 {% endif %}
                 <p class="help">
-                  Whether to add a unique Library identifier to Title Card filenames when a Series has multiple libraries.
-                  <br>
-                  This allows library-specific Title Cards - i.e. Server A's Card having a different style than Server B.
+                  Whether to add a unique Library identifier to Title Card filenames to allow library-specific Title Cards.
                   <br>
                   Users whose Series are only part of a single library, or who do not use watch-status specific styling, should leave this disabled.
+                  <br>
+                  <b>If enabled, TitleCardMaker will create one Title Card for each Episode for each Library.</b>
                 </p>
               </div>
             </div>

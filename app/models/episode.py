@@ -168,6 +168,13 @@ class Episode(Base):
         return f'S{self.season_number:02}E{self.episode_number:02}'
 
 
+    def __repr__(self) -> str:
+        return (
+            f'{self.series.full_name} '
+            f'S{self.season_number:02}E{self.episode_number:02}'
+        )
+
+
     @hybrid_property
     def log_str(self) -> str:
         """
@@ -309,6 +316,36 @@ class Episode(Base):
                 log.debug(f'{self.log_str}.{id_type} | {getattr(self, id_type)} -> {id_}')
                 setattr(self, id_type, id_)
                 changed = True
+
+        return changed
+
+
+    @hybrid_method
+    def remove_interface_ids(self, interface_id: int, /) -> bool:
+        """
+        Remove any database IDs associated with the given interface /
+        Connection ID. This can update the `emby_id` and `jellyfin_id`
+        attributes.
+
+        Args:
+            interface_id: ID of the interface whose IDs are being
+                removed.
+
+        Returns:
+            Whether any ID attributes of this Episode were modified.
+        """
+
+        # Get EpisodeInfo representation
+        episode_info: EpisodeInfo = self.as_episode_info
+
+        # Delete from each InterfaceID
+        changed = False
+        if episode_info.emby_id.delete_interface_id(interface_id):
+            self.emby_id = str(episode_info.emby_id)
+            changed = True
+        if episode_info.jellyfin_id.delete_interface_id(interface_id):
+            self.jellyfin_id = str(episode_info.jellyfin_id)
+            changed = True
 
         return changed
 
