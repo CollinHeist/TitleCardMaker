@@ -23,9 +23,9 @@ Series that have been added - this step is to showcase how to do this manually.
 :fontawesome-solid-tv: `Series` from the side navigation bar, or hitting
 ++shift++ + ++h++ (when a text box is not selected).
 
-2. In the top right (below the search bar), click the `+ New Series` button.
-This will take you to a separate page where you can browse both Series and
-Blueprints.
+2. In the top right (below the search bar), click the
+<span class="example md-button">+ New Series</span> button. This will take you
+to a separate page where you can browse both Series and Blueprints.
 
 3. For this tutorial, we'll be adding and customizing
 [Better Call Saul](https://www.themoviedb.org/tv/60059-better-call-saul).
@@ -54,14 +54,17 @@ add this to TCM:
     can assign any libraries or Templates to the Series, as well as search for
     any existing Blueprints.
 
-    2. Click the `Quick-Add` button on the right of the result. This adds the
-    Series to TCM using the last-selected library and Template settings. This
-    makes it easy to quickly add multiple Series in succession.
+    2. Click the <span class="example md-button">+ Quick-Add</span> button on
+    the right of the result. This adds the Series to TCM using the last-selected
+    library and Template settings. This makes it easy to quickly add multiple
+    Series in succession.
 
 5. Click the search result (option 1 above). If you'd like, assign the
 appropriate media server library from the dropdown (if available). At the bottom
-of the dialog, click the `Search for Blueprints` button. If you like the look of
-any these, you can import them (and the Series) here. Otherwise, click `Add`.
+of the dialog, click the <span class="example md-button">:octicons-search-16:
+Search for Blueprints</span> button. If you like the look of any these, you can
+import them (and the Series) here. Otherwise, click
+<span class="example md-button">Add +</span>.
 
     ??? question "What are Blueprints?"
 
@@ -83,13 +86,13 @@ Series page in one of a few ways:
     
     2. Return to the home page by clicking the :fontawesome-solid-tv: `Series`
     button on the left navigation bar, find _Better Call Saul_ and click either
-    the `View` button or the Series name.
+    the <span class="example md-button">View</span> button or the Series name.
 
 7. Click the `Card Configuration` tab, then in the "Font" dropdown select the
 `Better Call Saul` font we created earlier. This _assigns_ this custom font (and
-all of it's associated customizations) to BCS. Scroll down and click `Save`. If
-you imported a Blueprint back in Step 5, a custom Font will already have been
-assigned.
+all of it's associated customizations) to BCS. Scroll down and click
+<span class="example md-button">Save</span>. If you imported a Blueprint back in
+Step 5, a custom Font will already have been assigned.
 
 !!! success "Success"
 

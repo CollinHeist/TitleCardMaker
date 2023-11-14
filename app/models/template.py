@@ -47,12 +47,10 @@ OPERATIONS: dict[str, Callable[[Any, Any], bool]] = {
 
 """Supported Argument keywords."""
 ARGUMENT_KEYS = (
-    'Series Name', 'Series Year', 'Number of Seasons',
-    'Series Library Names', 'Series Logo',
-    # 'Episode is Watched'
-    'Episode Watched Status',
-    'Season Number', 'Episode Number', 'Absolute Number',
-    'Episode Title', 'Episode Title Length', 'Episode Airdate',
+    'Series Name', 'Series Year', 'Number of Seasons', 'Series Library Names',
+    'Series Logo', 'Episode Watched Status', 'Season Number', 'Episode Number',
+    'Absolute Number', 'Episode Title', 'Episode Title Length',
+    'Episode Airdate', 'Episode Extras',
 )
 
 """
@@ -308,6 +306,7 @@ class Template(Base):
                 'Episode Title': episode.title,
                 'Episode Title Length': len(episode.title),
                 'Episode Airdate': episode.airdate,
+                'Episode Extras': episode.extras,
             }
             if library:
                 ARGUMENTS['Episode Watched Status'] =episode.get_watched_status(

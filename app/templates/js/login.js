@@ -40,7 +40,7 @@ function submitForm() {
       document.cookie = `tcm_token=${token.access_token};expires=${date.toUTCString()};path=/;SameSite=Lax`;
 
       // Transition away login element
-      setTimeout(() => $('#login').transition({animation: 'fade', duration: 800}), 800);
+      setTimeout(() => $('#login').transition({animation: 'fade', duration: 500}), 500);
 
       // Redirect to indicated page
       setTimeout(() => {
@@ -48,7 +48,7 @@ function submitForm() {
         const redirectURL = new URLSearchParams(window.location.search).get('redirect');
         if (redirectURL) { window.location.href = redirectURL; }
         else {             window.location.href = '/';         }
-      }, 1600);
+      }, 1000);
     }, error: response => {
       $.toast({
         class: 'error',

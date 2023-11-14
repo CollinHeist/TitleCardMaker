@@ -5,7 +5,7 @@ from re import match as re_match
 from typing import Literal, Optional, Union
 
 from pydantic import ( # pylint: disable=no-name-in-module
-    Field, FilePath, PositiveFloat, PositiveInt, conint, constr, root_validator,
+    FilePath, PositiveFloat, PositiveInt, conint, constr, root_validator,
     validator,
 )
 
@@ -14,7 +14,7 @@ from modules.cards.AnimeTitleCard import AnimeTitleCard
 from modules.cards.CalligraphyTitleCard import CalligraphyTitleCard
 from modules.cards.ComicBookTitleCard import ComicBookTitleCard
 from modules.cards.CutoutTitleCard import CutoutTitleCard
-from modules.cards.DividerTitleCard import DividerTitleCard
+from modules.cards.DividerTitleCard import DividerTitleCard, TextGravity
 from modules.cards.FadeTitleCard import FadeTitleCard
 from modules.cards.FrameTitleCard import FrameTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
@@ -195,6 +195,7 @@ class DividerCardType(BaseCardTypeCustomFontAllText):
     font_file: FilePath = DividerTitleCard.TITLE_FONT
     stroke_color: BetterColor = 'black'
     divider_color: Optional[BetterColor] = None
+    text_gravity: Optional[TextGravity] = None
     title_text_position: Literal['left', 'right'] = 'left'
     text_position: TextPosition = 'lower right'
 
@@ -453,6 +454,7 @@ class WhiteBorderCardType(BaseCardTypeCustomFontAllText):
     font_file: FilePath = WhiteBorderTitleCard.TITLE_FONT
     omit_gradient: bool = False
     separator: str = '•'
+    border_color: BetterColor = 'white'
     stroke_color: BetterColor = WhiteBorderTitleCard.STROKE_COLOR
     episode_text_color: BetterColor = WhiteBorderTitleCard.TITLE_COLOR
 

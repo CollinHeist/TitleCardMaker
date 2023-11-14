@@ -227,14 +227,11 @@ def blacklist_blueprint(
     - blueprint_id: Unique ID of the Blueprint.
     """
 
-    # Get contextual logger
-    log = request.state.log
-
     # Add to blacklist, commit changes
     preferences.blacklisted_blueprints.add(blueprint_id)
-    preferences.commit(log=log)
+    preferences.commit()
 
-    log.debug(f'Blacklisted Blueprint[{blueprint_id}]')
+    request.state.log.debug(f'Blacklisted Blueprint[{blueprint_id}]')
 
 
 @blueprint_router.delete('/blacklist/{blueprint_id}')
@@ -251,7 +248,7 @@ def remove_blueprint_from_blacklist(
 
     try:
         preferences.blacklisted_blueprints.remove(blueprint_id)
-        preferences.commit(log=request.state.log)
+        preferences.commit()
     except KeyError as exc:
         raise HTTPException(
             status_code=404,

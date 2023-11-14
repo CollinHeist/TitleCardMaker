@@ -289,8 +289,8 @@
       <td data-column="width" class="center aligned collapsing"></td>
       <td data-column="height" class="center aligned collapsing"></td>
       <td data-column="filesize" class="center aligned collapsing"></td>
-      <td data-column="browse-tmdb" class="center aligned collapsing selectable">
-        <a><img data-action="browse-tmdb" src="/internal_assets/tmdb_primary_full_logo.svg" title="Browse TMDb source images" height="14"/></a>
+      <td data-column="browse-sources" class="center aligned collapsing selectable">
+        <a data-action="browse-sources"><i class="border all icon"></i></a>
       </td>
       <td data-column="search-tmdb" class="center aligned collapsing selectable">
         <a><i data-action="search-tmdb" class="ui search icon"></i></a>
@@ -1028,11 +1028,11 @@
                     <th class="collapsing">Height</th>
                     <th class="collapsing">Filesize</th>
                     {% if preferences.use_tmdb %}
-                    <th class="collapsing">Browse<br>TMDb</th>
-                    <th class="collapsing">Search<br>TMDb</th>
+                    <th class="collapsing">Browse</th>
+                    <th class="collapsing">Search</th>
                     {% endif %}
-                    <th class="collapsing">Upload<br>Image</th>
-                    <th class="collapsing">Mirror<br>Image</th>
+                    <th class="collapsing">Upload</th>
+                    <th class="collapsing">Mirror</th>
                   </tr>
                 </thead>
                 <tbody id="source-images"><!-- Added asynchrously --></tbody>
@@ -1258,7 +1258,7 @@
         <form id="upload-source-form" class="ui form">
           <div class="input field">
             <label>URL</label>
-            <input name="source_url"></input>
+            <input name="url"></input>
           </div>
 
           <div class="ui horizontal divider">Or</div>
@@ -1274,10 +1274,10 @@
       </div>
     </div>
 
-    <!-- TMDb source browser modal -->
+    <!-- Source Image browser modal -->
     <div id="browse-tmdb-modal" class="ui scrolling content large uninvertible basic modal">
       <i class="close icon"></i>
-      <div class="center aligned header">Browse TMDb Source Images</div>
+      <div class="center aligned header">Browse Source Images</div>
       <div class="center aligned scrolling image content">
         <div class="ui large images"></div>
       </div>

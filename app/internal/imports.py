@@ -11,7 +11,9 @@ from app.dependencies import (
     get_emby_interfaces, get_jellyfin_interfaces, get_plex_interfaces,
     get_sonarr_interfaces, get_tmdb_interfaces, refresh_imagemagick_interface
 )
-from app.internal.cards import add_card_to_database, resolve_card_settings
+from app.internal.cards import (
+    add_card_to_database, resolve_card_settings, validate_card_type_model
+)
 from app.internal.connection import add_connection, update_connection
 from app import models
 from app.models.connection import Connection
@@ -1405,7 +1407,8 @@ def import_cards(
 
         # No associated Episode, skip
         if episode is None:
-            log.warning(f'{series.log_str} No associated Episode for {image.resolve()} - skipping')
+            log.warning(f'{series.log_str} No associated Episode for '
+                        f'{image.resolve()} - skipping')
             continue
 
         # Episode has an existing Card, skip if not forced
@@ -1420,7 +1423,8 @@ def import_cards(
             for card in episode.cards:
                 log.debug(f'{card.log_str} deleting record')
                 db.query(models.card.Card).filter_by(id=card.id).delete()
-                log.debug(f'{series.log_str} {episode.log_str} has associated Card - reloading')
+                log.debug(f'{series.log_str} {episode.log_str} has associated '
+                          f'Card - reloading')
 
         # Get finalized Card settings for this Episode, override card file
         try:
@@ -1430,6 +1434,9 @@ def import_cards(
             log.exception(f'{series.log_str} {episode.log_str} Cannot import '
                           f'Card - settings are invalid {e}', e)
             continue
+
+        # Get a validated card class, and card type Pydantic model
+        _, CardTypeModel = validate_card_type_model(card_settings, log=log)
 
         # Card is valid, create and add to Database
         card_settings['card_file'] = image

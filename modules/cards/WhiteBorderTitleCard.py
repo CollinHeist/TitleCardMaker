@@ -24,6 +24,11 @@ class WhiteBorderTitleCard(BaseCardType):
         supports_custom_seasons=True,
         supported_extras=[
             Extra(
+                name='Border Color',
+                identifier='border_color',
+                description='Color of the border',
+                tooltip='Defaults to <v>white</v>.',
+            ), Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color of the season and episode text',
@@ -75,11 +80,11 @@ class WhiteBorderTitleCard(BaseCardType):
 
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
-        'episode_text', 'hide_season_text', 'hide_episode_text',
-        'font_color', 'font_file', 'font_interline_spacing', 'font_kerning',
-        'font_size', 'font_stroke_width', 'font_vertical_shift', 'stroke_color',
-        'episode_text_color', 'font_interword_spacing', 'separator',
-        'omit_gradient',
+        'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
+        'font_file', 'font_interline_spacing', 'font_kerning', 'font_size',
+        'font_stroke_width', 'font_vertical_shift', 'border_color',
+        'stroke_color', 'episode_text_color', 'font_interword_spacing',
+        'separator', 'omit_gradient',
     )
 
     def __init__(self, *,
@@ -100,6 +105,7 @@ class WhiteBorderTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
+            border_color: str = 'white',
             episode_text_color: str = TITLE_COLOR,
             omit_gradient: bool = False,
             separator: str = '•',
@@ -107,9 +113,7 @@ class WhiteBorderTitleCard(BaseCardType):
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this Card.
-        """
+        """Construct a new instance of this Card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -135,6 +139,7 @@ class WhiteBorderTitleCard(BaseCardType):
         self.font_vertical_shift = font_vertical_shift
 
         # Optional extras
+        self.border_color = border_color
         self.episode_text_color = episode_text_color
         self.omit_gradient = omit_gradient
         self.separator = separator
@@ -205,6 +210,27 @@ class WhiteBorderTitleCard(BaseCardType):
             f'-annotate +0+162 "{index_text}"',
         ]
 
+
+    @property
+    def border_color_commands(self) -> ImageMagickCommands:
+        """Subcommand to recolor the border by overlaying rectangles."""
+
+        # Do not recolor if border is white
+        if self.border_color.lower() in ('white', 'rgb(255,255,255)','#ffffff'):
+            return []
+
+        return [
+            f'-stroke none',
+            f'-fill "{self.border_color}"',
+            # Top
+            f'-draw "rectangle 0,0,{self.WIDTH},25"',
+            # Right
+            f'-draw "rectangle {self.WIDTH-25},0,{self.WIDTH},{self.HEIGHT}"',
+            # Bottom
+            f'-draw "rectangle 0,{self.HEIGHT-25},{self.WIDTH},{self.HEIGHT}"',
+            # Left
+            f'-draw "rectangle 0,0,25,{self.HEIGHT}"',
+        ]
 
     @staticmethod
     def modify_extras(
@@ -308,6 +334,8 @@ class WhiteBorderTitleCard(BaseCardType):
             # Overlay frame
             f'"{self.FRAME_IMAGE.resolve()}"',
             f'-composite',
+            # Recolor frame
+            *self.border_color_commands,
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

@@ -441,7 +441,7 @@ function notifyChanges(currentVersion, forceDisplay=false) {
   changes += '</div>'
 
   // Changes to display, show modal
-  if (changes && changes !== '<div class="ui styled fluid uninvertible accordion">') {
+  if (changes && changes !== '<div class="ui styled fluid uninvertible accordion"></div>') {
     $.modal({
       title: 'Changelog',
       class: 'uninvertible large',

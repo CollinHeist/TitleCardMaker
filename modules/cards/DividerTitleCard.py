@@ -7,6 +7,7 @@ from modules.BaseCardType import (
 
 
 SeriesExtra = Optional
+TextGravity = Literal['center', 'east', 'west']
 TitleTextPosition = Literal['left', 'right']
 TextPosition = Literal[
     'upper left', 'upper right', 'right', 'lower right', 'lower left', 'left',
@@ -33,6 +34,17 @@ class DividerTitleCard(BaseCardType):
         supports_custom_fonts=True,
         supports_custom_seasons=True,
         supported_extras=[
+            Extra(
+                name='Text Gravity',
+                identifier='text_gravity',
+                description='Alignment of the index text (relative to itself)',
+                tooltip=(
+                    'Either <v>center</v>, <v>east</v>, or <v>west</v>. '
+                    'Default is based on the specified Title Text Position '
+                    '(i.e. <v>left</v> is <v>west</v>; <v>right</v> is '
+                    '<v>east</v>).'
+                ),
+            ),
             Extra(
                 name='Text Stroke Color',
                 identifier='stroke_color',
@@ -105,7 +117,7 @@ class DividerTitleCard(BaseCardType):
         'font_file', 'font_interline_spacing', 'font_interword_spacing',
         'font_kerning', 'font_size', 'font_stroke_width', 'stroke_color',
         'title_text_position', 'text_position', 'font_vertical_shift',
-        'divider_color',
+        'divider_color', 'text_gravity',
     )
 
     def __init__(self,
@@ -128,14 +140,13 @@ class DividerTitleCard(BaseCardType):
             grayscale: bool = False,
             stroke_color: str = 'black',
             divider_color: str = TITLE_COLOR,
+            text_gravity: Optional[TextGravity] = None,
             title_text_position: TitleTextPosition = 'left',
             text_position: TextPosition = 'lower right',
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this Card.
-        """
+        """Construct a new instance of this Card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -161,8 +172,9 @@ class DividerTitleCard(BaseCardType):
         self.font_vertical_shift = font_vertical_shift
 
         # Optional extras
-        self.stroke_color = stroke_color
         self.divider_color = divider_color
+        self.stroke_color = stroke_color
+        self.text_gravity = text_gravity
         self.title_text_position = title_text_position
         self.text_position = text_position
 
@@ -171,7 +183,10 @@ class DividerTitleCard(BaseCardType):
     def index_text_command(self) -> ImageMagickCommands:
         """Subcommand for adding the index text to the source image."""
 
-        gravity = 'west' if self.title_text_position == 'left' else 'east'
+        if self.text_gravity:
+            gravity = self.text_gravity
+        else:
+            gravity = 'west' if self.title_text_position == 'left' else 'east'
 
         # Hiding all index text, return empty command
         if self.hide_season_text and self.hide_episode_text:

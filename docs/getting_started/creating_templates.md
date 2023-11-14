@@ -26,7 +26,8 @@ apply these Templates automatically with a [Sync](./first_sync/index.md).
 1. Navigate to the Template page by clicking :fontawesome-regular-clone:
 `Templates` from the side navigation bar.
 
-2. Create a new Template by clicking the `Create a New Template` button.
+2. Create a new Template by clicking the
+<span class="example md-button">Create New Template</span> button.
 
 3. Expand the created Template by clicking the accordion called "Blank
 Template".
@@ -44,7 +45,9 @@ Template".
 
 5. Under "Card Settings" change the card type to "Tinted Frame". 
 
-6. Scroll down to "Miscellaneous" and then click the `Add Extra` button.
+6. Scroll down to "Miscellaneous" and then click the
+<span class="example md-button">:material-plus-box-outline: Add Extra</span>
+button.
 
 7. In the dropdown, scroll down to the "Middle Element" extra under "Tinted
 Frame" - or, start typing "Tinted Frame" to filter all available extras. Hit
@@ -62,17 +65,20 @@ Frame" - or, start typing "Tinted Frame" to filter all available extras. Hit
 
 8. Hit `Save Changes`.
 
-9. Create another new Template by clicking the `Create a New Template` button.
+9. Create another new Template by clicking the
+<span class="example md-button">Create New Template</span> button.
 
 10. Expand the Template, rename it to "Tier 1 - Standard"
 
-11. Under "Filters", click the `Add Condition` button.
+11. Under "Filters", click the
+<span class="example md-button">:material-plus-box-outline: Add Condition</span>
+button.
 
 12. Select the Filter condition as `Season Number` `is less than` `3`.
 
 13. Under "Card Settings", change the card type to "Standard".
 
-14. Hit `Save Changes`.
+14. Click <span class="example md-button">Save Changes</span>.
 
 !!! success "Templates Created"
 

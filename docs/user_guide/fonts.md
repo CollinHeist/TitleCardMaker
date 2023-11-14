@@ -29,8 +29,9 @@ text. That is (generically) fixed, or recolored via an extra.
 
 ## Creating a New Font
 
-At the top of the Fonts page, a new Font can be created by clicking the _Create
-New Font_ button. This will create a "blank" Font added to the top of the page.
+At the top of the Fonts page, a new Font can be created by clicking the
+<span class="example md-button">Create New Font</span> button. This will create
+a "blank" Font added to the top of the page.
 
 Clicking the accordion will expand the Font, and all customization can then be
 entered.
@@ -39,8 +40,8 @@ entered.
 
 On the right-hand side of all Fonts is a live preview of the current Font. This
 preview reflects the currently entered Font settings - not necesarily what is
-saved in the Font - and can be refreshed by clicking the _Refresh Preview_
-button.
+saved in the Font - and can be refreshed by clicking the
+<span class="example md-button">:material-refresh: Refresh Preview</span> button.
 
 ### Preview Card Type
 
@@ -107,7 +108,8 @@ A custom Font file to use in place of the Card's default. This is _generally_
 only applied to the title text of the Card.
 
 In order for a Font file to be reflected in the live Card preview, you must
-upload the File to the server and click the _Save Changes_ button at the bottom
+upload the File to the server and click the
+<span class="example md-button">Save Changes</span> button at the bottom
 of the Font.
 
 ??? tip "File Location"
@@ -221,7 +223,8 @@ To aid with this, any Font can have a predefined set of character replacements
 which will be applied to an Episode title before the Card is created. These can
 be manually entered, or TCM can perform an
 [automatic analysis](#character-replacement-analysis) of the Font by clicking
-the :fontawesome-solid-wand-magic-sparkles: _Analyze Font Replacements_ button.
+the <span class="example md-button">:fontawesome-solid-wand-magic-sparkles:
+Analyze Font Replacements</span> button.
 
 These replacements can take any text (the left input field) and will replace
 that with the replacement text (the right input field). This replacement text

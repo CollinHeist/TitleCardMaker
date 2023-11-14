@@ -625,6 +625,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
             *,
+            proxy_url: bool = False,
             log: Logger = log,
         ) -> Optional[str]:
         """
@@ -634,6 +635,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             library_name: Name of the library the series is under.
             series_info: The series to get the source image of.
             episode_info: The episode to get the source image of.
+            proxy_url: Whether to proxy the returned URL.
             log: Logger for all log messages.
 
         Returns:
@@ -658,21 +660,25 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 season=episode_info.season_number,
                 episode=episode_info.episode_number
             )
-
-            # Verify this Episode does not have the PMM overlay label
-            if any(label.tag in bad_labels for label in plex_episode.labels):
-                log.warning(f'{series_info} {episode_info} Cannot use Plex '
-                            f'thumbnail, has existing Overlay or Title Card')
-                log.debug(f'{plex_episode.labels=}')
-                return None
-
-            return (
-                f'{self.__server._baseurl}{plex_episode.thumb}' # pylint: disable=protected-access
-                f'?X-Plex-Token={self.__token}'
-            )
         # Episode DNE in Plex, return
         except NotFound:
             return None
+
+        # Verify this Episode does not have the PMM overlay label (if not proxying)
+        if any(label.tag in bad_labels for label in plex_episode.labels):
+            log.warning(f'{series_info} {episode_info} Cannot use Plex '
+                        f'thumbnail, has existing Overlay or Title Card')
+            return None
+
+        # If proxying, use API redirect URL; token will be embedded by endpoint
+        if proxy_url:
+            return f'/api/proxy/plex?url={plex_episode.thumb}'
+
+        # pylint: disable=protected-access
+        return (
+            f'{self.__server._baseurl}{plex_episode.thumb}'
+            f'?X-Plex-Token={self.__token}'
+        )
 
 
     @catch_and_log('Error getting Series poster')

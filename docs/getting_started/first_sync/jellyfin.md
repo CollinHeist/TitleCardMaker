@@ -33,7 +33,8 @@ button, type `tcm-test` and hit ++enter++ - click `Save Changes`.
 5. Back within TitleCardMaker, navigate to the Sync page by clicking
 :fontawesome-solid-arrows-rotate: `Sync` from the side navigation bar.
 
-6. Under the Jellyfin section of the page, click the `+ Add Sync` button.
+6. Under the Jellyfin section of the page, click the
+<span class="example md-button">+ Add Sync</span> button.
 
 7. In the launched dialog, fill out the following information:
 

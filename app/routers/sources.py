@@ -19,7 +19,7 @@ from app.internal.sources import (
     process_svg_logo,
 )
 from app import models
-from app.schemas.card import SourceImage, TMDbImage
+from app.schemas.card import SourceImage, ExternalSourceImage
 
 from modules.WebInterface import WebInterface
 
@@ -161,12 +161,12 @@ def download_episode_source_images_(
 
 
 @source_router.get('/episode/{episode_id}/browse', status_code=200)
-def get_all_episode_source_images_on_tmdb(
+def get_all_episode_source_images(
         request: Request,
         episode_id: int,
         db: Session = Depends(get_database),
         tmdb_interface: TMDbInterface = Depends(require_tmdb_interface),
-    ) -> list[TMDbImage]:
+    ) -> list[ExternalSourceImage]:
     """
     Get all Source Images on TMDb for the given Episode.
 
@@ -182,15 +182,30 @@ def get_all_episode_source_images_on_tmdb(
     else:
         match_title = episode.series.match_titles
 
-    # Get all source images
-    source_images = tmdb_interface.get_all_source_images(
+    # Get all Source Images from TMDb
+    tmdb_images = tmdb_interface.get_all_source_images(
         episode.series.as_series_info,
         episode.as_episode_info,
         match_title=match_title,
         bypass_blacklist=True,
         log=request.state.log,
-    )
-    return [] if source_images is None else source_images
+    ) or []
+
+    # Get Source Image from Plex if possible
+    plex_images = []
+    # TODO update w/ multi-conn
+    if plex_interface and episode.series.plex_library_name:
+        plex_image_url = plex_interface.get_source_image(
+            episode.series.plex_library_name,
+            episode.series.as_series_info,
+            episode.as_episode_info,
+            proxy_url=True,
+            log=log,
+        )
+        if plex_image_url:
+            plex_images = [{'url': plex_image_url}]
+
+    return tmdb_images + plex_images
 
 
 @source_router.get('/series/{series_id}/logo/browse', status_code=200)
@@ -199,7 +214,7 @@ def get_all_series_logos_on_tmdb(
         series_id: int,
         db: Session = Depends(get_database),
         tmdb_interface: TMDbInterface = Depends(require_tmdb_interface),
-    ) -> list[TMDbImage]:
+    ) -> list[ExternalSourceImage]:
     """
     Get a list of all the logos available for the specified Series on
     TMDb.
@@ -225,7 +240,7 @@ def get_all_series_backdrops_on_tmdb(
         series_id: int,
         db: Session = Depends(get_database),
         tmdb_interface: TMDbInterface = Depends(require_tmdb_interface),
-    ) -> list[TMDbImage]:
+    ) -> list[ExternalSourceImage]:
     """
     Get a list of all the backdrops available for the specified Series
     on TMDb.
@@ -237,12 +252,11 @@ def get_all_series_backdrops_on_tmdb(
     series = get_series(db, series_id, raise_exc=True)
 
     # Get all backdrops
-    backdrops = tmdb_interface.get_all_backdrops(
+    return tmdb_interface.get_all_backdrops(
         series.as_series_info,
         bypass_blacklist=True,
         log=request.state.log,
-    )
-    return [] if backdrops is None else backdrops
+    ) or []
 
 
 @source_router.get('/series/{series_id}', status_code=200)

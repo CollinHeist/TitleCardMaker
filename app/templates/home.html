@@ -42,6 +42,48 @@
     </div>
   </template>
 
+  <template id="series-row-template">
+    <tr class="transition hidden">
+      <td class="selectable" data-row="select">
+        <a data-action="select">
+          <div data-value="select" class="ui right aligned fitted checkbox">
+            <input type="checkbox">
+            <label></label>
+          </div>
+        </a>
+      </td>
+      <td data-row="name" class="collapsing selectable">
+        <a>
+          <h4 class="ui image header">
+            <img class="ui tiny rounded image">
+            <div class="content" data-value="name">Attack on Titan</div>
+          </h4>
+        </a>
+      </td>
+      <td data-row="year" class="center aligned">{YEAR}</td>
+      <td data-row="libraries" class="center aligned">
+        <div data-value="libraries" class="ui compact multiple selection dropdown">
+          <input name="libraries" type="hidden">
+          <i class="dropdown icon"></i>
+          <div class="default text">None</div>
+          <div class="menu"></div>
+        </div>
+      </td>
+      <td data-row="card_count" class="center aligned selectable">
+        <a>
+          <span data-value="card_count">{N} / {Y} Cards</span>
+          <div class="ui bottom attached multiple progress" data-total="134" data-value="112,22">
+            <div class="green bar"></div>
+            <div class="red bar"></div>
+          </div>
+        </a>
+      </td>
+      <td data-row="templates" class="center aligned">...</td>
+      <td data-row="monitored" class="center aligned selectable"><a>...</a></td>
+      <td class="center aligned selectable" data-row="process"><a><i class="blue step forward icon"></i></a></td>
+    </tr>
+  </template>
+
   <template id="statistic-template">
     <div class="ui statistic">
       <div class="value">VALUE</div>
@@ -62,32 +104,132 @@
 
     <!-- Actual page content -->
     <div id="main-content" class="article">
-      <div id="statistics" class="ui small statistics"><!-- Added asynchronously --></div>
-
-      <!-- Sort buttons -->
-      <div id="toolbar">
-        <div class="ui compact blue inverted menu" tabindex="0">
-          <a class="item" title="Sort titles by ID" onclick="sortSeries(this, 'id')">
-            <i id="sort-by-id" class="sort icon"></i>
-          </a>
-          <a class="item" title="Sort titles alphabetically" onclick="sortSeries(this, 'title')">
-            <i id="sort-by-az" class="sort alphabet down icon"></i>
-          </a>
-          <a class="item" title="Sort titles by release year" onclick="sortSeries(this, 'year')">
-            <i id="sort-by-year" class="sort numeric down icon"></i>
-          </a>
+      <div id="toolbar" class="ui menu">
+        <div class="ui dropdown item">
+          <i class="ui sort icon"></i>
+          Sort
+          <div class="menu">
+            <a class="item" onclick="sortBy('name');">
+              <i class="ui sort alphabet down icon"></i>
+              Name
+            </a>
+            <a class="item" onclick="sortBy('id');">
+              <i class="ui sort icon"></i>
+              Recently Added
+            </a>
+            <a class="item" onclick="sortBy('card_count');">
+              <i class="ui sort amount down icon"></i>
+              Title Cards
+            </a>
+            <a class="item">
+              <i class="ui sort numeric down icon"></i>
+              Year
+            </a>
+          </div>
+        </div>
+        <a class="item" onclick="$('#filter-modal').modal('show');">
+          <i class="ui solid filter icon"></i>
+          Filter
+        </a>
+        <div class="ui dropdown disabled item" data-action="edit">
+          <i class="edit icon"></i>
+          Edit
+          <div class="menu">
+            <div class="divider"></div>
+            <a class="item" onclick="monitorSelection();">
+              <i class="ui eye outline green icon"></i>
+              Monitor
+            </a>
+            <a class="item" onclick="unmonitorSelection();">
+              <i class="ui eye slash outline red icon"></i>
+              Unmonitor
+            </a>
+            <a class="item" onclick="processSelection();">
+              <i class="blue step forward icon"></i>
+              Process
+            </a>
+            <a class="item" onclick="loadSelection(false);">
+              <i class="hdd outline icon"></i>
+              Load Title Cards
+            </a>
+            <a class="item" onclick="loadSelection(true);">
+              <i class="hdd outline orange icon"></i>
+              Force-Reload Title Cards
+            </a>
+            <div class="divider"></div>
+            <a class="item" onclick="deleteCardsSelection();">
+              <i class="red images outline icon"></i>
+              Delete Title Cards
+            </a>
+            <a class="item" onclick="deleteSeriesSelection();">
+              <i class="red trash alternate outline icon"></i>
+              Delete Series
+            </a>
+          </div>
         </div>
       </div>
 
+      <div id="statistics" class="ui small statistics"><!-- Added asynchronously --></div>
+
+      <!-- Loader -->
       <div class="loading container">
         <i class="layer"></i>
         <i class="layer"></i>
         <i class="layer"></i>
       </div>
 
+      <table class="ui basic sortable collapsing striped celled table">
+        <thead>
+          <tr>
+            <th class="center aligned collapsing no-sort">Select</th>
+            <th class="six wide collapsing">Series</th>
+            <th class="center aligned collapsing">Year</th>
+            <th class="center aligned collapsing no-sort">Libraries</th>
+            <th class="center aligned">Title Cards</th>
+            <th class="center aligned collapsing no-sort">Templates</th>
+            <th class="center aligned collapsing">Monitored</th>
+            <th class="center aligned collapsing no-sort">Process</th>
+          </tr>
+        </thead>
+        <tbody id="series-table"></tbody>
+      </table>
+
       <!-- Actual series content, added asynchronously -->
       <div id="series-list" class="ui cards"></div>
       <div id="pagination" class="ui centered pagination menu"><!-- Pagination added later --></div>
+
+      <!-- Modals -->
+      <div id="filter-modal" class="ui small scrolling modal">
+        <i class="close icon"></i>
+        <div class="header">Filter Series</div>
+        <div class="scrolling content">
+          <form class="ui form">
+            <div class="ui checkbox field">
+              <label>Included Monitored</label>
+              <input name="monitored" type="checkbox">
+            </div>
+            <br>
+
+            <div class="ui checkbox field">
+              <label>Included Unmonitored</label>
+              <input name="unmonitored" type="checkbox">
+            </div>
+            <br>
+
+            <div class="ui checkbox field">
+              <label>Missing Title Cards</label>
+              <input name="missing_title_cards" type="checkbox">
+            </div>
+          </form>
+        </div>
+        <div class="actions">
+          <button class="ui cancel button">Cancel</button>
+          <button class="ui blue right labeled icon button">
+            <i class="ui solid filter icon"></i>
+            Filter
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </body>

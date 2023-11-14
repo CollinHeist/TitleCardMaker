@@ -124,7 +124,8 @@
 /* Show cursor on all file card icons, and images in tmdb modal */
 #source-images .card .icon,
 #browse-tmdb-modal .image.content .images a,
-#browse-tmdb-logo-modal .image.content .images a {
+#browse-tmdb-logo-modal .image.content .images a,
+#card-previews img {
   cursor: pointer;
 }
 

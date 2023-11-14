@@ -53,8 +53,7 @@ class CleanPath(_Path_):
         Sanitize the given filename to remove any illegal characters.
 
         Args:
-            filename: Filename (string) to remove illegal characters
-                from.
+            filename: Filename to remove illegal characters from.
 
         Returns:
             Sanitized filename.
@@ -75,7 +74,8 @@ class CleanPath(_Path_):
 
         Returns:
             Sanitized path. This is a reconstructed CleanPath object
-            with each folder (or part), except the root/drive, sanitized.
+            with each folder (or part), except the root/drive,
+            sanitized.
         """
 
         return CleanPath(

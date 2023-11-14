@@ -356,7 +356,7 @@ def toggle_schedule_type(
     else:
         log.info('Enabling advanced Task scheduling')
     preferences.advanced_scheduling = not preferences.advanced_scheduling
-    preferences.commit(log=log)
+    preferences.commit()
 
     # Reset Scheduler
     initialize_scheduler(override=True)

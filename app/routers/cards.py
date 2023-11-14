@@ -535,6 +535,7 @@ def create_cards_for_sonarr_webhook(
 
     def _find_episode(episode_info: EpisodeInfo) -> Optional[Episode]:
         """Attempt to find the associated Episode up to three times."""
+
         for _ in range(3):
             # Search for this Episode
             episode = db.query(Episode)\
@@ -559,6 +560,7 @@ def create_cards_for_sonarr_webhook(
             title=webhook_episode.title,
             season_number=webhook_episode.seasonNumber,
             episode_number=webhook_episode.episodeNumber,
+            tvdb_id=webhook_episode.tvdbId,
         )
 
         # Find this Episode

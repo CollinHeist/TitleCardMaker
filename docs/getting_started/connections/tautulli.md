@@ -30,7 +30,7 @@ tags:
     [Sonarr](./sonarr.md#webhook-integration), but that integration only
     triggers for newly added content, not on watch-statuses.
 
-1. Click the `Create Notification Agent` button.
+1. Click <span class="example md-button">Create Notification Agent</span>.
 
 2. In the launched window, enter the _root_ URL to your instance of Tautulli.
 
@@ -39,7 +39,7 @@ tags:
         Although your local IP address will obviously be different, this IP
         should be _like_ `http://192.168.0.29:8181/`.
 
-3. Open the Tautull WebUI, and navigate to the Settings by clicking the 
+3. Open Tautulli and navigate to the Settings by clicking the 
 :fontawesome-solid-gears: Gear icon in the top right.
 
 4. From the left navigation bar, open the `Web Interface` settings.

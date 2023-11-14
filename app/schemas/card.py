@@ -129,10 +129,10 @@ class TMDbLanguage(Base):
     iso_639_1: str
     name: str
 
-class TMDbImage(Base):
+class ExternalSourceImage(Base):
     url: str
-    width: int
-    height: int
+    width: Optional[int] = None
+    height: Optional[int] = None
     language: Optional[TMDbLanguage] = None
 
 class SourceImage(Base):

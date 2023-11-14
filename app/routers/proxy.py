@@ -51,9 +51,8 @@ def redirect_plex_url(
     else:
         server_url = connection.url
 
-    # Start redirect URL in /
-    url = url if url.startswith('/') else f'/{url}'
-    redirected_url = f'{server_url}{url}?X-Plex-Token={connection.api_key}'
+    # Redirect using the Connection's token (API key)
+    redirected_url = f'{server_url}/{url}?X-Plex-Token={connection.api_key}'
 
     return Response(content=get(redirected_url, timeout=10).content)
 

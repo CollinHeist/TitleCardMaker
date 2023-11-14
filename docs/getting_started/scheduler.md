@@ -49,7 +49,7 @@ Series".
         This is a completely arbitrary interval, and was chosen just to show how
         any different interval units can be utilized.
 
-4. Click the `Save Changes` button.
+4. Click the <span class="example md-button">Save Changes</span> button.
 
 !!! success "Success"
 

@@ -286,19 +286,12 @@ class Preferences:
         self.commit()
 
 
-    def commit(self, *, log: Logger = log) -> None:
-        """
-        Commit the changes to this object to file.
-
-        Args:
-            log: Logger for all log messages.
-        """
+    def commit(self) -> None:
+        """Commit any changes to this object to file."""
 
         # Open the file, dump this object's contents
         with self.file.open('wb') as file_handle:
             dump(self, file_handle)
-
-        log.debug(f'Dumped Preferences to "{self.file.resolve()}"..')
 
 
     def update_values(self,
@@ -324,7 +317,7 @@ class Preferences:
                     log.debug(f'Preferences.{name} = {value}')
 
         # Commit changes
-        self.commit(log=log)
+        self.commit()
 
 
     def determine_imagemagick_prefix(self, *, log: Logger = log) -> None:

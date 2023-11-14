@@ -1,3 +1,8 @@
+/* Format menu bar */
+#main-content .menu:not(.pagination) {
+  box-shadow: 1px 1px 10px -3px rgba(252, 252, 252, 0.8)
+}
+
 /* Style series cards */
 .series-name {
   text-align: center;
@@ -22,14 +27,31 @@
 .card img.unmonitored {
   filter: grayscale(100%) blur(4px);
 }
+table img.unmonitored {
+  filter: grayscale(100%) blur(2px);
+}
+
+/* Enforce a max width of name rows */
+table td[data-row="name"] {
+  max-width: 2.5em;
+  overflow: hidden;
+}
+table td[data-row="name"] .content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#series-table tr.selected {
+  background-color: rgba(255, 227, 0, 0.29);
+}
 
 /* Do not round edges of progress bars */
-.card .ui.progress {
+.ui.progress {
   border-radius: 0;
 }
 
 /* Remove minimum width on progress bar */
-.card .ui.progress.attached .bar {
+.ui.progress.attached .bar {
   min-width: 0;
 }
 
@@ -64,33 +86,6 @@
 /* Pulse the add series button on hover */
 #add-series:hover {
   animation: pulse 2s infinite;
-}
-
-#toolbar {
-  position: fixed;
-  z-index: 11; /* Z index of the blur shadow overlay on posters is 10 */
-  line-height: 50px; /* Center text vertically inside the div */
-  /* Start the toolbar on the right side of the screen, move left */
-  display: inline-block;
-  right: 30px;
-}
-
-#toolbar > .menu {
-  margin-left: 10px;
-}
-
-/* Add drop shadow to all children of the toolbar */
-#toolbar > * {
-  box-shadow: 0 2px 4px 0 rgba(34,36,38,.3),0 2px 10px 0 rgba(34,36,38,.40);
-}
-
-/* Rotate toolbar icons when pressed */
-#toolbar >* i.icon {
-  transform: rotate(0deg);
-        transition: transform 0.5s ease-in-out;
-}
-#toolbar >* i.icon.rotate {
-  transform: rotate(180deg);
 }
 
 /* Ensure sidebar starts on the right of the statistics */

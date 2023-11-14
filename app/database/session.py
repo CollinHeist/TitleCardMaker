@@ -112,6 +112,8 @@ Register a custom Regex replacement function that can be used on this
 database.
 """
 def regex_replace(pattern: str, repl: str, string: str) -> str:
+    """Regex replacement function for DB registatrion"""
+
     return re_sub(pattern, repl, string, flags=IGNORECASE)
 
 @listens_for(engine, 'connect')

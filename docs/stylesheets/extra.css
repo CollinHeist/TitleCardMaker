@@ -29,6 +29,11 @@
   fill: crimson;
 }
 
+/* Reduce padding on inline buttons */
+.md-typeset .example.md-button {
+  padding: 0.05em 0.5em;
+}
+
 /* Resize termynal windows */
 [data-termynal] {
   padding: 40px 35px 35px !important;
