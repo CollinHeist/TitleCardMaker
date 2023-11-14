@@ -117,7 +117,7 @@ def add_connection(
     if preferences.episode_data_source is None:
         preferences.episode_data_source = connection.id
         log.info(f'Set global Episode Data Source to {connection.log_str}')
-        preferences.commit(log=log)
+        preferences.commit()
 
     # Update InterfaceGroup
     if connection.enabled:

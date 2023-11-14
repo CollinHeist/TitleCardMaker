@@ -531,7 +531,7 @@ def upgrade() -> None:
         batch_op.drop_column('episode_data_source')
 
     # Commit changes to Preferences
-    PreferencesLocal.commit(log=log)
+    PreferencesLocal.commit()
 
     log.debug(f'Upgraded SQL Schema to Version[{revision}]')
 

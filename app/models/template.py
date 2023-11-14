@@ -1,17 +1,24 @@
 from datetime import datetime
 from pathlib import Path
 from re import match as re_match
-from typing import Any, Callable, Literal, Optional, TypedDict
+from typing import Any, Callable, Literal, Optional, TypedDict, TYPE_CHECKING
 
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, JSON
-from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy import ForeignKey, JSON
+from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.ext.mutable import MutableDict, MutableList
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.session import Base
 from app.schemas.connection import ServerName
 from modules.Debug import log
+
+if TYPE_CHECKING:
+    from app.models.connection import Connection
+    from app.models.episode import Episode
+    from app.models.font import Font
+    from app.models.series import Series
+    from app.models.sync import Sync
 
 
 """Format of all refrence dates for before and after operations"""
@@ -61,53 +68,55 @@ class SeriesTemplates(Base):
 
     __tablename__ = 'series_templates'
 
-    id = Column(Integer, primary_key=True, index=True)
-    template_id = Column(Integer, ForeignKey('template.id'))
-    series_id = Column(Integer, ForeignKey('series.id'))
-    order = Column(Integer)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    template_id: Mapped[int] = mapped_column(ForeignKey('template.id'))
+    series_id: Mapped[int] = mapped_column(ForeignKey('series.id'))
+    order: Mapped[int]
 
-    template = relationship('Template', back_populates='_series')
-    series = relationship('Series', back_populates='_templates')
+    template: Mapped['Template'] = relationship(back_populates='_series')
+    series: Mapped['Series'] = relationship(back_populates='_templates')
 
 class EpisodeTemplates(Base):
     """SQL Relationship table for Episode:Template relationships"""
 
     __tablename__ = 'episode_templates'
 
-    id = Column(Integer, primary_key=True, index=True)
-    template_id = Column(Integer, ForeignKey('template.id'))
-    episode_id = Column(Integer, ForeignKey('episode.id'))
-    order = Column(Integer)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    template_id: Mapped[int] = mapped_column(ForeignKey('template.id'))
+    episode_id: Mapped[int] = mapped_column(ForeignKey('episode.id'))
+    order: Mapped[int]
 
-    template = relationship('Template', back_populates='_episodes')
-    episode = relationship('Episode', back_populates='_templates')
+    template: Mapped['Template'] = relationship(back_populates='_episodes')
+    episode: Mapped['Episode'] = relationship(back_populates='_templates')
 
 class SyncTemplates(Base):
     """SQL Relationship table for Sync:Template relationships"""
 
     __tablename__ = 'sync_templates'
 
-    id = Column(Integer, primary_key=True, index=True)
-    template_id = Column(Integer, ForeignKey('template.id'))
-    sync_id = Column(Integer, ForeignKey('sync.id'))
-    order = Column(Integer)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    template_id: Mapped[int] = mapped_column(ForeignKey('template.id'))
+    sync_id: Mapped[int] = mapped_column(ForeignKey('sync.id'))
+    order: Mapped[int]
 
-    template = relationship('Template', back_populates='_syncs')
-    sync = relationship('Sync', back_populates='_templates')
+    template: Mapped['Template'] = relationship(back_populates='_syncs')
+    sync: Mapped['Sync'] = relationship(back_populates='_templates')
 
 
 """
 Table for the Template SQL objects themselves.
 """
-class Filter(TypedDict): # pylint: disable=missing-class-docstring
+# pylint: disable=missing-class-docstring
+class Filter(TypedDict):
     argument: Literal[ARGUMENT_KEYS]
     operation: Literal[tuple(OPERATIONS.keys())]
     reference: Optional[str]
 
-class Library(TypedDict): # pylint: disable=missing-class-docstring
+class Library(TypedDict):
     interface: ServerName
     interface_id: int
     name: str
+# pylint: enable=missing-class-docstring
 
 class Template(Base):
     """
@@ -119,62 +128,66 @@ class Template(Base):
     __tablename__ = 'template'
 
     # Referencial arguments
-    id = Column(Integer, primary_key=True, index=True)
-    data_source_id = Column(Integer, ForeignKey('connection.id'))
-    font_id = Column(Integer, ForeignKey('font.id'))
-    data_source = relationship('Connection', back_populates='templates')
-    font = relationship('Font', back_populates='templates')
-    _syncs = relationship(
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    data_source_id: Mapped[Optional[int]] = mapped_column(ForeignKey('connection.id'))
+    font_id: Mapped[Optional[int]] = mapped_column(ForeignKey('font.id'))
+
+    data_source: Mapped['Connection'] = relationship(back_populates='templates')
+    font: Mapped['Font'] = relationship(back_populates='templates')
+    
+    _syncs: Mapped[list[SyncTemplates]] = relationship(
         SyncTemplates,
         back_populates='template',
         cascade='all, delete-orphan',
     )
-    syncs = association_proxy('_syncs', 'sync')
-    _series = relationship(
+    syncs: AssociationProxy[list['Sync']] = association_proxy('_syncs', 'sync')
+
+    _series: Mapped[list[SeriesTemplates]] = relationship(
         SeriesTemplates,
         back_populates='template',
         cascade='all, delete-orphan',
     )
-    series = association_proxy('_series', 'series')
-    _episodes = relationship(
+    series: AssociationProxy[list['Series']] = association_proxy('_series', 'series')
+
+    _episodes: Mapped[list[EpisodeTemplates]] = relationship(
         EpisodeTemplates,
         back_populates='template',
         cascade='all, delete-orphan',
     )
-    episodes = association_proxy('_episodes', 'episode')
+    episodes: AssociationProxy[list['Episode']] = association_proxy('_episodes', 'episode')
 
-    name = Column(String, nullable=False)
-    filters: list[Filter] = Column(
+    name: Mapped[str]
+    filters: Mapped[list[Filter]] = mapped_column(
         MutableList.as_mutable(JSON),
         default=[],
-        nullable=False,
     )
 
-    card_filename_format = Column(String, default=None)
-    sync_specials = Column(Boolean, default=None)
-    skip_localized_images = Column(Boolean, default=None)
-    translations = Column(
+    card_filename_format: Mapped[Optional[str]]
+    sync_specials: Mapped[Optional[bool]]
+    skip_localized_images: Mapped[Optional[bool]]
+    translations: Mapped[list[dict]] = mapped_column(
         MutableList.as_mutable(JSON),
-        default=None,
-        nullable=False,
+        default=[],
     )
 
-    card_type = Column(String, default=None)
-    hide_season_text = Column(Boolean, default=None)
-    season_titles = Column(
+    card_type: Mapped[Optional[str]]
+    hide_season_text: Mapped[Optional[bool]]
+    season_titles: Mapped[dict[str, str]] = mapped_column(
         MutableDict.as_mutable(JSON),
         default={},
-        nullable=False,
     )
-    hide_episode_text = Column(Boolean, default=None)
-    episode_text_format = Column(String, default=None)
-    unwatched_style = Column(String, default=None)
-    watched_style = Column(String, default=None)
+    hide_episode_text: Mapped[Optional[bool]]
+    episode_text_format: Mapped[Optional[str]]
+    unwatched_style: Mapped[Optional[str]]
+    watched_style: Mapped[Optional[str]]
 
-    extras = Column(MutableDict.as_mutable(JSON), default={}, nullable=False)
+    extras: Mapped[dict[str, str]] = mapped_column(
+        MutableDict.as_mutable(JSON),
+        default={},
+    )
 
 
-    @hybrid_property
+    @property
     def log_str(self) -> str:
         """
         Loggable string that defines this object (i.e. `__repr__`).
@@ -183,7 +196,7 @@ class Template(Base):
         return f'Template[{self.id}] "{self.name}"'
 
 
-    @hybrid_property
+    @property
     def card_properties(self) -> dict[str, Any]:
         """
         Properties to utilize and merge in Title Card creation.
@@ -208,7 +221,7 @@ class Template(Base):
         }
 
 
-    @hybrid_property
+    @property
     def export_properties(self) -> dict[str, Any]:
         """
         Properties to export in Blueprints.
@@ -246,7 +259,7 @@ class Template(Base):
         }
 
 
-    @hybrid_property
+    @property
     def image_source_properties(self) -> dict[str, bool]:
         """
         Properties to use in image source setting evaluations.
@@ -260,7 +273,6 @@ class Template(Base):
         }
 
 
-    @hybrid_method
     def meets_filter_criteria(self,
             preferences: 'Preferences', # type: ignore
             series: 'Series', # type: ignore
@@ -299,7 +311,6 @@ class Template(Base):
             ARGUMENTS = SERIES_ARGUMENTS
         else:
             ARGUMENTS = SERIES_ARGUMENTS | {
-                # 'Episode is Watched': episode.watched_statuses,
                 'Season Number': episode.season_number,
                 'Episode Number': episode.episode_number,
                 'Absolute Number': episode.absolute_number,

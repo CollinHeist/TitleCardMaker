@@ -1,14 +1,12 @@
+from datetime import datetime
 from logging import Logger
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, TYPE_CHECKING
 
-from sqlalchemy import (
-    Boolean, Column, DateTime, Integer, Float, ForeignKey, String, JSON
-)
+from sqlalchemy import Column, ForeignKey, String, JSON
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
-from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.ext.mutable import MutableDict
-from sqlalchemy.orm import Mapped, object_session, relationship
+from sqlalchemy.orm import Mapped, mapped_column, object_session, relationship
 
 from app.dependencies import get_preferences
 from app.database.session import Base
@@ -19,6 +17,12 @@ from modules.Debug import log
 from modules.EpisodeDataSource2 import WatchedStatus
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Debug import log
+
+if TYPE_CHECKING:
+    from app.models.card import Card
+    from app.models.font import Font
+    from app.models.loaded import Loaded
+    from app.models.series import Series
 
 
 class Episode(Base):
@@ -31,83 +35,86 @@ class Episode(Base):
     __tablename__ = 'episode'
 
     # Referencial arguments
-    id = Column(Integer, primary_key=True, index=True)
-    font_id = Column(Integer, ForeignKey('font.id'))
-    series_id = Column(Integer, ForeignKey('series.id'))
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    font_id: Mapped[Optional[int]] = mapped_column(ForeignKey('font.id'))
+    series_id: Mapped[int] = mapped_column(ForeignKey('series.id'))
 
-    cards = relationship(
-        'Card',
+    cards: Mapped[list['Card']] = relationship(
         back_populates='episode',
-        cascade='all, delete-orphan'
+        cascade='all,delete-orphan'
     )
-    font: Mapped['Font'] = relationship('Font', back_populates='episodes')
-    series: Mapped['Series'] = relationship('Series', back_populates='episodes')
-    loaded = relationship(
-        'Loaded',
+    font: Mapped['Font'] = relationship(back_populates='episodes')
+    series: Mapped['Series'] = relationship(back_populates='episodes')
+    loaded: Mapped[list['Loaded']] = relationship(
         back_populates='episode',
-        cascade='all, delete-orphan'
+        cascade='all,delete-orphan'
     )
     _templates: Mapped[list[EpisodeTemplates]] = relationship(
         EpisodeTemplates,
         back_populates='episode',
-        order_by=EpisodeTemplates.order,
         cascade='all, delete-orphan',
+        order_by=EpisodeTemplates.order,
     )
     templates: AssociationProxy[list[Template]] = association_proxy(
         '_templates', 'template',
         creator=lambda st: st,
     )
 
-    source_file = Column(String, default=None)
-    card_file = Column(String, default=None)
+    source_file: Mapped[Optional[str]]
+    card_file: Mapped[Optional[str]]
     watched_statuses: dict[str, bool] = Column(
         MutableDict.as_mutable(JSON),
         default={},
         nullable=False
     )
 
-    season_number = Column(Integer, nullable=False)
-    episode_number = Column(Integer, nullable=False)
-    absolute_number = Column(Integer, default=None)
+    season_number: Mapped[int]
+    episode_number: Mapped[int]
+    absolute_number: Mapped[Optional[int]]
 
-    title = Column(String, nullable=False)
-    match_title = Column(Boolean, default=None)
-    auto_split_title = Column(Boolean, default=True, nullable=False)
+    title: Mapped[str]
+    match_title: Mapped[Optional[bool]]
+    auto_split_title: Mapped[bool] = mapped_column(default=True)
 
-    card_type = Column(String, default=None)
-    hide_season_text = Column(Boolean, default=None)
-    season_text = Column(String, default=None)
-    hide_episode_text = Column(Boolean, default=None)
-    episode_text = Column(String, default=None)
-    unwatched_style: Optional[Style] = Column(String, default=None)
-    watched_style: Optional[Style] = Column(String, default=None)
+    card_type: Mapped[Optional[str]]
+    hide_season_text: Mapped[Optional[bool]]
+    season_text: Mapped[Optional[str]]
+    hide_episode_text: Mapped[Optional[bool]]
+    episode_text: Mapped[Optional[str]]
+    unwatched_style: Mapped[Optional[Style]] = mapped_column(String, default=None)
+    watched_style: Mapped[Optional[Style]] = mapped_column(String, default=None)
 
-    font_color = Column(String, default=None)
-    font_size = Column(Float, default=None)
-    font_kerning = Column(Float, default=None)
-    font_stroke_width = Column(Float, default=None)
-    font_interline_spacing = Column(Integer, default=None)
-    font_interword_spacing = Column(Integer, default=None)
-    font_vertical_shift = Column(Integer, default=None)
+    font_color: Mapped[Optional[str]]
+    font_size: Mapped[Optional[float]]
+    font_kerning: Mapped[Optional[float]]
+    font_stroke_width: Mapped[Optional[float]]
+    font_interline_spacing: Mapped[Optional[int]]
+    font_interword_spacing: Mapped[Optional[int]]
+    font_vertical_shift: Mapped[Optional[int]]
 
-    emby_id = Column(String, default=None)
-    imdb_id = Column(String, default=None)
-    jellyfin_id = Column(String, default=None)
-    tmdb_id = Column(Integer, default=None)
-    tvdb_id = Column(Integer, default=None)
-    tvrage_id = Column(Integer, default=None)
-    airdate = Column(DateTime, default=None)
+    emby_id: Mapped[str]
+    imdb_id: Mapped[Optional[str]]
+    jellyfin_id: Mapped[str]
+    tmdb_id: Mapped[Optional[int]]
+    tvdb_id: Mapped[Optional[int]]
+    tvrage_id: Mapped[Optional[int]]
+    airdate: Mapped[Optional[datetime]]
 
-    extras = Column(MutableDict.as_mutable(JSON), default=None)
-    translations = Column(MutableDict.as_mutable(JSON), default={})
+    translations: Mapped[dict[str, str]] = mapped_column(
+        MutableDict.as_mutable(JSON),
+        default={}
+    )
+    extras: Mapped[Optional[dict[str, Any]]] = mapped_column(
+        MutableDict.as_mutable(JSON),
+        default=None
+    )
 
-    image_source_attempts = Column(
+    image_source_attempts: Mapped[dict[str, int]] = mapped_column(
         MutableDict.as_mutable(JSON),
         default={'Emby': 0, 'Jellyfin': 0, 'Plex': 0, 'TMDb': 0}
     )
 
 
-    @hybrid_method
     def assign_templates(self,
             templates: list[Template],
             *,
@@ -145,8 +152,7 @@ class Episode(Base):
         log.debug(f'Episode[{self.id}].template_ids = {[t.id for t in templates]}')
 
 
-    # Relationship column properties
-    @hybrid_property
+    @property
     def template_ids(self) -> list[int]:
         """
         ID's of any Templates associated with this Episode (rather than
@@ -159,7 +165,7 @@ class Episode(Base):
         return [template.id for template in self.templates]
 
 
-    @hybrid_property
+    @property
     def index_str(self) -> str:
         """
         Index string as sXeY for this Episode.
@@ -175,7 +181,7 @@ class Episode(Base):
         )
 
 
-    @hybrid_property
+    @property
     def log_str(self) -> str:
         """
         Loggable string that defines this object (i.e. `__repr__`).
@@ -184,7 +190,7 @@ class Episode(Base):
         return f'Episode[{self.id}] {self.as_episode_info}'
 
 
-    @hybrid_property
+    @property
     def card_properties(self) -> dict[str, Any]:
         """
         Properties to utilize and merge in Title Card creation.
@@ -224,7 +230,7 @@ class Episode(Base):
         }
 
 
-    @hybrid_property
+    @property
     def export_properties(self) -> dict[str, Any]:
         """
         Properties to export in Blueprints.
@@ -261,7 +267,7 @@ class Episode(Base):
         }
 
 
-    @hybrid_property
+    @property
     def as_episode_info(self) -> EpisodeInfo:
         """
         The EpisodeInfo representation of this Episode.
@@ -287,7 +293,6 @@ class Episode(Base):
         )
 
 
-    @hybrid_method
     def update_from_info(self, other: EpisodeInfo, log: Logger = log) -> bool:
         """
         Update this Episodes' database IDs from the given EpisodeInfo.
@@ -307,7 +312,7 @@ class Episode(Base):
             Whether this object was changed.
         """
 
-        info: EpisodeInfo = self.as_episode_info
+        info = self.as_episode_info
         info.copy_ids(other)
 
         changed = False
@@ -320,7 +325,6 @@ class Episode(Base):
         return changed
 
 
-    @hybrid_method
     def remove_interface_ids(self, interface_id: int, /) -> bool:
         """
         Remove any database IDs associated with the given interface /
@@ -356,7 +360,6 @@ class Episode(Base):
         return self.get_source_file(style).exists()
 
 
-    @hybrid_method
     def get_source_file(self, style: Style) -> Path:
         """
         Get the source file for this Episode based on the given
@@ -383,7 +386,7 @@ class Episode(Base):
         ).resolve()
 
 
-    @hybrid_property
+    @property
     def watched_statuses_flat(self) -> dict[str, bool]:
         """
         Get a mapping of library names to watched statuses for this
@@ -404,7 +407,6 @@ class Episode(Base):
         }
 
 
-    @hybrid_method
     def get_watched_status(self,
             interface_id: int,
             library_name: str,
@@ -426,7 +428,6 @@ class Episode(Base):
         return self.watched_statuses.get(f'{interface_id}:{library_name}')
 
 
-    @hybrid_method
     def add_watched_status(self, status: WatchedStatus, /) -> bool:
         """
         Add the given WatchedStatus to this Episodes watched statuses.

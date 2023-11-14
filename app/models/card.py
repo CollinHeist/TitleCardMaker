@@ -1,11 +1,17 @@
 from pathlib import Path
+from typing import Optional, TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, String, ForeignKey, JSON
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import ForeignKey, JSON
 from sqlalchemy.ext.mutable import MutableDict
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.session import Base
+
+if TYPE_CHECKING:
+    from app.models.connection import Connection
+    from app.models.episode import Episode
+    from app.models.loaded import Loaded
+    from app.models.series import Series
 
 
 class Card(Base):
@@ -18,38 +24,37 @@ class Card(Base):
     __tablename__ = 'card'
 
     # Referencial arguments
-    id = Column(Integer, primary_key=True, index=True)
-    interface_id = Column(Integer, ForeignKey('connection.id'))
-    series_id = Column(Integer, ForeignKey('series.id'))
-    episode_id = Column(Integer, ForeignKey('episode.id'))
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    interface_id: Mapped[Optional[int]] = mapped_column(ForeignKey('connection.id'))
+    series_id: Mapped[int] = mapped_column(ForeignKey('series.id'))
+    episode_id: Mapped[int] = mapped_column(ForeignKey('episode.id'))
 
-    connection = relationship('Connection', back_populates='cards')
-    series = relationship('Series', back_populates='cards')
-    episode = relationship('Episode', back_populates='cards')
-    loaded = relationship(
-        'Loaded',
+    connection: Mapped['Connection'] = relationship(back_populates='cards')
+    series: Mapped['Series'] = relationship(back_populates='cards')
+    episode: Mapped['Episode'] = relationship(back_populates='cards')
+    loaded: Mapped['Loaded'] = relationship(
         back_populates='card',
         foreign_keys='Loaded.card_id',
     )
 
-    card_file = Column(String, nullable=False)
-    filesize = Column(Integer)
-    library_name = Column(String, default=None)
+    card_file: Mapped[str]
+    filesize: Mapped[int]
+    library_name: Mapped[Optional[str]]
 
-    card_type = Column(String, nullable=False)
-    model_json = Column(MutableDict.as_mutable(JSON), default={}, nullable=False)
+    card_type: Mapped[str]
+    model_json: Mapped[dict] = mapped_column(MutableDict.as_mutable(JSON), default={})
 
 
-    @hybrid_property
+    @property
     def log_str(self) -> str:
         """
         Loggable string that defines this object (i.e. `__repr__`).
         """
 
         return f'Card[{self.id}] "{self.card_file}"'
-    
 
-    @hybrid_property
+
+    @property
     def exists(self) -> bool:
         """Whether the Card file for this object exists."""
 

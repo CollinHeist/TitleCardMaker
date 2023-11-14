@@ -1,12 +1,18 @@
-from typing import Literal, Optional, Union
+from typing import Literal, Optional, Union, TYPE_CHECKING
 
-from sqlalchemy import Boolean, Column, Integer, String, JSON
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import String, JSON
 from sqlalchemy.ext.mutable import MutableList
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.session import Base
 from app.schemas.connection import InterfaceType
+
+if TYPE_CHECKING:
+    from app.models.card import Card
+    from app.models.loaded import Loaded
+    from app.models.series import Series
+    from app.models.sync import Sync
+    from app.models.template import Template
 
 
 SonarrLibraries = dict[Literal['interface_id', 'name', 'path'], Union[int, str]]
@@ -21,42 +27,42 @@ class Connection(Base):
 
     __tablename__ = 'connection'
 
-    id = Column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
-    cards = relationship('Card', back_populates='connection')
-    loaded = relationship('Loaded', back_populates='connection')
-    series = relationship('Series', back_populates='data_source')
-    syncs = relationship('Sync', back_populates='connection')
-    templates = relationship('Template', back_populates='data_source')
+    cards: Mapped[list['Card']] = relationship(back_populates='connection')
+    loaded: Mapped[list['Loaded']] = relationship(back_populates='connection')
+    series: Mapped[list['Series']] = relationship(back_populates='data_source')
+    syncs: Mapped[list['Sync']] = relationship(back_populates='connection')
+    templates: Mapped[list['Template']] = relationship(back_populates='data_source')
 
-    interface_type: InterfaceType = Column(String, nullable=False)
-    enabled = Column(Boolean, default=False, nullable=False)
-    name = Column(String, nullable=False)
-    api_key = Column(String, nullable=False)
+    interface_type: Mapped[InterfaceType] = mapped_column(String)
+    enabled: Mapped[bool] = mapped_column(default=False)
+    name: Mapped[str]
+    api_key: Mapped[str]
 
-    url = Column(String, default=None, nullable=True)
-    use_ssl = Column(Boolean, default=True, nullable=False)
+    url: Mapped[Optional[str]]
+    use_ssl: Mapped[bool] = mapped_column(default=True)
 
-    username = Column(String, default=None)
-    filesize_limit = Column(String, default='5 Megabytes')
-    integrate_with_pmm = Column(Boolean, default=False, nullable=False)
-    downloaded_only = Column(Boolean, default=True, nullable=False)
-    libraries: SonarrLibraries = Column(
+    username: Mapped[Optional[str]]
+    filesize_limit: Mapped[str] = mapped_column(default='5 Megabytes')
+    integrate_with_pmm: Mapped[bool] = mapped_column(default=False)
+    downloaded_only: Mapped[bool] = mapped_column(default=True)
+    libraries: Mapped[SonarrLibraries] = mapped_column(
         MutableList.as_mutable(JSON),
         default=[],
         nullable=False
     )
 
-    minimum_dimensions = Column(String, default=None)
-    skip_localized = Column(Boolean, default=True, nullable=False)
-    logo_language_priority: list[str] = Column(
+    minimum_dimensions: Mapped[Optional[str]]
+    skip_localized: Mapped[bool] = mapped_column(default=True)
+    logo_language_priority: Mapped[list[str]] = mapped_column(
         MutableList.as_mutable(JSON),
         default=[],
         nullable=False
     )
 
 
-    @hybrid_property
+    @property
     def log_str(self) -> str:
         """
         Loggable string that defines this object (i.e. `__repr__`).
@@ -65,7 +71,7 @@ class Connection(Base):
         return f'{self.interface_type}Connection[{self.id}]'
 
 
-    @hybrid_property
+    @property
     def filesize_limit_value(self) -> Optional[int]:
         """
         The filesize limit of this Connection - in Bytes (or None).
@@ -85,7 +91,7 @@ class Connection(Base):
         }[unit.lower()]
 
 
-    @hybrid_property
+    @property
     def minimum_width(self) -> Optional[int]:
         """
         The minimum width dimension of this Connection (in pixels).
@@ -97,7 +103,7 @@ class Connection(Base):
         return int(self.minimum_dimensions.split('x')[0])
 
 
-    @hybrid_property
+    @property
     def minimum_height(self) -> Optional[int]:
         """
         The minimum width dimension of this Connection (in pixels).
@@ -109,7 +115,7 @@ class Connection(Base):
         return int(self.minimum_dimensions.split('x')[1])
 
 
-    @hybrid_property
+    @property
     def interface_kwargs(self) -> dict:
         """
         The dictionary of keyword arguments required to initialize an
@@ -150,7 +156,7 @@ class Connection(Base):
                 'downloaded_only': self.downloaded_only,
                 'libraries': self.libraries,   
             }
-        
+
         if self.interface_type == 'TMDb':
             return {
                 'api_key': self.api_key,
@@ -159,6 +165,8 @@ class Connection(Base):
                 # 'blacklist_threshold': ...,
                 'logo_language_priority': self.logo_language_priority,
             }
+
+        return {}
 
 
     def determine_libraries(self,

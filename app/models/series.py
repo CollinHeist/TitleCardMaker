@@ -1,27 +1,32 @@
 from logging import Logger
 from pathlib import Path
-from typing import Any, Iterator, Literal, TypedDict, Union
 from re import sub as regex_replace, IGNORECASE
-from typing import Any
-
-from sqlalchemy import (
-    Boolean, Column, Float, ForeignKey, Integer, String, JSON, func
+from typing import (
+    Any, Iterator, Literal, Optional, TypedDict, Union, TYPE_CHECKING
 )
+
+from sqlalchemy import ColumnElement, ForeignKey, JSON, func
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.ext.mutable import MutableDict, MutableList
-from sqlalchemy.orm import Mapped, object_session, relationship
-from thefuzz.fuzz import partial_token_sort_ratio as partial_ratio # partial_ratio
+from sqlalchemy.orm import Mapped, mapped_column, object_session, relationship
+from thefuzz.fuzz import partial_token_sort_ratio as partial_ratio
 
 from app.database.session import Base
 from app.dependencies import get_preferences
-from app.models.template import SeriesTemplates
 from app.models.template import SeriesTemplates, Template
 from app.schemas.connection import ServerName
 from modules.CleanPath import CleanPath
 from modules.Debug import log
 from modules.SeriesInfo2 import SeriesInfo
 
+if TYPE_CHECKING:
+    from app.models.card import Card
+    from app.models.connection import Connection
+    from app.models.episode import Episode
+    from app.models.font import Font
+    from app.models.loaded import Loaded
+    from app.models.sync import Sync
 
 # Return type of the library iterator
 class Library(TypedDict): # pylint: disable=missing-class-docstring
@@ -43,19 +48,31 @@ class Series(Base):
     __tablename__ = 'series'
 
     # Referencial arguments
-    id = Column(Integer, primary_key=True)
-    data_source_id = Column(Integer, ForeignKey('connection.id'), default=None)
-    font_id = Column(Integer, ForeignKey('font.id'), default=None)
-    sync_id = Column(Integer, ForeignKey('sync.id'), default=None)
-    data_source = relationship('Connection', back_populates='series')
-    font = relationship('Font', back_populates='series')
-    sync = relationship('Sync', back_populates='series')
+    id: Mapped[int] = mapped_column(primary_key=True)
+    data_source_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey('connection.id'),
+        default=None
+    )
+    font_id: Mapped[Optional[int]] = mapped_column(ForeignKey('font.id'), default=None)
+    sync_id: Mapped[Optional[int]] = mapped_column(ForeignKey('sync.id'), default=None)
+    data_source: Mapped['Connection'] = relationship(back_populates='series',)
+    font: Mapped['Font'] = relationship(back_populates='series')
+    sync: Mapped['Sync'] = relationship(back_populates='series')
 
-    cards = relationship('Card', back_populates='series')
-    font = relationship('Font', back_populates='series')
-    sync = relationship('Sync', back_populates='series')
-    loaded = relationship('Loaded', back_populates='series')
-    episodes = relationship('Episode', back_populates='series')
+    cards: Mapped[list['Card']] = relationship(
+        back_populates='series',
+        cascade='all,delete-orphan',
+    )
+    font: Mapped['Font'] = relationship(back_populates='series')
+    sync: Mapped['Sync'] = relationship(back_populates='series')
+    loaded: Mapped[list['Loaded']] = relationship(
+        back_populates='series',
+        cascade='all,delete-orphan',
+    )
+    episodes: Mapped[list['Episode']] = relationship(
+        back_populates='series',
+        cascade='all,delete-orphan',
+    )
     _templates: Mapped[list[SeriesTemplates]] = relationship(
         SeriesTemplates,
         back_populates='series',
@@ -68,59 +85,70 @@ class Series(Base):
     )
 
     # Required arguments
-    name = Column(String, nullable=False)
-    year = Column(Integer, nullable=False)
-    monitored = Column(Boolean, default=True, nullable=False)
-    poster_file = Column(
-        String,
+    name: Mapped[str]
+    year: Mapped[int]
+    monitored: Mapped[bool]
+    poster_file: Mapped[str] = mapped_column(
         default=str(INTERNAL_ASSET_DIRECTORY/'placeholder.jpg')
     )
-    poster_url = Column(String, default='/internal_assets/placeholder.jpg')
+    poster_url: Mapped[str] = mapped_column(default='/internal_assets/placeholder.jpg')
 
     # Series config arguments
-    directory = Column(String, default=None)
-    libraries: list[Library] = Column(MutableList.as_mutable(JSON), default=[], nullable=False)
-    card_filename_format = Column(String, default=None)
-    sync_specials = Column(Boolean, default=None)
-    skip_localized_images = Column(Boolean, default=None)
-    translations = Column(MutableList.as_mutable(JSON), default=None)
-    match_titles = Column(Boolean, default=True, nullable=False)
+    directory: Mapped[Optional[str]]
+    libraries: Mapped[list[Library]] = mapped_column(
+        MutableList.as_mutable(JSON),
+        default=[]
+    )
+    card_filename_format: Mapped[Optional[str]]
+    sync_specials: Mapped[Optional[bool]]
+    skip_localized_images: Mapped[Optional[bool]]
+    translations: Mapped[Optional[list[dict[str, str]]]] = mapped_column(
+        MutableList.as_mutable(JSON),
+        default=None
+    )
+    match_titles: Mapped[bool] = mapped_column(default=True)
 
     # Database arguments
-    emby_id = Column(String, default=None)
-    imdb_id = Column(String, default=None)
-    jellyfin_id = Column(String, default=None)
-    sonarr_id = Column(String, default=None)
-    tmdb_id = Column(Integer, default=None)
-    tvdb_id = Column(Integer, default=None)
-    tvrage_id = Column(Integer, default=None)
+    emby_id: Mapped[Optional[str]]
+    imdb_id: Mapped[Optional[str]]
+    jellyfin_id: Mapped[Optional[str]]
+    sonarr_id: Mapped[Optional[str]]
+    tmdb_id: Mapped[Optional[int]]
+    tvdb_id: Mapped[Optional[int]]
+    tvrage_id: Mapped[Optional[int]]
 
     # Font arguments
-    font_color = Column(String, default=None)
-    font_title_case = Column(String, default=None)
-    font_size = Column(Float, default=None)
-    font_kerning = Column(Float, default=None)
-    font_stroke_width = Column(Float, default=None)
-    font_interline_spacing = Column(Integer, default=None)
-    font_interword_spacing = Column(Integer, default=None)
-    font_vertical_shift = Column(Integer, default=None)
+    font_color: Mapped[Optional[str]]
+    font_title_case: Mapped[Optional[str]]
+    font_size: Mapped[Optional[float]]
+    font_kerning: Mapped[Optional[float]]
+    font_stroke_width: Mapped[Optional[float]]
+    font_interline_spacing: Mapped[Optional[int]]
+    font_interword_spacing: Mapped[Optional[int]]
+    font_vertical_shift: Mapped[Optional[int]]
 
     # Card arguments
-    card_type = Column(String, default=None)
-    hide_season_text = Column(Boolean, default=None)
-    season_titles = Column(MutableDict.as_mutable(JSON), default=None)
-    hide_episode_text = Column(Boolean, default=None)
-    episode_text_format = Column(String, default=None)
-    unwatched_style = Column(String, default=None)
-    watched_style = Column(String, default=None)
-    extras = Column(MutableDict.as_mutable(JSON), default=None)
+    card_type: Mapped[Optional[str]]
+    hide_season_text: Mapped[Optional[bool]]
+    season_titles: Mapped[Optional[dict[str, str]]] = mapped_column(
+        MutableDict.as_mutable(JSON),
+        default=None
+    )
+    hide_episode_text: Mapped[Optional[bool]]
+    episode_text_format: Mapped[Optional[str]]
+    unwatched_style: Mapped[Optional[str]]
+    watched_style: Mapped[Optional[str]]
+    extras: Mapped[Optional[dict[str, str]]] = mapped_column(
+        MutableDict.as_mutable(JSON),
+        default=None
+    )
 
 
     def __repr__(self) -> str:
         return f'Series[{self.id}] {self.full_name}'
 
     # Columns from relationships
-    @hybrid_property
+    @property
     def episode_ids(self) -> list[int]:
         """
         ID's of any Episodes associated with this Series (rather than
@@ -133,7 +161,6 @@ class Series(Base):
         return [episode.id for episode in self.episodes]
 
 
-    @hybrid_method
     def assign_templates(self,
             templates: list[Template],
             *,
@@ -171,7 +198,7 @@ class Series(Base):
         log.debug(f'Series[{self.id}].template_ids = {[t.id for t in templates]}')
 
 
-    @hybrid_property
+    @property
     def template_ids(self) -> list[int]:
         """
         ID's of any Templates associated with this Series (rather than
@@ -191,6 +218,13 @@ class Series(Base):
         return f'{self.name} ({self.year})'
 
 
+    @full_name.expression
+    def full_name(cls: 'Series') -> ColumnElement[str]:
+        """Class-expression of `full_name` property."""
+
+        return cls.name + '(' + cls.year + ')'
+
+
     @hybrid_property
     def sort_name(self) -> str:
         """
@@ -206,7 +240,7 @@ class Series(Base):
         )
 
     @sort_name.expression
-    def sort_name(cls: 'Series'):
+    def sort_name(cls: 'Series') -> ColumnElement[str]:
         """Class-expression of `sort_name` property."""
 
         return func.regex_replace(r'^(a|an|the)(\s)', '', func.lower(cls.name))
@@ -230,7 +264,7 @@ class Series(Base):
 
 
     @diff_ratio.expression
-    def diff_ratio(cls: 'Series', other: str) -> int:
+    def diff_ratio(cls: 'Series', other: str) -> ColumnElement[int]:
         """Class expression of `diff_ratio` property."""
 
         return func.partial_ratio(func.lower(cls.name), other.lower())
@@ -255,7 +289,11 @@ class Series(Base):
         return partial_ratio(self.name.lower(), other.lower()) >= threshold
 
     @fuzzy_matches.expression
-    def fuzzy_matches(cls: 'Series', other: str, threshold: int = 85):
+    def fuzzy_matches(
+            cls: 'Series',
+            other: str,
+            threshold: int = 85,
+        ) -> ColumnElement[bool]:
         """Class-expression of the `fuzzy_matches` method."""
 
         return func.partial_ratio(
@@ -263,42 +301,42 @@ class Series(Base):
         ) >= threshold
 
 
-    @hybrid_property
+    @property
     def small_poster_url(self) -> str:
         """URI to the small poster URL of this Series."""
 
         return f'/assets/{self.id}/poster-750.jpg'
 
 
-    @hybrid_property
+    @property
     def number_of_seasons(self) -> int:
         """Number of unique seasons in this Series' linked Episodes."""
 
         return len(set(episode.season_number for episode in self.episodes))
 
 
-    @hybrid_property
+    @property
     def episode_count(self) -> int:
         """Number of Episodes linked to this Series."""
 
         return len(self.episodes)
 
 
-    @hybrid_property
+    @property
     def card_count(self) -> int:
         """Number of Title Cards linked to this Series."""
 
         return len(self.cards)
 
 
-    @hybrid_property
+    @property
     def path_safe_name(self) -> str:
         """Name of this Series to be utilized in Path operations"""
 
         return str(CleanPath.sanitize_name(self.full_name))[:254]
 
 
-    @hybrid_property
+    @property
     def card_directory(self) -> Path:
         """Path-safe Card subdirectory for this Series."""
 
@@ -310,7 +348,7 @@ class Series(Base):
         return CleanPath(get_preferences().card_directory) / directory
 
 
-    @hybrid_property
+    @property
     def source_directory(self) -> str:
         """Path-safe source subdirectory for this Series."""
 
@@ -319,7 +357,7 @@ class Series(Base):
         )
 
 
-    @hybrid_property
+    @property
     def log_str(self) -> str:
         """
         Loggable string that defines this object (i.e. `__repr__`).
@@ -328,7 +366,7 @@ class Series(Base):
         return f'Series[{self.id}] "{self.full_name}"'
 
 
-    @hybrid_property
+    @property
     def card_properties(self) -> dict[str, Any]:
         """
         Properties to utilize and merge in Title Card creation.
@@ -368,7 +406,7 @@ class Series(Base):
             'series_tvrage_id': self.tvrage_id,
         }
 
-    @hybrid_property
+    @property
     def export_properties(self) -> dict[str, Any]:
         """
         Properties to export in Blueprints.
@@ -415,7 +453,7 @@ class Series(Base):
         }
 
 
-    @hybrid_property
+    @property
     def image_source_properties(self) -> dict[str, Any]:
         """
         Properties to use in image source setting evaluations.
@@ -429,7 +467,7 @@ class Series(Base):
         }
 
 
-    @hybrid_property
+    @property
     def as_series_info(self) -> SeriesInfo:
         """
         Represent this Series as a SeriesInfo object, including any
@@ -450,7 +488,6 @@ class Series(Base):
         )
 
 
-    @hybrid_method
     def update_from_series_info(self, other: SeriesInfo) -> bool:
         """
         Update this Series' database IDs from the given SeriesInfo.
@@ -480,9 +517,8 @@ class Series(Base):
                 changed = True
 
         return changed
-    
 
-    @hybrid_method
+
     def remove_interface_ids(self, interface_id: int) -> bool:
         """
         Remove any database IDs associated with the given interface /
@@ -528,7 +564,7 @@ class Series(Base):
         return self.sort_name < name
 
     @comes_before.expression
-    def comes_before(cls, name: str) -> bool:
+    def comes_before(cls, name: str) -> ColumnElement[bool]:
         """Class expression of the `comes_before()` method."""
 
         return cls.sort_name < name
@@ -547,13 +583,12 @@ class Series(Base):
         return self.sort_name > name
 
     @comes_after.expression # pylint: disable=no-self-argument
-    def comes_after(cls, name: str) -> bool:
+    def comes_after(cls, name: str) -> ColumnElement[bool]:
         """Class expression of the `comes_after()` method."""
 
         return cls.sort_name > name
 
 
-    @hybrid_method
     def get_logo_file(self, source_base: str) -> Path:
         """
         Get the logo file for this series.
@@ -569,7 +604,6 @@ class Series(Base):
         return Path(source_base) / self.path_safe_name / 'logo.png'
 
 
-    @hybrid_method
     def get_series_backdrop(self, source_base: str) -> Path:
         """
         Get the backdrop file for this series.
@@ -585,7 +619,6 @@ class Series(Base):
         return Path(source_base) / self.path_safe_name / 'backdrop.jpg'
 
 
-    @hybrid_method
     def get_libraries(self,
             interface: Union[int, Literal['Emby', 'Jellyfin', 'Plex']],
         ) -> Iterator[tuple[int, str]]:

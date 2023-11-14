@@ -1,14 +1,19 @@
 from pathlib import Path
 from re import sub as re_sub, IGNORECASE
-from typing import Any, Optional
+from typing import Any, Optional, TYPE_CHECKING
 
-from sqlalchemy import Boolean, Column, Integer, Float, String, JSON, func
+from sqlalchemy import JSON, func
 
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.session import Base
 from app.dependencies import get_preferences
+
+if TYPE_CHECKING:
+    from app.models.episode import Episode
+    from app.models.series import Series
+    from app.models.template import Template
 
 
 def regex_replace(pattern, replacement, string):
@@ -27,26 +32,26 @@ class Font(Base):
     __tablename__ = 'font'
 
     # Referencial arguments
-    id = Column(Integer, primary_key=True, index=True)
-    episodes = relationship('Episode', back_populates='font')
-    series = relationship('Series', back_populates='font')
-    templates = relationship('Template', back_populates='font')
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    episodes: Mapped[list['Episode']] = relationship(back_populates='font')
+    series: Mapped[list['Series']] = relationship(back_populates='font')
+    templates: Mapped[list['Template']] = relationship(back_populates='font')
 
-    name = Column(String, nullable=False)
-    color = Column(String, default=None)
-    delete_missing = Column(Boolean, default=True)
-    file_name = Column(String, default=None)
-    interline_spacing = Column(Integer, default=0, nullable=False)
-    interword_spacing = Column(Integer, default=0, nullable=False)
-    kerning = Column(Float, default=1.0, nullable=False)
-    replacements = Column(JSON, default=None)
-    size = Column(Float, default=1.0, nullable=False)
-    stroke_width = Column(Float, default=1.0)
-    title_case = Column(String, default=None)
-    vertical_shift = Column(Integer, default=0, nullable=False)
+    name: Mapped[str]
+    color: Mapped[Optional[str]]
+    delete_missing: Mapped[bool] = mapped_column(default=True)
+    file_name: Mapped[Optional[str]]
+    interline_spacing: Mapped[int] = mapped_column(default=0)
+    interword_spacing: Mapped[int] = mapped_column(default=0)
+    kerning: Mapped[float] = mapped_column(default=1.0)
+    replacements: Mapped[Optional[dict[str, str]]] = mapped_column(JSON)
+    size: Mapped[float] = mapped_column(default=1.0)
+    stroke_width: Mapped[float] = mapped_column(default=1.0)
+    title_case: Mapped[Optional[str]]
+    vertical_shift: Mapped[int] = mapped_column(default=0)
 
 
-    @hybrid_property
+    @property
     def file(self) -> Optional[Path]:
         """
         Get the name of this Font's file, if indicated.
@@ -85,7 +90,7 @@ class Font(Base):
         return func.regex_replace(r'^(a|an|the)(\s)', '', func.lower(cls.name))
 
 
-    @hybrid_property
+    @property
     def log_str(self) -> str:
         """
         Loggable string that defines this object (i.e. `__repr__`).
@@ -94,7 +99,7 @@ class Font(Base):
         return f'Font[{self.id}] "{self.name}"'
 
 
-    @hybrid_property
+    @property
     def card_properties(self) -> dict[str, Any]:
         """
         Properties to utilize and merge in Title Card creation.
@@ -117,7 +122,7 @@ class Font(Base):
         } | {'font_file': str(file)}
 
 
-    @hybrid_property
+    @property
     def export_properties(self) -> dict[str, Any]:
         """
         Properties to export in Blueprints.
