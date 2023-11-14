@@ -1,4 +1,5 @@
 from typing import Literal
+from app.internal.cards import delete_cards
 
 from fastapi import APIRouter, Body, Depends, Request
 
@@ -6,7 +7,10 @@ from app.database.query import get_connection
 from app.dependencies import * # pylint: disable=W0401,W0614,W0621
 from app.internal.auth import get_current_user
 from app.internal.connection import add_connection, update_connection
+from app.models.card import Card
 from app.models.connection import Connection
+from app.models.episode import Episode
+from app.models.loaded import Loaded
 from app.models.series import Series
 from app.models.sync import Sync
 from app.models.template import Template
@@ -421,8 +425,9 @@ def update_tmdb_connection(
 
 @connection_router.delete('/{interface_id}')
 def delete_connection(
-        interface_id: int,
         request: Request,
+        interface_id: int,
+        delete_title_cards: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
         emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
@@ -435,11 +440,14 @@ def delete_connection(
     Delete the Connection with the given ID. This also disables and
     removes the Interface from the relevant InterfaceGroup, deletes any
     linked Syncs, removes this Connection's libraries from any Series,
-    any Episode Data Sources from Series and templates, and deletes the
-    Connection from the global image source priority and episode data
-    source.
+    any Episode Data Sources from Series and Templates, removes any
+    database IDs associated with the Connection (if it is an Emby,
+    Jellyfin, or Sonarr Connection), and deletes the Connection from the
+    global image source priority and episode data source settings.
 
     - interface_id: ID of the Connection to delete.
+    - delete_title_cards: Whether to delete Title Cards associated with
+    this Connection as well.
     """
 
     # Get contextual logger
@@ -510,6 +518,16 @@ def delete_connection(
     for episode in db.query(Episode).all():
         if episode.remove_interface_ids(interface_id):
             log.debug(f'Removed Episode IDs from {episode!r}')
+
+    # Delete Title Cards if indicated
+    if delete_title_cards:
+        deleted = delete_cards(
+            db,
+            db.query(Card).filter_by(interface_id=interface_id),
+            db.query(Loaded).filter_by(interface_id=interface_id),
+            log=log,
+        )
+        log.info(f'Deleted {len(deleted)} Title Cards')
 
     # Delete Connection
     db.delete(connection)

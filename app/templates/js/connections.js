@@ -298,6 +298,22 @@ function updateConnection(form, connectionId, connectionType, jsonData) {
   });
 }
 
+function _deleteConnectionRequest(connectionId, deleteCards=false) {
+  $.ajax({
+    type: 'DELETE',
+    url: `/api/connection/${connectionId}?delete_title_cards=${deleteCards}`,
+    success: () => {
+      showInfoToast('Deleted Connection');
+      if (deleteCards) { showInfoToast('Deleted Title Cards'); }
+      // Delete this connection from the page, refresh Sonarr so server dropdowns update
+      document.getElementById(`connection${connectionId}-title`).remove();
+      document.getElementById(`connection${connectionId}`).remove();
+      getAllConnections().then(initializeSonarr);
+    },
+    error: response => showErrorToast({title: 'Error Deleting Connection', response}),
+  });
+}
+
 /*
  * Display a temporary modal which asks the user to confirm the Connection
  * deletion. If confirmed, then submit an API request to delete the Connection
@@ -305,36 +321,46 @@ function updateConnection(form, connectionId, connectionType, jsonData) {
  * Connection are removed from the page and the Sonarr connections are
  * re-initialized (so they may display the correct library dropdowns).
  */
-function deleteConnection(connectionId) {
+function deleteConnection(connectionId, isMediaServer=false) {
+  // Internal modal content
+  let content = `
+  <span class="ui large red text"><b>This action cannot be undone.</b></span><br><br>
+  <span class="ui text">This <span class="ui red text">will</span> delete any linked Syncs, and remove assigned Libraries.</span><br>
+  <span>It <span class="ui red text">may</span> modify your global Episode Data Source and Image Source Priority.</span><br>`;
+  if (isMediaServer) {
+    content += `<span>It <span class="ui red text">can</span> delete Title Cards.</span>`;
+  }
+
+  // Actions within the modal
+  const actions = [
+    // Do not delete - no action
+    {text: 'No', icon: 'remove', class: 'green ok basic inverted'},
+    // Delete Connection only
+    {
+      text: 'Yes, delete this Connection',
+      icon: 'trash alternate outline',
+      class: 'red inverted',
+      click: () => _deleteConnectionRequest(connectionId, false),
+    },
+  ];
+  if (isMediaServer) {
+    actions.push({
+      text: 'Yes, delete this Connection and any associated Title Cards',
+      icon: 'dumpster',
+      class: 'red inverted',
+      click: () => _deleteConnectionRequest(connectionId, true),
+    });
+  }
+
+  // Create and display modal
   $.modal({
     classTitle: 'ui icon header',
     title: '<i class="trash icon"></i>Delete Connection?',
     class: 'basic',
+    content: content,
     classContent: 'center aligned',
-    content: '<span class="ui text">This action cannot be undone.</span><br><span class="ui text">This will delete any associated Syncs, libraries, Episode and Image sources.</span>',
+    actions: actions,
     classActions: 'center aligned',
-    actions: [
-      {text: 'No', icon: 'remove', class: 'green ok basic inverted'},
-      {
-        text: 'Yes, delete this Connection',
-        icon: 'trash alternate outline',
-        class: 'red inverted',
-        click: () => {
-          $.ajax({
-            type: 'DELETE',
-            url: `/api/connection/${connectionId}`,
-            success: () => {
-              showInfoToast('Deleted Connection');
-              // Delete this connection from the page, refresh Sonarr so server dropdowns update
-              document.getElementById(`connection${connectionId}-title`).remove();
-              document.getElementById(`connection${connectionId}`).remove();
-              getAllConnections().then(initializeSonarr);
-            },
-            error: response => showErrorToast({title: 'Error Deleting Connection', response}),
-          });
-        }
-      },
-    ]
   }).modal('show');
 }
 
@@ -415,7 +441,7 @@ function initializeEmby() {
         // Assign delete function to button
         $(`#connection${connection.id} button[data-action="delete"]`).on('click', (event) => {
           event.preventDefault();
-          deleteConnection(connection.id);
+          deleteConnection(connection.id, true);
         });
       });
     }, error: response => showErrorToast({title: 'Error Querying Emby Connections', response}),
@@ -501,7 +527,7 @@ function initializeJellyfin() {
         // Assign delete function to button
         $(`#connection${connection.id} button[data-action="delete"]`).on('click', (event) => {
           event.preventDefault();
-          deleteConnection(connection.id);
+          deleteConnection(connection.id, true);
         });
       });
     }, error: response => showErrorToast({title: 'Error Querying Jellyfin Connections', response}),
@@ -574,7 +600,7 @@ function initializePlex() {
         // Assign delete function to button
         $(`#connection${connection.id} button[data-action="delete"]`).on('click', (event) => {
           event.preventDefault();
-          deleteConnection(connection.id);
+          deleteConnection(connection.id, true);
         });
       });
     }, error: response => showErrorToast({title: 'Error Querying Plex Connections', response}),
