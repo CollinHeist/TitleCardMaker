@@ -571,13 +571,13 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         ]
 
 
-    def get_watched_statuses(self,
+    def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
             episodes: list[_Episode],
             *,
             log: Logger = log,
-        ) -> list[WatchedStatus]:
+        ) -> bool:
         """
         Modify the Episodes' watched attribute according to the watched
         status of the corresponding episodes within Emby.
@@ -587,24 +587,41 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             series_info: The series to update.
             episodes: List of Episode objects to update.
             log: Logger for all log messages.
+
+        Returns:
+            Whether any Episode's watched statuses were modified.
         """
 
         # If no episodes, exit
         if len(episodes) == 0:
-            return []
+            return False
 
-        statuses = []
-        for episode in self.__get_episodes(library_name, series_info, log=log):
-            for this_episode in episodes:
-                if episode == this_episode:
-                    statuses.append(WatchedStatus(
-                        self._interface_id,
-                        library_name,
-                        episode['UserData']['Played'],
-                    ))
+        # Get data for each Emby episode
+        emby_episodes = [
+            (
+                EpisodeInfo.from_emby_info(
+                    episode, self._interface_id, library_name
+                ),
+                WatchedStatus(
+                    self._interface_id,
+                    library_name,
+                    episode.get('UserData', {}).get('Played'),
+                )
+            )
+            for episode in
+            self.__get_episodes(library_name, series_info, log=log)
+        ]
+
+        # Update watched statuses of all Episodes
+        changed = False
+        for episode in episodes:
+            episode_info = episode.as_episode_info
+            for emby_episode, watched_status in emby_episodes:
+                if episode_info == emby_episode:
+                    changed |= episode.add_watched_status(watched_status)
                     break
 
-        return statuses
+        return changed
 
 
     def load_title_cards(self,

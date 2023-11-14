@@ -212,7 +212,8 @@ def refresh_episode_data(
 
         # Check if this Episode exists in the database already
         existing = db.query(Episode)\
-            .filter(episode_info.filter_conditions(Episode))\
+            .filter(Episode.series_id == series.id,
+                    episode_info.filter_conditions(Episode))\
             .first()
 
         # Episode does not exist, add

@@ -8,7 +8,7 @@ from PIL import Image
 from modules.Debug import log
 from modules.EpisodeDataSource2 import WatchedStatus
 from modules.EpisodeInfo2 import EpisodeInfo
-from modules.SeriesInfo import SeriesInfo
+from modules.SeriesInfo2 import SeriesInfo
 
 
 _Card = TypeVar('_Card')
@@ -93,13 +93,13 @@ class MediaServer(ABC):
 
 
     @abstractmethod
-    def get_watched_statuses(self,
+    def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
             episodes: list[_Episode],
             *,
             log: Logger = log,
-        ) -> list[WatchedStatus]:
+        ) -> bool:
         """Method to get the watched statuses of Episodes."""
         raise NotImplementedError
 

@@ -251,7 +251,6 @@ class EpisodeInfo(DatabaseInfoContainer):
                         'tvdb_id', 'tvrage_id'):
             if (getattr(self, id_attr) is not None
                 and getattr(self, id_attr) == getattr(other, id_attr)):
-                log.debug(f'{self}.{id_attr} matched {self!r} {other!r}')
                 return True
 
         # Require title match

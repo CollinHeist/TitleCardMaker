@@ -407,14 +407,14 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         return all_episodes
 
 
-    @catch_and_log('Error getting watched statuses')
-    def get_watched_statuses(self,
+    @catch_and_log('Error updating watched statuses')
+    def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
-            episodes: list['Episode'], # type: ignore
+            episodes: list[_Episode],
             *,
             log: Logger = log,
-        ) -> list[WatchedStatus]:
+        ) -> bool:
         """
         Modify the Episodes' watched attribute according to the watched
         status of the corresponding episodes within Plex.
@@ -424,36 +424,46 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             series_info: The Series to update.
             episodes: List of Episode objects to update.
             log: Logger for all log messages.
+
+        Returns:
+            Whether any Episode's watched statuses were modified.
         """
 
         # If no episodes, exit
         if len(episodes) == 0:
-            return []
+            return False
 
         # If the given library cannot be found, exit
         if not (library := self.__get_library(library_name, log=log)):
             log.warning(f'Cannot find library "{library_name}" of {series_info}')
-            return []
+            return False
 
         # If the given series cannot be found in this library, exit
         if not (series := self.__get_series(library, series_info, log=log)):
             log.warning(f'Cannot find {series_info} in library "{library}"')
-            return []
+            return False
 
-        # Go through each episode within Plex and update Episode spoiler status
-        statuses = []
-        for plex_episode in series.episodes(container_size=500):
-            for episode in episodes:
-                if (plex_episode.parentIndex == episode.season_number
-                    and plex_episode.index == episode.episode_number):
-                    statuses.append(WatchedStatus(
-                        self._interface_id,
-                        library_name,
-                        plex_episode.isWatched,
-                    ))
+        # Get data for each Plex episode
+        plex_episodes = [
+            (
+                EpisodeInfo.from_plex_episode(episode),
+                WatchedStatus(
+                    self._interface_id, library_name, episode.isWatched,
+                )
+            )
+            for episode in series.episodes(container_size=500)
+        ]
+
+        # Update watched statuses of all Episodes
+        changed = False
+        for episode in episodes:
+            episode_info = episode.as_episode_info
+            for plex_episode, watched_status in plex_episodes:
+                if episode_info == plex_episode:
+                    changed |= episode.add_watched_status(watched_status)
                     break
 
-        return statuses
+        return changed
 
 
     @catch_and_log("Error setting series ID's")

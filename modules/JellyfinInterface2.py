@@ -526,7 +526,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         # Find this series
         series_id = self.__get_series_id(library_name, series_info, log=log)
         if series_id is None:
-            log.warning(f'Series {series_info!r} not found in Jellyfin')
+            log.warning(f'Series {series_info} not found in Jellyfin')
             return []
 
         # Get all episodes for this series
@@ -560,13 +560,13 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         return all_episodes
 
 
-    def get_watched_statuses(self,
+    def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
             episodes: list[_Episode],
             *,
             log: Logger = log,
-        ) -> list[WatchedStatus]:
+        ) -> bool:
         """
         Modify the Episodes' watched attribute according to the watched
         status of the corresponding episodes within Jellyfin.
@@ -576,44 +576,59 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             series_info: The series to update.
             episodes: List of Episode objects to update.
             log: Logger for all log messages.
+
+        Returns:
+            Whether any Episode's watched statuses were modified.
         """
 
         # If no episodes, exit
         if len(episodes) == 0:
-            return []
+            return False
 
         # Find this series
         series_id = self.__get_series_id(library_name, series_info, log=log)
         if series_id is None:
             log.warning(f'Series not found in Jellyfin {series_info!r}')
-            return []
+            return False
 
         # Query for all episodes of this series
         response = self.session.get(
             f'{self.url}/Shows/{series_id}/Episodes',
-            params={'UserId': self.user_id} | self.__params
+            params={
+                'UserId': self.user_id,
+                'Fields': 'ProviderIds',
+            } | self.__params
         )
 
-        # Go through each episode in Jellyfin, determine watched status
-        statuses = []
-        for jellyfin_episode in response['Items']:
-            # Skip episodes without episode or season numbers
-            if (jellyfin_episode.get('IndexNumber', None) is None
-                or jellyfin_episode.get('ParentIndexNumber', None) is None):
-                continue
+        # Get data for each Jellyfin episode
+        jellyfin_episodes = [
+            (
+                EpisodeInfo.from_jellyfin_info(
+                    episode, self._interface_id, library_name, log=log
+                ),
+                WatchedStatus(
+                    self._interface_id,
+                    library_name,
+                    episode['UserData']['Played']
+                )
+            )
+            for episode in response['Items']
+            if (episode.get('IndexNumber') is not None
+                and episode.get('ParentIndexNumber') is not None
+                and episode.get('UserData', {}).get('Played') is not None)
+        ]
 
-            for episode in episodes:
-                if (jellyfin_episode['ParentIndexNumber']==episode.season_number
-                    and jellyfin_episode["IndexNumber"]==episode.episode_number
-                    and jellyfin_episode.get('UserData', {}).get('Played') is not None):
-                        statuses.append(WatchedStatus(
-                            self._interface_id,
-                            library_name,
-                            jellyfin_episode['UserData']['Played']
-                        ))
-                        break
+        # Update watched statuses of all Episodes
+        changed = False
+        for episode in episodes:
+            episode_info = episode.as_episode_info
+            # Match to the given Jellyfin Episode
+            for jellyfin_episode, watched_status in jellyfin_episodes:
+                if episode_info == jellyfin_episode:
+                    changed |= episode.add_watched_status(watched_status)
+                    break
 
-        return statuses
+        return changed
 
 
     def load_title_cards(self,
