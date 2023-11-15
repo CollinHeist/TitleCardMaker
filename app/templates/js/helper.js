@@ -432,19 +432,7 @@ async function initializeExtraDropdowns(
   });
 }
 
-function _updateSeriesConfig(seriesId, data) {
-  $.ajax({
-    type: 'PATCH',
-    url: `/api/series/${seriesId}`,
-    data: JSON.stringify(data),
-    contentType: 'application/json',
-    success: () => showInfoToast('Updated Series'),
-    error: response => showErrorToast({title: 'Error Updating Series', response}),
-  });
-}
-const updateSeriesConfig = debounce((...args) => _updateSeriesConfig(...args));
-
-/*
+/**
  * Query for all the globally available Connections and Libraries. This updates
  * the global variables. Only re-queries if not initialized.
  */
@@ -463,11 +451,12 @@ async function queryLibraries() {
 /*
  *
  */
-async function initializeLibraryDropdowns(
+async function initializeLibraryDropdowns({
     selectedLibraries,
     dropdownElements,
     clearable=true,
-    useLabels=true) {
+    useLabels=true,
+    onChange=() => {}}) {
   // Only re-query for libraries if not initialized
   if (_allLibraries === undefined || _allConnections === undefined) {
     await queryLibraries();
@@ -495,6 +484,7 @@ async function initializeLibraryDropdowns(
     placeholder: 'None',
     clearable,
     useLabels,
+    onChange,
     values: dropdownValues.map(({interface, interface_id, name, selected}) => {
       const serverName = _allConnections.filter(connection => connection.id === interface_id)[0].name || interface;
       return {
@@ -506,19 +496,6 @@ async function initializeLibraryDropdowns(
         selected: selected,
       };
     }),
-    onChange: function(value, text, $selectedItem) {
-      // Current value of the library dropdown
-      let libraries = [];
-      if (value) {
-        libraries = value.split(',').map(libraryStr => {
-          const libraryData = libraryStr.split('::');
-          return {interface: libraryData[0], interface_id: libraryData[1], name: libraryData[2]};
-        });
-      }
-      // Get series ID
-      const seriesId = $selectedItem.closest('tr').data('id');
-      updateSeriesConfig(seriesId, {libraries});
-    },
   });
 }
 

@@ -108,19 +108,19 @@
           <i class="ui sort icon"></i>
           Sort
           <div class="menu">
-            <a class="item" onclick="sortBy('name');">
+            <a class="item" onclick="sortSeries('name');">
               <i class="ui sort alphabet down icon"></i>
               Name
             </a>
-            <a class="item" onclick="sortBy('id');">
+            <a class="item" onclick="sortSeries('id');">
               <i class="ui sort icon"></i>
               Recently Added
             </a>
-            <a class="item" onclick="sortBy('card_count');">
+            <a class="item" onclick="sortSeries('cards');">
               <i class="ui sort amount down icon"></i>
               Title Cards
             </a>
-            <a class="item">
+            <a class="item" onclick="sortSeries('year')">
               <i class="ui sort numeric down icon"></i>
               Year
             </a>
@@ -130,37 +130,45 @@
           <i class="ui solid filter icon"></i>
           Filter
         </a>
+        <a class="item" data-action="select" onclick="toggleAllSelection();">
+          <i class="exchange alternate icon"></i>
+          Toggle Selection
+        </a>
+        <a class="disabled item" data-action="unselect" onclick="clearSelection();">
+          <i class="times icon"></i>
+          Clear Selection
+        </a>
         <div class="ui dropdown disabled item" data-action="edit">
           <i class="edit icon"></i>
           Edit
           <div class="menu">
             <div class="divider"></div>
-            <a class="item" onclick="monitorSelection();">
+            <a class="item" onclick="batchMonitor();">
               <i class="ui eye outline green icon"></i>
               Monitor
             </a>
-            <a class="item" onclick="unmonitorSelection();">
+            <a class="item" onclick="batchUnmonitor();">
               <i class="ui eye slash outline red icon"></i>
               Unmonitor
             </a>
-            <a class="item" onclick="processSelection();">
+            <a class="item" onclick="batchProcess();">
               <i class="blue step forward icon"></i>
               Process
             </a>
-            <a class="item" onclick="loadSelection(false);">
+            <a class="item" onclick="batchLoad(false);">
               <i class="hdd outline icon"></i>
               Load Title Cards
             </a>
-            <a class="item" onclick="loadSelection(true);">
+            <a class="item" onclick="batchLoad(true);">
               <i class="hdd outline orange icon"></i>
               Force-Reload Title Cards
             </a>
             <div class="divider"></div>
-            <a class="item" onclick="deleteCardsSelection();">
+            <a class="item" onclick="batchDeleteCards();">
               <i class="red images outline icon"></i>
               Delete Title Cards
             </a>
-            <a class="item" onclick="deleteSeriesSelection();">
+            <a class="item" onclick="batchDeleteSeries();">
               <i class="red trash alternate outline icon"></i>
               Delete Series
             </a>

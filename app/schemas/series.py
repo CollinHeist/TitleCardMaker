@@ -250,6 +250,10 @@ class UpdateSeries(BaseUpdate):
             raise ValueError('Template IDs must be unique')
         return val
 
+class BatchUpdateSeries(Base):
+    series_id: int
+    update: UpdateSeries
+
 """
 Return classes
 """

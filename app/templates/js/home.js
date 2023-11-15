@@ -1,8 +1,7 @@
-/*
+/**
  * Refresh the Card data (progress and card counts) for the Series with the
  * given ID.
- * 
- * @args {int} serieId: ID of the Series to update the card data of.
+ * @param {int} seriesId: ID of the Series to update the card data of.
  */
 function refreshCardData(seriesId) {
   $.ajax({
@@ -49,15 +48,34 @@ function toggleMonitoredStatus(seriesId) {
   });
 }
 
+/**
+ * Submit an API request to update the config of the Series with the given ID.
+ * @param {int} seriesId - ID of the Series to update. 
+ * @param {Object} data - An `UpdateSeries` object to pass to the PATCH request.
+ */
+function _updateSeriesConfig(seriesId, data) {
+  $.ajax({
+    type: 'PATCH',
+    url: `/api/series/${seriesId}`,
+    data: JSON.stringify(data),
+    contentType: 'application/json',
+    success: () => showInfoToast('Updated Series'),
+    error: response => showErrorToast({title: 'Error Updating Series', response}),
+  });
+}
+const updateSeriesConfig = debounce((...args) => _updateSeriesConfig(...args));
+
+/**
+ * Submit an API request to begin Processing the Series with the given ID.
+ * @param {int} seriesId - ID of the Series to process.
+ */
 function processSeries(seriesId) {
   $(`#series-id${seriesId} td[data-row="process"]`).toggleClass('disabled', true);
   $(`#series-id${seriesId} td[data-row="process"] i`).toggleClass('loading disabled', true);
   $.ajax({
     type: 'POST',
     url: `/api/series/${seriesId}/process`,
-    success: () => {
-      showInfoToast('Started Processing Series');
-    },
+    success: () => showInfoToast('Started Processing Series'),
     error: response => showErrorToast({title: 'Error Processing Series', response}),
     complete: () => {
       $(`#series-id${seriesId} td[data-row="process"]`).toggleClass('disabled', false);
@@ -66,36 +84,60 @@ function processSeries(seriesId) {
   });
 }
 
-/*
- * Function to toggle the series with the given ID's selection. This modifies
- * the row's class, checkbox, and updates the `selectedSeries` list.
- */
+/** @type {Array<int>} */
 let selectedSeries = [];
-function toggleSeriesSelection(seriesId) {
-  // Unselect
-  if (selectedSeries.includes(seriesId)) {
+
+/**
+ * Toggle the series with the given ID's selection status. This modifies the
+ * row's class, checkbox, and updates the `selectedSeries` list.
+ * @param {int} seriesId - ID of the Series to toggle the selection of.
+ * @param {boolean} [force] - Selection value to force for the given Series.
+ */
+function toggleSeriesSelection(seriesId, force=undefined) {
+  // Unselect if forced or Series is selected (and not being forced)
+  if (force === false || (!force && selectedSeries.includes(seriesId))) {
     $(`#series-id${seriesId}`).toggleClass('selected', false);
     $(`#series-id${seriesId} .checkbox[data-value="select"]`).checkbox('uncheck');
+    // Remove from selected ID list
     selectedSeries = selectedSeries.filter(id => id !== seriesId);
   }
-  // Select
-  else {
+  // Select if forced or Series is not selected
+  else if (force || !selectedSeries.includes(seriesId)) {
     $(`#series-id${seriesId}`).toggleClass('selected', true);
     $(`#series-id${seriesId} .checkbox[data-value="select"]`).checkbox('check');
     selectedSeries.push(seriesId);
   }
 
-  // If any series are selected, ensure "actions" button is displayed
+  // If any/none series are selected, ensure toolbar is proper state
   if (selectedSeries.length > 0) {
     $('#toolbar .item[data-action="edit"]').toggleClass('disabled', false);
+    $('#toolbar .item[data-action="unselect"]').toggleClass('disabled', false);
   } else {
     $('#toolbar .item[data-action="edit"]').toggleClass('disabled', true);
+    $('#toolbar .item[data-action="unselect"]').toggleClass('disabled', true);
   }
 }
 
-/*
+/** Toggle all currently displayed Series selection status. */
+function toggleAllSelection() {
+  $('#series-table tr')
+    .each((index, row) => {
+      toggleSeriesSelection(Number.parseInt(row.dataset.id))
+    });
+}
+
+/** Unselect all currently displayed Series. */
+function clearSelection() {
+  $('#series-table tr')
+    .each((index, row) => {
+      toggleSeriesSelection(Number.parseInt(row.dataset.id), false)
+    });
+}
+
+/**
  * Navigate to the Series page for the Series with the given ID. This only
  * navigates the page if no Series are selected.
+ * @param {int} seriesId - ID of the Series to open the page of.
  */
 function openSeries(seriesId) {
   if (selectedSeries.length === 0) {
@@ -103,21 +145,19 @@ function openSeries(seriesId) {
   }
 }
 
-// Get all series and load their cards into HTML
-async function getAllSeries(page=undefined) {
+/**
+ * Submit an API request to get all the Series at the given page number and add
+ * their content to the page.
+ * @param {int} [page] - Page number of Series to load 
+ * @param {boolean} [keepSelection] - Whether to keep the current selection of
+ * Series.
+ */
+async function getAllSeries(page=undefined, keepSelection=false) {
   // Get page from URL param if provided
   page = page || new URLSearchParams(window.location.search).get('page') || 1;
 
   // Get associated sort query param
-  const sortState = window.localStorage.getItem('series-sort-order') || 'a-z';
-  const sortParam = {
-    'id-asc': 'id',
-    'id-desc': 'reverse-id',
-    'a-z': 'alphabetical',
-    'z-a': 'reverse-alphabetical',
-    'year-asc': 'year',
-    'year-desc': 'reverse-year',
-  }[sortState];
+  const sortParam = window.localStorage.getItem('sort-by') || 'alphabetical'
 
   // Fade out existing posters
   $('#series-list .card').transition({animation: 'scale', interval: 15, reverse: true});
@@ -129,8 +169,9 @@ async function getAllSeries(page=undefined) {
   // Create Series cards
   if (true) {
     const template = document.getElementById('series-row-template');
-    // Clear selected series
-    selectedSeries = [];
+    // Clear selected series if indicated
+    if (!keepSelection) { selectedSeries = []; }
+    
     // Generate table rows
     let rows = allSeries.map(series => {
       // Get row template
@@ -173,18 +214,39 @@ async function getAllSeries(page=undefined) {
     });
     // Hide loader
     $('.loading.container').transition('fade out');
+  
     // Add rows
     document.getElementById('series-table').replaceChildren(...rows);
     $('#series-table tr').transition({animation: 'scale', interval: 25});
-    $('.progress').progress({duration: 2000});
+    $('.progress').progress({duration: 1800});
+
+    // Set selected statuses
+    selectedSeries.forEach(seriesId => {
+      $(`#series-id${seriesId}`).toggleClass('selected', true);
+      $(`#series-id${seriesId} .checkbox[data-value="select"]`).checkbox('check');
+    });
+
     // Initialize library dropdowns
     allSeries.forEach(async (series) => {
-      await initializeLibraryDropdowns(
-        series.libraries,
-        $(`#series-id${series.id} .dropdown[data-value="libraries"]`),
-        false,
-        false,
-      );
+      await initializeLibraryDropdowns({
+        selectedLibraries: series.libraries,
+        dropdownElements: $(`#series-id${series.id} .dropdown[data-value="libraries"]`),
+        clearable: false,
+        useLabels: false,
+        onChange: function(value, text, $selectedItem) {
+          // Current value of the library dropdown
+          let libraries = [];
+          if (value) {
+            libraries = value.split(',').map(libraryStr => {
+              const libraryData = libraryStr.split('::');
+              return {interface: libraryData[0], interface_id: libraryData[1], name: libraryData[2]};
+            });
+          }
+          // Get series ID
+          const seriesId = $selectedItem.closest('tr').data('id');
+          updateSeriesConfig(seriesId, {libraries});
+        },
+      });
     })
   } else {
     const template = document.getElementById('series-template');
@@ -253,6 +315,7 @@ async function getAllSeries(page=undefined) {
 
   // Refresh theme for any newly added HTML
   refreshTheme();
+
   // Dim Series posters on hover
   $('.ui.cards .image').dimmer({
     on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'
@@ -265,6 +328,7 @@ function getAllStatistics() {
     type: 'GET',
     url: '/api/statistics',
     success: statistics => {
+      $('#statistics .statistic').remove();
       const statisticsElement = document.getElementById('statistics');
       const template = document.getElementById('statistic-template');
       statistics.forEach(({value_text, unit, description}) => {
@@ -279,7 +343,7 @@ function getAllStatistics() {
   });
 }
 
-async function initAll() {
+function initAll() {
   getAllStatistics();
   getAllSeries();
 
@@ -290,36 +354,100 @@ async function initAll() {
   $('.ui.progress').progress();
   $('table').tablesort();
   // WIP
+}
 
-  // Dim Series posters on hover
-  $('.ui.cards .image').dimmer({
-    on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'
+const sortStates = {
+  name:  ['alphabetical', 'reverse-alphabetical'],
+  id:    ['id',           'reverse-id'],
+  cards: ['cards',        'reverse-cards'],
+  year:  ['year',         'reverse-year'],
+}
+/**
+ * Adjust how the Series are sorted on the home page. This updates the
+ * local storage for the sort parameter, and re-queries the current page.
+ * @param {string} sortBy - How to sort the Series on the page.
+ */
+function sortSeries(sortBy) {
+  // Get current sort state
+  const currentSortState = window.localStorage.getItem('sort-by') || 'alphabetical';
+
+  // Get new sort state, update local storage
+  const newSortState = sortStates[sortBy][(sortStates[sortBy].indexOf(currentSortState) + 1) % sortStates[sortBy].length];
+  window.localStorage.setItem('sort-by', newSortState);
+
+  // Re-query current page if modified
+  if (currentSortState !== newSortState) { getAllSeries(); }
+}
+
+/**
+ * Submit an API request to mark all the currently selected Series as monitored.
+ */
+function batchMonitor() {
+  if (selectedSeries.length === 0) { return; }
+  $.ajax({
+    type: 'PUT',
+    url: '/api/series/batch/monitor',
+    data: JSON.stringify(selectedSeries),
+    contentType: 'application/json',
+    success: updatedSeries => {
+      showInfoToast(`Monitored ${updatedSeries.length} Series`);
+      getAllSeries(undefined, true);
+    },
+    error: response => showErrorToast({title: 'Error Updating Series', response}),
   });
 }
 
-// Sort series different ways
-let sortStates = {
-  'id': {state: 0, allStates: [{icon: 'sort icon', sortState: 'id-desc'}, {icon: 'sort icon', sortState: 'id-asc'}]},
-  'title': {state: 0, allStates: [{icon: 'sort alphabet down icon', sortState: 'a-z'}, {icon: 'sort alphabet down alternate icon', sortState: 'z-a'}]},
-  'year': {state: 0, allStates: [{icon: 'sort numeric down icon', sortState: 'year-asc'}, {icon: 'sort numeric down alternate icon', sortState: 'year-desc'}]},
+/**
+ * Submit an API request to mark all the currently selected Series as  unmonitored.
+ */
+function batchUnmonitor() {
+  if (selectedSeries.length === 0) { return; }
+  $.ajax({
+    type: 'PUT',
+    url: '/api/series/batch/unmonitor',
+    data: JSON.stringify(selectedSeries),
+    contentType: 'application/json',
+    success: updatedSeries => {
+      showInfoToast(`Unmonitored ${updatedSeries.length} Series`);
+      getAllSeries(undefined, true);
+    },
+    error: response => showErrorToast({title: 'Error Updating Series', response}),
+  });
 }
 
-function sortSeries(elem, sortBy) {
-  // Update sort state property
-  let {state, allStates} = sortStates[sortBy];
-  let {sortState} = allStates[state];
-  window.localStorage.setItem('series-sort-order', sortState);
+/**
+ * Submit an API request to begin processing all the currently selected Series.
+ */
+function batchProcess() {
+  if (selectedSeries.length === 0) { return; }
+  $.ajax({
+    type: 'POST',
+    url: '/api/series/batch/process',
+    data: JSON.stringify(selectedSeries),
+    contentType: 'application/json',
+    success: () => {
+      showInfoToast(`Started Processing ${selectedSeries.length} Series`);
+      getAllSeries(undefined, true);
+    },
+    error: response => showErrorToast({title: 'Error Processing Series', response}),
+  });
+}
 
-  // Re-query current page
-  getAllSeries();
-
-  // Wait for rotation to finish, then change icon state
-  document.getElementById(elem.firstElementChild.id).classList.toggle('rotate');
-  setTimeout(() => {
-    sortStates[sortBy].state = (sortStates[sortBy].state + 1) % 2;
-    let {icon} = sortStates[sortBy].allStates[sortStates[sortBy].state];
-    elem.firstElementChild.className = icon;
-    // Update local storage for sort setting
-    window.localStorage.setItem('series-sort-order', sortState);
-  }, 500); // Timeout set to match the transition duration
+/**
+ * Submit an API request to delete the Title Cards of all the currently selected Series.
+ */
+function batchDeleteCards() {
+  if (selectedSeries.length === 0) { return; }
+  $.ajax({
+    type: 'DELETE',
+    url: '/api/cards/batch',
+    data: JSON.stringify(selectedSeries),
+    contentType: 'application/json',
+    success: actions => {
+      showInfoToast(`Deleted ${actions.deleted} Title Cards`);
+      getAllSeries(undefined, true);
+      getAllStatistics();
+    },
+    error: response => showErrorToast({title: 'Error Deleting Title Cards', response}),
+  });
 }
