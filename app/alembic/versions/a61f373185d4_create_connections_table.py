@@ -154,6 +154,7 @@ class Template(Base):
 class Sync(Base):
     __tablename__ = 'sync'
     id = sa.Column(sa.Integer, primary_key=True, index=True)
+    interface = sa.Column(sa.String, nullable=False)
     interface_id = sa.Column(sa.Integer, sa.ForeignKey('connection.id'))
 
 
@@ -217,7 +218,7 @@ def upgrade() -> None:
         emby = Connection(
             interface_type='Emby',
             enabled=True,
-            name='Emby Server',
+            name='Emby',
             url=PreferencesLocal.emby_url,
             api_key=PreferencesLocal.emby_api_key,
             use_ssl=PreferencesLocal.emby_use_ssl,
@@ -230,7 +231,7 @@ def upgrade() -> None:
         jellyfin = Connection(
             interface_type='Jellyfin',
             enabled=True,
-            name='Jellyfin Server',
+            name='Jellyfin',
             url=PreferencesLocal.jellyfin_url,
             api_key=PreferencesLocal.jellyfin_api_key,
             use_ssl=PreferencesLocal.jellyfin_use_ssl,
@@ -243,7 +244,7 @@ def upgrade() -> None:
         plex = Connection(
             interface_type='Plex',
             enabled=True,
-            name='Plex Server',
+            name='Plex',
             url=PreferencesLocal.plex_url,
             api_key=PreferencesLocal.plex_token,
             use_ssl=PreferencesLocal.plex_use_ssl,
@@ -256,7 +257,7 @@ def upgrade() -> None:
         sonarr = Connection(
             interface_type='Sonarr',
             enabled=True,
-            name='Sonarr Server',
+            name='Sonarr',
             url=PreferencesLocal.sonarr_url,
             api_key=PreferencesLocal.sonarr_api_key,
             use_ssl=PreferencesLocal.sonarr_use_ssl,
@@ -308,8 +309,8 @@ def upgrade() -> None:
     # Migrate Loaded interface_id and library_name
     for loaded in session.query(Loaded).all():
         # Delete unassociated Loaded objects
-        if not loaded.series or not loaded.episode_id:
-            log.debug(f'Loaded[{loaded.id}] has no parent Series/Episode - deleting')
+        if not loaded.series_id or not loaded.episode_id:
+            log.debug(f'Loaded[{loaded.id}] has no parent object - deleting')
             session.delete(loaded)
             continue
         # Migrate columns from associated Series' library
@@ -339,6 +340,20 @@ def upgrade() -> None:
             card.interface_id = card.loaded[0].interface_id
             card.library_name = card.loaded[0].library_name
     log.debug(f'Migrated Card.interface_id and Card.library_name')
+
+    # Migrate Sync interface_id
+    for sync in session.query(Sync).all():
+        if sync.interface == 'Emby' and emby:
+            sync.interface_id = emby.id
+        elif sync.interface == 'Jellyfin' and jellyfin:
+            sync.interface_id = jellyfin.id
+        elif sync.interface == 'Plex' and plex:
+            sync.interface_id = plex.id
+        elif sync.interface == 'Sonarr' and sonarr:
+            sync.interface_id = sonarr.id
+        else:
+            log.debug(f'No valid Connection for Sync[{sync.id}] - deleting')
+            session.delete(sync)
 
     # Migrate Series *_library_name into libraries list
     for series in session.query(Series).all():

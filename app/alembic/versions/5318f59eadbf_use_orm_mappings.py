@@ -10,7 +10,6 @@ Create Date: 2023-11-14 12:38:23.264714
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import sqlite
-from modules.Debug import contextualize
 
 from modules.Debug import contextualize
 
@@ -86,9 +85,6 @@ def upgrade() -> None:
             nullable=False)
 
     with op.batch_alter_table('loaded', schema=None) as batch_op:
-        batch_op.alter_column('card_id',
-            existing_type=sa.INTEGER(),
-            nullable=False)
         batch_op.alter_column('episode_id',
             existing_type=sa.INTEGER(),
             nullable=False)
@@ -158,7 +154,6 @@ def upgrade() -> None:
             existing_type=sa.VARCHAR(),
             nullable=False)
 
-    # ### end Alembic commands ###
     log.debug(f'Upgraded SQL Schema to Version[{revision}]')
 
 
