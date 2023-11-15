@@ -1,8 +1,8 @@
-/*
- * Submit an API request to get updated Series statistics. If successful,
- * then the card stats text and progress bar are updated.
- */
 let getStatisticsId;
+/**
+ * Submit an API request to get updated Series statistics. If successful, then
+ * the card stats text and progress bar are updated.
+ */
 function getStatistics() {
   $.ajax({
     type: 'GET',
@@ -63,11 +63,10 @@ function getUpdateEpisodeObject(episodeId) {
   return {...updateEpisode, template_ids: template_ids};
 }
 
-/*
+/**
  * Submit an API request to create the Title Card for the Episode with the given
  * ID. If successful, the card data of the current page is reloaded and the
- * Episode's row marking is removed
- * 
+ * Episode's row marking is removed.
  * @param {int} episodeId - ID of the Episode whose Card is being created.
  */
 function createEpisodeCard(episodeId) {
@@ -82,10 +81,9 @@ function createEpisodeCard(episodeId) {
   });
 }
 
-/*
- * Submit an API request to save the modified Episode configuration
- * for the given Episode.
- * 
+/**
+ * Submit an API request to save the modified Episode configuration for the
+ * given Episode.
  * @param {int} episodeId - ID of the Episode whose config is being changed.
  */
 function saveEpisodeConfig(episodeId) {
@@ -103,11 +101,10 @@ function saveEpisodeConfig(episodeId) {
   });
 }
 
-/*
+/**
  * Submit an API request to batch save all modified Episode configurations. This
  * uses the Episode ID's in the global `editedEpisodeIds` array.
  */
-
 function saveAllEpisodes() {
   // Get update objects
   const updateEpisodeObjects = editedEpisodeIds.map(episodeId => {
@@ -352,7 +349,7 @@ async function initalizeSeriesConfig() {
   });
 }
 
-/*
+/**
  * Submit an API request to query TPDb for this Series' poster. If successful,
  * the URL field of the edit poster modal is populated.
  */
@@ -495,12 +492,11 @@ function initStyles() {
   refreshTheme();
 }
 
-/*
+/**
  * Submit an API request to open the upload source image modal and then submit
  * an API request to upload that image when the modal form is submitted.
- * 
- * @param {int} episodeId: ID of the Episode whose source image is being
- *                         uploaded.
+ * @param {int} episodeId - ID of the Episode whose source image is being
+ * uploaded.
  */
 function uploadEpisodeSource(episodeId) {
   $('#upload-source-form').off('submit').on('submit', event => {
@@ -522,12 +518,11 @@ function uploadEpisodeSource(episodeId) {
   $('#upload-source-modal').modal('show');
 }
 
-/*
+/**
  * Submit an API request to mirror the source image of the given Episode. If
  * successful, then re-query the File and Card data.
- * 
  * @param {int} episodeId: ID of the Episode whose Source Image is being
- *                         modified.
+ * modified.
  */
 function mirrorSourceImage(episodeId) {
   $.ajax({
@@ -821,12 +816,15 @@ async function getEpisodeData(page=1) {
   });
 }
 
-/*
- * Submit an API request to load the given page of  Title Card previews.
- * If successful, then the cards are loaded into the page under the
- * appropriate element, and the pagination menu is updated.
- */
 let currentCardPage = 1;
+/**
+ * Submit an API request to load the given page of  Title Card previews. If
+ * successful, then the cards are loaded into the page under the appropriate
+ * element, and the pagination menu is updated.
+ * @param {int} [page] - The page number of card data to query.
+ * @param {bool} [transition] - Whether to transition the HTMLElements when
+ * updating the DOM.
+ */
 function getCardData(page=currentCardPage, transition=false) {
   const pageSize = isSmallScreen() ? 3 : 12;
   $.ajax({
@@ -880,7 +878,6 @@ function getCardData(page=currentCardPage, transition=false) {
       refreshTheme();
       $('#card-previews .image .dimmer').dimmer({transition: 'fade up', on: 'hover'});
     },
-    // error: response => showErrorToast({title: 'Error Getting Card Data', response}),
   });
 }
 
@@ -1136,11 +1133,10 @@ async function initAll() {
 }
 
 /**
- * Submit an API request clear some list values (e.g. extras, titles, or
- * translations) for this Series. If successful, the data is also removed from
- * the DOM.
- * @param {string} attribute - Name of the attribue being deleted. This should
- * be 'season_titles', 'translations', or 'extras'.
+ * Submit an API request clear some list values for this Series. If successful,
+ * the data is also removed from the DOM.
+ * @param {"season_titles" | "translations" | "extras"} attribute - Name of the
+ * attribue being deleted.
  */
 function deleteListValues(attribute) {
   let data;
@@ -1171,8 +1167,8 @@ function deleteListValues(attribute) {
 }
 
 /**
- * Submit an API request to toggle the monitored status of this Series.
- * If successful, this updates the HTML of the monitored icon.
+ * Submit an API request to toggle the monitored status of this Series. If
+ * successful, this updates the HTML of the monitored icon.
  */
 function toggleMonitorStatus() {
   $.ajax({
@@ -1194,9 +1190,9 @@ function toggleMonitorStatus() {
   });
 }
 
-/*
- * Submit an API request to completely process this Series. While
- * processing, all applicable buttons are disabled.
+/**
+ * Submit an API request to completely process this Series. While processing,
+ * all applicable buttons are disabled.
  */
 function processSeries() {
   $('#action-buttons .button[data-action="process"] i').toggleClass('loading', true);
@@ -1213,10 +1209,12 @@ function processSeries() {
   });
 }
 
-/*
- * Submit an API request to import the given Blueprint for this Series.
- * While processing, the card element with the given ID is marked as
- * loading. If successful, the page is reloaded.
+/**
+ * Submit an API request to import the given Blueprint for this Series. While
+ * processing, the card element with the given ID is marked as loading. If
+ * successful, the page is reloaded.
+ * @param {str} cardId - ID of the HTMLElement to mark as loading.
+ * @param {Object} blueprint - Blueprint object to import.
  */
 function importBlueprint(cardId, blueprint) {
   // Indicate loading
@@ -1279,37 +1277,52 @@ function importBlueprint(cardId, blueprint) {
   }
 }
 
-async function queryBlueprints() {
+/**
+ * Submit an API request to query for all available Blueprints of this Series.
+ * If successful and there are Blueprints, the card elements are added to the
+ * DOM.
+ */
+function queryBlueprints() {
   // Get templates
   const blueprintCards = document.getElementById('blueprint-cards');
   const blueprintTemplate = document.getElementById('blueprint-template');
   if (blueprintCards === null || blueprintTemplate === null) { return; }
+
   // Show loading message
   $('.tab[data-tab="blueprints"] .info.message').toggleClass('hidden', false);
+
   // Query for Blueprints
-  const allBlueprints = await fetch(`/api/blueprints/query/series/{{series.id}}`).then(resp => resp.json());
-  $('.tab[data-tab="blueprints"] .info.message').toggleClass('hidden', true);
-  // Disable query button
-  $('.tab[data-tab="blueprints"] .button[data-action="search"]').toggleClass('disabled', true);
-  // No blueprints available, hide loading and show warning message
-  if (allBlueprints === null || allBlueprints.length === 0) {
-    $('.tab[data-tab="blueprints"] .warning.message').toggleClass('hidden', false);
-    return;
-  }
-  // Blueprints available, create cards
-  const blueprints = allBlueprints.map((blueprint, blueprintId) => {
-    // Clone template, fill out card
-    let card = blueprintTemplate.content.cloneNode(true);
-    card = populateBlueprintCard(card, blueprint, `blueprint-id${blueprintId}`);
-    // Assign import to button
-    card.querySelector('a[data-action="import-blueprint"]').onclick = () => importBlueprint(`blueprint-id${blueprintId}`, blueprint);
-    return card;
+  $.ajax({
+    type: 'GET',
+    url: '/api/blueprints/query/series/{{series.id}}',
+    success: allBlueprints => {
+      // Hide info message and disable search button
+      $('.tab[data-tab="blueprints"] .info.message').toggleClass('hidden', true);
+      $('.tab[data-tab="blueprints"] .button[data-action="search"]').toggleClass('disabled', true);
+
+      // No Blueprints available, hide loading and show warning message
+      if (allBlueprints === null || allBlueprints.length === 0) {
+        $('.tab[data-tab="blueprints"] .warning.message').toggleClass('hidden', false);
+        return;
+      } 
+      
+      // Blueprints available, create elements
+      const blueprints = allBlueprints.map((blueprint, blueprintId) => {
+        // Clone template, fill out card
+        let card = blueprintTemplate.content.cloneNode(true);
+        card = populateBlueprintCard(card, blueprint, `blueprint-id${blueprintId}`);
+        // Assign import to button
+        card.querySelector('a[data-action="import-blueprint"]').onclick = () => importBlueprint(`blueprint-id${blueprintId}`, blueprint);
+        return card;
+      });
+      blueprintCards.replaceChildren(...blueprints);
+      $('[data-value="file-count"]').popup({inline: true});
+    },
+    error: response => showErrorToast({title: 'Error Querying Blueprints', response}),
   });
-  blueprintCards.replaceChildren(...blueprints);
-  $('[data-value="file-count"]').popup({inline: true});
 }
 
-/*
+/**
  * Submit an API request to export the Blueprint for this Series. If
  * successful, the Blueprint zip file is downloaded.
  */
@@ -1351,10 +1364,11 @@ function exportBlueprint() {
   })
 }
 
-/*
- * Submit an API request to download the given source image URL for the
- * Episode with the given ID. If successful, the Series file and Card
- * data is refreshed.
+/**
+ * Submit an API request to download the given Source Image URL for the Episode
+ * with the given ID. If successful, the Series file and Card data is refreshed.
+ * @param {int} episodeId - ID of the Episode associated with this image.
+ * @param {str} url - URL to download.
  */
 function selectTmdbImage(episodeId, url) {
   // Create psuedo form for this URL
@@ -1376,16 +1390,15 @@ function selectTmdbImage(episodeId, url) {
   });
 }
 
-/*
- * Submit an API request to download the Series logo at the specified
- * URL.
- * 
+/**
+ * Submit an API request to download the Series logo at the specified URL.
  * @param {str} url - URL of the logo file to download.
  */
 function downloadSeriesLogo(url) {
   // Create psuedo form for this URL
   const form = new FormData();
   form.set('url', url);
+
   // Submit API request to upload this URL
   $.ajax({
     type: 'PUT',
@@ -1403,16 +1416,16 @@ function downloadSeriesLogo(url) {
   });
 }
 
-/*
- * Submit an API request to download the Series backdrop at the specified
+/**
+ * Submit an API request to download the Series backdrop at the specified URL.
  * URL.
- * 
  * @param {str} url - URL of the backdrop file to download.
  */
 function downloadSeriesBackdrop(url) {
   // Create psuedo form for this URL
   const form = new FormData();
   form.set('url', url);
+
   // Submit API request to upload this URL
   $.ajax({
     type: 'PUT',
@@ -1429,9 +1442,9 @@ function downloadSeriesBackdrop(url) {
   });
 }
 
-/*
- * Submit an API request to browse the available Source Images for the
- * given Episode.
+/**
+ * Submit an API request to browse the available Source Images for the given
+ * Episode.
  */
 function browseSourceImages(episodeId, cardElementId) {
   document.getElementById(cardElementId).classList.add('loading');
@@ -1454,9 +1467,9 @@ function browseSourceImages(episodeId, cardElementId) {
   });
 }
 
-/*
- * Submit an API request to browse the available logos for this Series.
- * If successful, the relevant modal is shown.
+/**
+ * Submit an API request to browse the available logos for this Series. If
+ * uccessful, the relevant modal is shown.
  */
 function browseLogos() {
   $.ajax({
@@ -1476,9 +1489,9 @@ function browseLogos() {
   });
 }
 
-/*
- * Submit an API request to browse the available backdrops for this
- * Series. If successful, the relevant modal is shown.
+/**
+ * Submit an API request to browse the available backdrops for this Series. If
+ * successful, the relevant modal is shown.
  */
 function browseBackdrops() {
   $.ajax({
@@ -1500,10 +1513,10 @@ function browseBackdrops() {
   });
 }
 
-/*
- * Get the uploaded logo file and upload it to this Series. If the logo
- * is an image, then the API request to upload the logo is submitted. If
- * successful, then the logo `img` element is updated.
+/**
+ * Get the uploaded logo file and upload it to this Series. If the logo is an
+ * image, then the API request to upload the logo is submitted. If successful,
+ * then the logo `img` element is updated.
  */
 function uploadLogo() {
   // Get uploaded file
@@ -1535,7 +1548,7 @@ function uploadLogo() {
   });
 }
 
-/*
+/**
  * Get the uploaded backdrop file and upload it to this Series. If the
  * backdrop is an image, then the API request to upload the file is
  * submitted. If successful, then the backdrop `img` element is updated.
@@ -1570,7 +1583,7 @@ function uploadBackdrop() {
   });
 }
 
-/*
+/**
  * Submit an API request to download the Source Image for the given Episode.
  * This marks the given cardElementId as loading while processing.
  */
@@ -1585,7 +1598,7 @@ function getEpisodeSourceImage(episodeId, sourceElementId) {
   });
 }
 
-/*
+/**
  * Submit an API request to gather source images for this Series. This
  * disables the button while processing, and if successful the File data
  * is refreshed.
@@ -1602,7 +1615,7 @@ function getSourceImages() {
   });
 }
 
-/*
+/**
  * Submit an API request to initiate Card creation for this Series. This
  * disables the button while parsing, and if successful the Episode
  * data, statistics, and current Card page is refreshed.
@@ -1622,13 +1635,12 @@ function createTitleCards() {
   });
 }
 
-/*
+/**
  * Submit an API request to delete this Series' Title Cards. Series
  * statistics are re-queried if successful.
- * 
  * @param {int} interfaceId - ID of the library's interface.
  * @param {str} libraryName - Name of the library to load cards into.
- * @param {bool} reload - Whether to force reload the cards.
+ * @param {bool} [reload] - Whether to force reload the cards.
  */
 function loadCards(interfaceId, libraryName, reload=false) {
   const params = `?interface_id=${interfaceId}&library_name=${libraryName}&reload=${reload}`;
@@ -1642,7 +1654,7 @@ function loadCards(interfaceId, libraryName, reload=false) {
   });
 }
 
-/*
+/**
  * Submit an API request to delete this Series. If successful, this
  * redirects to the home page.
  */
@@ -1655,9 +1667,11 @@ function deleteSeries() {
   });
 }
 
-/*
+/**
  * Submit an API request to delete this Series' Title Cards. Series
  * statistics are re-queried after calling this.
+ * @param {function} [onSuccess] - Function to call if the API request is
+ * successful.
  */
 function deleteTitleCards(onSuccess) {
   $.ajax({
@@ -1672,9 +1686,13 @@ function deleteTitleCards(onSuccess) {
   });
 }
 
-/*
+/**
  * Submit an API request to add/create the new Episode defined in the given
- * event's target. 
+ * event's target.
+ * @param {Event} event - Triggering Event for the Form submission of the new
+ * Episode.
+ * @param {HTMLFormElement} event.target - Target of the event; i.e. the new
+ * Episode Form.
  */
 function addEpisode(event) {
   // Prep form
@@ -1698,9 +1716,9 @@ function addEpisode(event) {
   });
 }
 
-/*
- * Submit an API request to delete all Episodes of this Series. If
- * successful, then the Episode, file, and statistics data are re-queried.
+/**
+ * Submit an API request to delete all Episodes of this Series. If successful,
+ * then the Episode, file, and statistics data are re-queried.
  */
 function deleteAllEpisodes() {
   $.ajax({
@@ -1715,11 +1733,10 @@ function deleteAllEpisodes() {
   });
 }
 
-/*
+/**
  * Submit an API request to delete the Episode with the given ID. If successful,
  * then the statistics are re-queried and the Episode and file associated with
  * this Episode are removed from the DOM.
- * 
  * @param {int} id - Episode ID of the Episode to delete.
  */
 function deleteEpisode(id) {
@@ -1737,14 +1754,12 @@ function deleteEpisode(id) {
   });
 }
 
-/*
+/**
  * Submit an API request to navigate to the next or previous Series. If
  * successful (and there is a Series to navigate to), then the page is
  * redirected. If successful but there is no next/previous Series, the
  * appropriate nav button is disabled.
- * 
- * @param {string} next_or_previous - 'next' or 'previous'; where to navigate
- * the page.
+ * @param {"next" | "previous"} next_or_previous - Where to navigate the page.
  */
 function navigateSeries(next_or_previous) {
   $.ajax({
@@ -1761,14 +1776,12 @@ function navigateSeries(next_or_previous) {
   });
 }
 
-/*
+/**
  * Submit an API request to remove the TCM/PMM labels from this Series in Plex.
- * 
  * @param {int} interfaceId - ID of the library's interface.
  * @param {str} libraryName - Name of the library to load cards into.
  */
 function removePlexLabels(interfaceId, libraryName) {  
-  // Submit API request
   const params = `?interface_id=${interfaceId}&library_name=${libraryName}`;
   $.ajax({
     type: 'DELETE',
@@ -1778,7 +1791,7 @@ function removePlexLabels(interfaceId, libraryName) {
   });
 }
 
-/*
+/**
  * Add a blank Series Extra field to the card configuration form.
  */
 function addBlankSeriesExtra() {
@@ -1794,7 +1807,7 @@ function addBlankSeriesExtra() {
   $('#card-config-form .field[data-value="extras"] .link.icon').popup({inline: true});
 }
 
-/*
+/**
  * Add a blank Episode Extra field to the Episode extra modal form.
  */
 function addBlankEpisodeExtra() {
