@@ -24,7 +24,7 @@ from app.internal.cards import (
     get_watched_statuses
 )
 from app.internal.series import (
-    add_series, delete_series_and_episodes, download_series_poster,
+    add_series, delete_series, download_series_poster,
     lookup_series,
 )
 from app.internal.sources import download_episode_source_images
@@ -155,7 +155,7 @@ def add_new_series(
 
 
 @series_router.delete('/{series_id}', status_code=204)
-def delete_series(
+def delete_series_(
         series_id: int,
         request: Request,
         db: Session = Depends(get_database)
@@ -169,8 +169,8 @@ def delete_series(
     # Find series with this ID, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    # Delete Series, poster, and associated Episodes
-    delete_series_and_episodes(db, series, log=request.state.log)
+    # Delete Series and all child content
+    delete_series(db, series, log=request.state.log)
 
 
 @series_router.get('/search', status_code=200)

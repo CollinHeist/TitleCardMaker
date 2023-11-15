@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.database.query import get_all_templates, get_sync
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.auth import get_current_user
-from app.internal.series import delete_series_and_episodes
+from app.internal.series import delete_series
 from app.internal.sync import add_sync, run_sync
 from app import models
 from app.schemas.sync import (
@@ -146,7 +146,7 @@ def delete_sync(
     # If deleting Series, iterate and delete Series and all Episodes
     if delete_series:
         for series in sync.series:
-            delete_series_and_episodes(
+            delete_series(
                 db, series, commit_changes=False, log=request.state.log
             )
 

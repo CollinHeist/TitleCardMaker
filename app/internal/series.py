@@ -224,7 +224,7 @@ def download_series_poster(
     return None
 
 
-def delete_series_and_episodes(
+def delete_series(
         db: Session,
         series: Series,
         *,
@@ -232,7 +232,8 @@ def delete_series_and_episodes(
         log: Logger = log,
     ) -> None:
     """
-    Delete the given Series, it's poster, and all associated Episodes.
+    Delete the given Series, poster, and all child (Episode, Card, and
+    Loaded) objects.
 
     Args:
         db: Database to commit any deletion to.
@@ -250,11 +251,9 @@ def delete_series_and_episodes(
 
         log.debug(f'{series.log_str} Deleted poster(s)')
 
-    # Delete Series and Episodes from database
+    # Delete Series; all child objects are deleted on cascade
     log.info(f'Deleting {series.log_str}')
     db.delete(series)
-    for episode in series.episodes:
-        db.delete(episode)
 
     # Commit changes if indicated
     if commit_changes:
