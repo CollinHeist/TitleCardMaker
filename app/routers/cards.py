@@ -634,3 +634,29 @@ def batch_delete_title_cards(
     return CardActions(
         deleted=len(delete_cards(db, cards, log=request.state.log)),
     )
+
+
+@card_router.put('/batch/load', dependencies=[Depends(get_current_user)])
+def batch_load_title_cards_into_all_libraries(
+        request: Request,
+        series_ids: list[int] = Body(...),
+        reload: bool = Query(default=False),
+        db: Session = Depends(get_database),
+    ) -> None:
+    """
+    Batch operation to load all Title Cards for all Series into all
+    libraries.
+
+    - series_ids: IDs of the Series whose Cards are being loaded.
+    - reload: Whether to "force" reload all Cards, even those that have
+    already been loaded. If false, only Cards that have not been loaded
+    previously (or that have changed) are loaded.
+    """
+
+    for series_id in series_ids:
+        load_all_series_title_cards(
+            get_series(db, series_id, raise_exc=True),
+            db,
+            force_reload=reload,
+            log=request.state.log,
+        )
