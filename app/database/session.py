@@ -4,7 +4,6 @@ from os import environ
 from pathlib import Path
 from re import IGNORECASE, sub as re_sub, match as _regex_match
 from shutil import copy as file_copy
-from typing import Optional
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -170,7 +169,7 @@ PreferencesLocal = Preferences(preferences_file)
 
 
 # Default Page arguments used for paginated returns
-Page = Page.with_custom_options(size=Field(250, ge=1))
+Page = Page.with_custom_options(size=Field(100, ge=1))
 
 
 # Initialize all interfaces
