@@ -3,7 +3,7 @@ from re import match, compile as re_compile
 from typing import Optional, Union
 
 from plexapi.video import Show as PlexShow
-from sqlalchemy import and_, literal, or_
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Query
 
 from modules.CleanPath import CleanPath
@@ -398,19 +398,19 @@ class SeriesInfo(DatabaseInfoContainer):
         # Conditions to filter by database ID
         id_conditions = []
         if self.emby_id and hasattr(SeriesModel, 'emby_id'):
-            id_str = str(self.emby_id)
-            id_conditions.append(SeriesModel.emby_id.contains(id_str))
-            id_conditions.append(literal(id_str).contains(SeriesModel.emby_id))
+            id_conditions.append(func.regex_match(
+                f'^{self.emby_id}$', SeriesModel.emby_id
+            ))
         if self.imdb_id and hasattr(SeriesModel, 'imdb_id'):
             id_conditions.append(SeriesModel.imdb_id==self.imdb_id)
         if self.jellyfin_id and hasattr(SeriesModel, 'jellyfin_id'):
-            id_str = str(self.jellyfin_id)
-            id_conditions.append(SeriesModel.jellyfin_id.contains(id_str))
-            id_conditions.append(literal(id_str).contains(SeriesModel.jellyfin_id))
+            id_conditions.append(func.regex_match(
+                f'^{self.jellyfin_id}$', SeriesModel.jellyfin_id
+            ))
         if self.sonarr_id and hasattr(SeriesModel, 'sonarr_id'):
-            id_str = str(self.sonarr_id)
-            id_conditions.append(SeriesModel.sonarr_id.contains(id_str))
-            id_conditions.append(literal(id_str).contains(SeriesModel.sonarr_id))
+            id_conditions.append(func.regex_match(
+                f'^{self.sonarr_id}$', SeriesModel.sonarr_id
+            ))
         if self.tmdb_id and hasattr(SeriesModel, 'tmdb_id'):
             id_conditions.append(SeriesModel.tmdb_id==self.tmdb_id)
         if self.tvdb_id and hasattr(SeriesModel, 'tvdb_id'):

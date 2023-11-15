@@ -4,7 +4,7 @@ from typing import Optional, TypedDict, Union
 
 from num2words import num2words
 from plexapi.video import Episode as PlexEpisode
-from sqlalchemy import and_, literal, or_
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Query
 from titlecase import titlecase
 
@@ -360,13 +360,13 @@ class EpisodeInfo(DatabaseInfoContainer):
 
         # Parse airdate
         airdate = None
-        try:
-            airdate = datetime.strptime(
-                info['PremiereDate'], '%Y-%m-%dT%H:%M:%S.%f000000Z'
-            )
-        except Exception as e:
-            log.exception(f'Cannot parse airdate', e)
-            log.debug(f'Episode data: {info}')
+        if 'PremiereDate' in info:
+            try:
+                airdate = datetime.strptime(
+                    info['PremiereDate'], '%Y-%m-%dT%H:%M:%S.%f000000Z'
+                )
+            except Exception as e:
+                log.debug(f'Cannot parse airdate {e} - {info=}')
 
         return EpisodeInfo(
             info['Name'],
@@ -552,15 +552,15 @@ class EpisodeInfo(DatabaseInfoContainer):
         # Conditions to filter by database ID
         id_conditions = []
         if self.emby_id:
-            id_str = str(self.emby_id)
-            id_conditions.append(EpisodeModel.emby_id.contains(id_str))
-            id_conditions.append(literal(id_str).contains(EpisodeModel.emby_id))
+            id_conditions.append(func.regex_match(
+                f'^{self.emby_id}$', EpisodeModel.emby_id,
+            ))
         if self.imdb_id is not None:
             id_conditions.append(EpisodeModel.imdb_id==self.imdb_id)
         if self.jellyfin_id:
-            id_str = str(self.jellyfin_id)
-            id_conditions.append(EpisodeModel.jellyfin_id.contains(id_str))
-            id_conditions.append(literal(id_str).contains(EpisodeModel.jellyfin_id))
+            id_conditions.append(func.regex_match(
+                f'^{self.jellyfin_id}$', EpisodeModel.jellyfin_id,
+            ))
         if self.tmdb_id is not None:
             id_conditions.append(EpisodeModel.tmdb_id==self.tmdb_id)
         if self.tvdb_id is not None:

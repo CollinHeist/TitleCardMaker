@@ -533,7 +533,8 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         response = self.session.get(
             f'{self.url}/Shows/{series_id}/Episodes',
             params={
-                'UserId': self.user_id, 'Fields': 'ProviderIds'
+                'UserId': self.user_id,
+                'Fields': 'ProviderIds,PremiereDate'
             } | self.__params
         )
 
@@ -602,7 +603,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             f'{self.url}/Shows/{series_id}/Episodes',
             params={
                 'UserId': self.user_id,
-                'Fields': 'ProviderIds',
+                'Fields': 'ProviderIds,PremiereDate',
             } | self.__params
         )
 

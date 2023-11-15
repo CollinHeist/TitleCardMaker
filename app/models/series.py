@@ -301,6 +301,44 @@ class Series(Base):
         ) >= threshold
 
 
+    @hybrid_method
+    def comes_before(self, name: str) -> bool:
+        """
+        Whether the given name comes before this Series.
+
+        Returns:
+            True if the given `name` comes before this Series'
+            alphabetically. False otherwise
+        """
+
+        return self.sort_name < name
+
+    @comes_before.expression
+    def comes_before(cls, name: str) -> ColumnElement[bool]:
+        """Class expression of the `comes_before()` method."""
+
+        return cls.sort_name < name
+
+
+    @hybrid_method
+    def comes_after(self, name: str) -> bool:
+        """
+        Whether the given name comes after this Series.
+
+        Returns:
+            True if the given `name` comes after this Series'
+            alphabetically. False otherwise.
+        """
+
+        return self.sort_name > name
+
+    @comes_after.expression # pylint: disable=no-self-argument
+    def comes_after(cls, name: str) -> ColumnElement[bool]:
+        """Class expression of the `comes_after()` method."""
+
+        return cls.sort_name > name
+
+
     @property
     def small_poster_url(self) -> str:
         """URI to the small poster URL of this Series."""
@@ -549,44 +587,6 @@ class Series(Base):
             changed = True
 
         return changed
-
-
-    @hybrid_method
-    def comes_before(self, name: str) -> bool:
-        """
-        Whether the given name comes before this Series.
-
-        Returns:
-            True if the given `name` comes before this Series'
-            alphabetically. False otherwise
-        """
-
-        return self.sort_name < name
-
-    @comes_before.expression
-    def comes_before(cls, name: str) -> ColumnElement[bool]:
-        """Class expression of the `comes_before()` method."""
-
-        return cls.sort_name < name
-
-
-    @hybrid_method
-    def comes_after(self, name: str) -> bool:
-        """
-        Whether the given name comes after this Series.
-
-        Returns:
-            True if the given `name` comes after this Series'
-            alphabetically. False otherwise.
-        """
-
-        return self.sort_name > name
-
-    @comes_after.expression # pylint: disable=no-self-argument
-    def comes_after(cls, name: str) -> ColumnElement[bool]:
-        """Class expression of the `comes_after()` method."""
-
-        return cls.sort_name > name
 
 
     def get_logo_file(self, source_base: str) -> Path:

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from logging import Logger
 from os import environ
 from pathlib import Path
-from re import IGNORECASE, sub as re_sub
+from re import IGNORECASE, sub as re_sub, match as _regex_match
 from shutil import copy as file_copy
 from typing import Optional
 
@@ -112,9 +112,14 @@ Register a custom Regex replacement function that can be used on this
 database.
 """
 def regex_replace(pattern: str, repl: str, string: str) -> str:
-    """Regex replacement function for DB registatrion"""
+    """Regex replacement function for DB registration"""
 
     return re_sub(pattern, repl, string, flags=IGNORECASE)
+
+def regex_match(pattern: str, string: str) -> bool:
+    """Regex match function for DB registration"""
+
+    return _regex_match(pattern, string, flags=IGNORECASE)
 
 @listens_for(engine, 'connect')
 def register_custom_functions(
@@ -127,7 +132,9 @@ def register_custom_functions(
     `partial_ratio` fuzzy-string match function.
     """
     dbapi_connection.create_function('regex_replace', 3, regex_replace)
+    dbapi_connection.create_function('regex_match', 2, regex_match)
     dbapi_connection.create_function('partial_ratio', 2, partial_ratio)
+
 @listens_for(blueprint_engine, 'connect')
 def register_custom_functions_blueprints(
         dbapi_connection,
