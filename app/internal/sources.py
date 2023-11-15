@@ -1,10 +1,8 @@
 from logging import Logger
 from pathlib import Path
-from time import sleep
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from app.database.query import get_interface
@@ -18,41 +16,6 @@ from app.schemas.preferences import Style
 from modules.Debug import log
 from modules.TieredSettings import TieredSettings
 from modules.WebInterface import WebInterface
-
-
-def download_all_source_images(*, log: Logger = log) -> None:
-    """
-    Schedule-able function to attempt to download all source images for
-    all monitored Series and Episodes in the Database.
-    """
-
-    try:
-        # Get the Database
-        with next(get_database()) as db:
-            # Get all Series
-            failures = 0
-            for series in db.query(Series).all():
-                # Skip if Series is unmonitored
-                if not series.monitored:
-                    log.debug(f'{series.log_str} is not monitored, skipping')
-                    continue
-
-                # Download source image for all Episodes
-                for episode in series.episodes:
-                    try:
-                        download_episode_source_images(db, episode, log=log)
-                    except HTTPException:
-                        log.warning(f'{series.log_str} {episode.log_str} '
-                                    f'Skipping source selection')
-                        continue
-                    except OperationalError:
-                        if failures > 10:
-                            break
-                        failures += 1
-                        log.debug(f'Database is busy, sleeping..')
-                        sleep(30)
-    except Exception as exc:
-        log.exception(f'Failed to download source images', exc)
 
 
 def download_all_series_logos(*, log: Logger = log) -> None:
@@ -294,6 +257,7 @@ def download_episode_source_image(
         episode: Episode,
         library: Optional[Library] = None,
         *,
+        commit: bool = True,
         raise_exc: bool = False,
         log: Logger = log,
     ) -> list[str]:
@@ -303,6 +267,7 @@ def download_episode_source_image(
     Args:
         db: Database to update.
         episode: Episode whose source image is being downloaded.
+        commit: Whether to commit any database changes.
         raise_exc: Whether to raise any HTTPExceptions.
         log: Logger for all log messages.
 
@@ -384,7 +349,8 @@ def download_episode_source_image(
             episode.image_source_attempts[interface.INTERFACE_TYPE] += 1
             log.debug(f'{episode!r} failed to download Source Image from '
                       f'Connection[{interface_id}] {interface.INTERFACE_TYPE}')
-            db.commit()
+            if commit:
+                db.commit()
             continue
 
         # Source image is valid, download - error if download fails
@@ -408,6 +374,7 @@ def download_episode_source_images(
         db: Session,
         episode: Episode,
         *,
+        commit: bool = True,
         raise_exc: bool = False,
         log: Logger = log,
     ) -> list[str]:
@@ -417,6 +384,7 @@ def download_episode_source_images(
     Args:
         db: Database to update.
         episode: Episode whose Source Images are being downloaded.
+        commit: Whether to commit any changes to the database.
         raise_exc: Whether to raise any HTTPExceptions.
         log: Logger for all log messages.
 
@@ -430,12 +398,13 @@ def download_episode_source_images(
     if episode.series.libraries:
         return [
             download_episode_source_image(
-                db, episode, library, raise_exc=raise_exc, log=log
+                db, episode, library,
+                commit=commit, raise_exc=raise_exc, log=log,
             ) for library in episode.series.libraries
         ]
 
     return [download_episode_source_image(
-        db, episode, None, raise_exc=raise_exc, log=log
+        db, episode, None, commit=commit, raise_exc=raise_exc, log=log,
     )]
 
 

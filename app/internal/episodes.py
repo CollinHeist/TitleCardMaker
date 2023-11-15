@@ -1,15 +1,12 @@
 from logging import Logger
-from time import sleep
 from typing import Iterable, Optional
 
 from fastapi import BackgroundTasks, HTTPException
-from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from app.database.query import get_interface
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.templates import get_effective_series_template
-from app import models
 from app.models.episode import Episode
 from app.models.series import Series
 
@@ -17,35 +14,6 @@ from modules.Debug import log
 from modules.EpisodeDataSource2 import WatchedStatus
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.TieredSettings import TieredSettings
-
-
-def refresh_all_episode_data(*, log: Logger = log) -> None:
-    """
-    Schedule-able function to refresh the episode data for all Series in
-    the Database.
-
-    Args:
-        log: Logger for all log messages.
-    """
-
-    try:
-        # Get the Database
-        with next(get_database()) as db:
-            # Get through each Series, refresh Episode data
-            all_series = db.query(models.series.Series).all()
-            for series in all_series:
-                # If Series is unmonitored, skip
-                if not series.monitored:
-                    log.debug(f'{series.log_str} is Unmonitored, skipping')
-                    continue
-
-                try:
-                    refresh_episode_data(db, series, log=log)
-                except OperationalError:
-                    log.debug(f'Database is busy, sleeping..')
-                    sleep(30)
-    except Exception as e:
-        log.exception(f'Failed to refresh all episode data - {e}', e)
 
 
 def set_episode_ids(

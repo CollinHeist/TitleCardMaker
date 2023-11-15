@@ -10,7 +10,10 @@ from sqlalchemy.orm import Query, Session
 
 from app.database.query import get_interface
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.internal.episodes import refresh_episode_data
+from app.internal.sources import download_episode_source_images 
 from app.internal.templates import get_effective_templates
+from app.internal.translate import translate_episode
 from app.models.card import Card
 from app.models.episode import Episode
 from app.models.series import Library, Series
@@ -47,73 +50,54 @@ def create_all_title_cards(*, log: Logger = log) -> None:
             failures = 0
             all_series = db.query(Series).all()
             for series in all_series:
-                # Set watch statuses of all Episodes
-                get_watched_statuses(db, series, series.episodes, log=log)
+                try:
+                    # Refresh Episode data if Series is monitored
+                    if series.monitored:
+                        refresh_episode_data(db, series, log=log)
+                    else:
+                        log.debug(f'{series!r} is Unmonitored, not refreshing Episode data')
 
-                # Create Cards for all Episodes
-                for episode in series.episodes:
-                    try:
-                        create_episode_cards(
-                            db, None, episode, raise_exc=False, log=log
-                        )
-                    except HTTPException as e:
-                        if e.status_code != 404:
-                            log.exception(f'{series.log_str} {episode.log_str} - skipping Card', e)
-                    except OperationalError:
-                        if failures > 10:
-                            break
-                        failures += 1
-                        log.debug(f'Database is busy, sleeping..')
-                        sleep(30)
+                    # Set watch statuses of all Episodes 
+                    get_watched_statuses(db, series, series.episodes, log=log)
 
-                # Stop if failed too many times
-                if failures > 10:
-                    break
+                    # Add translations if monitored
+                    if series.monitored:
+                        for episode in series.episodes:
+                            translate_episode(db, episode, commit=False, log=log)
+                        db.commit()
+                    else:
+                        log.debug(f'{series} is Unmonitored, skipping translations')
+
+                    # Download Source Images
+                    if series.monitored:
+                        for episode in series.episodes:
+                            download_episode_source_images(
+                                db, episode,
+                                commit=False, raise_exc=False, log=log
+                            )
+                        db.commit()
+                    else:
+                        log.debug(f'{series} is unmonitored, skipping Source '
+                                  f'Image selection')
+
+                    # Create Cards for all Episodes
+                    for episode in series.episodes:
+                        try:
+                            create_episode_cards(
+                                db, None, episode, raise_exc=False, log=log
+                            )
+                        except HTTPException as e:
+                            if e.status_code != 404:
+                                log.exception(f'{episode} - skipping Card', e)
+                except OperationalError:
+                    if failures > 10:
+                        log.debug(f'Database is extremely busy, stopping Task')
+                        break
+                    failures += 1
+                    log.debug(f'Database is busy, sleeping..')
+                    sleep(30)
     except Exception as e:
         log.exception(f'Failed to create title cards', e)
-
-
-def remove_duplicate_cards(*, log: Logger = log) -> None:
-    """
-    Schedule-able function to remove any duplicate (e.g. Episodes with
-    >1 entry), and unlinked Card (Cards with no Series or Episode ID)
-    from the database.
-
-    Args:
-        log: Logger for all log messages.
-    """
-
-    try:
-        # Get the Database
-        with next(get_database()) as db:
-            # Go through each Episode, find any duplicate cards
-            # TODO evaluate what to do post multi-conn
-            changed = False
-            # all_episodes: list[Episode] = db.query(Episode).all()
-            # for episode in all_episodes:
-            #     # Look for any Cards with this Episode ID
-            #     cards = db.query(Card).filter_by(episode_id=episode.id).all()
-            #     if len(cards) > 1:
-            #         log.info(f'Identified duplicate Cards for {episode.log_str}')
-            #         for delete_card in cards[:-1]:
-            #             db.delete(delete_card)
-            #             log.debug(f'Deleted duplicate {delete_card.log_str}')
-            #             changed = True
-
-            # Delete any cards w/o Series or Episode IDs
-            unlinked_cards = db.query(Card)\
-                .filter(or_(Card.series_id.is_(None),
-                            Card.episode_id.is_(None)))
-            if unlinked_cards.count():
-                log.info(f'Deleting {unlinked_cards.count()} unlinked Cards')
-                unlinked_cards.delete()
-                changed = True
-
-            # If any changes were made, commit to DB
-            if changed:
-                db.commit()
-    except Exception as exc:
-        log.exception(f'Failed to remove duplicate Cards', exc)
 
 
 def refresh_all_remote_card_types(*, log: Logger = log) -> None:
@@ -684,13 +668,6 @@ def create_episode_card(
                         and_(Card.interface_id.is_(None),
                              Card.library_name.is_(None))))\
             .first()
-    # else:
-    #     # No library, find Episode Card without a library
-    #     existing_card = db.query(Card)\
-    #         .filter(Card.episode_id==episode.id,
-    #                 Card.interface_id.is_(None),
-    #                 Card.library_name.is_(None))\
-    #         .first()
 
     # No existing Card, begin creation
     if not existing_card:
@@ -815,7 +792,7 @@ def get_watched_statuses(
 def delete_cards(
         db: Session,
         card_query: Query,
-        loaded_query: Query,
+        loaded_query: Optional[Query] = None,
         *,
         log: Logger = log,
     ) -> list[str]:
@@ -844,7 +821,8 @@ def delete_cards(
 
     # Delete from database
     card_query.delete()
-    loaded_query.delete()
+    if loaded_query:
+        loaded_query.delete()
     db.commit()
 
     return deleted
