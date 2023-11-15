@@ -2,7 +2,7 @@
 from pathlib import Path
 from random import uniform
 from re import match as re_match
-from typing import Literal, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 from pydantic import ( # pylint: disable=no-name-in-module
     FilePath, PositiveFloat, PositiveInt, conint, constr, root_validator,
@@ -340,7 +340,7 @@ class PosterCardType(BaseCardModel):
 
 RomanNumeralValue = conint(gt=0, le=RomanNumeralTitleCard.MAX_ROMAN_NUMERAL)
 class RomanNumeralCardType(BaseCardTypeAllText):
-    card_file: Path
+    source_file: Any
     episode_number: RomanNumeralValue
     font_color: BetterColor = RomanNumeralTitleCard.TITLE_COLOR
     font_file: FilePath = RomanNumeralTitleCard.TITLE_FONT
