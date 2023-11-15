@@ -317,6 +317,7 @@ def update_series_(
     return series
 
 
+
 @series_router.post('/{series_id}/toggle-monitor', status_code=201)
 def toggle_series_monitored_status(
         series_id: int,
@@ -432,36 +433,6 @@ def remove_series_labels(
         library_name, series.as_series_info, labels,
         log=request.state.log
     )
-
-    return None
-
-
-@series_router.delete('/{series_id}/plex-labels/all', status_code=204)
-def remove_series_labels(
-        request: Request,
-        series_id: int,
-        labels: list[str] = Query(default=['TCM', 'Overlay']),
-        db: Session = Depends(get_database),
-    ) -> None:
-    """
-    Remove the given labels from the given Series' Episodes within all
-    of the Series' assigned Plex libraries. This can be used to reset
-    PMM overlays.
-
-    - series_id: ID of the Series whose Episode labels are being remove.
-    - labels: Any labels to remove.
-    """
-
-    # Get this Series, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
-
-    # Remove labels from each library
-    for library in series.libraries:
-        interface = get_interface(library['interface_id'], raise_exc=True)
-        interface.remove_series_labels(
-            library['name'], series.as_series_info, labels,
-            log=request.state.log
-        )
 
     return None
 
