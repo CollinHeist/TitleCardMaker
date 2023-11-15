@@ -281,6 +281,33 @@ def get_existing_series_source_images(
     )
 
 
+@source_router.delete('/series/{series_id}')
+def delete_series_source_images(
+        series_id: int,
+        request: Request,
+        db: Session = Depends(get_database),
+    ) -> None:
+    """
+    Delete all the Source Images for the given Series.
+
+    - series_id: ID of the Series whose Source Images are being deleted.
+    """
+
+    # Get contextual logger
+    log = request.state.log
+
+    # Get Series with this ID, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    for episode in series.episodes:
+        for _, source_file in resolve_all_source_settings(episode):
+            if source_file.exists():
+                log.debug(f'Deleting {episode} "{source_file.name}"')
+                source_file.unlink(missing_ok=True)
+
+    return None
+
+
 @source_router.get('/episode/{episode_id}', status_code=200)
 def get_existing_episode_source_image(
         episode_id: int,
@@ -298,7 +325,34 @@ def get_existing_episode_source_image(
     return get_source_image(episode)
 
 
-@source_router.post('/episode/{episode_id}/upload', status_code=201)
+@source_router.delete('/episode/{episode_id}', status_code=200)
+def delete_episode_source_images(
+        episode_id: int,
+        request: Request,
+        db: Session = Depends(get_database),
+    ) -> None:
+    """
+    Delete the Source Image(s) for the given Episode.
+
+    - episode_id: ID of the Episode to whose Source Images are being
+    deleted.
+    """
+
+    # Get contextual logger
+    log = request.state.log
+
+    # Get the Episode with this ID, raise 404 if DNE
+    episode = get_episode(db, episode_id, raise_exc=True)
+
+    for _, source_file in resolve_all_source_settings(episode):
+        if source_file.exists():
+            log.debug(f'Deleting {episode} "{source_file.name}"')
+            source_file.unlink(missing_ok=True)
+
+    return None
+
+
+@source_router.put('/episode/{episode_id}/upload', status_code=201)
 async def set_episode_source_image(
         request: Request,
         episode_id: int,
@@ -356,15 +410,15 @@ async def set_episode_source_image(
         content = uploaded_file
 
     # Get Episode source file
-    file = episode.get_source_file('unique')
+    source_file = episode.get_source_file('unique')
 
     # If file already exists, warn about overwriting
-    if file.exists():
+    if source_file.exists():
         log.info(f'{episode.series.log_str} {episode.log_str} source file '
-                 f'"{file.resolve()}" exists - replacing')
+                 f'"{source_file.resolve()}" exists - replacing')
 
     # Write new file to the disk
-    file.write_bytes(content)
+    source_file.write_bytes(content)
 
     # Delete associated Card and Loaded entry to initiate future reload
     delete_cards(
