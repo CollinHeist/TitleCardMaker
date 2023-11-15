@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -23,12 +23,12 @@ class Loaded(Base):
 
     # Referencial arguments
     id: Mapped[int] = mapped_column(primary_key=True)
-    card_id: Mapped[int] = mapped_column(ForeignKey('card.id'))
+    card_id: Mapped[Optional[int]] = mapped_column(ForeignKey('card.id'))
     episode_id: Mapped[int] = mapped_column(ForeignKey('episode.id'))
     interface_id: Mapped[int] = mapped_column(ForeignKey('connection.id'))
     series_id: Mapped[int] = mapped_column(ForeignKey('series.id'))
 
-    card: Mapped[list['Card']] = relationship(
+    card: Mapped[Optional['Card']] = relationship(
         back_populates='loaded',
         foreign_keys=[card_id]
     )
