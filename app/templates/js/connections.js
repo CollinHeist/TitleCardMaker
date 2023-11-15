@@ -5,7 +5,7 @@
 let allConnections = [];
 async function getAllConnections() {
   let allC = await fetch('/api/connection/all').then(resp => resp.json());
-  allConnections = allC.filter(connection => connection.interface_type !== 'Sonarr');
+  allConnections = allC.filter(connection => connection.interface_type !== 'Sonarr' && connection.interface_type !== 'TMDb');
 }
 
 /*
@@ -807,19 +807,23 @@ function initializeTMDb() {
  */
 let tempFormId = 0;
 function addConnection(connectionType) {
-  // Get the template for this connection - Jellyfin uses Emby template
+  // Get the template for this Connection - Jellyfin uses Emby template
   let template;
-  if (connectionType === 'jellyfin') {
+  if (connectionType === 'jellyfin' || connectionType == 'emby') {
     template = document.getElementById('emby-connection-template').content.cloneNode(true);
   } else {
     template = document.getElementById(`${connectionType}-connection-template`).content.cloneNode(true);
   }
+
+  // Disable other add Connection buttons
+  $('.add-connection.button').toggleClass('disabled', true);
+
   // Add ID to form
   let formId = `new-connection${tempFormId}`
   template.querySelector('form').id = formId;
   tempFormId++;
 
-  // Make minor adjustments
+  // Update element
   if (connectionType === 'sonarr') {
     // Disable library fields
     template.querySelector('.button[data-action="add-library"]').classList.add('disabled');
@@ -834,6 +838,11 @@ function addConnection(connectionType) {
     // Remove username dropdown until added
     template.querySelector('.field[data-value="username"]').remove();
   }
+
+  // Set accordion as active
+  template.querySelector('.title').classList.add('active');
+  template.querySelector('.content').classList.add('active');
+
   // Turn save button into create
   template.querySelector('button[data-action="save"] > .visible.content').innerText = 'Create';
   template.querySelector('form').onsubmit = (event) => {
@@ -856,8 +865,12 @@ function addConnection(connectionType) {
       error: response => showErrorToast({title: 'Error Creating Connection', response}),
     });
   };
+  // Add Connection to relevant section, open accordion
   const connections = document.getElementById(`${connectionType.toLowerCase()}-connections`);
   connections.appendChild(template);
+  $(`#new-connection${tempFormId}`).accordion('open');
+
+  // Refresh theme
   refreshTheme();
   addFormValidation();
   $('.ui.checkbox').checkbox();
