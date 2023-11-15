@@ -359,7 +359,7 @@ async function initalizeSeriesConfig() {
 function queryTMDbPoster() {
   $.ajax({
     type: 'GET',
-    url: '/api/series/{{series.id}}/poster/query',
+    url: '/api/series/series/{{series.id}}/poster/query',
     success: posterUrl => {
       if (posterUrl === null) {
         $.ajax({class: 'error', title: 'TMDb returned no images'});
@@ -506,7 +506,7 @@ function uploadEpisodeSource(episodeId) {
   $('#upload-source-form').off('submit').on('submit', event => {
     event.preventDefault();
     $.ajax({
-      type: 'POST',
+      type: 'PUT',
       url: `/api/sources/episode/${episodeId}/upload`,
       data: new FormData(event.target),
       cache: false,
@@ -684,7 +684,7 @@ async function getEpisodeData(page=1) {
   if (rowTemplate === null) { return; }
 
   // Get page of episodes via API
-  const episodeData = await fetch(`/api/episodes/series/{{series.id}}/all?size={{preferences.episode_data_page_size}}&page=${page}`).then(resp => resp.json());
+  const episodeData = await fetch(`/api/episodes/series/{{series.id}}?size={{preferences.episode_data_page_size}}&page=${page}`).then(resp => resp.json());
   if (episodeData === null || episodeData.items.length === 0) { return; }
   const episodes = episodeData.items;
 
@@ -964,8 +964,8 @@ async function initAll() {
     event.preventDefault();
     $('#submit-poster-button').toggleClass('loading', true);
     $.ajax({
-      type: 'POST',
-      url: '/api/series/{{series.id}}/poster',
+      type: 'PUT',
+      url: '/api/series/series/{{series.id}}/poster',
       data: new FormData(event.target),
       cache: false,
       contentType: false,
@@ -1098,7 +1098,7 @@ async function initAll() {
     // Submit API request
     $.ajax({
       type: 'PATCH',
-      url: '/api/series/{{series.id}}',
+      url: '/api/series/series/{{series.id}}',
       data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData}),
       contentType: 'application/json',
       success: () => showInfoToast('Updated Configuration Values'),
@@ -1135,11 +1135,10 @@ async function initAll() {
     });
 }
 
-/*
+/**
  * Submit an API request clear some list values (e.g. extras, titles, or
  * translations) for this Series. If successful, the data is also removed from
  * the DOM.
- * 
  * @param {string} attribute - Name of the attribue being deleted. This should
  * be 'season_titles', 'translations', or 'extras'.
  */
@@ -1154,7 +1153,7 @@ function deleteListValues(attribute) {
   } else { data = {}; }
   $.ajax({
     type: 'PATCH',
-    url: '/api/series/{{series.id}}',
+    url: '/api/series/series/{{series.id}}',
     data: JSON.stringify(data),
     contentType: 'application/json',
     success: () => {
@@ -1171,14 +1170,14 @@ function deleteListValues(attribute) {
   })
 }
 
-/*
+/**
  * Submit an API request to toggle the monitored status of this Series.
  * If successful, this updates the HTML of the monitored icon.
  */
 function toggleMonitorStatus() {
   $.ajax({
-    type: 'POST',
-    url: '/api/series/{{series.id}}/toggle-monitor',
+    type: 'PUT',
+    url: '/api/series/series/{{series.id}}/toggle-monitor',
     success: response => {
       // Show toast, toggle text and icon to show new status
       if (response.monitored) {
@@ -1204,51 +1203,13 @@ function processSeries() {
   $('#action-buttons .button').toggleClass('disabled', true);
   $.ajax({
     type: 'POST',
-    url: '/api/series/{{series.id}}/process',
+    url: '/api/series/series/{{series.id}}/process',
     success: () => showInfoToast('Started Processing Series'),
     error: response => showErrorToast({title: 'Error Processing Series', response}),
     complete: () => {
       $('#action-buttons .button[data-action="process"] i').toggleClass('loading', false);
       $('#action-buttons .button').toggleClass('disabled', false);
     }
-  });
-}
-
-/*
- * Submit an API request to refresh Episode data for this Series. If
- * successful, then the Episode, file, and statistics data are refreshed.
- */
-function refreshEpisodeData() {
-  document.getElementById('refresh').classList.add('disabled');
-  $('#refresh > i').toggleClass('loading', true);
-  $.ajax({
-    type: 'POST',
-    url: '/api/episodes/series/{{series.id}}/refresh',
-    success: () => {
-      showInfoToast('Refreshed Episode Data');
-      getEpisodeData();
-      getFileData();
-      getStatistics();
-    }, error: response => showErrorToast({title: 'Error Refreshing Data', response}),
-    complete: () => {
-      document.getElementById('refresh').classList.remove('disabled');
-      $('#refresh > i').toggleClass('loading', false);
-    }
-  });
-}
-
-/*
- * Submit an API request to add translations for this Series. This marks
- * the button as loading while processing.
- */
-function addTranslations() {
-  $('#add-translations > i').toggleClass('loading', true);
-  $.ajax({
-    type: 'POST',
-    url: '/api/translate/series/{{series.id}}',
-    success: () => showInfoToast('Adding Translations'),
-    error: response => showErrorToast({title: 'Error Adding Translations', response}),
-    complete: () => $('#add-translations > i').toggleClass('loading', false),
   });
 }
 
@@ -1401,7 +1362,7 @@ function selectTmdbImage(episodeId, url) {
   form.set('url', url);
   // Submit API request to upload this URL
   $.ajax({
-    type: 'POST',
+    type: 'PUT',
     url: `/api/sources/episode/${episodeId}/upload`,
     data: form,
     cache: false,
@@ -1427,7 +1388,7 @@ function downloadSeriesLogo(url) {
   form.set('url', url);
   // Submit API request to upload this URL
   $.ajax({
-    type: 'POST',
+    type: 'PUT',
     url: '/api/sources/series/{{series.id}}/logo/upload',
     data: form,
     cache: false,
@@ -1454,7 +1415,7 @@ function downloadSeriesBackdrop(url) {
   form.set('url', url);
   // Submit API request to upload this URL
   $.ajax({
-    type: 'POST',
+    type: 'PUT',
     url: '/api/sources/series/{{series.id}}/backdrop/upload',
     data: form,
     cache: false,
@@ -1561,7 +1522,7 @@ function uploadLogo() {
 
   // Submit API request
   $.ajax({
-    type: 'POST',
+    type: 'PUT',
     url: `/api/sources/series/{{series.id}}/logo/upload`,
     data: form,
     cache: false,
@@ -1596,7 +1557,7 @@ function uploadBackdrop() {
 
   // Submit API request
   $.ajax({
-    type: 'POST',
+    type: 'PUT',
     url: `/api/sources/series/{{series.id}}/backdrop/upload`,
     data: form,
     cache: false,
@@ -1688,7 +1649,7 @@ function loadCards(interfaceId, libraryName, reload=false) {
 function deleteSeries() {
   $.ajax({
     type: 'DELETE',
-    url: '/api/series/{{series.id}}',
+    url: '/api/series/series/{{series.id}}',
     success: () => window.location.href = '/',
     error: response => showErrorToast({title: 'Error Deleting Series', response}),
   });
@@ -1788,7 +1749,7 @@ function deleteEpisode(id) {
 function navigateSeries(next_or_previous) {
   $.ajax({
     type: 'GET',
-    url: `/api/series/{{series.id}}/${next_or_previous}`,
+    url: `/api/series/series/{{series.id}}/${next_or_previous}`,
     success: series => {
       // No Series to navigate, disable button
       if (series === null) {
@@ -1811,7 +1772,7 @@ function removePlexLabels(interfaceId, libraryName) {
   const params = `?interface_id=${interfaceId}&library_name=${libraryName}`;
   $.ajax({
     type: 'DELETE',
-    url: `/api/series/{{series.id}}/plex-labels/library${params}`,
+    url: `/api/series/series/{{series.id}}/plex-labels/library${params}`,
     success: () => showInfoToast('Removed Labels'),
     error: response => showErrorToast({title: 'Error Removing Labels', response}),
   });

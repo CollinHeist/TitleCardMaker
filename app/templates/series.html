@@ -368,31 +368,10 @@
           </div>
           <!-- Series action bottons -->
           <div id="action-buttons">
-            <button data-action="process" class="ui vertical labeled fluid icon blue button" onclick="processSeries();" data-tooltip="Refresh Episodes, query translations, download source images, and create Cards">
-              <i class="step forward icon"></i>
-              Process Series
+            <button data-action="process" class="ui vertical labeled fluid icon blue button" onclick="processSeries();">
+              <i class="images outline icon"></i>
+              Create Title Cards
             </button>
-            <div class="ui divider"></div>
-            <div class="ui vertical labeled icon fluid buttons">
-              <button id="refresh" class="ui labeled icon button" onclick="refreshEpisodeData()" data-tooltip="Look for new, and update any existing Episodes">
-                <i class="sync icon"></i>
-                Refresh Episode Data
-              </button>
-              {% if series.translations or series.template_ids %}
-              <button id="add-translations" class="ui labeled icon button" onclick="addTranslations()">
-                <i class="language icon"></i>
-                Add Translations
-              </button>
-              {% endif %}
-              <button data-action="download-source-images" class="ui labeled icon button" onclick="getSourceImages()" data-tooltip="Search for and download any missing source images">
-                <i class="cloud download alternate icon"></i>
-                Download Source Images
-              </button>
-              <button data-action="create-title-cards" class="ui labeled icon button" onclick="createTitleCards()">
-                <i class="images outline icon"></i>
-                Create Title Cards
-              </button>
-            </div>
             <!-- Library-specific buttons -->
             <div class="ui vertical labeled icon fluid buttons">
               {% for library in series.libraries %}

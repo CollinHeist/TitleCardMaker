@@ -5,7 +5,6 @@ from fastapi import (
     UploadFile,
 )
 from fastapi_pagination.ext.sqlalchemy import paginate
-from PIL import Image, ImageOps
 from requests import get
 from sqlalchemy.orm import Session
 
@@ -16,7 +15,7 @@ from app.internal.auth import get_current_user
 from app.internal.cards import delete_cards
 from app.internal.sources import (
     get_source_image, download_episode_source_images, download_series_logo,
-    process_svg_logo,
+    process_svg_logo, resolve_all_source_settings,
 )
 from app import models
 from app.schemas.card import SourceImage, ExternalSourceImage
@@ -288,7 +287,7 @@ def get_existing_episode_source_image(
         db: Session = Depends(get_database),
     ) -> SourceImage:
     """
-    Get the SourceImage details for the given Episode.
+    Get the Source Image details for the given Episode.
 
     - episode_id: ID of the Episode to get the details of.
     """
@@ -309,7 +308,8 @@ async def set_episode_source_image(
     ) -> SourceImage:
     """
     Set the Source Image for the given Episode. If there is an existing
-    Title Card associated with this Episode, it is deleted.
+    Title Card associated with this Episode, it is deleted. This always
+    replaces the unique image for the Episode, not the art image.
 
     - episode_id: ID of the Episode to set the Source Image of.
     - url: URL to the Source Image to download and utilize.
@@ -378,7 +378,7 @@ async def set_episode_source_image(
     return get_source_image(episode)
 
 
-@source_router.post('/series/{series_id}/logo/upload', status_code=201)
+@source_router.put('/series/{series_id}/logo/upload', status_code=201)
 async def set_series_logo(
         request: Request,
         series_id: int,
@@ -451,7 +451,7 @@ async def set_series_logo(
     file.write_bytes(content)
 
 
-@source_router.post('/series/{series_id}/backdrop/upload', status_code=201)
+@source_router.put('/series/{series_id}/backdrop/upload', status_code=201)
 async def set_series_backdrop(
         request: Request,
         series_id: int,

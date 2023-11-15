@@ -25,15 +25,14 @@ function refreshCardData(seriesId) {
   });
 }
 
-/*
+/**
  * Submit an API reuest to toggle the monitored status of the Series with the
  * given ID. This also updates the poster class and the monitored icon.
- * 
- * @param {int} seriesId: ID of the Series to toggle.
+ * @param {int} seriesId - ID of the Series to toggle.
  */
 function toggleMonitoredStatus(seriesId) {
   $.ajax({
-    type: 'POST',
+    type: 'PUT',
     url: `/api/series/${seriesId}/toggle-monitor`,
     success: series => {
       // Show toast, toggle text and icon to show new status

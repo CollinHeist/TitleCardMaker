@@ -83,7 +83,7 @@ def get_all_series(
     return paginate(series)
 
 
-@series_router.get('/{series_id}/previous', status_code=200)
+@series_router.get('/series/{series_id}/previous', status_code=200)
 def get_previous_series(
         series_id: int,
         db: Session = Depends(get_database),
@@ -110,7 +110,7 @@ def get_previous_series(
         .first()
 
 
-@series_router.get('/{series_id}/next', status_code=200)
+@series_router.get('/series/{series_id}/next', status_code=200)
 def get_next_series(
         series_id: int,
         db: Session = Depends(get_database),
@@ -251,7 +251,7 @@ def lookup_new_series(
     )
 
 
-@series_router.get('/{series_id}', status_code=200)
+@series_router.get('/series/{series_id}', status_code=200)
 def get_series_config(
         series_id: int,
         db: Session = Depends(get_database)
@@ -265,7 +265,7 @@ def get_series_config(
     return get_series(db, series_id, raise_exc=True)
 
 
-@series_router.patch('/{series_id}', status_code=200)
+@series_router.patch('/series/{series_id}', status_code=200)
 def update_series_(
         series_id: int,
         request: Request,
@@ -317,8 +317,7 @@ def update_series_(
     return series
 
 
-
-@series_router.post('/{series_id}/toggle-monitor', status_code=201)
+@series_router.put('/series/{series_id}/toggle-monitor')
 def toggle_series_monitored_status(
         series_id: int,
         db: Session = Depends(get_database),
@@ -339,8 +338,8 @@ def toggle_series_monitored_status(
     return series
 
 
-@series_router.post('/{series_id}/process', status_code=200)
-def process_series(
+@series_router.post('/series/{series_id}/process', status_code=200)
+def process_series_(
         background_tasks: BackgroundTasks,
         request: Request,
         series_id: int,
@@ -405,7 +404,7 @@ def process_series(
         )
 
 
-@series_router.delete('/{series_id}/plex-labels/library', status_code=204)
+@series_router.delete('/series/{series_id}/plex-labels/library', status_code=204)
 def remove_series_labels(
         request: Request,
         series_id: int,
@@ -437,7 +436,7 @@ def remove_series_labels(
     return None
 
 
-@series_router.get('/{series_id}/poster', status_code=200)
+@series_router.get('/series/{series_id}/poster', status_code=200)
 def download_series_poster_(
         series_id: int,
         request: Request,
@@ -474,7 +473,6 @@ def query_series_poster(
     return tmdb_interface.get_series_poster(series.as_series_info)
 
 
-@series_router.post('/{series_id}/poster', status_code=201)
 async def set_series_poster(
         series_id: int,
         poster_url: Optional[str] = Form(default=None),

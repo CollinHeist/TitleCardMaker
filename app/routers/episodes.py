@@ -269,7 +269,7 @@ def update_episode_config(
     return episode
 
 
-@episodes_router.get('/series/{series_id}/all', status_code=200, tags=['Series'])
+@episodes_router.get('/series/{series_id}', status_code=200, tags=['Series'])
 def get_all_series_episodes(
         series_id: int,
         order_by: Literal['index', 'absolute', 'id'] = 'index',
