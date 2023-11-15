@@ -128,8 +128,7 @@ def create_preview_card(
     )
 
 
-@card_router.get('/all', status_code=200,
-                 dependencies=[Depends(get_current_user)])
+@card_router.get('/all', dependencies=[Depends(get_current_user)])
 def get_all_title_cards(db: Session = Depends(get_database)) -> Page[TitleCard]:
     """
     Get all defined Title Cards.
@@ -140,8 +139,7 @@ def get_all_title_cards(db: Session = Depends(get_database)) -> Page[TitleCard]:
     return paginate(db.query(models.card.Card))
 
 
-@card_router.get('/card/{card_id}', status_code=200,
-                 dependencies=[Depends(get_current_user)])
+@card_router.get('/card/{card_id}', dependencies=[Depends(get_current_user)])
 def get_title_card(
         card_id: int,
         db: Session = Depends(get_database)
@@ -155,7 +153,7 @@ def get_title_card(
     return get_card(db, card_id, raise_exc=True)
 
 
-@card_router.post('/series/{series_id}', status_code=201, tags=['Series'],
+@card_router.post('/series/{series_id}', tags=['Series'],
                   dependencies=[Depends(get_current_user)])
 def create_cards_for_series(
         background_tasks: BackgroundTasks,
@@ -191,7 +189,7 @@ def create_cards_for_series(
     return None
 
 
-@card_router.get('/series/{series_id}', status_code=200, tags=['Series'],
+@card_router.get('/series/{series_id}', tags=['Series'],
                  dependencies=[Depends(get_current_user)])
 def get_series_cards(
         series_id: int,
@@ -214,7 +212,8 @@ def get_series_cards(
     )
 
 
-@card_router.put('/series/{series_id}/load/all', status_code=200, tags=['Series'])
+@card_router.put('/series/{series_id}/load/all', tags=['Series'],
+                 dependencies=[Depends(get_current_user)])
 def load_series_title_cards_into_all_libraries(
         series_id: int,
         request: Request,
@@ -238,9 +237,8 @@ def load_series_title_cards_into_all_libraries(
     )
 
 
-@card_router.put('/series/{series_id}/load/library',
-                 status_code=200,
-                 tags=['Series'])
+@card_router.put('/series/{series_id}/load/library', tags=['Series'],
+                 dependencies=[Depends(get_current_user)])
 def load_series_title_cards_into_library(
         request: Request,
         series_id: int,
@@ -289,7 +287,7 @@ def get_episode_cards(
     )
 
 
-@card_router.delete('/series/{series_id}', status_code=200, tags=['Series'],
+@card_router.delete('/series/{series_id}', tags=['Series'],
                     dependencies=[Depends(get_current_user)])
 def delete_series_title_cards(
         series_id: int,
@@ -313,7 +311,7 @@ def delete_series_title_cards(
     return CardActions(deleted=len(deleted))
 
 
-@card_router.delete('/episode/{episode_id}', status_code=200, tags=['Episodes'],
+@card_router.delete('/episode/{episode_id}', tags=['Episodes'],
                     dependencies=[Depends(get_current_user)])
 def delete_episode_title_cards(
         episode_id: int,
@@ -337,7 +335,7 @@ def delete_episode_title_cards(
     return CardActions(deleted=len(deleted))
 
 
-@card_router.delete('/card/{card_id}', status_code=200,
+@card_router.delete('/card/{card_id}',
                     dependencies=[Depends(get_current_user)])
 def delete_title_card(
         card_id: int,
@@ -361,7 +359,7 @@ def delete_title_card(
     return CardActions(deleted=len(deleted))
 
 
-@card_router.post('/episode/{episode_id}', status_code=200, tags=['Episodes'],
+@card_router.post('/episode/{episode_id}', tags=['Episodes'],
                   dependencies=[Depends(get_current_user)])
 def create_card_for_episode(
         episode_id: int,
@@ -387,7 +385,7 @@ def create_card_for_episode(
     create_episode_cards(db, None, episode, log=request.state.log)
 
 
-@card_router.post('/key', tags=['Plex', 'Tautulli'], status_code=200)
+@card_router.post('/key', tags=['Plex', 'Tautulli'])
 def create_cards_for_plex_rating_keys(
         request: Request,
         key: int = Body(...),
@@ -601,7 +599,7 @@ def create_cards_for_sonarr_webhook(
     return None
 
 
-@card_router.get('/missing')
+@card_router.get('/missing', dependencies=[Depends(get_current_user)])
 def get_missing_cards(
         db: Session = Depends(get_database),
     ) -> Page[EpisodeSchema]:
@@ -614,4 +612,25 @@ def get_missing_cards(
             .filter(not_(Episode.id.in_(
                 db.query(models.card.Card.episode_id).distinct()
             )))
+    )
+
+
+@card_router.delete('/batch', dependencies=[Depends(get_current_user)])
+def batch_delete_title_cards(
+        request: Request,
+        series_ids: list[int] = Body(...),
+        db: Session = Depends(get_database),
+    ) -> CardActions:
+    """
+    Batch delete all the Title Cards associated with the given Series.
+
+    - series_ids: List of IDs of Series whose Title Cards are being
+    deleted.
+    """
+
+    cards = db.query(models.card.Card)\
+        .filter(models.card.Card.series_id.in_(series_ids))
+
+    return CardActions(
+        deleted=len(delete_cards(db, cards, log=request.state.log)),
     )
