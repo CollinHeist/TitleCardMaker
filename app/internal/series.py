@@ -12,15 +12,17 @@ from app.database.query import (
 )
 
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
-from app.internal.cards import refresh_remote_card_types
+from app.internal.cards import create_episode_cards, get_watched_statuses, refresh_remote_card_types
 from app.internal.episodes import refresh_episode_data
-from app.internal.sources import download_series_logo
+from app.internal.sources import download_episode_source_images, download_series_logo
+from app.internal.translate import translate_episode
 from app.models.card import Card
 from app.models.episode import Episode
 from app.models.loaded import Loaded
 from app.models.series import Series
+from app.schemas.base import UNSPECIFIED
 from app.schemas.connection import EpisodeDataSourceInterface
-from app.schemas.series import NewSeries, SearchResult
+from app.schemas.series import NewSeries, SearchResult, UpdateSeries
 
 from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
@@ -222,6 +224,119 @@ def download_series_poster(
 
     log.debug(f'Series[{series.id}] Downloaded poster {path.resolve()}')
     return None
+
+
+def process_series(
+        db: Session,
+        series: Series,
+        background_tasks: BackgroundTasks,
+        *,
+        log: Logger = log,
+    ) -> None:
+    """
+    Completely process the given Series. This does all Title-Card tasks
+    except loading the Cards.
+
+    Args:
+        db: Database connection.
+        series: Series being processed.
+        background_tasks: BackgroundTasks to queue processing into.
+    """
+
+    # Begin processing the Series
+    # Refresh episode data, use BackgroundTasks for ID assignment
+    log.debug(f'{series.log_str} Started refreshing Episode data')
+    refresh_episode_data(db, series, log=log)
+
+    # Update watch statuses
+    get_watched_statuses(db, series, series.episodes, log=log)
+    db.commit()
+
+    # Begin downloading Source images - use BackgroundTasks
+    log.debug(f'{series.log_str} Started downloading source images')
+    for episode in series.episodes:
+        background_tasks.add_task(
+            # Function
+            download_episode_source_images,
+            # Arguments
+            db, episode, commit=False, raise_exc=False, log=log,
+        )
+
+    # Begin Episode translation - use BackgroundTasks
+    log.debug(f'{series.log_str} Started adding translations')
+    for episode in series.episodes:
+        background_tasks.add_task(
+            # Function
+            translate_episode,
+            # Arguments
+            db, episode, commit=False, log=log,
+        )
+    db.commit()
+
+    # Begin Card creation - use BackgroundTasks
+    log.debug(f'{series.log_str} Starting Card creation')
+    for episode in series.episodes:
+        background_tasks.add_task(
+            # Function
+            create_episode_cards,
+            # Arguments
+            db, background_tasks, episode, raise_exc=False, log=log
+        )
+
+
+def update_series(
+        db: Session,
+        series: Series,
+        update_series: UpdateSeries,
+        *,
+        commit: bool = True,
+        log: Logger = log,
+    ) -> bool:
+    """
+    Update the given Series with the changes defined in update_series.
+    This verifies any specified Fonts or Templates exist.
+
+    Args:
+        db: Database to query for Font or Template objects and to
+            commit changes to.
+        series: Series to modify.
+        update_series: Object defining changes to make to the Series.
+        commit: Whether to commit any changes to the database.
+        log: Logger for all log messages.
+
+    Returns:
+        Whether the given Series was modified.
+    """
+
+    # Get object as dictionary
+    update_series_dict = update_series.dict()
+
+    # If a Font is indicated, verify it exists
+    get_font(db, update_series_dict.get('font_id', None), raise_exc=True)
+
+    # Assign Templates if indicated
+    changed = False
+    if ((template_ids := update_series_dict.get('template_ids', None))
+        not in (None, UNSPECIFIED)):
+        if series.template_ids != template_ids:
+            templates = get_all_templates(db, update_series_dict)
+            series.assign_templates(templates, log=log)
+            changed = True
+
+    # Update each attribute of the object
+    for attr, value in update_series_dict.items():
+        if value != UNSPECIFIED and getattr(series, attr) != value:
+            log.debug(f'Series[{series.id}].{attr} = {value}')
+            setattr(series, attr, value)
+            changed = True
+
+    # If any values were changed, commit to database
+    if changed:
+        refresh_remote_card_types(db, log=log)
+        if commit:
+            db.commit()
+
+    return changed
 
 
 def delete_series(

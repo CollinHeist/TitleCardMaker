@@ -8,29 +8,21 @@ from fastapi import (
 from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_pagination import paginate as paginate_sequence
 from requests import get
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, func, or_
 
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.database.session import Page
-from app.database.query import (
-    get_all_templates, get_font, get_interface, get_series
-)
-from app.internal.episodes import refresh_episode_data
-from app.internal.translate import translate_episode
+from app.database.query import get_interface, get_series
 from app import models
-from app.internal.cards import (
-    create_episode_cards, refresh_remote_card_types,
-    get_watched_statuses
-)
 from app.internal.series import (
     add_series, delete_series, download_series_poster,
-    lookup_series,
+    lookup_series, process_series, update_series,
 )
-from app.internal.sources import download_episode_source_images
 from app.internal.auth import get_current_user
-from app.schemas.base import UNSPECIFIED
-from app.schemas.series import NewSeries, SearchResult, Series, UpdateSeries
+from app.schemas.series import (
+    BatchUpdateSeries, NewSeries, SearchResult, Series, UpdateSeries
+)
 
 from modules.TMDbInterface2 import TMDbInterface
 
@@ -45,12 +37,14 @@ series_router = APIRouter(
 OrderBy = Literal[
     'alphabetical', 'reverse-alphabetical',
     'id', 'reverse-id',
+    'cards', 'reverse-cards',
     'year', 'reverse-year'
 ]
 @series_router.get('/all', status_code=200)
 def get_all_series(
         db: Session = Depends(get_database),
-        order_by: OrderBy = 'id',
+        order_by: OrderBy = Query(default='alphabetical'),
+        # filter: SeriesFilter = Query(default={}),
     ) -> Page[Series]:
     """
     Get all defined Series.
@@ -64,13 +58,23 @@ def get_all_series(
         series = query.order_by(models.series.Series.sort_name)\
             .order_by(models.series.Series.year)
     elif order_by == 'reverse-alphabetical':
-        series = query.order_by(models.series.Series.sort_name.desc())\
+        series = query.order_by(desc(models.series.Series.sort_name))\
             .order_by(models.series.Series.year)
     # Order by ID
     elif order_by == 'id':
         series = query.order_by(models.series.Series.id)
     elif order_by == 'reverse-id':
         series = query.order_by(models.series.Series.id.desc())
+    # Order by Cards
+    # TODO fix
+    # elif order_by == 'cards':
+    #     series = query.outerjoin(models.series.Series.cards)\
+    #         .group_by(models.series.Series.id)\
+    #         .order_by(desc(func.count()))
+    # elif order_by == 'reverse-cards':
+    #     series = query.outerjoin(models.series.Series.cards)\
+    #         .group_by(models.series.Series.id)\
+    #         .order_by(func.count())
     # Order by Year > Name
     elif order_by == 'year':
         series = query.order_by(models.series.Series.year)\
@@ -269,7 +273,7 @@ def get_series_config(
 def update_series_(
         series_id: int,
         request: Request,
-        update_series: UpdateSeries = Body(...),
+        update: UpdateSeries = Body(...),
         db: Session = Depends(get_database)
     ) -> Series:
     """
@@ -279,40 +283,11 @@ def update_series_(
     - update_series: Attributes of the Series to update.
     """
 
-    # Get contextual logger
-    log = request.state.log
-
     # Query for this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    # Get object as dictionary
-    update_series_dict = update_series.dict()
-
-    # If a Font is indicated, verify it exists
-    get_font(db, update_series_dict.get('font_id', None), raise_exc=True)
-
-    # Assign Templates if indicated
-    changed = False
-    if ((template_ids := update_series_dict.get('template_ids', None))
-        not in (None, UNSPECIFIED)):
-        if series.template_ids != template_ids:
-            templates = get_all_templates(db, update_series_dict)
-            series.assign_templates(templates, log=log)
-            changed = True
-
-    # Update each attribute of the object
-    for attr, value in update_series_dict.items():
-        if value != UNSPECIFIED and getattr(series, attr) != value:
-            log.debug(f'Series[{series_id}].{attr} = {value}')
-            setattr(series, attr, value)
-            changed = True
-
-    # If any values were changed, commit to database
-    if changed:
-        db.commit()
-
-    # Refresh card types in case new remote type was specified
-    refresh_remote_card_types(db, log=log)
+    # Modify Series
+    update_series(db, series, update, commit=True, log=request.state.log)
 
     return series
 
@@ -358,50 +333,12 @@ def process_series_(
     - series_id: ID of the Series to process.
     """
 
-    # Get contextual logger
-    log = request.state.log
-
-    # Query for this Series, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
-
-    # Begin processing the Series
-    # Refresh episode data, use BackgroundTasks for ID assignment
-    log.debug(f'{series.log_str} Started refreshing Episode data')
-    refresh_episode_data(db, series, log=log)
-
-    # Update watch statuses
-    get_watched_statuses(db, series, series.episodes, log=log)
-    db.commit()
-
-    # Begin downloading Source images - use BackgroundTasks
-    log.debug(f'{series.log_str} Started downloading source images')
-    for episode in series.episodes:
-        background_tasks.add_task(
-            # Function
-            download_episode_source_images,
-            # Arguments
-            db, episode, raise_exc=False, log=log,
-        )
-
-    # Begin Episode translation - use BackgroundTasks
-    log.debug(f'{series.log_str} Started adding translations')
-    for episode in series.episodes:
-        background_tasks.add_task(
-            # Function
-            translate_episode,
-            # Arguments
-            db, episode, log=log,
-        )
-
-    # Begin Card creation - use BackgroundTasks
-    log.debug(f'{series.log_str} Starting Card creation')
-    for episode in series.episodes:
-        background_tasks.add_task(
-            # Function
-            create_episode_cards,
-            # Arguments
-            db, background_tasks, episode, raise_exc=False, log=log
-        )
+    process_series(
+        db,
+        get_series(db, series_id, raise_exc=True),
+        background_tasks,
+        log=request.state.log,
+    )
 
 
 @series_router.delete('/series/{series_id}/plex-labels/library', status_code=204)
@@ -432,8 +369,6 @@ def remove_series_labels(
         library_name, series.as_series_info, labels,
         log=request.state.log
     )
-
-    return None
 
 
 @series_router.get('/series/{series_id}/poster', status_code=200)
@@ -473,6 +408,7 @@ def query_series_poster(
     return tmdb_interface.get_series_poster(series.as_series_info)
 
 
+@series_router.put('/{series_id}/poster', status_code=201)
 async def set_series_poster(
         series_id: int,
         poster_url: Optional[str] = Form(default=None),
@@ -548,3 +484,108 @@ async def set_series_poster(
     db.commit()
 
     return series.poster_url
+
+
+@series_router.patch('/batch', status_code=200)
+def batch_update_series(
+        request: Request,
+        updates: list[BatchUpdateSeries] = Body(...),
+        db: Session = Depends(get_database),
+    ) -> list[Series]:
+    """
+    Update the config of all the given Series.
+
+    - updates: List of Series IDs and the associated changes to make for
+    that Series.
+    """
+
+    # Iterate through all provided Series
+    all_series, changed = [], False
+    for update in updates:
+        # Get Series with the specified ID
+        series = get_series(db, update.series_id, raise_exc=True)
+        all_series.append(series)
+
+        # Update this Series
+        changed |= update_series(
+            db, series, update.update, commit=False, log=request.state.log
+        )
+
+    # Commit changes to DB if necessary
+    if changed:
+        db.commit()
+
+    return all_series
+
+
+@series_router.put('/batch/monitor')
+def batch_monitor_series(
+        series_ids: list[int] = Body(...),
+        db: Session = Depends(get_database),
+    ) -> list[Series]:
+    """
+    Mark the Series with the given IDs as monitored.
+
+    - series_ids: List of IDs of Series to mark as monitored.
+    """
+
+    all_series = []
+    for series_id in series_ids:
+        # Query for this Series, raise 404 if DNE
+        series = get_series(db, series_id, raise_exc=True)
+        all_series.append(series)
+
+        # Update monitored attribute
+        series.monitored = True
+        log.debug(f'{series}.monitored = True')
+
+    db.commit()
+
+    return all_series
+
+
+@series_router.put('/batch/unmonitor')
+def batch_unmonitor_series(
+        series_ids: list[int] = Body(...),
+        db: Session = Depends(get_database),
+    ) -> list[Series]:
+    """
+    Mark the Series with the given IDs as unmonitored.
+
+    - series_ids: List of IDs of Series to mark as monitored.
+    """
+
+    all_series = []
+    for series_id in series_ids:
+        # Query for this Series, raise 404 if DNE
+        series = get_series(db, series_id, raise_exc=True)
+        all_series.append(series)
+
+        # Update monitored attribute
+        series.monitored = False
+        log.debug(f'{series}.monitored = False')
+
+    db.commit()
+
+    return all_series
+
+
+@series_router.post('/batch/process')
+def batch_process_series(
+        background_tasks: BackgroundTasks,
+        series_ids: list[int] = Body(...),
+        db: Session = Depends(get_database),
+    ) -> None:
+    """
+    Completely process all the given Series.
+
+    - series_ids: List of IDs of Series to process.
+    """
+
+    for series_id in series_ids:
+        process_series(
+            db,
+            get_series(db, series_id, raise_exc=True),
+            background_tasks,
+            log=log,
+        )
