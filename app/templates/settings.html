@@ -329,7 +329,6 @@
             </h3>
 
             <div class="ui two fields">
-
               <div class="eight wide field">
                 <label>Home Page Size</label>
                 <input type="number" name="home_page_size" placeholder="{{preferences.home_page_size}}" value="{{preferences.home_page_size}}">
@@ -342,6 +341,17 @@
                 <p class="help">How many Episodes per page to display in Episode data tables.</p>
               </div>
             </div>
+
+            <div class="ui checkbox field" data-value="home_page_table_view">
+              <label>Display Home Page as a Table</label>
+              {% if preferences.home_page_table_view %}
+              <input name="home_page_table_view" type="checkbox" checked="">
+              {% else %}
+              <input name="home_page_table_view" type="checkbox">
+              {% endif %}
+              <p class="help">Whether to display Series on the home page in a table.</p>
+            </div>
+            <br>
 
             <div class="ui checkbox field" data-value="simplified_data_table">
               <label>Simplified Episode Data Tables</label>

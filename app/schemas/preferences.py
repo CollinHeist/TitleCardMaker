@@ -96,6 +96,7 @@ class UpdatePreferences(UpdateBase):
     episode_data_page_size: PositiveInt = UNSPECIFIED
     stylize_unmonitored_posters: bool = UNSPECIFIED
     sources_as_table: bool = UNSPECIFIED
+    home_page_table_view: bool = UNSPECIFIED
     colorblind_mode: bool = UNSPECIFIED
 
     @validator('card_filename_format', pre=True)
@@ -160,4 +161,5 @@ class Preferences(Base):
     episode_data_page_size: PositiveInt
     stylize_unmonitored_posters: bool
     sources_as_table: bool
+    home_page_table_view: bool
     colorblind_mode: bool

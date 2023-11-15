@@ -6,7 +6,7 @@
 function refreshCardData(seriesId) {
   $.ajax({
     type: 'GET',
-    url: `/api/series/${seriesId}`,
+    url: `/api/series/series/${seriesId}`,
     success: series => {
       $(`#series-id${series.id} span[data-value="card_count"]`).transition('fade out');
       $(`#series-id${series.id} span[data-value="card_count"]`)[0].innerText = `${series.card_count} / ${series.episode_count} Cards`;
@@ -74,7 +74,7 @@ function processSeries(seriesId) {
   $(`#series-id${seriesId} td[data-row="process"] i`).toggleClass('loading disabled', true);
   $.ajax({
     type: 'POST',
-    url: `/api/series/${seriesId}/process`,
+    url: `/api/series/series/${seriesId}/process`,
     success: () => showInfoToast('Started Processing Series'),
     error: response => showErrorToast({title: 'Error Processing Series', response}),
     complete: () => {
@@ -167,136 +167,141 @@ async function getAllSeries(page=undefined, keepSelection=false) {
   let allSeries = allSeriesData.items;
 
   // Create Series cards
-  if (true) {
-    const template = document.getElementById('series-row-template');
-    // Clear selected series if indicated
-    if (!keepSelection) { selectedSeries = []; }
-    
-    // Generate table rows
-    let rows = allSeries.map(series => {
-      // Get row template
-      const row = template.content.cloneNode(true);
-      row.querySelector('tr').dataset.id = series.id;
-      row.querySelector('tr').id = `series-id${series.id}`;
-      // Make row red / yellow depending on Card count
-      if (series.card_count === 0) { row.querySelector('td').classList.add('left', 'red', 'marked'); }
-      else if (series.episode_count - series.card_count > 0) { row.querySelector('td').classList.add('left', 'orange', 'marked'); }
-      // Add "select row" action to select cell
-      row.querySelector('a[data-action="select"]').onclick = () => toggleSeriesSelection(series.id);
-      // Link name cell
-      row.querySelector('td[data-row="name"] a').onclick = () => openSeries(series.id);
-      row.querySelector('td[data-row="name"]').dataset.sortValue = `_${series.sort_name}`; // Add _ so numbers are still parsed as text
-      // Fill out data
-      row.querySelector('td[data-row="name"] [data-value="name"]').innerText = series.name;
-      const poster = row.querySelector('td[data-row="name"] img');
-      poster.src = `${series.small_poster_url}?${series.year}`;
-      {% if preferences.stylize_unmonitored_posters %}
-      if (!series.monitored) { poster.classList.add('unmonitored'); }
-      {% endif %}
-      row.querySelector('td[data-row="year"').innerText = series.year;
-      row.querySelector('td[data-row="libraries"]').dataset.sortValue = series.libraries.length;
-      // libraries later
-      row.querySelector('td[data-row="card_count"] a').onclick = () => refreshCardData(series.id);
-      row.querySelector('td[data-row="card_count"] span[data-value="card_count"]').innerText = `${series.card_count} / ${series.episode_count} Cards`;
-      row.querySelector('td[data-row="card_count"] .progress').dataset.value = `${series.card_count},${Math.max(0, series.episode_count-series.card_count)}`;
-      row.querySelector('td[data-row="card_count"] .progress').dataset.total = series.episode_count;
-      row.querySelector('td[data-row="card_count"]').dataset.sortValue = Math.max(0, series.episode_count-series.card_count);
-      row.querySelector('td[data-row="monitored"] a').onclick = () => toggleMonitoredStatus(series.id);
-      row.querySelector('td[data-row="monitored"]').dataset.sortValue = series.monitored;
-      if (series.monitored) {
-        row.querySelector('td[data-row="monitored"] a').innerHTML = '<i class="ui eye outline green icon"></i>';
-      } else {
-        row.querySelector('td[data-row="monitored"] a').innerHTML = '<i class="ui eye slash outline red icon">';
-      }
-      row.querySelector('td[data-row="process"] a').onclick = () => processSeries(series.id);
-
-      return row;
-    });
-    // Hide loader
-    $('.loading.container').transition('fade out');
+  {% if preferences.home_page_table_view %}
+  const template = document.getElementById('series-row-template');
+  // Clear selected series if indicated
+  if (!keepSelection) { selectedSeries = []; }
   
-    // Add rows
-    document.getElementById('series-table').replaceChildren(...rows);
-    $('#series-table tr').transition({animation: 'scale', interval: 25});
-    $('.progress').progress({duration: 1800});
+  // Generate table rows
+  let rows = allSeries.map(series => {
+    // Get row template
+    const row = template.content.cloneNode(true);
+    row.querySelector('tr').dataset.id = series.id;
+    row.querySelector('tr').id = `series-id${series.id}`;
+    // Make row red / yellow depending on Card count
+    if (series.card_count === 0) { row.querySelector('td').classList.add('left', 'red', 'marked'); }
+    else if (series.episode_count - series.card_count > 0) { row.querySelector('td').classList.add('left', 'orange', 'marked'); }
+    // Add "select row" action to select cell
+    row.querySelector('a[data-action="select"]').onclick = () => toggleSeriesSelection(series.id);
+    // Link name cell
+    row.querySelector('td[data-row="name"] a').onclick = () => openSeries(series.id);
+    row.querySelector('td[data-row="name"]').dataset.sortValue = `_${series.sort_name}`; // Add _ so numbers are still parsed as text
+    // Fill out data
+    row.querySelector('td[data-row="name"] [data-value="name"]').innerText = series.name;
+    const poster = row.querySelector('td[data-row="name"] img');
+    poster.src = `${series.small_poster_url}?${series.year}`;
+    {% if preferences.stylize_unmonitored_posters %}
+    if (!series.monitored) { poster.classList.add('unmonitored'); }
+    {% endif %}
+    row.querySelector('td[data-row="year"').innerText = series.year;
+    row.querySelector('td[data-row="libraries"]').dataset.sortValue = series.libraries.length;
+    // libraries later
+    row.querySelector('td[data-row="card_count"] a').onclick = () => refreshCardData(series.id);
+    row.querySelector('td[data-row="card_count"] span[data-value="card_count"]').innerText = `${series.card_count} / ${series.episode_count} Cards`;
+    row.querySelector('td[data-row="card_count"] .progress').dataset.value = `${series.card_count},${Math.max(0, series.episode_count-series.card_count)}`;
+    row.querySelector('td[data-row="card_count"] .progress').dataset.total = series.episode_count;
+    row.querySelector('td[data-row="card_count"]').dataset.sortValue = Math.max(0, series.episode_count-series.card_count);
+    row.querySelector('td[data-row="monitored"] a').onclick = () => toggleMonitoredStatus(series.id);
+    row.querySelector('td[data-row="monitored"]').dataset.sortValue = series.monitored;
+    if (series.monitored) {
+      row.querySelector('td[data-row="monitored"] a').innerHTML = '<i class="ui eye outline green icon"></i>';
+    } else {
+      row.querySelector('td[data-row="monitored"] a').innerHTML = '<i class="ui eye slash outline red icon">';
+    }
+    row.querySelector('td[data-row="process"] a').onclick = () => processSeries(series.id);
 
-    // Set selected statuses
-    selectedSeries.forEach(seriesId => {
-      $(`#series-id${seriesId}`).toggleClass('selected', true);
-      $(`#series-id${seriesId} .checkbox[data-value="select"]`).checkbox('check');
-    });
+    return row;
+  });
+  // Hide loader
+  $('.loading.container').transition('fade out');
 
-    // Initialize library dropdowns
-    allSeries.forEach(async (series) => {
-      await initializeLibraryDropdowns({
-        selectedLibraries: series.libraries,
-        dropdownElements: $(`#series-id${series.id} .dropdown[data-value="libraries"]`),
-        clearable: false,
-        useLabels: false,
-        onChange: function(value, text, $selectedItem) {
-          // Current value of the library dropdown
-          let libraries = [];
-          if (value) {
-            libraries = value.split(',').map(libraryStr => {
-              const libraryData = libraryStr.split('::');
-              return {interface: libraryData[0], interface_id: libraryData[1], name: libraryData[2]};
-            });
-          }
-          // Get series ID
-          const seriesId = $selectedItem.closest('tr').data('id');
-          updateSeriesConfig(seriesId, {libraries});
-        },
-      });
-    })
-  } else {
-    const template = document.getElementById('series-template');
-    let allSeriesCards = allSeries.map(series => {
-      const clone = template.content.cloneNode(true);
-      const topDiv = clone.querySelector('div');
-      // Set sorting attributes
-      topDiv.setAttribute('data-series-id', series.id);
-      topDiv.setAttribute('data-series-sort-name', series.sort_name);
-      topDiv.setAttribute('data-series-year', series.year);
-      // Poster
-      const img = clone.querySelector('img');
-      img.src = `${series.small_poster_url}?${series.name[0]}${series.year}`;
-      img.alt = `Poster for ${series.name}`;
-      // Grayscale if unmonitored (and enabled)
-      {% if preferences.stylize_unmonitored_posters %}
-      if (!series.monitored) { img.classList.add('unmonitored'); }
-      {% endif %}
-      // Link name and poster to the Series page
-      const as = clone.querySelectorAll('a');
-      as[0].href = `/series/${series.id}`;
-      as[1].href = `/series/${series.id}`;
-      // Go to Series page on Enter event for keyboard navigation
-        clone.querySelector('.text.content').addEventListener('keydown', event => {
-        // Check if the pressed key is Enter (key code 13)
-        if (event.keyCode === 13) { window.location.href = `/series/${series.id}`; }
-      });
-      // Populate title
-      const title = clone.querySelector('.series-name');
-      title.setAttribute('title', `${series.name} (${series.year})`);
-      title.innerText = series.name;
-      // Progress bar
-      const progressBar = clone.querySelector('.progress');
-      const cardVal = Math.min(series.card_count, series.episode_count);
-      if (cardVal > 0) {
-        if (series.monitored) {
-          progressBar.setAttribute('data-value', `${cardVal},${series.episode_count-cardVal},0,0`);
-        } else {
-          progressBar.setAttribute('data-value', `0,0,${cardVal},${series.episode_count-cardVal}`);
+  // Add rows
+  document.getElementById('series-table').replaceChildren(...rows);
+  $('#series-table tr').transition({animation: 'scale', interval: 20});
+  $('.progress').progress({duration: 1800});
+
+  // Set selected statuses
+  selectedSeries.forEach(seriesId => {
+    $(`#series-id${seriesId}`).toggleClass('selected', true);
+    $(`#series-id${seriesId} .checkbox[data-value="select"]`).checkbox('check');
+  });
+
+  // Initialize library dropdowns
+  allSeries.forEach(async (series) => {
+    await initializeLibraryDropdowns({
+      selectedLibraries: series.libraries,
+      dropdownElements: $(`#series-id${series.id} .dropdown[data-value="libraries"]`),
+      clearable: false,
+      useLabels: false,
+      onChange: function(value, text, $selectedItem) {
+        // Current value of the library dropdown
+        let libraries = [];
+        if (value) {
+          libraries = value.split(',').map(libraryStr => {
+            const libraryData = libraryStr.split('::');
+            return {interface: libraryData[0], interface_id: libraryData[1], name: libraryData[2]};
+          });
         }
-        progressBar.setAttribute('data-total', series.episode_count);
-      }
-  
-      return clone;
+        // Get series ID
+        const seriesId = $selectedItem.closest('tr').data('id');
+        updateSeriesConfig(seriesId, {libraries});
+      },
     });
-    $('.loading.container').transition('fade out');
-    document.getElementById('series-list').replaceChildren(...allSeriesCards);
-    $('#series-list .card').transition({animation: 'scale', interval: 15});
-    $('.progress').progress({duration: 2000});
-  }
+  });
+  {% else %}
+  const template = document.getElementById('series-template');
+  let allSeriesCards = allSeries.map(series => {
+    const clone = template.content.cloneNode(true);
+    const topDiv = clone.querySelector('div');
+    // Set sorting attributes
+    topDiv.setAttribute('data-series-id', series.id);
+    topDiv.setAttribute('data-series-sort-name', series.sort_name);
+    topDiv.setAttribute('data-series-year', series.year);
+    // Poster
+    const img = clone.querySelector('img');
+    img.src = `${series.small_poster_url}?${series.name[0]}${series.year}`;
+    img.alt = `Poster for ${series.name}`;
+    // Grayscale if unmonitored (and enabled)
+    {% if preferences.stylize_unmonitored_posters %}
+    if (!series.monitored) { img.classList.add('unmonitored'); }
+    {% endif %}
+    // Link name and poster to the Series page
+    const as = clone.querySelectorAll('a');
+    as[0].href = `/series/${series.id}`;
+    as[1].href = `/series/${series.id}`;
+    // Go to Series page on Enter event for keyboard navigation
+      clone.querySelector('.text.content').addEventListener('keydown', event => {
+      // Check if the pressed key is Enter (key code 13)
+      if (event.keyCode === 13) { window.location.href = `/series/${series.id}`; }
+    });
+    // Populate title
+    const title = clone.querySelector('.series-name');
+    title.setAttribute('title', `${series.name} (${series.year})`);
+    title.innerText = series.name;
+    // Progress bar
+    const progressBar = clone.querySelector('.progress');
+    const cardVal = Math.min(series.card_count, series.episode_count);
+    if (cardVal > 0) {
+      if (series.monitored) {
+        progressBar.setAttribute('data-value', `${cardVal},${series.episode_count-cardVal},0,0`);
+      } else {
+        progressBar.setAttribute('data-value', `0,0,${cardVal},${series.episode_count-cardVal}`);
+      }
+      progressBar.setAttribute('data-total', series.episode_count);
+    }
+
+    return clone;
+  });
+  // Fade out loader
+  $('.loading.container').transition('fade out');
+  // Add new cards, transition them in
+  document.getElementById('series-list').replaceChildren(...allSeriesCards);
+  $('#series-list .card').transition({animation: 'scale', interval: 15});
+  $('.progress').progress({duration: 2000});
+
+  // Dim Series posters on hover
+  $('.ui.cards .image').dimmer({on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'});
+  {% endif %}
 
   // Update pagination
   updatePagination({
@@ -315,11 +320,6 @@ async function getAllSeries(page=undefined, keepSelection=false) {
 
   // Refresh theme for any newly added HTML
   refreshTheme();
-
-  // Dim Series posters on hover
-  $('.ui.cards .image').dimmer({
-    on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'
-  });
 }
 
 // Get all statistics and load them into HTML
@@ -434,7 +434,25 @@ function batchProcess() {
 }
 
 /**
- * Submit an API request to delete the Title Cards of all the currently selected Series.
+ * Submit an API request to load the Title Cards all the currently selecte
+ * Series.
+ * @param {boolean} reload - Whether to force reload the Title Cards.
+ */
+function batchLoad(reload=false) {
+  if (selectedSeries.length === 0) { return; }
+  $.ajax({
+    type: 'PUT',
+    url: `/api/cards/batch/load?reload=${reload}`,
+    data: JSON.stringify(selectedSeries),
+    contentType: 'application/json',
+    success: () => showInfoToast(`Loaded Title Cards`),
+    error: response => showErrorToast({title: 'Error Loading Title Cards', response}),
+  });
+}
+
+/**
+ * Submit an API request to delete the Title Cards of all the currently selected
+ * Series.
  */
 function batchDeleteCards() {
   if (selectedSeries.length === 0) { return; }
