@@ -1,5 +1,6 @@
 from json import dump
 from pathlib import Path
+from random import choice as random_choice
 from shutil import copy as copy_file, make_archive as zip_directory
 from typing import Literal
 
@@ -22,6 +23,7 @@ from app.internal.episodes import get_all_episode_data
 from app.internal.series import add_series
 from app import models
 from app.models.blueprint import Blueprint, BlueprintSeries
+from app.models.card import Card
 from app.schemas.blueprint import (
     DownloadableFile, ExportBlueprint, RemoteBlueprint,
 )
@@ -156,24 +158,26 @@ async def export_series_blueprint_as_zip(
         series.episodes if include_episode_overrides else [],
     )
 
-    # Get preview image for this Series - use first non-stylized existing Card
-    cards = db.query(models.card.Card)\
+    # Get all non-Specials Cards for this Series
+    cards = db.query(Card)\
         .join(models.episode.Episode)\
-        .filter(models.card.Card.series_id==series_id,
+        .filter(Card.series_id==series_id,
                 models.episode.Episode.season_number>0)\
         .order_by(models.episode.Episode.season_number,
                   models.episode.Episode.episode_number)\
         .all()
-    card_file = None
-    for card in cards:
-        # Skip Cards that are blurred or grayscale
-        if (card.model_json.get('blur', False)
-            or card.model_json.get('grayscale', False)):
-            continue
-        # First Card whose file exists
-        if (this_card_file := Path(card.card_file)).exists():
-            card_file = this_card_file
-            break
+
+    # Filter out Cards which are stylized or DNE
+    filtered_cards = [
+        card.card_file
+        for card in cards
+        if (not card.model_json.get('blur', False)
+            and not card.model_json.get('grayscale', False)
+            and card.exists())
+    ]
+
+    # Select random Card if possible
+    card_file = Path(random_choice(filtered_cards)) if filtered_cards else None
 
     # Directories for zipping
     ZIPS_DIR = preferences.TEMPORARY_DIRECTORY / 'zips'
@@ -237,7 +241,6 @@ def blacklist_blueprint(
 @blueprint_router.delete('/blacklist/{blueprint_id}')
 def remove_blueprint_from_blacklist(
         blueprint_id: int,
-        request: Request,
         preferences: Preferences = Depends(get_preferences),
     ) -> None:
     """
