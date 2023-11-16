@@ -43,7 +43,11 @@
   </template>
 
   <template id="series-row-template">
+    {% if preferences.reduced_animations %}
+    <tr>
+    {% else %}
     <tr class="transition hidden">
+    {% endif %}
       <td class="selectable" data-row="select">
         <a data-action="select">
           <div data-value="select" class="ui right aligned fitted checkbox">
@@ -82,13 +86,6 @@
       <td class="center aligned selectable" data-row="process"><a><i class="images outline icon"></i></a></td>
     </tr>
   </template>
-
-  <template id="statistic-template">
-    <div class="ui statistic">
-      <div class="value">VALUE</div>
-      <div class="label">LABEL</div>
-    </div>
-  </template>
 </head>
 
 <body onload="initAll();">
@@ -103,6 +100,7 @@
 
     <!-- Actual page content -->
     <div id="main-content" class="article">
+      <!-- Toolbar -->
       <div id="toolbar" class="ui menu">
         <div class="ui dropdown item">
           <i class="ui sort icon"></i>
@@ -178,8 +176,6 @@
         {% endif %}
       </div>
 
-      <div id="statistics" class="ui small statistics"><!-- Added asynchronously --></div>
-
       <!-- Loader -->
       <div class="loading container">
         <i class="layer"></i>
@@ -207,6 +203,68 @@
       <div id="series-list" class="ui cards"></div>
       {% endif %}
       <div id="pagination" class="ui centered pagination menu"><!-- Pagination added later --></div>
+      
+      <!-- Statistics -->
+      <div class="ui equal width grid">
+        <div class="column">
+          <div class="ui mini horizontal statistics">
+            <div class="ui horizontal statistic" data-value="series">
+              <div class="value">x</div>
+              <div class="label">Series</div>
+            </div>
+            <div class="ui horizontal statistic" data-value="monitored">
+              <div class="value">x</div>
+              <div class="label">Monitored</div>
+            </div>
+            <div class="ui horizontal statistic" data-value="unmonitored">
+              <div class="value">x</div>
+              <div class="label">Unmonitored</div>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="ui mini horizontal statistics">
+            <a href="/card-templates">
+              <div class="ui horizontal statistic" data-value="templates">
+                <div class="value">x</div>
+                <div class="label">Templates</div>
+              </div>
+            </a>
+            <a href="/fonts">
+              <div class="ui horizontal statistic" data-value="fonts">
+                <div class="value">x</div>
+                <div class="label">Fonts</div>
+              </div>
+            </a>
+            <a href="/sync">
+              <div class="ui horizontal statistic" data-value="syncs">
+                <div class="value">x</div>
+                <div class="label">Syncs</div>
+              </div>
+            </a>
+          </div>
+        </div>
+        <div class="column">
+          <div class="ui mini horizontal statistics">
+            <div class="ui horizontal statistic" data-value="episodes">
+              <div class="value">x</div>
+              <div class="label">Episodes</div>
+            </div>
+            <div class="ui horizontal statistic" data-value="title-cards">
+              <div class="value">x</div>
+              <div class="label">Title Cards</div>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="ui mini horizontal statistics">
+            <div class="ui horizontal statistic" data-value="filesize">
+              <div class="value">x</div>
+              <div class="label">Mega-tera-giga-bytes</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Modals -->
       <div id="filter-modal" class="ui small scrolling modal">
