@@ -104,7 +104,7 @@ def get_all_episode_data(
 
     # Raise 409 if cannot communicate with the Series' Episode data source
     if (interface := get_interface(interface_id, raise_exc=False)) is None:
-        log.error(f'Unable to communicate with Connection[{interface_id}]')
+        log.error(f'Unable to communicate with Episode Data Source')
         if raise_exc:
             raise HTTPException(
                 status_code=409,
@@ -118,7 +118,7 @@ def get_all_episode_data(
 
     # Verify Series has an associated Library if EDS is a media server
     if not (libraries := list(series.get_libraries(interface_id))):
-        log.error(f'Series does not have a Library for Connection[{interface_id}]')
+        log.error(f'Series does not have a Library for the assigned Episode Data Source')
         if raise_exc:
             raise HTTPException(
                 status_code=409,

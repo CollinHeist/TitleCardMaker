@@ -65,7 +65,7 @@ class Preferences:
         'episode_data_page_size', 'stylize_unmonitored_posters',
         'sources_as_table', 'card_type_directory', 'local_card_types',
         'imported_blueprints', 'colorblind_mode', 'library_unique_cards',
-        'invalid_connections', 'home_page_table_view',
+        'invalid_connections', 'home_page_table_view', 'reduced_animations',
         # Arguments required only for the Connection data migrations
         'emby_url', 'emby_api_key', 'emby_username', 'emby_use_ssl',
         'emby_filesize_limit_number', 'emby_filesize_limit_unit',
@@ -218,6 +218,7 @@ class Preferences:
         self.sources_as_table = False
         self.home_page_table_view = True
         self.colorblind_mode = False
+        self.reduced_animations = False
 
         # Data migration attributes
         self.emby_url = ''

@@ -98,6 +98,7 @@ class UpdatePreferences(UpdateBase):
     sources_as_table: bool = UNSPECIFIED
     home_page_table_view: bool = UNSPECIFIED
     colorblind_mode: bool = UNSPECIFIED
+    reduced_animations: bool = UNSPECIFIED
 
     @validator('card_filename_format', pre=True)
     def validate_card_filename_format(cls, v):
@@ -163,3 +164,4 @@ class Preferences(Base):
     sources_as_table: bool
     home_page_table_view: bool
     colorblind_mode: bool
+    reduced_animations: bool

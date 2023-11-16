@@ -342,58 +342,71 @@
               </div>
             </div>
 
-            <div class="ui checkbox field" data-value="home_page_table_view">
-              <label>Display Home Page as a Table</label>
-              {% if preferences.home_page_table_view %}
-              <input name="home_page_table_view" type="checkbox" checked="">
-              {% else %}
-              <input name="home_page_table_view" type="checkbox">
-              {% endif %}
-              <p class="help">Whether to display Series on the home page in a table.</p>
+            <div class="ui two fields">
+              <div class="ui checkbox field" data-value="home_page_table_view">
+                <label>Display Home Page as a Table</label>
+                {% if preferences.home_page_table_view %}
+                <input name="home_page_table_view" type="checkbox" checked="">
+                {% else %}
+                <input name="home_page_table_view" type="checkbox">
+                {% endif %}
+                <p class="help">Whether to display Series on the home page in a table.</p>
+              </div>
+              
+              <div class="ui checkbox field">
+                <label>Display Source Image Data as a Table</label>
+                {% if preferences.sources_as_table %}
+                <input name="sources_as_table" type="checkbox" checked="checked">
+                {% else %}
+                <input name="sources_as_table" type="checkbox">
+                {% endif %}
+                <p class="help">Whether to display source image data in a table.</p>
+              </div>
             </div>
-            <br>
-
-            <div class="ui checkbox field" data-value="simplified_data_table">
-              <label>Simplified Episode Data Tables</label>
-              {% if preferences.simplified_data_table %}
-              <input name="simplified_data_table" type="checkbox" checked="">
-              {% else %}
-              <input name="simplified_data_table" type="checkbox">
-              {% endif %}
-              <p class="help">Whether to hide Advanced (uncommonly edited) columns from Episode data tables.</p>
+            
+            <div class="ui two fields">
+              <div class="ui checkbox field" data-value="simplified_data_table">
+                <label>Simplified Episode Data Tables</label>
+                {% if preferences.simplified_data_table %}
+                <input name="simplified_data_table" type="checkbox" checked="">
+                {% else %}
+                <input name="simplified_data_table" type="checkbox">
+                {% endif %}
+                <p class="help">Whether to hide "advanced" (uncommonly edited) columns from Episode data tables.</p>
+              </div>
+  
+              <div class="ui checkbox field">
+                <label>Stylize Unmonitored Posters</label>
+                {% if preferences.stylize_unmonitored_posters %}
+                <input name="stylize_unmonitored_posters" type="checkbox" checked="checked">
+                {% else %}
+                <input name="stylize_unmonitored_posters" type="checkbox">
+                {% endif %}
+                <p class="help">Whether to stylize the posters of Unmonitored Series on the home page.</p>
+              </div>
             </div>
-            <br>
 
-            <div class="ui checkbox field">
-              <label>Stylize Unmonitored Series Posters</label>
-              {% if preferences.stylize_unmonitored_posters %}
-              <input name="stylize_unmonitored_posters" type="checkbox" checked="checked">
-              {% else %}
-              <input name="stylize_unmonitored_posters" type="checkbox">
-              {% endif %}
-              <p class="help">Whether to stylize the posters of Unmonitored Series on the home screen.</p>
-            </div>
-            <br>
-
-            <div class="ui checkbox field">
-              <label>Display Source Image Data as a Table</label>
-              {% if preferences.sources_as_table %}
-              <input name="sources_as_table" type="checkbox" checked="checked">
-              {% else %}
-              <input name="sources_as_table" type="checkbox">
-              {% endif %}
-              <p class="help">Whether to display source image data in a table (instead of cards).</p>
-            </div>
-            <br>
-
-            <div class="ui checkbox field">
-              <label>Color-Impaired Mode</label>
-              {% if preferences.colorblind_mode %}
-              <input name="colorblind_mode" type="checkbox" checked="checked">
-              {% else %}
-              <input name="colorblind_mode" type="checkbox">
-              {% endif %}
-              <p class="help">Utilize alternate styling with more distinguished colors.</p>
+            <div class="ui two fields">
+              <div class="ui checkbox field">
+                <label>Color-Impaired Mode</label>
+                {% if preferences.colorblind_mode %}
+                <input name="colorblind_mode" type="checkbox" checked="checked">
+                {% else %}
+                <input name="colorblind_mode" type="checkbox">
+                {% endif %}
+                <p class="help">Utilize alternate styling with more distinguished colors.</p>
+              </div>
+              <br>
+  
+              <div class="ui checkbox field">
+                <label>Reduced Animations</label>
+                {% if preferences.reduced_animations %}
+                <input name="reduced_animations" type="checkbox" checked="checked">
+                {% else %}
+                <input name="reduced_animations" type="checkbox">
+                {% endif %}
+                <p class="help">Reduce website animations.</p>
+              </div>
             </div>
 
             <!-- Validation message -->
