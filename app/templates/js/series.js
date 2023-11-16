@@ -834,35 +834,48 @@ function getCardData(page=currentCardPage, transition=false) {
       const previewTemplate = document.getElementById('preview-image-template');
       const previews = cards.items.map(card => {
         const preview = previewTemplate.content.cloneNode(true);
-        // Fill out preview
         // Start hidden if transitioning
-        if (transition && !isSmallScreen()) {
-          preview.querySelector('.image').classList.add('transition', 'hidden');
-        }
-        preview.querySelector('img').onclick = () => createEpisodeCard(card.episode_id);
-        {% if preferences.library_unique_cards %}
-        if (card.library_name) {
-          preview.querySelector('.dimmer .content').innerHTML = `<h5>Season ${card.episode.season_number} Episode ${card.episode.episode_number} (${card.library_name})</h5>`;
-        } else {
-          preview.querySelector('.dimmer .content').innerHTML = `<h5>Season ${card.episode.season_number} Episode ${card.episode.episode_number}</h5>`;
-        }
-        {% else %}
-        preview.querySelector('.dimmer .content').innerHTML = `<h5>Season ${card.episode.season_number} Episode ${card.episode.episode_number}</h5>`;
+        {% if not preferences.reduced_animations %}
+          if (transition && !isSmallScreen()) {
+            preview.querySelector('.image').classList.add('transition', 'hidden');
+          }
         {% endif %}
+
+        // Re-create Card when image is clicked
+        preview.querySelector('img').onclick = () => createEpisodeCard(card.episode_id);
+        
+        // If library unique mode is enabled, add the library name to the text (if present)
+        {% if preferences.library_unique_cards %}
+          if (card.library_name) {
+            preview.querySelector('.dimmer .content').innerHTML = `<h5>Season ${card.episode.season_number} Episode ${card.episode.episode_number} (${card.library_name})</h5>`;
+          } else {
+            preview.querySelector('.dimmer .content').innerHTML = `<h5>Season ${card.episode.season_number} Episode ${card.episode.episode_number}</h5>`;
+          }
+        {% else %}
+          preview.querySelector('.dimmer .content').innerHTML = `<h5>Season ${card.episode.season_number} Episode ${card.episode.episode_number}</h5>`;
+        {% endif %}
+
+        // Use modified URL for the image src
         const modifiedUrl = card.card_file.replace('{{preferences.card_directory}}', '/cards')
         preview.querySelector('img').src = `${modifiedUrl}?${card.filesize}`;
+
         return preview;
       });
+
       // Add elements to page
-      if (transition && !isSmallScreen()) {
-        $('#card-previews .image').transition({transition: 'fade out', interval: 20});
-        setTimeout(() => {
-          document.getElementById('card-previews').replaceChildren(...previews);
-          $('#card-previews .image').transition({transition: 'fade out', interval: 20});
-        }, 500);
-      } else {
+      {% if preferences.reduced_animations %}
         document.getElementById('card-previews').replaceChildren(...previews);
-      }
+      {% else %}
+        if (transition && !isSmallScreen()) {
+          $('#card-previews .image').transition({transition: 'fade out', interval: 20});
+          setTimeout(() => {
+            document.getElementById('card-previews').replaceChildren(...previews);
+            $('#card-previews .image').transition({transition: 'fade out', interval: 20});
+          }, 500);
+        } else {
+          document.getElementById('card-previews').replaceChildren(...previews);
+        }
+      {% endif %}
 
       // Update pagination
       currentCardPage = page;

@@ -432,11 +432,11 @@ async function initializeExtraDropdowns(
   });
 }
 
+let _allLibraries, _allConnections;
 /**
  * Query for all the globally available Connections and Libraries. This updates
  * the global variables. Only re-queries if not initialized.
  */
-let _allLibraries, _allConnections;
 async function queryLibraries() {
   if (_allConnections === undefined) {
     _allConnections = await fetch('/api/connection/all')

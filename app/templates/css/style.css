@@ -204,7 +204,6 @@ html.ios body {
 @supports (scrollbar-color: red blue) {
   * {
     scrollbar-color: var(--tcm-blue-color) rgba(12,12,12, 0.2);
-    /* scrollbar-width: thin; */ /* Use auto */
   }
 }
 
@@ -219,26 +218,10 @@ html.ios body {
 }
 
 @media (max-width: 768px) {
-  /* Remove fixed width on logo */
-  /* #tcm-logo {
-    width: unset;
-    flex: 0 0 70px;
-  } */
-
-  /* Remove extra right margin for header buttons */
-  /* #page-header > [data-position="right"] {
-    margin-right: unset;
-  } */
-
   /* Do not use absolute positioning, let items stack themselves */
   #page-header > div {
     position: unset;
   }
-
-  /* Hide support button on mobile */
-  /* #support-button {
-    display: none;
-  } */
 
   /* Shrink search input */
   #header-search input {
