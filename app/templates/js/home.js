@@ -131,13 +131,14 @@ function toggleSeriesSelection(seriesId, force=undefined, event=undefined) {
   const _select = (id, status) => {
     $(`#series-id${id}`).toggleClass('selected', status);
     $(`#series-id${id} .checkbox[data-value="select"]`).checkbox(status ? 'check' : 'uncheck');
+    // Add or remove from selection
+    if (status) { selectedSeries.push(id); }
+    else        { selectedSeries = selectedSeries.filter(id_ => id_ !== id); }
   }
 
   // Unselect if forced or Series is selected (and not being forced)
   if (force === false || (!force && selectedSeries.includes(seriesId))) {
     _select(seriesId,false);
-    // Remove from selected ID list
-    selectedSeries = selectedSeries.filter(id => id !== seriesId);
   }
   // Select if forced or Series is not selected
   else if (force || !selectedSeries.includes(seriesId)) {
@@ -153,8 +154,6 @@ function toggleSeriesSelection(seriesId, force=undefined, event=undefined) {
         allIds.slice(endIndex, startIndex+1).forEach(id => _select(id, true));
       }
     }
-
-    selectedSeries.push(seriesId);
     lastSelection = seriesId;
   }
 
@@ -481,9 +480,12 @@ function getAllStatistics() {
 
 /** Initialize the page by querying for Series and statistics */
 function initAll() {
+  // Make remote queries
   getAllSeries();
   getAllStatistics();
+  // Initialize table sorting and dropdowns
   $('table').tablesort();
+  $('.ui.dropdown').dropdown();
 }
 
 const sortStates = {
