@@ -87,7 +87,7 @@ function toggleMonitoredStatus(seriesId) {
 function _updateSeriesConfig(seriesId, data) {
   $.ajax({
     type: 'PATCH',
-    url: `/api/series/${seriesId}`,
+    url: `/api/series/series/${seriesId}`,
     data: JSON.stringify(data),
     contentType: 'application/json',
     success: () => showInfoToast('Updated Series'),
@@ -479,17 +479,11 @@ function getAllStatistics() {
   });
 }
 
+/** Initialize the page by querying for Series and statistics */
 function initAll() {
   getAllSeries();
   getAllStatistics();
-
-  // WIP
-  $('.ui.dropdown').dropdown();
-  // $('.modal').modal('show');
-  $('.ui.checkbox').checkbox();
-  $('.ui.progress').progress();
   $('table').tablesort();
-  // WIP
 }
 
 const sortStates = {
