@@ -102,16 +102,12 @@ const updateSeriesConfig = debounce((...args) => _updateSeriesConfig(...args));
  */
 function processSeries(seriesId) {
   $(`#series-id${seriesId} td[data-row="process"]`).toggleClass('disabled', true);
-  $(`#series-id${seriesId} td[data-row="process"] i`).toggleClass('loading disabled', true);
   $.ajax({
     type: 'POST',
     url: `/api/series/series/${seriesId}/process`,
     success: () => showInfoToast('Started Processing Series'),
     error: response => showErrorToast({title: 'Error Processing Series', response}),
-    complete: () => {
-      $(`#series-id${seriesId} td[data-row="process"]`).toggleClass('disabled', false);
-      $(`#series-id${seriesId} td[data-row="process"] i`).toggleClass('loading disabled', false);
-    },
+    complete: () => $(`#series-id${seriesId} td[data-row="process"]`).toggleClass('disabled', false),
   });
 }
 
