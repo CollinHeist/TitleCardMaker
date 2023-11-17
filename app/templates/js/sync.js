@@ -1,4 +1,17 @@
-/*
+/**
+ * @typedef {Object} Sync
+ * @property {int} id
+ * @property {"Emby" | "Jellyfin" | "Plex" | "Sonarr"} interface
+ * @property {string} name
+ * @property {int} interface_id
+ * @property {Array<int>} template_ids
+ * @property {Array<string>} required_tags
+ * @property {Array<string>} excluded_tags
+ * @property {Array<string>} required_libraries
+ * @property {Array<string>} excluded_libraries
+ */
+
+/**
  * Submit an API request to get all defined Connections. The dropdowns for each
  * connection type are initialized with the servers for that connection. Any
  * types without connections are removed from the page.
@@ -47,7 +60,7 @@ function initConnectionDropdowns() {
   });
 }
 
-/*
+/**
  * Get all libraries on all defined interfaces and initialize the dropdowns for
  * Emby, Jellyfin, and Plex.
  */
@@ -96,7 +109,7 @@ function getLibraries() {
   });
 }
 
-/*
+/**
  * Get all tags on all defined Sonarr interfaces and initialize the dropdowns.
  */
 function getTags() {
@@ -116,6 +129,11 @@ function getTags() {
 }
 
 let allTemplates = [];
+
+/**
+ * Submit an API request to get all the available Templates, initializing the
+ * dropdowns with these values (and a placeholder).
+ */
 function getTemplates() {
   $.ajax({
     type: 'GET',
@@ -126,10 +144,15 @@ function getTemplates() {
         placeholder: 'None',
         values: getActiveTemplates(null, availableTemplates),
       });
-    }, error: response => showErrorToast({'title': 'Error Querying Templates', response}),
+    },
+    error: response => showErrorToast({'title': 'Error Querying Templates', response}),
   })
 }
 
+/**
+ * Populate and display a modal for editing the given Sync.
+ * @param {Sync} sync - Sync object used to populate the modal.
+ */
 function showEditModel(sync) {
   // Get reference New Sync modal to edit
   const refModalId = `add-${sync.interface}-sync-modal`.toLowerCase();
