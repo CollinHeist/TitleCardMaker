@@ -12,14 +12,21 @@ function getStatistics() {
       const [cardStat, episodeStat] = statistics;
       $('#card-count')[0].innerHTML = `<i class="image outline icon"></i><span class="ui pulsate text" onclick="getStatistics();">${cardStat.value} Cards / ${episodeStat.value} Episodes</span>`;
       
+      // Determine maximum number of cards
+      {% if preferences.library_unique_cards %}
+      const maxCards = episodeStat.value * {{series.libraries|safe}}.length;
+      {% else %}
+      const maxCards = episodeStat.value;
+      {% endif %}
+      console.log(`${cardStat.value},${maxCards-cardStat.value} / ${maxCards}`)
       // Update progress bar
-      let cardVal = Math.min(cardStat.value, episodeStat.value);
       $('#card-progress').progress({
-        total: episodeStat.value,
-        value: `${cardVal},${episodeStat.value-cardVal}`,
+        total: maxCards,
+        value: `${cardStat.value},${maxCards-cardStat.value}`,
         duration: 1500,
       });
-    }, error: response => {
+    },
+    error: response => {
       if (response.status === 401) {
         clearInterval(getStatisticsId);
       }

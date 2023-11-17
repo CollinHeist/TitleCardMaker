@@ -202,14 +202,22 @@ function openSeries(seriesId) {
 function _populateSeriesRow(series, template) {
   // Clone Template
   const row = template.content.cloneNode(true);
+
   // Add ID to row dataset (for querying)
   row.querySelector('tr').dataset.id = series.id;
   row.querySelector('tr').id = `series-id${series.id}`;
 
+  // Determine maximum number of Cards based on libraries
+  {% if preferences.library_unique_cards %}
+    const maxCards = series.episode_count * series.libraries.length;
+  {% else %}
+    const maxCards = series.episode_count;
+  {% endif %}
+
   // Make row red / yellow depending on Card count
   if (series.card_count === 0 && series.episode_count > 0) {
     row.querySelector('td').classList.add('left', 'red', 'marked');
-  } else if (series.episode_count - series.card_count > 0) {
+  } else if (maxCards - series.card_count > 0) {
     row.querySelector('td').classList.add('left', 'orange', 'marked'); 
   }
 
@@ -242,14 +250,14 @@ function _populateSeriesRow(series, template) {
 
   // Refresh Card data when the card count cell is clicked
   row.querySelector('td[data-row="card_count"] a').onclick = () => refreshCardData(series.id);
-
+  
   // Fill out Card and episode text
-  row.querySelector('td[data-row="card_count"] span[data-value="card_count"]').innerText = `${series.card_count} / ${series.episode_count} Cards`;
+  row.querySelector('td[data-row="card_count"] span[data-value="card_count"]').innerText = `${series.card_count} / ${maxCards} Cards`;
 
   // Populate Card progress bars
-  row.querySelector('td[data-row="card_count"] .progress').dataset.value = `${series.card_count},${Math.max(0, series.episode_count-series.card_count)}`;
-  row.querySelector('td[data-row="card_count"] .progress').dataset.total = series.episode_count;
-  row.querySelector('td[data-row="card_count"]').dataset.sortValue = Math.max(0, series.episode_count-series.card_count);
+  row.querySelector('td[data-row="card_count"] .progress').dataset.value = `${Math.min(series.card_count, maxCards)},${Math.max(0, maxCards - series.card_count)}`;
+  row.querySelector('td[data-row="card_count"] .progress').dataset.total = maxCards;
+  row.querySelector('td[data-row="card_count"]').dataset.sortValue = Math.max(0, maxCards - series.card_count);
 
   // Toggle monitored status when cell is clicked
   row.querySelector('td[data-row="monitored"] a').onclick = () => toggleMonitoredStatus(series.id);
