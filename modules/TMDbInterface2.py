@@ -20,7 +20,7 @@ from modules.WebInterface import WebInterface
 def catch_and_log(
         message: str,
         *,
-        default: Any = None
+        default: Any = None,
     ) -> Callable:
     """
     Return a decorator that logs the given message if the decorated
@@ -30,8 +30,8 @@ def catch_and_log(
 
     Args:
         message: Message to log upon uncaught exception.
-        default: (Keyword) Value to return if decorated function
-            raises an uncaught exception.
+        default: Value to return if decorated function raises an
+            uncaught exception.
 
     Returns:
         Wrapped decorator that returns a wrapped callable.
@@ -41,7 +41,7 @@ def catch_and_log(
         def inner(*args, **kwargs) -> Any:
             try:
                 return function(*args, **kwargs)
-            except TMDbException as e:
+            except TMDbException as exc:
                 # Get contextual logger if provided as argument to function
                 if ('log' in kwargs
                     and isinstance(kwargs['log'], (Logger, LoggerAdapter))):
@@ -52,10 +52,62 @@ def catch_and_log(
                 # Log message and exception
                 clog.error(message)
                 clog.exception(f'TMDbException from {function.__name__}'
-                                f'({args}, {kwargs})', e)
+                                f'({args}, {kwargs})', exc)
                 return default
+
         return inner
     return decorator
+
+
+class DecoratedAPI:
+    """
+    A purely transparent object which decorates all function calls to
+    the initializing API object and catches all exceptions. NotFound and
+    TMDbExceptions are re-raised, and all other Exceptions are logged
+    and then raised under the guide of a TMDbException.
+
+    The intention of this class is to handle uncaught API errors while
+    not catching all exceptions within the `catch_and_log` decorator.
+    """
+
+    def __init__(self, api: TMDbAPIs) -> None:
+        """Initialize this decorated object with the given instance."""
+
+        self.api = api
+
+    def __getattr__(self, function: Callable) -> Callable:
+        """
+        Get an arbitrary function for this object. This returns a
+        wrapped version of the given function that catches any uncaught
+        Exceptions, logs them, and then raises them as an
+        `TMDbException`.
+
+        Args:
+            function: The function to wrap.
+
+        Returns:
+            Wrapped callable.
+        """
+
+        def wrapper(*args, **kwargs):
+            try:
+                getattr(self.api, function)(*args, **kwargs)
+            except (NotFound, TMDbException) as exc:
+                raise exc
+            except Exception as exc:
+                # Get contextual logger if provided as argument to function
+                if ('log' in kwargs
+                    and isinstance(kwargs['log'], (Logger, LoggerAdapter))):
+                    clog = kwargs['log']
+                else:
+                    clog = log
+
+                # Log message and exception
+                clog.debug(f'Uncaught Exception from {function}'
+                                f'({args}, {kwargs})', exc)
+                raise TMDbException from exc
+
+        return wrapper
 
 
 class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
@@ -236,7 +288,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
         # Create API object, validate key
         try:
-            self.api = TMDbAPIs(api_key, self.session)
+            self.api: TMDbAPIs = DecoratedAPI(TMDbAPIs(api_key, self.session))
         except Unauthorized as e:
             log.critical(f'TMDb API key is invalid')
             raise HTTPException(
@@ -1271,7 +1323,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         return None
 
 
-    @catch_and_log('Error setting series poster', default=None)
+    @catch_and_log('Error getting series poster', default=None)
     def get_series_poster(self,
             series_info: SeriesInfo,
             *,
