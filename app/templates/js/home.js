@@ -206,7 +206,6 @@ function openSeries(seriesId) {
 function _populateSeriesRow(series, template) {
   // Clone Template
   const row = template.content.cloneNode(true);
-  series.name = 'Idaho Power'
   // Add ID to row dataset (for querying)
   row.querySelector('tr').dataset.id = series.id;
   row.querySelector('tr').id = `series-id${series.id}`;
