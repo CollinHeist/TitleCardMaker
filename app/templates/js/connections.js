@@ -865,6 +865,10 @@ function addConnection(connectionType) {
       error: response => showErrorToast({title: 'Error Creating Connection', response}),
     });
   };
+
+  // Delete delete button
+  template.querySelector('button[data-action="delete"]').remove();
+
   // Add Connection to relevant section, open accordion
   const connections = document.getElementById(`${connectionType.toLowerCase()}-connections`);
   connections.appendChild(template);
