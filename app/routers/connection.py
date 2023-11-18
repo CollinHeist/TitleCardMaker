@@ -534,7 +534,7 @@ def delete_connection(
     log.info(f'Deleting {connection.log_str}')
 
     # Commit changes to global options and Database
-    preferences.commit(log=log)
+    preferences.commit()
     db.commit()
 
 

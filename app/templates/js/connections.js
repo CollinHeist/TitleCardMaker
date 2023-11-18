@@ -845,6 +845,8 @@ function addConnection(connectionType) {
 
   // Turn save button into create
   template.querySelector('button[data-action="save"] > .visible.content').innerText = 'Create';
+  
+  // Assign post API request to form submission
   template.querySelector('form').onsubmit = (event) => {
     event.preventDefault();
     // Parse form and submit API request
