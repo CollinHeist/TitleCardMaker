@@ -203,6 +203,7 @@ nav:
     - Settings: user_guide/settings.md
     # - Scheduler: user_guide/scheduler.md
     # - Importer: user_guide/importer.md
+    - Logs: user_guide/logs.md
   - Card Types:
     # - card_types/index.md
     - Local: card_types/local.md
