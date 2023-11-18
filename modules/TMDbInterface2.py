@@ -91,7 +91,7 @@ class DecoratedAPI:
 
         def wrapper(*args, **kwargs):
             try:
-                getattr(self.api, function)(*args, **kwargs)
+                return getattr(self.api, function)(*args, **kwargs)
             except (NotFound, TMDbException) as exc:
                 raise exc
             except Exception as exc:
@@ -995,7 +995,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
         # Series found on TMDb, return all logos
         return series.logos
-    
+
 
     @catch_and_log('Error getting all backdrops', default=None)
     def get_all_backdrops(self,
