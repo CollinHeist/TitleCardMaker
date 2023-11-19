@@ -62,12 +62,9 @@ class MediaServer(ABC):
             be compressed.
         """
 
-        # Ensure image is Path object
-        image = Path(image)
-
         # No compression necessary
         if (self.filesize_limit is None
-            or image.stat().st_size <= self.filesize_limit):
+            or (image := Path(image)).stat().st_size <= self.filesize_limit):
             return image
 
         # Start with a quality of 90%, decrement by 5% each time
