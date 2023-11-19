@@ -13,8 +13,19 @@ tags:
     This documentation is actively being developed.
 
 From the left-hand navigation menu, Global Settings can be accessed and set.
+
+![](../assets/settings_light.webp#only-light){.no-lightbox}
+![](../assets/settings_dark.webp#only-dark){.no-lightbox}
+
 Settings listed here are the _global_ defaults for TitleCardMaker, but many can
-be overwritten within an Episode, Series, or Template.
+be overwritten within an Episode, Series, or Template. If a specific setting
+can be overwritten, then some variation of this badge will be displayed next
+to the Setting (here, not within the UI).
+
+<!-- md:overwritable Episode, Series, Template -->
+
+With the above meaning it can be overwritten per-Episode, per-Series, and
+per-Template.
 
 ## Recommended Settings
 TitleCardMaker's default settings are typically the recommended settings
@@ -32,6 +43,7 @@ below.
         | Episode Data Source | Sonarr | 
         | Image Source Priority | `TMDb` `Plex` `Emby` `Jellyfin` |
         | Sync Specials | Unchecked |
+        | Translation Languages | None |
         | Default Card Type | _Personal Preference_ |
         | Excluded Card Types | _Personal Preference_ |
         | Watched Episode Style | Unique |
@@ -41,7 +53,7 @@ below.
         | Filename Format | {series_full_name} - S{season_number:02}E{episode_number:02} |
         | Specials Folder Format | Specials |
         | Season Folder Format | Season {season_number} |
-        | ImageMagick Docker Container | Unchecked and Disabled |
+        | Multi-Library Filenames | Unchecked |
 
     === "Non-Docker"
 
@@ -52,6 +64,7 @@ below.
         | Episode Data Source | Sonarr | 
         | Image Source Priority | `TMDb` `Plex` `Emby` `Jellyfin` |
         | Sync Specials | Unchecked |
+        | Translation Languages | None |
         | Default Card Type | _Personal Preference_ |
         | Excluded Card Types | _Personal Preference_ |
         | Watched Episode Style | Unique |
@@ -61,29 +74,7 @@ below.
         | Filename Format | {series_full_name} - S{season_number:02}E{episode_number:02} |
         | Specials Folder Format | Specials |
         | Season Folder Format | Season {season_number} |
-        | ImageMagick Docker Container | Unchecked and Disabled |
-
-## Quick Reference
-Below is a brief description of each setting, as well as whether that setting
-can be overwritten per-Series. Each setting is described in greater detail
-below.
-
-| Setting | Overwritable | Description |
-| ---: | :---: | :--- |
-| Card Directory | :material-check:{.green} | Root directory where all Title Cards will be created and stored. |
-| Source Directory | :octicons-x-16:{.red} | Root directory where all source images will be stored. |
-| Episode Data Source | :material-check:{.green} | Where to source Series Episode data from. |
-| Image Source Priority | :octicons-x-16:{.red} | Where to gather source images from. |
-| Sync Specials | :material-check:{.green} | Whether to ignore Episodes from Season 0 by default. |
-| Default Card Type | :material-check:{.green} | Default card type to use for all Title Cards. |
-| Excluded Card Types | :octicons-x-16:{.red} | Card types to exclude from card type dropdowns (for easier use). |
-| Watched Episode Style | :material-check:{.green} | How to style Title Cards for Episodes that are watched. |
-| Unwatched Episode Style | :material-check:{.green} | How to style Title Cards for Episodes that are unwatched. |
-| Card Width and Height | :octicons-x-16:{.red} | Image dimensions for created Title Cards. |
-| Card Extension | :octicons-x-16:{.red} | Image extension for created Title Cards. |
-| Filename Format | :material-check:{.green} | Format for the filenames of created Title Cards. |
-| Specials Folder Format | :octicons-x-16:{.red}| Format of the folder name for Title Cards from Season 0. |
-| Season Folder Format | :octicons-x-16:{.red} | Format of the folder name for all other Title Cards. |
+        | Multi-Library Filenames | Unchecked |
 
 ## Root Folders
 The root folders listed here serve as the primary asset directories for both
@@ -266,7 +257,9 @@ you find there are specific types you intend to never use.
 <!-- md:overwritable Episode, Series, Template -->
 
 The default style for all Episodes that are **watched** or **unwatched** in
-their indicated Media Server.
+their indicated Media Server. For Episodes whose watched statuses cannot be
+determined (likely the Episode is not available in your Media Server), the
+unwatched styling is used.
 
 For a visual example of each available style, click the :octicons-question-16:
 icon next to either dropdown.
@@ -411,6 +404,36 @@ A full list of the available variables are listed below.
 ### Season Folder Format
 
 ...
+
+### Multi-Library Filename Support
+
+!!! warning "Warning"
+
+    Erroneously enabling this setting can result in TitleCardMaker deleting and
+    remaking duplicates of all your Title Cards. Please read the following
+    descripion and the in-UI help text __very thoroughly__.
+
+Whether to add a unique Library-specific "identifier" to the filenames of all
+Title Cards. This is separate from your [Filename Format](#filename-format)
+setting.
+
+This setting should only be enabled by users who have more than one Media Server
+_and_ would like to utilize watched status specific styling.
+
+Once enabled, TitleCardMaker will keep separate Title Card files created for
+each Library assigned to a Series. 
+
+!!! example "Example"
+
+    The following example showcases a use of this setting in a Series with three
+    libraries alongside Templates which utilize watched-status Filters to create
+    completely different Title Cards for each library.
+
+    ![](../assets/library_unique_cards_light.webp#only-light){.no-lightbox}
+    ![](../assets/library_unique_cards_dark.webp#only-dark){.no-lightbox}
+
+    The first two columns are for libraries in which the Episode is watched,
+    and in the third column that Episode has not been watched.
 
 ---
 

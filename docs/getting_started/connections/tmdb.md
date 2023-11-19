@@ -19,9 +19,9 @@ publicly accessible database which  can serve as an
 [Episode Data Source](../../user_guide/settings.md#episode-data-source), and is
 the recommended
 [Image Source](../../user_guide/settings.md#image-source-priority) due to the 
-much higher quality (and selection) of images compared to the Media Servers. It
-is also the only Connection which can provided Episode translations, Series
-logos, backdrops, and posters.
+much higher quality (and wider selection) of images compared to the Media
+Servers. It is also the only Connection which can provided Episode translations,
+Series logos[^1], backdrops, and posters.
 
 1. Click the external link :octicons-link-external-16: icon and open the TMDb
 [Getting Started](https://developer.themoviedb.org/docs/getting-started) page.
@@ -55,13 +55,13 @@ you truly don't care about image quality, you can enter `0x0`.
     !!! tip "Threshold Application"
 
         This threshold _only_ applies to automatically-gathered Source Images.
-        Logos and posters, in addition to Source Images you select within the
-        UI, have no minimum resolution.
+        Logos, posters, and Source Images selected manually via the UI have no
+        minimum resolution.
 
 6. Check `Ignore Localized Images` so that TCM rejects Source Images which have
-assigned languages[^1].
+assigned languages[^2].
 
-7. Click `Create`.
+7. Click <span class="example md-button">Create</span>.
 
 7. After the page has reloaded, and if you speak any non-English languages,
 select these in the order you which TCM to grab logos in.
@@ -74,5 +74,7 @@ select these in the order you which TCM to grab logos in.
 
         This is recommended for users who have Anime libraries.
 
-[^1]: For more details, see
-[here](../../user_guide/connections.md#simple-themoviedatabasetmdb-themoviedatabase).
+[^1]: _Technically_, Emby and Jellyfin can provide logos as well, however their
+logos are not browsable.
+[^2]: For more details, see
+[here](../../user_guide/connections.md#ignore-localized-images).

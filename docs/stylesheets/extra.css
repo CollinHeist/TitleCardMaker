@@ -2,6 +2,11 @@
   --badge-color: #526cfe1a;
 }
 
+/* Inline header icons */
+h2 > img {
+  height: 1.125em !important;
+}
+
 /* Logo colors */
 .emby {
   color: #4CAF50
