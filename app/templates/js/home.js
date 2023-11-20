@@ -453,6 +453,7 @@ const statisticMap = [
   //
   {description: 'Number of Episodes', dataValue: 'episodes'},
   {description: 'Number of Title Cards', dataValue: 'title-cards'},
+  {description: 'Number of loaded Title Cards', dataValue: 'loaded-title-cards'},
   //
   {description: 'File size of all Title Cards', dataValue: 'filesize'},
 ];

@@ -8,6 +8,7 @@ from app.internal.auth import get_current_user
 from app.models.card import Card
 from app.models.episode import Episode
 from app.models.font import Font
+from app.models.loaded import Loaded
 from app.models.preferences import Preferences
 from app.models.series import Series
 from app.models.sync import Sync
@@ -33,15 +34,16 @@ def get_all_statistics(
     Get all statistics.
     """
 
-    # Count the Series, Episodes, and Cards
+    # Count objects
+    card_count = db.query(Card).count()
+    episode_count = db.query(Episode).count()
+    font_count = db.query(Font).count()
+    loaded_count = db.query(Loaded).count()
     series_count = db.query(Series).count()
     monitored_count = db.query(Series).filter_by(monitored=True).count()
     unmonitored_count = db.query(Series).filter_by(monitored=False).count()
-    episode_count = db.query(Episode).count()
-    card_count = db.query(Card).count()
-    font_count = db.query(Font).count()
-    template_count = db.query(Template).count()
     sync_count = db.query(Sync).count()
+    template_count = db.query(Template).count()
 
     # Get and format total asset size | pylint: disable=not-callable
     asset_size = db.query(Card)\
@@ -82,7 +84,10 @@ def get_all_statistics(
         ), Statistic(
             value=sync_count, value_text=f'{sync_count:,}', unit='Syncs',
             description='Number of Syncs',
-        ),
+        ), Statistic(
+            value=loaded_count, value_text=f'{loaded_count:,}',
+            unit='Loaded Cards', description='Number of loaded Title Cards',
+        )
     ]
 
 
