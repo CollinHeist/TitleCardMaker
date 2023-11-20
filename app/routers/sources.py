@@ -193,10 +193,10 @@ def get_all_episode_source_images(
 
     # Get Source Images from Plex if possible
     plex_images = []
-    for interface_id, library_name in episode.series.libraries:
-        if (plex_interface := plex_interfaces[interface_id]):
+    for library in episode.series.libraries:
+        if (plex_interface := plex_interfaces[library['interface_id']]):
             url = plex_interface.get_source_image(
-                library_name,
+                library['name'],
                 episode.series.as_series_info,
                 episode.as_episode_info,
                 proxy_url=True,
