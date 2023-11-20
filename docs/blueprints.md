@@ -10,16 +10,16 @@ tags:
 
 # Blueprints
 
-_Blueprints_ can be viewed as amped-up [Templates](./user_guide/templates.md).
+Blueprints can be viewed as amped-up [Templates](./user_guide/templates.md).
 These are ready-made collections of cards configurations that apply to a single
 Series. Blueprints allow for importing a pre-made customization for a Series,
 and can include any of the following:
 
-- Named Fonts - _i.e. Fonts with files_
+- Named Fonts - e.g. Fonts with files
 - Templates
 - Series customizations
 - Episode customizations
-- Source files - _i.e. logos, masks, Source Images, etc._
+- Source Files - e.g. logos, masks, Source Images, etc.
 
 !!! example "Example"
 

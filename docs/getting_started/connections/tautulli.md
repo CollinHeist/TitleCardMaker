@@ -63,7 +63,8 @@ input box.
 :material-wrench-outline: Wrench icon in the top right corner.
 
 9. From the left navigation bar, scroll down to `Library` under the `Settings`
-section and take note of your `Video Played Threshold` setting.
+section and take note of your `Video Played Threshold` setting (this is an
+Advanced Setting).
 
 10. Back in Tautulli, open the `General` settings from the sidebar, and find the
 `TV Episode Watched Percent` setting. Set this to 1-2% _higher_ than the Plex
@@ -82,7 +83,7 @@ setting from Step 9.
         has had time to update within Plex.
 
 Once created, you can close the box within TCM. Unlike the other Connections,
-your Tautulli connection details __will not__ are stored (and so will not
-appear) in TCM - this is because TCM only submits API requests to Tautulli to
+your Tautulli connection details __will not__ be stored (and so will not appear)
+in TCM - this is because TCM only submits API requests to Tautulli to
 create an agent. Afterwards, it is Tautulli that sends data to TCM, and so no
 active connection is required.

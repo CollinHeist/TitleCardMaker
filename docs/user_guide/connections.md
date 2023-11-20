@@ -33,7 +33,7 @@ Each Connection is described in greater detail below.
 
 ## Authentication
 
-If you expose your instance of TCM _outside_ our LAN (through a reverse proxy
+If you expose your instance of TCM _outside_ your LAN (through a reverse proxy
 or some other means), it is recommended to enable Authentication so that a
 username and password are required to access TCM.
 
