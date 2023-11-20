@@ -415,8 +415,8 @@ TMDb is a free database service which can serve as an
 [Episode Data Source](./settings.md#episode-data-source), and is the recommended
 [Image Source](./settings.md#image-source-priority) due to the much higher
 quality (and wider selection) of images compared to the Media Servers. It is
-also the only Connection which can provided Episode translations, Series logos,
-backdrops, and posters.
+also the only Connection which can provide Episode translations, Series
+logos[^2], backdrops, and posters.
 
 ??? question "Why enable multiple TMDb Connections?"
 
@@ -468,3 +468,5 @@ available.
 [file extension](./settings.md#card-extension), like `.png` or `.tiff`, 
 alongside a low filesize limit, then the compression algorithm TCM uses might
 fail to compress and upload some Title Cards.
+[^2]: _Technically_, Emby and Jellyfin can provide logos as well, however their
+logos are not browsable.
