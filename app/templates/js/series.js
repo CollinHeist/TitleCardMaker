@@ -18,7 +18,6 @@ function getStatistics() {
       {% else %}
       const maxCards = episodeStat.value;
       {% endif %}
-      console.log(`${cardStat.value},${maxCards-cardStat.value} / ${maxCards}`)
       // Update progress bar
       $('#card-progress').progress({
         total: maxCards,
@@ -589,27 +588,24 @@ async function getFileData(page=currentFilePage) {
     if (source.exists) {
       filesize.innerText = formatBytes(source.filesize, 1);
       filesize.dataset.sortValue = source.filesize;
-      // Disable search TMDb icon
-      row.querySelector('[data-column="search-tmdb"]').classList.add('disabled');
-      row.querySelector('[data-column="search-tmdb"] i').classList.add('disabled');
+      // Disable search cell
+      row.querySelector('[data-column="search"]').classList.add('disabled');
+      row.querySelector('[data-column="search"] i').classList.add('disabled');
       // Add mirror API request to mirror icon
-      row.querySelector('i[data-action="mirror"]').onclick = () => mirrorSourceImage(source.episode_id);
+      row.querySelector('a[data-action="mirror"]').onclick = () => mirrorSourceImage(source.episode_id);
     } else {
       filesize.innerText = 'Missing'; filesize.dataset.sortValue = 0;
       width.classList.add('error');
       height.classList.add('error');
       filesize.classList.add('error');
-      row.querySelector('i[data-action="search-tmdb"]').onclick = () => getEpisodeSourceImage(source.episode_id, elementId);
+      row.querySelector('a[data-action="search"]').onclick = () => searchEpisodeSourceImage(source.episode_id, elementId);
       row.querySelector('[data-column="mirror"]').classList.add('disabled');
       row.querySelector('[data-column="mirror"] i').classList.add('disabled');
     }
-    // Launch TMDb browse modal when TMDb logo is clicked
-    const tmdbLogo = row.querySelector('[data-action="browse-sources"]');
-    if (tmdbLogo !== null) {
-      tmdbLogo.onclick = () => browseSourceImages(source.episode_id, elementId);
-    }
+    // Launch browse modal when clicked
+    row.querySelector('a[data-action="browse"]').onclick = () => browseSourceImages(source.episode_id, elementId);
     // Launch upload source modal when upload icon is clicked
-    row.querySelector('i[data-action="upload"]').onclick = () => uploadEpisodeSource(source.episode_id);
+    row.querySelector('a[data-action="upload"]').onclick = () => uploadEpisodeSource(source.episode_id);
 
     return row;
     {% else %}
@@ -619,15 +615,12 @@ async function getFileData(page=currentFilePage) {
     file.querySelector('[data-value="index"]').innerHTML = `Season ${source.season_number} Episode ${source.episode_number}`;
     file.querySelector('[data-value="path"]').innerHTML = source.source_file_name;
     // Launch TMDb browse modal when TMDb logo is clicked
-    const tmdbLogo = file.querySelector('[data-action="browse-sources"]');
-    if (tmdbLogo !== null) {
-      tmdbLogo.onclick = () => browseSourceImages(source.episode_id, elementId);
-    }
+    file.querySelector('[data-action="browse"]').onclick = () => browseSourceImages(source.episode_id, elementId);
     // Launch upload source modal when upload icon is clicked
     file.querySelector('i[data-action="upload"]').onclick = () => uploadEpisodeSource(source.episode_id);
     if (source.exists) {
-      // Disable search icon
-      file.querySelector('i[data-action="search-tmdb"]').classList.add('disabled');
+      // Remove search icon
+      file.querySelector('i[data-action="search"]').remove();
       // Add mirror API request to mirror icon
       file.querySelector('i[data-action="mirror"]').onclick = () => mirrorSourceImage(source.episode_id);
       // Remove missing label, fill in dimensions and filesize
@@ -636,9 +629,9 @@ async function getFileData(page=currentFilePage) {
       file.querySelector('[data-value="filesize"]').innerHTML = formatBytes(source.filesize, 1);
     } else {
       // Add download image function to icon click
-      file.querySelector('i[data-action="search-tmdb"]').onclick = () => getEpisodeSourceImage(source.episode_id, elementId);
-      // Disable mirror button
-      file.querySelector('i[data-action="mirror"]').classList.add('disabled');
+      file.querySelector('i[data-action="search"]').onclick = () => searchEpisodeSourceImage(source.episode_id, elementId);
+      // Remove mirror icon
+      file.querySelector('i[data-action="mirror"]').remove();
       // Make the card red, remove unnecessary elements
       file.querySelector('.card').classList.add('red');
       file.querySelector('[data-value="dimension"]').remove();
@@ -1607,7 +1600,7 @@ function uploadBackdrop() {
  * Submit an API request to download the Source Image for the given Episode.
  * This marks the given cardElementId as loading while processing.
  */
-function getEpisodeSourceImage(episodeId, sourceElementId) {
+function searchEpisodeSourceImage(episodeId, sourceElementId) {
   document.getElementById(sourceElementId).classList.add('loading');
   $.ajax({
     type: 'POST',

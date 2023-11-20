@@ -255,10 +255,8 @@
       <div class="content">
         <i data-action="mirror" class="right floated exchange alternate icon" title="Horizontally mirror this image"></i>
         <i data-action="upload" class="right floated file import icon" title="Upload a new source image"></i>
-        <i data-action="search-tmdb" class="right floated search icon" title="Search for this image"></i>
-        {% if preferences.use_tmdb %}
-        <img data-action="browse-tmdb" class="right floated icon" src="/internal_assets/tmdb_primary_full_logo.svg" title="Browse TMDb source images"/>
-        {% endif %}
+        <i data-action="search" class="right floated search icon" title="Search for this image"></i>
+        <i data-action="browse" class="right floated border all icon" title="Browse source images"></i>
         <div data-value="index" class="header">{descriptive name}</div>
         <div class="meta">
           <span data-value="path">{path}</span>
@@ -289,17 +287,17 @@
       <td data-column="width" class="center aligned collapsing"></td>
       <td data-column="height" class="center aligned collapsing"></td>
       <td data-column="filesize" class="center aligned collapsing"></td>
-      <td data-column="browse-sources" class="center aligned collapsing selectable">
-        <a data-action="browse-sources"><i class="border all icon"></i></a>
+      <td data-column="browse" class="center aligned collapsing selectable">
+        <a data-action="browse"><i data-action="browse" class="border all icon"></i></a>
       </td>
-      <td data-column="search-tmdb" class="center aligned collapsing selectable">
-        <a><i data-action="search-tmdb" class="ui search icon"></i></a>
+      <td data-column="search" class="center aligned collapsing selectable">
+        <a data-action="search"><i data-action="search" class="ui search icon"></i></a>
       </td>
       <td data-column="upload" class="center aligned collapsing selectable">
-        <a><i data-action="upload" class="ui file import icon"></i></a>
+        <a data-action="upload"><i data-action="upload" class="ui file import icon"></i></a>
       </td>
       <td data-column="mirror" class="center aligned collapsing selectable">
-        <a><i data-action="mirror" class="ui exchange alternate icon"></i></a>
+        <a data-action="mirror"><i data-action="mirror" class="ui exchange alternate icon"></i></a>
       </td>
     </tr>
   </template>
