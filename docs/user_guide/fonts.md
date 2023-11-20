@@ -13,7 +13,7 @@ tags:
     This documentation is actively being developed.
 
 There are two classifications of fonts in TCM - _named_ and _un-named_. _Named_
-fonts are created in the :fontawesome-solid-font: `Font` page within TCM (or at
+fonts are created in the :fontawesome-solid-font: `Fonts` page within TCM (or at
 the `/fonts` URL); while _un-named_ fonts can be added directly to a Series or
 Episode. Aside from that, the only differences between these two are that
 _named_ fonts can use custom font files and character replacements in addition
@@ -181,9 +181,9 @@ spacing is dependent on the Card.
 
 !!! note "Stroke vs. Drop Shadows"
 
-    Many card types instead feature a drop _shadow_ which will not be affected
-    by this stroke width metric. For example, the Calligraphy, Tinted Frame, and
-    Lanscape card.
+    Rather than using a text stroke, many card types instead feature a drop 
+    shadow which will be unaffacted by this stroke width metric. In particular,
+    the Calligraphy, Tinted Frame, and Lanscape cards.
 
 Scale of the Font's stroke width. This generally refers to title text which has
 an outer stroke which helps the characters appear more visible.
@@ -233,9 +233,9 @@ can be blank to indicate the input text should be deleted.
 ## Character Replacement Analysis
 
 Under the [Character Replacements](#character-replacements) section of a Font
-is a :fontawesome-solid-wand-magic-sparkles: _Analyze Font Replacements_ button
-which can be pressed to prompt TCM to perform an automated analysis of the Font
-and make suggested replacements.
+is a <span class="example md-button">:fontawesome-solid-wand-magic-sparkles:
+Analyze Font Replacements</span> which can be pressed to prompt TCM to perform
+an automated analysis of the Font and make suggested replacements.
 
 During this analysis, TCM will look for any appropriate glyph within the Font
 for all the most commonly used English characters (i.e. A-Z and all standard

@@ -167,8 +167,7 @@ def update_multiple_episode_configs(
         db: Session = Depends(get_database),
     ) -> list[Episode]:
     """
-    Update all the Epiodes with the given IDs. Only provided fields are
-    updated.
+    Update all the Epiodes at once. Only provided fields are updated.
 
     - update_episodes: List of BatchUpdateEpisode containing fields to
     update.
@@ -208,12 +207,10 @@ def update_multiple_episode_configs(
         # Append updated Episode
         episodes.append(episode)
 
-    # If any values were changed, commit to database
+    # If any values were changed, commit to database; refresh card types
     if changed:
         db.commit()
-
-    # Refresh card types in case new remote type was specified
-    refresh_remote_card_types(db, log=log)
+        refresh_remote_card_types(db, log=log)
 
     return episodes
 

@@ -130,6 +130,19 @@ function runTask(taskId) {
 }
 
 /**
+ * Decode the given crontab expression into a human-readable string.
+ * @param {string} crontab - Crontab to decode
+ * @returns {string} Decoded cron expression HTML.
+ */
+function decodeCrontab(crontab) {
+  try {
+    return `<span class="ui text">${cronstrue.toString(crontab)}</span>`;
+  } catch (error) {
+    return '<span class="ui red text">Invalid Expression</span>';
+  }
+}
+
+/**
  * Initialize all elements on the page. This creates the Scheduled Task
  * table.
  */
@@ -157,16 +170,12 @@ async function initAll() {
       // Add human-readable time
       const span = row.querySelector('td[data-column="schedule"] span');
       const scheduleStringRow = row.querySelector('td[data-column="schedule-string"]');
-      scheduleStringRow.innerText = cronstrue.toString(task.crontab);
-      // column.setAttribute('data-tooltip', cronstrue.toString(task.crontab));
-      // column.innerHTML = `<span contenteditable="true">${task.crontab}</span>`;
+      scheduleStringRow.innerHTML = decodeCrontab(task.crontab);
       span.innerText = task.crontab;
+
       // Update tooltip on edit
       span.addEventListener('keyup', function() {
-      // column.addEventListener('keyup', function() {
-        const newCrontab = span.innerText;
-        scheduleStringRow.innerText = cronstrue.toString(newCrontab);
-        // column.setAttribute('data-tooltip', cronstrue.toString(newCrontab));
+        scheduleStringRow.innerHTML = decodeCrontab(span.innerText);
       });
     // Fill out frequency row
     } else {

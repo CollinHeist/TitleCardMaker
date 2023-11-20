@@ -328,7 +328,7 @@ class TintedFrameTitleCard(BaseCardType):
 
         # Determine vertical position based on which element this text is
         if self.top_element == 'index':
-            vertical_shift = -708
+            vertical_shift = -705
         else:
             vertical_shift = 722
         vertical_shift += self.episode_text_vertical_shift

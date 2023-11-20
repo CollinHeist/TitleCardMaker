@@ -10,16 +10,16 @@ tags:
 
 # Blueprints
 
-_Blueprints_ can be viewed as amped-up [Templates](./user_guide/templates.md).
+Blueprints can be viewed as amped-up [Templates](./user_guide/templates.md).
 These are ready-made collections of cards configurations that apply to a single
 Series. Blueprints allow for importing a pre-made customization for a Series,
 and can include any of the following:
 
-- Named Fonts - _i.e. Fonts with files_
+- Named Fonts - e.g. Fonts with files
 - Templates
 - Series customizations
 - Episode customizations
-- Source files - _i.e. logos, masks, Source Images, etc._
+- Source Files - e.g. logos, masks, Source Images, etc.
 
 !!! example "Example"
 
@@ -70,11 +70,12 @@ On this card will be a preview of the Blueprint, as well as what customizations
 will be imported. This can be any number of Fonts, Templates, or Episode
 overrides.
 
-After picking the Blueprint you like, simply click :material-cloud-download:
-`Import` and TCM will download and apply the Blueprint for you. Once it is
-completed, the page will refresh.
+After picking the Blueprint you like, simply click
+<span class="example md-button">:material-cloud-download: Import</span> and TCM
+will download and apply the Blueprint for you. Once it is completed, the page
+will refresh.
 
-Once a Blueprint has been imported, you are free to make any edits to the
+After a Blueprint has been imported, you are free to make any edits to the
 Series, Templates, or Fonts as you see fit. TitleCardMaker will not override
 your changes with the Blueprint settings unless you prompt it to do so by
 re-importing the Blueprint.
@@ -109,12 +110,13 @@ as easy as possible.
     - [x] [Create an issue](https://github.com/TitleCardMaker/Blueprints/issues/new?assignees=CollinHeist&labels=blueprint&projects=&template=new_blueprint.yaml&title=%5BBlueprint%5D+)
     on the Blueprints repository (this should be started for you).
     - [x] Fill out the issue form's required data:
-        - [x] Series name, year, your username, and the blueprint description
+        - [x] Series name, year, your username, and the description
         - [x] Copy/paste the contents of the exported `blueprint.json` file in
         the _Blueprint File_ field.
-        - [x] Upload any associated files.
-            - [x] Verify any Font licenses permit the files to be shared - if
-            not, [see below](#editing-the-blueprint).
+        - [x] Upload and verify any Font files' licenses permit the files to be
+        shared - if not, [see below](#editing-the-blueprint).
+        - [x] Include any Source Images in a `.zip` and make  mention of them in
+        the description.
 
 ### Exporting the Data
 
@@ -123,33 +125,39 @@ it's page in TitleCardMaker, and then go to the _Blueprints_ tab. Click the
 <span class="example md-button">:fontawesome-solid-file-export: Export</span>
 button, and TCM will do a few things:
 
-1. If the Series (or any linked Templates) have a Named Font -  __this includes
-those linked directly to Episodes__ - it will copy any Font files;
+1. If the Series (or any linked Templates or Episodes) have a Named Font it will
+copy any Font files
 
-2. Search for and copy the first available[^1] Title Card for the Series;
+2. Search for and copy a random available[^1] Title Card for the Series
 
 3. Convert the Series, Templates, Fonts, and Episode customizations into a
-Blueprint "object" written as JSON.
+Blueprint "object" written as JSON
 
 4. All of the above data is bundled (and sub-bundled) into a `.zip` file and
-downloaded through your browser.
+downloaded through your browser
 
 5. Finally, TCM will open a new tab to GitHub and begin filling out the
 Blueprint submission form (if you are logged in).
 
+It is important to note that TCM cannot automatically detect when a Source Image
+should be included in a Blueprint export. Because of this you will need to
+manually copy and zip the files you would like included.
+
 ### Editing the Blueprint
 
 Before submitting the Blueprint to the repository, it's best to double-check the
-data in the Blueprint for validity.
+data in the Blueprint submission.
 
-1. Review that the Preview image is appropriate, present, and representative of
-the Blueprint.
+1. Review that the preview images are appropriate, and representative of the
+Blueprint. You may also include multiple previews if the Blueprint has various
+different styles. If you are submitting multiple Blueprints for the same Series,
+I recommend selecting different preview Cards so there is variation.
 
     ??? question "No Preview Image Present?"
 
         If TCM did not include a `preview` file in the zip, then there were no
-        valid Cards for it to export. You can grab any existing Card in its
-        place.
+        valid Cards for it to export. You can use an existing Card in its place,
+        but make sure it is of high quality and is not blurred or grayscale.
 
     ??? tip "Changing the Preview"
 
@@ -200,22 +208,23 @@ if the author's license is listed as open and/or free for public
         If you cannot find the applicable license for a Font, assume the Font
         is not public and follow those instructions.
 
+7. Grab any Source Images that are instrumental to the Blueprint (this is most
+often a logo file) and zip them into a `.zip` file.
+
 ### Submitting the Blueprint
 
 With this Blueprint, the next (and final) step is to submit it to the Blueprints
 repository.
 
 1. Open a [new issue](https://github.com/TitleCardMaker/Blueprints/issues/new?assignees=CollinHeist&labels=blueprint&projects=&template=new_blueprint.yaml&title=%5BBlueprint%5D+)
-on the Blueprints GitHub repository - this should have been started for you.
+on the Blueprints GitHub repository (this might have been started for you).
 
 2. Fill out the form with the relevant information.
 
 3. Paste the contents of the exported `blueprint.json` file into the _Blueprint
 File_ field.
 
-4. Upload a preview Title Card into the _Preview Title Card_ section of the form.
-
-5. The last step is only applicable to Blueprints _with_ custom Font files:
+5. If your Blueprints includes any custom Font files:
 
     === "No Font Files"
 
@@ -232,7 +241,10 @@ File_ field.
             This is required because GitHub only allows directly uploading files
             of specific extensions, and Font extensions are not on that list.
 
-5. Click the  _Submit new issue_ button.
+4. Upload the preview Title Card(s) into the _Preview Title Cards_ section of
+the form.
+
+6. Click the  _Submit new issue_ button.
 
 !!! success "Success"
 

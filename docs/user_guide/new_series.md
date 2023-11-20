@@ -37,8 +37,8 @@ Connection to search. The default is to search your global
 [Episode data source](./settings.md#episode-data-source), but it is largely
 irrelevant which Connection you browse (as TCM uses them all). Click `Search`.
 
-![Browsing Series](../assets/add_series_light.png#only-light){.no-lightbox}
-![Browsing Series](../assets/add_series_dark.png#only-dark){.no-lightbox}
+![Browsing Series](../assets/add_series_light.webp#only-light){.no-lightbox}
+![Browsing Series](../assets/add_series_dark.webp#only-dark){.no-lightbox}
 
 !!! note "Unclickable Results"
 

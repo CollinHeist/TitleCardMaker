@@ -62,6 +62,7 @@ class MediaServer(ABC):
         """
 
         # No compression necessary
+        image = Path(image)
         if (self.filesize_limit is None
             or (image := Path(image)).stat().st_size <= self.filesize_limit):
             return image

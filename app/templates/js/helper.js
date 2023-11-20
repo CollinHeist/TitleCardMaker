@@ -212,7 +212,14 @@ function createPageElement(pageNumber, pageText, active = false, navigateFunctio
   let element = document.createElement('a');
   element.className = active ? 'active disabled item' : 'item';
   element.innerText = pageText;
-  if (pageNumber !== undefined) { element.onclick = () => navigateFunction(pageNumber); }
+  if (pageNumber !== undefined) {
+    element.onclick = () => {
+      // Add a looping animation to show element has been clicked
+      element.classList.add('transition', 'looping', 'pulsating', 'blue');
+      // Call navigate function on this page number
+      navigateFunction(pageNumber);
+    }
+  }
   return element;
 }
 

@@ -1763,6 +1763,8 @@ function deleteEpisode(id) {
       setTimeout(() => document.getElementById(`episode-id${id}`).remove(), 1000);
       document.getElementById(`file-episode${id}`).remove();
       getStatistics();
+      getCardData();
+      getFileData();
     }, error: response => showErrorToast({title: 'Error Deleting Episode', response}),
   });
 }
