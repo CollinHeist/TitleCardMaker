@@ -410,15 +410,26 @@ def upgrade() -> None:
         if template.data_source_id:
             log.debug(f'Initialized Template[{template.id}].data_source_id = {template.data_source_id}')
 
-    # Migrate Template library filter conditions
+    # Migrate Template filter conditions
     for template in session.query(Template).all():
         # Skip if no filters
         if not template.filters:
             continue
 
+        # Re-create Template filters
         new_filters = []
         for filter_ in template.filters:
             arg, op_, ref = filter_['argument'], filter_['operation'], filter_['reference']
+
+            # Convert Episode watched filters
+            if arg == 'Episode is Watched':
+                new_filters.append({
+                    'argument': 'Episode Watched Status',
+                    'operation': op_, 'reference': ref,
+                })
+                continue
+
+            # Convert library name filters
             if not arg.startswith('Series Library Name'):
                 new_filters.append(filter_)
                 continue
