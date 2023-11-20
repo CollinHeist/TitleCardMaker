@@ -5,6 +5,7 @@ from fastapi import (
     UploadFile,
 )
 from fastapi_pagination.ext.sqlalchemy import paginate
+from PIL import Image, ImageOps
 from requests import get
 from sqlalchemy.orm import Session
 
@@ -15,7 +16,7 @@ from app.internal.auth import get_current_user
 from app.internal.cards import delete_cards
 from app.internal.sources import (
     get_source_image, download_episode_source_images, download_series_logo,
-    process_svg_logo, resolve_all_source_settings,
+    process_svg_logo, resolve_all_source_settings, resolve_source_settings,
 )
 from app import models
 from app.schemas.card import SourceImage, ExternalSourceImage
@@ -429,6 +430,44 @@ async def set_episode_source_image(
     )
 
     # Return created SourceImage
+    return get_source_image(episode)
+
+
+@source_router.put('/episode/{episode_id}/mirror', status_code=200)
+def mirror_episode_source_image(
+        episode_id: int,
+        db: Session = Depends(get_database),
+    ) -> SourceImage:
+    """
+    Mirror the Source Image for the given Episode. This flips the
+    image horizontally. Any associated Card or Loaded asset is deleted.
+
+    - episode_id: ID of the Episode whose Source Image is being
+    mirrored.
+    """
+
+    # Get the Episode with this ID, raise 404 if DNE
+    episode = get_episode(db, episode_id, raise_exc=True)
+
+    # Get the Source Image for this Episode, raise 404 if DNE
+    _, source_image = resolve_source_settings(episode)
+    if not source_image.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f'Episode {episode.log_str} has no Source Image'
+        )
+
+    # Mirror source, overwriting existing file
+    ImageOps.mirror(Image.open(source_image)).save(source_image)
+
+    # Delete existing Card and Loaded entries for this Episode
+    delete_cards(
+        db,
+        db.query(models.card.Card).filter_by(episode_id=episode_id),
+        db.query(models.loaded.Loaded).filter_by(episode_id=episode_id),
+        log=log,
+    )
+
     return get_source_image(episode)
 
 
