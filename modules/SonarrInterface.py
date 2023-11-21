@@ -137,10 +137,11 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface):
 
             # Create keys to store this data under
             # Always store series under full name and sonarr ID
-            keys = [
-                f'{series["title"]} ({series["year"]})',
-                f'sonarr:{self.server_id}-{series["id"]}',
-            ]
+            if series['title'].endswith(f'({series["year"]})'):
+                effective_title = series['title']
+            else:
+                effective_title = f'{series["title"]} ({series["year"]})'
+            keys = [effective_title, f'sonarr:{self.server_id}-{series["id"]}']
 
             # Also store under any provided database ID's
             if series.get('imdbId'):
