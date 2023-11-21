@@ -1,6 +1,6 @@
 from logging import Logger, Formatter, getLogger, setLoggerClass, StreamHandler
 from logging.handlers import TimedRotatingFileHandler
-from logging import NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL
+from logging import DEBUG, INFO, WARNING, ERROR, CRITICAL
 
 from pathlib import Path
 from tqdm import tqdm

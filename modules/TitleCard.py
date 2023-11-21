@@ -30,6 +30,7 @@ from modules.cards.TintedFrameTitleCard import TintedFrameTitleCard
 from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 
+
 class TitleCard:
     """
     This class describes a title card. This class is responsible for
