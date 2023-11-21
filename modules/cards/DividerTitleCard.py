@@ -6,6 +6,7 @@ from modules.Debug import log
 
 
 SeriesExtra = Optional
+TextGravity = Literal['center', 'east', 'west']
 TitleTextPosition = Literal['left', 'right']
 TextPosition = Literal[
     'upper left', 'upper right', 'right', 'lower right', 'lower left', 'left',
@@ -20,6 +21,7 @@ class DividerTitleCard(BaseCardType):
     positioning of text on the image to be adjusted. The general design
     was inspired by the title card interstitials in Overlord (season 3).
     """
+
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'anime'
@@ -52,7 +54,7 @@ class DividerTitleCard(BaseCardType):
         'font_file', 'font_interline_spacing', 'font_interword_spacing',
         'font_kerning', 'font_size', 'font_stroke_width', 'stroke_color',
         'title_text_position', 'text_position', 'font_vertical_shift',
-        'divider_color',
+        'divider_color', 'text_gravity',
     )
 
     def __init__(self,
@@ -75,14 +77,13 @@ class DividerTitleCard(BaseCardType):
             grayscale: bool = False,
             stroke_color: str = 'black',
             divider_color: str = TITLE_COLOR,
+            text_gravity: Optional[TextGravity] = None,
             title_text_position: TitleTextPosition = 'left',
             text_position: TextPosition = 'lower right',
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this Card.
-        """
+        """Construct a new instance of this Card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -121,13 +122,17 @@ class DividerTitleCard(BaseCardType):
             self.valid = False
         self.text_position = str(text_position).lower()
         self.divider_color = divider_color
+        self.text_gravity = text_gravity
 
 
     @property
     def index_text_command(self) -> ImageMagickCommands:
         """Subcommand for adding the index text to the source image."""
 
-        gravity = 'west' if self.title_text_position == 'left' else 'east'
+        if self.text_gravity:
+            gravity = self.text_gravity
+        else:
+            gravity = 'west' if self.title_text_position == 'left' else 'east'
 
         # Hiding all index text, return empty command
         if self.hide_season_text and self.hide_episode_text:
