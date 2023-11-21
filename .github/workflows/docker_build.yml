@@ -55,6 +55,8 @@ jobs:
           platforms: linux/amd64,linux/arm64 # edit this if you want to build more architectures
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/titlecardmaker:${{ inputs.tag }},ghcr.io/collinheist/titlecardmaker:${{ inputs.tag }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
 
       - name: Move cache
         run: |
