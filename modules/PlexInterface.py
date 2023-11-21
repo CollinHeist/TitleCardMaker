@@ -212,6 +212,18 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         except NotFound:
             pass
 
+        # Try by full name
+        try:
+            results = library.search(
+                title=series_info.full_name, year=series_info.year,
+                libtype='show'
+            )
+            for series in results:
+                if series_info.matches(series.title):
+                    return series
+        except NotFound:
+            pass
+
         # Not found, return None
         key = f'{library.title}-{series_info.full_name}'
         if key not in self.__warned:

@@ -75,6 +75,7 @@ class DecoratedAPI:
 
         self.api = api
 
+
     def __getattr__(self, function: Callable) -> Callable:
         """
         Get an arbitrary function for this object. This returns a
