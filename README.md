@@ -7,6 +7,12 @@
 
 An automated title card maker for the Plex, Jellyfin, and Emby media servers. All user documentation is available on the [Wiki](https://github.com/CollinHeist/TitleCardMaker/wiki).
 
+A Web UI has officially entered pre-release, and is currently available for project [Sponsors](https://github.com/sponsors/CollinHeist).
+
+<img alt="Web UI" src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker/web-ui/docs/assets/home_dark.webp"/>
+
+More details are located at [titlecardmaker.com](https://titlecardmaker.com/) - this README (and the Wiki documentation) are primarily geared towards the non-UI (v1).
+
 ## Table of Contents
 - [Description](#description)
 - [Getting Started](#getting-started)
@@ -54,7 +60,7 @@ Below are examples of almost all the types of title card that can be created aut
 
 The TitleCardMaker can also use user-created and maintained card types hosted on the [companion GitHub](https://github.com/CollinHeist/TitleCardMaker-CardTypes), an example of each type is shown below:
 
-<img src="https://i.ibb.co/tBPsxpc/Westworld-2016-S04-E01.jpg" height="175"/> <img src="https://github.com/Beedman/TitleCardMaker-CardTypes/blob/master/Beedman/The%20Afterparty%20(2022)%20-%20S01E02%20-%20Brett.jpg?raw=true" height="175"/> <img src="https://i.ibb.co/0tnJJ6P/Stranger-Things-2016-S03-E02.jpg" height="175"/> <img src="https://cdn.discordapp.com/attachments/975108033531219979/977614937457303602/S01E04.jpg" height="175"/> <img src="https://github.com/Wdvh/TitleCardMaker-CardTypes/blob/c14f1b3759983a63e66982ba6517e2bc3f651dca/Wdvh/S01E01.jpg" height="175"/> <img src="https://user-images.githubusercontent.com/17693271/169709482-6bb023ab-4986-464e-88d6-0e05ad75d0d3.jpg" height="175"/> <img src="https://user-images.githubusercontent.com/1803189/171089736-f60a6ff2-0914-432a-a45d-145323d39c42.jpg" height="175"/> <img src="https://user-images.githubusercontent.com/17693271/169709359-ffc9e109-b327-44e9-b78a-7276f77fe917.jpg" height="175"/> <img src="https://github.com/CollinHeist/TitleCardMaker-CardTypes/blob/110c2ec729dbb20d8ed461e7cc5a07c54540f842/Wdvh/S01E07.jpg" height="175"/>  <img src="https://user-images.githubusercontent.com/7379812/187586521-353ba09f-30a8-424b-bbf3-ee9036c9e638.jpg" height="175"/>
+<img src="https://i.ibb.co/tBPsxpc/Westworld-2016-S04-E01.jpg" height="175"/> <img src="https://github.com/Beedman/TitleCardMaker-CardTypes/blob/master/Beedman/The%20Afterparty%20(2022)%20-%20S01E02%20-%20Brett.jpg?raw=true" height="175"/> <img src="https://i.ibb.co/0tnJJ6P/Stranger-Things-2016-S03-E02.jpg" height="175"/> <img src="https://cdn.discordapp.com/attachments/975108033531219979/977614937457303602/S01E04.jpg" height="175"/> <img src="https://raw.githubusercontent.com/Wdvh/TitleCardMaker-CardTypes/c14f1b3759983a63e66982ba6517e2bc3f651dca/Wdvh/S01E01.jpg" height="175"/> <img src="https://user-images.githubusercontent.com/17693271/169709482-6bb023ab-4986-464e-88d6-0e05ad75d0d3.jpg" height="175"/> <img src="https://user-images.githubusercontent.com/1803189/171089736-f60a6ff2-0914-432a-a45d-145323d39c42.jpg" height="175"/> <img src="https://user-images.githubusercontent.com/17693271/169709359-ffc9e109-b327-44e9-b78a-7276f77fe917.jpg" height="175"/> <img src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/110c2ec729dbb20d8ed461e7cc5a07c54540f842/Wdvh/S01E07.jpg" height="175"/>  <img src="https://user-images.githubusercontent.com/7379812/187586521-353ba09f-30a8-424b-bbf3-ee9036c9e638.jpg" height="175"/>
  
 > The above cards are, in order, `Yozora/BarebonesTitleCard`, `Beedman/GradientLogoTitleCard`, `Yozora/RetroTitleCard`, `Yozora/SlimTitleCard`, `Wdvh/StarWarsTitleOnly`, `Wdvh/WhiteTextAbsolute`, `lyonza/WhiteTextBroadcast`, `Wdvh/WhiteTextStandard`, `Wdvh/WhiteTextTitleOnly`, and `azuravian/TitleColorMatch`
 
