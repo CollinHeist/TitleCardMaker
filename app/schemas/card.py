@@ -1,7 +1,7 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from typing import Literal, Optional, Union
 
-from pydantic import Field, PositiveInt, validator, root_validator # pylint: disable=no-name-in-module
+from pydantic import PositiveInt, validator, root_validator # pylint: disable=no-name-in-module
 
 from app.schemas.base import (
     Base, DictKey, UpdateBase, validate_argument_lists_to_dict
@@ -47,7 +47,7 @@ class RemoteCardType(CardTypeDescription):
 Base classes
 """
 class BaseTitleCard(Base):
-    card_type: str = Field(title='Card type identifier')
+    card_type: str
     title_text: str
     season_text: str
     hide_season_text: bool = False
@@ -98,7 +98,6 @@ class PreviewTitleCard(UpdateBase):
 
     @root_validator
     def validate_paired_lists(cls, values):
-        # Extras
         return validate_argument_lists_to_dict(
             values, 'extras',
             'extra_keys', 'extra_values',

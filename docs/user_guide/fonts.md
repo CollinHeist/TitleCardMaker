@@ -13,7 +13,7 @@ tags:
     This documentation is actively being developed.
 
 There are two classifications of fonts in TCM - _named_ and _un-named_. _Named_
-fonts are created in the :fontawesome-solid-font: `Fonts` page within TCM (or at
+fonts are created in the :fontawesome-solid-font: `Fonts` page within TCM (at
 the `/fonts` URL); while _un-named_ fonts can be added directly to a Series or
 Episode. Aside from that, the only differences between these two are that
 _named_ fonts can use custom font files and character replacements in addition
@@ -33,13 +33,13 @@ At the top of the Fonts page, a new Font can be created by clicking the
 <span class="example md-button">Create New Font</span> button. This will create
 a "blank" Font added to the top of the page.
 
-Clicking the accordion will expand the Font, and all customization can then be
+Clicking the accordion will expand the Font, where all customization can be
 entered.
 
 ## Previewing a Font
 
 On the right-hand side of all Fonts is a live preview of the current Font. This
-preview reflects the currently entered Font settings - not necesarily what is
+preview reflects the currently entered Font settings - not necessarily what is
 saved in the Font - and can be refreshed by clicking the
 <span class="example md-button">:material-refresh: Refresh Preview</span> button.
 
@@ -92,15 +92,16 @@ apply to.
 
 !!! note "Importing Blueprint Fonts"
 
-    The name of the Font is also used to match Fonts when importing
+    The name of a Font is also used to match Fonts when importing
     [Blueprints](../blueprints.md).
     
-    For example - if you are importing a Font named _Better Call Saul_ and have
-    already created a Font named _Better Call Saul_, then TCM will not duplicate
-    the Font and instead just assign the existing Font to the Series.
+    For example - if you are importing a Blueprint featuring a Font named
+    _Better Call Saul_ and have already created a Font named _Better Call Saul_,
+    then TCM will not duplicate the Font and instead just assign the existing
+    Font to the Series.
 
-    This is part of the reason to recommend naming your Fonts by the applicable
-    Series or franchine.
+    This is part of the reason it is recommended to name your Fonts by the
+    applicable Series or franchise.
 
 ### File
 

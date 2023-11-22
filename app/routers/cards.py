@@ -97,16 +97,16 @@ def create_preview_card(
     )
 
     # Add card default font stuff
-    if card_settings.get('font_file', None) is None:
+    if card_settings.get('font_file') is None:
         card_settings['font_file'] = CardClass.TITLE_FONT
-    if card_settings.get('font_color', None) is None:
+    if card_settings.get('font_color') is None:
         card_settings['font_color'] = CardClass.TITLE_COLOR
 
     # Turn manually entered \n into newline
     card_settings['title_text'] = card_settings['title_text'].replace(r'\n', '\n')
 
     # Apply title text case function
-    if card_settings.get('font_title_case', None) is None:
+    if card_settings.get('font_title_case') is None:
         case_func = CardClass.CASE_FUNCTIONS[CardClass.DEFAULT_FONT_CASE]
     else:
         case_func = CardClass.CASE_FUNCTIONS[card_settings['font_title_case']]

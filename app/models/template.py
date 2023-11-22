@@ -134,7 +134,7 @@ class Template(Base):
 
     data_source: Mapped['Connection'] = relationship(back_populates='templates')
     font: Mapped['Font'] = relationship(back_populates='templates')
-    
+
     _syncs: Mapped[list[SyncTemplates]] = relationship(
         SyncTemplates,
         back_populates='template',
