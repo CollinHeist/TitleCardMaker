@@ -1,8 +1,9 @@
-from typing import Any, Optional, Union
+from typing import Any, Literal, Optional, TypeVar, Union, overload
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from app.database.session import Base
 from app.dependencies import (
     EmbyInterface, EmbyInterfaces, JellyfinInterface, JellyfinInterfaces,
     PlexInterface, PlexInterfaces, SonarrInterface, SonarrInterfaces,
@@ -19,20 +20,22 @@ from app.models.template import Template
 
 from modules.Debug import log
 
+_ObjectType = TypeVar('_ObjectType', bound=Base)
+
 
 def _get_obj(
         db: Session,
-        model: Any,
+        model: _ObjectType,
         model_name: str,
         object_id: int,
         raise_exc: bool = True
-    ) -> Optional[Any]:
+    ) -> Optional[_ObjectType]:
     """
-    Get the Object from the Database with the given ID.
+    Get the Object from the database with the given ID.
 
     Args:
-        db: SQL Database to query for the given object.
-        model: SQL model to filter the SQL Database Table by.
+        db: SQL database to query for the given object.
+        model: SQL model to filter the SQL database Table by.
         model_name: Name of the Model for logging.
         object_id: ID of the Object to query for.
         raise_exc: Whether to raise 404 if the given object does not
@@ -68,6 +71,12 @@ def _get_obj(
     return obj
 
 
+@overload
+def get_blueprint(
+        db: Session, blueprint_id: int, *, raise_exc: Literal[True] = True
+    ) -> Blueprint:
+    ...
+
 def get_blueprint(
         db: Session,
         blueprint_id: int,
@@ -83,6 +92,12 @@ def get_blueprint(
     return _get_obj(db, Blueprint, 'Blueprint', blueprint_id, raise_exc)
 
 
+@overload
+def get_card(
+        db: Session, card_id: int, *, raise_exc: Literal[True] = True,
+    ) -> Card:
+    ...
+
 def get_card(
         db: Session,
         card_id: int,
@@ -97,6 +112,12 @@ def get_card(
 
     return _get_obj(db, Card, 'Card', card_id, raise_exc)
 
+
+@overload
+def get_connection(
+        db: Session, connection_id: int, *, raise_exc: Literal[True] = True,
+    ) -> Connection:
+    ...
 
 def get_connection(
         db: Session,
@@ -114,6 +135,12 @@ def get_connection(
     return _get_obj(db, Connection, 'Connection', connection_id, raise_exc)
 
 
+@overload
+def get_episode(
+        db: Session, episode_id: int, *, raise_exc: Literal[True] = True,
+    ) -> Episode:
+    ...
+
 def get_episode(
         db: Session,
         episode_id: int,
@@ -128,6 +155,12 @@ def get_episode(
 
     return _get_obj(db, Episode, 'Episode', episode_id, raise_exc)
 
+
+@overload
+def get_font(
+        db: Session, font_id: int, *, raise_exc: Literal[True] = True,
+    ) -> Font:
+    ...
 
 def get_font(
         db: Session,
@@ -144,6 +177,12 @@ def get_font(
     return _get_obj(db, Font, 'Font', font_id, raise_exc)
 
 
+@overload
+def get_series(
+        db: Session, series_id: int, *, raise_exc: Literal[True] = True,
+    ) -> Series:
+    ...
+
 def get_series(
         db: Session,
         series_id: int,
@@ -158,6 +197,12 @@ def get_series(
 
     return _get_obj(db, Series, 'Series', series_id, raise_exc)
 
+
+@overload
+def get_sync(
+        db: Session, sync_id: int, *, raise_exc: Literal[True] = True,
+    ) -> Sync:
+    ...
 
 def get_sync(
         db: Session,
@@ -174,6 +219,12 @@ def get_sync(
     return _get_obj(db, Sync, 'Sync', sync_id, raise_exc)
 
 
+@overload
+def get_template(
+        db: Session, template_id: int, *, raise_exc: Literal[True] = True,
+    ) -> Template:
+    ...
+
 def get_template(
         db: Session,
         template_id: int,
@@ -189,12 +240,19 @@ def get_template(
     return _get_obj(db, Template, 'Template', template_id, raise_exc)
 
 
+@overload
+def get_all_templates(
+        db: Session, obj_dict: dict, *, raise_exc: Literal[True] = True,
+    ) -> list[Template]:
+    ...
+
+
 def get_all_templates(
         db: Session,
         obj_dict: dict,
         *,
         raise_exc: bool = True,
-    ) -> list[Template]:
+    ) -> Optional[list[Template]]:
     """
     Get all Templates defined in the given Dictionaries "template_ids"
     key. This removes the "template_ids" key from obj_dict.
@@ -221,6 +279,13 @@ def get_all_templates(
         for template_id in template_ids
     ]
 
+
+@overload
+def get_interface(
+        interface_id: int, *, raise_exc: Literal[True] = True,
+    ) -> Union[EmbyInterface, JellyfinInterface, PlexInterface, SonarrInterface,
+               TMDbInterface]:
+    ...
 
 def get_interface(
         interface_id: int,
