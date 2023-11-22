@@ -2,6 +2,19 @@
 from app.schemas.base import Base
 
 
+class NewSnapshot(Base):
+    blueprints: int
+    cards: int
+    episodes: int
+    fonts: int
+    loaded: int
+    series: int
+    syncs: int
+    templates:int
+    users: int
+    filesize: int
+    cards_created: int
+
 class Statistic(Base):
     value: int
     value_text: str

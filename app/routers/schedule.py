@@ -18,6 +18,7 @@ from app.internal.series import (
     download_all_series_posters, load_all_media_servers, set_all_series_ids
 )
 from app.internal.sources import download_all_series_logos
+from app.internal.statistic import snapshot_database
 from app.internal.sync import sync_all
 from app.models.preferences import Preferences
 from app.schemas.schedule import NewJob, ScheduledTask, UpdateSchedule
@@ -47,13 +48,14 @@ JOB_BACKUP_DATABASE = 'BackupDatabase'
 INTERNAL_JOB_CHECK_FOR_NEW_RELEASE = 'CheckForNewRelease'
 INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES = 'RefreshRemoteCardTypes'
 INTERNAL_JOB_SET_SERIES_IDS = 'SetSeriesIDs'
+INTERNAL_JOB_SNAPSHOT_DATABASE = 'SnapshotDatabase'
 
 TaskID = Literal[
     JOB_SYNC_INTERFACES, JOB_CREATE_TITLE_CARDS, JOB_LOAD_MEDIA_SERVERS,         # type: ignore
     JOB_DOWNLOAD_SERIES_LOGOS, JOB_DOWNLOAD_SERIES_POSTERS, JOB_BACKUP_DATABASE, # type: ignore
     # Internal jobs
     INTERNAL_JOB_CHECK_FOR_NEW_RELEASE, INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES,  # type: ignore
-    INTERNAL_JOB_SET_SERIES_IDS,                                                 # type: ignore
+    INTERNAL_JOB_SET_SERIES_IDS, INTERNAL_JOB_SNAPSHOT_DATABASE                  # type: ignore
 ]
 
 """
@@ -124,6 +126,12 @@ def wrapped_backup_database(log: Optional[Logger] = None):
     _wrap_before(JOB_BACKUP_DATABASE, log=log)
     backup_data(log=log)
     _wrap_after(JOB_BACKUP_DATABASE, log=log)
+
+def wrapped_snapshot_database(log: Optional[Logger] = None):
+    log = log or contextualize()
+    _wrap_before(INTERNAL_JOB_SNAPSHOT_DATABASE, log=log)
+    snapshot_database(log=log)
+    _wrap_after(INTERNAL_JOB_SNAPSHOT_DATABASE, log=log)
 # pylint: enable=missing-function-docstring,redefined-outer-name
 
 """

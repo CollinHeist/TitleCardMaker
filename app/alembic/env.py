@@ -44,6 +44,7 @@ from app.models.font import Font
 from app.models.loaded import Loaded
 from app.models.preferences import Preferences
 from app.models.series import Series
+from app.models.statistic import Statistic
 from app.models.sync import Sync
 from app.models.template import Template
 from app.models.user import User
