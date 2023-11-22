@@ -24,7 +24,9 @@ class Card(Base):
     __tablename__ = 'card'
 
     # Referencial arguments
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(
+        primary_key=True, index=True, autoincrement=True
+    )
     interface_id: Mapped[Optional[int]] = mapped_column(ForeignKey('connection.id'))
     series_id: Mapped[int] = mapped_column(ForeignKey('series.id'))
     episode_id: Mapped[int] = mapped_column(ForeignKey('episode.id'))
