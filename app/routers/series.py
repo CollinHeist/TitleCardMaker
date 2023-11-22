@@ -158,7 +158,7 @@ def add_new_series(
     return add_series(new_series, background_tasks, db, log=request.state.log)
 
 
-@series_router.delete('/{series_id}', status_code=204)
+@series_router.delete('/series/{series_id}', status_code=204)
 def delete_series_(
         series_id: int,
         request: Request,
