@@ -328,7 +328,7 @@ def update_series_(
         series_id: int,
         request: Request,
         update_series: UpdateSeries = Body(...),
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> Series:
     """
     Update the config of the given Series.
