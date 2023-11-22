@@ -18,9 +18,6 @@ Return classes
 class ImportYaml(ImportBase):
     ...
 
-class ImportSeriesYaml(ImportBase):
-    default_library: Optional[str] = Field(default=None, min_length=1)
-
 class ImportCardDirectory(Base):
     directory: Optional[DirectoryPath] = None
     image_extension: CardExtension = '.jpg'

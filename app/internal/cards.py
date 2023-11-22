@@ -1,31 +1,31 @@
 from logging import Logger
 from pathlib import Path
 from time import sleep
-from typing import Any, Optional
+from typing import Optional
 
 from fastapi import BackgroundTasks, HTTPException
-from sqlalchemy import or_
+from sqlalchemy import and_, or_
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Query, Session
 
+from app.database.query import get_interface
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.internal.episodes import refresh_episode_data
+from app.internal.sources import download_episode_source_images 
 from app.internal.templates import get_effective_templates
-from app import models
+from app.internal.translate import translate_episode
 from app.models.card import Card
 from app.models.episode import Episode
-from app.models.preferences import Preferences
+from app.models.series import Library, Series
+from app.models.template import Template
 from app.schemas.base import Base
 from app.schemas.font import DefaultFont
 from app.schemas.card import NewTitleCard
 from app.schemas.card_type import LocalCardTypeModels
-from app.schemas.series import Series
 from modules.BaseCardType import BaseCardType
 
 from modules.CleanPath import CleanPath
 from modules.Debug import log
-from modules.EmbyInterface2 import EmbyInterface
-from modules.JellyfinInterface2 import JellyfinInterface
-from modules.PlexInterface2 import PlexInterface
 from modules.RemoteCardType2 import RemoteCardType
 from modules.RemoteFile import RemoteFile
 from modules.SeasonTitleRanges import SeasonTitleRanges
@@ -45,78 +45,59 @@ def create_all_title_cards(*, log: Logger = log) -> None:
 
     try:
         # Get the Database
-        failures = 0
         with next(get_database()) as db:
             # Get all Series
-            all_series = db.query(models.series.Series).all()
+            failures = 0
+            all_series = db.query(Series).all()
             for series in all_series:
-                # Set watch statuses of all Episodes
-                update_episode_watch_statuses(
-                    get_emby_interface(), get_jellyfin_interface(),
-                    get_plex_interface(), series, series.episodes, log=log,
-                )
+                try:
+                    # Refresh Episode data if Series is monitored
+                    if series.monitored:
+                        refresh_episode_data(db, series, log=log)
+                    else:
+                        log.debug(f'{series!r} is Unmonitored, not refreshing Episode data')
 
-                # Create Cards for all Episodes
-                for episode in series.episodes:
-                    try:
-                        create_episode_card(
-                            db, get_preferences(), None, episode, log=log,
-                        )
-                    except HTTPException as e:
-                        if e.status_code != 404:
-                            log.exception(f'{series.log_str} {episode.log_str} - skipping Card', e)
-                    except OperationalError:
-                        if failures > 10:
-                            break
-                        failures += 1
-                        log.debug(f'Database is busy, sleeping..')
-                        sleep(30)
+                    # Set watch statuses of all Episodes 
+                    get_watched_statuses(db, series, series.episodes, log=log)
+
+                    # Add translations if monitored
+                    if series.monitored:
+                        for episode in series.episodes:
+                            translate_episode(db, episode, commit=False, log=log)
+                        db.commit()
+                    else:
+                        log.debug(f'{series} is Unmonitored, skipping translations')
+
+                    # Download Source Images
+                    if series.monitored:
+                        for episode in series.episodes:
+                            download_episode_source_images(
+                                db, episode,
+                                commit=False, raise_exc=False, log=log
+                            )
+                        db.commit()
+                    else:
+                        log.debug(f'{series} is unmonitored, skipping Source '
+                                  f'Image selection')
+
+                    # Create Cards for all Episodes
+                    for episode in series.episodes:
+                        try:
+                            create_episode_cards(
+                                db, None, episode, raise_exc=False, log=log
+                            )
+                        except HTTPException as e:
+                            if e.status_code != 404:
+                                log.exception(f'{episode} - skipping Card', e)
+                except OperationalError:
+                    if failures > 10:
+                        log.debug(f'Database is extremely busy, stopping Task')
+                        break
+                    failures += 1
+                    log.debug(f'Database is busy, sleeping..')
+                    sleep(30)
     except Exception as e:
         log.exception(f'Failed to create title cards', e)
-
-
-def remove_duplicate_cards(*, log: Logger = log) -> None:
-    """
-    Schedule-able function to remove any duplicate (e.g. Episodes with
-    >1 entry), and unlinked Card (Cards with no Series or Episode ID)
-    from the database.
-
-    Args:
-        log: Logger for all log messages.
-    """
-
-    try:
-        # Get the Database
-        with next(get_database()) as db:
-            # Get all Episodes
-            all_episodes: list[Episode] = db.query(Episode).all()
-
-            # Go through each Episode, find any duplicate cards
-            changed = False
-            for episode in all_episodes:
-                # Look for any Cards with this Episode ID
-                cards = db.query(Card).filter_by(episode_id=episode.id).all()
-                if len(cards) > 1:
-                    log.info(f'Identified duplicate Cards for {episode.log_str}')
-                    for delete_card in cards[:-1]:
-                        db.delete(delete_card)
-                        log.debug(f'Deleted duplicate {delete_card.log_str}')
-                        changed = True
-
-            # Delete any cards w/o Series or Episode IDs
-            unlinked_cards = db.query(Card)\
-                .filter(or_(Card.series_id.is_(None),
-                            Card.episode_id.is_(None)))
-            if unlinked_cards.count():
-                log.info(f'Deleting {unlinked_cards.count()} unlinked Cards')
-                unlinked_cards.delete()
-                changed = True
-
-            # If any changes were made, commit to DB
-            if changed:
-                db.commit()
-    except Exception as exc:
-        log.exception(f'Failed to remove duplicate Cards', exc)
 
 
 def refresh_all_remote_card_types(*, log: Logger = log) -> None:
@@ -160,9 +141,9 @@ def refresh_remote_card_types(
     # Get all card types globally, from Templates, Series, and Episodes
     preferences = get_preferences()
     card_identifiers = {preferences.default_card_type} \
-        | _get_unique_card_types(models.template.Template) \
-        | _get_unique_card_types(models.series.Series) \
-        | _get_unique_card_types(models.episode.Episode)
+        | _get_unique_card_types(Template) \
+        | _get_unique_card_types(Series) \
+        | _get_unique_card_types(Episode)
 
     # Reset loaded remote file(s)
     if reset:
@@ -216,6 +197,7 @@ def add_card_to_database(
         card_model: NewTitleCard,
         CardTypeModel: Base,
         card_file: Path,
+        library: Optional[Library],
     ) -> Card:
     """
     Add the given Card to the Database.
@@ -225,17 +207,24 @@ def add_card_to_database(
         card_model: NewTitleCard model being added to the Database.
         card_file: Path to the Card associated with the given model
             being added to the Database.
+        library: Library the Card is associated with.
 
     Returns:
         Created Card entry within the Database.
     """
 
+    # Add Card to database
     card_model.filesize = card_file.stat().st_size
     card = Card(
         **card_model.dict(),
         model_json=_card_type_model_to_json(CardTypeModel),
     )
     db.add(card)
+
+    # Add library details if provided
+    if library:
+        card.interface_id = library['interface_id']
+        card.library_name = library['name']
     db.commit()
 
     return card
@@ -286,10 +275,10 @@ def validate_card_type_model(
 
 def create_card(
         db: Session,
-        preferences: Preferences,
         card_model: NewTitleCard,
-        CardClass: BaseCardType,
+        CardClass: type[BaseCardType],
         CardTypeModel: Base,
+        library: Optional[Library],
         *,
         log: Logger = log,
     ) -> None:
@@ -298,21 +287,23 @@ def create_card(
 
     Args:
         db: Database to add the Card entry to.
-        preferences: Preferences to pass to the CardClass.
         card_model: TitleCard model to update and add to the Database.
         CardClass: Class to initialize for Card creation.
         CardTypeModel: Pydantic model for this Card to pass the
             attributes of to the CardClass.
+        library: Library associated with Card.
         log: Logger for all log messages.
     """
 
-    # Create card
-    card_maker = CardClass(**CardTypeModel.dict(), preferences=preferences)
+    # Create Card
+    card_maker = CardClass(**CardTypeModel.dict(),preferences=get_preferences())
     card_maker.create()
 
     # If file exists, card was created successfully - add to database
     if (card_file := CardTypeModel.card_file).exists():
-        card = add_card_to_database(db, card_model, CardTypeModel, card_file)
+        card = add_card_to_database(
+            db, card_model, CardTypeModel, card_file, library
+        )
         log.info(f'Created {card.log_str}')
     # Card file does not exist, log failure
     else:
@@ -322,6 +313,7 @@ def create_card(
 
 def resolve_card_settings(
         episode: Episode,
+        library: Optional[Library] = None,
         *,
         log: Logger = log,
     ) -> dict:
@@ -334,13 +326,14 @@ def resolve_card_settings(
         log: Logger for all log messages.
 
     Returns:
-        List of CardAction strings if some error occured in setting
-        resolution; or the settings themselves as a dictionary.
+        The resolved Card settings as a dictionary.
     """
 
     # Get effective Template for this Series and Episode
     series = episode.series
-    series_template, episode_template = get_effective_templates(series, episode)
+    series_template, episode_template = get_effective_templates(
+        series, episode, library
+    )
     series_template_dict, episode_template_dict = {}, {}
     if series_template is not None:
         series_template_dict = series_template.card_properties
@@ -513,15 +506,18 @@ def resolve_card_settings(
                     detail=f'Invalid episode text format - missing data {e}',
                 ) from e
 
-    # Turn styles into boolean style toggles
-    if (watched := card_settings.get('watched')) is not None:
-        prefix = 'watched' if watched else 'unwatched'
-        style = card_settings[f'{prefix}_style']
+    # Set style independent of watched status if both styles match
+    watched = None
+    if card_settings['watched_style'] == card_settings['unwatched_style']:
+        style = card_settings['watched_style']
         card_settings['blur'] = 'blur' in style
         card_settings['grayscale'] = 'grayscale' in style
-    # Indeterminate watch status, set styles if both styles match
-    elif card_settings['watched_style'] == card_settings['unwatched_style']:
-        style = card_settings['watched_style']
+    # Turn styles into boolean style toggles
+    elif (library and
+        (watched := episode.get_watched_status(library['interface_id'],
+                                              library['name'])) is not None):
+        prefix = 'watched' if watched else 'unwatched'
+        style = card_settings[f'{prefix}_style']
         card_settings['blur'] = 'blur' in style
         card_settings['grayscale'] = 'grayscale' in style
     # Indeterminate watch status, cannot determine styles
@@ -552,7 +548,7 @@ def resolve_card_settings(
     if (CardClass.USES_UNIQUE_SOURCES
         and not card_settings['source_file'].exists()):
         log.debug(f'{series.log_str} {episode.log_str} Card source image '
-                    f'({card_settings["source_file"]}) is missing')
+                    f'({card_settings["source_file"].name}) is missing')
         raise HTTPException(
             status_code=404,
             detail=f'Cannot create Card - missing source image',
@@ -568,10 +564,13 @@ def resolve_card_settings(
     # If an explicit card file was indicated, use it vs. default
     try:
         if card_settings.get('card_file', None) is None:
+            card_settings['title'] = card_settings['title'].replace('\\n', '')
             filename = CleanPath.sanitize_name(
                 card_settings['card_filename_format'].format(**card_settings)
             )
-            card_settings['title'] = card_settings['title'].replace('\\n', '')
+            # Add library-specific identifier to filename if indicated
+            if library is not None and preferences.library_unique_cards:
+                filename += f' [{library["interface"]} {library["name"]}]'
             card_settings['card_file'] = series_directory \
                 / preferences.get_folder_format(episode_info) \
                 / filename
@@ -599,35 +598,37 @@ def resolve_card_settings(
 
 def create_episode_card(
         db: Session,
-        preferences: Preferences,
         background_tasks: Optional[BackgroundTasks],
         episode: Episode,
+        library: Optional[Library],
         *,
         raise_exc: bool = True,
         log: Logger = log,
     ) -> None:
     """
-    Create the Title Card for the given Episode.
+    Create the singular Title Card for the given Episode in the given
+    library.
 
     Args:
         db: Database to query and update.
-        preferences: Global Preferences to use as lowest priority
-            settings.
         background_tasks: Optional BackgroundTasks to queue card
             creation within.
-        episode: Episode whose Card is being created.
-        raise_exc: Whether to raise or ignore any
-            HTTPExceptions.
+        episode: Episode whose Cards are being created.
+        raise_exc: Whether to raise any HTTPExceptions.
         log: Logger for all log messages.
+
+    Raises:
+        HTTPException: If the card settings are invalid and `raise_exc`
+            is True.
     """
 
     # Resolve Card settings
     series = episode.series
     try:
-        card_settings = resolve_card_settings(episode, log=log)
-    except HTTPException as e:
+        card_settings = resolve_card_settings(episode, library, log=log)
+    except HTTPException as exc:
         if raise_exc:
-            raise e
+            raise exc
         return None
 
     # Get a validated card class, and card type Pydantic model
@@ -643,22 +644,35 @@ def create_episode_card(
     # Create Card parent directories if needed
     card_settings['card_file'].parent.mkdir(parents=True, exist_ok=True)
 
-    # Inner function to begin card creation as a background task, or immediately
+    # Inner function to begin card creation as a background task or immediately
     def _start_card_creation():
         if background_tasks is None:
-            create_card(db, preferences, card, CardClass, CardTypeModel,log=log)
+            create_card(db, card, CardClass, CardTypeModel, library, log=log)
         else:
             background_tasks.add_task(
-                create_card, db, preferences, card, CardClass, CardTypeModel,
-                log=log,
+                create_card,
+                db, card, CardClass, CardTypeModel, library, log=log,
             )
 
-    # No existing card, create and add to database
-    existing_card: list[Card] = episode.card
+    # Find existing Card
+    # Library unique mode is disabled, look for any Card for this Episode
+    if not get_preferences().library_unique_cards or not library:
+        existing_card = db.query(Card).filter_by(episode_id=episode.id).first()
+    elif library:
+        # Look for Card associated with this library OR no library (if
+        # the library was just added to the Series)
+        existing_card = db.query(Card)\
+            .filter(Card.episode_id==episode.id,
+                    or_(and_(Card.interface_id==library['interface_id'],
+                             Card.library_name==library['name']),
+                        and_(Card.interface_id.is_(None),
+                             Card.library_name.is_(None))))\
+            .first()
+
+    # No existing Card, begin creation
     if not existing_card:
         _start_card_creation()
         return None
-    existing_card = existing_card[0]
 
     # Function to get the existing val
     def _get_existing(attribute: str) -> Any:
@@ -701,64 +715,84 @@ def create_episode_card(
     return None
 
 
-def update_episode_watch_statuses(
-        emby_interface: Optional[EmbyInterface],
-        jellyfin_interface: Optional[JellyfinInterface],
-        plex_interface: Optional[PlexInterface],
+def create_episode_cards(
+        db: Session,
+        background_tasks: Optional[BackgroundTasks],
+        episode: Episode,
+        *,
+        raise_exc: bool = True,
+        log: Logger = log,
+    ) -> None:
+    """
+    Create all the Title Card for the given Episode.
+
+    Args:
+        db: Database to query and update.
+        background_tasks: Optional BackgroundTasks to queue Card
+            creation within.
+        episode: Episode whose Cards are being created.
+        raise_exc: Whether to raise any HTTPExceptions.
+        log: Logger for all log messages.
+
+    Raises:
+        HTTPException: If the card settings are invalid and `raise_exc`
+            is True.
+    """
+
+    # If parent Series has multiple libraries
+    if episode.series.libraries:
+        # In library unique mode, create Card for each library
+        if get_preferences().library_unique_cards:
+            for library in episode.series.libraries:
+                create_episode_card(
+                    db, background_tasks, episode, library,
+                    raise_exc=raise_exc, log=log
+                )
+        # Only create Card for primary library
+        else:
+            create_episode_card(
+                db, background_tasks, episode, episode.series.libraries[0],
+                raise_exc=raise_exc, log=log,
+            )
+    else:
+        create_episode_card(
+            db, background_tasks, episode, None, raise_exc=raise_exc, log=log
+        )
+
+
+def get_watched_statuses(
+        db: Session,
         series: Series,
         episodes: list[Episode],
         *,
         log: Logger = log,
     ) -> None:
     """
-    Update the watch statuses of all Episodes for the given Series.
+    Update the watch statuses of the given Episodes for the given
+    Series. This queries all libraries of this Series.
 
     Args:
-        *_interface: Interface to the media server to query for updated
-            watch statuses.
         series: Series whose Episodes are being updated.
         episodes: List of Episodes to update the statuses of.
         log: Logger for all log messages.
     """
 
-    if series.emby_library_name is not None:
-        if emby_interface is None:
-            log.warning(f'{series.log_str} Cannot query watch statuses - no '
-                        f'Emby connection')
-        else:
-            emby_interface.update_watched_statuses(
-                series.emby_library_name,
-                series.as_series_info,
-                episodes,
+    # Get statuses for each library of this Series
+    changed = False
+    for library in series.libraries:
+        if (interface := get_interface(library['interface_id'])):
+            changed |= interface.update_watched_statuses(
+                library['name'], series.as_series_info, episodes, log=log,
             )
-    elif series.jellyfin_library_name is not None:
-        if jellyfin_interface is None:
-            log.warning(f'{series.log_str} Cannot query watch statuses - no '
-                        f'Jellyfin connection')
-        else:
-            jellyfin_interface.update_watched_statuses(
-                series.jellyfin_library_name,
-                series.as_series_info,
-                episodes,
-                log=log,
-            )
-    elif series.plex_library_name is not None:
-        if plex_interface is None:
-            log.warning(f'{series.log_str} Cannot query watch statuses - no '
-                        f'Plex connection')
-        else:
-            plex_interface.update_watched_statuses(
-                series.plex_library_name,
-                series.as_series_info,
-                episodes,
-                log=log,
-            )
+
+    if changed:
+        db.commit()
 
 
 def delete_cards(
         db: Session,
         card_query: Query,
-        loaded_query: Query,
+        loaded_query: Optional[Query] = None,
         *,
         log: Logger = log,
     ) -> list[str]:
@@ -782,12 +816,13 @@ def delete_cards(
     for card in card_query.all():
         if (card_file := Path(card.card_file)).exists():
             card_file.unlink()
-            log.debug(f'Delete "{card_file.resolve()}" card')
+            log.debug(f'Deleted "{card_file.resolve()}" Card')
             deleted.append(str(card_file))
 
     # Delete from database
     card_query.delete()
-    loaded_query.delete()
+    if loaded_query:
+        loaded_query.delete()
     db.commit()
 
     return deleted

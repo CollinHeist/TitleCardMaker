@@ -1,26 +1,17 @@
-from typing import Optional
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_sync
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.auth import get_current_user
-from app.internal.series import delete_series_and_episodes
+from app.internal.series import delete_series
 from app.internal.sync import add_sync, run_sync
 from app import models
-from app.models.preferences import Preferences
 from app.schemas.sync import (
     EmbySync, JellyfinSync, PlexSync, SonarrSync, Sync, NewEmbySync,
     NewJellyfinSync, NewPlexSync, NewSonarrSync, UpdateSync,
 )
 from app.schemas.series import Series
-
-from modules.EmbyInterface2 import EmbyInterface
-from modules.ImageMagickInterface import ImageMagickInterface
-from modules.JellyfinInterface2 import JellyfinInterface
-from modules.PlexInterface2 import PlexInterface
-from modules.SonarrInterface2 import SonarrInterface
-from modules.TMDbInterface2 import TMDbInterface
 
 
 # Create sub router for all /sync API requests
@@ -155,7 +146,7 @@ def delete_sync(
     # If deleting Series, iterate and delete Series and all Episodes
     if delete_series:
         for series in sync.series:
-            delete_series_and_episodes(
+            delete_series(
                 db, series, commit_changes=False, log=request.state.log
             )
 
@@ -238,27 +229,15 @@ def run_sync_(
         request: Request,
         sync_id: int,
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
     ) -> list[Series]:
     """
     Run the given Sync by querying the assigned interface, adding any
     new series to the database. Return a list of any new Series.
 
-    - sync_id: ID of the sync to run.
+    - sync_id: ID of the Sync to run.
     """
 
     # Get existing Sync, raise 404 if DNE
     sync = get_sync(db, sync_id, raise_exc=True)
 
-    return run_sync(
-        db, preferences, sync, emby_interface, imagemagick_interface,
-        jellyfin_interface, plex_interface, sonarr_interface,
-        tmdb_interface,
-        background_tasks=background_tasks, log=request.state.log,
-    )
+    return run_sync(db, sync, background_tasks, log=request.state.log)

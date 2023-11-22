@@ -16,8 +16,10 @@ class TautulliInterface(WebInterface, Interface):
     updating/creation.
     """
 
+    INTERFACE_TYPE = 'Tautulli'
+
     """Default configurations for the notification agent(s)"""
-    DEFAULT_AGENT_NAME = 'Update TitleCardMaker'
+    DEFAULT_AGENT_NAME = 'Update TitleCardMaker (v3)'
 
     """Agent ID for a Webhook"""
     AGENT_ID = 25
@@ -27,6 +29,7 @@ class TautulliInterface(WebInterface, Interface):
             tcm_url: str,
             tautulli_url: str,
             api_key: str,
+            plex_interface_id: int,
             use_ssl: bool = True,
             agent_name: str = DEFAULT_AGENT_NAME,
             *,
@@ -42,12 +45,12 @@ class TautulliInterface(WebInterface, Interface):
             use_ssl: Whether to use SSL for the interface.
             agent_name: Name of the Notification Agent to check for and/
                 or create on Tautulli.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Raises:
-            HTTPException (400) if Tautulli cannot be connected to.
-            HTTPException (401) if Tautulli's status cannot be queried.
-            HTTPException (422) if the URL is invalid.
+            HTTPException (400): Tautulli cannot be connected to.
+            HTTPException (401): Tautulli's status cannot be queried.
+            HTTPException (422): The URL is invalid.
         """
 
         # Initialize parent classes
@@ -55,8 +58,7 @@ class TautulliInterface(WebInterface, Interface):
 
         # Get correct TCM URL
         tcm_url = tcm_url if tcm_url.endswith('/') else f'{tcm_url}/'
-        self.tcm_url = f'{tcm_url}api/cards/key'
-
+        self.tcm_url = f'{tcm_url}api/cards/key?interface_id={plex_interface_id}'
         # Get correct Tautulli URL
         tautulli_url = tautulli_url if tautulli_url.endswith('/') else f'{tautulli_url}/'
         if tautulli_url.endswith('/api/v2/'):
@@ -126,7 +128,7 @@ class TautulliInterface(WebInterface, Interface):
         Create a new Notification Agent.
 
         Args:
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             Notifier ID of created agent, None if agent was not created.
@@ -166,7 +168,7 @@ class TautulliInterface(WebInterface, Interface):
         exist or cannot be identified.
 
         Args:
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # If already integrated, skip

@@ -86,26 +86,6 @@
               </div>
             </div>
 
-            <div data-value="media_server" class="ui field">
-              <label>Media Server</label>
-              <div data-value="media_server" class="ui compact selection dropdown">
-                <input name="media_server" type="hidden">
-                <i class="dropdown icon"></i>
-                <div class="default text">Plex</div>
-                <div class="menu">
-                  {% if preferences.use_emby %}
-                  <div class="item">Emby</div>
-                  {% endif %}
-                  {% if preferences.use_jellyfin %}
-                  <div class="item">Jellyfin</div>
-                  {% endif %}
-                  {% if preferences.use_plex %}
-                  <div class="active item">Plex</div>
-                  {% endif %}
-                </div>
-              </div>
-              <p class="help">Which Connection to load the Title Cards into after importing.</p>
-            </div>
             <button class="ui animated primary button" type="submit">
               <div class="visible content">Submit</div>
               <div class="hidden content">

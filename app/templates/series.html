@@ -159,7 +159,7 @@
       {% endif %}
       <td data-column="watched" data-type="boolean" class="center aligned collapsing"><!-- Icon --></td>
       {% if not preferences.simplified_data_table %}
-      {% if preferences.use_emby and series.emby_library_name %}
+      {% if preferences.use_emby %}
       <td data-column="emby_id" class="center aligned collapsing">
         <div class="ui transparent id input">
           <input name="emby_id" type="text" placeholder="-">
@@ -171,7 +171,7 @@
           <input name="imdb_id" type="text" placeholder="-">
         </div>
       </td>
-      {% if preferences.use_jellyfin and series.jellyfin_library_name %}
+      {% if preferences.use_jellyfin %}
       <td data-column="jellyfin_id" class="center aligned collapsing">
         <div class="ui transparent id input">
           <input name="jellyfin_id" type="text" placeholder="-">
@@ -255,10 +255,8 @@
       <div class="content">
         <i data-action="mirror" class="right floated exchange alternate icon" title="Horizontally mirror this image"></i>
         <i data-action="upload" class="right floated file import icon" title="Upload a new source image"></i>
-        <i data-action="search-tmdb" class="right floated search icon" title="Search for this image"></i>
-        {% if preferences.use_tmdb %}
-        <img data-action="browse-tmdb" class="right floated icon" src="/internal_assets/tmdb_primary_full_logo.svg" title="Browse TMDb source images"/>
-        {% endif %}
+        <i data-action="search" class="right floated search icon" title="Search for this image"></i>
+        <i data-action="browse" class="right floated border all icon" title="Browse source images"></i>
         <div data-value="index" class="header">{descriptive name}</div>
         <div class="meta">
           <span data-value="path">{path}</span>
@@ -278,7 +276,7 @@
               {file name}
         </div>
       </div>
-      <img loading="lazy" class="glightbox">
+      <img loading="lazy">
     </div>
   </template>
 
@@ -289,17 +287,17 @@
       <td data-column="width" class="center aligned collapsing"></td>
       <td data-column="height" class="center aligned collapsing"></td>
       <td data-column="filesize" class="center aligned collapsing"></td>
-      <td data-column="browse-sources" class="center aligned collapsing selectable">
-        <a data-action="browse-sources"><i class="border all icon"></i></a>
+      <td data-column="browse" class="center aligned collapsing selectable">
+        <a data-action="browse"><i data-action="browse" class="border all icon"></i></a>
       </td>
-      <td data-column="search-tmdb" class="center aligned collapsing selectable">
-        <a><i data-action="search-tmdb" class="ui search icon"></i></a>
+      <td data-column="search" class="center aligned collapsing selectable">
+        <a data-action="search"><i data-action="search" class="ui search icon"></i></a>
       </td>
       <td data-column="upload" class="center aligned collapsing selectable">
-        <a><i data-action="upload" class="ui file import icon"></i></a>
+        <a data-action="upload"><i data-action="upload" class="ui file import icon"></i></a>
       </td>
       <td data-column="mirror" class="center aligned collapsing selectable">
-        <a><i data-action="mirror" class="ui exchange alternate icon"></i></a>
+        <a data-action="mirror"><i data-action="mirror" class="ui exchange alternate icon"></i></a>
       </td>
     </tr>
   </template>
@@ -368,84 +366,31 @@
           </div>
           <!-- Series action bottons -->
           <div id="action-buttons">
-            <button data-action="process" class="ui vertical labeled fluid icon blue button" onclick="processSeries();" data-tooltip="Refresh Episodes, query translations, download source images, and create Cards">
-              <i class="step forward icon"></i>
-              Process Series
+            <button data-action="process" class="ui vertical labeled fluid icon blue button" onclick="processSeries();">
+              <i class="images outline icon"></i>
+              Create Title Cards
             </button>
-            <div class="ui divider"></div>
+            <!-- Library-specific buttons -->
             <div class="ui vertical labeled icon fluid buttons">
-              <button id="refresh" class="ui labeled icon button" onclick="refreshEpisodeData()" data-tooltip="Look for new, and update any existing Episodes">
-                <i class="sync icon"></i>
-                Refresh Episode Data
-              </button>
-              {% if series.translations or series.template_ids %}
-              <button id="add-translations" class="ui labeled icon button" onclick="addTranslations()">
-                <i class="language icon"></i>
-                Add Translations
-              </button>
-              {% endif %}
-              <button data-action="download-source-images" class="ui labeled icon button" onclick="getSourceImages()" data-tooltip="Search for and download any missing source images">
-                <i class="cloud download alternate icon"></i>
-                Download Source Images
-              </button>
-              <button data-action="create-title-cards" class="ui labeled icon button" onclick="createTitleCards()">
-                <i class="images outline icon"></i>
-                Create Title Cards
-              </button>
-            </div>
-            <div class="ui divider"></div>
-            <div class="ui vertical labeled icon fluid buttons">
-              {% if preferences.use_emby and series.emby_library_name %}
-              <button class="ui labeled icon button" onclick="loadCards('Emby');">
+              {% for library in series.libraries %}
+              <div class="ui mini horizontal divider" data-interface="{{library.interface}}">
+                {{library.name}} | <span data-value="interface-type">{{library.interface}}</span>
+              </div>
+              <button class="ui labeled icon button" onclick="loadCards({{library.interface_id}}, `{{library.name}}`, false);">
                 <i class="hdd outline icon"></i>
-                Load Cards into Emby
+                Load Cards
               </button>
-              <button class="ui labeled icon button" onclick="loadCards('Emby', true);">
+              <button class="ui labeled icon button" onclick="loadCards({{library.interface_id}}, `{{library.name}}`, true);">
                 <i class="orange hdd outline icon"></i>
-                Force Reload Cards into Emby
+                Force Reload Cards
               </button>
-              {% elif (preferences.use_emby and not series.emby_library_name) or (not preferences.use_emby and series.emby_library_name) %}
-              <button class="ui disabled labeled icon button">
-                <i class="hdd outline icon"></i>
-                Reload Emby
-              </button>
-              {% endif %}
-                
-              {% if preferences.use_jellyfin and series.jellyfin_library_name %}
-              <button class="ui labeled icon button" onclick="loadCards('Jellyfin');">
-                <i class="hdd outline icon"></i>
-                Load Cards into Jellyfin
-              </button>
-              <button class="ui labeled icon button" onclick="loadCards('Jellyfin', true);">
-                <i class="orange hdd outline icon"></i>
-                Force Reload Cards into Jellyfin
-              </button>
-              {% elif (preferences.use_jellyfin and not series.jellyfin_library_name) or (not preferences.use_jellyfin and series.jellyfin_library_name) %}
-              <button class="ui disabled labeled icon button">
-                <i class="hdd outline icon"></i>
-                Load Cards into Jellyfin
-              </button>
-              {% endif %}
-
-              {% if preferences.use_plex and series.plex_library_name %}
-              <button class="ui labeled icon button" onclick="loadCards('Plex');">
-                <i class="hdd outline icon"></i>
-                Load Cards into Plex
-              </button>
-              <button class="ui labeled icon button" onclick="loadCards('Plex', true);">
-                <i class="orange hdd outline icon"></i>
-                Force Reload Cards into Plex
-              </button>
-              <button data-value="labels" class="ui labeled icon button" onclick="removePlexLabels(this);" data-tooltip="Remove any Episode labels which prevent TCM from grabbing Source Images from Plex">
-                <i class="tags icon"></i>
+              {% if library.interface == 'Plex' %}
+              <button data-value="labels" class="ui labeled icon button" onclick="removePlexLabels({{library.interface_id}}, `{{library.name}}`);" data-tooltip="Remove any labels which prevent TCM from grabbing Source Images">
+                <i class="red tags icon"></i>
                 Remove Episode Labels
               </button>
-              {% elif (preferences.use_plex and not series.plex_library_name) or (not preferences.use_plex and series.plex_library_name) %}
-              <button class="ui disabled labeled icon button">
-                <i class="hdd outline icon"></i>
-                Load Cards into Plex
-              </button>
               {% endif %}
+              {% endfor %}
             </div>
           </div>
           <div>
@@ -461,7 +406,6 @@
               </button>
             </div>
           </div>
-          
         </div>
 
         <!-- Data Tabs -->
@@ -479,19 +423,19 @@
           <div id="series-tabs" class="ui bottom attached tab active segment" data-tab="options">
             <form id="series-config-form" class="ui compact form">
               <!-- Warning if Series is not found in various interfaces -->
-              {% if preferences.use_emby and series.emby_id is none %}
+              {% if preferences.use_emby and not series.emby_id %}
               <div class="ui visible floating warning message">
                 <i class="exclamation triangle icon"></i>
                 This Series has not been found in Emby.
               </div>
               {% endif %}
-              {% if preferences.use_jellyfin and series.jellyfin_id is none %}
+              {% if preferences.use_jellyfin and not series.jellyfin_id %}
               <div class="ui visible floating warning message">
                 <i class="exclamation triangle icon"></i>
                 This Series has not been found in Jellyfin.
               </div>
               {% endif %}
-              {% if preferences.use_sonarr and series.sonarr_id is none %}
+              {% if preferences.use_sonarr and not series.sonarr_id %}
               <div class="ui visible floating warning message">
                 <i class="exclamation triangle icon"></i>
                 This Series has not been found in Sonarr.
@@ -504,11 +448,27 @@
               </div>
               {% endif %}
 
+              <!-- Libraries -->
+              <div class="ui field">
+                <label>Libraries</label>
+                <div data-value="libraries" class="ui compact multiple selection dropdown">
+                  <input name="libraries" type="hidden">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">None</div>
+                  <div class="menu"><!-- Added asynchronousely --></div>
+                </div>
+                <p class="help">
+                  Libraries to load Title Cards into.
+                  <br>
+                  Queried and loaded in order.
+                </p>
+              </div>
+
               <!-- Episode Data Source -->
               <div class="field">
                 <label>Episode Data Source</label>
-                <div id="episode-data-source" class="ui compact selection clearable dropdown">
-                  <input name="episode_data_source" type="hidden">
+                <div data-value="data_source_id" class="ui compact selection clearable dropdown">
+                  <input name="data_source_id" type="hidden">
                   <i class="dropdown icon"></i>
                   <div class="default text"></div>
                   <div class="menu"><!-- Added asynchronously --></div>
@@ -549,48 +509,6 @@
                 </div>
                 <p class="help">Whether to ignore images with assigned Languages (i.e. images with text).</p>
               </div>
-
-              <!-- Emby Library -->
-              {% if preferences.use_emby or series.emby_library_name %}
-              <div class="ui field">
-                <label>Emby Library</label>
-                <div id="emby-library" class="ui compact selection clearable dropdown">
-                  <input name="emby_library_name" id="emby-library-input" type="hidden">
-                  <div class="default text">None</div>
-                  <i class="dropdown icon"></i>
-                  <div class="menu"><!-- Added asynchronously --></div>
-                </div>
-                <p class="help">Library to load Title Cards into.</p>
-              </div>
-              {% endif %}
-
-              <!-- Jellyfin Library -->            
-              {% if preferences.use_jellyfin or series.jellyfin_library_name %}
-              <div class="ui field">
-                <label>Jellyfin Library</label>
-                <div id="jellyfin-library" class="ui compact selection clearable dropdown">
-                  <input name="jellyfin_library_name" type="hidden">
-                  <div class="default text">None</div>
-                  <i class="dropdown icon"></i>
-                  <div class="menu"><!-- Added asynchronously --></div>
-                </div>
-                <p class="help">Library to load Title Cards into.</p>
-              </div>
-              {% endif %}
-
-              <!-- Plex Library -->
-              {% if preferences.use_plex or series.plex_library_name %}
-              <div class="ui field">
-                <label>Plex Library</label>
-                <div id="plex-library" class="ui compact selection clearable dropdown">
-                  <input name="plex_library_name" type="hidden">
-                  <div class="default text">None</div>
-                  <i class="dropdown icon"></i>
-                  <div class="menu"><!-- Added asynchronously --></div>
-                </div>
-                <p class="help">Library to load Title Cards into.</p>
-              </div>
-              {% endif %}
 
               <!-- Card Directory -->
               <div class="ui field">
@@ -769,11 +687,11 @@
                     </div>
                   </div>
 
-                  <!-- Font interline spacing, vertical shift -->
+                  <!-- Font interline spacing, interword spacing, vertical shift -->
                   <div class="three fields">
                     <div class="field">
                       <label>Interline Spacing</label>
-                      {% if series.font_interline is none %}
+                      {% if series.font_interline_spacing is none %}
                       <input name="font_interline_spacing" type="number" placeholder="Default">
                       {% else %}
                       <input name="font_interline_spacing" type="number" placeholder="Default" value="{{series.font_interline_spacing}}">
@@ -1014,11 +932,11 @@
                     {% endif %}
                     <th class="collapsing">Watched</th>
                     {% if not preferences.simplified_data_table %}
-                    {% if preferences.use_emby and series.emby_library_name %}
+                    {% if preferences.use_emby %}
                     <th class="collapsing">Emby<br>ID</th>
                     {% endif %}
                     <th class="collapsing">IMDb<br>ID</th>
-                    {% if preferences.use_jellyfin and series.jellyfin_library_name %}
+                    {% if preferences.use_jellyfin %}
                     <th class="collapsing">Jellyfin<br>ID</th>
                     {% endif %}
                     <th class="collapsing">TMDb<br>ID</th>
@@ -1155,18 +1073,19 @@
               <div id-type="Emby ID" class="field">
                 {% if series.emby_id %}
                 <label>Emby</label>
-                <input name="emby_id" type="text" placeholder="{{series.emby_id}}" value="{{series.emby_id}}">
+                <input name="emby_id" type="text" placeholder="None" value="{{series.emby_id}}">
                 {% else %}
                 <label>Emby</label>
                 <input name="emby_id" type="text" placeholder="N/A">
                 {% endif %}
+                <p class="help">Enter as {Interface ID}:{Library Name}:{ID} - can be multiple, comma-separated IDs.</p>
               </div>
               {% endif %}
 
               <div id-type="IMDb" class="field">
                 {% if series.imdb_id %}
                 <label>IMDb <a href="https://www.imdb.com/title/{{series.imdb_id}}" target="_blank"><i class="external alternate small icon"></i></a></label>
-                <input name="imdb_id" type="text" placeholder="{{series.imdb_id}}" value="{{series.imdb_id}}">
+                <input name="imdb_id" type="text" placeholder="None" value="{{series.imdb_id}}">
                 {% else %}
                 <label>IMDb</label>
                 <input name="imdb_id" type="text" placeholder="None">
@@ -1175,12 +1094,14 @@
 
               {% if preferences.use_jellyfin %}
               <div id-type="Jellyfin" class="field">
-                <label>Jellyfin</label>
                 {% if series.jellyfin_id %}
-                <input name="jellyfin_id" type="text" placeholder="{{series.jellyfin_id}}" value="{{series.jellyfin_id}}">
+                <label>Jellyfin</label>
+                <input name="jellyfin_id" type="text" placeholder="None" value="{{series.jellyfin_id}}">
                 {% else %}
+                <label>Jellyfin</label>
                 <input name="jellyfin_id" type="text" placeholder="None">
                 {% endif %}
+                <p class="help">Enter as {Interface ID}:{Library Name}:{ID} - can be multiple, comma-separated IDs.</p>
               </div>
               {% endif %}
 
@@ -1188,19 +1109,19 @@
               <div id-type="Sonarr" class="field">
                 {% if series.sonarr_id %}
                 <label>Sonarr</label>
-                <input name="sonarr_id" type="text" placeholder="{{series.sonarr_id}}" value="{{series.sonarr_id}}">
+                <input name="sonarr_id" type="text" placeholder="None" value="{{series.sonarr_id}}">
                 {% else %}
                 <label>Sonarr</label>
                 <input name="sonarr_id" type="text" placeholder="None">
                 {% endif %}
-                <p class="help">Prefix Sonarr ID with <code>0-</code>. For example: <code>0-123</code>.</p>
+                <p class="help">Enter as {Interface ID}:{ID} - can be multiple, comma-separated IDs.</p>
               </div>
               {% endif %}
 
               <div id-type="TMDb" class="field">
                 {% if series.tmdb_id %}
                 <label>TMDb <a href="https://www.themoviedb.org/tv/{{series.tmdb_id}}" target="_blank"><i class="external alternate small icon"></i></a></label>
-                <input name="tmdb_id" type="text" placeholder="{{series.tmdb_id}}" value="{{series.tmdb_id}}">
+                <input name="tmdb_id" type="text" placeholder="None" value="{{series.tmdb_id}}">
                 {% else %}
                 <label>TMDb</label>
                 <input name="tmdb_id" type="text" placeholder="None">
@@ -1210,18 +1131,18 @@
               <div id-type="TVDb" class="field">
                 {% if series.tvdb_id %}
                 <label>TVDb <a href="https://www.thetvdb.com/dereferrer/series/{{series.tvdb_id}}" target="_blank"><i class="external alternate small icon"></i></a></label>
-                <input name="tvdb_id" type="text" placeholder="{{series.tvdb_id}}" value="{{series.tvdb_id}}">
+                <input name="tvdb_id" type="text" placeholder="None" value="{{series.tvdb_id}}">
                 {% else %}
                 <label>TVDb</label>
                 <input name="tvdb_id" type="text" placeholder="None">
                 {% endif %}
               </div>
 
-              {% if series.year < 2017 %}
+              {% if series.year < 2017 or series.tvrage_id %}
               <div id-type="TVRage" class="field">
                 <label>TVRage</label>
                 {% if series.tvrage_id %}
-                <input name="tvrage_id" type="text" placeholder="{{series.tvrage_id}}" value="{{series.tvrage_id}}">
+                <input name="tvrage_id" type="text" placeholder="None" value="{{series.tvrage_id}}">
                 {% else %}
                 <input name="tvrage_id" type="text" placeholder="None">
                 {% endif %}

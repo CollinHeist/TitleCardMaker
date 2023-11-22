@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 from app.schemas.episode import Episode
 from app.schemas.font import NamedFont
@@ -8,7 +8,7 @@ from app.schemas.series import Series
 def get_effective_fonts(
         series: Series,
         episode: Optional[Episode] = None,
-    ) -> tuple[Optional[NamedFont], Optional[NamedFont]]:
+    ) -> Union[tuple[NamedFont, None], tuple[None, NamedFont]]:
     """
     Get the effective Series and Episode Fonts for the given Series and
     optional Episode. This evaluates the Episode Font overrides Series

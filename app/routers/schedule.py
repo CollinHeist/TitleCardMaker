@@ -12,17 +12,14 @@ from app.dependencies import get_preferences, get_scheduler
 from app.internal.auth import get_current_user
 from app.internal.availability import get_latest_version
 from app.internal.cards import (
-    create_all_title_cards, refresh_all_remote_card_types, remove_duplicate_cards
+    create_all_title_cards, refresh_all_remote_card_types,
 )
-from app.internal.episodes import refresh_all_episode_data
 from app.internal.series import (
     download_all_series_posters, load_all_media_servers, set_all_series_ids
 )
-from app.internal.sources import (
-    download_all_source_images, download_all_series_logos
-)
+from app.internal.sources import download_all_series_logos
+from app.internal.statistic import snapshot_database
 from app.internal.sync import sync_all
-from app.internal.translate import translate_all_series
 from app.models.preferences import Preferences
 from app.schemas.schedule import NewJob, ScheduledTask, UpdateSchedule
 
@@ -40,30 +37,25 @@ schedule_router = APIRouter(
     dependencies=[Depends(get_current_user)],
 )
 
-
 # Job ID's for scheduled tasks
-JOB_ADD_TRANSLATIONS = 'AddMissingTranslations'
 JOB_CREATE_TITLE_CARDS = 'CreateTitleCards'
 JOB_DOWNLOAD_SERIES_LOGOS = 'DownloadSeriesLogos'
 JOB_DOWNLOAD_SERIES_POSTERS = 'DownloadSeriesPosters'
-JOB_DOWNLOAD_SOURCE_IMAGES = 'DownloadSourceImages'
 JOB_LOAD_MEDIA_SERVERS = 'LoadMediaServers'
-JOB_REFRESH_EPISODE_DATA = 'RefreshEpisodeData'
 JOB_SYNC_INTERFACES = 'SyncInterfaces'
 JOB_BACKUP_DATABASE = 'BackupDatabase'
 # Internal Job ID's
 INTERNAL_JOB_CHECK_FOR_NEW_RELEASE = 'CheckForNewRelease'
 INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES = 'RefreshRemoteCardTypes'
 INTERNAL_JOB_SET_SERIES_IDS = 'SetSeriesIDs'
-INTERNAL_JOB_REMOVE_DUPLICATE_CARDS = 'RemoveDuplicateCards'
+INTERNAL_JOB_SNAPSHOT_DATABASE = 'SnapshotDatabase'
 
 TaskID = Literal[
-    JOB_REFRESH_EPISODE_DATA, JOB_SYNC_INTERFACES, JOB_DOWNLOAD_SOURCE_IMAGES,  # type: ignore
-    JOB_CREATE_TITLE_CARDS, JOB_LOAD_MEDIA_SERVERS, JOB_ADD_TRANSLATIONS,       # type: ignore
-    JOB_DOWNLOAD_SERIES_LOGOS, JOB_DOWNLOAD_SERIES_POSTERS, JOB_BACKUP_DATABASE,# type: ignore
+    JOB_SYNC_INTERFACES, JOB_CREATE_TITLE_CARDS, JOB_LOAD_MEDIA_SERVERS,         # type: ignore
+    JOB_DOWNLOAD_SERIES_LOGOS, JOB_DOWNLOAD_SERIES_POSTERS, JOB_BACKUP_DATABASE, # type: ignore
     # Internal jobs
-    INTERNAL_JOB_CHECK_FOR_NEW_RELEASE, INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES, # type: ignore
-    INTERNAL_JOB_SET_SERIES_IDS, INTERNAL_JOB_REMOVE_DUPLICATE_CARDS,           # type: ignore
+    INTERNAL_JOB_CHECK_FOR_NEW_RELEASE, INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES,  # type: ignore
+    INTERNAL_JOB_SET_SERIES_IDS, INTERNAL_JOB_SNAPSHOT_DATABASE                  # type: ignore
 ]
 
 """
@@ -99,35 +91,17 @@ def wrapped_download_all_series_posters(log: Optional[Logger] = None):
     download_all_series_posters(log=log)
     _wrap_after(JOB_DOWNLOAD_SERIES_POSTERS, log=log)
 
-def wrapped_download_source_images(log: Optional[Logger] = None):
-    log = contextualize() if log is None else log
-    _wrap_before(JOB_DOWNLOAD_SOURCE_IMAGES, log=log)
-    download_all_source_images(log=log)
-    _wrap_after(JOB_DOWNLOAD_SOURCE_IMAGES, log=log)
-
 def wrapped_load_media_servers(log: Optional[Logger] = None):
     log = contextualize() if log is None else log
     _wrap_before(JOB_LOAD_MEDIA_SERVERS, log=log)
     load_all_media_servers(log=log)
     _wrap_after(JOB_LOAD_MEDIA_SERVERS, log=log)
 
-def wrapped_refresh_all_episode_data(log: Optional[Logger] = None):
-    log = contextualize() if log is None else log
-    _wrap_before(JOB_REFRESH_EPISODE_DATA, log=log)
-    refresh_all_episode_data(log=log)
-    _wrap_after(JOB_REFRESH_EPISODE_DATA, log=log)
-
 def wrapped_sync_all(log: Optional[Logger] = None):
     log = contextualize() if log is None else log
     _wrap_before(JOB_SYNC_INTERFACES, log=log)
     sync_all(log=log)
     _wrap_after(JOB_SYNC_INTERFACES, log=log)
-
-def wrapped_translate_all_series(log: Optional[Logger] = None):
-    log = contextualize() if log is None else log
-    _wrap_before(JOB_ADD_TRANSLATIONS, log=log)
-    translate_all_series(log=log)
-    _wrap_after(JOB_ADD_TRANSLATIONS, log=log)
 
 def wrapped_get_latest_version(log: Optional[Logger] = None):
     log = contextualize() if log is None else log
@@ -153,11 +127,11 @@ def wrapped_backup_database(log: Optional[Logger] = None):
     backup_data(log=log)
     _wrap_after(JOB_BACKUP_DATABASE, log=log)
 
-def wrapped_remove_duplicate_cards(log: Optional[Logger] = None):
+def wrapped_snapshot_database(log: Optional[Logger] = None):
     log = log or contextualize()
-    _wrap_before(INTERNAL_JOB_REMOVE_DUPLICATE_CARDS, log=log)
-    remove_duplicate_cards(log=log)
-    _wrap_after(INTERNAL_JOB_REMOVE_DUPLICATE_CARDS, log=log)
+    _wrap_before(INTERNAL_JOB_SNAPSHOT_DATABASE, log=log)
+    snapshot_database(log=log)
+    _wrap_after(INTERNAL_JOB_SNAPSHOT_DATABASE, log=log)
 # pylint: enable=missing-function-docstring,redefined-outer-name
 
 """
@@ -166,29 +140,17 @@ attributes for all major functions.
 """
 BaseJobs = {
     # Public jobs
-    JOB_REFRESH_EPISODE_DATA: NewJob(
-        id=JOB_REFRESH_EPISODE_DATA,
-        function=wrapped_refresh_all_episode_data,
-        seconds=60 * 60 * 8,
-        crontab='0 */8 * * *',
-        description='Look for new episodes and update all existing episodes',
-    ), JOB_SYNC_INTERFACES: NewJob(
+    JOB_SYNC_INTERFACES: NewJob(
         id=JOB_SYNC_INTERFACES,
         function=wrapped_sync_all,
         seconds=60 * 60 * 6,
         crontab='0 */6 * * *',
         description='Run all defined Syncs, adding any new Series',
-    ), JOB_DOWNLOAD_SOURCE_IMAGES: NewJob(
-        id=JOB_DOWNLOAD_SOURCE_IMAGES,
-        function=wrapped_download_source_images,
-        seconds=60 * 60 * 4,
-        crontab='0 */4 * * *',
-        description='Download source images for Title Cards',
     ), JOB_CREATE_TITLE_CARDS: NewJob(
         id=JOB_CREATE_TITLE_CARDS,
         function=wrapped_create_all_title_cards,
-        seconds=60 * 60 * 6,
-        crontab='0 */6 * * *',
+        seconds=60 * 60 * 12,
+        crontab='0 */12 * * *',
         description='Create all missing or outdated Title Cards',
     ), JOB_LOAD_MEDIA_SERVERS: NewJob(
         id=JOB_LOAD_MEDIA_SERVERS,
@@ -196,12 +158,6 @@ BaseJobs = {
         seconds=60 * 60 * 4,
         crontab='0 */4 * * *',
         description='Load all Title Cards into Emby, Jellyfin, or Plex',
-    ), JOB_ADD_TRANSLATIONS: NewJob(
-        id=JOB_ADD_TRANSLATIONS,
-        function=wrapped_translate_all_series,
-        seconds=60 * 60 * 4,
-        crontab='0 */4 * * *',
-        description='Search for and add all missing Episode translations',
     ), JOB_DOWNLOAD_SERIES_LOGOS: NewJob(
         id=JOB_DOWNLOAD_SERIES_LOGOS,
         function=wrapped_download_all_series_logos,
@@ -227,14 +183,14 @@ BaseJobs = {
         function=wrapped_get_latest_version,
         seconds=60 * 60 * 24,
         crontab='0 0 */1 * *',
-        description='Check for a new release of TitleCardMaker',
+        description='Check for a new release',
         internal=True,
     ), INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES: NewJob(
         id=INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES,
         function=wrapped_refresh_all_remote_cards,
         seconds=60 * 60 * 24,
         crontab='0 0 */1 * *',
-        description='Refresh all RemoteCardType files',
+        description='Refresh all non-built-in card types',
         internal=True,
     ), INTERNAL_JOB_SET_SERIES_IDS: NewJob(
         id=INTERNAL_JOB_SET_SERIES_IDS,
@@ -243,12 +199,12 @@ BaseJobs = {
         crontab='0 0 */1 * *',
         description='Set Series IDs',
         internal=True,
-    ), INTERNAL_JOB_REMOVE_DUPLICATE_CARDS: NewJob(
-        id=INTERNAL_JOB_REMOVE_DUPLICATE_CARDS,
-        function=wrapped_remove_duplicate_cards,
-        seconds=60 * 60 * 24 * 24,
-        crontab='0 1 */1 * *', # 1 AM
-        description='Remove duplicate Card entries',
+    ), INTERNAL_JOB_SNAPSHOT_DATABASE: NewJob(
+        id=INTERNAL_JOB_SNAPSHOT_DATABASE,
+        function=wrapped_snapshot_database,
+        seconds=60 * 30,
+        crontab='*/30 * * * *',
+        description='Take a snapshot of the database',
         internal=True,
     ),
 }
@@ -474,11 +430,13 @@ def reschedule_task(
             update_schedule.minutes = 10
 
         # Reschedule with modified interval
-        log.debug(f'Task[{job.id}] rescheduled via {update_schedule.dict()}')
+        update_dict = update_schedule.dict()
+        update_dict.pop('crontab', None) # Remove crontab arg
+        log.debug(f'Task[{job.id}] rescheduled via {update_dict}')
         job = scheduler.reschedule_job(
             task_id,
             trigger='interval',
-            **update_schedule.dict(),
+            **update_dict,
         )
 
     return _scheduled_task_from_job(job, preferences)

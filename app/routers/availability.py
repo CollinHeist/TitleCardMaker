@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from logging import Logger
-from typing import Literal, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from requests import get as req_get
@@ -10,6 +10,7 @@ from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard
 from app.internal.auth import get_current_user
 from app.internal.availability import get_latest_version
 from app import models
+from app.models.preferences import Preferences
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.availability import (
     AvailableFont, AvailableSeries, AvailableTemplate, TranslationLanguage
@@ -18,18 +19,12 @@ from app.schemas.card import (
     BuiltinCardType, CardTypeDescription, LocalCardType, RemoteCardType
 )
 from app.schemas.card_type import Extra
-from app.schemas.preferences import (
-    EpisodeDataSourceToggle, Preferences, StyleOption
-)
+from app.schemas.preferences import StyleOption
+from app.schemas.series import MediaServerLibrary
 from app.schemas.sync import Tag
 
 from modules.cards.available import LocalCards
 from modules.Debug import log
-from modules.EmbyInterface2 import EmbyInterface
-from modules.JellyfinInterface2 import JellyfinInterface
-from modules.PlexInterface2 import PlexInterface
-from modules.SonarrInterface2 import SonarrInterface
-from modules.TMDbInterface2 import TMDbInterface
 
 
 # URL for user card types
@@ -213,120 +208,147 @@ def get_available_tmdb_translations() -> list[TranslationLanguage]:
     ]
 
 
-@availablility_router.get('/episode-data-sources', status_code=200)
-def get_available_episode_data_sources(
-        preferences: Preferences = Depends(get_preferences),
-    ) -> list[EpisodeDataSourceToggle]:
+@availablility_router.get('/logo-languages', status_code=200)
+def get_available_tmdb_logo_languages() -> list[dict]:
     """
-    Get all available (enabled) Episode data sources.
+    Get the list of available TMDb logo languages.
     """
 
     return [
-        {'name': source,
-         'value': source,
-         'selected': source == preferences.episode_data_source}
-        for source in preferences.valid_episode_data_sources
+        {'name': label, 'value': language_code}
+        for language_code, label in TMDbInterface.LANGUAGES.items()
     ]
 
 
-@availablility_router.get('/image-source-priority', status_code=200)
-def get_image_source_priority(
-        preferences: Preferences = Depends(get_preferences),
-    ) -> list[EpisodeDataSourceToggle]:
+@availablility_router.get('/libraries/emby', status_code=200, tags=['Emby'])
+def get_emby_libraries(
+        emby_interface: EmbyInterface = Depends(require_emby_interface),
+    ) -> list[MediaServerLibrary]:
     """
-    Get the global image source priority.
+    Get all available libraries for the given Emby interface.
     """
 
     return [
-        {
-            'name': source,
-            'value': source,
-            'selected': (source in preferences.image_source_priority)
-        }
-        for source in (set(preferences.image_source_priority)
-                       | set(preferences.valid_image_sources))
+        MediaServerLibrary(
+            media_server='Emby',
+            interface_id=emby_interface._interface_id,
+            name=library,
+        ) for library in emby_interface.get_libraries()
     ]
 
 
-@availablility_router.get('/libraries/{media_server}', status_code=200,
+@availablility_router.get('/libraries/emby', status_code=200, tags=['Jellyfin'])
+def get_jellyfin_libraries(
+        jellyfin_interface: JellyfinInterface = Depends(require_jellyfin_interface),
+    ) -> list[MediaServerLibrary]:
+    """
+    Get all available libraries for the given Jellyfin interface.
+    """
+
+    return [
+        MediaServerLibrary(
+            media_server='Jellyfin',
+            interface_id=jellyfin_interface._interface_id,
+            name=library,
+        ) for library in jellyfin_interface.get_libraries()
+    ]
+
+
+@availablility_router.get('/libraries/plex', status_code=200, tags=['Plex'])
+def get_plex_libraries(
+        plex_interface: PlexInterface = Depends(require_plex_interface),
+    ) -> list[MediaServerLibrary]:
+    """
+    Get all available libraries for the given Plex interface.
+    """
+
+    return [
+        MediaServerLibrary(
+            media_server='Plex',
+            interface_id=plex_interface._interface_id,
+            name=library,
+        ) for library in plex_interface.get_libraries()
+    ]
+
+
+@availablility_router.get('/libraries/all', status_code=200,
                           tags=['Emby', 'Jellyfin', 'Plex'])
 def get_server_libraries(
-        media_server: Literal['emby', 'jellyfin', 'plex'],
-        preferences: Preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-    ) -> list[str]:
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
+    ) -> list[MediaServerLibrary]:
     """
-    Get all available TV library names on the given media server.
-
-    - media_server: Which media server to get the library names of.
+    Get all available libraries for all enabled interfaces.
     """
 
-    if media_server == 'emby':
-        if preferences.use_emby and emby_interface:
-            return emby_interface.get_libraries()
-        return []
-    if media_server == 'jellyfin':
-        if preferences.use_jellyfin and jellyfin_interface:
-            return jellyfin_interface.get_libraries()
-        return []
-    if media_server == 'plex':
-        if preferences.use_plex and plex_interface:
-            return plex_interface.get_libraries()
-        return []
+    libraries = []
+    for interface_id, interface in emby_interfaces:
+        libraries += [
+            MediaServerLibrary(
+                interface='Emby',
+                interface_id=interface_id,
+                name=library
+            ) for library in interface.get_libraries()
+        ]
+    for interface_id, interface in jellyfin_interfaces:
+        libraries += [
+            MediaServerLibrary(
+                interface='Jellyfin',
+                interface_id=interface_id,
+                name=library
+            ) for library in interface.get_libraries()
+        ]
+    for interface_id, interface in plex_interfaces:
+        libraries += [
+            MediaServerLibrary(
+                interface='Plex',
+                interface_id=interface_id,
+                name=library
+            ) for library in interface.get_libraries()
+        ]
 
-    raise HTTPException(
-        status_code=400,
-        detail=f'Cannot get libraries for the "{media_server}" media server'
-    )
+    return libraries
 
 
 @availablility_router.get('/usernames/emby', status_code=200, tags=['Emby'])
 def get_emby_usernames(
-        preferences: Preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
+        emby_interface: EmbyInterface = Depends(require_emby_interface),
     ) -> list[str]:
     """
-    Get all the public usernames in Emby. Returns an empty list if
-    Emby is disabled.
+    Get all the public usernames in Emby.
     """
 
-    if preferences.use_emby and emby_interface:
-        return emby_interface.get_usernames()
-
-    return []
+    return emby_interface.get_usernames()
 
 
 @availablility_router.get('/usernames/jellyfin', status_code=200, tags=['Jellyfin'])
 def get_jellyfin_usernames(
-        preferences: Preferences = Depends(get_preferences),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
+        jellyfin_interface: EmbyInterface = Depends(require_jellyfin_interface),
     ) -> list[str]:
     """
-    Get all the public usernames in Jellyfin. Returns an empty list if
-    Jellyfin is disabled.
+    Get all the public usernames in Jellyfin.
     """
 
-    if preferences.use_jellyfin and jellyfin_interface:
-        return jellyfin_interface.get_usernames()
-
-    return []
+    return jellyfin_interface.get_usernames()
 
 
 @availablility_router.get('/tags/sonarr', status_code=200, tags=['Sonarr'])
 def get_sonarr_tags(
-        preferences: Preferences = Depends(get_preferences),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface)
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces)
     ) -> list[Tag]:
     """
-    Get all tags defined in Sonarr.
+    Get all tags defined in all Sonarr interfaces.
     """
 
-    if preferences.use_sonarr and sonarr_interface:
-        return sonarr_interface.get_all_tags()
+    tags = []
+    for interface_id, interface in sonarr_interfaces:
+        tags += [
+            tag | {'interface_id': interface_id}
+            for tag in interface.get_all_tags()
+        ]
 
-    return []
+    return tags
 
 
 @availablility_router.get('/fonts', status_code=200, tags=['Fonts'])

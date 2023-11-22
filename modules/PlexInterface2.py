@@ -1,9 +1,8 @@
-from collections import namedtuple
 from datetime import datetime, timedelta
 from logging import Logger, LoggerAdapter
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, NamedTuple, Optional, Union
 
 from fastapi import HTTPException
 from PIL import Image
@@ -18,19 +17,21 @@ from requests.exceptions import (
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 
 from modules.Debug import log
-from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult
+from modules.EpisodeDataSource2 import (
+    EpisodeDataSource, SearchResult, WatchedStatus
+)
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
-from modules.MediaServer2 import MediaServer, SourceImage
-from modules.SeriesInfo import SeriesInfo
+from modules.MediaServer2 import _Card, _Episode, MediaServer, SourceImage
+from modules.SeriesInfo2 import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
 
-EpisodeDetails = namedtuple(
-    'EpisodeDetails',
-    ('series_info', 'episode_info', 'watched_status')
-)
+class EpisodeDetails(NamedTuple): # pylint: disable=missing-class-docstring
+    series_info: SeriesInfo
+    episode_info: EpisodeInfo
+    watched_status: WatchedStatus
 
 
 def catch_and_log(
@@ -79,6 +80,8 @@ def catch_and_log(
 class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
     """This class describes an interface to Plex."""
 
+    INTERFACE_TYPE = 'Plex'
+
     """Series ID's that can be set by TMDb"""
     SERIES_IDS = ('imdb_id', 'tmdb_id', 'tvdb_id')
 
@@ -91,12 +94,12 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
     def __init__(self,
             url: str,
-            token: str = 'NA',
-            verify_ssl: bool = True,
+            api_key: str = 'NA',
+            use_ssl: bool = True,
             integrate_with_pmm: bool = False,
             filesize_limit: int = 10485760,
-            use_magick_prefix: bool = False,
             *,
+            interface_id: int = 0,
             log: Logger = log,
         ) -> None:
         """
@@ -104,38 +107,38 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         Args:
             url: URL of plex server.
-            token: X-Plex Token for sending API requests to Plex.
-            verify_ssl: Whether to verify SSL requests when querying
-                Plex.
+            api_key: X-Plex Token for sending API requests to Plex.
+            use_ssl: Whether to use SSL in all requests.
             integrate_with_pmm: Whether to integrate with PMM in image
-                uploading.
+                uploads.
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
-            use_magick_prefix: Whether to use 'magick' command prefix.
+            interface_id: ID of this interface.
             log: Logger for all log messages.
         """
 
-        super().__init__(filesize_limit, use_magick_prefix)
+        super().__init__(filesize_limit)
 
         # Create Session for caching HTTP responses
-        self.__session = WebInterface('Plex', verify_ssl, log=log).session
+        self._interface_id = interface_id
+        self.__session = WebInterface('Plex', use_ssl, log=log).session
 
         # Create PlexServer object with these arguments
         try:
-            self.__token = token
-            self.__server = PlexServer(url, token, self.__session)
+            self.__token = api_key
+            self.__server = PlexServer(url, api_key, self.__session)
         except Unauthorized as e:
-            log.critical(f'Invalid Plex Token "{token}"')
+            log.critical(f'Invalid Plex Token "{api_key}"')
             raise HTTPException(
                 status_code=401,
                 detail=f'Invalid Plex Token',
             ) from e
-        except Exception as e:
-            log.critical(f'Cannot connect to Plex - returned error: "{e}"')
+        except Exception as exc:
+            log.critical(f'Cannot connect to Plex - returned error: "{exc}"')
             raise HTTPException(
                 status_code=400,
-                detail=f'Cannot connect to Plex - {e}',
-            ) from e
+                detail=f'Cannot connect to Plex - {exc}',
+            ) from exc
 
         # Store integration
         self.integrate_with_pmm = integrate_with_pmm
@@ -191,7 +194,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             log: Logger for all log messages.
 
         Returns:
-            The Series associated with this SeriesInfo object.
+            The series associated with this SeriesInfo object.
         """
 
         # Try by IMDb ID
@@ -284,23 +287,19 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         Get all series within Plex, as filtered by the given arguments.
 
         Args:
-            filter_libraries: Optional list of library names to filter
-                returned list by. If provided, only series that are
-                within a given library are returned.
-            excluded_libraries: Optional list of library names to filter
-                returned list by. If provided, only series that are not
-                within a given library are returned.
-            required_tags: Optional list of tags to filter return by. If
-                provided, only series with all the given tags are
-                returned.
-            excluded_tags: Optional list of tags to filter return by. If
-                provided, series with any of the given tags are not
-                returned.
+            required_libraries: Library names that a series must be
+                present in to be returned.
+            excluded_libraries: Library names that a series cannot be
+                present in to be returned.
+            required_tags: Tags that a series must have all of in order
+                to be returned.
+            excluded_tags: Tags that a series cannot have any of in
+                order to be returned.
             log: Logger for all log messages.
 
         Returns:
-            List of tuples whose elements are the SeriesInfo of the
-            series, and its corresponding library name.
+            List of tuples of the filtered series info and their
+            corresponding library names.
         """
 
         # Temporarily override request timeout to 240s (4 min)
@@ -314,9 +313,8 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 continue
 
             # If filtering libraries, skip library if unspecified
-            if required_libraries and library.title not in required_libraries:
-                continue
-            if excluded_libraries and library.title in excluded_libraries:
+            if ((required_libraries and library.title not in required_libraries)
+                or (excluded_libraries and library.title in excluded_libraries)):
                 continue
 
             # Get all Shows in this library
@@ -352,7 +350,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             series_info: SeriesInfo,
             *,
             log: Logger = log,
-        ) -> list[tuple[EpisodeInfo, Optional[bool]]]:
+        ) -> list[tuple[EpisodeInfo, WatchedStatus]]:
         """
         Gets all episode info for the given series. Only episodes that
         have  already aired are returned.
@@ -397,7 +395,14 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
             # Create a new EpisodeInfo, add to list
             episode_info = EpisodeInfo.from_plex_episode(plex_episode)
-            all_episodes.append((episode_info, plex_episode.isWatched))
+            all_episodes.append((
+                episode_info,
+                WatchedStatus(
+                    self._interface_id,
+                    library_name,
+                    plex_episode.isWatched,
+                ),
+            ))
 
         return all_episodes
 
@@ -406,10 +411,10 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
     def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
-            episodes: list['Episode'], # type: ignore
+            episodes: list[_Episode],
             *,
             log: Logger = log,
-        ) -> None:
+        ) -> bool:
         """
         Modify the Episodes' watched attribute according to the watched
         status of the corresponding episodes within Plex.
@@ -419,31 +424,46 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             series_info: The Series to update.
             episodes: List of Episode objects to update.
             log: Logger for all log messages.
+
+        Returns:
+            Whether any Episode's watched statuses were modified.
         """
 
         # If no episodes, exit
         if len(episodes) == 0:
-            return None
+            return False
 
         # If the given library cannot be found, exit
         if not (library := self.__get_library(library_name, log=log)):
             log.warning(f'Cannot find library "{library_name}" of {series_info}')
-            return None
+            return False
 
         # If the given series cannot be found in this library, exit
         if not (series := self.__get_series(library, series_info, log=log)):
             log.warning(f'Cannot find {series_info} in library "{library}"')
-            return None
+            return False
 
-        # Go through each episode within Plex and update Episode spoiler status
-        for plex_episode in series.episodes(container_size=500):
-            for episode in episodes:
-                if (plex_episode.parentIndex == episode.season_number
-                    and plex_episode.index == episode.episode_number):
-                    episode.watched = plex_episode.isWatched
+        # Get data for each Plex episode
+        plex_episodes = [
+            (
+                EpisodeInfo.from_plex_episode(episode),
+                WatchedStatus(
+                    self._interface_id, library_name, episode.isWatched,
+                )
+            )
+            for episode in series.episodes(container_size=500)
+        ]
+
+        # Update watched statuses of all Episodes
+        changed = False
+        for episode in episodes:
+            episode_info = episode.as_episode_info
+            for plex_episode, watched_status in plex_episodes:
+                if episode_info == plex_episode:
+                    changed |= episode.add_watched_status(watched_status)
                     break
 
-        return None
+        return changed
 
 
     @catch_and_log("Error setting series ID's")
@@ -592,7 +612,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         return [
             SearchResult(
                 name=result.title, year=result.year,
-                poster=f'/api/proxy/plex?url={result.thumb}',
+                poster=f'/api/proxy/plex?url={result.thumb}&interface_id={self._interface_id}',
                 overview=result.summary,
                 **parse_ids(result),
             ) for result in results
@@ -750,10 +770,10 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
     def load_title_cards(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_and_cards: list[tuple['Episode', 'Card']], # type: ignore
+            episode_and_cards: list[tuple[_Episode, _Card]],
             *,
             log: Logger = log,
-        ) -> list[tuple['Episode', 'Card']]: # type: ignore
+        ) -> list[tuple[_Episode, _Card]]:
         """
         Load the title cards for the given Series and Episodes.
 
@@ -833,12 +853,12 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             log: Logger for all log messages.
 
         Returns:
-            List of tuples of the library name, SeriesInfo, EpisodeInfo,
-            and the episode watch status corresponding to the given
-            rating key. If the object associated with the rating key is
-            a show/season, then all contained episodes are detailed.
-            An empty list is returned if the item(s) associated with the
-            given key cannot be found.
+            List of tuples of the SeriesInfo, EpisodeInfo, and the watch
+            status corresponding to the given rating key. If the object
+            associated with the rating key is a show or season, then all
+            contained episodes are detailed. An empty list is returned
+            if the item(s) associated with the given key cannot be
+            found.
         """
 
         try:
@@ -852,7 +872,11 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 return [EpisodeDetails(
                     series_info,
                     EpisodeInfo.from_plex_episode(ep),
-                    ep.isWatched
+                    WatchedStatus(
+                        self._interface_id,
+                        entry.librarySectionTitle, # entry.parent TODO evaluate
+                        ep.isWatched,
+                    )
                 ) for ep in entry.episodes()]
 
             # Season, return all episodes in season
@@ -863,7 +887,11 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 return [EpisodeDetails(
                     series_info,
                     EpisodeInfo.from_plex_episode(ep),
-                    ep.isWatched
+                    WatchedStatus(
+                        self._interface_id,
+                        ep.librarySectionTitle, # TODO double check
+                        ep.isWatched,
+                    ),
                 ) for ep in entry.episodes()]
 
             # Episode, return just that
@@ -874,13 +902,17 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 return [EpisodeDetails(
                     series_info,
                     EpisodeInfo.from_plex_episode(entry),
-                    entry.isWatched,
+                    WatchedStatus(
+                        self._interface_id,
+                        entry.librarySectionTitle, # TODO double check
+                        entry.isWatched,
+                    ),
                 )]
 
             log.warning(f'Item with rating key {rating_key} has no episodes')
             return []
         except NotFound:
-            log.error(f'No item with rating key {rating_key} exists')
+            log.warning(f'No item with rating key {rating_key} exists')
         except (ValueError, AssertionError):
             log.warning(f'Item with rating key {rating_key} has no year')
         except Exception as e:

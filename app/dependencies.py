@@ -1,29 +1,37 @@
 from datetime import datetime, timedelta
 from logging import Logger
-from pathlib import Path
-from typing import Iterator
+from typing import Any, Iterator, Optional, Union
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from fastapi import HTTPException, Request
-from requests import get
+from fastapi import HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
 from app.database.session import (
-    BlueprintSessionMaker, EmbyInterfaceLocal, ImageMagickInterfaceLocal,
-    JellyfinInterfaceLocal, PreferencesLocal, PlexInterfaceLocal, Scheduler,
-    SessionLocal, SonarrInterfaceLocal, TMDbInterfaceLocal,
+    BlueprintSessionMaker, EmbyInterfaces, ImageMagickInterfaceLocal,
+    JellyfinInterfaces, PreferencesLocal, Scheduler, SessionLocal,
+    TMDbInterfaces, PlexInterfaces, SonarrInterfaces,
 )
+from requests import get
+from sqlalchemy.orm import Session
+
 from app.models.preferences import Preferences
 
 from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
 from modules.ImageMagickInterface import ImageMagickInterface
+from modules.InterfaceGroup import InterfaceGroup
 from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
+"""Type for any generic interface"""
+AnyInterface = Union[
+    EmbyInterface, JellyfinInterface, PlexInterface, SonarrInterface,
+    TMDbInterface
+]
 
+"""Where to read/write the Blueprint SQL database file"""
 BLUEPRINT_DATABASE_FILE = Preferences.TEMPORARY_DIRECTORY / 'blueprints.db'
 
 
@@ -121,38 +129,76 @@ def get_preferences() -> Preferences:
     return PreferencesLocal
 
 
-# pylint: disable=global-statement
-def refresh_emby_interface(*, log: Logger = log) -> None:
+def _require_interface(
+        interface_group: InterfaceGroup,
+        interface_id: int,
+        name: str,
+    ) -> Any:
     """
-    Refresh the global interface to Emby. This reinitializes and
-    overrides the object.
+    Dependency to get the interface with the given ID from the given
+    `InterfaceGroup`.
 
     Args:
-        log: Logger for all log messages.
-    """
-
-    global EmbyInterfaceLocal
-    EmbyInterfaceLocal = EmbyInterface(
-        **get_preferences().emby_arguments, log=log
-    )
-
-
-def get_emby_interface() -> EmbyInterface:
-    """
-    Dependency to get the global interface to Emby. This refreshes the
-    connection if it is enabled but not initialized.
+        interface_group: InterfaceGroup containing all interfaces of
+            this connection.
+        interface_id: ID of the interface to return.
+        name: Name of the connection this interface corresponds to.
 
     Returns:
-        Global EmbyInterface.
+        `Interface` object with the given ID.
+
+    Raises:
+        HTTPException (400): The interface cannot be communicated with.
+        HTTPException (404): There is no interface with the given ID.
     """
 
-    if get_preferences().use_emby and not EmbyInterfaceLocal:
-        try:
-            refresh_emby_interface()
-        except Exception as e:
-            log.exception(f'Error connecting to Emby', e)
+    # Get this interface's arguments
+    if interface_id not in interface_group:
+        raise HTTPException(
+            status_code=404,
+            detail=f'No {name} Connection with ID {interface_id}'
+        )
 
-    return EmbyInterfaceLocal
+    # Interface enabled but not active, refresh
+    if not interface_group[interface_id]:
+        raise HTTPException(
+            status_code=400,
+            detail=f'Error connecting to {name}[{interface_id}]'
+        )
+
+    return interface_group[interface_id]
+
+
+# pylint: disable=global-statement
+def get_emby_interfaces() -> InterfaceGroup[int, EmbyInterface]:
+    """
+    Dependency to get all interfaces to Emby.
+
+    Returns:
+        Global `InterfaceGroup` of `EmbyInterface` objects.
+    """
+
+    return EmbyInterfaces
+
+
+def require_emby_interface(interface_id: int = Query(...)) -> EmbyInterface:
+    """
+    Dependency to get the `EmbyInterface` with the given ID. This adds
+    `interface_id` as a Query parameter.
+
+    Args:
+        interface_id: ID of the interface to get.
+
+    Returns:
+        `EmbyInterface` with the given ID as defined in the global
+        `InterfaceGroup`.
+
+    Raises:
+        HTTPException (400): The interface cannot be communicated with.
+        HTTPException (404): There is no interface with the given ID.
+    """
+
+    return _require_interface(EmbyInterfaces, interface_id, 'Emby')
 
 
 def refresh_imagemagick_interface() -> None:
@@ -181,135 +227,169 @@ def get_imagemagick_interface() -> ImageMagickInterface:
     return ImageMagickInterfaceLocal
 
 
-def refresh_jellyfin_interface(*, log: Logger = log) -> JellyfinInterface:
+def get_jellyfin_interfaces() -> InterfaceGroup[int, JellyfinInterface]:
     """
-    Refresh the global interface to Jellyfin. This reinitializes and
-    overrides the object.
-
-    Args:
-        log: Logger for all log messages.
-    """
-
-    global JellyfinInterfaceLocal
-    JellyfinInterfaceLocal = JellyfinInterface(
-        **get_preferences().jellyfin_arguments, log=log
-    )
-
-
-def get_jellyfin_interface() -> JellyfinInterface:
-    """
-    Dependency to get the global interface to Jellyfin. This refreshes
-    the connection if it is enabled but not initialized.
+    Dependency to get all interfaces to Jellyfin.
 
     Returns:
-        Global JellyfinInterface.
+        Global `InterfaceGroup` of `JellyfinInterface` objects.
     """
 
-    if get_preferences().use_jellyfin and not JellyfinInterfaceLocal:
-        try:
-            refresh_jellyfin_interface()
-        except Exception as e:
-            log.exception(f'Error connecting to Jellyfin', e)
-
-    return JellyfinInterfaceLocal
+    return JellyfinInterfaces
 
 
-def refresh_plex_interface(*, log: Logger = log) -> None:
+def require_jellyfin_interface(interface_id: int = Query(...)) -> JellyfinInterface:
     """
-    Refresh the global interface to Plex. This reinitializes and
-    overrides the object.
+    Dependency to get the `JellyfinInterface` with the given ID. This
+    adds `interface_id` as a Query parameter.
 
     Args:
-        log: Logger for all log messages.
-    """
-
-    global PlexInterfaceLocal
-    PlexInterfaceLocal = PlexInterface(
-        **get_preferences().plex_arguments, log=log
-    )
-
-
-def get_plex_interface() -> PlexInterface:
-    """
-    Dependency to get the global interface to Plex. This refreshes the
-    connection if it is enabled but not initialized.
+        interface_id: ID of the interface to get.
 
     Returns:
-        Global PlexInterface.
+        `JellyfinInterface` with the given ID as defined in the global
+        `InterfaceGroup`.
+
+    Raises:
+        HTTPException (400): The interface cannot be communicated with.
+        HTTPException (404): There is no interface with the given ID.
     """
 
-    if get_preferences().use_plex and not PlexInterfaceLocal:
-        try:
-            refresh_plex_interface()
-        except Exception as e:
-            log.exception(f'Error connecting to Plex', e)
-
-    return PlexInterfaceLocal
+    return _require_interface(JellyfinInterfaces, interface_id, 'Jellyfn')
 
 
-def refresh_sonarr_interface(*, log: Logger = log) -> None:
+def get_plex_interfaces() -> InterfaceGroup[int, PlexInterface]:
     """
-    Refresh the global interface to Sonarr. This reinitializes and
-    overrides the object.
+    Dependency to get all interfaces to Plex.
+
+    Returns:
+        Global `InterfaceGroup` of `PlexInterface` objects.
+    """
+
+    return PlexInterfaces
+
+
+def require_plex_interface(interface_id: int = Query(...)) -> PlexInterface:
+    """
+    Dependency to get the `PlexInterface` with the given ID. This adds
+    `interface_id` as a Query parameter.
 
     Args:
-        log: Logger for all log messages.
-    """
-
-    global SonarrInterfaceLocal
-    SonarrInterface.REQUEST_TIMEOUT = 15
-    SonarrInterfaceLocal = SonarrInterface(
-        **get_preferences().sonarr_arguments, log=log
-    )
-    SonarrInterface.REQUEST_TIMEOUT = 600
-
-
-def get_sonarr_interface() -> SonarrInterface:
-    """
-    Dependency to get the global interface to Sonarr. This refreshes the
-    connection if it is enabled but not initialized.
+        interface_id: ID of the interface to get.
 
     Returns:
-        Global SonarrInterface.
+        `PlexInterface` with the given ID as defined in the global
+        `InterfaceGroup`.
+
+    Raises:
+        HTTPException (400): The interface cannot be communicated with.
+        HTTPException (404): There is no interface with the given ID.
     """
 
-    if get_preferences().use_sonarr and not SonarrInterfaceLocal:
-        try:
-            refresh_sonarr_interface()
-        except Exception as e:
-            log.exception(f'Error connecting to Sonarr', e)
-
-    return SonarrInterfaceLocal
+    return _require_interface(PlexInterfaces, interface_id, 'Plex')
 
 
-def refresh_tmdb_interface(*, log: Logger = log) -> None:
+def get_sonarr_interfaces() -> InterfaceGroup[int, SonarrInterface]:
     """
-    Refresh the global interface to TMDb. This reinitializes and
-    overrides the object.
+    Dependency to get all interfaces to Sonarr.
+
+    Returns:
+        Global `InterfaceGroup` of `SonarrInterface` objects.
+    """
+
+    return SonarrInterfaces
+
+
+def require_sonarr_interface(interface_id: int = Query(...)) -> SonarrInterface:
+    """
+    Dependency to get the `SonarrInterface` with the given ID. This adds
+    `interface_id` as a Query parameter.
 
     Args:
-        log: Logger for all log messages.
-    """
-
-    global TMDbInterfaceLocal
-    TMDbInterfaceLocal = TMDbInterface(
-        **get_preferences().tmdb_arguments, log=log
-    )
-
-
-def get_tmdb_interface() -> TMDbInterface:
-    """
-    Dependency to get the global interface to TMDb. This refreshes the
-    connection if it is enabled but not initialized.
+        interface_id: ID of the interface to get.
 
     Returns:
-        Global TMDbInterface.
+        `SonarrInterface` with the given ID as defined in the global
+        `InterfaceGroup`.
+
+    Raises:
+        HTTPException (400): The interface cannot be communicated with.
+        HTTPException (404): There is no interface with the given ID.
     """
 
-    if get_preferences().use_tmdb and not TMDbInterfaceLocal:
-        try:
-            refresh_tmdb_interface()
-        except Exception as e:
-            log.exception(f'Error connecting to TMDb', e)
+    return _require_interface(SonarrInterfaces, interface_id, 'sonarr')
 
-    return TMDbInterfaceLocal
+
+def get_tmdb_interfaces() -> InterfaceGroup[int, TMDbInterface]:
+    """
+    Dependency to get all interfaces to TMDb.
+
+    Returns:
+        Global `InterfaceGroup` of `TMDbInterface` objects.
+    """
+
+    return TMDbInterfaces
+
+
+def require_tmdb_interface(
+        interface_id: Optional[int] = Query(default=None)
+    ) -> TMDbInterface:
+    """
+    Dependency to get the `TMDbInterface` with the given ID. This adds
+    `interface_id` as a Query parameter. If the parameter is omitted,
+    then the first TMDbInterface is used.
+
+    Args:
+        interface_id: ID of the interface to get.
+
+    Returns:
+        `TMDbInterface` with the given ID (or the first one if
+        `interface_id` is None) as defined in the global
+        `InterfaceGroup`.
+
+    Raises:
+        HTTPException (400): The interface cannot be communicated with.
+        HTTPException (404): There is no interface with the given ID.
+    """
+
+    if interface_id is None:
+        for _, interface in TMDbInterfaces:
+            return interface
+
+    return _require_interface(TMDbInterfaces, interface_id, 'tmdb')
+
+
+def require_interface(interface_id: int = Query(...)) -> AnyInterface:
+    """
+    Dependency to get the interface with the given ID. This adds
+    `interface_id` as a Query parameter.
+
+    Args:
+        interface_id: ID of the interface to get.
+
+    Returns:
+        Interface with the given ID as defined in the global
+        `InterfaceGroup` for the corresponding type.
+
+    Raises:
+        HTTPException (400): The interface cannot be communicated with.
+        HTTPException (404): There is no interface with the given ID.
+    """
+
+    groups = (
+        (EmbyInterfaces, 'Emby'), (JellyfinInterfaces, 'Jellyfin'),
+        (PlexInterfaces, 'Plex'), (SonarrInterfaces, 'Sonarr'),
+        (TMDbInterfaces, 'TMDb'),
+    )
+
+    for interface_group, name in groups:
+        try:
+            return _require_interface(interface_group, interface_id, name)
+        except HTTPException as exc:
+            if exc.status_code != 404:
+                raise exc
+
+    raise HTTPException(
+        status_code=404,
+        detail=f'No Connection with ID {interface_id}'
+    )

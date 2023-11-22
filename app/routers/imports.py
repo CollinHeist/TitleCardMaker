@@ -1,4 +1,5 @@
-from typing import Literal, Optional
+from shutil import copyfile
+from typing import Literal
 
 from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request
@@ -18,9 +19,7 @@ from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo
 from app import models
 from app.schemas.font import NamedFont
-from app.schemas.imports import (
-    ImportCardDirectory, ImportSeriesYaml, ImportYaml, MultiCardImport
-)
+from app.schemas.imports import ImportCardDirectory, ImportYaml, MultiCardImport
 from app.schemas.preferences import Preferences
 from app.schemas.series import Series, Template
 from app.schemas.sync import Sync
@@ -70,8 +69,8 @@ def import_connection_yaml(
         request: Request,
         connection: Literal['all', 'emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
         import_yaml: ImportYaml = Body(...),
-        preferences: Preferences = Depends(get_preferences)
-    ) -> Preferences:
+        db: Session = Depends(get_database),
+    ) -> None:
     """
     Import the connection preferences defined in the given YAML. This
     does NOT import any Sync settings.
@@ -86,34 +85,25 @@ def import_connection_yaml(
     # Parse raw YAML into dictionary
     yaml_dict = parse_raw_yaml(import_yaml.yaml)
     if len(yaml_dict) == 0:
-        return preferences
-
-    def _parse_all(*args, **kwargs):
-        parse_emby(*args, **kwargs)
-        parse_jellyfin(*args, **kwargs)
-        parse_plex(*args, **kwargs)
-        parse_sonarr(*args, **kwargs)
-        parse_tmdb(*args, **kwargs)
-
-        return preferences
-
-    parse_function = {
-        'all': _parse_all,
-        'emby': parse_emby,
-        'jellyfin': parse_jellyfin,
-        'plex': parse_plex,
-        'tmdb': parse_tmdb,
-        'sonarr': parse_sonarr,
-    }[connection]
+        return None
 
     try:
-        return parse_function(preferences, yaml_dict, log=log)
-    except ValidationError as e:
-        log.exception(f'Invalid YAML', e)
+        if connection in ('all', 'emby'):
+            parse_emby(db, yaml_dict, log=log)
+        if connection in ('all', 'jellyfin'):
+            parse_jellyfin(db, yaml_dict, log=log)
+        if connection in ('all', 'plex'):
+            parse_plex(db, yaml_dict, log=log)
+        if connection in ('all', 'sonarr'):
+            parse_sonarr(db, yaml_dict, log=log)
+        if connection in ('all', 'tmdb'):
+            parse_tmdb(db, yaml_dict, log=log)
+    except ValidationError as exc:
+        log.exception(f'Invalid YAML', exc)
         raise HTTPException(
             status_code=422,
-            detail=f'YAML is invalid - {e}'
-        ) from e
+            detail=f'YAML is invalid - {exc}'
+        ) from exc
 
 
 @import_router.post('/preferences/sync', status_code=201)
@@ -168,7 +158,8 @@ def import_sync_yaml(
 def import_fonts_yaml(
         request: Request,
         import_yaml: ImportYaml = Body(...),
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
+        preferences: Preferences = Depends(get_preferences),
     ) -> list[NamedFont]:
     """
     Import all Fonts defined in the given YAML. This does NOT import any
@@ -198,12 +189,25 @@ def import_fonts_yaml(
 
     # Add each defined Font to the database
     all_fonts = []
-    for new_font in new_fonts:
+    for new_font, font_file in new_fonts:
         font = models.font.Font(**new_font.dict())
         db.add(font)
+        db.commit()
         log.info(f'{font.log_str} imported to Database')
         all_fonts.append(font)
-    db.commit()
+
+        # If there is a Font file, copy into asset directory
+        if font_file is not None:
+            if font_file.exists():
+                font_directory = preferences.asset_directory / 'fonts'
+                file_path = font_directory / str(font.id) / font_file.name
+                copyfile(font_file, file_path)
+
+                # Update object and database
+                font.file_name = file_path.name
+                db.commit()
+            else:
+                log.error(f'Font File "{font_file.resolve()}" does not exist')
 
     return all_fonts
 
@@ -255,15 +259,9 @@ def import_template_yaml(
 def import_series_yaml(
         background_tasks: BackgroundTasks,
         request: Request,
-        import_yaml: ImportSeriesYaml = Body(...),
+        import_yaml: ImportYaml = Body(...),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
     ) -> list[Series]:
     """
     Import all Series defined in the given YAML.
@@ -281,9 +279,7 @@ def import_series_yaml(
 
     # Create NewSeries objects from the YAML dictionary
     try:
-        new_series = parse_series(
-            db, preferences, yaml_dict, import_yaml.default_library, log=log,
-        )
+        new_series = parse_series(db, preferences, yaml_dict, log=log)
     except ValidationError as e:
         log.exception(f'Invalid YAML', e)
         raise HTTPException(
@@ -312,22 +308,19 @@ def import_series_yaml(
             # Function
             set_series_database_ids,
             # Arguments
-            series, db, emby_interface, jellyfin_interface, plex_interface,
-            sonarr_interface, tmdb_interface, log=log,
+            series, db, log=log,
         )
         background_tasks.add_task(
             # Function
             download_series_poster,
             # Arguments
-            db, preferences, series, emby_interface, imagemagick_interface,
-            jellyfin_interface, plex_interface, tmdb_interface, log=log,
+            db, series, log=log,
         )
         background_tasks.add_task(
             # Function
             download_series_logo,
             # Arguments
-            preferences, emby_interface, imagemagick_interface,
-            jellyfin_interface, tmdb_interface, series, log=log,
+            series, log=log,
         )
         all_series.append(series)
     db.commit()
@@ -356,8 +349,9 @@ def import_cards_for_series(
     series = get_series(db, series_id, raise_exc=True)
 
     import_cards(
-        db, series, card_directory.directory, card_directory.image_extension,
-        card_directory.force_reload, log=request.state.log,
+        db, series, card_directory.directory,
+        card_directory.image_extension, card_directory.force_reload,
+        log=request.state.log,
     )
 
 

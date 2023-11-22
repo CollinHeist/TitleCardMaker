@@ -1,3 +1,6 @@
+/**
+ * Download the current page of logs. This parses the HTML for content.
+ */
 function downloadPage() {
   // Get arrays of each value
   const levels = $('#log-data [data-value="level"]').map(function() { return $(this).text(); }).get();
@@ -13,6 +16,11 @@ function downloadPage() {
   downloadTextFile('tcm_log.txt', logStr);
 }
 
+/**
+ * Set the given level as the currently selected value in the dropdown.
+ * @param {"debug" | "info" | "warning" | "error" | "critical"} level - The log
+ * level to set as the current selection in the dropdown.
+ */
 function updateMessageLevel(level) {
   // Uppercase first letter of level
   const newLevel = level.charAt(0).toUpperCase() + level.slice(1)
@@ -21,20 +29,28 @@ function updateMessageLevel(level) {
   $('.dropdown[data-value="level"]').dropdown('set value', newLevel.toLowerCase());
 }
 
+/**
+ * Set the timestamp filter field to the given value. This updates the "after"
+ * field if blank, then the before field. If neither are blank nothing happens.
+ * @param {string} timestamp - Timestamp to set as the current value.
+ */
 function updateTimestamp(timestamp) {
   // Get current values of before/after
   const currentAfter = $('input[name="after"]').val();
   const currentBefore = $('input[name="before"]').val();
+
   // Populate after if blank, else before
   if (currentAfter === '') {
     $('input[name="after"]')[0].value = timestamp;
   } else if (currentBefore === '') {
     $('input[name="before"]')[0].value = timestamp;
-  } else {
-    //
   }
 }
 
+/**
+ * Add the given context ID to the current log filter input field.
+ * @param {string} id - Unique context ID to add to the current log filters.
+ */
 function appendContextID(id) {
   // Get current value
   const currentVal = $('input[name="context_id"]').val();
@@ -44,6 +60,9 @@ function appendContextID(id) {
   }
 }
 
+/**
+ * Reset the filter form.
+ */
 function resetForm() {
   $('#log-filters').form('clear');
 }
@@ -94,11 +113,14 @@ async function queryForLogs(page=1) {
     navigateFunction: queryForLogs,
     page: messageData.page,
     pages: messageData.pages,
-    amountVisible: 10,
+    amountVisible: 5,
   });
 }
 
-
+/**
+ * Initialize the page. This queries for logs, initializes dropdowns, and
+ * initializes the after/before calendar inputs.
+ */
 function initAll() {
   queryForLogs();
 

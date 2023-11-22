@@ -196,7 +196,7 @@ nav:
     - user_guide/index.md
     - Series: user_guide/series.md
     - Adding Series: user_guide/new_series.md
-    # - Templates: user_guide/templates.md
+    - Templates: user_guide/templates.md
     - Fonts: user_guide/fonts.md
     # - Sync: user_guide/sync.md
     - Connections: user_guide/connections.md

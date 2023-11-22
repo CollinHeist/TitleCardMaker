@@ -11,17 +11,357 @@
 
   <link rel="stylesheet" type="text/css" href="/templates/css/connections.css"/>
 
-  <template id="sync-volume">
-    <div class="two wide library field">
-      <label>Library</label>
-      <input type="text" placeholder="Library Name">
+  <template id="interface-dropdown-template">
+    <div data-value="interface_id" class="ui selection dropdown">
+      <input type="hidden" name="interface_id">
+      <i class="dropdown icon"></i>
+      <div class="default text"></div>
+      <div class="menu"></div>
     </div>
-    <div class="four wide field">
-      <label>Path</label>
-      <input type="text" placeholder="Library Path">
+  </template>
+
+  <template id="emby-connection-template">
+    <div class="title">
+      <i class="dropdown icon"></i>
+      New Connection
+      <span class="right floated">New</span>
+    </div>
+    <div class="content">
+      <form class="ui fluid form" form-type="emby">
+        <div data-value="enabled" class="ui left aligned checkbox field">
+          <input name="enabled" type="checkbox" checked="">
+          <label>Enabled</label>
+        </div>
+
+        <div class="ui required eight wide field">
+          <label>Connection Name</label>
+          <input name="name" type="text" value="Server">
+          <p class="help">Name of this Connection within TCM.</p>
+        </div>
+
+        <div class="ui required eight wide field">
+          <label>URL</label>
+          <input name="url" type="text" placeholder="http://192.168.0.1:8000/">
+          <p class="help">Host URL or IP Address of the server (including the port number).</p>
+        </div>
+
+        <div class="ui required eight wide field">
+          <label>API Key</label>
+          <input name="api_key" type="text" class="private">
+          <p class="help">API key to authenticate communication.</p>
+        </div>
+
+        <div class="ui required field" data-value="username">
+          <label>Username</label>
+          <div data-value="username" class="ui compact selection dropdown">
+            <input type="hidden" name="username">
+            <i class="dropdown icon"></i>
+            <div class="default text"></div>
+            <div class="menu"></div>
+          </div>
+          <p class="help">Username of the user to query Episode watched statuses from.</p>
+        </div>
+
+        <div data-value="use_ssl" class="ui left aligned checkbox field">
+          <label>Use SSL</label>
+          <input name="use_ssl" type="checkbox">
+          <p class="help">Connect with HTTPS instead of HTTP.</p>
+        </div>
+
+        <div class="ui eight wide field">
+          <label>Filesize Limit</label>
+          <input name="filesize_limit" type="text" value="5 Megabytes">
+          <p class="help">
+            Maximum file size of Title Cards to upload.
+            <br>
+            Title Cards larger than this will be compressed.
+          </p>
+        </div>
+
+        <div class="ui error message"></div>
+        <button class="ui primary animated button" type="submit" data-action="save">
+          <div class="visible content">Save Changes</div>
+          <div class="hidden content">
+            <i class="right arrow icon"></i>
+          </div>
+        </button>
+        <button class="ui negative animated button" data-action="delete">
+          <div class="visible content">Delete</div>
+          <div class="hidden content">
+            <i class="trash icon"></i>
+          </div>
+        </button>
+      </form>
+    </div>
+  </template>
+
+  <template id="plex-connection-template">
+    <div class="title">
+      <i class="dropdown icon"></i>
+      New Connection
+      <span class="right floated">New</span>
+    </div>
+    <div class="content">
+      <form class="ui fluid form" form-type="plex">
+        <div data-value="enabled" class="ui left aligned checkbox field">
+          <label>Enabled</label>
+          <input name="enabled" type="checkbox" checked="">
+          <p class="help">Disabled Connections cannot be interacted with by TitleCardMaker.</p>
+        </div>
+
+        <div class="ui required eight wide field">
+          <label>Connection Name</label>
+          <input name="name" type="text" value="Plex">
+          <p class="help">Name of this Connection within TCM.</p>
+        </div>
+
+        <div class="ui required eight wide field">
+          <label>URL</label>
+          <input name="url" type="text" placeholder="http://localhost:32400/">
+          <p class="help">Host URL or IP Address of the server (including the port number).</p>
+        </div>
+
+        <div class="ui required eight wide field">
+          <label>Token <a href="https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/" target="_blank"><i class="external alternate small icon"></i></a></label>
+          <input name="api_key" type="text" class="private" placeholder="Token">
+          <p class="help">X-Plex-Token to authenticate communication.</p>
+        </div>
+
+        <div data-value="use_ssl" class="ui left aligned checkbox field"">
+          <label>Use SSL</label>
+          <input name="use_ssl" type="checkbox">
+          <p class="help">Connect with HTTPS instead of HTTP.</p>
+        </div>
+        <br>
+
+        <div data-value="integrate_with_pmm" class="ui left aligned checkbox field">
+          <label>Integrate with Plex Meta Manager</label>
+          <input name="integrate_with_pmm" type="checkbox">
+          <p class="help">
+            Whether to remove the <b>Overlay</b> label after uploading Title Cards.
+            <br>
+            This also prevents TCM from grabbing Source Images with overlays applied.
+          </p>
+        </div>
+
+        <div class="ui eight wide field">
+          <label>Filesize Limit</label>
+          <input name="filesize_limit" type="text" value="5 Megabytes">
+          <p class="help">
+            Maximum file size of Title Cards to upload.
+            <br>
+            Title Cards larger than this will be compressed.
+            <br>
+            Plex rejects all images larger than 10 Megabytes.
+          </p>
+        </div>
+
+        <div class="ui field">
+          <label>Tautulli Agent</label>
+          <button class="ui green animated button" data-action="tautulli" type="button">
+            <div class="visible content">Create Notification Agent</div>
+            <div class="hidden content">
+              <i class="right arrow icon"></i>
+            </div>
+          </button>
+          <p class="help">
+            Create a Notification Agent in Tautulli.
+            <br>
+            Once created, this does not need to be re-created unless this Connection is deleted.
+          </p>
+        </div>
+
+        <div class="ui error message"></div>
+        <button class="ui primary animated button" type="submit" data-action="save">
+          <div class="visible content">Save Changes</div>
+          <div class="hidden content">
+            <i class="right arrow icon"></i>
+          </div>
+        </button>
+        <button class="ui negative animated button" data-action="delete">
+          <div class="visible content">Delete</div>
+          <div class="hidden content">
+            <i class="trash icon"></i>
+          </div>
+        </button>
+      </form>
+    </div>
+  </template>
+
+  <template id="sonarr-connection-template">
+    <div class="title">
+      <i class="dropdown icon"></i>
+      New Connection
+      <span class="right floated">New</span>
+    </div>
+    <div class="content">
+      <form class="ui fluid form" form-type="sonarr">
+        <div data-value="enabled" class="ui left aligned checkbox field">
+          <label>Enabled</label>
+          <input name="enabled" type="checkbox" checked="">
+        </div>
+
+        <div class="ui required eight wide field">
+          <label>Connection Name</label>
+          <input name="name" type="text" value="Sonarr">
+          <p class="help">Name of this Connection within TCM.</p>
+        </div>
+
+        <div class="ui required eight wide field">
+          <label>URL</label>
+          <input name="url" type="text" placeholder="http://localhost:8989/">
+          <p class="help">Host URL or IP Address of the server (including the port number).</p>
+        </div>
+
+        <div class="ui required eight wide field">
+          <label>API Key</label>
+          <input name="api_key" type="text" class="private" placeholder="API Key">
+          <p class="help">API key to authenticate communication.</p>
+        </div>
+
+        <div data-value="use_ssl" class="ui left aligned checkbox field">
+          <label>Use SSL</label>
+          <input name="use_ssl" type="checkbox">
+          <p class="help">Connect with HTTPS instead of HTTP.</p>
+        </div>
+        <br>
+
+        <div data-value="downloaded_only" class="ui left aligned checkbox field">
+          <label>Query Downloaded Episodes Only</label>
+          <input name="downloaded_only" type="checkbox">
+          <p class="help">Only get data for Episodes which are downloaded.</p>
+        </div>
+
+        <div class="ui eight wide field" data-value="libraries">
+          <label>Library Paths</label>
+          <p class="help">
+            How to interpret Sonarr's paths when auto-assigning Libraries.
+            <br>
+            Only required if Syncing from Sonarr.
+          </p>
+          <div class="ui compact floating visible warning message">
+            <i class="exclamation icon"></i>
+            Libraries must be added after the Connection is created.
+          </div>
+          <div class="ui segment">
+
+            <div class="three equal width fields">
+              <div class="ui required library field" data-value="media_server">
+                <label>Media Server</label>
+                <p class="help">Associated server.</p>
+                <!-- Added asychronously -->
+              </div>
+  
+              <div class="library field" data-value="library_name">
+                <label>Library Name</label>
+                <p class="help">Name of the library to assign.</p>
+                <!-- Added asynchronously -->
+              </div>
+              
+              <div class="library field" data-value="library_path">
+                <label>Path</label>
+                <p class="help">Root directory of this library.</p>
+                <!-- Added asynchronously -->
+              </div>
+            </div>
+            <div class="circular ui icon mini button" data-action="add-library">
+              <i class="plus square outline icon"></i>
+              Add Library
+            </div>
+            <div class="circular ui icon mini button" data-action="query-libraries" data-tooltip="Attempt to auto-detect Sonarr libraries">
+              <i class="search icon"></i>
+              Auto-fill Libraries
+            </div>
+          </div>
+        </div>
+
+        <div class="ui error message"></div>
+        <button class="ui primary animated button" type="submit" data-action="save">
+          <div class="visible content">Save Changes</div>
+          <div class="hidden content">
+            <i class="right arrow icon"></i>
+          </div>
+        </button>
+        <button class="ui negative animated button" data-action="delete">
+          <div class="visible content">Delete</div>
+          <div class="hidden content">
+            <i class="trash icon"></i>
+          </div>
+        </button>
+      </form>
     </div>
   </template>
   
+  <template id="tmdb-connection-template">
+    <div class="title">
+      <i class="dropdown icon"></i>
+      New Connection
+      <span class="right floated">New</span>
+    </div>
+    <div class="content">
+      <form class="ui fluid form" form-type="plex">
+        <div data-value="enabled" class="ui left aligned checkbox field">
+          <label>Enabled</label>
+          <input name="enabled" type="checkbox" checked="">
+        </div>
+
+        <div data-value="name" class="ui required eight wide field">
+          <label>Connection Name</label>
+          <input name="name" type="text" value="TMDb">
+          <p class="help">Name of this Connection within TCM.</p>
+        </div>
+
+        <div data-value="api_key" class="ui required eight wide field">
+          <label>API Key <a href="https://developers.themoviedb.org/3/getting-started/introduction" target="_blank"><i class="external alternate small icon"></i></a></label>
+          <input name="api_key" type="text" class="private">
+          <p class="help">Key to submit API requests to TMDb.</p>
+        </div>
+
+        <div data-value="minimum_dimensions" class="ui required four wide field">
+          <label>Minimum Image Dimensions</label>
+          <input name="minimum_dimensions" type="text" value="800x400">
+          <p class="help">
+            Minimum image resolution for source images from TMDb (in pixels) - enter as <b>width</b>x<b>height</b>.
+          </p>
+        </div>
+
+        <div data-value="ignore_localized" class="ui left aligned checkbox field">
+          <label>Ignore Localized Images</label>
+          <input name="ignore_localized" type="checkbox">
+          <p class="help">
+            Whether to ignore images with assigned Languages (i.e. images with text).
+            <br>
+            Can be overwritten per-Series.
+          </p>
+        </div>
+
+        <div data-value="logo_language_priority" class="ui required field">
+          <label>Logo Language Priority</label>
+          <div data-value="logo_language_priority" class="ui compact multiple search selection dropdown">
+            <input type="hidden" name="logo_language_priority">
+            <i class="dropdown icon"></i>
+            <div class="default text"></div>
+            <div class="menu"></div>
+          </div>
+          <p class="help">Order of languages to search for logos in.</p>
+        </div>
+
+        <div class="ui error message"></div>
+        <button class="ui primary animated button" type="submit" data-action="save">
+          <div class="visible content">Save Changes</div>
+          <div class="hidden content">
+            <i class="right arrow icon"></i>
+          </div>
+        </button>
+        <button class="ui negative animated button" data-action="delete">
+          <div class="visible content">Delete</div>
+          <div class="hidden content">
+            <i class="trash icon"></i>
+          </div>
+        </button>
+      </form>
+    </div>
+  </template>
 </head>
 
 <body onload="initAll();">
@@ -80,453 +420,58 @@
       </div>
 
       <!-- Emby Connections -->
-      <h2 id="emby" class="ui dividing header">Emby Media Server</h2>
-      <div id="emby-connection" class="connection-form">
-        <!-- Enable button -->
-        {% if preferences.use_emby %}
-        <div id="enable-emby" class="ui left aligned checked checkbox field">
-          <input type="checkbox" checked="">
-        {% else %}
-        <div id="enable-emby" class="ui left aligned checkbox field">
-          <input type="checkbox" >
-        {% endif %}
-          <label for="enable-emby-checkbox">Enable Emby</label>
-        </div>
-
-        <form id="emby-settings" class="ui fluid form">
-          <div class="ui disabled required eight wide field">
-            <label>URL</label>
-            <input name="url" type="text" value="{{preferences.emby_url}}">
-            <p class="help">Host URL or IP Address of the server (including the port number).</p>
-          </div>
-
-          <div class="ui disabled required eight wide field">
-            <label>API Key</label>
-            <input name="api_key" type="text" class="private" value="{{preferences.emby_api_key}}">
-            <p class="help">API key to authenticate communication.</p>
-          </div>
-
-          <div class="ui disabled required field">
-            <label>Username</label>
-            <div data-value="emby_username" class="ui compact selection dropdown">
-              <input type="hidden" name="username">
-              <i class="dropdown icon"></i>
-              <div class="default text">{{preferences.emby_username}}</div>
-              <div class="menu"></div>
-            </div>
-            <p class="help">Username of the user to query Episode watched statuses from.</p>
-          </div>
-
-          <div class="ui left aligned disabled checkbox field">
-            <label>Use SSL</label>
-            {% if preferences.emby_use_ssl %}
-            <input name="use_ssl" type="checkbox" checked="">
-            {% else %}
-            <input name="use_ssl" type="checkbox">
-            {% endif %}
-            <p class="help">Connect with HTTPS instead of HTTP.</p>
-          </div>
-
-          <div class="ui disabled field">
-            <label>Filesize Limit</label>
-            <div class="ui fields">
-              <div class="two wide field">
-                <input name="filesize_limit_number" type="number" min="0" value="{{preferences.emby_filesize_limit_number}}" placeholder="None">
-              </div>
-              <div class="three wide field">
-                <div data-value="emby_filesize_limit_unit" class="ui selection dropdown">
-                  <input name="filesize_limit_unit" type="hidden">
-                  <i class="dropdown icon"></i>
-                  <div class="default text"></div>
-                  <div class="menu"></div>
-                </div>
-              </div>
-            </div>
-            <p class="help">
-              Maximum file size of Title Cards to upload.
-              <br>
-              Title Cards larger than this will be compressed.
-            </p>
-          </div>
-
-          <div class="ui error message"></div>
-          <div class=field>
-            <button id="submit-emby" class="ui primary animated button" type="submit">
-              <div class="visible content">Save Changes</div>
-              <div class="hidden content">
-                <i class="right arrow icon"></i>
-              </div>
-            </button>
-          </div>
-        </form>
+      <h2 class="ui dividing header">Emby</h2>
+      <button class="ui blue tertiary add-connection button" onclick="addConnection('emby');">
+        Add Connection
+      </button>
+      <div id="emby-connections" class="ui styled fluid accordion">
+        <!-- Added later -->
       </div>
 
       <!-- Jellyfin Connections -->
-      <h2 id="jellyfin" class="ui dividing header">Jellyfin Media Server</h2>
-      <div id="jellyfin-connection" class="connection-form">
-        <!-- Enable button -->
-        {% if preferences.use_jellyfin %}
-        <div id="enable-jellyfin" class="ui left aligned checked checkbox field">
-          <input id="enable-jellyfin-checkbox" type="checkbox" checked="">
-        {% else %}
-        <div id="enable-jellyfin" class="ui left aligned checkbox field">
-          <input id="enable-jellyfin-checkbox" type="checkbox" >
-        {% endif %}
-          <label for="enable-jellyfin-checkbox">Enable Jellyfin</label>
-        </div>
-
-        <form id="jellyfin-settings" class="ui fluid form">
-          <div class="ui disabled required eight wide field">
-            <label>URL</label>
-            <input name="url" type="text" value="{{preferences.jellyfin_url}}">
-            <p class="help">Host URL or IP Address of the server (including the port number).</p>
-          </div>
-
-          <div class="ui disabled required eight wide field">
-            <label>API Key</label>
-            <input name="api_key" type="text" class="private" value="{{preferences.jellyfin_api_key}}">
-            <p class="help">API key to authenticate communication.</p>
-          </div>
-
-          <div class="ui disabled required field">
-            <label>Username</label>
-            <div data-value="jellyfin_username" class="ui compact selection dropdown">
-              <input type="hidden" name="username">
-              <i class="dropdown icon"></i>
-              <div class="default text">{{preferences.jellyfin_username}}</div>
-              <div class="menu"></div>
-            </div>
-            <p class="help">Username of the user to query Episode watched statuses from.</p>
-          </div>
-
-          <div class="ui left aligned disabled checkbox field">
-            <label>Use SSL</label>
-            {% if preferences.jellyfin_use_ssl %}
-            <input name="use_ssl" type="checkbox" checked="">
-            {% else %}
-            <input name="use_ssl" type="checkbox">
-            {% endif %}
-            <p class="help">Connect with HTTPS instead of HTTP.</p>
-          </div>
-
-          <div class="ui disabled field">
-            <label>Filesize Limit</label>
-            <div class="ui fields">
-              <div class="two wide field" data-tooltip="Maximum file size of assets to upload to Jellyfin">
-                <input name="filesize_limit_number" type="number" min="0" placeholder="None" value="{{preferences.jellyfin_filesize_limit_number}}">
-              </div>
-              <div class="three wide field">
-                <div data-value="jellyfin_filesize_limit_unit" class="ui selection dropdown">
-                  <input name="filesize_limit_unit" type="hidden">
-                  <i class="dropdown icon"></i>
-                  <div class="default text"></div>
-                  <div class="menu"></div>
-                </div>
-              </div>
-            </div>
-            <p class="help">
-              Maximum file size of Title Cards to upload.
-              <br>
-              Title Cards larger than this will be compressed.
-            </p>
-          </div>
-
-          <div class="ui error message"></div>
-          <div class=field>
-            <button id="submit-jellyfin" class="ui primary animated button" type="submit">
-              <div class="visible content">Save Changes</div>
-              <div class="hidden content">
-                <i class="right arrow icon"></i>
-              </div>
-            </button>
-          </div>
-        </form>
+      <h2 class="ui dividing header">Jellyfin</h2>
+      <button class="ui blue tertiary add-connection button" onclick="addConnection('jellyfin');">
+        Add Connection
+      </button>
+      <div id="jellyfin-connections" class="ui styled fluid accordion">
+        <!-- Added later -->
       </div>
 
       <!-- Plex Connections -->
-      <h2 id="plex" class="ui dividing header">Plex Media Server</h2>
-      <div id="plex-connection" class="connection-form">
-        <!-- Enable button -->
-        <div id="enable-plex" class="ui left aligned checkbox field">
-          <label>Enable Plex</label>
-          {% if preferences.use_plex %}
-          <input type="checkbox" checked="">
-          {% else %}
-          <input type="checkbox">
-          {% endif %}
-          
-        </div>
-
-        <form id="plex-settings" class="ui fluid form">
-          <div class="ui disabled required eight wide field">
-            <label>URL</label>
-            <input name="url" type="text" value="{{preferences.plex_url}}" placeholder="http://localhost:32400/">
-            <p class="help">Host URL or IP Address of the server (including the port number).</p>
-          </div>
-          
-          <div class="ui disabled eight wide field">
-            <label>Token <a href="https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/" target="_blank"><i class="external alternate small icon"></i></a></label>
-            <input name="token" type="text" class="private" value="{{preferences.plex_token}}">
-            <p class="help">X-Plex-Token to authenticate communication.</p>
-          </div>
-
-          <div class="ui left aligned disabled checked checkbox field">
-            <label>Use SSL</label>
-            {% if preferences.plex_use_ssl %}
-            <input name="use_ssl" type="checkbox" checked="">
-            {% else %}             
-            <input name="use_ssl" type="checkbox">
-            {% endif %}
-            <p class="help">Connect with HTTPS instead of HTTP.</p>
-          </div>
-          <br>
-
-          <div class="ui left aligned disabled checkbox field">
-            <label>Integrate with Plex Meta Manager</label>
-            {% if preferences.plex_integrate_with_pmm %}
-            <input name="integrate_with_pmm" type="checkbox" checked="">
-            {% else %}
-            <input name="integrate_with_pmm"type="checkbox">
-            {% endif %}
-            <p class="help">
-              Whether to remove the <b>Overlay</b> label after uploading Title Cards.
-              <br>
-              This also prevents TCM from grabbing Source Images with overlays applied.
-            </p>
-          </div>
-
-          <div data-value="plex_filesize_limit" class="ui disabled field">
-            <label>Filesize Limit</label>
-            <div class="ui fields">
-              <div class="two wide field">
-                <input name="filesize_limit_number" type="number" min="1" value="{{preferences.plex_filesize_limit_number}}">
-              </div>
-              <div class="three wide field">
-                <div data-value="plex_filesize_limit_unit" class="ui selection dropdown">
-                  <input name="filesize_limit_unit" type="hidden">
-                  <i class="dropdown icon"></i>
-                  <div class="default text"></div>
-                  <div class="menu"></div>
-                </div>
-              </div>
-            </div>
-            <p class="help">
-              Maximum file size of Title Cards to upload.
-              <br>
-              Title Cards larger than this will be compressed.
-              <br>
-              Plex rejects all images larger than 10 Megabytes.
-            </p>
-          </div>
-          <!-- Filesize warning -->
-          {% if (preferences.plex_filesize_limit or 0) > 10485760 %}
-          <div id="plex-filesize-warning" class="ui compact visible warning message">
-          {% else %}
-          <div id="plex-filesize-warning" class="ui compact warning message">
-          {% endif %}
-            <i class="exclamation triangle icon"></i>
-            <b>Warning</b> Plex will reject images larger than <code>10 MB</code>
-          </div>
-
-          <div class="ui error message"></div>
-          <button id="submit-plex" class="ui primary animated button" type="submit">
-            <div class="visible content">Save Changes</div>
-            <div class="hidden content">
-              <i class="right arrow icon"></i>
-            </div>
-          </button>
-        </form>
+      <h2 class="ui dividing header">Plex</h2>
+      <button class="ui blue tertiary add-connection button" onclick="addConnection('plex');">
+        Add Connection
+      </button>
+      <div id="plex-connections" class="ui styled fluid accordion">
+        <!-- Added later -->
       </div>
 
       <!-- Sonarr Connections -->
-      <h2 id="sonarr" class="ui dividing header">Sonarr</h2>
-      <div id="sonarr-connection" class="connection-form">
-        <!-- Enable button -->
-        <div id="enable-sonarr" class="ui left aligned checkbox field">
-          <label>Enable Sonarr</label>
-          {% if preferences.use_sonarr %}
-          <input type="checkbox" name="enable_sonarr" checked="">
-          {% else %}
-          <input type="checkbox" name="enable_sonarr">
-          {% endif %}
-        </div>
-
-        <form id="sonarr-settings" class="ui fluid form">
-          <div class="ui disabled required eight wide field">
-            <label>URL</label>
-            <input type="text" name="url" value="{{preferences.sonarr_url}}" placeholder="http://localhost:8989">
-            <p class="help">Host URL or IP Address of the server (including the port number).</p>
-          </div>
-
-          <div class="ui disabled required eight wide field">
-            <label>API Key <a href="https://github.com/CollinHeist/TitleCardMaker/wiki/Sonarr-Attributes#sonarr-api-key" target="_blank"><i class="external alternate small icon"></i></a></label>
-            <input name="api_key" type="text" class="private" value="{{preferences.sonarr_api_key}}">
-            <p class="help">API key to authenticate communication.</p>
-          </div>
-
-          <div class="ui left aligned checkbox field" >
-            <label>Use SSL</label>
-            {% if preferences.sonarr_use_ssl %}
-            <input name="use_ssl" type="checkbox" checked="">
-            {% else %}
-            <input name="use_ssl" type="checkbox">
-            {% endif %}
-            <p class="help">Connect with HTTPS instead of HTTP.</p>
-          </div>
-          <br>
-
-          <div class="ui left aligned checkbox field">
-            <label>Query Downloaded Episodes Only</label>
-            {% if preferences.sonarr_downloaded_only %}
-            <input type="checkbox" name="downloaded_only" checked="">
-            {% else %}
-            <input type="checkbox" name="downloaded_only">
-            {% endif %}
-            <p class="help">Whether to ignore Sonarr Episode data for Episodes that are not downloaded.</p>
-          </div>
-
-          <div class="ui disabled field">
-            <label>Library Paths</label>
-            <p class="help">
-              How TCM should interpret Sonarr's paths in order to auto-assign a Library.
-              <br>
-              Only required if Syncing from Sonarr.
-            </p>
-            <!-- <div class="ui compact floating visible info message">
-              <i class="info circle icon"></i>
-              Only required if Syncing from Sonarr
-            </div> -->
-            <div class="fields">
-              <div id="sonarr-libraries-library-names" class="two wide library field">
-                <label>Library Name</label> 
-                <!-- Added asynchronously -->
-              </div>
-              <div id="sonarr-libraries-library-paths" class="four wide field">
-                <label>Path</label>
-                <!-- Added asynchronously -->
-              </div>
-            </div>
-            <div class="circular ui icon mini button" onclick="addSonarrLibrary()">
-              <i class="plus square outline icon"></i>
-              Add Library
-            </div>
-            <div class="circular ui icon mini button" onclick="querySonarrLibraries()" data-tooltip="Attempt to auto-detect Sonarr libraries">
-              <i class="search icon"></i>
-              Auto-fill Libraries
-            </div>
-          </div>
-
-          <div class="ui error message"></div>
-          <div class="ui compact warning message">
-            <i class="exclamation triangle icon"></i>
-            These Library names and paths are <b>best guesses</b> from your Sonarr root folders.
-            Double check their validity before saving.
-          </div>
-          <button id="submit-sonarr" class="ui primary animated button" type="submit">
-            <div class="visible content">Save Changes</div>
-            <div class="hidden content">
-              <i class="right arrow icon"></i>
-            </div>
-          </button>
-        </form>
-      </div>
-
-      <!-- Tautulli Integration -->
-      <h2 id="tautulli" class="ui dividing header">Tautulli</h2>
-      <button id="tautulli-agent-button" class="ui labeled icon blue button">
-        <i class="bell icon"></i>
-        Create Notification Agent
+      <h2 class="ui dividing header">Sonarr</h2>
+      <button class="ui blue tertiary add-connection button" onclick="addConnection('sonarr');">
+        Add Connection
       </button>
+      <div id="sonarr-connections" class="ui styled fluid accordion">
+        <!-- Added later -->
+      </div>
 
       <!-- TMDb Connections -->
       <h2 class="ui dividing header">TheMovieDatabase</h2>
-      <div id="tmdb-connection" class="connection-form">
-        <!-- Enable button -->
-        <div id="enable-tmdb" class="ui left aligned checkbox field">
-          {% if preferences.use_tmdb %}
-          <input type="checkbox" name="enable_tmdb" checked="">
-          {% else %}
-          <input type="checkbox" name="enable_tmdb">
-          {% endif %}
-          <label>Enable TMDb</label>
-        </div>
-
-        <form id="tmdb-settings" class="ui fluid form">
-          <!-- Input fields -->
-          <div class="ui disabled required eight wide field">
-            <label>API Key <a href="https://developers.themoviedb.org/3/getting-started/introduction" target="_blank"><i class="external alternate small icon"></i></a></label>
-            <input name="api_key"type="text" class="private" placeholder="{{preferences.tmdb_api_key}}" value="{{preferences.tmdb_api_key}}">
-            <p class="help">Key to submit API requests to TMDb.</p>
-          </div>
-
-          <div class="two fields">
-            <div class="two wide field">
-              <label>Minimum Width</label>
-              <input name="minimum_width" type="number" value="{{preferences.tmdb_minimum_width}}">
-            </div>
-            <div class="two wide field">
-              <label>Minimum Height</label>
-              <input name="minimum_height" type="number" value="{{preferences.tmdb_minimum_height}}">
-            </div>
-          </div>
-          <p class="help">
-            Minimum image resolution for source images from TMDb (in pixels).
-          </p>
-
-          <div class="ui left aligned checkbox field">
-            <label>Ignore Localized Images</label>
-            {% if preferences.tmdb_skip_localized %}
-            <input name="skip_localized" type="checkbox" checked="">
-            {% else %}
-            <input name="skip_localized" type="checkbox" >
-            {% endif %}
-            <p class="help">
-              Whether to ignore images with assigned Languages (i.e. images with text).
-              <br>
-              Can be overwritten per-Series.
-            </p>
-          </div>
-
-          <br>
-          <div class="ui left aligned checkbox field">
-            <label>Download Logos</label>
-            {% if preferences.tmdb_download_logos %}
-            <input name="download_logos" type="checkbox" checked="">
-            {% else %}
-            <input name="download_logos" type="checkbox">
-            {% endif %}
-            <p class="help">Whether to download logos automatically.</p>
-          </div>
-
-          <div class="field">
-            <label>Logo Language Priority</label>
-            <div data-value="tmdb_logo_language_priority" class="ui compact multiple selection dropdown">
-              <input name="logo_language_priority" type="hidden">
-              <i class="dropdown icon"></i>
-              <div class="default text"></div>
-              <div class="menu"><!-- Added asynchronousely --></div>
-            </div>
-            <p class="help">Order of languages to search for logos in.</p>
-          </div>
-
-          <div class="ui error message"></div>
-          <button id="submit-tmdb" class="ui primary animated button" type="submit">
-            <div class="visible content">Save Changes</div>
-            <div class="hidden content">
-              <i class="right arrow icon"></i>
-            </div>
-          </button>
-        </form>
+      <button class="ui blue tertiary add-connection button" onclick="addConnection('tmdb');">
+        Add Connection
+      </button>
+      <div id="tmdb-connections" class="ui styled fluid accordion">
+        <!-- Added later -->
       </div>
     </div>
+
+    <!-- Modals -->
 
     <div id="tautulli-agent-modal" class="ui small modal">
       <i class="close icon"></i>
       <div class="header">Tautulli Notification Agent</div>
       <div class="content">
         <div class="ui compact floating visible info message">
-          <!-- <i class="info circle icon"></i>
-          <b>Info</b> -->
           <ul class="list">
             <li>A Tautulli Notification Agent can be used to immediately update Title Cards for newly added or recently watched Episodes.</li>
             <li>This bypasses the Scheduler, and is <i>highly</i> recommended for Plex users.</li>
@@ -535,22 +480,22 @@
         <form id="tautulli-agent-form" class="ui form">
           <div class="ui field">
             <label>Tautulli URL</label>
-            <input name="tautulli_url" placeholder="http://localhost:8181/">
+            <input name="url" placeholder="http://localhost:8181/">
           </div>
           
           <div class="ui field">
             <label>Tautulli API Key</label>
-            <input name="tautulli_api_key" type="password" placeholder="abcdef">
+            <input name="api_key" type="password" placeholder="abcdef">
           </div>
 
           <div class="ui left aligned checkbox field">
-            <input name="tautulli_use_ssl" type="checkbox" checked="">
             <label>Use SSL</label>
+            <input name="use_ssl" type="checkbox" checked="">
           </div>
 
           <div class="ui field">
             <label>Notification Agent Name</label>
-            <input name="tautulli_agent_name" value="Update TitleCardMaker" placeholder="Update TitleCardMaker">
+            <input name="agent_name" value="Update TitleCardMaker (v3)" placeholder="Update TitleCardMaker (v3)">
           </div>
           <div class="ui info message"></div>
         </form>

@@ -1,18 +1,12 @@
 /* Add vertical padding around button */
 form > *:last-child {
-  padding-top: 1em !important;
+  /* padding-top: 1em !important; */
 }
 
 /* Reduce margin between adjacent user fields */
 #auth-settings .fields {
   margin-top: 0.3em;
   margin-bottom: 0.3em;
-}
-
-/* For library path inputs, align the library name/label to the right */
-.library.field,
-.library.field > input {
-  text-align: right;
 }
 
 /* Blur private input fields when not selected or hovered */
@@ -31,7 +25,24 @@ input.private:not(:hover,:focus) {
   display: inline-block !important;
 }
 
-/* Ensure there is a newline before the submit buttons */
-.button[type="submit"] {
-  display: block;
+/* Equal padding on Sonarr library fields */
+.dropdown ~ .dropdown {
+  margin-top: 4px !important;
+}
+
+/* Right-float spans inside accordion titles */
+.accordion > .title {
+  display: flex;
+  justify-content: space-between;
+}
+.accordion > .title > .right.floated {
+  flex: 1;
+  text-align: right;
+  /* Reduce opacity of right floated text */
+  opacity: 50%;
+}
+
+/* Color invalid connections */
+.accordion > .invalid.title {
+  color: red !important;
 }

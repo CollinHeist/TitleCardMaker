@@ -1,18 +1,38 @@
 from datetime import datetime
+from logging import Logger
 from typing import Optional, TypedDict, Union
 
 from num2words import num2words
 from plexapi.video import Episode as PlexEpisode
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Query
 from titlecase import titlecase
 
 from modules.Debug import log
-from modules.DatabaseInfoContainer import DatabaseInfoContainer
+from modules.DatabaseInfoContainer import DatabaseInfoContainer, InterfaceID
 from modules.Title import Title
 
 
-class EpisodeDatabaseIDs(TypedDict): # pylint: disable=missing-class-docstring
+# pylint: disable=missing-class-docstring
+class UserData(TypedDict):
+    Played: Optional[bool]
+
+class EmbyProviderIDs(TypedDict):
+    Imdb: Optional[str]
+    Tmdb: Optional[int]
+    Tvdb: Optional[int]
+    TvRage: Optional[int]
+
+class EmbyEpisodeDict(TypedDict):
+    Name: str
+    ParentIndexNumber: int
+    IndexNumber: int
+    Id: int
+    ProviderIds: EmbyProviderIDs
+    PremiereDate: str
+    UserData: UserData
+
+class EpisodeDatabaseIDs(TypedDict):
     emby_id: int
     imdb_id: str
     jellyfin_id: str
@@ -20,17 +40,18 @@ class EpisodeDatabaseIDs(TypedDict): # pylint: disable=missing-class-docstring
     tvdb_id: int
     tvrage_id: int
 
-class EpisodeCharacteristics(TypedDict, total=False): # pylint: disable=missing-class-docstring
+class EpisodeCharacteristics(TypedDict, total=False):
     season_number: int
     episode_number: int
     absolute_number: Optional[int]
     absolute_episode_number: int
     airdate: Optional[datetime]
 
-class EpisodeIndices(TypedDict): # pylint: disable=missing-class-docstring
+class EpisodeIndices(TypedDict):
     season_number: int
     episode_number: int
     absolute_number: Optional[int]
+# pylint: enable=missing-class-docstring
 
 class WordSet(dict):
     """
@@ -127,8 +148,8 @@ class WordSet(dict):
 class EpisodeInfo(DatabaseInfoContainer):
     """
     This class describes static information about an Episode, such as
-    the season, episode, and absolute number, as well as the various
-    ID's associated with it.
+    the season, episode, and absolute number, as well as the various IDs
+    associated with it.
     """
 
     __slots__ = (
@@ -171,18 +192,15 @@ class EpisodeInfo(DatabaseInfoContainer):
         self.airdate = airdate
 
         # Store default database ID's
-        self.emby_id = None
+        self.emby_id = InterfaceID(emby_id, type_=int, libraries=True)
         self.imdb_id = None
-        self.jellyfin_id = None
+        self.jellyfin_id = InterfaceID(jellyfin_id, type_=str, libraries=True)
         self.tmdb_id = None
         self.tvdb_id = None
         self.tvrage_id = None
-        self.airdate = None
 
         # Update each ID
-        self.set_emby_id(emby_id)
         self.set_imdb_id(imdb_id)
-        self.set_jellyfin_id(jellyfin_id)
         self.set_tmdb_id(tmdb_id)
         self.set_tvdb_id(tvdb_id)
         self.set_tvrage_id(tvrage_id)
@@ -195,9 +213,9 @@ class EpisodeInfo(DatabaseInfoContainer):
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        attributes = ', '.join(f'{attr}={getattr(self, attr)}'
+        attributes = ', '.join(f'{attr}={getattr(self, attr)!r}'
             for attr in self.__slots__
-            if not attr.startswith('__') and getattr(self, attr) is not None
+            if not attr.startswith('__')
         )
 
         return f'<EpisodeInfo {attributes}>'
@@ -209,13 +227,13 @@ class EpisodeInfo(DatabaseInfoContainer):
         return f'S{self.season_number:02}E{self.episode_number:02}'
 
 
-    def __eq__(self, info: 'EpisodeInfo') -> bool:
+    def __eq__(self, other: 'EpisodeInfo') -> bool:
         """
         Returns whether the given EpisodeInfo object corresponds to the
         same entry (has the same season and episode index).
 
         Args:
-            info: EpisodeInfo object to compare.
+            other: EpisodeInfo object to compare.
 
         Returns:
             True if the season and episode number of the two objects
@@ -223,21 +241,23 @@ class EpisodeInfo(DatabaseInfoContainer):
         """
 
         # Verify the comparison is another EpisodeInfo object
-        if not isinstance(info, EpisodeInfo):
+        if not isinstance(other, EpisodeInfo):
             raise TypeError(
                 f'Can only compare equality between EpisodeInfo objects'
             )
 
         # ID matches are immediate equality
-        for id_type, id_ in self.ids.items():
-            if id_ is not None and info.has_id(id_type):
-                return id_ == getattr(info, id_type)
+        for id_attr in ('emby_id', 'imdb_id', 'jellyfin_id', 'tmdb_id',
+                        'tvdb_id', 'tvrage_id'):
+            if (getattr(self, id_attr) is not None
+                and getattr(self, id_attr) == getattr(other, id_attr)):
+                return True
 
         # Require title match
         return (
-            self.season_number == info.season_number
-            and self.episode_number == info.episode_number
-            and self.title.matches(info.title)
+            self.season_number == other.season_number
+            and self.episode_number == other.episode_number
+            and self.title.matches(other.title)
         )
 
 
@@ -272,9 +292,100 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     @staticmethod
+    def from_emby_info(
+            info: EmbyEpisodeDict,
+            interface_id: int,
+            library_name: str,
+        ) -> 'EpisodeInfo':
+        """
+        Create an EpisodeInfo object from the given emby episode data.
+
+        Args:
+            info: Dictionary of episode info.
+            interface_id: ID of the Emby interface whose data is being
+                parsed.
+            library_name: Name of the library associated with this
+                Series.
+
+        Returns:
+            EpisodeInfo object defining the given data.
+        """
+
+        # Parse airdate
+        airdate = None
+        try:
+            airdate = datetime.strptime(
+                info['PremiereDate'], '%Y-%m-%dT%H:%M:%S.%f000000Z'
+            )
+        except Exception as e:
+            log.exception(f'Cannot parse airdate', e)
+            log.debug(f'Episode data: {info}')
+
+        return EpisodeInfo(
+            info['Name'],
+            info['ParentIndexNumber'],
+            info['IndexNumber'],
+            emby_id=f'{interface_id}:{library_name}:{info["Id"]}',
+            imdb_id=info['ProviderIds'].get('Imdb'),
+            tmdb_id=info['ProviderIds'].get('Tmdb'),
+            tvdb_id=info['ProviderIds'].get('Tvdb'),
+            tvrage_id=info['ProviderIds'].get('TvRage'),
+            airdate=airdate,
+        )
+
+
+    @staticmethod
+    def from_jellyfin_info(
+            info: EmbyEpisodeDict,
+            interface_id: int,
+            library_name: str,
+            *,
+            log: Logger = log,
+        ) -> 'EpisodeInfo':
+        """
+        Create an EpisodeInfo object from the given Jellyfin episode
+        data.
+
+        Args:
+            info: Dictionary of episode info.
+            interface_id: ID of the Jellyfin interface whose data is
+                being parsed.
+            library_name: Name of the library associated with this
+                Series.
+            log: Logger for all log messages.
+
+        Returns:
+            EpisodeInfo object defining the given data.
+        """
+
+        # Parse airdate
+        airdate = None
+        if 'PremiereDate' in info:
+            try:
+                airdate = datetime.strptime(
+                    info['PremiereDate'], '%Y-%m-%dT%H:%M:%S.%f000000Z'
+                )
+            except Exception as e:
+                log.debug(f'Cannot parse airdate {e} - {info=}')
+
+        return EpisodeInfo(
+            info['Name'],
+            info['ParentIndexNumber'],
+            info['IndexNumber'],
+            imdb_id=info['ProviderIds'].get('Imdb'),
+            jellyfin_id=f'{interface_id}:{library_name}:{info["Id"]}',
+            tmdb_id=info['ProviderIds'].get('Tmdb'),
+            tvdb_id=info['ProviderIds'].get('Tvdb'),
+            tvrage_id=info['ProviderIds'].get('TvRage'),
+            airdate=airdate,
+        )
+
+
+    @staticmethod
     def from_plex_episode(plex_episode: PlexEpisode) -> 'EpisodeInfo':
         """
-        Create an EpisodeInfo object from a plexapi Episode object.
+        Create an EpisodeInfo object from a `plexapi.video.Episode`
+        object.
 
         Args:
             plex_episode: Episode to create an object from. Any
@@ -313,7 +424,7 @@ class EpisodeInfo(DatabaseInfoContainer):
     def has_all_ids(self) -> bool:
         """Whether this object has all ID's defined"""
 
-        return all(id_ is not None for id_ in self.ids.values())
+        return all(self.ids.values())
 
 
     @property
@@ -321,9 +432,9 @@ class EpisodeInfo(DatabaseInfoContainer):
         """This object's ID's (as a dictionary)"""
 
         return {
-            'emby_id': self.emby_id,
+            'emby_id': str(self.emby_id),
             'imdb_id': self.imdb_id,
-            'jellyfin_id': self.jellyfin_id,
+            'jellyfin_id': str(self.jellyfin_id),
             'tmdb_id': self.tmdb_id,
             'tvdb_id': self.tvdb_id,
             'tvrage_id': self.tvrage_id,
@@ -367,32 +478,59 @@ class EpisodeInfo(DatabaseInfoContainer):
         }
 
 
-    def set_emby_id(self, emby_id) -> None:
+    def set_emby_id(self,
+            emby_id: int,
+            interface_id: int,
+            library_name: str,
+        ) -> None:
         """Set the Emby ID of this object. See `_update_attribute()`."""
-        self._update_attribute('emby_id', emby_id, int)
 
-    def set_imdb_id(self, imdb_id) -> None:
+        self._update_attribute(
+            'emby_id', emby_id,
+            interface_id=interface_id, library_name=library_name,
+        )
+
+
+    def set_imdb_id(self, imdb_id: str) -> None:
         """Set the IMDb ID of this object. See `_update_attribute()`."""
+
         self._update_attribute('imdb_id', imdb_id, str)
 
-    def set_jellyfin_id(self, jellyfin_id) -> None:
+
+    def set_jellyfin_id(self,
+            jellyfin_id: str,
+            interface_id: int,
+            library_name: str,
+        ) -> None:
         """Set the Jellyfin ID of this object. See `_update_attribute()`."""
-        self._update_attribute('jellyfin_id', jellyfin_id, str)
+
+        self._update_attribute(
+            'jellyfin_id', jellyfin_id,
+            interface_id=interface_id, library_name=library_name,
+        )
+
 
     def set_tmdb_id(self, tmdb_id) -> None:
         """Set the TMDb ID of this object. See `_update_attribute()`."""
+
         self._update_attribute('tmdb_id', tmdb_id, int)
+
 
     def set_tvdb_id(self, tvdb_id) -> None:
         """Set the TVDb ID of this object. See `_update_attribute()`."""
+
         self._update_attribute('tvdb_id', tvdb_id, int)
+
 
     def set_tvrage_id(self, tvrage_id) -> None:
         """Set the TVRage ID of this object. See `_update_attribute()`."""
+
         self._update_attribute('tvrage_id', tvrage_id, int)
+
 
     def set_airdate(self, airdate: datetime) -> None:
         """Set the airdate of this object. See `_update_attribute()`."""
+
         self._update_attribute('airdate', airdate)
 
 
@@ -413,8 +551,16 @@ class EpisodeInfo(DatabaseInfoContainer):
 
         # Conditions to filter by database ID
         id_conditions = []
+        if self.emby_id:
+            id_conditions.append(func.regex_match(
+                f'^{self.emby_id}$', EpisodeModel.emby_id,
+            ))
         if self.imdb_id is not None:
             id_conditions.append(EpisodeModel.imdb_id==self.imdb_id)
+        if self.jellyfin_id:
+            id_conditions.append(func.regex_match(
+                f'^{self.jellyfin_id}$', EpisodeModel.jellyfin_id,
+            ))
         if self.tmdb_id is not None:
             id_conditions.append(EpisodeModel.tmdb_id==self.tmdb_id)
         if self.tvdb_id is not None:
@@ -429,7 +575,6 @@ class EpisodeInfo(DatabaseInfoContainer):
             and_(
                 EpisodeModel.season_number==self.season_number,
                 EpisodeModel.episode_number==self.episode_number,
-                # TODO Maybe not title match?
                 EpisodeModel.title==self.title.full_title,
             ),
         )

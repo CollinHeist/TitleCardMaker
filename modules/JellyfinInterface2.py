@@ -6,11 +6,13 @@ from typing import Optional, Union
 from fastapi import HTTPException
 
 from modules.Debug import log
-from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult
+from modules.EpisodeDataSource2 import (
+    EpisodeDataSource, SearchResult, WatchedStatus
+)
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
-from modules.MediaServer2 import MediaServer, SourceImage
-from modules.SeriesInfo import SeriesInfo
+from modules.MediaServer2 import _Card, _Episode, MediaServer, SourceImage
+from modules.SeriesInfo2 import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
@@ -23,8 +25,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
     cards can be loaded into).
     """
 
-    """Default is no filesize limit for all uploaded assets"""
-    DEFAULT_FILESIZE_LIMIT = None
+    INTERFACE_TYPE = 'Jellyfin'
 
     """Series ID's that can be set by Jellyfin"""
     SERIES_IDS = ('imdb_id', 'jellyfin_id', 'tmdb_id', 'tvdb_id')
@@ -37,10 +38,10 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             url: str,
             api_key: str,
             username: Optional[str] = None,
-            verify_ssl: bool = True,
+            use_ssl: bool = True,
             filesize_limit: Optional[int] = None,
-            use_magick_prefix: bool = False,
             *,
+            interface_id: int = 0,
             log: Logger = log,
         ) -> None:
         """
@@ -51,18 +52,19 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             api_key: The API key for API requests.
             username: Username of the Jellyfin account to get watch
                 statuses of.
-            verify_ssl: Whether to verify SSL requests.
+            use_ssl: Whether to use SSL in all requests.
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
-            use_magick_prefix: Whether to use 'magick' command prefix.
+            interface_id: ID of this interface.
             log: Logger for all log messages.
         """
 
         # Intiialize parent classes
-        super().__init__(filesize_limit, use_magick_prefix)
+        super().__init__(filesize_limit)
 
         # Store attributes of this Interface
-        self.session = WebInterface('Jellyfin', verify_ssl, log=log)
+        self._interface_id = interface_id
+        self.session = WebInterface('Jellyfin', use_ssl, log=log)
         self.url = url[:-1] if url.endswith('/') else url
         self.__params = {'api_key': api_key}
         self.username = username
@@ -85,7 +87,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             ) from exc
 
         # Get user ID if indicated
-        if username is None:
+        if not username:
             self.user_id = None
         elif (user_id := self._get_user_id(username)) is not None:
             self.user_id = user_id
@@ -93,7 +95,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             log.critical(f'Cannot identify ID of user "{username}"')
             self.user_id = None
 
-        # Get the ID's of all libraries within this server
+        # # Get the ID's of all libraries within this server
         self.libraries = self._map_libraries()
         self.activate()
 
@@ -171,8 +173,9 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         """
 
         # If Series has Jellyfin ID, and not returning raw object, return
-        if series_info.has_id('jellyfin') and not raw_obj:
-            return series_info.jellyfin_id
+        if (not raw_obj
+            and series_info.has_id('jellyfin', self._interface_id,library_name)):
+            return series_info.jellyfin_id[self._interface_id, library_name]
 
         # Get ID of this library
         if (library_id := self.libraries.get(library_name, None)) is None:
@@ -217,6 +220,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
 
 
     def __get_episode_id(self,
+            library_name: str,
             series_jellyfin_id: str,
             episode_info: EpisodeInfo,
         ) -> Optional[str]:
@@ -232,8 +236,8 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         """
 
         # If episode has a Jellyfin ID, return that
-        if episode_info.has_id('jellyfin'):
-            return episode_info.jellyfin_id
+        if episode_info.has_id('jellyfin', self._interface_id, library_name):
+            return episode_info.jellyfin_id[self._interface_id, library_name]
 
         # Query for this episode
         response = self.session.get(
@@ -283,7 +287,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         if episode_info is None:
             return series_id, None
 
-        return series_id, self.__get_episode_id(series_id, episode_info)
+        return series_id, self.__get_episode_id(library_name, series_id, episode_info)
 
 
     def get_usernames(self) -> list[str]:
@@ -316,7 +320,8 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         """
 
         # If all possible ID's are defined
-        if series_info.has_ids(*self.SERIES_IDS):
+        if series_info.has_ids(*self.SERIES_IDS, interface_id=self._interface_id,
+                               library_name=library_name):
             return None
 
         # Find series
@@ -329,7 +334,9 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             return None
 
         # Assign ID's
-        series_info.set_jellyfin_id(series['Id'])
+        series_info.set_jellyfin_id(
+            series['Id'], self._interface_id, library_name
+        )
         if (imdb_id := series['ProviderIds'].get('Imdb')):
             series_info.set_imdb_id(imdb_id)
         if (tmdb_id := series['ProviderIds'].get('Tmdb')):
@@ -366,7 +373,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         for old_episode_info in episode_infos:
             for new_episode_info, _ in new_episode_infos:
                 if old_episode_info == new_episode_info:
-                    old_episode_info.copy_ids(new_episode_info)
+                    old_episode_info.copy_ids(new_episode_info, log=log)
                     break
 
         return None
@@ -396,27 +403,24 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
                 'recursive': True,
                 'includeItemTypes': 'Series',
                 'searchTerm': query,
-                'fields': 'ProviderIds,Overview',
+                'fields': 'ParentId,ProviderIds,Overview',
                 'enableImages': False,
             },
         )
 
-        # def get_year(premire_date: str) -> int:
-        #     return datetime.strptime(premire_date, self.AIRDATE_FORMAT).year
-
         return [
             SearchResult(
                 name=result['Name'],
-                year=result['ProductionYear'], # get_year(result['PremiereDate'])
+                year=result['ProductionYear'],
                 ongoing=result['Status'] == 'Continuing',
                 overview=result.get('Overview', 'No overview available'),
                 poster=f'{self.url}/Items/{result["Id"]}/Images/Primary?quality=75',
                 imdb_id=result.get('ProviderIds', {}).get('Imdb'),
-                jellyfin_id=result['Id'],
                 tmdb_id=result.get('ProviderIds', {}).get('Tmdb'),
                 tvdb_id=result.get('ProviderIds', {}).get('Tvdb'),
                 tvrage_id=result.get('ProviderIds', {}).get('TvRage'),
-            ) for result in search_results['Items']
+            )
+            for result in search_results['Items']
             if 'PremiereDate' in result
         ]
 
@@ -434,16 +438,19 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         libraries and tags.
 
         Args:
-            filter_libraries: Optional list of library names to filter
-                returned list by. If provided, only series that are
-                within a given library are returned.
-            required_tags: Optional list of tags to filter return by. If
-                provided, only series with all the given tags are
-                returned.
+            required_libraries: Library names that a series must be
+                present in to be returned.
+            excluded_libraries: Library names that a series cannot be
+                present in to be returned.
+            required_tags: Tags that a series must have all of in order
+                to be returned.
+            excluded_tags: Tags that a series cannot have any of in
+                order to be returned.
+            log: Logger for all log messages.
 
         Returns:
-            List of tuples whose elements are the SeriesInfo of the
-            series, and its corresponding library name.
+            List of tuples of the filtered series info and their
+            corresponding library names.
         """
 
         # Temporarily override request timeout to 240s (4 min)
@@ -483,17 +490,12 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
                 if any(tag in series.get('Tags') for tag in excluded_tags):
                     continue
 
-                series_info = SeriesInfo(
-                    series['Name'],
-                    datetime.strptime(series['PremiereDate'],
-                                      self.AIRDATE_FORMAT).year,
-                    imdb_id=series.get('ProviderIds', {}).get('Imdb'),
-                    jellyfin_id=series['Id'],
-                    tmdb_id=series.get('ProviderIds', {}).get('Tmdb'),
-                    tvdb_id=series.get('ProviderIds', {}).get('Tvdb'),
-                    tvrage_id=series.get('ProviderIds', {}).get('TvRage'),
-                )
-                all_series.append((series_info, library))
+                all_series.append((
+                    SeriesInfo.from_jellyfin_info(
+                        series, self._interface_id, library
+                    ),
+                    library
+                ))
 
         # Reset request timeout
         self.REQUEST_TIMEOUT = 30
@@ -506,7 +508,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             series_info: SeriesInfo,
             *,
             log: Logger = log,
-        ) -> list[tuple[EpisodeInfo, Optional[bool]]]:
+        ) -> list[tuple[EpisodeInfo, WatchedStatus]]:
         """
         Gets all episode info for the given series. Only episodes that
         have  already aired are returned.
@@ -524,14 +526,15 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         # Find this series
         series_id = self.__get_series_id(library_name, series_info, log=log)
         if series_id is None:
-            log.warning(f'Series {series_info!r} not found in Jellyfin')
+            log.warning(f'Series {series_info} not found in Jellyfin')
             return []
 
         # Get all episodes for this series
         response = self.session.get(
             f'{self.url}/Shows/{series_id}/Episodes',
             params={
-                'UserId': self.user_id, 'Fields': 'ProviderIds'
+                'UserId': self.user_id,
+                'Fields': 'ProviderIds,PremiereDate'
             } | self.__params
         )
 
@@ -550,34 +553,16 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
                 log.debug(f'Series {series_info} episode is missing index data')
                 continue
 
-            # Parse airdate for this episode
-            airdate = None
-            if 'PremiereDate' in episode:
-                try:
-                    airdate = datetime.strptime(
-                        episode['PremiereDate'], self.AIRDATE_FORMAT
-                    )
-                except Exception as e:
-                    log.exception(f'Cannot parse airdate', e)
-                    log.debug(f'Episode data: {episode}')
-
-            episode_info = EpisodeInfo(
-                episode['Name'],
-                episode['ParentIndexNumber'],
-                episode['IndexNumber'],
-                imdb_id=episode['ProviderIds'].get('Imdb'),
-                jellyfin_id=episode.get('Id'),
-                tmdb_id=episode['ProviderIds'].get('Tmdb'),
-                tvdb_id=episode['ProviderIds'].get('Tvdb'),
-                tvrage_id=episode['ProviderIds'].get('TvRage'),
-                airdate=airdate,
-            )
-
-            # Add to list
-            if episode_info is not None:
-                all_episodes.append(
-                    (episode_info, episode.get('UserData', {}).get('Played'))
+            all_episodes.append((
+                EpisodeInfo.from_jellyfin_info(
+                    episode, self._interface_id, library_name,
+                ),
+                WatchedStatus(
+                    self._interface_id,
+                    library_name,
+                    episode.get('UserData', {}).get('Played'),
                 )
+            ))
 
         return all_episodes
 
@@ -585,10 +570,10 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
     def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
-            episodes: list['Episode'], # type: ignore
+            episodes: list[_Episode],
             *,
             log: Logger = log,
-        ) -> None:
+        ) -> bool:
         """
         Modify the Episodes' watched attribute according to the watched
         status of the corresponding episodes within Jellyfin.
@@ -598,49 +583,68 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             series_info: The series to update.
             episodes: List of Episode objects to update.
             log: Logger for all log messages.
+
+        Returns:
+            Whether any Episode's watched statuses were modified.
         """
 
         # If no episodes, exit
         if len(episodes) == 0:
-            return None
+            return False
 
         # Find this series
         series_id = self.__get_series_id(library_name, series_info, log=log)
         if series_id is None:
             log.warning(f'Series not found in Jellyfin {series_info!r}')
-            return None
+            return False
 
         # Query for all episodes of this series
         response = self.session.get(
             f'{self.url}/Shows/{series_id}/Episodes',
-            params={'UserId': self.user_id} | self.__params
+            params={
+                'UserId': self.user_id,
+                'Fields': 'ProviderIds,PremiereDate',
+            } | self.__params
         )
 
-        # Go through each episode in Jellyfin, update Episode status/card
-        for jellyfin_episode in response['Items']:
-            # Skip episodes without episode or season numbers
-            if (jellyfin_episode.get('IndexNumber', None) is None
-                or jellyfin_episode.get('ParentIndexNumber', None) is None):
-                continue
+        # Get data for each Jellyfin episode
+        jellyfin_episodes = [
+            (
+                EpisodeInfo.from_jellyfin_info(
+                    episode, self._interface_id, library_name, log=log
+                ),
+                WatchedStatus(
+                    self._interface_id,
+                    library_name,
+                    episode['UserData']['Played']
+                )
+            )
+            for episode in response['Items']
+            if (episode.get('IndexNumber') is not None
+                and episode.get('ParentIndexNumber') is not None
+                and episode.get('UserData', {}).get('Played') is not None)
+        ]
 
-            for episode in episodes:
-                if (jellyfin_episode['ParentIndexNumber']==episode.season_number
-                    and jellyfin_episode["IndexNumber"]==episode.episode_number):
-                    if (jellyfin_episode.get('UserData', {}).get('Played')
-                        is not None):
-                        episode.watched = jellyfin_episode['UserData']['Played']
-                        break
+        # Update watched statuses of all Episodes
+        changed = False
+        for episode in episodes:
+            episode_info = episode.as_episode_info
+            # Match to the given Jellyfin Episode
+            for jellyfin_episode, watched_status in jellyfin_episodes:
+                if episode_info == jellyfin_episode:
+                    changed |= episode.add_watched_status(watched_status)
+                    break
 
-        return None
+        return changed
 
 
     def load_title_cards(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_and_cards: list[tuple['Episode', 'Card']], # type: ignore
+            episode_and_cards: list[tuple[_Episode, _Card]],
             *,
             log: Logger = log,
-        ) -> list[tuple['Episode', 'Card']]: # type: ignore
+        ) -> list[tuple[_Episode, _Card]]:
         """
         Load the title cards for the given Series and Episodes.
 
@@ -666,7 +670,9 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         loaded = []
         for episode, card in episode_and_cards:
             # Find episode, skip if not found
-            episode_id = self.__get_episode_id(series_id, episode.as_episode_info)
+            episode_id = self.__get_episode_id(
+                library_name, series_id, episode.as_episode_info
+            )
             if episode_id is None:
                 continue
 

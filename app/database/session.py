@@ -2,8 +2,9 @@ from datetime import datetime, timedelta
 from logging import Logger
 from os import environ
 from pathlib import Path
-from re import IGNORECASE, sub as re_sub
+from re import IGNORECASE, sub as re_sub, match as _regex_match
 from shutil import copy as file_copy
+from typing import NamedTuple
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -12,8 +13,7 @@ from fastapi_pagination import Page
 from pydantic import Field
 from sqlalchemy import create_engine
 from sqlalchemy.event import listens_for
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base, sessionmaker
 from thefuzz.fuzz import partial_token_sort_ratio as partial_ratio # partial_ratio
 
 from app.models.preferences import Preferences
@@ -21,6 +21,7 @@ from app.models.preferences import Preferences
 from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
 from modules.ImageMagickInterface import ImageMagickInterface
+from modules.InterfaceGroup import InterfaceGroup
 from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
@@ -46,8 +47,11 @@ blueprint_engine = create_engine(
     BLUEPRINT_SQL_DATABASE_URL, connect_args={'check_same_thread': False},
 )
 
+class DataBackup(NamedTuple): # pylint: disable=missing-class-docstring
+    config: Path
+    database: Path
 
-def backup_data(*, log: Logger = log) -> tuple[Path, Path]:
+def backup_data(*, log: Logger = log) -> DataBackup:
     """
     Perform a backup of the SQL database and global preferences.
 
@@ -102,7 +106,38 @@ def backup_data(*, log: Logger = log) -> tuple[Path, Path]:
         file_copy(database, database_backup)
         log.info(f'Performed database backup')
 
-    return config_backup, database_backup
+    return DataBackup(config=config_backup, database=database_backup)
+
+
+def restore_backup(backup: DataBackup, /, *, log: Logger = log):
+    """
+    Restore the config and database from the given data backup.
+
+    Args:
+        backup: Tuple of backup data (as returned by `backup_data()`)
+            to restore from.
+        log: Logger for all log messages.
+    """
+
+    # Restore config
+    if backup.config.exists():
+        if IS_DOCKER:
+            file_copy(backup.config, Path('/config/config.pickle'))
+        else:
+            file_copy(backup.config, Path('./config/config.pickle'))
+        log.debug(f'Restored backup from "{backup.config}"')
+    else:
+        log.warning(f'Cannot restore backup from "{backup.config}"')
+
+    # Restore database
+    if backup.database.exists():
+        if IS_DOCKER:
+            file_copy(backup.database, Path('/config/db.sqlite'))
+        else:
+            file_copy(backup.database, Path('./config/db.sqlite'))
+        log.debug(f'Restored backup from "{backup.database}"')
+    else:
+        log.warning(f'Cannot restore backup from "{backup.database}"')
 
 
 """
@@ -110,9 +145,14 @@ Register a custom Regex replacement function that can be used on this
 database.
 """
 def regex_replace(pattern: str, repl: str, string: str) -> str:
-    """Regex replacement function for DB registatrion"""
+    """Regex replacement function for DB registration"""
 
     return re_sub(pattern, repl, string, flags=IGNORECASE)
+
+def regex_match(pattern: str, string: str) -> bool:
+    """Regex match function for DB registration"""
+
+    return _regex_match(pattern, string, flags=IGNORECASE)
 
 @listens_for(engine, 'connect')
 def register_custom_functions(
@@ -125,7 +165,9 @@ def register_custom_functions(
     `partial_ratio` fuzzy-string match function.
     """
     dbapi_connection.create_function('regex_replace', 3, regex_replace)
+    dbapi_connection.create_function('regex_match', 2, regex_match)
     dbapi_connection.create_function('partial_ratio', 2, partial_ratio)
+
 @listens_for(blueprint_engine, 'connect')
 def register_custom_functions_blueprints(
         dbapi_connection,
@@ -161,7 +203,7 @@ PreferencesLocal = Preferences(preferences_file)
 
 
 # Default Page arguments used for paginated returns
-Page = Page.with_custom_options(size=Field(250, ge=1))
+Page = Page.with_custom_options(size=Field(100, ge=1))
 
 
 # Initialize all interfaces
@@ -173,43 +215,8 @@ try:
 except Exception as e:
     pass
 
-EmbyInterfaceLocal = None
-if PreferencesLocal.use_emby:
-    try:
-        EmbyInterfaceLocal = EmbyInterface(**PreferencesLocal.emby_arguments)
-    except Exception as e:
-        pass
-
-JellyfinInterfaceLocal = None
-if PreferencesLocal.use_jellyfin:
-    try:
-        JellyfinInterfaceLocal = JellyfinInterface(
-            **PreferencesLocal.jellyfin_arguments
-        )
-    except Exception as e:
-        pass
-
-PlexInterfaceLocal = None
-if PreferencesLocal.use_plex:
-    try:
-        PlexInterfaceLocal = PlexInterface(**PreferencesLocal.plex_arguments)
-    except Exception as e:
-        pass
-
-SonarrInterfaceLocal = None
-if PreferencesLocal.use_sonarr:
-    try:
-        SonarrInterfaceLocal.REQUEST_TIMEOUT = 15
-        SonarrInterfaceLocal = SonarrInterface(
-            **PreferencesLocal.sonarr_arguments
-        )
-        SonarrInterfaceLocal.REQUEST_TIMEOUT = 600
-    except Exception as e:
-        pass
-
-TMDbInterfaceLocal = None
-if PreferencesLocal.use_tmdb:
-    try:
-        TMDbInterfaceLocal = TMDbInterface(**PreferencesLocal.tmdb_arguments)
-    except Exception as e:
-        pass
+EmbyInterfaces: InterfaceGroup[int, EmbyInterface] = InterfaceGroup(EmbyInterface)
+JellyfinInterfaces: InterfaceGroup[int, JellyfinInterface] = InterfaceGroup(JellyfinInterface)
+PlexInterfaces: InterfaceGroup[int, PlexInterface] = InterfaceGroup(PlexInterface)
+SonarrInterfaces: InterfaceGroup[int, SonarrInterface] = InterfaceGroup(SonarrInterface)
+TMDbInterfaces: InterfaceGroup[int, TMDbInterface] = InterfaceGroup(TMDbInterface)

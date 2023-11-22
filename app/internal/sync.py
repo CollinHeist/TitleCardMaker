@@ -1,30 +1,28 @@
 from logging import Logger
 from time import sleep
 from typing import Optional, Union
+from app.schemas.series import NewSeries
 
 from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
-from app.database.query import get_all_templates
+from app.database.query import get_all_templates, get_interface
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.models.connection import Connection
+from app.models.series import Series
+from app.models.sync import Sync
+from app.schemas.sync import (
+    NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync
+)
 from app.internal.series import add_series
-from app import models
 from app.models.sync import Sync
 from app.schemas.sync import (
     NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync,
 )
-from app.schemas.series import NewSeries, Series
-from app.schemas.preferences import Preferences
 
 
 from modules.Debug import log
-from modules.EmbyInterface2 import EmbyInterface
-from modules.ImageMagickInterface import ImageMagickInterface
-from modules.JellyfinInterface2 import JellyfinInterface
-from modules.PlexInterface2 import PlexInterface
-from modules.SonarrInterface2 import SonarrInterface
-from modules.TMDbInterface2 import TMDbInterface
 
 
 def sync_all(*, log: Logger = log) -> None:
@@ -38,12 +36,7 @@ def sync_all(*, log: Logger = log) -> None:
             # Get and run all Syncs
             for sync in db.query(Sync).all():
                 try:
-                    run_sync(
-                        db, get_preferences(), sync, get_emby_interface(),
-                        get_imagemagick_interface(), get_jellyfin_interface(),
-                        get_plex_interface(), get_sonarr_interface(),
-                        get_tmdb_interface(), log=log,
-                    )
+                    run_sync(db, sync, log=log)
                 except HTTPException as e:
                     log.exception(f'{sync.log_str} Error Syncing - {e.detail}', e)
                 except OperationalError:
@@ -89,14 +82,7 @@ def add_sync(
 
 def run_sync(
         db: Session,
-        preferences: Preferences,
         sync: Sync,
-        emby_interface: Optional[EmbyInterface],
-        imagemagick_interface: Optional[ImageMagickInterface],
-        jellyfin_interface: Optional[JellyfinInterface],
-        plex_interface: Optional[PlexInterface],
-        sonarr_interface: Optional[SonarrInterface],
-        tmdb_interface: Optional[TMDbInterface],
         background_tasks: Optional[BackgroundTasks] = None,
         *,
         log: Logger = log,
@@ -108,138 +94,91 @@ def run_sync(
 
     Args:
         db: Database to query for existing Series.
-        preferences: Preferences to use for global settings.
         sync: Sync to run.
-        *_interface: Interfaces to query.
         background_tasks: BackgroundTasks to add tasks to for any newly
             added Series.
         log: Logger for all log messages.
     """
 
-    # If specified interface is disabled, raise 409
-    interface = {
-        'Emby': emby_interface,
-        'Jellyfin': jellyfin_interface,
-        'Plex': plex_interface,
-        'Sonarr': sonarr_interface,
-    }.get(sync.interface, None)
-    if interface is None:
-        raise HTTPException(
-            status_code=409,
-            detail=f'Unable to communicate with {sync.interface}',
-        )
+    # Get specified Interface
+    interface = get_interface(sync.interface_id, raise_exc=True)
 
-    # Sync depending on the associated interface
-    added: list[NewSeries] = []
+    # Query interface for the indicated subset of Series
+    log.debug(f'{sync.log_str} starting to query {sync.interface}[{sync.interface_id}]')
+    all_series = interface.get_all_series(**sync.sync_kwargs, log=log)
 
-    # Sync from Emby
-    log.debug(f'{sync.log_str} starting to query {sync.interface}')
-    if sync.interface == 'Emby':
-        all_series = emby_interface.get_all_series(
-            required_libraries=sync.required_libraries,
-            excluded_libraries=sync.excluded_libraries,
-            required_tags=sync.required_tags,
-            excluded_tags=sync.excluded_tags,
-            log=log,
-        )
-        for series_info, library in all_series:
-            # Look for existing series, add if DNE
-            existing = db.query(models.series.Series)\
-                .filter(series_info.filter_conditions(models.series.Series))\
-                .first()
-            if existing is None:
-                added.append(NewSeries(
-                    name=series_info.name,
-                    year=series_info.year,
-                    sync_id=sync.id,
-                    template_ids=sync.template_ids,
-                    emby_library_name=library,
-                    **series_info.ids,
-                ))
-    # Sync from Jellyfin
-    elif sync.interface == 'Jellyfin':
-        all_series = jellyfin_interface.get_all_series(
-            required_libraries=sync.required_libraries,
-            excluded_libraries=sync.excluded_libraries,
-            required_tags=sync.required_tags,
-            excluded_tags=sync.excluded_tags,
-            log=log,
-        )
-        for series_info, library in all_series:
-            # Look for existing series, add if DNE
-            existing = db.query(models.series.Series)\
-                .filter(series_info.filter_conditions(models.series.Series))\
-                .first()
-            if existing is None:
-                added.append(NewSeries(
-                    name=series_info.name,
-                    year=series_info.year,
-                    sync_id=sync.id,
-                    template_ids=sync.template_ids,
-                    jellyfin_library_name=library,
-                    **series_info.ids,
-                ))
-    # Sync from Plex
-    elif sync.interface == 'Plex':
-        all_series = plex_interface.get_all_series(
-            required_libraries=sync.required_libraries,
-            excluded_libraries=sync.excluded_libraries,
-            required_tags=sync.required_tags,
-            excluded_tags=sync.excluded_tags,
-            log=log,
-        )
-        for series_info, library in all_series:
-            # Look for existing series, add if DNE
-            existing = db.query(models.series.Series)\
-                .filter(series_info.filter_conditions(models.series.Series))\
-                .first()
-            if existing is None:
-                added.append(NewSeries(
-                    name=series_info.name,
-                    year=series_info.year,
-                    sync_id=sync.id,
-                    template_ids=sync.template_ids,
-                    plex_library_name=library,
-                    **series_info.ids,
-                ))
-    # Sync from Sonarr
-    elif sync.interface == 'Sonarr':
-        all_series = sonarr_interface.get_all_series(
-            required_tags=sync.required_tags,
-            excluded_tags=sync.excluded_tags,
-            monitored_only=sync.monitored_only,
-            downloaded_only=sync.downloaded_only,
-            required_series_type=sync.required_series_type,
-            excluded_series_type=sync.excluded_series_type,
-            log=log,
-        )
-        for series_info, directory in all_series:
-            # Look for existing series, add if DNE
-            existing = db.query(models.series.Series)\
-                .filter(series_info.filter_conditions(models.series.Series))\
-                .first()
-            if existing is None:
-                library = preferences.determine_sonarr_library(directory)
-                added.append(NewSeries(
-                    name=series_info.name,
-                    year=series_info.year,
-                    sync_id=sync.id,
-                    template_ids=sync.template_ids,
-                    plex_library_name=library,
-                    **series_info.ids,
-                ))
+    # Process all Series returned by Sync
+    added: list[Series] = []
+    for series_info, lib_or_dir in all_series:
+        # Look for existing Series
+        existing = db.query(Series)\
+            .filter(series_info.filter_conditions(Series))\
+            .first()
 
-    # If anything was added, commit updates to database
-    if added:
-        db.commit()
-    else:
+        # Determine this Series' libraries
+        libraries = []
+        if sync.interface == 'Sonarr':
+            # Get the Connection associated with this Sync
+            if (connection := sync.connection) is None:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f'Unable to communicate with {sync.interface}',
+                )
+
+            # Determine libraries using this Connection
+            library_data = connection.determine_libraries(lib_or_dir)
+            for interface_id, library in library_data:
+                # Get Connection of this library
+                library_connection = db.query(Connection)\
+                    .filter_by(id=interface_id)\
+                    .first()
+                if library_connection is None:
+                    log.error(f'No Connection of ID {interface_id} - cannot '
+                              f'assign library')
+                    continue
+
+                libraries.append({
+                    'interface': library_connection.interface_type,
+                    'interface_id': interface_id,
+                    'name': library,
+                })
+        else:
+            libraries.append({
+                'interface': sync.interface,
+                'interface_id': sync.interface_id,
+                'name': lib_or_dir
+            })
+
+        # If already exists in Database, update IDs and libraries then skip
+        if existing:
+            # Add any new libraries
+            for new in libraries:
+                exists = any(
+                    new['interface_id'] == existing_library['interface_id']
+                    and new['name'] == existing_library['name']
+                    for existing_library in existing.libraries
+                )
+                if not exists:
+                    existing.libraries.append(new)
+                    log.debug(f'Added Library "{new["name"]}" to {existing.log_str}')
+
+            # Update IDs
+            existing.update_from_series_info(series_info)
+            db.commit()
+            continue
+
+        # Create NewSeries for this entry
+        added.append(NewSeries(
+            name=series_info.name, year=series_info.year, libraries=libraries,
+            **series_info.ids, sync_id=sync.id, template_ids=sync.template_ids,
+        ))
+
+    # Nothing added, log
+    if not added:
         log.debug(f'{sync.log_str} No new Series synced')
 
     # Process each newly added Series
     return [
-        add_series(
-            new_series, background_tasks, db, emby_interface,
-            imagemagick_interface, jellyfin_interface, plex_interface,
-            sonarr_interface, tmdb_interface, log=log,
-        ) for new_series in added
+        add_series(new_series, background_tasks, db, log=log)
+        for new_series in added
     ]

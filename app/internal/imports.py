@@ -1,23 +1,33 @@
 from logging import Logger
 from pathlib import Path
 from re import match, IGNORECASE
-from typing import Any, Callable, Literal, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 from fastapi import HTTPException
 from ruamel.yaml import YAML
 from sqlalchemy.orm import Session
 
-from app.dependencies import refresh_imagemagick_interface
-from app.internal.cards import add_card_to_database, resolve_card_settings, validate_card_type_model
-from app.internal.connection import update_connection
+from app.dependencies import (
+    get_emby_interfaces, get_jellyfin_interfaces, get_plex_interfaces,
+    get_sonarr_interfaces, get_tmdb_interfaces, refresh_imagemagick_interface
+)
+from app.internal.cards import (
+    add_card_to_database, resolve_card_settings, validate_card_type_model
+)
+from app.internal.connection import add_connection, update_connection
 from app import models
+from app.models.connection import Connection
 from app.models.preferences import Preferences
 from app.schemas.base import UNSPECIFIED
 from app.schemas.card import NewTitleCard
+from app.schemas.connection import (
+    NewEmbyConnection, NewJellyfinConnection, NewPlexConnection,
+    NewSonarrConnection, NewTMDbConnection, UpdateEmby, UpdateJellyfin,
+    UpdatePlex, UpdateSonarr, UpdateTMDb,
+)
 from app.schemas.font import NewNamedFont
 from app.schemas.preferences import (
-    CardExtension, EpisodeDataSource, UpdateEmby, UpdateJellyfin,
-    UpdatePlex, UpdatePreferences, UpdateSonarr, UpdateTMDb
+    CardExtension, EpisodeDataSource, UpdatePreferences
 )
 from app.schemas.series import NewSeries, NewTemplate, Series, Translation
 from app.schemas.sync import (
@@ -28,7 +38,6 @@ from modules.Debug import log
 from modules.EpisodeMap import EpisodeMap
 from modules.PreferenceParser import PreferenceParser
 from modules.SeriesInfo import SeriesInfo
-from modules.Template import Template as YamlTemplate
 from modules.TieredSettings import TieredSettings
 
 
@@ -212,33 +221,36 @@ def _parse_episode_data_source(
 
 def _parse_filesize_limit(
         yaml_dict: dict[str, Any]
-    ) -> Union[tuple[int, str], tuple[UNSPECIFIED, UNSPECIFIED]]:
+    ) -> str:
     """
-    Parse the filesize limit unit and number from the given YAML.
+    Parse the filesize limit from the given YAML.
 
     Args:
         yaml_dict: Dictionary of YAML to parse.
 
     Returns:
-        Tuple of the filesize number and unit. If the limit is not in
-        the specified YAML, then a tuple of UNSPECIFIED is returned.
+        The modified filesize limit. If the limit is not in the
+        specified YAML, then UNSPECIFIED is returned.
 
     Raises:
-        HTTPException (422) if the limit values cannot be parsed.
+        HTTPException (422): The limit values cannot be parsed.
     """
 
     if (not isinstance(yaml_dict, dict)
         or (limit := yaml_dict.get('filesize_limit', None)) is None):
-        return UNSPECIFIED, UNSPECIFIED
+        return UNSPECIFIED
 
     try:
         number, unit = limit.split(' ')
-        return int(number), unit
-    except Exception as e:
+        modified_unit = {
+            'b': 'Bytes', 'kb': 'Kilobytes', 'mb': 'Megabytes'
+        }[unit.lower()]
+        return f'{number} {modified_unit}'
+    except Exception as exc:
         raise HTTPException(
             status_code=422,
             detail=f'Invalid filesize limit',
-        ) from e
+        ) from exc
 
 
 def _parse_filename_format(yaml_dict: dict[str, Any]) -> str:
@@ -425,263 +437,327 @@ def parse_preferences(
 
 
 def parse_emby(
-        preferences: Preferences,
+        db: Session,
         yaml_dict: dict,
         *,
         log: Logger = log,
-    ) -> Preferences:
+    ) -> None:
     """
-    Update the Emby connection preferences for the given YAML.
+    Update the Emby connection details for the given YAML. This either
+    modifies the first existing Emby Connection, if one exists, or
+    creates a new Connection with the parsed details.
 
     Args:
-        preferences: Preferences whose connection details are being
-            modified.
+        db: Database to query for an existing Connection to modify, or
+            to add the new Connection to.
         yaml_dict: Dictionary of YAML attributes to parse.
         log: Logger for all log messages.
 
-    Returns:
-        Modified Preferences object. If no changes are made, the object
-        is returned unmodified.
-
     Raises:
-        HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if an UpdateEmby object cannot be
-            created from the given YAML.
+        HTTPException (422): There are any YAML formatting errors.
+        ValidationError: The YAML cannot be parsed into valid Connection
+            details.
     """
 
     # Skip if no section
     if not isinstance(yaml_dict, dict) or 'emby' not in yaml_dict:
-        return preferences
+        return None
 
     # Get emby options
     emby = _get(yaml_dict, 'emby', default={})
 
-    # Get filesize limit
-    limit_number, limit_unit = _parse_filesize_limit(emby)
+    # If there is an existing Connection, update instead of create
+    existing = db.query(Connection).filter_by(interface_type='Emby').first()
+    if existing:
+        update_obj = UpdateEmby(**_remove_unspecifed_args(
+            url=_get(emby, 'url', type_=str, default=UNSPECIFIED),
+            api_key=_get(emby, 'api_key', default=UNSPECIFIED),
+            username=_get(emby, 'username', type_=str, default=UNSPECIFIED),
+            use_ssl=_get(emby, 'verify_ssl', type_=bool, default=UNSPECIFIED),
+            filesize_limit=_parse_filesize_limit(emby),
+        ))
+        update_connection(
+            db, existing.id, get_emby_interfaces(), update_obj, log=log,
+        )
 
-    update_emby = UpdateEmby(**_remove_unspecifed_args(
-        url=_get(emby, 'url', type_=str, default=UNSPECIFIED),
-        api_key=_get(emby, 'api_key', default=UNSPECIFIED),
-        username=_get(emby, 'username', type_=str, default=UNSPECIFIED),
-        use_ssl=_get(emby, 'verify_ssl', type_=bool, default=UNSPECIFIED),
-        filesize_limit_number=limit_number,
-        filesize_limit_unit=limit_unit,
-    ))
-    preferences.use_emby = True
-    preferences.commit()
+        return None
 
-    return update_connection(preferences, update_emby, 'emby', log=log)
+    # New Connection
+    new_obj = NewEmbyConnection(
+        url=_get(emby, 'url', type_=str),
+        api_key=_get(emby, 'api_key', type_=str),
+        use_ssl=_get(emby, 'verify_ssl', type_=bool, default=True),
+        filesize_limit=_parse_filesize_limit(emby),
+        username=_get(emby, 'username', type_=str, default=None),
+    )
+    add_connection(db, new_obj, get_emby_interfaces(), log=log)
+
+    return None
 
 
 def parse_jellyfin(
-        preferences: Preferences,
+        db: Session,
         yaml_dict: dict,
         *,
         log: Logger = log,
-    ) -> Preferences:
+    ) -> None:
     """
-    Update the Jellyfin connection preferences for the given YAML.
+    Update the Jellyfin connection details for the given YAML. This
+    either modifies the first existing Jellyfin Connection, if one
+    exists, or creates a new Connection with the parsed details.
 
     Args:
-        preferences: Preferences whose connection details are being
-            modified.
+        db: Database to query for an existing Connection to modify, or
+            to add the new Connection to.
         yaml_dict: Dictionary of YAML attributes to parse.
         log: Logger for all log messages.
 
-    Returns:
-        Modified Preferences object. If no changes are made, the object
-        is returned unmodified.
-
     Raises:
-        HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if an UpdateJellyfin object cannot be
-            created from the given YAML.
+        HTTPException (422): There are any YAML formatting errors.
+        ValidationError: The YAML cannot be parsed into valid Connection
+            details.
     """
 
     # Skip if no section
     if not isinstance(yaml_dict, dict) or 'jellyfin' not in yaml_dict:
-        return preferences
+        return None
 
     # Get jellyfin options
     jellyfin = _get(yaml_dict, 'jellyfin', default={})
 
-    # Get filesize limit
-    limit_number, limit_unit = _parse_filesize_limit(jellyfin)
+    # If there is an existing Jellyfin interface, update instead of create
+    existing = db.query(Connection).filter_by(interface_type='Jellyfin').first()
+    if existing:
+        # Create Update object from these arguments
+        update_obj = UpdateJellyfin(**_remove_unspecifed_args(
+            url=_get(jellyfin, 'url', type_=str, default=UNSPECIFIED),
+            api_key=_get(jellyfin, 'api_key', default=UNSPECIFIED),
+            username=_get(jellyfin, 'username', type_=str, default=UNSPECIFIED),
+            use_ssl=_get(jellyfin, 'verify_ssl', type_=bool, default=UNSPECIFIED),
+            filesize_limit=_parse_filesize_limit(jellyfin),
+        ))
+        update_connection(
+            db, existing.id, get_jellyfin_interfaces(), update_obj, log=log,
+        )
 
-    update_jellyfin = UpdateJellyfin(
-        url=_get(jellyfin, 'url', type_=str, default=UNSPECIFIED),
-        api_key=_get(jellyfin, 'api_key', default=UNSPECIFIED),
-        username=_get(jellyfin, 'username', type_=str, default=UNSPECIFIED),
-        use_ssl=_get(jellyfin, 'verify_ssl', type_=bool, default=UNSPECIFIED),
-        filesize_limit_number=limit_number,
-        filesize_limit_unit=limit_unit,
+        return None
+
+    # New connection
+    new_obj = NewJellyfinConnection(
+        url=_get(jellyfin, 'url', type_=str),
+        api_key=_get(jellyfin, 'api_key', type_=str),
+        use_ssl=_get(jellyfin, 'verify_ssl', type_=bool, default=True),
+        filesize_limit=_parse_filesize_limit(jellyfin),
+        username=_get(jellyfin, 'username', type_=str, default=None),
     )
-    preferences.use_jellyfin = True
-    preferences.commit()
+    add_connection(db, new_obj, get_jellyfin_interfaces(), log=log)
 
-    return update_connection(preferences, update_jellyfin, 'jellyfin', log=log)
+    return None
 
 
 def parse_plex(
-        preferences: Preferences,
+        db: Session,
         yaml_dict: dict,
         *,
         log: Logger = log,
-    ) -> Preferences:
+    ) -> None:
     """
-    Update the Plex connection preferences for the given YAML.
+    Update the Plex connection details for the given YAML. This either
+    modifies the first existing Plex Connection, if one exists, or
+    creates a new Connection with the parsed details.
 
     Args:
-        preferences: Preferences whose connection details are being
-            modified.
+        db: Database to query for an existing Connection to modify, or
+            to add the new Connection to.
         yaml_dict: Dictionary of YAML attributes to parse.
         log: Logger for all log messages.
 
-    Returns:
-        Modified Preferences object. If no changes are made, the object
-        is returned unmodified.
-
     Raises:
-        HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if an UpdatePlex object cannot be
-            created from the given YAML.
+        HTTPException (422): There are any YAML formatting errors.
+        ValidationError: The YAML cannot be parsed into valid Connection
+            details.
     """
 
     # Skip if no section
     if not isinstance(yaml_dict, dict) or 'plex' not in yaml_dict:
-        return preferences
+        return None
 
-    # Get plex options
+    # Get jellyfin options
     plex = _get(yaml_dict, 'plex', default={})
 
-    # Get filesize limit
-    limit_number, limit_unit = _parse_filesize_limit(plex)
+    # If there is an existing Plex interface, update instead of create
+    existing = db.query(Connection).filter_by(interface_type='Plex').first()
+    if existing:
+        # Create Update object from these arguments
+        update_obj = UpdatePlex(**_remove_unspecifed_args(
+            url=_get(plex, 'url', type_=str, default=UNSPECIFIED),
+            api_key=_get(plex, 'token', default=UNSPECIFIED),
+            use_ssl=_get(plex, 'verify_ssl', type_=bool, default=UNSPECIFIED),
+            filesize_limit=_parse_filesize_limit(plex),
+            integrate_with_pmm=_get(
+                plex, 'integrate_with_pmm_overlays',
+                type_=bool,
+                default=UNSPECIFIED
+            ),
+        ))
+        update_connection(
+            db, existing.id, get_plex_interfaces(), update_obj, log=log,
+        )
 
-    update_plex = UpdatePlex(**_remove_unspecifed_args(
-        url=_get(plex, 'url', type_=str, default=UNSPECIFIED),
-        token=_get(plex, 'token', default=UNSPECIFIED),
-        use_ssl=_get(plex, 'verify_ssl', type_=bool, default=UNSPECIFIED),
-        integrate_with_pmm=_get(
-            plex,
-            'integrate_with_pmm_overlays',
-            type_=bool, default=UNSPECIFIED,
-        ), filesize_limit_number=limit_number,
-        filesize_limit_unit=limit_unit,
-    ))
-    preferences.use_plex = True
-    preferences.commit()
+        return None
 
-    return update_connection(preferences, update_plex, 'plex', log=log)
+    # New connection
+    new_obj = NewPlexConnection(
+        url=_get(plex, 'url', type_=str),
+        api_key=_get(plex, 'api_key', type_=str),
+        use_ssl=_get(plex, 'verify_ssl', type_=bool, default=True),
+        filesize_limit=_parse_filesize_limit(plex),
+        integrate_with_pmm=_get(plex, 'integrate_with_pmm_overlays', type_=bool)
+    )
+    add_connection(db, new_obj, get_emby_interfaces(), log=log)
+
+    return None
 
 
 def parse_sonarr(
-        preferences: Preferences,
+        db: Session,
         yaml_dict: dict,
         *,
         log: Logger = log,
-    ) -> Preferences:
+    ) -> None:
     """
-    Update the Sonarr connection preferences for the given YAML.
+    Update the Sonarr connection details for the given YAML. This either
+    modifies the first existing Sonarr Connection, if one exists, or
+    creates a new Connection with the parsed details.
 
     Args:
-        preferences: Preferences whose connection details are being
-            modified.
+        db: Database to query for an existing Connection to modify, or
+            to add the new Connection to.
         yaml_dict: Dictionary of YAML attributes to parse.
         log: Logger for all log messages.
 
-    Returns:
-        Modified Preferences object. If no changes are made, the object
-        is returned unmodified.
-
     Raises:
-        HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if an UpdateSonarr object cannot be
-            created from the given YAML.
+        HTTPException (422): There are any YAML formatting errors.
+        ValidationError: The YAML cannot be parsed into valid Connection
+            details.
     """
 
     # Skip if no section
     if not isinstance(yaml_dict, dict) or 'sonarr' not in yaml_dict:
-        return preferences
+        return None
 
-    # Get sonarr options
-    sonarr = _get(yaml_dict, 'sonarr', default={})
+    # Get sonarr options, format as list of servers
+    sonarrs = _get(yaml_dict, 'sonarr', default={})
+    if isinstance(sonarr, dict):
+        sonarrs = [sonarrs]
 
-    update_sonarr = UpdateSonarr(**_remove_unspecifed_args(
-        url=_get(sonarr, 'url', default=UNSPECIFIED),
-        api_key=_get(sonarr, 'api_key', default=UNSPECIFIED),
-        use_ssl=_get(sonarr, 'verify_ssl', default=UNSPECIFIED),
-    ))
-    preferences.use_sonarr = True
-    preferences.commit()
+    all_existing = db.query(Connection).filter_by(interface_type='Emby').all()
+    for id_, sonarr in enumerate(sonarr):
+        # Existing Connection, update instead of create
+        if id_ < len(all_existing):
+            update_obj = UpdateSonarr(**_remove_unspecifed_args(
+                url=_get(sonarr, 'url', type_=str, default=UNSPECIFIED),
+                api_key=_get(sonarr, 'token', default=UNSPECIFIED),
+                use_ssl=_get(sonarr, 'verify_ssl', type_=bool, default=UNSPECIFIED),
+                downloaded_only=_get(
+                    sonarr, 'downloaded_only', type_=bool, default=UNSPECIFIED
+                ),
+            ))
+            update_connection(
+                db, all_existing[id_].id, get_sonarr_interfaces(), update_obj,
+                log=log,
+            )
 
-    return update_connection(preferences, update_sonarr, 'sonarr', log=log)
+            return None
+
+        # New connection
+        new_obj = NewSonarrConnection(
+            url=_get(sonarr, 'url', type_=str),
+            api_key=_get(sonarr, 'api_key', type_=str),
+            use_ssl=_get(sonarr, 'verify_ssl', type_=bool, default=True),
+            downloaded_only=_get(sonarr, 'downloaded_only', type_=bool, default=True),
+        )
+        add_connection(db, new_obj, get_sonarr_interfaces(), log=log)
+
+    return None
 
 
 def parse_tmdb(
-        preferences: Preferences,
+        db: Session,
         yaml_dict: dict,
         *,
         log: Logger = log,
-    ) -> Preferences:
+    ) -> None:
     """
-    Update the TMDb connection preferences for the given YAML.
+    Update the TMDb connection details for the given YAML. This either
+    modifies the first existing TMDb Connection, if one exists, or
+    creates a new Connection with the parsed details.
 
     Args:
-        preferences: Preferences whose connection details are being
-            modified.
+        db: Database to query for an existing Connection to modify, or
+            to add the new Connection to.
         yaml_dict: Dictionary of YAML attributes to parse.
         log: Logger for all log messages.
 
-    Returns:
-        Modified Preferences object. If no changes are made, the object
-        is returned unmodified.
-
     Raises:
-        HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if an UpdateTMDb object cannot be
-            created from the given YAML.
+        HTTPException (422): There are any YAML formatting errors.
+        ValidationError: The YAML cannot be parsed into valid Connection
+            details.
     """
 
     # Skip if no section
     if not isinstance(yaml_dict, dict) or 'tmdb' not in yaml_dict:
-        return preferences
+        return None
 
     # Get tmdb options
     tmdb = _get(yaml_dict, 'tmdb', default={})
 
     SplitList = lambda s: str(s).lower().replace(' ', '').split(',')
 
-    update_tmdb = UpdateTMDb(**_remove_unspecifed_args(
-        api_key=_get(tmdb, 'api_key', default=UNSPECIFIED),
-        minimum_width=_get(
-            tmdb,
-            'minimum_resolution',
-            type_=Width, default=UNSPECIFIED,
-        ), minimum_height=_get(
-            tmdb,
-            'minimum_resolution',
-            type_=Height, default=UNSPECIFIED,
-        ), skip_localized=_get(
-            tmdb,
-            'skip_localized_images',
-            type_=bool, default=UNSPECIFIED,
-        ), logo_language_priority=_get(
-            tmdb,
-            'logo_language_priority',
-            type_=SplitList, default=UNSPECIFIED,
-        ),
-    ))
-    preferences.use_tmdb = True
-    preferences.commit()
+    # If there is an existing Connection, update instead of create
+    existing = db.query(Connection).filter_by(interface_type='TMDb').first()
+    if existing:
+        update_obj = UpdateTMDb(**_remove_unspecifed_args(
+            api_key=_get(tmdb, 'api_key', default=UNSPECIFIED),
+            minimum_dimensions=_get(
+                tmdb, 'minimum_resolution', default=UNSPECIFIED
+            ),
+            skip_localized=_get(
+                tmdb,
+                'skip_localized_images',
+                type_=bool, default=UNSPECIFIED,
+            ), logo_language_priority=_get(
+                tmdb,
+                'logo_language_priority',
+                type_=SplitList, default=UNSPECIFIED,
+            ),
+        ))
+        update_connection(
+            db, existing.id, get_tmdb_interfaces(), update_obj, log=log
+        )
 
-    return update_connection(preferences, update_tmdb, 'tmdb', log=log)
+        return None
+
+    # New Connection
+    new_obj = NewTMDbConnection(
+        api_key=_get(tmdb, 'api_key', type_=str),
+        minimum_dimensions=_get(tmdb, 'minimum_resolution', default='0x0'),
+        skip_localized=_get(
+            tmdb, 'skip_localized_images', type_=bool, default=True
+        ),
+        logo_language_priority=_get(
+            tmdb, 'logo_language_priority', type_=SplitList, default=['en']
+        ),
+    )
+    add_connection(db, new_obj, get_tmdb_interfaces(), log=log)
+
+    return None
 
 
 def parse_syncs(
         db: Session,
         yaml_dict: dict[str, Any],
-    ) -> Union[list[NewEmbySync], list[NewJellyfinSync],
-               list[NewPlexSync], list[NewSonarrSync]]:
+    ) -> list[Union[NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync]]:
     """
     Create NewSync objects for all defined syncs in the given YAML.
 
@@ -694,11 +770,11 @@ def parse_syncs(
         defined in the YAML.
 
     Raises:
-        HTTPException (404) if an indicated Template cannot be found in
+        HTTPException (404): An indicated Template cannot be found in
             the database.
-        HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if a New*Sync object cannot be created
-            from the given YAML.
+        HTTPException (422): YAML formatting errors.
+        ValidationError: An New*Sync object cannot be created from the
+            given YAML.
     """
 
     def _get_templates(sync: dict[str, Any]) -> list[int]:
@@ -706,7 +782,8 @@ def parse_syncs(
             return []
 
         template = db.query(models.template.Template)\
-            .filter_by(name=sync['add_template']).first()
+            .filter_by(name=sync['add_template'])\
+            .first()
         if template is None:
             raise HTTPException(
                 status_code=404,
@@ -716,7 +793,7 @@ def parse_syncs(
 
     def _parse_media_server_sync(
             yaml_dict: dict[str, Any],
-            media_server: Literal['Emby', 'Jellyfin', 'Plex'],
+            connection: Connection,
             NewSyncClass: Union[NewEmbySync, NewJellyfinSync, NewPlexSync]
         ) -> Union[list[NewEmbySync], list[NewJellyfinSync], list[NewPlexSync]]:
         """
@@ -724,7 +801,7 @@ def parse_syncs(
 
         Args:
             yaml_dict: Dictionary of YAML attributes to parse.
-            media_server: Which media server this Sync corresponds do.
+            connection: Connection to associate the imported Syncs with.
             NewSyncClass: Class to instantiate with the parsed arguments
 
         Returns:
@@ -752,7 +829,8 @@ def parse_syncs(
 
             # Add object to list
             all_syncs.append(NewSyncClass(**_remove_unspecifed_args(
-                name=f'Imported {media_server} Sync {sync_id+1}',
+                interface_id=connection.id,
+                name=f'Imported {connection.name} Sync {sync_id+1}',
                 templates=_get_templates(sync),
                 required_tags=_get(sync, 'required_tags',type_=list,default=[]),
                 excluded_tags=excluded_tags,
@@ -764,48 +842,78 @@ def parse_syncs(
     # Add Syncs for each defined section
     all_syncs = []
     if (emby := _get(yaml_dict, 'emby', 'sync')) is not None:
-        all_syncs += _parse_media_server_sync(emby, 'Emby', NewEmbySync)
+        connection = db.query(Connection)\
+            .filter_by(interface_type='Emby')\
+            .first()
+        if connection:
+            all_syncs += _parse_media_server_sync(emby, connection, NewEmbySync)
+        else:
+            log.warning(f'Cannot import Emby Syncs, no valid Connection')
 
     if (jellyfin := _get(yaml_dict, 'jellyfin', 'sync')) is not None:
-        all_syncs += _parse_media_server_sync(
-            jellyfin, 'Jellyfin', NewJellyfinSync
-        )
+        connection = db.query(Connection)\
+            .filter_by(interface_type='Jellyfin')\
+            .first()
+        if connection:
+            all_syncs += _parse_media_server_sync(
+                jellyfin, connection, NewJellyfinSync
+            )
+        else:
+            log.warning(f'Cannot import Jellyfin Syncs, no valid Connection')
 
     if (plex := _get(yaml_dict, 'plex', 'sync')) is not None:
-        all_syncs += _parse_media_server_sync(plex, 'Plex', NewPlexSync)
+        connection = db.query(Connection)\
+            .filter_by(interface_type='Plex')\
+            .first()
+        if connection:
+            all_syncs += _parse_media_server_sync(plex, connection, NewPlexSync)
+        else:
+            log.warning(f'Cannot import Plex Syncs, no valid Connection')
 
-    if (sonarr := _get(yaml_dict, 'sonarr', 'sync')) is not None:
-        syncs = sonarr if isinstance(sonarr, list) else [sonarr]
-        for sync_id, sync in enumerate(syncs):
-            # Skip invalid syncs, and those not being written to files
-            if not isinstance(sync, dict) or 'file' not in sync:
-                continue
+    sonarrs = _get(yaml_dict, 'sonarr')
+    sonarrs = sonarrs if isinstance(sonarrs, list) else [sonarrs]
+    all_existing = db.query(Connection).filter_by(interface_type='Sonarr').all()
+    for id_, sonarr in enumerate(sonarrs):
+        # No associated Connection to import into
+        if id_ > len(all_existing):
+            log.warning(f'Cannot import Sonarr syncs for Connection[{id_}] - '
+                        f'no valid Connection')
+            break
+        existing = all_existing[id_]
 
-            # Merge the first sync settings into this one
-            TieredSettings(sync, syncs[0], sync)
+        if (syncs := _get(sonarr, 'sync')) is not None:
+            syncs = syncs if isinstance(syncs, list) else [syncs]
+            for sync_id, sync in enumerate(syncs):
+                # Skip invalid syncs, and those not being written to files
+                if not isinstance(sync, dict) or 'file' not in sync:
+                    continue
 
-            # Get excluded tags
-            excluded_tags = [
-                list(exclusion.values())[0] for exclusion in _get(
-                    sync, 'exclusions', type_=list, default=[]
-                ) if list(exclusion.keys())[0] == 'tag'
-            ]
+                # Merge the first sync settings into this one
+                TieredSettings(sync, syncs[0], sync)
 
-            # Add object to list
-            all_syncs.append(NewSonarrSync(**_remove_unspecifed_args(
-                name=f'Imported Sonarr Sync {sync_id+1}',
-                template_ids=_get_templates(sync),
-                required_tags=_get(sync, 'required_tags', type_=list, default=[]),
-                excluded_tags=excluded_tags,
-                required_series_type=_get(sync, 'series_type'),
-                downloaded_only=_get(sync, 'downloaded_only', type_=bool, default=False),
-                monitored_only=_get(sync, 'monitored_only', type_=bool, default=False),
-            )))
+                # Get excluded tags
+                excluded_tags = [
+                    list(exclusion.values())[0] for exclusion in _get(
+                        sync, 'exclusions', type_=list, default=[]
+                    ) if list(exclusion.keys())[0] == 'tag'
+                ]
+
+                # Add object to list
+                all_syncs.append(NewSonarrSync(**_remove_unspecifed_args(
+                    interface_id=existing.id,
+                    name=f'Imported {existing.name} Sync {sync_id+1}',
+                    template_ids=_get_templates(sync),
+                    required_tags=_get(sync, 'required_tags', type_=list, default=[]),
+                    excluded_tags=excluded_tags,
+                    required_series_type=_get(sync, 'series_type'),
+                    downloaded_only=_get(sync, 'downloaded_only', type_=bool, default=False),
+                    monitored_only=_get(sync, 'monitored_only', type_=bool, default=False),
+                )))
 
     return all_syncs
 
 
-def parse_fonts(yaml_dict: dict[str, Any]) -> list[NewNamedFont]:
+def parse_fonts(yaml_dict: dict) -> list[tuple[NewNamedFont, Optional[Path]]]:
     """
     Create NewNamedFont objects for any defined fonts in the given
     YAML.
@@ -814,7 +922,8 @@ def parse_fonts(yaml_dict: dict[str, Any]) -> list[NewNamedFont]:
         yaml_dict: Dictionary of YAML attributes to parse.
 
     Returns:
-        List of NewTemplates that match any defined YAML templates.
+        List of tuples of each new Font object and the Path to the
+        listed Font file for that Font.
 
     Raises:
         HTTPException (422) if there are any YAML formatting errors.
@@ -849,8 +958,8 @@ def parse_fonts(yaml_dict: dict[str, Any]) -> list[NewNamedFont]:
                 detail=f'Invalid replacements in Font "{font_name}"',
             )
 
-        # Create NewTemplate with all indicated customization
-        fonts.append(NewNamedFont(**_remove_unspecifed_args(
+        # Create New Font with all indicated customization
+        new_font = NewNamedFont(**_remove_unspecifed_args(
             name=str(font_name),
             color=_get(font_dict, 'color'),
             title_case=_get(font_dict, 'case'),
@@ -862,7 +971,8 @@ def parse_fonts(yaml_dict: dict[str, Any]) -> list[NewNamedFont]:
             delete_missing=_get(font_dict, 'delete_missing', default=True, type_=bool),
             replacements_in=list(replacements.keys()),
             replacements_out=list(replacements.values()),
-        )))
+        ))
+        fonts.append((new_font, _get(font_dict, 'file', type_=Path)))
 
     return fonts
 
@@ -996,7 +1106,6 @@ def parse_series(
         db: Session,
         preferences: Preferences,
         yaml_dict: dict[str, Any],
-        default_library: Optional[str] = None,
         *,
         log: Logger = log,
     ) -> list[NewSeries]:
@@ -1032,6 +1141,7 @@ def parse_series(
     # If not a dictionary of series, return empty list
     if not isinstance(all_series, dict):
         return []
+
     # Determine which media server to assume libraries are for
     if preferences.use_emby:
         library_type = 'emby_library_name'
@@ -1043,18 +1153,7 @@ def parse_series(
     # Parse library section
     yaml_libraries = _get(yaml_dict, 'libraries', type_=dict, default={})
 
-    # Parse YAML templates
-    yaml_templates = {}
-    if 'templates' in yaml_dict and isinstance(yaml_dict['templates'], dict):
-        for name, template_yaml in yaml_dict['templates'].items():
-            if not isinstance(template_yaml, dict):
-                raise HTTPException(
-                    status_code=422,
-                    detail=f'Template "{name}" is invalid'
-                )
-            yaml_templates[name] = YamlTemplate(name, template_yaml)
-
-    # Create NewSeries objects for all listed Sseries
+    # Create NewSeries objects for all listed Series
     series = []
     for series_name, series_dict in all_series.items():
         # Skip if not a dictionary
@@ -1068,9 +1167,9 @@ def parse_series(
         series_dict = PreferenceParser.finalize_show_yaml(
             _get(series_dict, 'name', type_=str, default=series_name),
             series_dict,
-            yaml_templates,
+            {}, # Assign Templates, do not merge
             yaml_libraries,
-            {},
+            {}, # assign Fonts, do not merge
             raise_exc=True,
         )
 
@@ -1120,6 +1219,28 @@ def parse_series(
                 )
             font_id = font.id
 
+        # Get the assigned template name ID
+        series_template = _get(series_dict, 'template', default={})
+        if isinstance(series_template, str):
+            template_name = series_template
+        elif isinstance(series_template, dict):
+            template_name = _get(series_template, 'name', default='Unnamed')
+        else:
+            raise HTTPException(
+                status_code=422,
+                detail=f'Unrecognized Template in Series "{series_info}"',
+            )
+
+        # Look for Template with this name
+        template_id: Optional[int] = db.query(models.template.Template.id)\
+            .filter_by(name=template_name)\
+            .first()
+        if series_template and not template_id:
+            raise HTTPException(
+                status_code=404,
+                detail=f'Template "{template_name}" not found',
+            )
+
         # Get season titles via episode_ranges or seasons
         episode_map = EpisodeMap(
             _get(series_dict, 'seasons', default={}),
@@ -1146,9 +1267,33 @@ def parse_series(
             if k != 'logo' and not str(v).endswith('logo.png')
         }
 
-        # Use default library if a manual one was not specified
-        if (library := _get(series_dict, 'library', 'name')) is None:
-            library = default_library
+        # Assign library
+        libraries = []
+        if (library_name := _get(series_dict, 'library', 'name')):
+            # No explicit server specification, use global enables
+            if not (media_server := _get(series_dict, 'library', 'media_server')):
+                if preferences.use_emby:
+                    media_server = 'Emby'
+                elif preferences.use_jellyfin:
+                    media_server = 'Jellyfin'
+                else:
+                    media_server = 'Plex'
+
+            # Get first Connection for this server type
+            connection = db.query(models.connection.Connection)\
+                .filter_by(interface_type=media_server.title())\
+                .first()
+            if connection:
+                libraries.append({
+                    'interface_id': connection.id,
+                    'interface': connection.interface_type,
+                    'name': library_name
+                })
+            else:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f'Invalid library assignment in" {series_info}"'
+                )
 
         # Create NewTemplate with all indicated customization
         series.append(NewSeries(**_remove_unspecifed_args(
@@ -1169,6 +1314,7 @@ def parse_series(
                 type_=preferences.standardize_style
             ),
             translations=_parse_translations(series_dict, default=None),
+            template_id=template_id,
             font_id=font_id,
             font_color=_get(series_dict, 'font', 'color'),
             font_title_case=_get(series_dict, 'font', 'case'),
@@ -1193,7 +1339,7 @@ def parse_series(
                 'font', 'vertical_shift',
                 type_=int
             ), directory=_get(series_dict, 'media_directory'),
-            **{library_type: library},
+            libraries=libraries,
             **series_info.ids,
             season_title_ranges=list(season_titles.keys()),
             season_title_values=list(season_titles.values()),
@@ -1266,14 +1412,15 @@ def import_cards(
             continue
 
         # Episode has an existing Card, skip if not forced
-        if episode.card and not force_reload:
-            log.debug(f'{series.log_str} {episode.log_str} has an associated '
-                      f'Card - skipping')
+        # TODO evaluate w/ multi-conn
+        if episode.cards and not force_reload:
+            log.debug(f'{series.log_str} {episode.log_str} has an associated Card - skipping')
             continue
 
-        # Episode has Card, delete if reloading
-        if force_reload and episode.card:
-            for card in episode.card:
+        # Episode has card, delete if reloading
+        # TODO evaluate w/ force-reload and multi-conn
+        if episode.cards and force_reload:
+            for card in episode.cards:
                 log.debug(f'{card.log_str} deleting record')
                 db.query(models.card.Card).filter_by(id=card.id).delete()
                 log.debug(f'{series.log_str} {episode.log_str} has associated '
@@ -1281,6 +1428,7 @@ def import_cards(
 
         # Get finalized Card settings for this Episode, override card file
         try:
+            # TODO eval w/ library?
             card_settings = resolve_card_settings(episode, log=log)
         except HTTPException as e:
             log.exception(f'{series.log_str} {episode.log_str} Cannot import '
@@ -1298,9 +1446,8 @@ def import_cards(
             episode_id=episode.id,
         )
 
-        card = add_card_to_database(
-            db, title_card, CardTypeModel, card_settings['card_file']
-        )
+        # TODO revise w/ multi-conn
+        card = add_card_to_database(db, title_card, card_settings['card_file'])
         log.debug(f'{series.log_str} {episode.log_str} Imported {image.resolve()}')
 
     return None

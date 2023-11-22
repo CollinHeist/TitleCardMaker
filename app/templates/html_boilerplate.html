@@ -22,12 +22,23 @@
 <script type="text/javascript" src="/templates/js/changelog.js?v={{preferences.current_version}}"></script>
 <script type="text/javascript">
   $(document).ready(function() {
+    // Error icon if a Connection is invalid
+    {% if preferences.invalid_connections %}
+    if ($('#nav-menu a[href="/connections"]').length > 0) {
+      $('#nav-menu a[href="/connections"] i').toggleClass('red', true);
+    } else {
+      $('#nav-menu a[href="/settings"] i').toggleClass('red', true);
+    }
+    {% endif %}
+
     // Show changelog if necessary
     notifyChanges('{{preferences.current_version}}');
+
     // Turn on accessible colormode if enabled
     {% if preferences.colorblind_mode %}
     $('body').toggleClass('accessible', true);
     {% endif %}
+
     // Update link for this page's external documentation link
     let docSite = '';
     if      (location.pathname === '/') { }

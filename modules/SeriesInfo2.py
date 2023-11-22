@@ -1,12 +1,13 @@
-from re import compile as re_compile, match, sub as re_sub, IGNORECASE
+from datetime import datetime
+from re import match, compile as re_compile
 from typing import Optional, Union
 
 from plexapi.video import Show as PlexShow
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Query
 
 from modules.CleanPath import CleanPath
-from modules.DatabaseInfoContainer import DatabaseInfoContainer
+from modules.DatabaseInfoContainer import DatabaseInfoContainer, InterfaceID
 
 
 class SeriesInfo(DatabaseInfoContainer):
@@ -36,7 +37,7 @@ class SeriesInfo(DatabaseInfoContainer):
             tmdb_id: Optional[int] = None,
             tvdb_id: Optional[int] = None,
             tvrage_id: Optional[int] = None,
-            match_titles: bool = True,
+            match_titles: Optional[bool] = True,
         ) -> None:
         """
         Create a SeriesInfo object that defines a series described by
@@ -65,19 +66,16 @@ class SeriesInfo(DatabaseInfoContainer):
         # Parse arguments into attributes
         self.name = name
         self.year = year
-        self.emby_id = None
+        self.emby_id = InterfaceID(emby_id, type_=str, libraries=True)
         self.imdb_id = None
-        self.jellyfin_id = None
-        self.sonarr_id = None
+        self.jellyfin_id = InterfaceID(jellyfin_id, type_=str, libraries=True)
+        self.sonarr_id = InterfaceID(sonarr_id, type_=int, libraries=False)
         self.tmdb_id = None
         self.tvdb_id = None
         self.tvrage_id = None
         self.match_titles = match_titles
 
-        self.set_emby_id(emby_id)
         self.set_imdb_id(imdb_id)
-        self.set_jellyfin_id(jellyfin_id)
-        self.set_sonarr_id(sonarr_id)
         self.set_tmdb_id(tmdb_id)
         self.set_tvdb_id(tvdb_id)
         self.set_tvrage_id(tvrage_id)
@@ -99,14 +97,9 @@ class SeriesInfo(DatabaseInfoContainer):
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        ret = f'<SeriesInfo name={self.name}, year={self.year}'
-        ret += f', emby_id={self.emby_id}' if self.emby_id else ''
-        ret += f', imdb_id={self.imdb_id}' if self.imdb_id else ''
-        ret += f', jellyfin_id={self.jellyfin_id}' if self.jellyfin_id else ''
-        ret += f', sonarr_id={self.sonarr_id}' if self.sonarr_id else ''
-        ret += f', tmdb_id={self.tmdb_id}' if self.tmdb_id else ''
-        ret += f', tvdb_id={self.tvdb_id}' if self.tvdb_id else ''
-        ret += f', tvrage_id={self.tvrage_id}' if self.tvrage_id else ''
+        ret = '<SeriesInfo'
+        for attr in self.__slots__:
+            ret += f' {attr}={getattr(self, attr)!r}'
 
         return f'{ret}>'
 
@@ -118,16 +111,117 @@ class SeriesInfo(DatabaseInfoContainer):
 
 
     @staticmethod
+    def from_series_infos(
+            primary: 'SeriesInfo',
+            *series_infos: tuple['SeriesInfo'],
+        ) -> 'SeriesInfo':
+        """
+        Construct a SeriesInfo object from all the given objects. This
+        takes `primary` as the base info (name, year, etc.), and then
+        adds the IDs from the other infos.
+
+        Args:
+            primary: Base info.
+            series_infos: Any number of infos whose IDs to utilize in
+                the construction of the resulting SeriesInfo object.
+                IDs are taken in priority sequentially.
+
+        Returns:
+            SeriesInfo object with the name/year of `primary`, but the
+            combined IDs of all infos. 
+        """
+
+        series_info = SeriesInfo(
+            primary.name, primary.year, emby_id=primary.emby_id,
+            imdb_id=primary.imdb_id, jellyfin_id=primary.jellyfin_id,
+            sonarr_id=primary.sonarr_id, tmdb_id=primary.tmdb_id,
+            tvdb_id=primary.tvdb_id, tvrage_id=primary.tvrage_id,
+            match_titles=primary.match_titles,
+        )
+
+        for info in series_infos:
+            series_info.copy_ids(info)
+
+        return SeriesInfo
+
+
+    @staticmethod
+    def from_emby_info(
+            info: dict,
+            interface_id: int,
+            library_name: str,
+        ) -> 'SeriesInfo':
+        """
+        Create a SeriesInfo object from the given emby series data (from
+        the `/Items/` endpoint).
+
+        Args:
+            info: Dictionary of series info.
+            interface_id: ID of the Emby interface whose data is being
+                parsed.
+            library_name: Name of the library associated with this
+                Series.
+
+        Returns:
+            SeriesInfo object defining the given data.
+        """
+
+        return SeriesInfo(
+            name=info['Name'],
+            year=info.get('ProductionYear'),
+            emby_id=f'{interface_id}:{library_name}:{info["Id"]}',
+            imdb_id=info.get('ProviderIds', {}).get('Imdb'),
+            tmdb_id=info.get('ProviderIds', {}).get('Tmdb'),
+            tvdb_id=info.get('ProviderIds', {}).get('Tvdb'),
+            tvrage_id=info.get('ProviderIds', {}).get('TvRage'),
+        )
+
+
+    @staticmethod
+    def from_jellyfin_info(
+            info: dict,
+            interface_id: int,
+            library_name: str,
+        ) -> 'SeriesInfo':
+        """
+        Create a SeriesInfo object from the given Jellyfin series data
+        (from the `/Items/` endpoint).
+
+        Args:
+            info: Dictionary of series info.
+            interface_id: ID of the Jellyfin interface whose data is
+                being parsed.
+            library_name: Name of the library associated with this
+                Series.
+
+        Returns:
+            SeriesInfo object defining the given data.
+        """
+
+        AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f000000Z'
+
+        return SeriesInfo(
+            info['Name'],
+            datetime.strptime(info['PremiereDate'], AIRDATE_FORMAT).year,
+            emby_id=f'{interface_id}:{library_name}:{info["Id"]}',
+            imdb_id=info.get('ProviderIds', {}).get('Imdb'),
+            tmdb_id=info.get('ProviderIds', {}).get('Tmdb'),
+            tvdb_id=info.get('ProviderIds', {}).get('Tvdb'),
+            tvrage_id=info.get('ProviderIds', {}).get('TvRage'),
+        )
+
+
+    @staticmethod
     def from_plex_show(plex_show: PlexShow) -> 'SeriesInfo':
         """
-        Create a SeriesInfo object from a plexapi Show object.
+        Create a SeriesInfo object from a `plexapi.video.Show` object.
 
         Args:
             plex_show: Show to create an object from. Any available
                 GUID's are utilized.
 
         Returns:
-            SeriesInfo object encapsulating the given show.
+            SeriesInfo object defining the given show.
         """
 
         # Create SeriesInfo for this show
@@ -157,13 +251,13 @@ class SeriesInfo(DatabaseInfoContainer):
 
     @property
     def ids(self) -> dict[str, Union[str, int]]:
-        """Dictionary of ID's for this object."""
+        """Dictionary of IDs for this object."""
 
         return {
-            'emby_id': self.emby_id,
+            'emby_id': str(self.emby_id),
             'imdb_id': self.imdb_id,
-            'jellyfin_id': self.jellyfin_id,
-            'sonarr_id': self.sonarr_id,
+            'jellyfin_id': str(self.jellyfin_id),
+            'sonarr_id': str(self.sonarr_id),
             'tmdb_id': self.tmdb_id,
             'tvdb_id': self.tvdb_id,
             'tvrage_id': self.tvrage_id,
@@ -197,32 +291,61 @@ class SeriesInfo(DatabaseInfoContainer):
         self.full_clean_name =  CleanPath.sanitize_name(self.full_name)
 
 
-    def set_emby_id(self, emby_id: int) -> None:
+    def set_emby_id(self,
+            emby_id: int,
+            interface_id: int,
+            library_name: str,
+        ) -> None:
         """Set this object's Emby ID - see `_update_attribute()`."""
-        self._update_attribute('emby_id', emby_id, type_=int)
+
+        self._update_attribute(
+            'emby_id', emby_id,
+            interface_id=interface_id, library_name=library_name,
+        )
+
 
     def set_imdb_id(self, imdb_id: str) -> None:
         """Set this object's IMDb ID - see `_update_attribute()`."""
+
         self._update_attribute('imdb_id', imdb_id, type_=str)
 
-    def set_jellyfin_id(self, jellyfin_id: str) -> None:
-        """Set this object's Jellyfin ID - see `_update_attribute()`."""
-        self._update_attribute('jellyfin_id', jellyfin_id, type_=str)
 
-    def set_sonarr_id(self, sonarr_id: str) -> None:
+    def set_jellyfin_id(self,
+            jellyfin_id: str,
+            interface_id: int,
+            library_name: str,
+        ) -> None:
+        """Set this object's Jellyfin ID - see `_update_attribute()`."""
+
+        self._update_attribute(
+            'jellyfin_id', jellyfin_id,
+            interface_id=interface_id, library_name=library_name,
+        )
+
+
+    def set_sonarr_id(self, sonarr_id: int, interface_id: int) -> None:
         """Set this object's Sonarr ID - see `_update_attribute()`."""
-        self._update_attribute('sonarr_id', sonarr_id, str)
+
+        self._update_attribute(
+            'sonarr_id', sonarr_id, interface_id=interface_id
+        )
+
 
     def set_tmdb_id(self, tmdb_id: int) -> None:
         """Set this object's TMDb ID - see `_update_attribute()`."""
+
         self._update_attribute('tmdb_id', tmdb_id, type_=int)
+
 
     def set_tvdb_id(self, tvdb_id: int) -> None:
         """Set this object's TVDb ID - see `_update_attribute()`."""
+
         self._update_attribute('tvdb_id', tvdb_id, type_=int)
+
 
     def set_tvrage_id(self, tvrage_id: int) -> None:
         """Set this object's TVRage ID - see `_update_attribute()`."""
+
         self._update_attribute('tvrage_id', tvrage_id, type_=int)
 
 
@@ -239,13 +362,6 @@ class SeriesInfo(DatabaseInfoContainer):
         """
 
         return ''.join(filter(str.isalnum, text)).lower()
-
-
-    @property
-    def sort_name(self) -> str:
-        """The sort-friendly name of this Series."""
-
-        return re_sub(r'^(a|an|the)(\s)', '', self.name.lower(), IGNORECASE)
 
 
     def matches(self, *names: tuple[str]) -> bool:
@@ -281,29 +397,30 @@ class SeriesInfo(DatabaseInfoContainer):
 
         # Conditions to filter by database ID
         id_conditions = []
-        if self.emby_id is not None and hasattr(SeriesModel, 'emby_id'):
-            id_conditions.append(SeriesModel.emby_id==self.emby_id)
-        if self.imdb_id is not None and hasattr(SeriesModel, 'imdb_id'):
+        if self.emby_id and hasattr(SeriesModel, 'emby_id'):
+            id_conditions.append(func.regex_match(
+                f'^{self.emby_id}$', SeriesModel.emby_id
+            ))
+        if self.imdb_id and hasattr(SeriesModel, 'imdb_id'):
             id_conditions.append(SeriesModel.imdb_id==self.imdb_id)
-        if self.jellyfin_id is not None and hasattr(SeriesModel, 'jellyfin_id'):
-            id_conditions.append(SeriesModel.jellyfin_id==self.jellyfin_id)
-        if self.sonarr_id is not None and hasattr(SeriesModel, 'sonarr_id'):
-            id_conditions.append(SeriesModel.sonarr_id==self.sonarr_id)
-        if self.tmdb_id is not None and hasattr(SeriesModel, 'tmdb_id'):
+        if self.jellyfin_id and hasattr(SeriesModel, 'jellyfin_id'):
+            id_conditions.append(func.regex_match(
+                f'^{self.jellyfin_id}$', SeriesModel.jellyfin_id
+            ))
+        if self.sonarr_id and hasattr(SeriesModel, 'sonarr_id'):
+            id_conditions.append(func.regex_match(
+                f'^{self.sonarr_id}$', SeriesModel.sonarr_id
+            ))
+        if self.tmdb_id and hasattr(SeriesModel, 'tmdb_id'):
             id_conditions.append(SeriesModel.tmdb_id==self.tmdb_id)
-        if self.tvdb_id is not None and hasattr(SeriesModel, 'tvdb_id'):
+        if self.tvdb_id and hasattr(SeriesModel, 'tvdb_id'):
             id_conditions.append(SeriesModel.tvdb_id==self.tvdb_id)
-        if self.tvrage_id is not None and hasattr(SeriesModel, 'tvrage_id'):
+        if self.tvrage_id and hasattr(SeriesModel, 'tvrage_id'):
             id_conditions.append(SeriesModel.tvrage_id==self.tvrage_id)
 
         return or_(
             # Find by database ID
             or_(*id_conditions),
             # Find by title and year
-            and_(
-                or_(
-                    SeriesModel.name==self.name,
-                    SeriesModel.sort_name==self.sort_name,
-                ), SeriesModel.year==self.year
-            ),
+            and_(SeriesModel.name==self.name, SeriesModel.year==self.year),
         )

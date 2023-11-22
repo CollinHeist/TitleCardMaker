@@ -1,6 +1,10 @@
-/*
+/**
  * Get a string of the difference between the given datetime string and
  * the current time. Only up to the two highest intervals are returned.
+ * @param {string} next_run - String representation of when the next run will
+ * occur.
+ * @returns {string} String representation of the difference between now and
+ * the next run.
  */
 function timeDiffString(next_run) {
   const nextRun = new Date(next_run);
@@ -26,8 +30,12 @@ function timeDiffString(next_run) {
   return timeUnits.slice(0, 2).join(', ');
 }
 
-/*
+/**
  * Get a string representation of the given frequency.
+ * @param {int} freq - Frequency (in seconds).
+ * @param {int} top - Maximum number of units to include in the output. Highest
+ * order units are shown first.
+ * @returns {string} String representation of the frequency.
  */
 function timeFreqString(freq, top=-1) {
   const seconds = Math.floor(freq);
@@ -44,7 +52,7 @@ function timeFreqString(freq, top=-1) {
   else { return timeUnits.join(', '); }
 }
 
-/*
+/**
  * Reschedule all tasks on this page. This reads the text contents of
  * each row of the table for the API request. A separate request is
  * submitted for each row.
@@ -79,9 +87,9 @@ function updateScheduledTasks() {
   });
 }
 
-/*
- * Submit the API request to toggle the Scheduler type. If successful,
- * this reloads the page.
+/**
+ * Submit the API request to toggle the Scheduler type. If successful, this
+ * reloads the page.
  */
 function toggleScheduleType() {
   document.getElementById('toggle-button').classList.add('loading');
@@ -98,8 +106,9 @@ function toggleScheduleType() {
   });
 }
 
-/*
+/**
  * Submit the API request to run the Task with the given ID.
+ * @param {string} taskId - ID of the Task which is being run.
  */
 function runTask(taskId) {
   // If task is already running, do not re-run

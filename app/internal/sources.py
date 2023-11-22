@@ -1,66 +1,21 @@
 from logging import Logger
 from pathlib import Path
-from time import sleep
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
+from app.database.query import get_interface
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.templates import get_effective_templates
 from app.models.episode import Episode
-from app.models.series import Series
+from app.models.series import Library, Series
 from app.schemas.card import SourceImage
-from app.schemas.preferences import Preferences, Style
+from app.schemas.preferences import Style
 
 from modules.Debug import log
-from modules.EmbyInterface2 import EmbyInterface
-from modules.ImageMagickInterface import ImageMagickInterface
-from modules.JellyfinInterface2 import JellyfinInterface
-from modules.PlexInterface2 import PlexInterface
-from modules.TMDbInterface2 import TMDbInterface
 from modules.TieredSettings import TieredSettings
 from modules.WebInterface import WebInterface
-
-
-def download_all_source_images(*, log: Logger = log) -> None:
-    """
-    Schedule-able function to attempt to download all source images for
-    all monitored Series and Episodes in the Database.
-    """
-
-    try:
-        # Get the Database
-        with next(get_database()) as db:
-            # Get all Series
-            failures = 0
-            for series in db.query(Series).all():
-                # Skip if Series is unmonitored
-                if not series.monitored:
-                    log.debug(f'{series.log_str} is not monitored, skipping')
-                    continue
-
-                # Download source image for all Episodes
-                for episode in series.episodes:
-                    try:
-                        download_episode_source_image(
-                            db, get_preferences(), get_emby_interface(),
-                            get_jellyfin_interface(), get_plex_interface(),
-                            get_tmdb_interface(), episode, log=log,
-                        )
-                    except HTTPException:
-                        log.warning(f'{series.log_str} {episode.log_str} '
-                                    f'Skipping source selection')
-                        continue
-                    except OperationalError:
-                        if failures > 10:
-                            break
-                        failures += 1
-                        log.debug(f'Database is busy, sleeping..')
-                        sleep(30)
-    except Exception as exc:
-        log.exception(f'Failed to download source images', exc)
 
 
 def download_all_series_logos(*, log: Logger = log) -> None:
@@ -81,11 +36,7 @@ def download_all_series_logos(*, log: Logger = log) -> None:
                     continue
 
                 try:
-                    download_series_logo(
-                        get_preferences(), get_emby_interface(),
-                        get_imagemagick_interface(), get_jellyfin_interface(),
-                        get_tmdb_interface(), series, log=log,
-                    )
+                    download_series_logo(series, log=log)
                 except HTTPException:
                     log.warning(f'{series.log_str} Skipping logo selection')
                     continue
@@ -95,6 +46,7 @@ def download_all_series_logos(*, log: Logger = log) -> None:
 
 def resolve_source_settings(
         episode: Episode,
+        library: Optional[Library] = None,
     ) -> tuple[Style, Path]:
     """
     Get the Episode style and source file for the given Episode.
@@ -109,7 +61,9 @@ def resolve_source_settings(
 
     # Get effective Template for this Series and Episode
     series = episode.series
-    series_template, episode_template = get_effective_templates(series, episode)
+    series_template, episode_template = get_effective_templates(
+        series, episode, library,
+    )
 
     # Resolve styles
     preferences = get_preferences()
@@ -135,19 +89,41 @@ def resolve_source_settings(
         or ('unique' in watched_style and 'unique' in unwatched_style)):
         return watched_style, episode.get_source_file(watched_style)
 
-    # Watch status is unset, or Episode is unwatched, use unwatched style
-    if episode.watched is None or not episode.watched:
-        return unwatched_style, episode.get_source_file(unwatched_style)
-
     # Episode is watched, use watched style
-    return watched_style, episode.get_source_file(watched_style)
+    if (library and
+        episode.get_watched_status(library['interface_id'],library['name'])):
+        return watched_style, episode.get_source_file(watched_style)
+
+    # Watch status is unset or Episode is unwatched, use unwatched style
+    return unwatched_style, episode.get_source_file(unwatched_style)
+
+
+def resolve_all_source_settings(episode: Episode) -> list[tuple[Style, Path]]:
+    """
+    Get all the style and source files for the given Episode. This
+    evaluates source settings for all libraries of the parent Series.
+
+    Args:
+        episode: Episode being evaluated.
+
+    Returns:
+        List of tuples of the effective Style and the Path to the source
+        file for the given Episode.
+    """
+
+    if episode.series.libraries:
+        return [
+            resolve_source_settings(episode, library)
+            for library in episode.series.libraries
+        ]
+
+    return [resolve_source_settings(episode)]
 
 
 def process_svg_logo(
         url: str,
         series: Series,
         logo_file: Path,
-        imagemagick_interface: Optional[ImageMagickInterface],
         *,
         log: Logger = log,
     ) -> str:
@@ -159,27 +135,19 @@ def process_svg_logo(
         url: URL to the SVG file to download and process.
         series: Series whose logo this is (for logging).
         logo_file: Path to the directory where the logo will be written.
-        imagemagick_interface: Interface to use for SVG -> PNG
-            conversion.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         String of the asset path for the processed logo.
 
     Raises:
-        HTTPException (409) if an SVG image was returned but cannot be
+        HTTPException (409): SVG image was returned but cannot be
             converted into PNG.
-        HTTPException (400) if the logo cannot be downloaded.
+        HTTPException (400): The logo cannot be downloaded.
     """
 
-    # If no ImageMagick, raise 409
-    if not imagemagick_interface:
-        raise HTTPException(
-            status_code=409,
-            detail=f'Cannot convert SVG logo, no valid ImageMagick interface'
-        )
-
     # Download to temporary location pre-conversion
+    imagemagick_interface = get_imagemagick_interface()
     success = WebInterface.download_image(
         url, imagemagick_interface.TEMPORARY_SVG_FILE, log=log,
     )
@@ -208,11 +176,6 @@ def process_svg_logo(
 
 
 def download_series_logo(
-        preferences: Preferences,
-        emby_interface: Optional[EmbyInterface],
-        imagemagick_interface: Optional[ImageMagickInterface],
-        jellyfin_interface: Optional[JellyfinInterface],
-        tmdb_interface: Optional[TMDbInterface],
         series: Series,
         *,
         log: Logger = log,
@@ -221,44 +184,49 @@ def download_series_logo(
     Download the logo for the given Series.
 
     Args:
-        preferences: Preferences to use for global settings
-        *_interface: Interface to query for any logos.
         series: Series whose logo to download.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         The URI to the Series logo. If one cannot be downloaded, None is
         returned instead.
 
     Raises:
-        HTTPException (409) if an SVG image was returned but cannot be
+        HTTPException (409): An SVG image was returned but cannot be
             converted into PNG.
-        HTTPException (400) if the logo cannot be downloaded.
+        HTTPException (400): The logo cannot be downloaded.
     """
 
     # Get the Series logo, return if already exists
+    preferences = get_preferences()
     logo_file = series.get_logo_file(preferences.source_directory)
     if logo_file.exists():
         return f'/source/{series.path_safe_name}/logo.png'
 
     # Go through all image sources
-    for image_source in preferences.image_source_priority:
-        if (image_source == 'Emby'
-            and emby_interface is not None
-            and series.emby_library_name is not None):
-            logo = emby_interface.get_series_logo(
-                series.emby_library_name, series.as_series_info, log=log,
-            )
-        elif (image_source == 'Jellyfin'
-            and jellyfin_interface is not None
-            and series.jellyfin_library_name is not None):
-            logo = jellyfin_interface.get_series_logo(
-                series.jellyfin_library_name, series.as_series_info, log=log
-            )
-        elif image_source == 'TMDb' and tmdb_interface:
-            logo = tmdb_interface.get_series_logo(series.as_series_info)
-        else:
+    logo = None
+    for interface_id in preferences.image_source_priority:
+        # Skip if there is no interface for this ID
+        if not (interface := get_interface(interface_id)):
             continue
+
+        # Skip interfaces which cannot provide logos
+        if interface.INTERFACE_TYPE in ('Plex', 'Sonarr'):
+            continue
+
+        # Handle TMDb separately
+        if interface.INTERFACE_TYPE == 'TMDb':
+            logo = interface.get_series_logo(series.as_series_info)
+
+        # Go through each library of this interface
+        for _, library in series.get_libraries(interface_id):
+            # Stop when a logo has been found
+            if logo:
+                break
+
+            logo = interface.get_series_logo(
+                library, series.as_series_info, log=log
+            )
 
         # If no logo was returned, move on to next image source
         if logo is None:
@@ -266,13 +234,12 @@ def download_series_logo(
 
         # If logo is an svg, convert
         if isinstance(logo, str) and logo.endswith('.svg'):
-            return process_svg_logo(
-                logo, series, logo_file, imagemagick_interface, log=log
-            )
+            return process_svg_logo(logo, series, logo_file, log=log)
 
         # Logo is png and valid, download
         if WebInterface.download_image(logo, logo_file, log=log):
-            log.info(f'{series.log_str} Downloaded logo from {image_source}')
+            log.info(f'{series.log_str} Downloaded logo from '
+                     f'{interface.INTERFACE_TYPE}[{interface_id}]')
             return f'/source/{series.path_safe_name}/{logo_file.name}'
 
         # Download failed, raise 400
@@ -287,37 +254,34 @@ def download_series_logo(
 
 def download_episode_source_image(
         db: Session,
-        preferences: Preferences,
-        emby_interface: Optional[EmbyInterface],
-        jellyfin_interface: Optional[JellyfinInterface],
-        plex_interface: Optional[PlexInterface],
-        tmdb_interface: Optional[TMDbInterface],
         episode: Episode,
-        raise_exc: bool = False,
+        library: Optional[Library] = None,
         *,
+        commit: bool = True,
+        raise_exc: bool = False,
         log: Logger = log,
-    ) -> Optional[str]:
+    ) -> str:
     """
     Download the source image for the given Episode.
 
     Args:
         db: Database to update.
-        preferences: Preferences to utilize for global settings.
-        *_interface: Interface to query for each source image.
         episode: Episode whose source image is being downloaded.
+        library: Library associated with this Episode - used for source
+            setting and Template evaluation(s).
+        commit: Whether to commit any database changes.
         raise_exc: Whether to raise any HTTPExceptions.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
-        The URI to the Episode source image. If one cannot be
-        downloaded, None is returned instead.
+        URI to the Episode source image.
 
     Raises:
-        HTTPException (400) if the image cannot be downloaded.
+        HTTPException (400): The image cannot be downloaded.
     """
 
     # Determine Episode style and source file
-    style, source_file = resolve_source_settings(episode)
+    style, source_file = resolve_source_settings(episode, library)
 
     # If source already exists, return that
     series: Series = episode.series
@@ -325,9 +289,12 @@ def download_episode_source_image(
         return f'/source/{series.path_safe_name}/{source_file.name}'
 
     # Get effective Templates
-    series_template, episode_template = get_effective_templates(series, episode)
+    series_template, episode_template = get_effective_templates(
+        series, episode, library,
+    )
 
     # Get source image settings
+    preferences = get_preferences()
     skip_localized_images = TieredSettings.resolve_singular_setting(
         preferences.tmdb_skip_localized,
         getattr(series_template, 'skip_localized_images', None),
@@ -336,77 +303,62 @@ def download_episode_source_image(
     )
 
     # Go through all image sources
-    for image_source in preferences.image_source_priority:
-        # Skip and do not warn if this interface is outright disabled
-        if not getattr(preferences, f'use_{image_source.lower()}', False):
-            continue
-
-        # Verify Series has a library, skip if not
-        library_attribute = f'{image_source.lower()}_library_name'
-        if (image_source in ('Emby', 'Jellyfin', 'Plex')
-            and getattr(series, library_attribute, None) is None):
-            log.warning(f'{series.log_str} Has no {image_source} library')
+    for interface_id in preferences.image_source_priority:
+        # Skip if this interface cannot be communicated with
+        if not (interface := get_interface(interface_id, raise_exc=raise_exc)):
             continue
 
         # Skip if sourcing art from a media server
-        if (image_source in ('Emby', 'Jellyfin', 'Plex')
+        if (interface.INTERFACE_TYPE in ('Emby', 'Jellyfin', 'Plex')
             and 'art' in style):
-            log.debug(f'Cannot source Art images from {image_source} - skipping')
+            log.debug(f'Cannot source Art images from '
+                      f'{interface.INTERFACE_TYPE} - skipping')
             continue
 
-        if image_source == 'Emby' and emby_interface:
-            source_image = emby_interface.get_source_image(
-                series.emby_library_name,
-                series.as_series_info,
-                episode.as_episode_info,
-                log=log,
-            )
-        elif image_source == 'Jellyfin' and jellyfin_interface:
-            source_image = jellyfin_interface.get_source_image(
-                series.jellyfin_library_name,
-                series.as_series_info,
-                episode.as_episode_info,
-            )
-        elif image_source == 'Plex' and plex_interface:
-            source_image = plex_interface.get_source_image(
-                series.plex_library_name,
-                series.as_series_info,
-                episode.as_episode_info,
-                log=log,
-            )
-        elif image_source == 'TMDb' and tmdb_interface:
+        # Try each library of each media servers
+        source_image = None
+        if interface.INTERFACE_TYPE in ('Emby', 'Jellyfin', 'Plex'):
+            for _, library in series.get_libraries(interface_id):
+                source_image = interface.get_source_image(
+                    library,
+                    series.as_series_info,
+                    episode.as_episode_info,
+                    log=log,
+                )
+                if source_image:
+                    break
+        elif interface.INTERFACE_TYPE == 'TMDb':
             # TODO implement blacklist bypassing
             # Get art backdrop
             if 'art' in style:
-                source_image = tmdb_interface.get_series_backdrop(
+                source_image = interface.get_series_backdrop(
                     series.as_series_info,
                     skip_localized_images=skip_localized_images,
                     raise_exc=raise_exc,
                 )
             # Get source image
             else:
-                source_image = tmdb_interface.get_source_image(
+                source_image = interface.get_source_image(
                     series.as_series_info,
                     episode.as_episode_info,
                     skip_localized_images=skip_localized_images,
                     raise_exc=raise_exc,
                     log=log,
                 )
-        else:
-            log.warning(f'{series.log_str} {episode.log_str} Cannot source '
-                        f'images from {image_source}')
-            continue
 
         # If no source image was returned, increment attempts counter
         if source_image is None:
-            episode.image_source_attempts[image_source] += 1
-            db.commit()
+            episode.image_source_attempts[interface.INTERFACE_TYPE] += 1
+            log.debug(f'{episode!r} failed to download Source Image from '
+                      f'Connection[{interface_id}] {interface.INTERFACE_TYPE}')
+            if commit:
+                db.commit()
             continue
 
         # Source image is valid, download - error if download fails
         if WebInterface.download_image(source_image, source_file, log=log):
             log.info(f'{series.log_str} {episode.log_str} Downloaded '
-                      f'"{source_file.name}" from {image_source}')
+                     f'"{source_file.name}" from {interface.INTERFACE_TYPE}')
             return f'/source/{series.path_safe_name}/{source_file.name}'
 
         if raise_exc:
@@ -420,16 +372,49 @@ def download_episode_source_image(
     return None
 
 
-def get_source_image(
-        imagemagick_interface: Optional[ImageMagickInterface],
+def download_episode_source_images(
+        db: Session,
         episode: Episode,
-    ) -> SourceImage:
+        *,
+        commit: bool = True,
+        raise_exc: bool = False,
+        log: Logger = log,
+    ) -> list[str]:
     """
-    Get the SourceImage details for the given objects.
+    Download all Source Images for the given Episode.
 
     Args:
-        imagemagick_interface: ImageMagickInterface to query the image
-            dimensions from.
+        db: Database to update.
+        episode: Episode whose Source Images are being downloaded.
+        commit: Whether to commit any changes to the database.
+        raise_exc: Whether to raise any HTTPExceptions.
+        log: Logger for all log messages.
+
+    Returns:
+        List of URIs to the Episode source images.
+
+    Raises:
+        HTTPException (400): An image cannot be downloaded.
+    """
+
+    if episode.series.libraries:
+        return [
+            download_episode_source_image(
+                db, episode, library,
+                commit=commit, raise_exc=raise_exc, log=log,
+            ) for library in episode.series.libraries
+        ]
+
+    return [download_episode_source_image(
+        db, episode, None, commit=commit, raise_exc=raise_exc, log=log,
+    )]
+
+
+def get_source_image(episode: Episode) -> SourceImage:
+    """
+    Get the SourceImage details for the given Episode. This only evalutes
+
+    Args:
         episode: Episode of the Source Image.
 
     Returns:
@@ -452,12 +437,10 @@ def get_source_image(
 
     # If the source file exists, add the filesize and dimensions
     if source['exists']:
-        # Get image dimensions if ImageMagickInterface is provided
-        width, height = None, None
-        if imagemagick_interface is not None:
-            width, height = imagemagick_interface.get_image_dimensions(
-                source_file
-            )
+        # Get image dimensions
+        width, height = get_imagemagick_interface().get_image_dimensions(
+            source_file
+        )
 
         source |= {
             'filesize': source_file.stat().st_size,

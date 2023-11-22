@@ -5,11 +5,12 @@ from pydantic import conint, constr, Field, root_validator, validator # pylint: 
 
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.base import (
-    Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
+    Base, MediaServer, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
 )
+from app.schemas.connection import TMDbLanguageCode
 from app.schemas.font import TitleCase
 from app.schemas.ids import * # pylint: disable=wildcard-import,unused-wildcard-import
-from app.schemas.preferences import EpisodeDataSource, Style, LanguageCode
+from app.schemas.preferences import Style
 
 # Match absolute ranges (1-10), season numbers (1), episode ranges (s1e1-s1e10)
 SeasonTitleRange = constr(regex=r'^(\d+-\d+)|^(\d+)|^(s\d+e\d+-s\d+e\d+)$')
@@ -27,15 +28,20 @@ class Condition(Base):
     reference: Optional[str] = None
 
 class Translation(Base):
-    language_code: LanguageCode
+    language_code: TMDbLanguageCode
     data_key: DictKey
+
+class MediaServerLibrary(Base):
+    interface: MediaServer
+    interface_id: int
+    name: str
 
 class BaseConfig(Base):
     font_id: Optional[int] = None
     sync_specials: Optional[bool] = None
     skip_localized_images: Optional[bool] = None
     card_filename_format: Optional[str] = None
-    episode_data_source: Optional[EpisodeDataSource] = None
+    data_source_id: Optional[int] = None
     card_type: Optional[str] = None
     unwatched_style: Optional[Style] = None
     watched_style: Optional[Style] = None
@@ -55,6 +61,7 @@ class BaseSeries(BaseConfig):
     template_ids: Optional[list[int]] = None
     match_titles: bool = True
     translations: Optional[list[Translation]] = None
+    libraries: list[MediaServerLibrary] = []
 
     font_color: Optional[str] = None
     font_title_case: Optional[TitleCase] = None
@@ -65,13 +72,10 @@ class BaseSeries(BaseConfig):
     font_interword_spacing: Optional[int] = None
     font_vertical_shift: Optional[int] = None
 
-    emby_library_name: Optional[constr(min_length=1)] = None
-    jellyfin_library_name: Optional[constr(min_length=1)] = None
-    plex_library_name: Optional[constr(min_length=1)] = None
-    emby_id: EmbyID = None
+    emby_id: EmbyID = ''
     imdb_id: IMDbID = None
-    jellyfin_id: JellyfinID = None
-    sonarr_id: SonarrID = None
+    jellyfin_id: JellyfinID = ''
+    sonarr_id: SonarrID = ''
     tmdb_id: TMDbID = None
     tvdb_id: TVDbID = None
     tvrage_id: TVRageID = None
@@ -84,7 +88,7 @@ class BaseUpdate(UpdateBase):
     sync_specials: Optional[bool] = UNSPECIFIED
     skip_localized_images: Optional[bool] = UNSPECIFIED
     card_filename_format: Optional[str] = UNSPECIFIED
-    episode_data_source: Optional[EpisodeDataSource] = UNSPECIFIED
+    data_source_id: Optional[int] = UNSPECIFIED
     translations: Optional[list[Translation]] = UNSPECIFIED
     card_type: Optional[str] = UNSPECIFIED
     hide_season_text: Optional[bool] = UNSPECIFIED
@@ -201,17 +205,16 @@ class UpdateTemplate(BaseUpdate):
     extra_values: list[Any] = UNSPECIFIED
 
 class UpdateSeries(BaseUpdate):
-    name: constr(min_length=1) = UNSPECIFIED
     year: conint(ge=1900) = UNSPECIFIED
-
     template_ids: Optional[list[int]] = UNSPECIFIED
     font_id: Optional[int] = UNSPECIFIED
     sync_specials: Optional[bool] = UNSPECIFIED
     skip_localized_images: Optional[bool] = UNSPECIFIED
     card_filename_format: Optional[str] = UNSPECIFIED
-    episode_data_source: Optional[EpisodeDataSource] = UNSPECIFIED
     match_titles: bool = UNSPECIFIED
     translations: Optional[list[Translation]] = UNSPECIFIED
+    libraries: list[MediaServerLibrary] = UNSPECIFIED
+
     card_type: Optional[str] = UNSPECIFIED
     hide_season_text: Optional[bool] = UNSPECIFIED
     season_title_ranges: Optional[list[SeasonTitleRange]] = UNSPECIFIED
@@ -232,9 +235,6 @@ class UpdateSeries(BaseUpdate):
     font_interword_spacing: Optional[int] = UNSPECIFIED
     font_vertical_shift: Optional[int] = UNSPECIFIED
 
-    emby_library_name: Optional[str] = UNSPECIFIED
-    jellyfin_library_name: Optional[str] = UNSPECIFIED
-    plex_library_name: Optional[str] = UNSPECIFIED
     emby_id: EmbyID = UNSPECIFIED
     imdb_id: IMDbID = UNSPECIFIED
     jellyfin_id: JellyfinID = UNSPECIFIED
@@ -249,6 +249,10 @@ class UpdateSeries(BaseUpdate):
         if len(val) != len(set(val)):
             raise ValueError('Template IDs must be unique')
         return val
+
+class BatchUpdateSeries(Base):
+    series_id: int
+    update: UpdateSeries
 
 """
 Return classes

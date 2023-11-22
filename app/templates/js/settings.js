@@ -1,21 +1,49 @@
-// Get the latest episode data sources, update dropdown
-async function getEpisodeDataSources() {
-  const sources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
-  $('#episode-data-source').dropdown({
-    values: sources.map(({name, selected}) => {
-      return {name: name, value: name, selected: selected};
-    })
-  });
+// Get all Connection data
+let allConnections;
+async function getAllConnections() {
+  allConnections = await fetch('/api/connection/all').then(resp => resp.json());
 }
 
-// Get the latest image source priority, update dropdown
-async function getImageSourcePriority() {
-  const sources = await fetch('/api/settings/image-source-priority').then(resp => resp.json());
-  $('#image-source-priority').dropdown({
-    values: sources.map(({name, selected}) => {
-      return {name: name, value: name, selected: selected};
-    })
-  });
+/*
+ * Get the global Episode data source and initialize the dropdown with all
+ * valid Connections.
+ */
+function getEpisodeDataSources() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/settings/episode-data-source',
+    success: sources => {
+      $('.dropdown[data-value="episode_data_source"]').dropdown({
+        values: sources.map(({interface_id, name, selected}) => {
+          return {name, value: interface_id, selected};
+        })
+      });
+    }, error: response => showErrorToast({title: 'Error Querying Episode Data Sources', response}),
+  });  
+}
+
+/*
+ * Get the global image source priority and initialize the dropdown with all
+ * valid Connections.
+ */
+function getImageSourcePriority() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/settings/image-source-priority',
+    success: sources => {
+      $('#image-source-priority').dropdown({
+        values: sources.map(({interface, interface_id, selected}) => {
+          // Match this interface to a defined Connection (to get the name)
+          for (let {id, name} of allConnections) {
+            if (id === interface_id) {
+              return {name, value: id, selected};
+            }
+          }
+          return {name: interface, value: interface_id, selected};
+        })
+      });
+    }, error: response => showErrorToast({title: 'Error Querying Image Source Priority', response}),
+  });  
 }
 
 function getLanguageCodes() {
@@ -48,7 +76,6 @@ async function initCardTypeDropdowns() {
     element: '#default-card-type',
     isSelected: (identifier) => identifier === '{{preferences.default_card_type}}',
     showExcluded: false,
-    // Dropdown args
     dropdownArgs: {
       onChange: (value, text, $selectedItem) => {
         $('#title-card-image')
@@ -60,7 +87,10 @@ async function initCardTypeDropdowns() {
   return allCards;
 }
 
-// Function to update the preview title card
+/*
+ * Update the preview title card for the given type. This updates all
+ * elements of the preview card.
+ */
 function updatePreviewTitleCard(allCards, previewCardType) {
   for (let {name, identifier, example, creators, supports_custom_fonts,
             supports_custom_seasons, description} of allCards) {
@@ -77,7 +107,8 @@ function updatePreviewTitleCard(allCards, previewCardType) {
   }
 }
 
-function initAll() {
+async function initAll() {
+  await getAllConnections();
   getEpisodeDataSources();
   getImageSourcePriority();
   getLanguageCodes();
@@ -88,10 +119,6 @@ function initAll() {
   // Enable dropdowns, checkboxes, etc.
   $('.ui.dropdown').dropdown();
   $('.ui.checkbox').checkbox();
-  $('.message .close').on('click', function() {$(this)
-    .closest('.message')
-    .transition('fade');
-  });
 
   // Show extension warning based on starting extension
   let currentExtension = $('#card-extension-input').val();
@@ -124,20 +151,32 @@ function initAll() {
       inline : true,
       fields: {
         card_directory: {
-          rules: [{type: 'minLength[1]', prompt: 'Card directory is required'}]
-        }, source_directory: {
-          rules: [{type: 'minLength[1]', prompt: 'Source directory is required'}]
-        }, image_source_priority: {
-          rules: [{type: 'minCount[1]', prompt: 'Select at least one source'}]
-        }, card_width: {
+          rules: [{type: 'empty', prompt: 'Card directory is required'}]
+        },
+        source_directory: {
+          rules: [{type: 'empty', prompt: 'Source directory is required'}]
+        },
+        episode_data_source: {
+          rules: [{type: 'empty', prompt: 'Episode Data Source is required'}]
+        },
+        image_source_priority: {
+          rules: [{type: 'minCount[1]', prompt: 'Select at least one Connection'}]
+        },
+        card_width: {
           rules: [{type: 'integer[1..]', prompt: 'Dimension must be a positive number'}]
-        }, card_height: {
+        },
+        card_height: {
           rules: [{type: 'integer[1..]', prompt: 'Dimension must be a positive number'}]
-        }, card_filename_format: {
+        },
+        card_filename_format: {
           rules: [{type: 'minLength[1]', prompt: 'Filename format is required'}]
         },
-        home_page_size: 'integer[1..999]',
-        episode_data_page_size: 'integer[1..999]',
+        home_page_size: {
+          rules: [{type: 'integer[1..999]', prompt: 'Page size must be between 1 and 999'}],
+        },
+        episode_data_page_size: {
+          rules: [{type: 'integer[1..999]', prompt: 'Page size must be between 1 and 999'}],
+        },
       },
     })
     // On form submission, submit API request to change settings
@@ -147,10 +186,19 @@ function initAll() {
       $('#save-changes').toggleClass('loading', true);
       // Prep form
       let form = new FormData(event.target);
-      const imageSourcePriority = form.get('image_source_priority') === '' ? [] : form.get('image_source_priority').split(',');
-      const excludedCardTypes = (form.get('excluded_card_types') === '') ? [] : form.get('excluded_card_types').split(',');
+
+      // Parse ISP
+      const imageSourcePriority = form.get('image_source_priority').split(',');
+      form.delete('image_source_priority');
+
+      // Parse card exclusions
+      const excludedCardTypes = form.get('excluded_card_types') === '' ? [] : form.get('excluded_card_types').split(',');
+      form.delete('excluded_card_types');
+
+      // Parse language codes
       const languageCodes = form.get('language_codes') === '' ? [] : form.get('language_codes').split(',');
-      form.delete('image_source_priority'); form.delete('excluded_card_types');
+      
+      // Delete blank values
       for (const [key, value] of [...form.entries()]) {
         if (value === '') { form.delete(key); }
       }

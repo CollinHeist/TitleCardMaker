@@ -1,3 +1,8 @@
+/* Ensure content takes up full size */
+#main-content {
+  height: 100vh;
+}
+
 /* Format menu bar */
 #main-content .menu:not(.pagination) {
   box-shadow: 1px 1px 10px -3px rgba(252, 252, 252, 0.8)
@@ -41,8 +46,12 @@ table td[data-row="name"] .content {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* When in select mode, highlight selected rows */
 #series-table tr.selected {
   background-color: rgba(255, 227, 0, 0.29);
+}
+table .dropdown[data-value="libraries"] .active.item {
+  color: crimson !important; 
 }
 
 /* Do not round edges of progress bars */
@@ -57,11 +66,6 @@ table td[data-row="name"] .content {
 
 /* Mobile formatting */
 @media (max-width: 768px) {
-  /* Hide statistics */
-  #statistics {
-    display: none !important;
-  }
-
   /* Show 3 cards/row */
   .ui.cards .card {
     min-width: unset;
@@ -88,16 +92,18 @@ table td[data-row="name"] .content {
   animation: pulse 2s infinite;
 }
 
-/* Ensure sidebar starts on the right of the statistics */
-#statistics {
-  display: inline-block; 
-  margin-bottom: 10px;
+/* Reduce vertical margin on statistics */
+.horizontal.statistics .statistic {
+  margin-top: 0.5em !important;
+  margin-bottom: 0.5em !important;
 }
 
 #pagination {
   /* Add spacing between pagination menu and series cards */
   margin-top: 25px;
-  @media only screen and (hover: none) and (pointer: coarse) {
+}
+@media only screen and (hover: none) and (pointer: coarse) {
+  #pagination {
     /* On mobile, wrap pagination if wider than screen */
     max-width: 100%;
     display: flex;
@@ -133,6 +139,7 @@ table td[data-row="name"] .content {
     transform: rotateX(var(--x-rotation)) rotateY(0deg) rotateZ(45deg) translateZ(calc(-1 * var(--moveup-distance)));
   }
 }
+
 /**
  * Square layer styles
  */
@@ -160,16 +167,6 @@ table td[data-row="name"] .content {
   -webkit-animation: moveup 1.8s cubic-bezier(0.39, 0.575, 0.565, 1) infinite normal;
           animation: moveup 1.8s cubic-bezier(0.39, 0.575, 0.565, 1) infinite normal;
 }
-/* .container .layer:nth-of-type(3)::after {
-  content: "";
-  position: absolute;
-  bottom: 0.75em;
-  right: 0.75em;
-  clip-path: url(#clip);
-  border-right: 5em solid white;
-  border-bottom: 5em solid transparent;
-  border-left: 5em solid transparent;
-} */
 
 /* Stage and link styles */
 .container {

@@ -5,10 +5,14 @@ from pydantic import BaseModel, constr, root_validator # pylint: disable=no-name
 
 
 # Default value to use for arguments in Update objects that accept None
-UNSPECIFIED = '__unspecified_'
+UNSPECIFIED: Literal['__unspecified_'] = '__unspecified_'
 
 # String that can be used as key in a dictionary
 DictKey = constr(regex=r'^[a-zA-Z]+[^ -]*$', min_length=1)
+
+InterfaceName = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr', 'TMDb']
+ImageSource = Literal['Emby', 'Jellyfin', 'Plex', 'TMDb']
+MediaServer = Literal['Emby', 'Jellyfin', 'Plex']
 
 # Pydantic base class
 class Base(BaseModel):

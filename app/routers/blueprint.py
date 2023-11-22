@@ -1,7 +1,8 @@
 from json import dump
 from pathlib import Path
+from random import choice as random_choice
 from shutil import copy as copy_file, make_archive as zip_directory
-from typing import Literal, Optional
+from typing import Literal
 
 from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Request
@@ -9,8 +10,8 @@ from fastapi import (
 from fastapi.responses import FileResponse
 from fastapi_pagination import paginate as paginate_sequence
 from sqlalchemy.orm import Session
-from app.database.query import get_blueprint, get_series
 
+from app.database.query import get_blueprint, get_series
 from app.database.session import Page
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.auth import get_current_user
@@ -22,11 +23,12 @@ from app.internal.episodes import get_all_episode_data
 from app.internal.series import add_series
 from app import models
 from app.models.blueprint import Blueprint, BlueprintSeries
+from app.models.card import Card
 from app.schemas.blueprint import (
     DownloadableFile, ExportBlueprint, RemoteBlueprint,
 )
-from app.schemas.series import Series
-from modules.SeriesInfo import SeriesInfo
+from app.schemas.series import NewSeries, Series
+from modules.SeriesInfo2 import SeriesInfo
 
 
 # Create sub router for all /blueprints API requests
@@ -44,12 +46,6 @@ def export_series_blueprint(
         include_global_defaults: bool = Query(default=True),
         include_episode_overrides: bool = Query(default=True),
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> ExportBlueprint:
     """
     Generate the Blueprint for the given Series. This Blueprint can be
@@ -71,14 +67,11 @@ def export_series_blueprint(
     episode_data = []
     if include_episode_overrides:
         episode_data = get_all_episode_data(
-            preferences, series, emby_interface, jellyfin_interface,
-            plex_interface, sonarr_interface, tmdb_interface, raise_exc=False,
-            log=request.state.log,
+            series, raise_exc=False, log=request.state.log,
         )
 
     return generate_series_blueprint(
-        series, episode_data, include_global_defaults,
-        include_episode_overrides, preferences,
+        series, episode_data, include_global_defaults, include_episode_overrides
     )
 
 
@@ -125,11 +118,6 @@ async def export_series_blueprint_as_zip(
         include_episode_overrides: bool = Query(default=True),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> FileResponse:
     """
     Export a zipped file of the given Series' Blueprint (as JSON), any
@@ -153,9 +141,7 @@ async def export_series_blueprint_as_zip(
     episode_data = []
     if include_episode_overrides:
         episode_data = get_all_episode_data(
-            preferences, series, emby_interface, jellyfin_interface,
-            plex_interface, sonarr_interface, tmdb_interface, raise_exc=False,
-            log=request.state.log,
+            series, raise_exc=False, log=request.state.log,
         )
         # Get just the EpisodeInfo objects
         episode_data = [data[0] for data in episode_data]
@@ -163,7 +149,7 @@ async def export_series_blueprint_as_zip(
     # Generate Blueprint
     blueprint = generate_series_blueprint(
         series, episode_data, include_global_defaults,
-        include_episode_overrides, preferences,
+        include_episode_overrides,
     )
 
     # Get list of Font files for this Series' Blueprint
@@ -172,24 +158,26 @@ async def export_series_blueprint_as_zip(
         series.episodes if include_episode_overrides else [],
     )
 
-    # Get preview image for this Series - use first non-stylized existing Card
-    cards = db.query(models.card.Card)\
+    # Get all non-Specials Cards for this Series
+    cards = db.query(Card)\
         .join(models.episode.Episode)\
-        .filter(models.card.Card.series_id==series_id,
+        .filter(Card.series_id==series_id,
                 models.episode.Episode.season_number>0)\
         .order_by(models.episode.Episode.season_number,
                   models.episode.Episode.episode_number)\
         .all()
-    card_file = None
-    for card in cards:
-        # Skip Cards that are blurred or grayscale
-        if (card.model_json.get('blur', False)
-            or card.model_json.get('grayscale', False)):
-            continue
-        # First Card whose file exists
-        if (this_card_file := Path(card.card_file)).exists():
-            card_file = this_card_file
-            break
+
+    # Filter out Cards which are stylized or DNE
+    filtered_cards = [
+        card.card_file
+        for card in cards
+        if (not card.model_json.get('blur', False)
+            and not card.model_json.get('grayscale', False)
+            and card.exists())
+    ]
+
+    # Select random Card if possible
+    card_file = Path(random_choice(filtered_cards)) if filtered_cards else None
 
     # Directories for zipping
     ZIPS_DIR = preferences.TEMPORARY_DIRECTORY / 'zips'
@@ -253,7 +241,6 @@ def blacklist_blueprint(
 @blueprint_router.delete('/blacklist/{blueprint_id}')
 def remove_blueprint_from_blacklist(
         blueprint_id: int,
-        request: Request,
         preferences: Preferences = Depends(get_preferences),
     ) -> None:
     """
@@ -394,13 +381,6 @@ def import_blueprint_and_series(
         blueprint_id: int,
         db: Session = Depends(get_database),
         blueprint_db: Session = Depends(get_blueprint_database),
-        preferences: Preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Series:
     """
     Import the given Blueprint - creating the associated Series if it
@@ -426,14 +406,12 @@ def import_blueprint_and_series(
         log.debug(f'Blueprint Series {blueprint.series.as_series_info} not '
                   f'found - adding to database')
         series = add_series(
-            blueprint.series.as_new_series,
-            background_tasks, db, emby_interface, imagemagick_interface,
-            jellyfin_interface, plex_interface, sonarr_interface,
-            tmdb_interface, log=log,
+            NewSeries(name=series_info.name, year=series_info.year),
+            background_tasks, db, log=log,
         )
 
     # Import Blueprint
-    import_blueprint(db, preferences, series, blueprint, log=log)
+    import_blueprint(db, series, blueprint, log=log)
 
     return series
 
@@ -445,7 +423,6 @@ def import_series_blueprint_by_id(
         blueprint_id: int,
         db: Session = Depends(get_database),
         blueprint_db: Session = Depends(get_blueprint_database),
-        preferences: Preferences = Depends(get_preferences),
     ) -> None:
     """
     Import the Blueprint with the given ID to the given Series.
@@ -461,7 +438,7 @@ def import_series_blueprint_by_id(
     blueprint = get_blueprint(blueprint_db, blueprint_id, raise_exc=True)
 
     # Import Blueprint
-    import_blueprint(db, preferences, series, blueprint, log=request.state.log)
+    import_blueprint(db, series, blueprint, log=request.state.log)
 
 
 @blueprint_router.put('/import/series/{series_id}', status_code=200)
@@ -470,7 +447,6 @@ def import_series_blueprint_(
         series_id: int,
         blueprint: RemoteBlueprint = Body(...),
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences)
     ) -> None:
     """
     Import the given Blueprint into the given Series.
@@ -483,4 +459,4 @@ def import_series_blueprint_(
     series = get_series(db, series_id, raise_exc=True)
 
     # Import Blueprint
-    import_blueprint(db, preferences, series, blueprint, log=request.state.log)
+    import_blueprint(db, series, blueprint, log=request.state.log)

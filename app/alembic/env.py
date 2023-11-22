@@ -13,6 +13,17 @@ Manually perform DB migrations (to latest revision)
 >>> alembic upgrade head
 Manually downgrade DB to specific version
 >>> alembic downgrade <target-revision>
+
+Schema Version History (oldest to newest):
+- 693dd5aa47cd | Initialize tables
+- 65fd10d8732e | Add User table
+- 0233f2608d72 | Add interword spacing
+- 5861246a49f3 | Change default of Font.interword_spacing
+- 4d7cb48238be | Replace Font.file with Font.file_name
+- 25490125daaf | Add explicit ordering to Templates
+- caec4f618689 | Turn Card attributes into Card.model_json
+- a61f373185d4 | Add support for multiple Connections
+- 5318f59eadbf | Utilize ORM Mappings and finalize Column nullability
 """
 
 # this is the Alembic Config object, which provides
@@ -26,16 +37,18 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from app.database.session import Base
 from app.models.card import Card
+from app.models.connection import Connection
 from app.models.episode import Episode
 from app.models.font import Font
 from app.models.loaded import Loaded
 from app.models.preferences import Preferences
 from app.models.series import Series
+from app.models.snapshot import Snapshot
 from app.models.sync import Sync
 from app.models.template import Template
 from app.models.user import User
+from app.database.session import Base
 target_metadata = Base.metadata
 
 from os import environ

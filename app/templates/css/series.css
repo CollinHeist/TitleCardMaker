@@ -22,6 +22,16 @@
   }
 }
 
+#action-buttons .divider[data-interface="Emby"] span[data-value="interface-type"] {
+  color: #4CAF50;
+}
+#action-buttons .divider[data-interface="Jellyfin"] span[data-value="interface-type"] {
+  color: rgb(108,119,199);
+}
+#action-buttons .divider[data-interface="Plex"] span[data-value="interface-type"] {
+  color: rgb(226,179,61);
+}
+
 /* Remove minimum width on progress bar */
 #card-progress .bar {
   min-width: 0;
@@ -119,14 +129,22 @@
   cursor: pointer;
 }
 
-/* File search icon should color semantic blue on hover */
-#source-images .card i[data-action="search"]:hover {
+/* Search and browse icons should color semantic blue on hover */
+#source-images i[data-action="search"]:hover
+#source-images td[data-column="search"]:hover i,
+#source-images i[data-action="browse"]:hover,
+#source-images td[data-column="browse"]:hover i {
   color: #2185d0;
 }
-
 /* Upload file icon should color semantic green on hover */
-#source-images .card i[data-action="upload"]:hover {
+#source-images i[data-action="upload"]:hover,
+#source-images td[data-column="upload"]:hover i {
   color: #21ba45;
+}
+/* Mirror icon should color semantic violet on hover */
+#source-images i[data-action="mirror"]:hover,
+#source-images td[data-column="mirror"]:hover i {
+  color: #a291fb;
 }
 
 /* The TMDb logo should be 14px high */

@@ -52,84 +52,68 @@
           {% endif %}
 
           <!-- Emby -->
-          {% if preferences.use_emby %}
-          <h3 class="ui horizontal divider left aligned header">Emby</h3>
-          <div id="emby-syncs" class="ui raised cards">
-            <div class="ui add card">
-              <div class="center aligned content">
-                {% if preferences.use_emby %}
-                <div id="add-emby-sync" class="ui blue button">
-                {% else %}
-                <div id="add-emby-sync" class="ui blue disabled button">
-                {% endif %}
-                  <i class="plus icon"></i>
-                  Add Sync
+          <section data-connection="emby">
+            <h3 class="ui horizontal divider left aligned header">Emby</h3>
+            <div id="emby-syncs" class="ui raised cards">
+              <div class="ui add card">
+                <div class="center aligned content">
+                  <div id="add-emby-sync" class="ui blue button">
+                    <i class="plus icon"></i>
+                    Add Sync
+                  </div>
                 </div>
               </div>
+              <!-- Other sync cards added asynchronously -->
             </div>
-            <!-- Other sync cards added asynchronously -->
-          </div>
-          {% endif %}
+          </section>
 
           <!-- Jellyfin -->
-          {% if preferences.use_jellyfin %}
-          <h3 class="ui horizontal divider left aligned header">Jellyfin</h3>
-          <div id="jellyfin-syncs" class="ui raised cards">
-            <div class="ui add card">
-              <div class="center aligned content">
-                {% if preferences.use_jellyfin %}
-                <div id="add-jellyfin-sync" class="ui blue button">
-                {% else %}
-                <div id="add-jellyfin-sync" class="ui blue disabled button">
-                {% endif %}
-                  <i class="plus icon"></i>
-                  Add Sync
+          <section data-connection="jellyfin">
+            <h3 class="ui horizontal divider left aligned header">Jellyfin</h3>
+            <div id="jellyfin-syncs" class="ui raised cards">
+              <div class="ui add card">
+                <div class="center aligned content">
+                  <div id="add-jellyfin-sync" class="ui blue button">
+                    <i class="plus icon"></i>
+                    Add Sync
+                  </div>
                 </div>
               </div>
+              <!-- Other sync cards added asynchronously -->
             </div>
-            <!-- Other sync cards added asynchronously -->
-          </div>
-          {% endif %}
+          </section>
 
           <!-- Plex -->
-          {% if preferences.use_plex %}
-          <h3 class="ui horizontal divider left aligned header">Plex</h3>
-          <div id="plex-syncs" class="ui raised cards">
-            <div class="ui add card">
-              <div class="center aligned content">
-                {% if preferences.use_plex %}
-                <div id="add-plex-sync" class="ui blue button">
-                {% else %}
-                <div id="add-plex-sync" class="ui blue disabled button">
-                {% endif %}
-                  <i class="plus icon"></i>
-                  Add Sync
+          <section data-connection="plex">
+            <h3 class="ui horizontal divider left aligned header">Plex</h3>
+            <div id="plex-syncs" class="ui raised cards">
+              <div class="ui add card">
+                <div class="center aligned content">
+                  <div id="add-plex-sync" class="ui blue button">
+                    <i class="plus icon"></i>
+                    Add Sync
+                  </div>
                 </div>
               </div>
+              <!-- Other sync cards added asynchronously -->
             </div>
-            <!-- Other sync cards added asynchronously -->
-          </div>
-          {% endif %}
+          </section>
 
           <!-- Sonarr -->
-          {% if preferences.use_sonarr %}
-          <h3 class="ui horizontal divider left aligned header">Sonarr</h3>
-          <div id="sonarr-syncs" class="ui raised cards">
-            <div class="ui add card">
-              <div class="center aligned content">
-                {% if preferences.use_sonarr %}
-                <div id="add-sonarr-sync" class="ui blue button">
-                {% else %}
-                <div id="add-sonarr-sync" class="ui blue disabled button">
-                {% endif %}
-                  <i class="plus icon"></i>
-                  Add Sync
+          <section data-connection="sonarr">
+            <h3 class="ui horizontal divider left aligned header">Sonarr</h3>
+            <div id="sonarr-syncs" class="ui raised cards">
+              <div class="ui add card">
+                <div class="center aligned content">
+                  <div id="add-sonarr-sync" class="ui blue button">
+                    <i class="plus icon"></i>
+                    Add Sync
+                  </div>
                 </div>
               </div>
+              <!-- Other sync cards added asynchronously -->
             </div>
-            <!-- Other sync cards added asynchronously -->
-          </div>
-          {% endif %}
+          </section>
         </div>
       </div>
     </div>
@@ -137,12 +121,21 @@
     <!-- New Sync Modals -->
 
     <!-- Emby -->
-    {% if preferences.use_emby %}
     <div id="add-emby-sync-modal" class="ui small sync modal">
       <i class="close icon"></i>
       <div class="header">New Emby Sync</div>
       <div class="content">
         <form id="emby-sync-form" class="ui form">
+          <div class="required field">
+            <label>Connection</label>
+            <div data-type="emby_connections" data-value="interface_id" class="ui compact selection dropdown">
+              <input type="hidden" name="interface_id">
+              <i class="dropdown icon"></i>
+              <div class="default text">Connection</div>
+              <div class="menu"><!-- Added asynchronously --></div>
+            </div>
+          </div>
+
           <div class="required field">
             <label>Sync Name</label>
             <input name="name" type="text" minlength="1">
@@ -219,15 +212,23 @@
         </button>
       </div>
     </div>
-    {% endif %}
 
     <!-- Jellyfin -->
-    {% if preferences.use_jellyfin %}
     <div id="add-jellyfin-sync-modal" class="ui small sync modal">
       <i class="close icon"></i>
       <div class="header">New Jellyfin Sync</div>
       <div class="content">
         <form id="jellyfin-sync-form" class="ui form">
+          <div class="required field">
+            <label>Connection</label>
+            <div data-type="jellyfin_connections" data-value="interface_id" class="ui compact selection dropdown">
+              <input type="hidden" name="interface_id">
+              <i class="dropdown icon"></i>
+              <div class="default text">Connection</div>
+              <div class="menu"><!-- Added asynchronously --></div>
+            </div>
+          </div>
+
           <div class="required field">
             <label>Sync Name</label>
             <input name="name" type="text" minlength="1">
@@ -304,15 +305,23 @@
         </button>
       </div>
     </div>
-    {% endif %}
 
     <!-- Plex -->
-    {% if preferences.use_plex %}
     <div id="add-plex-sync-modal" class="ui small sync modal">
       <i class="close icon"></i>
       <div class="header">New Plex Sync</div>
       <div class="content">
         <form id="plex-sync-form" class="ui form">
+          <div class="required field">
+            <label>Connection</label>
+            <div data-type="plex_connections" data-value="interface_id" class="ui compact selection dropdown">
+              <input type="hidden" name="interface_id">
+              <i class="dropdown icon"></i>
+              <div class="default text">Connection</div>
+              <div class="menu"><!-- Added asynchronously --></div>
+            </div>
+          </div>
+
           <div class="required field">
             <label>Sync Name</label>
             <input name="name" type="text" minlength="1">
@@ -389,15 +398,23 @@
         </button>
       </div>
     </div>
-    {% endif %}
 
     <!-- Sonarr -->
-    {% if preferences.use_sonarr %}
     <div id="add-sonarr-sync-modal" class="ui small sync modal">
       <i class="close icon"></i>
       <div class="header">New Sonarr Sync</div>
       <div class="content">
         <form id="sonarr-sync-form" class="ui form">
+          <div class="required field">
+            <label>Connection</label>
+            <div data-type="sonarr_connections" data-value="interface_id" class="ui compact selection dropdown">
+              <input type="hidden" name="interface_id">
+              <i class="dropdown icon"></i>
+              <div class="default text">Connection</div>
+              <div class="menu"><!-- Added asynchronously --></div>
+            </div>
+          </div>
+
           <div class="required field">
             <label>Sync Name</label>
             <input name="name" type="text" minlength="1">
@@ -507,7 +524,6 @@
         </button>
       </div>
     </div>
-    {% endif %}
 
     <!-- Delete Sync Modal -->
     <div id="delete-sync-modal" class="ui basic modal">

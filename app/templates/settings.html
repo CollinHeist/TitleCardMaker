@@ -62,14 +62,14 @@
               <i class="layer group icon"></i>
               Episode Data
             </h3>
-            <div id="episode-data-settings" class="field">
+            <div class="field">
               <div class="field">
                 <label>Episode Data Source</label>
-                <div id="episode-data-source" class="ui compact selection dropdown">
-                  <input id="episode-data-source-input" type="hidden" name="episode_data_source" value="{{preferences.episode_data_source}}">
+                <div data-value="episode_data_source" class="ui compact selection dropdown">
+                  <input type="hidden" name="episode_data_source">
                   <i class="dropdown icon"></i>
-                  <div class="default text">{{preferences.episode_data_source}}</div>
-                  <div id="episode-data-source-choices" class="menu">
+                  <div class="default text">Connection</div>
+                  <div class="menu">
                     <!-- Added asynchronously -->
                   </div>
                 </div>
@@ -301,9 +301,25 @@
                   <div class="field">
                     <label>Season Folder Format</label>
                     <input type="text" name="season_folder_format" placeholder="{{preferences.season_folder_format}}" value="{{preferences.season_folder_format}}">
-                    <p class="help">Format of all the non-specials Title Card subfolders. {season_number} is the season number variable.</p>
+                    <p class="help">Format of all the non-special Title Card subfolders. {season_number} is the season number variable.</p>
                   </div>
                 </div>
+              </div>
+
+              <div class="ui checkbox field">
+                <label>Multi-Library Filename Support</label>
+                {% if preferences.library_unique_cards %}
+                <input name="library_unique_cards" type="checkbox" checked="">
+                {% else %}
+                <input name="library_unique_cards" type="checkbox">
+                {% endif %}
+                <p class="help">
+                  Whether to add a unique Library identifier to Title Card filenames to allow library-specific Title Cards.
+                  <br>
+                  Users whose Series are only part of a single library, or who do not use watch-status specific styling, should leave this disabled.
+                  <br>
+                  <b>If enabled, TitleCardMaker will create one Title Card for each Episode for each Library.</b>
+                </p>
               </div>
             </div>
 
@@ -313,7 +329,6 @@
             </h3>
 
             <div class="ui two fields">
-
               <div class="eight wide field">
                 <label>Home Page Size</label>
                 <input type="number" name="home_page_size" placeholder="{{preferences.home_page_size}}" value="{{preferences.home_page_size}}">
@@ -327,47 +342,71 @@
               </div>
             </div>
 
-            <div class="ui checkbox field" data-value="simplified_data_table">
-              <label>Simplified Episode Data Tables</label>
-              {% if preferences.simplified_data_table %}
-              <input name="simplified_data_table" type="checkbox" checked="">
-              {% else %}
-              <input name="simplified_data_table" type="checkbox">
-              {% endif %}
-              <p class="help">Whether to hide Advanced (uncommonly edited) columns from Episode data tables.</p>
+            <div class="ui two fields">
+              <div class="ui checkbox field" data-value="home_page_table_view">
+                <label>Display Home Page as a Table</label>
+                {% if preferences.home_page_table_view %}
+                <input name="home_page_table_view" type="checkbox" checked="">
+                {% else %}
+                <input name="home_page_table_view" type="checkbox">
+                {% endif %}
+                <p class="help">Whether to display Series on the home page in a table.</p>
+              </div>
+              
+              <div class="ui checkbox field">
+                <label>Display Source Image Data as a Table</label>
+                {% if preferences.sources_as_table %}
+                <input name="sources_as_table" type="checkbox" checked="checked">
+                {% else %}
+                <input name="sources_as_table" type="checkbox">
+                {% endif %}
+                <p class="help">Whether to display source image data in a table.</p>
+              </div>
             </div>
-            <br>
-
-            <div class="ui checkbox field">
-              <label>Stylize Unmonitored Series Posters</label>
-              {% if preferences.stylize_unmonitored_posters %}
-              <input name="stylize_unmonitored_posters" type="checkbox" checked="checked">
-              {% else %}
-              <input name="stylize_unmonitored_posters" type="checkbox">
-              {% endif %}
-              <p class="help">Whether to stylize the posters of Unmonitored Series on the home screen.</p>
+            
+            <div class="ui two fields">
+              <div class="ui checkbox field" data-value="simplified_data_table">
+                <label>Simplified Episode Data Tables</label>
+                {% if preferences.simplified_data_table %}
+                <input name="simplified_data_table" type="checkbox" checked="">
+                {% else %}
+                <input name="simplified_data_table" type="checkbox">
+                {% endif %}
+                <p class="help">Whether to hide "advanced" (uncommonly edited) columns from Episode data tables.</p>
+              </div>
+  
+              <div class="ui checkbox field">
+                <label>Stylize Unmonitored Posters</label>
+                {% if preferences.stylize_unmonitored_posters %}
+                <input name="stylize_unmonitored_posters" type="checkbox" checked="checked">
+                {% else %}
+                <input name="stylize_unmonitored_posters" type="checkbox">
+                {% endif %}
+                <p class="help">Whether to stylize the posters of Unmonitored Series on the home page.</p>
+              </div>
             </div>
-            <br>
 
-            <div class="ui checkbox field">
-              <label>Display Source Image Data as a Table</label>
-              {% if preferences.sources_as_table %}
-              <input name="sources_as_table" type="checkbox" checked="checked">
-              {% else %}
-              <input name="sources_as_table" type="checkbox">
-              {% endif %}
-              <p class="help">Whether to display source image data in a table (instead of cards).</p>
-            </div>
-            <br>
-
-            <div class="ui checkbox field">
-              <label>Color-Impaired Mode</label>
-              {% if preferences.colorblind_mode %}
-              <input name="colorblind_mode" type="checkbox" checked="checked">
-              {% else %}
-              <input name="colorblind_mode" type="checkbox">
-              {% endif %}
-              <p class="help">Utilize alternate styling with more distinguished colors.</p>
+            <div class="ui two fields">
+              <div class="ui checkbox field">
+                <label>Color-Impaired Mode</label>
+                {% if preferences.colorblind_mode %}
+                <input name="colorblind_mode" type="checkbox" checked="checked">
+                {% else %}
+                <input name="colorblind_mode" type="checkbox">
+                {% endif %}
+                <p class="help">Utilize alternate styling with more distinguished colors.</p>
+              </div>
+              <br>
+  
+              <div class="ui checkbox field">
+                <label>Reduced Animations</label>
+                {% if preferences.reduced_animations %}
+                <input name="reduced_animations" type="checkbox" checked="checked">
+                {% else %}
+                <input name="reduced_animations" type="checkbox">
+                {% endif %}
+                <p class="help">Reduce website animations.</p>
+              </div>
             </div>
 
             <!-- Validation message -->
@@ -386,17 +425,17 @@
           <!-- System info -->
           <div class="ui divider"></div>
           <div class="system info">
-            <div class="ui blue info label">
+            <div class="ui blue label">
               Current Version
               <div class="detail">{{preferences.current_version}}</div>
             </div>
   
-            <div class="ui blue info label">
+            <div class="ui blue label">
               Available Version
               <div class="detail">{{preferences.available_version}}</div>
             </div>
   
-            <div class="ui blue info label">
+            <div class="ui blue label">
               Execution Mode
               <div class="detail">
                 {% if preferences.is_docker %}
@@ -407,7 +446,7 @@
               </div>
             </div>
   
-            <div class="ui blue info label">
+            <div class="ui blue label">
               Changelog
               <a onclick="notifyChanges('{{preferences.current_version}}', true);">View</a>
             </div>

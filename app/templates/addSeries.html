@@ -154,8 +154,8 @@
       <div class="ui blue right action left icon input">
         <i class="search icon"></i>
         <input id="search-query" type="text" placeholder="Search" autofocus>
-        <div id="search-source" class="ui basic floating dropdown button" data-tooltip="Which connection to search">
-          <input id="search-interface" type="hidden">
+        <div data-value="interface_id" class="ui basic floating dropdown button" data-tooltip="Which connection to search">
+          <input name="interface_id" type="hidden">
           <div class="default text"></div>
           <i class="dropdown icon"></i>
           <div class="menu"><!-- Added asynchronously --></div>
@@ -200,10 +200,6 @@
         </div>
       </div>
 
-      <!-- <button class="ui green tertiary button" onclick="queryAllBlueprints();">
-        <i class="search icon"></i>
-        Search for Blueprints
-      </button> -->
       <div class="ui raised segment">
         <div id="all-blueprint-results" class="ui three stackable raised cards"><!-- Added asynchronously --></div>
       </div>
@@ -216,53 +212,26 @@
       <div data-value="series-name-header" class="header">Add Series</div>
       <div class="scrolling content">
         <form class="ui form">
-          <h4 class="ui dividing header">Library</h4>
-          <div class="three fields">
-            {% if preferences.use_emby %}
+          <h4 class="ui dividing header">Configuration</h4>
+          <div class="ui two fields">
             <div class="ui field">
-              <label>Emby Library</label>
-              <div data-value="emby_library_name" class="ui selection clearable dropdown">
-                <input data-value="emby_library_name" name="emby_library_name" type="hidden">
+              <label>Libraries</label>
+              <div data-value="libraries" class="ui compact clearable search selection multiple dropdown">
+                <input name="libraries" type="hidden">
                 <div class="default text">None</div>
                 <i class="dropdown icon"></i>
                 <div class="menu"><!-- Added asynchronously --></div>
               </div>
             </div>
-            {% endif %}
-
-            {% if preferences.use_jellyfin %}
-            <div class="ui field">
-              <label>Jellyfin Library</label>
-              <div data-value="jellyfin_library_name" class="ui selection clearable dropdown">
-                <input data-value="jellyfin_library_name" name="jellyfin_library_name" type="hidden">
-                <div class="default text">None</div>
+  
+            <div class="field">
+              <label>Templates</label>
+              <div data-value="template_ids" class="ui compact clearable search selection multiple dropdown">
+                <input data-value="template_ids" name="template_ids" type="hidden">
                 <i class="dropdown icon"></i>
+                <div class="default text">None</div>
                 <div class="menu"><!-- Added asynchronously --></div>
               </div>
-            </div>
-            {% endif %}
-
-            {% if preferences.use_plex %}
-            <div class="ui field">
-              <label>Plex Library</label>
-              <div data-value="plex_library_name" class="ui selection clearable dropdown">
-                <input data-value="plex_library_name" name="plex_library_name" type="hidden">
-                <div class="default text">None</div>
-                <i class="dropdown icon"></i>
-                <div class="menu"><!-- Added asynchronously --></div>
-              </div>
-            </div>
-            {% endif %}
-          </div>
-
-          <h4 class="ui dividing header">Card Configuration</h4>
-          <div class="field">
-            <label>Templates</label>
-            <div data-value="template_ids" class="ui compact clearable search selection multiple dropdown">
-              <input data-value="template_ids" name="template_ids" type="hidden">
-              <i class="dropdown icon"></i>
-              <div class="default text">None</div>
-              <div class="menu"><!-- Added asynchronously --></div>
             </div>
           </div>
 

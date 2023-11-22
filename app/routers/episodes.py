@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, Request
 from fastapi_pagination.ext.sqlalchemy import paginate
@@ -31,11 +31,6 @@ def add_new_episode(
         request: Request,
         new_episode: NewEpisode = Body(...),
         db: Session = Depends(get_database),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Episode:
     """
     Add a new episode to the given series.
@@ -63,11 +58,8 @@ def add_new_episode(
     # Refresh card types in case new remote type was specified
     refresh_remote_card_types(db, log=request.state.log)
 
-    # Add background task to add episode ID's for this Episode
-    set_episode_ids(
-        db, series, [episode], emby_interface, jellyfin_interface,
-        plex_interface, sonarr_interface, tmdb_interface, log=request.state.log,
-    )
+    # Add ID's for this Episode
+    set_episode_ids(db, series, [episode], log=request.state.log)
 
     return episode
 
@@ -82,8 +74,9 @@ def get_episode_by_id(
 
     - episode_id: ID of the Episode to retrieve.
     """
-
-    return get_episode(db, episode_id, raise_exc=True)
+    episode = get_episode(db, episode_id, raise_exc=True)
+    log.info(f'{episode.as_episode_info=!r}')
+    return episode
 
 
 @episodes_router.delete('/episode/{episode_id}', status_code=204)
@@ -151,12 +144,6 @@ def refresh_episode_data_(
         request: Request,
         series_id: int,
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> None:
     """
     Refresh the episode data associated with the given series. This
@@ -170,12 +157,7 @@ def refresh_episode_data_(
     series = get_series(db, series_id, raise_exc=True)
 
     # Refresh episode data, use BackgroundTasks for ID assignment
-    refresh_episode_data(
-        db, preferences,
-        series,
-        emby_interface, jellyfin_interface, plex_interface, sonarr_interface,
-        tmdb_interface, background_tasks, log=request.state.log,
-    )
+    refresh_episode_data(db, series, background_tasks, log=request.state.log)
 
 
 @episodes_router.patch('/batch', status_code=200)
@@ -202,7 +184,7 @@ def update_multiple_episode_configs(
 
         # Get this Episode, raise 404 if DNE
         episode = get_episode(db, update_obj.episode_id, raise_exc=True)
-        update_episode_dict = update_obj.update_episode.dict()
+        update_episode_dict = update_obj.update_episode.dict(exclude_defaults=True)
 
         # If any reference ID's were indicated, verify referenced object exists
         get_font(db, getattr(update_episode, 'font_id', None), raise_exc=True)
@@ -284,7 +266,7 @@ def update_episode_config(
     return episode
 
 
-@episodes_router.get('/series/{series_id}/all', status_code=200, tags=['Series'])
+@episodes_router.get('/series/{series_id}', status_code=200, tags=['Series'])
 def get_all_series_episodes(
         series_id: int,
         order_by: Literal['index', 'absolute', 'id'] = 'index',

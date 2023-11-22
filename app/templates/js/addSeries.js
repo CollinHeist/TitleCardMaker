@@ -13,19 +13,34 @@ function addPlaceholders(element, amount=10, placeholderElementId='result-placeh
  * Create a NewSeries object for the given result.
  */
 function generateNewSeriesObject(result) {
+  // Comma separate Template IDs
   const template_string = $('#add-series-modal .dropdown[data-value="template_ids"]').dropdown('get value');
   const template_ids = template_string === '' ? [] : template_string.split(',');
+  
+  // Parse libraries
+  const library_vals = $('#add-series-modal .dropdown[data-value="libraries"]').dropdown('get value');
+  let libraries = [];
+  if (library_vals) {
+    libraries = library_vals.split(',')
+      .map(libraryStr => {
+        const libraryData = libraryStr.split('::');
+        return {
+          interface: libraryData[0],
+          interface_id: libraryData[1],
+          name: libraryData[2]
+        };
+      });
+  }
+
   return {
     name: result.name,
     year: result.year,
     template_ids: template_ids,
-    emby_library_name: $('#add-series-modal input[name="emby_library_name"]').val() || null,
-    jellyfin_library_name: $('#add-series-modal input[name="jellyfin_library_name"]').val() || null,
-    plex_library_name: $('#add-series-modal input[name="plex_library_name"]').val() || null,
-    emby_id: result.emby_id,
+    libraries: libraries,
+    emby_id: result.emby_id || '',
     imdb_id: result.imdb_id,
-    jellyfin_id: result.jellyfin_id,
-    sonarr_id: result.sonarr_id,
+    jellyfin_id: result.jellyfin_id || '',
+    sonarr_id: result.sonarr_id || '',
     tmdb_id: result.tmdb_id,
     tvdb_id: result.tvdb_id,
     tvrage_id: result.tvrage_id,
@@ -212,47 +227,47 @@ function quickAddSeries(result, resultElementId) {
 /*
  * Load the interface search dropdown.
  */
-async function initializeSearchSource() {
-  const eds = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
-  $('#search-source').dropdown({
-      values: eds,
-  })
+function initializeSearchSource() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/settings/episode-data-source',
+    success: dataSources => {
+      $('.dropdown[data-value="interface_id"]').dropdown({
+        placeholder: 'Default',
+        values: dataSources.map(({name, interface_id, selected}) => {
+          return {name, value: interface_id, selected};
+        }),
+      });
+    },
+    error: response => showErrorToast({title: 'Error Querying Episode Data Sources', response}),
+  });
 }
 
 /*
- * Initialize the library dropdowns for all enabled media servers. This
- * only makes API requests for enabled connections.
+ * Initialize the library dropdowns.
  */
 async function initializeLibraryDropdowns() {
-  if ($('.dropdown[data-value="emby_library_name"]').length) {
-    const embyLibraries = await fetch('/api/available/libraries/emby').then(resp => resp.json());
-    $('.dropdown[data-value="emby_library_name"]').dropdown({
-      placeholder: 'None',
-      values: embyLibraries.map(name => {
-        return {name: name, value: name};
-      }),
-    });
-  }
-
-  if ($('.dropdown[data-value="jellyfin_library_name"]').length) {
-    const jellyfinLibraries = await fetch('/api/available/libraries/jellyfin').then(resp => resp.json());
-    $('.dropdown[data-value="jellyfin_library_name"]').dropdown({
-      placeholder: 'None',
-      values: jellyfinLibraries.map(name => {
-        return {name: name, value: name};
-      }),
-    });
-  }
-
-  if ($('.dropdown[data-value="plex_library_name"]').length) {
-    const plexLibraries = await fetch('/api/available/libraries/plex').then(resp => resp.json());
-    $('.dropdown[data-value="plex_library_name"]').dropdown({
-      placeholder: 'None',
-      values: plexLibraries.map(name => {
-        return {name: name, value: name};
-      }),
-    });
-  }
+  const allConnections = await fetch('/api/connection/all').then(resp => resp.json());
+  $.ajax({
+    type: 'GET',
+    url: '/api/available/libraries/all',
+    success: libraries => {
+      $('.dropdown[data-value="libraries"]').dropdown({
+        placeholder: 'None',
+        values: libraries.map(({interface, interface_id, name}) => {
+          const serverName = allConnections.filter(connection => connection.id === interface_id)[0].name || interface;
+          return {
+            name: name,
+            text: `${name} (${serverName})`,
+            value: `${interface}::${interface_id}::${name}`,
+            description: serverName,
+            descriptionVertical: true,
+            selected: false,
+          };
+        }),
+      });
+    }, error: response => showErrorToast({title: 'Error Querying Libraries', response}),
+  });
 }
 
 /*
@@ -260,7 +275,7 @@ async function initializeLibraryDropdowns() {
  */
 async function initAll() {
   initializeSearchSource();
-  initializeLibraryDropdowns();
+  await initializeLibraryDropdowns();
 
   // Initialize search input with query param if provided
   const query = new URLSearchParams(window.location.search).get('q');
@@ -286,29 +301,24 @@ async function querySeries() {
   const resultTemplate = document.getElementById('search-result-template');
   const resultSegment = document.getElementById('search-results');
   let query = $('#search-query').val();
-  // Parse query name and year (if indicated)
-  let year;
-  if (query.match(/(.+)\s+y:(\d+)/)) {
-    [, query, year] = query.match(/(.+)\s+y:(\d+)/);
-  }
 
   // Exit if are no HTML elements or query
   if (resultTemplate === null || resultSegment === null || !query) { return; }
 
   // Add placeholders while searching
   addPlaceholders(resultSegment, 10);
-  const interfaceName = $('#search-interface').val() || 'Sonarr';
-  const qStr = `name=${query}` + (year ? `&year=${year}` : '');
+  const interfaceId = $('input[name="interface_id"]').val() || {{preferences.episode_data_source}};
 
   // Submit API request
-  const allResults = await fetch(`/api/series/lookup?${qStr}&interface=${interfaceName}`).then(resp => resp.json());
+  const allResults = await fetch(`/api/series/lookup?name=${query}&interface_id=${interfaceId}`).then(resp => resp.json());
   const results = allResults.items.map((result, index) => {
     // Clone template
     const card = resultTemplate.content.cloneNode(true);
     // Assign ID
     card.querySelector('.card').id = `result${index}`;
-    // Fill out content
+    // Add DB ID to image src string in case a proxy URL is needed
     card.querySelector('img').src = result.poster;
+    // Fill out content
     card.querySelector('[data-value="name"]').innerText = result.name;
     card.querySelector('[data-value="year"]').innerText = result.year;
     if (result.ongoing === null) {

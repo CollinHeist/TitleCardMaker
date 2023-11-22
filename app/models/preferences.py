@@ -1,4 +1,3 @@
-from collections import namedtuple
 from logging import Logger
 from os import environ
 from pathlib import Path
@@ -7,6 +6,7 @@ from typing import Any, Optional
 from pickle import dump, load
 
 from app.schemas.base import UNSPECIFIED
+from app.schemas.preferences import CardExtension
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
@@ -16,13 +16,6 @@ from modules.RemoteCardType2 import RemoteCardType
 from modules.TitleCard import TitleCard
 from modules.Version import Version
 
-
-EpisodeDataSource = namedtuple('EpisodeDataSource', ('value', 'label'))
-Emby = EpisodeDataSource('emby', 'Emby')
-Jellyfin = EpisodeDataSource('jellyfin', 'Jellyfin')
-Plex = EpisodeDataSource('plex', 'Plex')
-Sonarr = EpisodeDataSource('sonarr', 'Sonarr')
-TMDb = EpisodeDataSource('tmdb', 'TMDb')
 
 TCM_ROOT = Path(__file__).parent.parent.parent
 CONFIG_ROOT = TCM_ROOT / 'config'
@@ -40,9 +33,7 @@ class Preferences:
     DEFAULT_CARD_FILENAME_FORMAT = (
         '{series_full_name} - S{season_number:02}E{episode_number:02}'
     )
-    DEFAULT_CARD_EXTENSION = '.jpg'
-    DEFAULT_IMAGE_SOURCE_PRIORITY = ['TMDb', 'Plex', 'Jellyfin', 'Emby']
-    DEFAULT_EPISODE_DATA_SOURCE = 'Sonarr'
+    DEFAULT_CARD_EXTENSION: CardExtension = '.jpg'
     VALID_IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp')
 
     """Directory to all internal assets"""
@@ -51,16 +42,10 @@ class Preferences:
     """Directory for all temporary file operations"""
     TEMPORARY_DIRECTORY = TCM_ROOT / 'modules' / '.objects'
 
-    """Attributes that should not be explicitly logged"""
-    PRIVATE_ATTRIBUTES = (
-        'emby_url', 'emby_api_key', 'jellyfin_url', 'jellyfin_api_key',
-        'plex_url', 'plex_token', 'sonarr_url', 'sonarr_api_key', 'tmdb_api_key'
-    )
-
     """Attributes whose values should be ignored when loading from file"""
     __read_only = (
         'is_docker', 'file', 'asset_directory', 'card_type_directory',
-        'remote_card_types', 'local_card_types',
+        'remote_card_types', 'local_card_types', 'invalid_connections',
     )
 
     __slots__ = (
@@ -70,16 +55,8 @@ class Preferences:
         'valid_image_extensions', 'specials_folder_format',
         'season_folder_format', 'sync_specials', 'remote_card_types',
         'default_card_type', 'excluded_card_types', 'default_watched_style',
-        'default_unwatched_style', 'use_emby', 'emby_url', 'emby_api_key',
-        'emby_username', 'emby_use_ssl', 'emby_filesize_limit_number',
-        'emby_filesize_limit_unit', 'use_jellyfin', 'jellyfin_url',
-        'jellyfin_api_key', 'jellyfin_username', 'jellyfin_use_ssl',
-        'jellyfin_filesize_limit_number', 'jellyfin_filesize_limit_unit',
-        'use_plex', 'plex_url', 'plex_token', 'plex_use_ssl',
-        'plex_integrate_with_pmm', 'plex_filesize_limit_number',
-        'plex_filesize_limit_unit', 'use_sonarr', 'sonarr_url',
-        'sonarr_api_key', 'sonarr_use_ssl', 'sonarr_downloaded_only',
-        'sonarr_libraries', 'use_tmdb', 'tmdb_api_key', 'tmdb_minimum_width',
+        'default_unwatched_style', 'use_emby', 'use_jellyfin', 'use_plex',
+        'use_sonarr', 'use_tmdb', 'tmdb_api_key', 'tmdb_minimum_width',
         'tmdb_minimum_height', 'tmdb_skip_localized', 'tmdb_download_logos',
         'tmdb_logo_language_priority', 'language_codes',
         'use_magick_prefix', 'current_version', 'available_version',
@@ -87,7 +64,17 @@ class Preferences:
         'task_crontabs', 'simplified_data_table', 'home_page_size',
         'episode_data_page_size', 'stylize_unmonitored_posters',
         'sources_as_table', 'card_type_directory', 'local_card_types',
-        'imported_blueprints', 'colorblind_mode',
+        'imported_blueprints', 'colorblind_mode', 'library_unique_cards',
+        'invalid_connections', 'home_page_table_view', 'reduced_animations',
+        # Arguments required only for the Connection data migrations
+        'emby_url', 'emby_api_key', 'emby_username', 'emby_use_ssl',
+        'emby_filesize_limit_number', 'emby_filesize_limit_unit',
+        'jellyfin_url', 'jellyfin_api_key', 'jellyfin_username',
+        'jellyfin_use_ssl', 'jellyfin_filesize_limit_number',
+        'jellyfin_filesize_limit_unit', 'plex_url', 'plex_token',
+        'plex_use_ssl', 'plex_integrate_with_pmm', 'plex_filesize_limit_number',
+        'plex_filesize_limit_unit', 'sonarr_url', 'sonarr_api_key',
+        'sonarr_use_ssl', 'sonarr_downloaded_only', 'sonarr_libraries',
     )
 
 
@@ -184,10 +171,11 @@ class Preferences:
         self.card_width = TitleCard.DEFAULT_WIDTH
         self.card_height = TitleCard.DEFAULT_HEIGHT
         self.card_filename_format = self.DEFAULT_CARD_FILENAME_FORMAT
+        self.library_unique_cards = False
         self.card_extension = self.DEFAULT_CARD_EXTENSION
 
-        self.image_source_priority = self.DEFAULT_IMAGE_SOURCE_PRIORITY
-        self.episode_data_source = self.DEFAULT_EPISODE_DATA_SOURCE
+        self.image_source_priority: list[int] = []
+        self.episode_data_source: Optional[int] = None
         self.valid_image_extensions = self.VALID_IMAGE_EXTENSIONS
 
         self.specials_folder_format = 'Specials'
@@ -202,38 +190,13 @@ class Preferences:
         self.default_watched_style = 'unique'
         self.default_unwatched_style = 'unique'
 
+        self.invalid_connections: list[int] = []
         self.use_emby = False
-        self.emby_url = ''
-        self.emby_api_key = ''
-        self.emby_username = None
-        self.emby_use_ssl = True
-        self.emby_filesize_limit_number = None
-        self.emby_filesize_limit_unit = None
-
         self.use_jellyfin = False
-        self.jellyfin_url = ''
-        self.jellyfin_api_key = ''
-        self.jellyfin_username = None
-        self.jellyfin_use_ssl = True
-        self.jellyfin_filesize_limit_number = None
-        self.jellyfin_filesize_limit_unit = None
-
         self.use_plex = False
-        self.plex_url = ''
-        self.plex_token = ''
-        self.plex_use_ssl = True
-        self.plex_integrate_with_pmm = False
-        self.plex_filesize_limit_number = 10
-        self.plex_filesize_limit_unit = 'Megabytes'
-
         self.use_sonarr = False
-        self.sonarr_url = ''
-        self.sonarr_api_key = ''
-        self.sonarr_use_ssl = True
-        self.sonarr_downloaded_only = True
-        self.sonarr_libraries = []
-
         self.use_tmdb = False
+
         self.tmdb_api_key = ''
         self.tmdb_minimum_width = 0
         self.tmdb_minimum_height = 0
@@ -253,7 +216,34 @@ class Preferences:
         self.episode_data_page_size = 50
         self.stylize_unmonitored_posters = False
         self.sources_as_table = False
+        self.home_page_table_view = True
         self.colorblind_mode = False
+        self.reduced_animations = False
+
+        # Data migration attributes
+        self.emby_url = ''
+        self.emby_api_key = ''
+        self.emby_username = None
+        self.emby_use_ssl = True
+        self.emby_filesize_limit_number = None
+        self.emby_filesize_limit_unit = None
+        self.jellyfin_url = ''
+        self.jellyfin_api_key = ''
+        self.jellyfin_username = None
+        self.jellyfin_use_ssl = True
+        self.jellyfin_filesize_limit_number = None
+        self.jellyfin_filesize_limit_unit = None
+        self.plex_url = ''
+        self.plex_token = ''
+        self.plex_use_ssl = True
+        self.plex_integrate_with_pmm = False
+        self.plex_filesize_limit_number = 10
+        self.plex_filesize_limit_unit = 'Megabytes'
+        self.sonarr_url = ''
+        self.sonarr_api_key = ''
+        self.sonarr_use_ssl = True
+        self.sonarr_downloaded_only = True
+        self.sonarr_libraries = []
 
 
     def read_file(self) -> Optional[object]:
@@ -323,7 +313,7 @@ class Preferences:
         for name, value in update_kwargs.items():
             if value != UNSPECIFIED and value != getattr(self, name, '*'):
                 setattr(self, name, value)
-                if name in self.PRIVATE_ATTRIBUTES:
+                if name in ('tmdb_api_key', ):
                     log.debug(f'Preferences.{name} = *****')
                 else:
                     log.debug(f'Preferences.{name} = {value}')
@@ -380,145 +370,12 @@ class Preferences:
 
 
     @property
-    def emby_filesize_limit(self) -> int:
-        """Get the integer filesize limit for Emby."""
-
-        return self.get_filesize(
-            self.emby_filesize_limit_number,
-            self.emby_filesize_limit_unit,
-        )
-
-
-    @property
-    def jellyfin_filesize_limit(self) -> int:
-        """Get the integer filesize limit for Jellyfin."""
-
-        return self.get_filesize(
-            self.jellyfin_filesize_limit_number,
-            self.jellyfin_filesize_limit_unit,
-        )
-
-
-    @property
-    def plex_filesize_limit(self) -> int:
-        """Get the integer filesize limit for Plex."""
-
-        return self.get_filesize(
-            self.plex_filesize_limit_number,
-            self.plex_filesize_limit_unit,
-        )
-
-
-    @property
-    def emby_arguments(self) -> dict[str, Any]:
-        """Arguments for initializing a EmbyInterface"""
-
-        return {
-            'url': str(self.emby_url),
-            'api_key': self.emby_api_key,
-            'username': self.emby_username,
-            'verify_ssl': self.emby_use_ssl,
-            'filesize_limit': self.emby_filesize_limit,
-            'use_magick_prefix': self.use_magick_prefix,
-        }
-
-
-    @property
     def imagemagick_arguments(self) -> dict[str, bool]:
         """Arguments for initializing a ImageMagickInterface"""
 
         return {
             'use_magick_prefix': self.use_magick_prefix,
         }
-
-
-    @property
-    def jellyfin_arguments(self) -> dict[str, Any]:
-        """Arguments for initializing a JellyfinInterface"""
-
-        return {
-            'url': str(self.jellyfin_url),
-            'api_key': self.jellyfin_api_key,
-            'username': self.jellyfin_username,
-            'verify_ssl': self.jellyfin_use_ssl,
-            'filesize_limit': self.jellyfin_filesize_limit,
-            'use_magick_prefix': self.use_magick_prefix,
-        }
-
-
-    @property
-    def plex_arguments(self) -> dict[str, Any]:
-        """Arguments for initializing a PlexInterface"""
-
-        return {
-            'url': str(self.plex_url),
-            'token': self.plex_token,
-            'verify_ssl': self.plex_use_ssl,
-            'integrate_with_pmm': self.plex_integrate_with_pmm,
-            'filesize_limit': self.plex_filesize_limit,
-            'use_magick_prefix': self.use_magick_prefix,
-        }
-
-
-    @property
-    def sonarr_arguments(self) -> dict[str, Any]:
-        """Arguments for initializing a SonarrInterface"""
-
-        return {
-            'url': str(self.sonarr_url),
-            'api_key': self.sonarr_api_key,
-            'verify_ssl': self.sonarr_use_ssl,
-            'downloaded_only': self.sonarr_downloaded_only,
-        }
-
-
-    @property
-    def tmdb_arguments(self) -> dict[str, Any]:
-        """Arguments for initializing a TMDbInterface"""
-
-        return {
-            'api_key': str(self.tmdb_api_key),
-            'minimum_source_width': self.tmdb_minimum_width,
-            'minimum_source_height': self.tmdb_minimum_height,
-            'blacklist_threshold': 3, # TODO add variable
-            'logo_language_priority': self.tmdb_logo_language_priority,
-        }
-
-
-    @property
-    def valid_image_sources(self) -> set[str]:
-        """Set of valid image sources"""
-
-        return set(filter(None, [
-            'Emby' * self.use_emby,
-            'Jellyfin' * self.use_jellyfin,
-            'Plex' * self.use_plex,
-            'TMDb' * self.use_tmdb,
-        ]))
-
-
-    @property
-    def valid_episode_data_sources(self) -> list[str]:
-        """List of valid Episode data sources"""
-
-        return list(filter(None, [
-            'Emby' * self.use_emby,
-            'Jellyfin' * self.use_jellyfin,
-            'Plex' * self.use_plex,
-            'TMDb' * self.use_tmdb,
-            'Sonarr' * self.use_sonarr,
-        ]))
-
-
-    @property
-    def enabled_media_servers(self) -> list[str]:
-        """List of enabled Media Servers"""
-
-        return list(filter(None, [
-            'Emby' * self.use_emby,
-            'Jellyfin' * self.use_jellyfin,
-            'Plex' * self.use_plex,
-        ]))
 
 
     @property
@@ -614,26 +471,6 @@ class Preferences:
                 return f'{value/ref_value:,.1f}', unit
 
         return '0', 'Bytes'
-
-
-    def determine_sonarr_library(self, directory: str) -> Optional[str]:
-        """
-        Determine the library of the series in the given directory. This
-        uses this object's sonarr_libraries attribute.
-
-        Args:
-            directory: Directory whose library is being determined.
-
-        Returns:
-            Name of the directory's matching library. None if no library
-            can be determined.
-        """
-
-        for library in self.sonarr_libraries:
-            if directory.startswith(library['path']):
-                return library['name']
-
-        return None
 
 
     def standardize_style(self, style: str) -> str:

@@ -144,7 +144,7 @@ async function getAllTemplates() {
   const allFonts = await fetch('/api/fonts/all').then(resp => resp.json());
   const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
   const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
-  const allEpisodeDataSources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
+  const allEpisodeDataSources = await fetch('/api/settings/episode-data-source').then(resp => resp.json());
   const allTranslations = await fetch('/api/available/translations').then(resp => resp.json());
   await queryAvailableExtras();
   await getAllCardTypes();
@@ -328,10 +328,11 @@ async function getAllTemplates() {
       value: templateObj.hide_episode_text,
     });
     // Episode data source
-    $(`#template-id${templateObj.id} >* .dropdown[data-value="episode-data-source"]`).dropdown({
-      values: allEpisodeDataSources.map(({name, value}) => {
-        return {name: name, value: value, selected: value === templateObj.episode_data_source};
-      }), placeholder: 'Global Default',
+    $(`#template-id${templateObj.id} .dropdown[data-value="data_source_id"]`).dropdown({
+      placeholder: 'Global Default',
+      values: allEpisodeDataSources.map(({name, interface_id}) => {
+        return {name, value: interface_id, selected: interface_id === templateObj.data_source_id};
+      }),
     });
     // Skip localized images
     initializeNullableBoolean({

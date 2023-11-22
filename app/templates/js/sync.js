@@ -1,64 +1,139 @@
-function getEmbyLibraries() {
+/**
+ * @typedef {Object} Sync
+ * @property {int} id
+ * @property {"Emby" | "Jellyfin" | "Plex" | "Sonarr"} interface
+ * @property {string} name
+ * @property {int} interface_id
+ * @property {Array<int>} template_ids
+ * @property {Array<string>} required_tags
+ * @property {Array<string>} excluded_tags
+ * @property {Array<string>} required_libraries
+ * @property {Array<string>} excluded_libraries
+ */
+
+/**
+ * Submit an API request to get all defined Connections. The dropdowns for each
+ * connection type are initialized with the servers for that connection. Any
+ * types without connections are removed from the page.
+ */
+function initConnectionDropdowns() {
   $.ajax({
     type: 'GET',
-    url: '/api/available/libraries/emby',
-    success: libraries => {
-      const values = libraries.map(name => {
-        return {name: name, value: name, selected: false}
+    url: '/api/connection/all',
+    success: connections => {
+      const emby = connections.filter(({interface_type}) => interface_type === 'Emby');
+      const jellyfin = connections.filter(({interface_type}) => interface_type === 'Jellyfin');
+      const plex = connections.filter(({interface_type}) => interface_type === 'Plex');
+      const sonarr = connections.filter(({interface_type}) => interface_type === 'Sonarr');
+
+      $('.dropdown[data-type="emby_connections"]').dropdown({
+        placeholder: 'Connection',
+        values: emby.map(({id, name}) => {
+          return {name, value: id};
+        }),
       });
+      $('.dropdown[data-type="jellyfin_connections"]').dropdown({
+        placeholder: 'Connection',
+        values: jellyfin.map(({id, name}) => {
+          return {name, value: id};
+        }),
+      });
+      $('.dropdown[data-type="plex_connections"]').dropdown({
+        placeholder: 'Connection',
+        values: plex.map(({id, name}) => {
+          return {name, value: id};
+        }),
+      });
+      $('.dropdown[data-type="sonarr_connections"]').dropdown({
+        placeholder: 'Connection',
+        values: sonarr.map(({id, name}) => {
+          return {name, value: id};
+        }),
+      });
+
+      // Remove sections with no connections
+      if (emby.length === 0) { $('section[data-connection="emby"]').remove(); }
+      if (jellyfin.length === 0) { $('section[data-connection="jellyfin"]').remove(); }
+      if (plex.length === 0) { $('section[data-connection="plex"]').remove(); }
+      if (sonarr.length === 0) { $('section[data-connection="sonarr"]').remove(); }
+    }, error: response => showErrorToast({title: 'Error Querying Connections', response}),
+  });
+}
+
+/**
+ * Get all libraries on all defined interfaces and initialize the dropdowns for
+ * Emby, Jellyfin, and Plex.
+ */
+function getLibraries() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/available/libraries/all',
+    success: libraries => {
+      const emby = libraries.filter(({interface}) => interface === 'Emby').map(({name}) => {
+        return {name, value: name, selected: false};
+      });
+      const jellyfin = libraries.filter(({interface}) => interface === 'Jellyfin').map(({name}) => {
+        return {name, value: name, selected: false};
+      });
+      const plex = libraries.filter(({interface}) => interface === 'Plex').map(({name}) => {
+        return {name, value: name, selected: false};
+      });
+
       $('#emby-sync-form .dropdown[data-value="required_libraries"]').dropdown({
         placeholder: 'None',
-        values: values
+        values: emby,
       });
       $('#emby-sync-form .dropdown[data-value="excluded_libraries"]').dropdown({
         placeholder: 'None',
-        values: values
+        values: emby,
       });
-    }, error: response => showErrorToast({title: 'Error Querying Emby Libraries', response}),
-  });
-}
 
-function getJellyfinLibraries() {
-  $.ajax({
-    type: 'GET',
-    url: '/api/available/libraries/jellyfin',
-    success: libraries => {
-      const values = libraries.map(name => {
-        return {name: name, value: name, selected: false}
-      });
       $('#jellyfin-sync-form .dropdown[data-value="required_libraries"]').dropdown({
         placeholder: 'None',
-        values: values
+        values: jellyfin,
       });
       $('#jellyfin-sync-form .dropdown[data-value="excluded_libraries"]').dropdown({
         placeholder: 'None',
-        values: values
+        values: emby,
       });
-    }, error: response => showErrorToast({title: 'Error Querying Jellyfin Libraries', response}),
-  });
-}
 
-async function getPlexLibraries() {
-  $.ajax({
-    type: 'GET',
-    url: '/api/available/libraries/plex',
-    success: libraries => {
-      const values = libraries.map(name => {
-        return {name: name, value: name, selected: false}
-      });
       $('#plex-sync-form .dropdown[data-value="required_libraries"]').dropdown({
         placeholder: 'None',
-        values: values
+        values: plex,
       });
       $('#plex-sync-form .dropdown[data-value="excluded_libraries"]').dropdown({
         placeholder: 'None',
-        values: values
+        values: plex,
       });
-    }, error: response => showErrorToast({title: 'Error Querying Plex Libraries', response}),
+    }, error: response => showErrorToast({title: 'Error Querying Libraries', response}),
+  });
+}
+
+/**
+ * Get all tags on all defined Sonarr interfaces and initialize the dropdowns.
+ */
+function getTags() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/available/tags/sonarr',
+    success: tags => {
+      $('.dropdown[dropdown-type="sonarr-tags"]').dropdown({
+        allowAdditions: true,
+        placeholder: 'None',
+        values: tags.map(({label}) => {
+          return {name: label, value: label, selected: false};
+        })
+      })
+    }, error: response => showErrorToast({title: 'Error Querying Tags', response}),
   });
 }
 
 let allTemplates = [];
+
+/**
+ * Submit an API request to get all the available Templates, initializing the
+ * dropdowns with these values (and a placeholder).
+ */
 function getTemplates() {
   $.ajax({
     type: 'GET',
@@ -69,24 +144,16 @@ function getTemplates() {
         placeholder: 'None',
         values: getActiveTemplates(null, availableTemplates),
       });
-    }, error: response => showErrorToast({'title': 'Error Querying Templates', response}),
+    },
+    error: response => showErrorToast({'title': 'Error Querying Templates', response}),
   })
 }
 
-// Function to add tags to all tag dropdowns
-async function getSonarrTags() {
-  // Add tag options to add tag dropdowns
-  const tags = await fetch('/api/available/tags/sonarr').then(resp => resp.json());
-  $('.dropdown[dropdown-type="sonarr-tags"]').dropdown({
-    placeholder: 'None',
-    allowAdditions: true,
-    values: tags.map(({label}) => {
-      return {name: label, value: label, selected: false};
-    }),
-  })
-}
-
-async function showEditModel(sync) {
+/**
+ * Populate and display a modal for editing the given Sync.
+ * @param {Sync} sync - Sync object used to populate the modal.
+ */
+function showEditModel(sync) {
   // Get reference New Sync modal to edit
   const refModalId = `add-${sync.interface}-sync-modal`.toLowerCase();
   const editModal = document.getElementById(refModalId).cloneNode(true);
@@ -97,6 +164,7 @@ async function showEditModel(sync) {
   $('.ui.checkbox').checkbox();
   // Fill out existing data
   $(`#edit-sync${sync.id} .header`)[0].innerText = `Editing Sync "${sync.name}"`;
+  $(`#edit-sync${sync.id} .dropdown[data-value="interface_id"]`).dropdown('set selected', sync.interface_id);
   $(`#edit-sync${sync.id} input[name="name"]`)[0].value = sync.name;
   $(`#edit-sync${sync.id} .dropdown[data-value="template_ids"]`).dropdown({
     placeholder: 'None',
@@ -113,6 +181,13 @@ async function showEditModel(sync) {
   if (downloadedCheckbox.length) { downloadedCheckbox[0].checked = sync.downloaded_only; }
   const monitoredCheckbox = $(`#edit-sync${sync.id} input[name="monitored_only"]`);
   if (monitoredCheckbox.length) { monitoredCheckbox[0].checked = sync.monitored_only; }
+  // Query tags/libraries when connection field is changed
+  $(`#edit-sync${sync.id} .dropdown[data-value="interface_id"] input`).change(async () => {
+    if (sync.interface === 'Sonarr') {
+      const tags = await fetch(`/api/available/tags/sonarr?interface_id=${sync.interface_id}`).then(resp => resp.json());
+      $(`#edit-sync${sync.id} .dropdown[data-value="required_tags"]`)
+    }
+  });
   // Change "save" button text
   $(`#edit-sync${sync.id} [data-value="primary-button"]`)[0].innerText = 'Save Changes';
   // Delete form assignment
@@ -164,7 +239,7 @@ async function showDeleteSyncModal(syncId) {
   $('#delete-sync-modal .button[data-action="delete-sync-only"]')
     .off('click')
     .on('click', () => {
-      $(`#card-sync${syncId}`).toggleClass('red double loading', true);
+      $(`#sync${syncId}`).toggleClass('red double loading', true);
       $.ajax({
         type: 'DELETE',
         url: `/api/sync/delete/${syncId}?delete_series=false`,
@@ -173,14 +248,14 @@ async function showDeleteSyncModal(syncId) {
           getAllSyncs();
         }, error: response => {
           showErrorToast({title: 'Error Deleting Sync', response});
-          $(`#card-sync${syncId}`).toggleClass('red double loading', false);
+          $(`#sync${syncId}`).toggleClass('red double loading', false);
         },
       });
     });
   $('#delete-sync-modal .button[data-action="delete-sync-and-series"]')
     .off('click')
     .on('click', () => {
-      $(`#card-sync${syncId}`).toggleClass('red double loading', true);
+      $(`#sync${syncId}`).toggleClass('red double loading', true);
       $.ajax({
         type: 'DELETE',
         url: `/api/sync/delete/${syncId}?delete_series=true`,
@@ -190,7 +265,7 @@ async function showDeleteSyncModal(syncId) {
         },
         error: response => {
           showErrorToast({title: 'Error Deleting Sync', response});
-          $(`#card-sync${syncId}`).toggleClass('red double loading', false);
+          $(`#sync${syncId}`).toggleClass('red double loading', false);
         },
       });
     });
@@ -217,8 +292,7 @@ async function getAllSyncs() {
       const {id, name} = syncObject;
       // Clone the card template, adjust header and meta text
       const clone = templateElement.content.cloneNode(true);
-      const card = clone.querySelector('.card');
-      card.id = `card-sync${id}`;
+      clone.querySelector('.card').id = `sync${id}`;
       clone.querySelector('.header').innerText = name;
       clone.querySelector('.sync-meta').innerText = `Sync ID ${id}`;
 
@@ -231,7 +305,7 @@ async function getAllSyncs() {
       // Add sync API request to sync icon
       clone.querySelector('i.sync').onclick = () => {
         // Add loading indicator, create toast
-        $(`#card-sync${id} >* i.sync`).toggleClass('loading blue', true);
+        $(`#sync${id} >* i.sync`).toggleClass('loading blue', true);
         showInfoToast(`Started Syncing "${name}"`);
         // Submit API request, show toast of results
         $.ajax({
@@ -251,7 +325,7 @@ async function getAllSyncs() {
             });
           },
           error: response => showErrorToast({title: 'Error encountered while Syncing', response}),
-          complete: () => $(`#card-sync${id} >* i.sync`).toggleClass('loading blue', false),
+          complete: () => $(`#sync${id} >* i.sync`).toggleClass('loading blue', false),
         });
       }
 
@@ -262,7 +336,7 @@ async function getAllSyncs() {
   });
 }
 
-async function getScheduledSyncs() {
+async function getSyncSchedule() {
   const {next_run} = await fetch('/api/schedule/SyncInterfaces').then(resp => resp.json());
   const nextRun = new Date(next_run);
   const nextRunStr = nextRun.toLocaleString();
@@ -288,21 +362,12 @@ async function getScheduledSyncs() {
 }
 
 async function initAll() {
+  initConnectionDropdowns();
+  getLibraries();
+  getTags();
   getAllSyncs();
-  {% if preferences.use_emby %}
-  getEmbyLibraries();
-  {% endif %}
-  {% if preferences.use_jellyfin %}
-  getJellyfinLibraries();
-  {% endif %}
-  {% if preferences.use_plex %}
-  getPlexLibraries();
-  {% endif %}
   getTemplates();
-  {% if preferences.use_sonarr %}
-  getSonarrTags();
-  {% endif %}
-  getScheduledSyncs();
+  getSyncSchedule();
 
   // Enable elements
   $('.checkbox').checkbox();
@@ -313,19 +378,11 @@ async function initAll() {
   $('.ui.dropdown[dropdown-type="server-tags"]').dropdown({allowAdditions: true});
 
   // Attach button clicks to modal hiding
-  {% if preferences.use_emby %}
   $('#add-emby-sync-modal').modal('attach events', '#add-emby-sync', 'show');
-  {% endif %}
-  {% if preferences.use_jellyfin %}
   $('#add-jellyfin-sync-modal').modal('attach events', '#add-jellyfin-sync', 'show');
-  {% endif %}
-  {% if preferences.use_plex %}
   $('#add-plex-sync-modal').modal('attach events', '#add-plex-sync', 'show');
-  {% endif %}
-  {% if preferences.use_sonarr %}
   $('#add-sonarr-sync-modal').modal('attach events', '#add-sonarr-sync', 'show');
-  {% endif %}
-
+  
   // Submit API request to create a new sync, do so for each source
   const syncData = [
     {interface: 'emby', formID: 'emby-sync-form', modalID: 'add-emby-sync-modal'},
@@ -338,6 +395,13 @@ async function initAll() {
       event.preventDefault();
       // Turn form into object, turning multi selects into arrays
       let form = new FormData(event.target);
+
+      // Verify interface ID is present
+      if (!form.get('interface_id') || !form.get('name')) {
+        showErrorToast({title: 'Connection and Sync Name are Required'});
+        return;
+      }
+
       let dataObj = {};
       for (let [name, value] of [...form.entries()]) {
         if (name.includes('_tags') || name.includes('_libraries') || name === 'template_ids') {

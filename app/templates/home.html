@@ -43,7 +43,11 @@
   </template>
 
   <template id="series-row-template">
+    {% if preferences.reduced_animations %}
+    <tr>
+    {% else %}
     <tr class="transition hidden">
+    {% endif %}
       <td class="selectable" data-row="select">
         <a data-action="select">
           <div data-value="select" class="ui right aligned fitted checkbox">
@@ -78,16 +82,9 @@
           </div>
         </a>
       </td>
-      <td data-row="monitored" class="center aligned selectable"><a>...</a></td>
-      <td class="center aligned selectable" data-row="process"><a><i class="blue step forward icon"></i></a></td>
+      <td data-row="monitored" class="center aligned selectable"><a></a></td>
+      <td class="center aligned selectable" data-row="process"><a><i class="images outline icon"></i></a></td>
     </tr>
-  </template>
-
-  <template id="statistic-template">
-    <div class="ui statistic">
-      <div class="value">VALUE</div>
-      <div class="label">LABEL</div>
-    </div>
   </template>
 </head>
 
@@ -103,24 +100,25 @@
 
     <!-- Actual page content -->
     <div id="main-content" class="article">
+      <!-- Toolbar -->
       <div id="toolbar" class="ui menu">
         <div class="ui dropdown item">
           <i class="ui sort icon"></i>
           Sort
           <div class="menu">
-            <a class="item" onclick="sortBy('name');">
+            <a class="item" onclick="sortSeries('name');">
               <i class="ui sort alphabet down icon"></i>
               Name
             </a>
-            <a class="item" onclick="sortBy('id');">
+            <a class="item" onclick="sortSeries('id');">
               <i class="ui sort icon"></i>
               Recently Added
             </a>
-            <a class="item" onclick="sortBy('card_count');">
+            <a class="item" onclick="sortSeries('cards');">
               <i class="ui sort amount down icon"></i>
               Title Cards
             </a>
-            <a class="item">
+            <a class="item" onclick="sortSeries('year')">
               <i class="ui sort numeric down icon"></i>
               Year
             </a>
@@ -130,45 +128,53 @@
           <i class="ui solid filter icon"></i>
           Filter
         </a>
+        {% if preferences.home_page_table_view %}
+        <a class="item" data-action="select" onclick="toggleAllSelection();">
+          <i class="exchange alternate icon"></i>
+          Toggle Selection
+        </a>
+        <a class="disabled item" data-action="unselect" onclick="clearSelection();">
+          <i class="times icon"></i>
+          Clear Selection
+        </a>
         <div class="ui dropdown disabled item" data-action="edit">
-          <i class="edit icon"></i>
+          <i class="wrench icon"></i>
           Edit
           <div class="menu">
             <div class="divider"></div>
-            <a class="item" onclick="monitorSelection();">
+            <a class="item" onclick="batchMonitor();">
               <i class="ui eye outline green icon"></i>
               Monitor
             </a>
-            <a class="item" onclick="unmonitorSelection();">
+            <a class="item" onclick="batchUnmonitor();">
               <i class="ui eye slash outline red icon"></i>
               Unmonitor
             </a>
-            <a class="item" onclick="processSelection();">
-              <i class="blue step forward icon"></i>
-              Process
+            <a class="item" onclick="batchProcess();">
+              <i class="ui images outline blue icon"></i>
+              Create Title Cards
             </a>
-            <a class="item" onclick="loadSelection(false);">
+            <a class="item" onclick="batchLoad(false);">
               <i class="hdd outline icon"></i>
               Load Title Cards
             </a>
-            <a class="item" onclick="loadSelection(true);">
+            <a class="item" onclick="batchLoad(true);">
               <i class="hdd outline orange icon"></i>
               Force-Reload Title Cards
             </a>
             <div class="divider"></div>
-            <a class="item" onclick="deleteCardsSelection();">
+            <a class="item" onclick="batchDeleteCards();">
               <i class="red images outline icon"></i>
               Delete Title Cards
             </a>
-            <a class="item" onclick="deleteSeriesSelection();">
+            <a class="item" onclick="batchDeleteSeries();">
               <i class="red trash alternate outline icon"></i>
               Delete Series
             </a>
           </div>
         </div>
+        {% endif %}
       </div>
-
-      <div id="statistics" class="ui small statistics"><!-- Added asynchronously --></div>
 
       <!-- Loader -->
       <div class="loading container">
@@ -176,25 +182,93 @@
         <i class="layer"></i>
         <i class="layer"></i>
       </div>
-
+      
+      <!-- Actual series content, added asynchronously -->
+      {% if preferences.home_page_table_view %}
       <table class="ui basic sortable striped celled table">
         <thead>
           <tr>
             <th class="center aligned collapsing no-sort">Select</th>
             <th class="six wide collapsing">Series</th>
             <th class="center aligned collapsing">Year</th>
-            <th class="center aligned collapsing no-sort">Libraries</th>
+            <th class="center aligned">Libraries</th>
             <th class="center aligned">Title Cards</th>
             <th class="center aligned collapsing">Monitored</th>
-            <th class="center aligned collapsing no-sort">Process</th>
+            <th class="center aligned collapsing no-sort">Create<br>Cards</th>
           </tr>
         </thead>
         <tbody id="series-table"></tbody>
       </table>
-
-      <!-- Actual series content, added asynchronously -->
+      {% else %}
       <div id="series-list" class="ui cards"></div>
+      {% endif %}
       <div id="pagination" class="ui centered pagination menu"><!-- Pagination added later --></div>
+      
+      <!-- Statistics -->
+      <div class="ui equal width grid">
+        <div class="column">
+          <div class="ui mini horizontal statistics">
+            <div class="ui statistic" data-value="series">
+              <div class="value">x</div>
+              <div class="label">Series</div>
+            </div>
+            <div class="ui statistic" data-value="monitored">
+              <div class="value">x</div>
+              <div class="label">Monitored</div>
+            </div>
+            <div class="ui statistic" data-value="unmonitored">
+              <div class="value">x</div>
+              <div class="label">Unmonitored</div>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="ui mini horizontal statistics">
+            <a href="/card-templates">
+              <div class="ui statistic" data-value="templates">
+                <div class="value">x</div>
+                <div class="label">Templates</div>
+              </div>
+            </a>
+            <a href="/fonts">
+              <div class="ui statistic" data-value="fonts">
+                <div class="value">x</div>
+                <div class="label">Fonts</div>
+              </div>
+            </a>
+            <a href="/sync">
+              <div class="ui statistic" data-value="syncs">
+                <div class="value">x</div>
+                <div class="label">Syncs</div>
+              </div>
+            </a>
+          </div>
+        </div>
+        <div class="column">
+          <div class="ui mini horizontal statistics">
+            <div class="ui statistic" data-value="episodes">
+              <div class="value">x</div>
+              <div class="label">Episodes</div>
+            </div>
+            <div class="ui statistic" data-value="title-cards">
+              <div class="value">x</div>
+              <div class="label">Cards</div>
+            </div>
+            <div class="ui statistic" data-value="loaded-title-cards">
+              <div class="value">x</div>
+              <div class="label">Loaded Cards</div>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="ui mini horizontal statistics">
+            <div class="ui statistic" data-value="filesize">
+              <div class="value">x</div>
+              <div class="label">Mega-tera-giga-bytes</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Modals -->
       <div id="filter-modal" class="ui small scrolling modal">

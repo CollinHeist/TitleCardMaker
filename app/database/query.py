@@ -1,11 +1,17 @@
-from typing import Any, Optional
+from typing import Any, Literal, Optional, TypeVar, Union, overload
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app import models
+from app.database.session import Base
+from app.dependencies import (
+    EmbyInterface, EmbyInterfaces, JellyfinInterface, JellyfinInterfaces,
+    PlexInterface, PlexInterfaces, SonarrInterface, SonarrInterfaces,
+    TMDbInterface, TMDbInterfaces,
+)
 from app.models.blueprint import Blueprint
 from app.models.card import Card
+from app.models.connection import Connection
 from app.models.episode import Episode
 from app.models.font import Font
 from app.models.series import Series
@@ -14,20 +20,22 @@ from app.models.template import Template
 
 from modules.Debug import log
 
+_ObjectType = TypeVar('_ObjectType', bound=Base)
+
 
 def _get_obj(
         db: Session,
-        model: Any,
+        model: _ObjectType,
         model_name: str,
         object_id: int,
         raise_exc: bool = True
-    ) -> Optional[Any]:
+    ) -> Optional[_ObjectType]:
     """
-    Get the Object from the Database with the given ID.
+    Get the Object from the database with the given ID.
 
     Args:
-        db: SQL Database to query for the given object.
-        model: SQL model to filter the SQL Database Table by.
+        db: SQL database to query for the given object.
+        model: SQL model to filter the SQL database Table by.
         model_name: Name of the Model for logging.
         object_id: ID of the Object to query for.
         raise_exc: Whether to raise 404 if the given object does not
@@ -63,6 +71,12 @@ def _get_obj(
     return obj
 
 
+@overload
+def get_blueprint(
+        db: Session, blueprint_id: int, *, raise_exc: Literal[True] = True
+    ) -> Blueprint:
+    ...
+
 def get_blueprint(
         db: Session,
         blueprint_id: int,
@@ -77,6 +91,12 @@ def get_blueprint(
 
     return _get_obj(db, Blueprint, 'Blueprint', blueprint_id, raise_exc)
 
+
+@overload
+def get_card(
+        db: Session, card_id: int, *, raise_exc: Literal[True] = True,
+    ) -> Card:
+    ...
 
 def get_card(
         db: Session,
@@ -93,6 +113,34 @@ def get_card(
     return _get_obj(db, Card, 'Card', card_id, raise_exc)
 
 
+@overload
+def get_connection(
+        db: Session, connection_id: int, *, raise_exc: Literal[True] = True,
+    ) -> Connection:
+    ...
+
+def get_connection(
+        db: Session,
+        connection_id: int,
+        /,
+        *,
+        raise_exc: bool = True,
+    ) -> Optional[Connection]:
+    """
+    Get the Connection with the given ID from the given Database.
+
+    See `_get_obj` for all details.
+    """
+
+    return _get_obj(db, Connection, 'Connection', connection_id, raise_exc)
+
+
+@overload
+def get_episode(
+        db: Session, episode_id: int, *, raise_exc: Literal[True] = True,
+    ) -> Episode:
+    ...
+
 def get_episode(
         db: Session,
         episode_id: int,
@@ -105,8 +153,14 @@ def get_episode(
     See `_get_obj` for all details.
     """
 
-    return _get_obj(db, models.episode.Episode, 'Episode', episode_id,raise_exc)
+    return _get_obj(db, Episode, 'Episode', episode_id, raise_exc)
 
+
+@overload
+def get_font(
+        db: Session, font_id: int, *, raise_exc: Literal[True] = True,
+    ) -> Font:
+    ...
 
 def get_font(
         db: Session,
@@ -120,8 +174,14 @@ def get_font(
     See `_get_obj` docstring for all details.
     """
 
-    return _get_obj(db, models.font.Font, 'Font', font_id, raise_exc)
+    return _get_obj(db, Font, 'Font', font_id, raise_exc)
 
+
+@overload
+def get_series(
+        db: Session, series_id: int, *, raise_exc: Literal[True] = True,
+    ) -> Series:
+    ...
 
 def get_series(
         db: Session,
@@ -135,8 +195,14 @@ def get_series(
     See `_get_obj` for all details.
     """
 
-    return _get_obj(db, models.series.Series, 'Series', series_id, raise_exc)
+    return _get_obj(db, Series, 'Series', series_id, raise_exc)
 
+
+@overload
+def get_sync(
+        db: Session, sync_id: int, *, raise_exc: Literal[True] = True,
+    ) -> Sync:
+    ...
 
 def get_sync(
         db: Session,
@@ -150,8 +216,14 @@ def get_sync(
     See `_get_obj` for all details.
     """
 
-    return _get_obj(db, models.sync.Sync, 'Sync', sync_id, raise_exc)
+    return _get_obj(db, Sync, 'Sync', sync_id, raise_exc)
 
+
+@overload
+def get_template(
+        db: Session, template_id: int, *, raise_exc: Literal[True] = True,
+    ) -> Template:
+    ...
 
 def get_template(
         db: Session,
@@ -165,9 +237,14 @@ def get_template(
     See `_get_obj` for all details.
     """
 
-    return _get_obj(
-        db, models.template.Template, 'Template', template_id, raise_exc
-    )
+    return _get_obj(db, Template, 'Template', template_id, raise_exc)
+
+
+@overload
+def get_all_templates(
+        db: Session, obj_dict: dict, *, raise_exc: Literal[True] = True,
+    ) -> list[Template]:
+    ...
 
 
 def get_all_templates(
@@ -175,7 +252,7 @@ def get_all_templates(
         obj_dict: dict,
         *,
         raise_exc: bool = True,
-    ) -> list[Template]:
+    ) -> Optional[list[Template]]:
     """
     Get all Templates defined in the given Dictionaries "template_ids"
     key. This removes the "template_ids" key from obj_dict.
@@ -190,8 +267,8 @@ def get_all_templates(
         indicated ID's.
 
     Raises:
-        HTTPException (404) if any of the indicated Templates do not
-        exist and `raise_exc` is True.
+        HTTPException (404): Any of the indicated Templates do not exist
+            and `raise_exc` is True.
     """
 
     if not (template_ids := obj_dict.pop('template_ids', [])):
@@ -201,3 +278,63 @@ def get_all_templates(
         get_template(db, template_id, raise_exc=raise_exc)
         for template_id in template_ids
     ]
+
+
+@overload
+def get_interface(
+        interface_id: int, *, raise_exc: Literal[True] = True,
+    ) -> Union[EmbyInterface, JellyfinInterface, PlexInterface, SonarrInterface,
+               TMDbInterface]:
+    ...
+
+def get_interface(
+        interface_id: int,
+        *,
+        raise_exc: bool = True,
+    ) -> Optional[Union[EmbyInterface, JellyfinInterface, PlexInterface,
+                        SonarrInterface, TMDbInterface]]:
+    """
+    Get the `Interface` to communicate with the service with the given
+    ID. This searches all the global `InterfaceGroup` for each service.
+
+    Args:
+        interface_id: ID of the Interface to return.
+        raise_exc: Whether to raise an `HTTPException` if there is no
+            Interface with this ID.
+
+    Returns:
+        `Interface` with the given ID, or None (if `raise_exc` is False).
+    """
+
+    # Look for interface under each type
+    interface = None
+    if not interface and interface_id in EmbyInterfaces:
+        interface = EmbyInterfaces[interface_id]
+
+    if not interface and interface_id in JellyfinInterfaces:
+        interface = JellyfinInterfaces[interface_id]
+
+    if not interface and interface_id in PlexInterfaces:
+        interface = PlexInterfaces[interface_id]
+
+    if not interface and interface_id in SonarrInterfaces:
+        interface = SonarrInterfaces[interface_id]
+
+    if not interface and interface_id in TMDbInterfaces:
+        interface = TMDbInterfaces[interface_id]
+
+    # If defined (and activated), return
+    if interface:
+        return interface
+
+    # Not defined / activated, raise or return None
+    if raise_exc:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f'No Connection with {interface_id} - Connection might be '
+                f'disabled or invalid'
+            )
+        )
+
+    return None

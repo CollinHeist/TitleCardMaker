@@ -1,58 +1,20 @@
 from logging import Logger
-from time import sleep
 
-from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
-from app.dependencies import get_database, get_tmdb_interface
+from app.dependencies import get_tmdb_interfaces
 from app.internal.templates import get_effective_templates
-from app import models
 from app.schemas.episode import Episode
 
 from modules.Debug import log
 from modules.TieredSettings import TieredSettings
-from modules.TMDbInterface2 import TMDbInterface
-
-
-def translate_all_series(*, log: Logger = log) -> None:
-    """
-    Schedule-able function to add missing translations to all Series and
-    Episodes in the Database.
-    """
-
-    try:
-        # Cannot translate if no TMDbInterface
-        if (tmdb_interface := get_tmdb_interface()) is None:
-            log.warning(f'Not translating any Episodes - no TMDbInterface')
-            return None
-
-        # Get the Database
-        with next(get_database()) as db:
-            # Get all Series
-            all_series = db.query(models.series.Series).all()
-            for series in all_series:
-                if not series.monitored:
-                    log.debug(f'{series.log_str} is Unmonitored, skipping')
-                    continue
-
-                # Translate each Episode
-                try:
-                    for episode in series.episodes:
-                        translate_episode(db, episode, tmdb_interface, log=log)
-                except OperationalError:
-                    log.debug(f'Database is busy, sleeping..')
-                    sleep(30)
-    except Exception as e:
-        log.exception(f'Failed to add translations - {e}', e)
-
-    return None
 
 
 def translate_episode(
         db: Session,
         episode: Episode,
-        tmdb_interface: TMDbInterface,
         *,
+        commit: bool = True,
         log: Logger = log,
     ) -> None:
     """
@@ -63,9 +25,13 @@ def translate_episode(
         series_template: Template of the Series that can define
             translations.
         episode: Episode to translate and add translations to.
-        tmdb_interface: TMDbInterface to query for translations.
-        log: (Keyword) Logger for all log messages.
+        commit: Whether to commit the translations to the database.
+        log: Logger for all log messages.
     """
+
+    # Skip if there are no TMDbInterfaces
+    if not get_tmdb_interfaces():
+        return None
 
     # Get the Series and Episode Template
     series = episode.series
@@ -94,22 +60,20 @@ def translate_episode(
             continue
 
         # Get new translation from TMDb, add to Episode
-        translation = tmdb_interface.get_episode_title(
-            series.as_series_info, episode.as_episode_info, language_code,
-            log=log,
-        )
-        if translation is None:
-            log.debug(f'{series.log_str} {episode.log_str} - no translation '
-                      f'available for "{language_code}"')
-            continue
-
-        episode.translations[data_key] = translation
-        log.info(f'{series.log_str} {episode.log_str} translated '
-                    f'{language_code} -> "{translation}" -> {data_key}')
-        changed = True
+        for _, interface in get_tmdb_interfaces():
+            translation = interface.get_episode_title(
+                series.as_series_info, episode.as_episode_info, language_code,
+                log=log,
+            )
+            if translation is not None:
+                episode.translations[data_key] = translation
+                log.info(f'{series.log_str} {episode.log_str} translated '
+                         f'{language_code} -> "{translation}" -> {data_key}')
+                changed = True
+                break
 
     # If any translations were added, commit updates to database
-    if changed:
+    if commit and changed:
         db.commit()
 
     return None

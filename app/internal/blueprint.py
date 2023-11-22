@@ -7,10 +7,10 @@ from fastapi import HTTPException
 from requests import get
 from sqlalchemy.orm import Session
 
+from app.dependencies import get_preferences
 from app.models.blueprint import Blueprint, BlueprintSeries
 from app.models.episode import Episode
 from app.models.font import Font
-from app.models.preferences import Preferences
 from app.models.series import Series
 from app.models.template import Template
 from app.schemas.blueprint import ExportBlueprint
@@ -101,7 +101,6 @@ def generate_series_blueprint(
         raw_episode_data: list[EpisodeInfo],
         include_global_defaults: bool,
         include_episode_overrides: bool,
-        preferences: Preferences,
     ) -> ExportBlueprint:
     """
     Generate the Blueprint for the given Series. This Blueprint can be
@@ -116,7 +115,6 @@ def generate_series_blueprint(
         include_episode_overrides: Whether to include Episode-level
             overrides in the exported Blueprint. If True, then any
             Episode Font and Template assignments are also included.
-        preferences: Global default Preferences.
 
     Returns:
         Blueprint that can be used to recreate the Series configuration.
@@ -141,7 +139,7 @@ def generate_series_blueprint(
     # Append Series config
     if include_global_defaults:
         export_obj['series'] = TieredSettings.new_settings(
-            preferences.export_properties,
+            get_preferences().export_properties,
             series.export_properties,
         )
     else:
@@ -257,10 +255,10 @@ def query_series_blueprints(
     blueprint_series = blueprint_db.query(BlueprintSeries)\
         .filter(series_info.filter_conditions(BlueprintSeries))\
         .first()
-    print(f'{blueprint_series=}')
+
     if blueprint_series is None:
         return []
-    print(f'Matched to BlueprintSeries[{blueprint_series.id}]')
+
     return blueprint_db.query(Blueprint)\
         .filter_by(series_id=blueprint_series.id)\
         .all()
@@ -268,7 +266,6 @@ def query_series_blueprints(
 
 def import_blueprint(
         db: Session,
-        preferences: Preferences,
         series: Series,
         blueprint: Blueprint,
         *,
@@ -280,7 +277,6 @@ def import_blueprint(
     Args:
         db: Database to add any imported Fonts, and Templates, and to
             query for existing Episodes.
-        preferences: Preferences to use for the asset directory.
         series: Series the imported Blueprint is affecting.
         blueprint: Blueprint to parse for imported settings.
         log: Logger for all log messages.
@@ -326,7 +322,7 @@ def import_blueprint(
 
         # Download Font file if provided
         if font_content:
-            font_directory = preferences.asset_directory / 'fonts'
+            font_directory = get_preferences().asset_directory / 'fonts'
             file_path = font_directory / str(new_font.id) / font.file
             file_path.parent.mkdir(exist_ok=True, parents=True)
             file_path.write_bytes(font_content)
@@ -446,6 +442,7 @@ def import_blueprint(
             log.debug(f'Wrote {len(response.content)} bytes to "{filename}"')
 
     # Add ID to imported set
+    preferences = get_preferences()
     preferences.imported_blueprints.add(blueprint.id)
     preferences.commit()
 

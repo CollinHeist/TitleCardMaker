@@ -7,10 +7,10 @@ from typing import Any, Literal, Optional
 from fastapi import HTTPException
 
 from modules.Debug import log
-from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult
+from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult, WatchedStatus
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
-from modules.SeriesInfo import SeriesInfo
+from modules.SeriesInfo2 import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
@@ -24,6 +24,8 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
     EpisodeDataSource, WebInterface, and SyncInterface object which
     connects to an instance of Sonarr.
     """
+
+    INTERFACE_TYPE = 'Sonarr'
 
     """Use a longer request timeout for Sonarr to handle slow databases"""
     REQUEST_TIMEOUT = 600
@@ -47,9 +49,10 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             api_key: str,
             verify_ssl: bool = True,
             downloaded_only: bool = True,
-            server_id: int = 0,
             *,
+            interface_id: int = 0,
             log: Logger = log,
+            **_,
         ) -> None:
         """
         Construct a new instance of an interface to Sonarr.
@@ -60,8 +63,8 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             verify_ssl: Whether to verify SSL requests to Sonarr.
             downloaded_only: Whether to ignore Episode that are not
                 downloaded when querying Sonarr for Episode data.
-            server_id: Server ID of this server.
-            log: (Keyword) Logger for all log messages.
+            interface_id: Interface ID of this interface.
+            log: Logger for all log messages.
 
         Raises:
             HTTPException (401) if the Sonarr system status cannot be
@@ -87,7 +90,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
 
         # Base parameters for sending requests to Sonarr
         self.__standard_params = {'apikey': api_key}
-        self.server_id = server_id
+        self.server_id = interface_id
         self.downloaded_only = downloaded_only
 
         # Query system status to verify connection to Sonarr
@@ -133,23 +136,25 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             log: Logger = log,
         ) -> list[tuple[SeriesInfo, str]]:
         """
-        Get all the series within Sonarr, filtered by the given parameters.
+        Get all the series within Sonarr, filtered by the given
+        parameters.
 
          Args:
-            required_tags: List of tags to filter return by. If provided, only
-                series that have all of the given tags are returned.
-            excluded_tags: List of tags to filter return by. If provided, series
-                with any of the given tags are excluded from return.
-            monitored_only: Whether to filter return to exclude series that are
-                unmonitored within Sonarr.
-            downloaded_only: Whether to filter return to exclude series that do
-                not have any downloaded episodes.
+            required_tags: List of tags to filter return by. Only series
+                that have all of the given tags are returned.
+            excluded_tags: List of tags to filter return by. Series with
+                any of the given tags are excluded from return.
+            monitored_only: Whether to filter return to exclude series
+                that are unmonitored within Sonarr.
+            downloaded_only: Whether to filter return to exclude series
+                that do not have any downloaded episodes.
             series_type: Optional series type to filter series by.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
-            List of tuples. Tuple contains the SeriesInfo object for the series,
-            and the Path to the series' media as reported by Sonarr.
+            List of tuples. Tuple contains the SeriesInfo object for the
+            series, and the Path to the series' media as reported by
+            Sonarr.
         """
 
         # Construct GET arguments
@@ -190,12 +195,12 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
                 or show['year'] == 0):
                 continue
 
-            # Construct SeriesInfo object for this show, do not use MediaInfoSet
+            # Construct SeriesInfo object for this show
             series_info = SeriesInfo(
                 show['title'],
                 show['year'],
                 imdb_id=show.get('imdbId'),
-                sonarr_id=f'{self.server_id}-{show.get("id")}',
+                sonarr_id=f'{self.server_id}:{show.get("id")}',
                 tvdb_id=show.get('tvdbId'),
                 tvrage_id=show.get('tvRageId'),
             )
@@ -207,7 +212,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
 
 
     def set_series_ids(self,
-            library_name: Any,
+            library_name: str,
             series_info: SeriesInfo,
             *,
             log: Logger = log,
@@ -218,15 +223,15 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
         Args:
             library_name: Unused argument.
             series_info: SeriesInfo to update.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # If all possible ID's are defined, exit
-        if series_info.has_ids(*self.SERIES_IDS):
+        if series_info.has_ids(*self.SERIES_IDS, interface_id=self.server_id):
             return None
 
         # Search for Series
-        search_results = self.get(
+        search_results: list[dict] = self.get(
             url=f'{self.url}series/lookup',
             params={'term': series_info.name} | self.__standard_params,
         )
@@ -251,9 +256,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
 
             # Add Sonarr ID if added to this server
             if (sonarr_id := series.get('id')) is not None:
-                reference_series_info.set_sonarr_id(
-                    f'{self.server_id}-{sonarr_id}'
-                )
+                reference_series_info.set_sonarr_id(sonarr_id, self.server_id)
             else:
                 log.debug(f'Found {series_info} via Sonarr, but not in server')
 
@@ -274,7 +277,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
 
         Args:
             query: Series name or substring to look up.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of SearchResults for the given query. Results include
@@ -299,22 +302,19 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
                 images: List of image types/URL's to parse for a poster.
 
             Returns:
-                Proxied URL for the poster, if provided. If no images
-                are provided or available, then `None` is returned.
+                Proxied URL for the poster, if provided. None if there
+                are no valid posters.
             """
-
-            if len(images) == 0:
-                return None
 
             for image in images:
                 if image['coverType'] == 'poster':
                     url = image['url'].rsplit('?', maxsplit=1)[0]
-                    return f'/api/proxy/sonarr?url={url}'
+                    return f'/api/proxy/sonarr?url={url}&interface_id={self.server_id}'
 
             return None
 
         def get_sonarr_id(id_: Optional[int]) -> Optional[str]:
-            return None if id_ is None else f'{self.server_id}-{id_}'
+            return None if id_ is None else f'{self.server_id}:{id_}'
 
         return [
             SearchResult(
@@ -336,7 +336,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             series_info: SeriesInfo,
             *,
             log: Logger = log,
-        ) -> list[tuple[EpisodeInfo, Optional[bool]]]:
+        ) -> list[tuple[EpisodeInfo, WatchedStatus]]:
         """
         Gets all episode info for the given series. Only episodes that
         have  already aired are returned.
@@ -344,7 +344,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
         Args:
             library_name: Unused argument.
             series_info: SeriesInfo for the entry.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             List of tuples of the EpisodeInfo objects and None (as the
@@ -353,14 +353,14 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
         """
 
         # If no ID was returned, error and return an empty list
-        if not series_info.has_id('sonarr_id'):
+        if not series_info.has_id('sonarr_id', self.server_id):
             log.warning(f'Series "{series_info}" not found in Sonarr')
             return []
 
         # Construct GET arguments
         url = f'{self.url}episode/'
         params = {
-            'seriesId': int(series_info.sonarr_id.split('-')[1])
+            'seriesId': series_info.sonarr_id[self.server_id]
         } | self.__standard_params
 
         # Query Sonarr to get JSON of all episodes for this series
@@ -414,7 +414,10 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
 
             # Add to episode list
             if episode_info is not None:
-                all_episode_info.append((episode_info, None))
+                all_episode_info.append((
+                    episode_info,
+                    WatchedStatus(self.server_id),
+                ))
 
         # If any episodes had TVDb ID's of 0, then warn user to refresh series
         if has_bad_ids:
@@ -439,7 +442,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             library_name: Unused argument.
             series_info: SeriesInfo for the entry.
             episode_infos: List of EpisodeInfo objects to update.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
         """
 
         # Get all episodes for this series
