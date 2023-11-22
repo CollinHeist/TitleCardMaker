@@ -27,7 +27,7 @@ function timeDiffString(next_run) {
   if (diffSeconds % 60 > 1) { timeUnits.push(`<span class="ui teal text">${diffSeconds%60}</span> seconds`); }
   else if (diffSeconds % 60 > 0) { timeUnits.push(`<span class="ui teal text">${diffSeconds%60}</span> second`); }
 
-  return inStr = timeUnits.slice(0, 2).join(', ');
+  return timeUnits.slice(0, 2).join(', ');
 }
 
 /**
