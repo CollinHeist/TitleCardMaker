@@ -1,20 +1,18 @@
 from datetime import datetime
-from logging import Logger
 
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
 from app.database.session import Base
-from modules.Debug import log
 
 
-class Statistic(Base):
+class Snapshot(Base):
     """
-    SQL Table that defines a Statistic. This is essentially a
+    SQL Table that defines a Snapshot. This is essentially a
     timestamped count of the database for chart generation.
     """
 
-    __tablename__ = 'statistic'
+    __tablename__ = 'snapshot'
 
     # Referencial arguments
     id: Mapped[int] = mapped_column(primary_key=True, index=True)

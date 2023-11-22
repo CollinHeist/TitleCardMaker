@@ -11,10 +11,11 @@ from app.models.font import Font
 from app.models.loaded import Loaded
 from app.models.preferences import Preferences
 from app.models.series import Series
+from app.models.snapshot import Snapshot as SnapshotModel
 from app.models.sync import Sync
 from app.models.template import Template
 from app.schemas.statistic import (
-    Statistic, CardCount, EpisodeCount, AssetSize
+    Snapshot, Statistic, CardCount, EpisodeCount, AssetSize
 )
 
 
@@ -25,7 +26,7 @@ statistics_router = APIRouter(
 )
 
 
-@statistics_router.get('/', status_code=200)
+@statistics_router.get('/')
 def get_all_statistics(
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
@@ -91,7 +92,7 @@ def get_all_statistics(
     ]
 
 
-@statistics_router.get('/series/{series_id}', status_code=200)
+@statistics_router.get('/series/{series_id}')
 def get_series_statistics(
         series_id: int,
         db: Session = Depends(get_database),
@@ -123,3 +124,12 @@ def get_series_statistics(
             unit=preferences.format_filesize(asset_size)[1],
         ),
     ]
+
+
+@statistics_router.get('/snapshots')
+def get_snapshots(db: Session = Depends(get_database)) -> list[Snapshot]:
+    """
+    
+    """
+
+    return db.query(SnapshotModel).all()

@@ -199,6 +199,13 @@ BaseJobs = {
         crontab='0 0 */1 * *',
         description='Set Series IDs',
         internal=True,
+    ), INTERNAL_JOB_SNAPSHOT_DATABASE: NewJob(
+        id=INTERNAL_JOB_SNAPSHOT_DATABASE,
+        function=wrapped_snapshot_database,
+        seconds=60 * 30,
+        crontab='*/30 * * * *',
+        description='Take a snapshot of the database',
+        internal=True,
     ),
 }
 

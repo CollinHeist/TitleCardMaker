@@ -1,4 +1,4 @@
-"""Add Statistic Table
+"""Add Snapshot Table
 
 Revision ID: 48872195483e
 Revises: 5318f59eadbf
@@ -21,7 +21,7 @@ def upgrade() -> None:
     log = contextualize()
     log.debug(f'Upgrading SQL Schema to Version[{revision}]..')
 
-    op.create_table('statistic',
+    op.create_table('snapshot',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('timestamp', sa.DateTime(), nullable=False),
         sa.Column('blueprints', sa.Integer(), nullable=False),
@@ -37,8 +37,8 @@ def upgrade() -> None:
         sa.Column('cards_created', sa.Integer(), nullable=False),
         sa.PrimaryKeyConstraint('id')
     )
-    with op.batch_alter_table('statistic', schema=None) as batch_op:
-        batch_op.create_index(batch_op.f('ix_statistic_id'), ['id'], unique=False)
+    with op.batch_alter_table('snapshot', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_snapshot_id'), ['id'], unique=False)
 
     log.debug(f'Upgraded SQL Schema to Version[{revision}]')
 
@@ -47,9 +47,9 @@ def downgrade() -> None:
     log = contextualize()
     log.debug(f'Downgrading SQL Schema to Version[{down_revision}]..')
 
-    with op.batch_alter_table('statistic', schema=None) as batch_op:
-        batch_op.drop_index(batch_op.f('ix_statistic_id'))
+    with op.batch_alter_table('snapshot', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_snapshot_id'))
 
-    op.drop_table('statistic')
+    op.drop_table('snapshot')
 
     log.debug(f'Downgraded SQL Schema to Version[{down_revision}]')
