@@ -260,19 +260,21 @@ def download_episode_source_image(
         commit: bool = True,
         raise_exc: bool = False,
         log: Logger = log,
-    ) -> list[str]:
+    ) -> str:
     """
     Download the source image for the given Episode.
 
     Args:
         db: Database to update.
         episode: Episode whose source image is being downloaded.
+        library: Library associated with this Episode - used for source
+            setting and Template evaluation(s).
         commit: Whether to commit any database changes.
         raise_exc: Whether to raise any HTTPExceptions.
         log: Logger for all log messages.
 
     Returns:
-        List of URIs to the Episode source images.
+        URI to the Episode source image.
 
     Raises:
         HTTPException (400): The image cannot be downloaded.
