@@ -250,7 +250,6 @@ def process_series(
 
     # Update watch statuses
     get_watched_statuses(db, series, series.episodes, log=log)
-    db.commit()
 
     # Begin downloading Source images - use BackgroundTasks
     log.debug(f'{series.log_str} Started downloading source images')

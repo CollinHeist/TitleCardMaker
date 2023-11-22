@@ -363,15 +363,15 @@ def resolve_card_settings(
         {'logo_file': series.get_logo_file(preferences.source_directory)},
         episode_template_dict,
         episode_font_dict,
-        episode.card_properties,
+        episode.get_card_properties(library),
     )
 
     # Resolve all extras
     card_extras = TieredSettings.new_settings(
         series_template_dict.get('extras', {}),
-        series.card_properties.get('extras', {}),
+        series.extras,
         episode_template_dict.get('extras', {}),
-        episode.card_properties.get('extras', {}),
+        episode.extras,
     )
 
     # Override settings with extras, and merge translations into extras

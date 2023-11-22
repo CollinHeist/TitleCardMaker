@@ -1,4 +1,4 @@
-/*
+/**
 * Get all the defined non-Sonarr Connections and update the allConnections
 * list.
 */
@@ -8,7 +8,7 @@ async function getAllConnections() {
   allConnections = allC.filter(connection => connection.interface_type !== 'Sonarr' && connection.interface_type !== 'TMDb');
 }
 
-/*
+/**
  * Get the global logo language priority, and initialize the dropdown
  * with those values.
  */
@@ -17,7 +17,7 @@ async function getAvailableLanguages() {
   availableLanguages = await fetch('/api/available/logo-languages').then(resp => resp.json());
 }
 
-/*
+/**
  * Submit the API request to enable authentication. If successful the page
  * is redirected to the login page with a callback to redirect back here
  * if the subsequent login is successful.
@@ -43,7 +43,7 @@ function enableAuthentication() {
   });
 }
 
-/*
+/**
  * Submit the API request to disable authentication. If successful the
  * authentication section is disabled.
  */
@@ -65,7 +65,7 @@ function disableAuthentication() {
   });
 }
 
-/*
+/**
  * Submit the API request to edit the current active User's credentials.
  * If successful, the TCM token cookie is cleared, and the page is
  * redirected to the login page with a callback to redirect back here.
@@ -99,7 +99,7 @@ function editUserAuth() {
   });
 }
 
-/*
+/**
  * Initialize the Authorization form/section. This populates the current
  * User's username (if applicable), enabled/disables fields, and assigns
  * functions to all events/presses.
@@ -141,7 +141,7 @@ function initializeAuthForm() {
   });
 }
 
-/*
+/**
  * Add form validation for all the non-Auth and Tautulli connection
  * forms.
  */
@@ -204,9 +204,11 @@ function addFormValidation() {
   });
 }
 
-/*
+/**
  * Add form validation to the Tautulli integration form, and assign the
  * API request to the form submission.
+ * @param {int} plexInterfaceId - ID of the Plex interface associated with the
+ * Tautulli instance.
  */
 function initializeTautulliForm(plexInterfaceId) {
   // Add form validation
@@ -250,9 +252,10 @@ function initializeTautulliForm(plexInterfaceId) {
   });
 }
 
-/*
+/**
  * Add the required HTML elements for a new Sonarr library field to the Form
  * of the Connection with the given ID.
+ * @param {int} connectionId - ID of the Connection whose form to add fields to.
  */
 function addSonarrLibraryField(connectionId) {
   // Add interface_id dropdown
@@ -273,9 +276,15 @@ function addSonarrLibraryField(connectionId) {
   refreshTheme();
 }
 
-/*
+/**
  * Submit an API request to update the given Connection. This parses the given
  * form, and adds any checkboxes or given jsonData to the submitted JSON object.
+ * @param {HTMLFormElement} form - Form with Connection details to parse.
+ * @param {int} connectionId - ID of the Connection being updated.
+ * @param {"Emby" | "Plex" | "Jellyfin" | "Sonarr" | "TMDb"} connectionType -
+ * Type of Connection being modified.
+ * @param {Object} jsonData - Extra JSON data to include in the API request
+ * payload.
  */
 function updateConnection(form, connectionId, connectionType, jsonData) {
   $(`#connection${connectionId} .button[data-action="save"]`).toggleClass('loading', true);
@@ -314,12 +323,15 @@ function _deleteConnectionRequest(connectionId, deleteCards=false) {
   });
 }
 
-/*
+/**
  * Display a temporary modal which asks the user to confirm the Connection
  * deletion. If confirmed, then submit an API request to delete the Connection
  * with the given ID. If that is successful, then the HTML element(s) for this
  * Connection are removed from the page and the Sonarr connections are
  * re-initialized (so they may display the correct library dropdowns).
+ * @param {int} connectionId - ID of the Connection being deleted.
+ * @param {boolean} [isMediaServer] - Whether the Connection is a media server.
+ * If true, then the indicated warning text is slightly modified.
  */
 function deleteConnection(connectionId, isMediaServer=false) {
   // Internal modal content
@@ -364,7 +376,7 @@ function deleteConnection(connectionId, isMediaServer=false) {
   }).modal('show');
 }
 
-/*
+/**
  * Initialize the Emby portion of the page with all Emby Connections.
  */
 function initializeEmby() {
@@ -444,7 +456,8 @@ function initializeEmby() {
           deleteConnection(connection.id, true);
         });
       });
-    }, error: response => showErrorToast({title: 'Error Querying Emby Connections', response}),
+    },
+    error: response => showErrorToast({title: 'Error Querying Emby Connections', response}),
     complete: () => {
       addFormValidation();
       refreshTheme();
@@ -452,7 +465,7 @@ function initializeEmby() {
   });
 }
 
-/*
+/**
  * Initialize the Jellyfin portion of the page with all Jellyfin Connections.
  */
 function initializeJellyfin() {
