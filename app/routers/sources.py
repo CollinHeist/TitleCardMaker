@@ -9,7 +9,7 @@ from PIL import Image, ImageOps
 from requests import get
 from sqlalchemy.orm import Session
 
-from app.database.query import get_episode, get_series
+from app.database.query import get_connection, get_episode, get_series
 from app.database.session import Page
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.auth import get_current_user
@@ -359,7 +359,9 @@ async def set_episode_source_image(
         episode_id: int,
         url: Optional[str] = Form(default=None),
         file: Optional[UploadFile] = None,
+        interface_id: Optional[int] = Query(default=None),
         db: Session = Depends(get_database),
+        plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
     ) -> SourceImage:
     """
     Set the Source Image for the given Episode. If there is an existing
@@ -369,6 +371,8 @@ async def set_episode_source_image(
     - episode_id: ID of the Episode to set the Source Image of.
     - url: URL to the Source Image to download and utilize.
     - file: Source Image file content to utilize.
+    - interface_id: ID of the interface associated with the proxy URL;
+    only required if `url` is a proxied API URL from Plex.
     """
 
     # Get contextual logger
@@ -398,6 +402,28 @@ async def set_episode_source_image(
 
     # If only URL was required, attempt to download, error if unable
     if url is not None:
+        # If proxied, de-proxy using associated interface
+        if url.startswith('/api/proxy/plex?url='):
+            # Use first Plex Connection if no ID provided
+            if interface_id is None:
+                interface_id = plex_interfaces.first_interface_id
+
+            # If no interface ID, raise
+            if interface_id is None:
+                raise HTTPException(
+                    status_code=422,
+                    detail='Interface ID is required'
+                )
+
+            # Get Connection with this ID, raise 404 if DNE
+            connection = get_connection(db, interface_id, raise_exc=True)
+
+            url = url.split('/api/proxy/plex?url=', maxsplit=1)[1]
+            if connection.url.endswith('/'):
+                url = connection.url[:-1] + url
+            else:
+                url = connection.url + url
+
         try:
             content = get(url, timeout=30).content
         except Exception as e:
