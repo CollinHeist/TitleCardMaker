@@ -51,7 +51,7 @@ class Show(YamlReader):
         'logo', 'backdrop', 'file_interface', 'profile', 'season_poster_set',
         'episodes', 'emby_interface', 'jellyfin_interface', 'plex_interface',
         'sonarr_interface', 'tmdb_interface', '__is_archive', 'media_server',
-        'image_source_priority',
+        'image_source_priority', '__auto_hide_seasons',
     )
 
     def __init__(self,
@@ -474,7 +474,7 @@ class Show(YamlReader):
             episode_info: EpisodeInfo for this episode.
 
         Returns:
-            Path for the full title card destination, and None if this
+            Path for the full title card destination, or None if this
             show has no media directory.
         """
 
@@ -500,8 +500,10 @@ class Show(YamlReader):
         self.episodes = {}
 
         # Go through each entry in the file interface
+        seasons = set()
         for entry, given_keys in self.file_interface.read():
             # Create Episode object for this entry, store under key
+            seasons.add(entry['episode_info'].season_number)
             self.episodes[entry['episode_info'].key] = Episode(
                 base_source=self.source_directory,
                 destination=self.__get_destination(entry['episode_info']),
@@ -509,6 +511,11 @@ class Show(YamlReader):
                 given_keys=given_keys,
                 **entry,
             )
+
+        if (not self.__is_archive
+            and self.__auto_hide_seasons 
+            and (seasons - set({0, 1}))):
+            self.hide_seasons = True
 
 
     def add_new_episodes(self) -> None:

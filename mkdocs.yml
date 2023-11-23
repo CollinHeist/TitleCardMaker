@@ -204,6 +204,8 @@ nav:
     # - Scheduler: user_guide/scheduler.md
     # - Importer: user_guide/importer.md
     - Logs: user_guide/logs.md
+    - Setting Priority: user_guide/setting_priority.md
+    # - FAQ: user_guide/faq.md
   - Card Types:
     # - card_types/index.md
     - Local: card_types/local.md
