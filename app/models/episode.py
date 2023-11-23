@@ -1,7 +1,7 @@
 from datetime import datetime
 from logging import Logger
 from pathlib import Path
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING, TypedDict
 
 from sqlalchemy import Column, ForeignKey, String, JSON
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
@@ -11,18 +11,24 @@ from sqlalchemy.orm import Mapped, mapped_column, object_session, relationship
 from app.dependencies import get_preferences
 from app.database.session import Base
 from app.models.template import EpisodeTemplates, Template
+from app.schemas.connection import ServerName
 from app.schemas.preferences import Style
 
 from modules.Debug import log
 from modules.EpisodeDataSource2 import WatchedStatus
 from modules.EpisodeInfo2 import EpisodeInfo
-from modules.Debug import log
 
 if TYPE_CHECKING:
     from app.models.card import Card
     from app.models.font import Font
     from app.models.loaded import Loaded
     from app.models.series import Series
+
+
+class Library(TypedDict):
+    interface: ServerName
+    interface_id: int
+    name: str
 
 
 class Episode(Base):
@@ -190,8 +196,7 @@ class Episode(Base):
         return f'Episode[{self.id}] {self.as_episode_info}'
 
 
-    @property
-    def card_properties(self) -> dict[str, Any]:
+    def get_card_properties(self, library: Optional[Library]) -> dict[str, Any]:
         """
         Properties to utilize and merge in Title Card creation.
 
@@ -199,9 +204,16 @@ class Episode(Base):
             Dictionary of properties.
         """
 
+        watched = None
+        if library:
+            watched = self.get_watched_status(
+                library['interface_id'], library['name']
+            )
+
         return {
             'source_file': self.source_file,
             'card_file': self.card_file,
+            'watched': watched,
             'title': self.translations.get('preferred_title', self.title),
             'match_title': self.match_title,
             'auto_split_title': self.auto_split_title,

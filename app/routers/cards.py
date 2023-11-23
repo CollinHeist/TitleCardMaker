@@ -23,6 +23,7 @@ from app.internal.series import (
     load_all_series_title_cards, load_episode_title_card,
     load_series_title_cards
 )
+from app.internal.snapshot import take_snapshot
 from app.internal.sources import download_episode_source_images
 from app.internal.translate import translate_episode
 from app.models.episode import Episode
@@ -465,9 +466,7 @@ def create_cards_for_plex_rating_keys(
         create_episode_cards(db, None, episode, log=log)
 
         # Add this Series to list of Series to load
-        if episode.series.plex_library_name is None:
-            log.info(f'{episode.series.log_str} has no linked Library - skipping')
-        elif episode.series not in episodes_to_load:
+        if episode not in episodes_to_load:
             episodes_to_load.append(episode)
 
     # Load all Episodes that require reloading
@@ -480,13 +479,14 @@ def create_cards_for_plex_rating_keys(
         db.refresh(episode)
 
         # Reload into all associated libraries
-        for library in series.libraries:
+        for library in episode.series.libraries:
             interface = get_interface(library['interface_id'])
             load_episode_title_card(
-                episode, db, library['name'], library['interface_id'], interface,
-                attempts=6, log=log,
+                episode, db, library['name'], library['interface_id'],
+                interface, attempts=6, log=log,
             )
 
+    take_snapshot(db, log=log)
     return None
 
 
