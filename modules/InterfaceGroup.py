@@ -122,6 +122,17 @@ class InterfaceGroup(Generic[_InterfaceID, _Interface],
             yield interface_id, interface
 
 
+    @property
+    def first_interface_id(self) -> Optional[_InterfaceID]:
+        """The first interface ID with a defined, active Interface."""
+
+        for interface_id, interface in self.interfaces.items():
+            if interface:
+                return interface_id
+
+        return None
+
+
     @classmethod
     def from_argument_list(
             cls: type['InterfaceGroup'],
