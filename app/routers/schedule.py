@@ -18,7 +18,7 @@ from app.internal.series import (
     download_all_series_posters, load_all_media_servers, set_all_series_ids
 )
 from app.internal.sources import download_all_series_logos
-from app.internal.statistic import snapshot_database
+from app.internal.snapshot import snapshot_database
 from app.internal.sync import sync_all
 from app.models.preferences import Preferences
 from app.schemas.schedule import NewJob, ScheduledTask, UpdateSchedule
@@ -129,9 +129,13 @@ def wrapped_backup_database(log: Optional[Logger] = None):
 
 def wrapped_snapshot_database(log: Optional[Logger] = None):
     log = log or contextualize()
-    _wrap_before(INTERNAL_JOB_SNAPSHOT_DATABASE, log=log)
+    # log.info(f'Task[{job_id}] Started execution')
+    BaseJobs[INTERNAL_JOB_SNAPSHOT_DATABASE].previous_start_time = datetime.now()
+    BaseJobs[INTERNAL_JOB_SNAPSHOT_DATABASE].running = True
     snapshot_database(log=log)
-    _wrap_after(INTERNAL_JOB_SNAPSHOT_DATABASE, log=log)
+    BaseJobs[INTERNAL_JOB_SNAPSHOT_DATABASE].previous_end_time = datetime.now()
+    BaseJobs[INTERNAL_JOB_SNAPSHOT_DATABASE].running = False
+    # log.info(f'Task[{job_id}] Finished execution')
 # pylint: enable=missing-function-docstring,redefined-outer-name
 
 """
