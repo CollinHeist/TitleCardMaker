@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Graphs - TitleCardMaker</title>
+  {% include "./html_boilerplate.html" %}
+
+  <script type="text/javascript" defer>
+    {% include "./js/graphs.js" %}
+  </script>
+
+  <link rel="stylesheet" type="text/css" href="/templates/css/logs.css">
+
+  <!-- Templates -->
+  <script>
+    
+  </script>
+</head>
+
+<body onload="initAll();">
+  <div class="pusher">
+    <!-- Static header and sidebar -->
+    <div id="page-header">
+      {% include "./header.html" %}
+    </div>
+    <div id="nav-menu">
+      {% include "./sidebar.html" %}
+    </div>
+
+    <!-- Actual page content -->
+    <div id="main-content" class="article">
+      <h1 class="ui header">System Graphs</h1>
+      
+      <div class="ui equal width grid">
+        <div class="ui column">
+          <canvas id="graph"></canvas>
+          <canvas id="dbCountsGraph"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luxon@^2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@^1"></script>
+</html>
