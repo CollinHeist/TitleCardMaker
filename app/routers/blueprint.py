@@ -173,7 +173,7 @@ async def export_series_blueprint_as_zip(
         for card in cards
         if (not card.model_json.get('blur', False)
             and not card.model_json.get('grayscale', False)
-            and card.exists())
+            and card.exists)
     ]
 
     # Select random Card if possible
