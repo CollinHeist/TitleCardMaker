@@ -531,25 +531,33 @@ def load_episode_title_card(
     """
 
     # Only load if Episode has a Card
-    if not episode.card:
-        log.debug(f'{episode.series.log_str} {episode.log_str} - no associated Card')
+    # Get associated Card
+    card = db.query(Card)\
+        .filter_by(episode_id=episode.id,
+                    interface_id=interface_id,
+                    library_name=library_name)\
+        .first()
+
+    # Only load if Episode has a Card
+    if not card:
+        log.debug(f'{episode.series} {episode} - no associated Card')
         return None
-    card: Card = episode.card[-1]
 
     # Get previously loaded asset for comparison
     previously_loaded = db.query(Loaded)\
         .filter_by(episode_id=episode.id,
                    interface_id=interface_id,
-                   library_name=library_name)
+                   library_name=library_name)\
+        .first()
 
     # If this asset's filesize has not changed, no need to reload
-    if (previously_loaded.first() is not None
-        and previously_loaded.first().filesize == card.filesize):
+    if (previously_loaded is not None
+        and previously_loaded.filesize == card.filesize):
         return True
 
     # New Card is different, delete Loaded entry
-    if previously_loaded.first() is not None:
-        previously_loaded.delete()
+    if previously_loaded is not None:
+        db.delete(previously_loaded)
 
     loaded_assets = []
     for _ in range(attempts):
