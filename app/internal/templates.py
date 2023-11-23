@@ -1,10 +1,20 @@
-from typing import Optional, Union
+from typing import Literal, Optional, Union, overload
 
 from app.dependencies import get_preferences
 from app.models.episode import Episode
 from app.models.series import Library, Series
 from app.models.template import Template
 
+
+@overload
+def get_effective_series_template(
+        series: Series,
+        episode: Optional[Episode] = None,
+        library: Optional[Library] = None,
+        *,
+        as_dict: Literal[True] = False,
+    ) -> dict:
+    ...
 
 def get_effective_series_template(
         series: Series,
