@@ -1,16 +1,12 @@
-from typing import Optional
-from pydantic import AnyUrl
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Response
 from requests import get
 from requests.exceptions import Timeout
 from sqlalchemy.orm import Session
 
 from app.database.query import get_connection
-from app.dependencies import get_database, get_preferences, get_tmdb_interfaces
+from app.dependencies import get_database
 from app.internal.auth import get_current_user
-from app.models.preferences import Preferences
-from modules.InterfaceGroup import InterfaceGroup
-from modules.TMDbInterface2 import TMDbInterface
+from modules.Debug import log
 
 
 # Create sub router for all /proxy API requests
@@ -51,6 +47,9 @@ def redirect_plex_url(
     else:
         server_url = connection.url
 
+    # Do not start proxied URL in /
+    url = url[1:] if url.startswith('/') else url
+
     # Redirect using the Connection's token (API key)
     redirected_url = f'{server_url}/{url}?X-Plex-Token={connection.api_key}'
 
@@ -83,8 +82,10 @@ def redirect_sonarr_url(
     # Get Connection with this ID, raise 404 if DNE
     connection = get_connection(db, interface_id, raise_exc=True)
 
-    # Do not end server URL in /
-    if connection.url.endswith('/'):
+    # Remove /api/ endpoint from URL if present; do not end in /
+    if '/api' in connection.url:
+        server_url = connection.url.split('/api')[0]
+    elif connection.url.endswith('/'):
         server_url = connection.url[:-1]
     else:
         server_url = connection.url
@@ -92,6 +93,7 @@ def redirect_sonarr_url(
     # Start redirect URL in /
     url = url if url.startswith('/') else f'/{url}'
     redirected_url = f'{server_url}{url}'
+
     # Query for content, ensure the local `SonarrAuth` cookies are
     # utilized in the request
     try:
