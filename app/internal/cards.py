@@ -57,8 +57,13 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                     else:
                         log.debug(f'{series!r} is Unmonitored, not refreshing Episode data')
 
-                    # Set watch statuses of all Episodes 
-                    get_watched_statuses(db, series, series.episodes, log=log)
+                    # Set watch statuses of all Episodes
+                    try:
+                        get_watched_statuses(
+                            db, series, series.episodes, log=log
+                        )
+                    except HTTPException as exc:
+                        log.debug(f'Cannot query watched statuses of {series} - {exc}')
 
                     # Add translations if monitored
                     if series.monitored:
