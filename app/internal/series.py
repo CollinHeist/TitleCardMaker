@@ -403,37 +403,48 @@ def load_series_title_cards(
     changed, episodes_to_load = False, []
     for episode in series.episodes:
         # Get associated Card
-        card = db.query(Card)\
-            .filter_by(episode_id=episode.id,
-                       interface_id=interface_id,
-                       library_name=library_name)\
-            .first()
+        if len(episode.series.libraries) == 1:
+            card = db.query(Card).filter_by(episode_id=episode.id).first()
+        else:
+            card = db.query(Card)\
+                .filter_by(episode_id=episode.id,
+                           interface_id=interface_id,
+                           library_name=library_name)\
+                .first()
 
         # Only load if Episode has a Card
         if not card:
-            log.debug(f'{series.log_str} {episode.log_str} - no associated Card')
+            log.debug(f'{series} {episode} - no associated Card')
             continue
 
         # Find existing associated Loaded object
-        previously_loaded = db.query(Loaded)\
-            .filter_by(card_id=card.id,
-                       interface_id=interface_id,
-                       library_name=library_name)
+        if len(episode.series.libraries) == 1:
+            previously_loaded = db.query(Loaded).filter_by(card_id=card.id).all()
+        else:
+            previously_loaded = db.query(Loaded)\
+                .filter_by(card_id=card.id,
+                           interface_id=interface_id,
+                           library_name=library_name)\
+                .all()
 
         # No previously loaded Cards, load
-        if previously_loaded.first() is None:
+        if not previously_loaded:
             episodes_to_load.append((episode, card))
             continue
 
         # There is a previously loaded Card, delete entry, reload
-        if (force_reload
-            or (previously_loaded.first() is not None
-                and previously_loaded.first().filesize != card.filesize)):
+        if force_reload or (previously_loaded[0].filesize != card.filesize):
             # Delete previously loaded entries for this server
-            previously_loaded.delete()
+            for loaded in previously_loaded:
+                db.delete(loaded)
             changed = True
             episodes_to_load.append((episode, card))
-        # Episode does not need to be (re)loaded
+        # >1 loaded entry for this Card, delete first entries
+        elif len(previously_loaded) > 1:
+            for loaded in previously_loaded[:-1]:
+                log.debug(f'Deleted {loaded}')
+                db.delete(loaded)
+        # Episode does not need to be reloaded
         else:
             continue
 
@@ -453,8 +464,7 @@ def load_series_title_cards(
                 filesize=loaded_card.filesize,
                 library_name=library_name,
             ))
-            log.debug(f'{series.log_str} {loaded_episode.log_str} Loaded '
-                      f'{card.log_str} into "{library_name}"')
+            log.debug(f'{series} {loaded_episode} Loaded {card} into "{library_name}"')
         except InvalidRequestError:
             log.warning(f'Error creating Loaded asset for '
                         f'{loaded_episode.log_str} {card.log_str}')
@@ -463,8 +473,7 @@ def load_series_title_cards(
     # If any cards were (re)loaded, commit updates to database
     if changed or loaded_assets:
         db.commit()
-        log.info(f'{series.log_str} Loaded {len(loaded_assets)} Cards into '
-                 f'"{library_name}"')
+        log.info(f'{series} Loaded {len(loaded_assets)} Cards into "{library_name}"')
 
 
 def load_all_series_title_cards(
