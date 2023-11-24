@@ -281,13 +281,13 @@ def upgrade() -> None:
         log.info(f'Created TMDb Connection[{tmdb.id}]')
 
     # Migrate the global Episode data source and image source priorities
-    if emby and PreferencesLocal.episode_data_source == 'Emby':
+    if emby and PreferencesLocal.episode_data_source in ('Emby', 'emby'):
         PreferencesLocal.episode_data_source = emby.id
-    elif jellyfin and PreferencesLocal.episode_data_source == 'Jellyfin':
+    elif jellyfin and PreferencesLocal.episode_data_source in ('Jellyfin', 'jellyfin'):
         PreferencesLocal.episode_data_source = jellyfin.id
-    elif sonarr and PreferencesLocal.episode_data_source == 'Sonarr':
+    elif sonarr and PreferencesLocal.episode_data_source in ('Sonarr', 'sonarr'):
         PreferencesLocal.episode_data_source = sonarr.id
-    elif PreferencesLocal.episode_data_source == 'TMDb':
+    elif PreferencesLocal.episode_data_source in ('TMDb', 'tmdb'):
         PreferencesLocal.episode_data_source = tmdb.id
     else:
         PreferencesLocal.episode_data_source = None
@@ -536,6 +536,12 @@ def upgrade() -> None:
                     log.warning(f'Unable to migrate Episode[{episode.id}].jellyfin_id')
             else:
                 episode.jellyfin_id = ''
+
+    # Delete Episodes w/ null IDs
+    for episode in session.query(Episode).filter(sa.or_(Episode.emby_id.is_(None),
+                                                        Episode.jellyfin_id.is_(None))):
+        log.debug(f'Deleting Episode{episode.id} - no valid ID conversion')
+        session.delete(episode)
 
     # Commit changes
     session.commit()
