@@ -14,6 +14,14 @@ from pytz import timezone, UnknownTimeZoneError
 from tqdm import tqdm
 
 
+"""Custom Exception classes"""
+# pylint: disable=missing-class-docstring,multiple-statements
+class InvalidCardSettings(Exception): ...
+class InvalidFormatString(InvalidCardSettings): ...
+class MissingSourceImage(InvalidCardSettings): ...
+# pylint: enable=missing-class-docstring,multiple-statements
+
+
 def generate_context_id() -> str:
     """
     Generate a unique pseudo-random "unique" ID.

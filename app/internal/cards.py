@@ -16,16 +16,18 @@ from app.internal.templates import get_effective_templates
 from app.internal.translate import translate_episode
 from app.models.card import Card
 from app.models.episode import Episode
+from app.models.loaded import Loaded
 from app.models.series import Library, Series
 from app.models.template import Template
 from app.schemas.base import Base
 from app.schemas.font import DefaultFont
 from app.schemas.card import NewTitleCard
 from app.schemas.card_type import LocalCardTypeModels
-from modules.BaseCardType import BaseCardType
 
+from modules.BaseCardType import BaseCardType
 from modules.CleanPath import CleanPath
-from modules.Debug import log
+from modules.Debug import InvalidCardSettings, MissingSourceImage, log
+from modules.FormatString import FormatString
 from modules.RemoteCardType2 import RemoteCardType
 from modules.RemoteFile import RemoteFile
 from modules.SeasonTitleRanges import SeasonTitleRanges
@@ -55,7 +57,8 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                     if series.monitored:
                         refresh_episode_data(db, series, log=log)
                     else:
-                        log.debug(f'{series!r} is Unmonitored, not refreshing Episode data')
+                        log.debug(f'{series} is Unmonitored, not refreshing '
+                                  f'Episode data')
 
                     # Set watch statuses of all Episodes
                     try:
@@ -91,6 +94,9 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                             create_episode_cards(
                                 db, None, episode, raise_exc=False, log=log
                             )
+                        except InvalidCardSettings as exc:
+                            log.debug(f'{episode} - skipping Card creation ({exc})')
+                            continue
                         except HTTPException as e:
                             if e.status_code != 404:
                                 log.exception(f'{episode} - skipping Card', e)
@@ -103,6 +109,23 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                     sleep(30)
     except Exception as e:
         log.exception(f'Failed to create title cards', e)
+
+
+def remove_stale_loaded_objects(*, log: Logger = log) -> None:
+    """
+    Schedule-able function to remove bad / stale Loaded objects from the
+    database.
+
+    Args:
+        log: Logger for all log messages.
+    """
+
+    try:
+        with next(get_database()) as db:
+            # Delete Loaded assets with no associated Card
+            db.query(Loaded).filter(Loaded.card_id.is_(None)).delete()
+    except Exception as exc:
+        log.exception(f'Failed to clean Loaded records', exc)
 
 
 def refresh_all_remote_card_types(*, log: Logger = log) -> None:
@@ -309,7 +332,7 @@ def create_card(
         card = add_card_to_database(
             db, card_model, CardTypeModel, card_file, library
         )
-        log.info(f'Created {card.log_str}')
+        log.info(f'Created {card}')
     # Card file does not exist, log failure
     else:
         log.warning(f'Card creation failed')
@@ -385,34 +408,15 @@ def resolve_card_settings(
     card_settings['extras'] = card_extras | episode.translations
 
     # Resolve logo file format string if indicated
-    try:
-        card_settings['logo_file'] = Path(card_settings['logo_file'])
-        filename = card_settings['logo_file'].stem
-        formatted_filename = filename.format(
-            season_number=episode.season_number,
-            episode_number=episode.episode_number,
-            absolute_number=episode.absolute_number,
-        )
-        card_settings['logo_file'] = Path(series.source_directory) \
-            / f"{formatted_filename}{card_settings['logo_file'].suffix}"
-    except KeyError as exc:
-        log.exception(f'{series.log_str} {episode.log_str} Cannot format logo '
-                      f'filename - missing data', exc)
-        raise HTTPException(
-            status_code=400,
-            detail=f'Cannot create Card - invalid logo filename format - '
-                   f'missing data {exc}',
-        ) from exc
-    except ValueError as exc:
-        log.exception(f'{series.log_str} {episode.log_str} Cannot format logo '
-                      f'filename - bad format', exc)
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                f'Cannot create Card - invalid logo filename format - bad '
-                f'format {exc}'
-            )
-        ) from exc
+    logo_file = Path(card_settings['logo_file'])
+    filename = FormatString.new(
+        logo_file.stem,
+        data=card_settings,
+        name='logo filename',
+        series=series, episode=episode, log=log,
+    )
+    card_settings['logo_file'] = Path(series.source_directory) \
+        / f'{filename}{logo_file.suffix}'
 
     # Get the effective card class
     CardClass = preferences.get_card_type_class(
@@ -463,22 +467,10 @@ def resolve_card_settings(
 
     # Apply title text format if indicated
     if (title_format := card_settings.get('title_text_format')) is not None:
-        try:
-            card_settings['title_text'] = title_format.format(**card_settings)
-        except KeyError as exc:
-            log.exception(f'{series.log_str} {episode.log_str} Title Text '
-                          f'Format is invalid - {exc}', exc)
-            raise HTTPException(
-                status_code=400,
-                detail=f'Invalid title text format - missing data {exc}'
-            ) from exc
-        except ValueError as exc:
-            log.exception(f'{series.log_str} {episode.log_str} Title Text '
-                          f'Format is invalid - bad format', exc)
-            raise HTTPException(
-                status_code=400,
-                detail=f'Invalid title text format - bad format {exc}'
-            ) from exc
+        card_settings['title_text'] = FormatString.new(
+            title_format, data=card_settings, name='title text format',
+            series=series, episode=episode, log=log
+        )
 
     # Get EpisodeInfo for this Episode
     episode_info = episode.as_episode_info
@@ -494,22 +486,23 @@ def resolve_card_settings(
             episode_info, card_settings,
         )
 
-    # If no episode text was indicated, determine
+        # Apply season text formatting if indicated
+        if card_settings.get('season_text_format') is not None:
+            card_settings['season_text'] = FormatString.new(
+                card_settings['season_text_format'], data=card_settings,
+                name='season text format', series=series, episode=episode,
+                log=log,
+            )
+
+    # If no episode text was indicated, determine using ETF
     if card_settings.get('episode_text') is None:
-        if card_settings.get('episode_text_format') is None:
-            card_settings['episode_text'] =\
-                CardClass.EPISODE_TEXT_FORMAT.format(**card_settings)
-        else:
-            try:
-                fmt = card_settings['episode_text_format']
-                card_settings['episode_text'] = fmt.format(**card_settings)
-            except KeyError as e:
-                log.exception(f'{series.log_str} {episode.log_str} Episode Text'
-                              f' Format is invalid - {e}', e)
-                raise HTTPException(
-                    status_code=400,
-                    detail=f'Invalid episode text format - missing data {e}',
-                ) from e
+        card_settings['episode_text'] = FormatString.new(
+            card_settings.get(
+                'episode_text_format', CardClass.EPISODE_TEXT_FORMAT,
+            ),
+            data=card_settings,
+            name='episode text format', series=series, episode=episode, log=log,
+        )
 
     # Set style independent of watched status if both styles match
     watched = None
@@ -536,60 +529,45 @@ def resolve_card_settings(
             card_settings['watched_style' if watched else 'unwatched_style'],
         )
     else:
-        try:
-            card_settings['source_file'] = preferences.source_directory \
-                / series.path_safe_name \
-                / card_settings['source_file'].format(**card_settings)[:254]
-        except KeyError as e:
-            log.exception(f'{series.log_str} {episode.log_str} Source File '
-                            f'Format is invalid - {e}', e)
-            raise HTTPException(
-                status_code=400,
-                detail=f'Cannot create Card - invalid source file format, '
-                        f'missing data {e}',
-            ) from e
+        card_settings['source_file'] = preferences.source_directory \
+            / series.path_safe_name \
+            / FormatString.new_path(
+                card_settings['source_file'], data=card_settings,
+                name='source file format', series=series, episode=episode,
+                log=log,
+            )
 
     # Exit if the source file does not exist
     if (CardClass.USES_UNIQUE_SOURCES
         and not card_settings['source_file'].exists()):
         log.debug(f'{series.log_str} {episode.log_str} Card source image '
                     f'({card_settings["source_file"].name}) is missing')
-        raise HTTPException(
-            status_code=404,
-            detail=f'Cannot create Card - missing source image',
-        )
+        raise MissingSourceImage
 
     # Get card folder
-    if card_settings.get('directory', None) is None:
+    if card_settings.get('directory') is None:
         series_directory = Path(preferences.card_directory) \
             / series.path_safe_name
     else:
         series_directory = Path(card_settings.get('directory')[:254])
 
     # If an explicit card file was indicated, use it vs. default
-    try:
-        if card_settings.get('card_file', None) is None:
-            card_settings['title'] = card_settings['title'].replace('\\n', '')
-            filename = CleanPath.sanitize_name(
-                card_settings['card_filename_format'].format(**card_settings)
-            )
-            # Add library-specific identifier to filename if indicated
-            if library is not None and preferences.library_unique_cards:
-                filename += f' [{library["interface"]} {library["name"]}]'
-            card_settings['card_file'] = series_directory \
-                / preferences.get_folder_format(episode_info) \
-                / filename
-        else:
-            card_settings['card_file'] = series_directory \
-                / preferences.get_folder_format(episode_info) \
-                / CleanPath.sanitize_name(card_settings['card_file'])
-    except KeyError as e:
-        log.exception(f'{series.log_str} {episode.log_str} Cannot format Card '
-                      f'filename - missing data', e)
-        raise HTTPException(
-            status_code=400,
-            detail=f'Cannot create Card - invalid filename format',
-        ) from e
+    if card_settings.get('card_file') is None:
+        card_settings['title'] = card_settings['title'].replace('\\n', '')
+        filename = FormatString.new_path(
+            card_settings['card_filename_format'], data=card_settings,
+            name='title card filename', series=series, episode=episode, log=log,
+        )
+        # Add library-specific identifier to filename if indicated
+        if library is not None and preferences.library_unique_cards:
+            filename += f' [{library["interface"]} {library["name"]}]'
+        card_settings['card_file'] = series_directory \
+            / preferences.get_folder_format(episode_info) \
+            / filename
+    else:
+        card_settings['card_file'] = series_directory \
+            / preferences.get_folder_format(episode_info) \
+            / CleanPath.sanitize_name(card_settings['card_file'])
 
     # Add extension if needed
     card_file_name = card_settings['card_file'].name
