@@ -41,7 +41,10 @@ class Loaded(Base):
 
 
     def __repr__(self) -> str:
-        return f'Loaded[{self.id}] Card[{self.card_id}] {self.filesize:,} bytes into "{self.library_name}"'
+        return (
+            f'Loaded[{self.id}] Card[{self.card_id}] {self.filesize:,} '
+            f'bytes into "{self.library_name}"'
+        )
 
 
     @property

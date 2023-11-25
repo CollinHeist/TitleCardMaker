@@ -1,5 +1,33 @@
 document$.subscribe(function() {
+  // Exit if not on home page
   if (window.location.pathname !== '/') { return; }
+
+  // Update scroller marquees
+  const scrollers = document.querySelectorAll('.scroller');
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    // Scrolling disabled, delete all but the first image
+    scrollers.forEach(scroller => {
+      const images = Array.from(scroller.querySelectorAll('.scroller__inner > *'));
+      for (let i = 2; i < images.length; i++) {
+        images[i].remove();
+      }
+    });
+  } else {
+    scrollers.forEach(scroller => {
+      // Enable animation attribute
+      scroller.setAttribute('data-animated', true);
+
+      const scrollerInner = scroller.querySelector('.scroller__inner');
+      const scrollerContent = Array.from(scrollerInner.children); // Do not use live children
+
+      scrollerContent.forEach(item => {
+        const newItem = item.cloneNode(true);
+        newItem.setAttribute('aria-hidden', true);
+        scrollerInner.appendChild(newItem);
+      });
+    });
+  }
+
   // Get elements whose src attributes are being changed
   let previewElements = [
     document.getElementById('preview0'),

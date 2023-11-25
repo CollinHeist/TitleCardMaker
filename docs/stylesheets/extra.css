@@ -2,6 +2,35 @@
   --badge-color: #526cfe1a;
 }
 
+/* Stylize horizontal marquee / scrollers */
+.scroller {
+  max-width: 100%;
+}
+.scroller > .scroller__inner {
+  display: flex; /* All content should display inline */
+}
+
+.scroller[data-animated=true] {
+  /* overflow: hidden;
+  -webkit-mask: linear-gradient(90deg, transparent, white 5%,
+                                white 95%, transparent);
+  mask: linear-gradient(90deg, transparent, white 5%,
+                      white 95%, transparent); */
+}
+.scroller[data-animated=true] > .scroller__inner {
+  /* The inner scroller should be the size of all inner content */
+  width: max-content;
+  flex-wrap: nowrap;
+  animation: scroll var(--_animation-duration, 50s) linear infinite;
+}
+@keyframes scroll {
+  to { transform: translate(-50%); }
+}
+/* Reduce image height if scroller is enabled */
+.scroller[data-animated=true] img {
+  height: 75vh;
+}
+
 /* Inline header icons */
 h2 > img {
   height: 1.125em !important;

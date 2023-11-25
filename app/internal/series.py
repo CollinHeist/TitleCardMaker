@@ -466,8 +466,7 @@ def load_series_title_cards(
             ))
             log.debug(f'{series} {loaded_episode} Loaded {card} into "{library_name}"')
         except InvalidRequestError:
-            log.warning(f'Error creating Loaded asset for '
-                        f'{loaded_episode.log_str} {card.log_str}')
+            log.warning(f'Error creating Loaded asset for {loaded_episode} {card}')
             continue
 
     # If any cards were (re)loaded, commit updates to database
@@ -596,8 +595,7 @@ def load_episode_title_card(
         filesize=card.filesize,
         library_name=library_name,
     ))
-    log.debug(f'{episode.series.log_str} {episode.log_str} Loaded '
-              f'{card.log_str} into "{library_name}"')
+    log.debug(f'{episode.series} {episode} Loaded {card} into "{library_name}"')
     db.commit()
     return True
 

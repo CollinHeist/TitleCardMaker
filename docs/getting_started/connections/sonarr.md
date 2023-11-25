@@ -114,6 +114,11 @@ guidance on how to enter your library paths.
     The process of setting this up Tautulli is covered [here](tautulli.md). It
     is not recommended (or necessary) to enable both integrations.
 
+!!! warning "Sonarr v4 Required"
+
+    The Webhook utilized by TCM was reworked in Sonarr v4; meaning this is
+    required for the integration.
+
 If you'd like to create Title Cards for Episodes faster than TCM typically does
 via the [adjustable scheduler](../scheduler.md), you can enable a Sonarr Webhook
 to trigger card creation for Episodes as they are grabbed by Sonarr. How to

@@ -47,13 +47,8 @@ class Card(Base):
     model_json: Mapped[dict] = mapped_column(MutableDict.as_mutable(JSON), default={})
 
 
-    @property
-    def log_str(self) -> str:
-        """
-        Loggable string that defines this object (i.e. `__repr__`).
-        """
-
-        return f'Card[{self.id}] "{self.card_file}"'
+    def __repr__(self) -> str:
+        return f'Card "{self.card_file}"'
 
 
     @property

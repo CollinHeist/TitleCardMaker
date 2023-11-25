@@ -544,7 +544,7 @@ def create_cards_for_sonarr_webhook(
             # Episode exists, return it
             if episode:
                 return episode
-            
+
             # Sleep and re-query Episode data
             log.debug(f'Cannot find Episode, waiting..')
             sleep(30)

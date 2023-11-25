@@ -17,15 +17,28 @@ TitleCardMaker (TCM) is a program and Docker container written in Python that
 automates the creation of customized Title Cards for use in personal media
 server services like Plex, Jellyfin, or Emby.
 
-![Home Page](./assets/home_light.webp#only-light){.no-lightbox}
-![Home Page](./assets/home_dark.webp#only-dark){.no-lightbox}
+<div class="scroller">
+  <div class="scroller__inner">
+    <img class="no-lightbox" src="./assets/home_light.webp#only-light">
+    <img class="no-lightbox" src="./assets/home_dark.webp#only-dark">
+    <a href="./user_guide/series"><img class="no-lightbox" src="./assets/series_light.webp#only-light"></a>
+    <a href="./user_guide/series"><img class="no-lightbox" src="./assets/series_dark.webp#only-dark"></a>
+    <a href="./user_guide/new_series"><img class="no-lightbox" src="./assets/add_series_light.webp#only-light"></a>
+    <a href="./user_guide/new_series"><img class="no-lightbox" src="./assets/add_series_dark.webp#only-dark"></a>
+    <a href="./blueprints"><img class="no-lightbox" src="./assets/blueprint_all_light.webp#only-light"></a>
+    <a href="./blueprints"><img class="no-lightbox" src="./assets/blueprint_all_dark.webp#only-dark"></a>
+    <a href="./user_guide/fonts"><img class="no-lightbox" src="./assets/fonts_light.webp#only-light"></a>
+    <a href="./user_guide/fonts"><img class="no-lightbox" src="./assets/fonts_dark.webp#only-dark"></a>
+  </div>
+</div>
 
 # What is a Title Card?
 
 A Title Card is a thumbnail image for an Episode of television that can be used
 to add a unique look within a personal media server like Plex, Emby, or
 Jellyfin. Some Series have "official" Title Cards featured in the Episode
-itself. For example, the following Cards can both be automatically created with
+itself, but TCM specializes in creating and customizing "unofficial" Title
+Cards. The following Cards have all been designed by me, and were created with
 TitleCardMaker:
 
 ![Tinted Frame](./assets/card_example0.jpg){id="preview0" width="48%"} ![Anime](./assets/card_example1.jpg){id="preview1" width="48%"}
