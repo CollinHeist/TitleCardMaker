@@ -11,8 +11,8 @@ The TitleCardMaker API is auto-generated, documented, and fully interactable via
 the `/docs` and `/redoc` URLs. These are OpenAPI and ReDoc API documentations.
 An example of each is shown below:
 
-![Interactive API Documentation](../assets/api_doc.png)
-![ReDoc API Documentation](../assets/api_redocs.png)
+![Interactive API Documentation](../assets/api_doc.webp)
+![ReDoc API Documentation](../assets/api_redocs.webp)
 
 These API endpoints are utilized by the TCM UI to perform all actions, so
 examples of how these endpoints are utilized can be found by exploring the TCM
