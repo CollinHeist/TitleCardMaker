@@ -199,8 +199,8 @@ nav:
     - Templates: user_guide/templates.md
     - Fonts: user_guide/fonts.md
     # - Sync: user_guide/sync.md
-    - Connections: user_guide/connections.md
     - Settings: user_guide/settings.md
+    - Connections: user_guide/connections.md
     # - Scheduler: user_guide/scheduler.md
     # - Importer: user_guide/importer.md
     - Logs: user_guide/logs.md

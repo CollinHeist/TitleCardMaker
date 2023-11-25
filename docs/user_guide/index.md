@@ -18,14 +18,16 @@ description: >
     [Getting Started](../getting_started/index.md) tutorial.
 
 The TitleCardMaker interface is separated into various pages which can be
-navigated to via the sidebar. Each page is detailed below:
+navigated to via the sidebar or buttons on the header. Each page is detailed
+below:
 
 - [Series](./series.md)
-- [New Series](./new_series.md)
-<!-- - [Tempates](./templates.md) -->
-<!-- - [Fonts](./fonts.md) -->
+- [Adding Series](./new_series.md)
+- [Tempates](./templates.md)
+- [Fonts](./fonts.md)
 <!-- - [Sync](./syncs.md) -->
 - [Settings](./settings.md)
 - [Connections](./connections.md)
 <!-- - [Scheduler](./scheduler.md) -->
 <!-- - [Importer](./importer.md) -->
+- [Logs](./logs.md)

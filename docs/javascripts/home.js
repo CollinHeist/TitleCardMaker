@@ -5,7 +5,7 @@ document$.subscribe(function() {
   // Update scroller marquees
   const scrollers = document.querySelectorAll('.scroller');
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    // Scrolling disabled, delete all but the first image
+    // Scrolling disabled, delete all but the first image (first two for theme-specific imaging)
     scrollers.forEach(scroller => {
       const images = Array.from(scroller.querySelectorAll('.scroller__inner > *'));
       for (let i = 2; i < images.length; i++) {

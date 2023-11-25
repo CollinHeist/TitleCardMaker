@@ -21,7 +21,7 @@
   /* The inner scroller should be the size of all inner content */
   width: max-content;
   flex-wrap: nowrap;
-  animation: scroll var(--_animation-duration, 50s) linear infinite;
+  animation: scroll var(--_animation-duration, 55s) linear infinite;
 }
 @keyframes scroll {
   to { transform: translate(-50%); }
@@ -29,6 +29,12 @@
 /* Reduce image height if scroller is enabled */
 .scroller[data-animated=true] img {
   height: 75vh;
+}
+/* Reduce height on mobile */
+@media (max-width: 768px) {
+  .scroller[data-animated=true] img {
+    height: 40vh;
+  }
 }
 
 /* Inline header icons */
