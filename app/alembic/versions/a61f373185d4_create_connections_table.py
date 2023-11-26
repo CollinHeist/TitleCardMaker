@@ -266,6 +266,7 @@ def upgrade() -> None:
         session.add(sonarr)
         session.commit()
         log.info(f'Created Sonarr Connection[{sonarr.id}]')
+        log.warning(f'Cannot migrate Sonarr Libraries data - resetting')
     if PreferencesLocal.tmdb_api_key:
         tmdb = Connection(
             interface_type='TMDb',
