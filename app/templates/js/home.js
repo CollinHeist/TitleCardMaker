@@ -608,3 +608,22 @@ function batchDeleteCards() {
     error: response => showErrorToast({title: 'Error Deleting Title Cards', response}),
   });
 }
+
+/**
+ * Submit an API request to delete all the currently selected Series.
+ */
+function batchDeleteSeries() {
+  if (selectedSeries.length === 0) { return; }
+  $.ajax({
+    type: 'DELETE',
+    url: '/api/series/batch/delete',
+    data: JSON.stringify(selectedSeries),
+    contentType: 'application/json',
+    success: () => {
+      showInfoToast(`Deleted ${selectedSeries.length} Series`);
+      getAllSeries(undefined, true);
+      getAllStatistics();
+    },
+    error: response => showErrorToast({title: 'Error Deleting Series', response}),
+  });
+}
