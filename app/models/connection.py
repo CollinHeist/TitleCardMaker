@@ -47,7 +47,7 @@ class Connection(Base):
     filesize_limit: Mapped[str] = mapped_column(default='5 Megabytes')
     integrate_with_pmm: Mapped[bool] = mapped_column(default=False)
     downloaded_only: Mapped[bool] = mapped_column(default=True)
-    libraries: Mapped[SonarrLibraries] = mapped_column(
+    libraries: Mapped[list[SonarrLibraries]] = mapped_column(
         MutableList.as_mutable(JSON),
         default=[],
         nullable=False

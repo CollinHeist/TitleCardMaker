@@ -152,7 +152,7 @@ def regex_replace(pattern: str, repl: str, string: str) -> str:
 def regex_match(pattern: str, string: str) -> bool:
     """Regex match function for DB registration"""
 
-    return _regex_match(pattern, string, flags=IGNORECASE)
+    return bool(_regex_match(pattern, string, flags=IGNORECASE))
 
 @listens_for(engine, 'connect')
 def register_custom_functions(
