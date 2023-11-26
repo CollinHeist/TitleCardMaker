@@ -1,6 +1,6 @@
 from datetime import datetime
 from logging import Logger
-from typing import Optional, TypedDict, Union
+from typing import TYPE_CHECKING, Optional, TypedDict, Union
 
 from num2words import num2words
 from plexapi.video import Episode as PlexEpisode
@@ -12,6 +12,8 @@ from modules.Debug import log
 from modules.DatabaseInfoContainer import DatabaseInfoContainer, InterfaceID
 from modules.Title import Title
 
+if TYPE_CHECKING:
+    from app.models.episode import Episode
 
 # pylint: disable=missing-class-docstring
 class UserData(TypedDict):
@@ -535,7 +537,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     def filter_conditions(self,
-            EpisodeModel: 'sqlachemy.Model', # type: ignore
+            EpisodeModel: 'Episode',
         ) -> Query:
         """
         Get the SQLAlchemy Query condition for this object.
@@ -553,13 +555,13 @@ class EpisodeInfo(DatabaseInfoContainer):
         id_conditions = []
         if self.emby_id:
             id_conditions.append(func.regex_match(
-                f'^{self.emby_id}$', EpisodeModel.emby_id,
+                f'(?:^|\D){self.emby_id}(?!\d)', EpisodeModel.emby_id,
             ))
         if self.imdb_id is not None:
             id_conditions.append(EpisodeModel.imdb_id==self.imdb_id)
         if self.jellyfin_id:
             id_conditions.append(func.regex_match(
-                f'^{self.jellyfin_id}$', EpisodeModel.jellyfin_id,
+                f'(?:^|\D){self.jellyfin_id}(?!\d)', EpisodeModel.jellyfin_id,
             ))
         if self.tmdb_id is not None:
             id_conditions.append(EpisodeModel.tmdb_id==self.tmdb_id)
