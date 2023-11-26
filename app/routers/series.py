@@ -66,15 +66,14 @@ def get_all_series(
     elif order_by == 'reverse-id':
         series = query.order_by(models.series.Series.id.desc())
     # Order by Cards
-    # TODO fix
-    # elif order_by == 'cards':
-    #     series = query.outerjoin(models.series.Series.cards)\
-    #         .group_by(models.series.Series.id)\
-    #         .order_by(desc(func.count()))
-    # elif order_by == 'reverse-cards':
-    #     series = query.outerjoin(models.series.Series.cards)\
-    #         .group_by(models.series.Series.id)\
-    #         .order_by(func.count())
+    elif order_by == 'cards':
+        series = query.outerjoin(models.card.Card)\
+            .group_by(models.series.Series.id)\
+            .order_by(func.count(models.series.Series.id))
+    elif order_by == 'reverse-cards':
+        series = query.outerjoin(models.card.Card)\
+            .group_by(models.series.Series.id)\
+            .order_by(func.count(models.series.Series.id).desc())
     # Order by Year > Name
     elif order_by == 'year':
         series = query.order_by(models.series.Series.year)\
