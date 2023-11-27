@@ -567,6 +567,7 @@ def load_episode_title_card(
     # If this asset's filesize has not changed, no need to reload
     if (previously_loaded is not None
         and previously_loaded.filesize == card.filesize):
+        log.debug(f'{episode.series} {episode} Card has not changed')
         return True
 
     # New Card is different, delete Loaded entry
@@ -585,11 +586,12 @@ def load_episode_title_card(
         if loaded_assets:
             break
 
-        log.debug(f'{episode.series.log_str} {episode.log_str} not found - waiting')
+        log.debug(f'{episode.series} {episode} not found - waiting')
         sleep(30)
 
     # Episode was not loaded, exit
     if not loaded_assets:
+        log.debug(f'{episode.series} {episode} could not be loaded')
         return False
 
     # Episode loaded, create Loaded asset and commit to database

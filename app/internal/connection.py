@@ -16,7 +16,7 @@ from app.schemas.connection import (
     NewSonarrConnection, NewTMDbConnection,
     UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb
 )
-from modules.Debug import log
+from modules.Debug import log, SECRETS
 from modules.InterfaceGroup import InterfaceGroup
 
 
@@ -37,7 +37,8 @@ def initialize_connections(
     ) -> None:
     """
     Initialize all Interfaces (and add them to their respective
-    InterfaceGroup).
+    InterfaceGroup). This also adds their secrets to the set of secrets
+    for logging.
 
     Args:
         db: Database with Connection definitions to query.
@@ -63,7 +64,10 @@ def initialize_connections(
 
         # Initialize an Interface for each Connection (if enabled)
         for connection in connections:
-            # Warn if disabled
+            # Add to set of secrets
+            connection.add_secrets(SECRETS)
+
+            # Skip if disabled
             if not connection.enabled:
                 log.debug(f'Not initializing {connection} - disabled')
                 continue
@@ -107,6 +111,9 @@ def add_connection(
     connection = Connection(**new_connection.dict())
     db.add(connection)
     db.commit()
+
+    # Add API key to set of secrets
+    connection.add_secrets(SECRETS)
     log.info(f'Created {connection}')
 
     # Update global use_ attribute
@@ -164,9 +171,13 @@ def update_connection(
     changed = False
     for attr, value in update_object.dict(exclude_defaults=True).items():
         if value != UNSPECIFIED and getattr(connection, attr) != value:
-            log.debug(f'Connection[{interface_id}].{attr} = {value}')
+            # Update Connection
             setattr(connection, attr, value)
             changed = True
+
+            # Update secrets, log change
+            connection.add_secrets(SECRETS)
+            log.debug(f'Connection[{interface_id}].{attr} = {value}')
 
     # If any values were changed, commit to database
     if changed:

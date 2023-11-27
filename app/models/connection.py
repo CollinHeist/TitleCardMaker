@@ -166,9 +166,7 @@ class Connection(Base):
         return {}
 
 
-    def determine_libraries(self,
-            directory: str,
-        ) -> list[tuple[int, str]]:
+    def determine_libraries(self,directory: str, /) -> list[tuple[int, str]]:
         """
         Determine the libraries of the series in the given directory.
         >>> connection.libraries = [
@@ -192,3 +190,18 @@ class Connection(Base):
             for library in self.libraries
             if directory.startswith(library['path'])
         ]
+
+
+    def add_secrets(self, secret: set[str], /) -> None:
+        """
+        Add this Connection's secret details (the URL and API key) to
+        the given set of secrets (for log redaction).
+
+        Args:
+            secret: Set of secrets to add to.
+        """
+
+        if self.url:
+            secret.add(self.url)
+        if self.api_key:
+            secret.add(self.api_key)

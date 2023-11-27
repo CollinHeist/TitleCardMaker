@@ -56,8 +56,8 @@ Installation and startup instructions are [here](./getting_started/index.md).
 !!! info "Detailed Tutorial"
 
     For more detailed tutorials that take you step-by-step through the
-    installation and setup of TitleCardMaker, continue to the Getting Started
-    tutorial.
+    installation and setup of TitleCardMaker, continue to the
+    [Getting Started](./getting_started/index.md) tutorial.
 
 TitleCardMaker is designed to for an easy "out of the box" setup. The basic
 steps are as follows:

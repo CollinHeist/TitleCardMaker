@@ -44,9 +44,10 @@ TQDM_KWARGS = {
     'disable': None,
 }
 
+"""Whether this is being executed inside a Docker container"""
 IS_DOCKER = environ.get('TCM_IS_DOCKER', 'false').lower() == 'true'
 
-"""Log file"""
+"""Base log file"""
 LOG_FILE = Path(__file__).parent.parent / 'config' / 'logs' / 'maker.log'
 if IS_DOCKER:
     LOG_FILE = Path('/config/logs/maker.log')
@@ -86,10 +87,12 @@ if IS_DOCKER and environ.get('TZ', None) is not None:
         print(f'Invalid timezone (TZ) environment variable')
 
 
-class Formatter(Formatter):
+SECRETS = set()
+class BaseFormatter(Formatter):
     """
     Overwrite the Formatter class to write the localized time on all log
-    messages.
+    messages. Also redact any instances of the strings in `SECRETS`
+    before emitting a record.
     """
 
     def formatTime(self, record, datefmt=None):
@@ -99,7 +102,20 @@ class Formatter(Formatter):
         return str(dt)
 
 
-class ErrorFormatterColor(Formatter):
+    def format(self, record) -> str:
+        """
+        Format the given record. This removes any secrets present in
+        `SECRETS`.
+        """
+
+        message = super().format(record)
+        for secret in SECRETS:
+            message = message.replace(secret, '********')
+
+        return message
+
+
+class ErrorFormatterColor(BaseFormatter):
     """
     Formatter class to handle exception traceback printing with color.
     """
@@ -108,7 +124,7 @@ class ErrorFormatterColor(Formatter):
         return f'\x1b[1;30m[TRACEBACK] {super().formatException(ei)}\x1b[0m'
 
 
-class ErrorFormatterNoColor(Formatter):
+class ErrorFormatterNoColor(BaseFormatter):
     """
     Formatter class to handle exception traceback printing without
     color.
@@ -118,7 +134,7 @@ class ErrorFormatterNoColor(Formatter):
         return f'[TRACEBACK] {super().formatException(ei)}'
 
 
-class LogFormatterColor(Formatter):
+class LogFormatterColor(BaseFormatter):
     """
     Formatter containing ErrorFormatterColor objects instantiated with
     different format strings for various colors depending on the log
@@ -147,7 +163,7 @@ class LogFormatterColor(Formatter):
         return self.LEVEL_FORMATS[record.levelno].format(record)
 
 
-class LogFormatterNoColor(Formatter):
+class LogFormatterNoColor(BaseFormatter):
     """Colorless version of the `LogFormatterColor` class."""
 
     FORMATTER = ErrorFormatterNoColor('[%(levelname)s] %(message)s')
