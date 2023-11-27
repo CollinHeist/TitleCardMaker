@@ -38,7 +38,7 @@ def sync_all(*, log: Logger = log) -> None:
                 try:
                     run_sync(db, sync, log=log)
                 except HTTPException as e:
-                    log.exception(f'{sync.log_str} Error Syncing - {e.detail}', e)
+                    log.exception(f'{sync} Error Syncing - {e.detail}', e)
                 except OperationalError:
                     log.debug(f'Database is busy, sleeping..')
                     sleep(30)
@@ -103,8 +103,16 @@ def run_sync(
     # Get specified Interface
     interface = get_interface(sync.interface_id, raise_exc=True)
 
+    # Get this Interface's Connection
+    if (connection := sync.connection) is None:
+        log.error(f'Unable to communicate with {sync.interface}')
+        raise HTTPException(
+            status_code=404,
+            detail=f'Unable to communicate with {sync.interface}',
+        )
+
     # Query interface for the indicated subset of Series
-    log.debug(f'{sync.log_str} starting to query {sync.interface}[{sync.interface_id}]')
+    log.debug(f'{sync} starting to query {sync.interface}[{sync.interface_id}]')
     all_series = interface.get_all_series(**sync.sync_kwargs, log=log)
 
     # Process all Series returned by Sync
@@ -118,13 +126,6 @@ def run_sync(
         # Determine this Series' libraries
         libraries = []
         if sync.interface == 'Sonarr':
-            # Get the Connection associated with this Sync
-            if (connection := sync.connection) is None:
-                raise HTTPException(
-                    status_code=409,
-                    detail=f'Unable to communicate with {sync.interface}',
-                )
-
             # Determine libraries using this Connection
             library_data = connection.determine_libraries(lib_or_dir)
             for interface_id, library in library_data:
@@ -175,7 +176,7 @@ def run_sync(
 
     # Nothing added, log
     if not added:
-        log.debug(f'{sync.log_str} No new Series synced')
+        log.debug(f'{sync} No new Series synced')
 
     # Process each newly added Series
     return [
