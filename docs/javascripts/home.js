@@ -14,6 +14,9 @@ document$.subscribe(function() {
     });
   } else {
     scrollers.forEach(scroller => {
+      // If clones are present, skip (this function can be triggered >1 times as SPA)
+      if (scroller.querySelector('[aria-hidden=true]')) { return; }
+
       // Enable animation attribute
       scroller.setAttribute('data-animated', true);
 
