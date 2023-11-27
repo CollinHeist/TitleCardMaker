@@ -459,7 +459,7 @@ def upgrade() -> None:
                 log.warning(f'Not converting Template[{template.id}] Filter '
                             f'operation "{op_}"')
                 continue
-   
+
             new_filters.append({
                 'argument': new_arg, 'operation': new_op, 'reference': ref,
             })
@@ -472,7 +472,8 @@ def upgrade() -> None:
         if len(series.libraries) == 0:
             continue
         if len(series.libraries) > 1:
-            log.debug(f'Cannot migrate Episode watched statuses for Series[{series.id}] - has conflicting libraries')
+            log.debug(f'Cannot migrate Episode watched statuses for Series'
+                      f'[{series.id}] - has conflicting libraries')
             continue
 
         for episode in series.episodes:
@@ -488,7 +489,6 @@ def upgrade() -> None:
         if series.emby_id:
             if series.emby_library_name and emby:
                 series.emby_id = f'{emby.id}:{series.emby_library_name}:{series.emby_id}'
-                log.debug(f'Migrated Series[{series.id}].emby_id = {series.emby_id}')
             else:
                 series.emby_id = ''
                 log.warning(f'Unable to migrate Series[{series.id}].emby_id')
@@ -498,7 +498,6 @@ def upgrade() -> None:
         if series.jellyfin_id:
             if series.jellyfin_library_name and jellyfin:
                 series.jellyfin_id = f'{jellyfin.id}:{series.jellyfin_library_name}:{series.jellyfin_id}'
-                log.debug(f'Migrated Series[{series.id}].jellyfin_id = {series.jellyfin_id}')
             else:
                 series.jellyfin_id = ''
                 log.warning(f'Unable to migrate Series[{series.id}].jellyfin_id')
@@ -508,7 +507,6 @@ def upgrade() -> None:
         if series.sonarr_id:
             if sonarr:
                 series.sonarr_id = f'{sonarr.id}:{series.sonarr_id.split("-")[1]}'
-                log.debug(f'Migrated Series[{series.id}].sonarr_id = {series.sonarr_id}')
             else:
                 series.sonarr_id = ''
                 log.warning(f'Unable to migrate Series[{series.id}].sonarr_id')
@@ -521,7 +519,6 @@ def upgrade() -> None:
             if episode.emby_id:
                 if series.emby_library_name and emby:
                     episode.emby_id = f'{emby.id}:{series.emby_library_name}:{episode.emby_id}'
-                    log.debug(f'Migrated Episode[{episode.id}].emby_id = {episode.emby_id}')
                 else:
                     episode.emby_id = ''
                     log.warning(f'Unable to migrate Episode[{episode.id}].emby_id')
@@ -531,17 +528,18 @@ def upgrade() -> None:
             if episode.jellyfin_id:
                 if series.jellyfin_library_name and jellyfin:
                     episode.jellyfin_id = f'{jellyfin.id}:{series.jellyfin_library_name}:{episode.jellyfin_id}'
-                    log.debug(f'Migrated Episode[{episode.id}].jellyfin_id = {episode.jellyfin_id}')
                 else:
                     episode.jellyfin_id = ''
                     log.warning(f'Unable to migrate Episode[{episode.id}].jellyfin_id')
             else:
                 episode.jellyfin_id = ''
+    log.debug(f'Migrated Series.emby_id, Series.jellyfin_id, Series.sonarr_id')
+    log.debug(f'Migrated Episode.emby_id, Episode.jellyfin_id')
 
     # Delete Episodes w/ null IDs
     for episode in session.query(Episode).filter(sa.or_(Episode.emby_id.is_(None),
                                                         Episode.jellyfin_id.is_(None))):
-        log.debug(f'Deleting Episode{episode.id} - no valid ID conversion')
+        log.info(f'Deleting Episode[{episode.id}] - no valid ID conversion')
         session.delete(episode)
 
     # Commit changes
@@ -570,6 +568,10 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    log = contextualize()
+    log.debug(f'Downgrading SQL Schema to Version[{down_revision}]..')
+    log.error(f'SQL schema is not backwards compatible')
+
     with op.batch_alter_table('card', schema=None) as batch_op:
         batch_op.drop_constraint('fk_connection_card', type_='foreignkey')
         batch_op.drop_column('library_name')

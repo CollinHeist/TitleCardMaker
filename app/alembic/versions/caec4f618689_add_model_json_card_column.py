@@ -171,7 +171,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     log = contextualize()
     log.debug(f'Downgrading SQL Schema to Version[{down_revision}]..')
-    log.error(f'Card schema is not backwards compatible')
+    log.error(f'SQL schema is not backwards compatible')
 
     with op.batch_alter_table('card', schema=None) as batch_op:
         batch_op.drop_column('model_json')
