@@ -265,7 +265,7 @@ def import_blueprint(
             font_map[font_id] = existing_font
             log.info(f'Matched Blueprint Font[{font_id}] to existing Font '
                      f'{existing_font.log_str}')
-            break
+            continue
 
         # This Font has a file that can be directly downloaded
         font_content = None
@@ -312,8 +312,8 @@ def import_blueprint(
         if existing_template is not None:
             template_map[template_id] = existing_template
             log.info(f'Matched Blueprint Template[{template_id}] to existing '
-                     f'Template {existing_template.log_str}')
-            break
+                     f'Template {existing_template}')
+            continue
 
         # Update Font ID from Font map if indicated
         if getattr(template, 'font_id', None) is not None:

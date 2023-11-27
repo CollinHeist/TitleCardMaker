@@ -186,6 +186,12 @@ class Template(Base):
     )
 
 
+    def __repr__(self) -> str:
+        """Returns an unambiguous string representation of the object."""
+
+        return f'Template[{self.id}] "{self.name}"'
+
+
     @property
     def log_str(self) -> str:
         """
