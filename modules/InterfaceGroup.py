@@ -231,4 +231,5 @@ class InterfaceGroup(Generic[_InterfaceID, _Interface],
             interface_id: ID of the Interface to disable.
         """
 
-        del self.interfaces[interface_id]
+        if interface_id in self.interfaces:
+            del self.interfaces[interface_id]
