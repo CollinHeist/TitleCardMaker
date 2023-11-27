@@ -399,11 +399,16 @@ def load_series_title_cards(
         log: Logger for all log messages.
     """
 
+    # Determine if in single-library mode
+    single_library_mode = (
+        get_preferences().library_unique_cards or len(series.libraries) == 1
+    )
+
     # Get list of Episodes to reload
     changed, episodes_to_load = False, []
     for episode in series.episodes:
         # Get associated Card
-        if len(episode.series.libraries) == 1:
+        if single_library_mode:
             card = db.query(Card).filter_by(episode_id=episode.id).first()
         else:
             card = db.query(Card)\
@@ -418,7 +423,7 @@ def load_series_title_cards(
             continue
 
         # Find existing associated Loaded object
-        if len(episode.series.libraries) == 1:
+        if single_library_mode:
             previously_loaded = db.query(Loaded).filter_by(card_id=card.id).all()
         else:
             previously_loaded = db.query(Loaded)\
