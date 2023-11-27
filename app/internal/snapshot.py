@@ -39,10 +39,13 @@ def take_snapshot(db: Session, *, log: Logger = log) -> None:
     # Determine total card creation count; max of Card.id and previous card
     # creation count
     # pylint: disable=not-callable
-    cards_created = max(
-        db.query(func.max(models.card.Card.id)).scalar(),
-        db.query(func.max(Snapshot.cards_created)).scalar()
-    )
+    try:
+        cards_created = max(
+            db.query(func.max(models.card.Card.id)).scalar(),
+            db.query(func.max(Snapshot.cards_created)).scalar()
+        )
+    except TypeError:
+        cards_created = db.query(func.max(models.card.Card.id)).scalar() or 0
 
     snapshot = NewSnapshot(
         blueprints=len(get_preferences().imported_blueprints),
