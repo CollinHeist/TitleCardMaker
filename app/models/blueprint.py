@@ -30,7 +30,7 @@ class BlueprintSeries(BlueprintBase):
     __tablename__ = 'series'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
+    name = Column(String, nullable=False) # Same as clean_name
     year = Column(Integer, nullable=False)
     path_name = Column(String, nullable=False)
 
@@ -56,12 +56,25 @@ class BlueprintSeries(BlueprintBase):
 
     @sort_name.expression
     def sort_name(cls: 'BlueprintSeries'):
-        """Class-expression of `sort_name` property."""
+        """Class-expression of the `sort_name` property."""
 
         return func.regex_replace(r'^(a|an|the)(\s)', '', func.lower(cls.name))
 
 
     @hybrid_property
+    def letter(self) -> str:
+        """Letter subfolder for this Series."""
+
+        return self.sort_name[0].upper()
+
+    @letter.expression
+    def letter(cls: 'BlueprintSeries'):
+        """Class expression of the `letter` property."""
+
+        return func.upper(cls.sort_name[0])
+
+
+    @property
     def as_series_info(self) -> SeriesInfo:
         """
         Represent this Series as a SeriesInfo object, including any
@@ -77,7 +90,7 @@ class BlueprintSeries(BlueprintBase):
         )
 
 
-    @hybrid_property
+    @property
     def as_new_series(self) -> NewSeries:
         """
         Get the `NewSeries` Pydantic model equivalent of this object.
@@ -107,10 +120,13 @@ class Blueprint(BlueprintBase):
     created = Column(DateTime, nullable=False, default=func.now)
     json = Column(String, nullable=False)
 
-    series: Mapped[BlueprintSeries] = relationship('BlueprintSeries', back_populates='blueprints')
+    series: Mapped[BlueprintSeries] = relationship(
+        'BlueprintSeries',
+        back_populates='blueprints'
+    )
 
 
-    @hybrid_property
+    @property
     def blueprint(self) -> ImportBlueprint:
         """
         Attribute of the actual Blueprint (i.e. configurable options)
@@ -122,3 +138,20 @@ class Blueprint(BlueprintBase):
         """
 
         return ImportBlueprint.parse_raw(self.json)
+
+
+    def get_folder(self, blueprint_repo_url: str) -> str:
+        """
+        Get the repo-URL subfolder associated with this Blueprint.
+
+        Args:
+            blueprint_repo_url: Base URL of the Blueprints repository.
+
+        Returns:
+            URL associated with this Blueprint.
+        """
+
+        return (
+            f'{blueprint_repo_url}/{self.series.letter}/{self.series.path_name}'
+            f'/{self.blueprint_number}'
+        )

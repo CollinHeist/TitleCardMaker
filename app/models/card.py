@@ -48,6 +48,8 @@ class Card(Base):
 
 
     def __repr__(self) -> str:
+        """Returns an unambiguous string representation of the object."""
+
         return f'Card "{self.card_file}"'
 
 

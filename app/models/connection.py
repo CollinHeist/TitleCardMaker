@@ -62,11 +62,8 @@ class Connection(Base):
     )
 
 
-    @property
-    def log_str(self) -> str:
-        """
-        Loggable string that defines this object (i.e. `__repr__`).
-        """
+    def __repr__(self) -> str:
+        """Returns an unambiguous string representation of the object."""
 
         return f'{self.interface_type}Connection[{self.id}]'
 

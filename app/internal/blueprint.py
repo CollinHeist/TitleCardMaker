@@ -1,6 +1,6 @@
 from logging import Logger
 from pathlib import Path
-from re import compile as re_compile, sub as re_sub, IGNORECASE
+from re import compile as re_compile, IGNORECASE
 from time import sleep
 
 from fastapi import HTTPException
@@ -17,8 +17,6 @@ from app.schemas.blueprint import ExportBlueprint
 from app.schemas.episode import UpdateEpisode
 from app.schemas.font import NewNamedFont
 from app.schemas.series import NewTemplate, UpdateSeries
-
-from modules.CleanPath import CleanPath
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.SeriesInfo import SeriesInfo
@@ -67,33 +65,6 @@ def delay_zip_deletion(zip_directory: Path, zip_file: Path) -> None:
     # Delete zip directory
     zip_directory.rmdir()
     log.debug(f'Deleted {zip_directory}')
-
-
-def get_blueprint_folders(series_name: str) -> tuple[str, str]:
-    """
-    Get the parent folders for the given Series name. This does any name
-    cleaning. For example:
-
-    >>> get_blueprint_folders('The Expanse (2015)')
-    ('E', 'The Expanse (2015)')
-    >>> get_blueprint_folders('Demon Slayer: Kimetsu no Yaiba (2018)')
-    ('D', 'Demon Slayer - Kimetsu no Yaiba (2018)')
-
-    Args:
-        series_name: Name of the Series to get the folders of.
-
-    Returns:
-        Tuple of the name of the letter subfolder and series name
-        subfolder for the given Series name.
-    """
-
-    # Remove illegal path characters
-    clean_name = CleanPath.sanitize_name(series_name)
-
-    # Remove prefix words like A/An/The
-    sort_name = re_sub(r'^(a|an|the)(\s)', '', clean_name, flags=IGNORECASE)
-
-    return sort_name[0].upper(), clean_name
 
 
 def generate_series_blueprint(
@@ -282,11 +253,8 @@ def import_blueprint(
         log: Logger for all log messages.
     """
 
-    # Get subfolder for this Series
-    letter, path_name = get_blueprint_folders(series.full_name)
-    blueprint_folder = (
-        f'{BLUEPRINTS_URL}/{letter}/{path_name}/{blueprint.blueprint_number}'
-    )
+    # Get subfolder for this Blueprint
+    blueprint_folder = blueprint.get_folder(BLUEPRINTS_URL)
 
     # Import Fonts
     font_map: dict[int, Font] = {}

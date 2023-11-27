@@ -478,26 +478,26 @@ def delete_connection(
 
     # Delete any linked Syncs
     for sync in db.query(Sync).filter_by(interface_id=interface_id).all():
-        log.info(f'Deleting {sync.log_str}')
+        log.info(f'Deleting {sync}')
         db.delete(sync)
 
     # Remove from any linked Series libraries or data sources
     for series in db.query(Series).all():
         if any(library['interface_id'] == interface_id
                for library in series.libraries):
-            log.warning(f'Removing {connection.log_str} libraries from {series.log_str}')
+            log.warning(f'Removing {connection} libraries from {series}')
             series.libraries = [
                 library for library in series.libraries
                 if library['interface_id'] != interface_id
             ]
 
         if series.data_source_id == interface_id:
-            log.warning(f'Removing Episode Data Source from {series.log_str}')
+            log.warning(f'Removing Episode Data Source from {series}')
             series.data_source_id = None
 
     # Remove linked data source from Templates
     for template in db.query(Template).filter_by(data_source_id=interface_id).all():
-        log.warning(f'Removing Episode Data Source from {template.log_str}')
+        log.warning(f'Removing Episode Data Source from {template}')
         template.data_source_id = None
 
     # Delete from ISP if present
@@ -531,7 +531,7 @@ def delete_connection(
 
     # Delete Connection
     db.delete(connection)
-    log.info(f'Deleting {connection.log_str}')
+    log.info(f'Deleting {connection}')
 
     # Commit changes to global options and Database
     preferences.commit()

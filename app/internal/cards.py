@@ -57,7 +57,7 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                     if series.monitored:
                         refresh_episode_data(db, series, log=log)
                     else:
-                        log.debug(f'{series} is Unmonitored, not refreshing '
+                        log.debug(f'{series} is unmonitored, not refreshing '
                                   f'Episode data')
 
                     # Set watch statuses of all Episodes
@@ -74,7 +74,7 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                             translate_episode(db, episode, commit=False, log=log)
                         db.commit()
                     else:
-                        log.debug(f'{series} is Unmonitored, skipping translations')
+                        log.debug(f'{series} is unmonitored, skipping translations')
 
                     # Download Source Images
                     if series.monitored:

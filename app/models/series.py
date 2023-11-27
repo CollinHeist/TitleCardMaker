@@ -145,7 +145,10 @@ class Series(Base):
 
 
     def __repr__(self) -> str:
+        """Returns an unambiguous string representation of the object."""
+
         return f'Series[{self.id}] {self.full_name}'
+
 
     # Columns from relationships
     @property

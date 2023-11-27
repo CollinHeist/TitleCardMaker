@@ -65,7 +65,7 @@ def initialize_connections(
         for connection in connections:
             # Warn if disabled
             if not connection.enabled:
-                log.warning(f'Not initializing {connection.log_str} - disabled')
+                log.debug(f'Not initializing {connection} - disabled')
                 continue
 
             try:
@@ -74,7 +74,7 @@ def initialize_connections(
                 )
             except Exception as exc:
                 preferences.invalid_connections.append(connection.id)
-                log.exception(f'Error initializing {connection.log_str} - {exc}', exc)
+                log.exception(f'Error initializing {connection} - {exc}', exc)
 
     if preferences.invalid_connections:
         log.debug(f'Disabled Connection(s) {preferences.invalid_connections}')
@@ -107,7 +107,7 @@ def add_connection(
     connection = Connection(**new_connection.dict())
     db.add(connection)
     db.commit()
-    log.info(f'Created {connection.log_str}')
+    log.info(f'Created {connection}')
 
     # Update global use_ attribute
     preferences = get_preferences()
@@ -116,7 +116,7 @@ def add_connection(
     # Assign global EDS if unset
     if preferences.episode_data_source is None:
         preferences.episode_data_source = connection.id
-        log.info(f'Set global Episode Data Source to {connection.log_str}')
+        log.info(f'Set global Episode Data Source to {connection}')
         preferences.commit()
 
     # Update InterfaceGroup

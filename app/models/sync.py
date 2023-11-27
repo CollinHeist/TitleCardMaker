@@ -2,10 +2,7 @@ from logging import Logger
 from typing import Literal, Optional, TypedDict, Union, TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, JSON, String
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
-from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, object_session, relationship
 
 from app.database.session import Base
@@ -69,6 +66,12 @@ class Sync(Base):
     excluded_series_type: Mapped[Optional[str]]
 
 
+    def __repr__(self) -> str:
+        """Returns an unambiguous string representation of the object."""
+
+        return f'Sync[{self.id}] {self.name}'
+
+
     def assign_templates(self,
             templates: list[Template],
             *,
@@ -117,15 +120,6 @@ class Sync(Base):
         """
 
         return [template.id for template in self.templates]
-
-
-    @property
-    def log_str(self) -> str:
-        """
-        Loggable string that defines this object (i.e. `__repr__`).
-        """
-
-        return f'Sync[{self.id}] {self.name}'
 
 
     @property
