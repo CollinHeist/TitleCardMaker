@@ -401,7 +401,8 @@ def load_series_title_cards(
 
     # Determine if in single-library mode
     single_library_mode = (
-        get_preferences().library_unique_cards or len(series.libraries) == 1
+        (not get_preferences().library_unique_cards)
+        or len(series.libraries) == 1
     )
 
     # Get list of Episodes to reload
