@@ -51,7 +51,7 @@ def delay_zip_deletion(zip_directory: Path, zip_file: Path) -> None:
     """
 
     # Wait a while to give the browser time to download the zips
-    sleep(15)
+    sleep(5)
 
     # Delete zip file
     zip_file.unlink(missing_ok=True)
