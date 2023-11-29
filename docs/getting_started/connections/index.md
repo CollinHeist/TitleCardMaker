@@ -16,11 +16,12 @@ applicable to your setup will improve TCM's operation.
 
 !!! warning "Using Multiple Media Servers"
 
-    Although using multiple Media Servers together is _possible_, using
-    [watch-specific
+    Using multiple Media Servers together is _possible_, using [watch-specific
     styles](../../user_guide/settings.md#watched-and-unwatched-episode-styles)
-    will not integrate well if the two Servers have different watch statuses for
-    a given Episode.
+    will require enabling the global [multi-library
+    filename](../../user_guide/settings.md#multi-library-filename-support)
+    setting in order to properly integrate. Carefully read the in-UI help text
+    and the linked documentation before enabling this.
 
 Use the sidebar to find the instructions to set up the connections for each type
 of server.

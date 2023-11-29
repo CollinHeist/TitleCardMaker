@@ -100,31 +100,25 @@ importing YAML. A summary of what each box enables is below:
 
     ??? question "What settings are not imported? Why?"
     
-        There are [a lot]() of changes between TCM v1 and v2 - because of this,
+        There are [a lot](...) of changes between TCM v1 and v2 - because of this,
         some settings are no longer applicable, and as such are not imported.
         These are:
 
         The list of Series YAML files (`options`, `series`)
         
         :   TitleCardMaker no longer reads YAML files for lists of Series to
-            create Title Cards for. However, these files _can_ be [imported]().
+            create Title Cards for. However, these files _can_ be imported.
 
         Execution mode (`options`, `execution_mode`)
 
         :   TitleCardMaker now executes all primary tasks on separate,
-            [schedulable](), intervals. The concept of the two different
-            execution modes is no longer applicable.
+            [schedulable](../user_guide/scheduler.md), intervals. The concept of
+            the two different execution modes is no longer applicable.
 
         Font validation (`options`, `validate_fonts`)
 
         :   This feature was hardly ever _disabled_, as there is very little
             reason to do so. Font validation is always enabled.
-
-        Language codes (`options`, `language_codes`)
-
-        :   Language codes are now interpreted directly from a Series' or
-            Episode's episode text format, and do not need to be globally
-            enabled.
 
         Various Sync options
 

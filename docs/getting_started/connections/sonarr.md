@@ -21,8 +21,11 @@ is _generally_ the recommended option for most users.
 
 ## Connecting
 
-1. Toggle the `Enable Sonarr` checkbox.
-2. Enter the _root_ URL of your Sonarr server (including the port).
+1. Click the <span class="example md-button">Add Connection</span> button to
+create a blank Connection.
+
+2. Give this Connection some descriptive name - e.g. `Sonarr 4K` - and enter the
+_root_ URL to your Sonarr server __including the port__.
 
     ??? example "Example URL"
 
@@ -30,7 +33,9 @@ is _generally_ the recommended option for most users.
         should be _like_ `http://192.168.0.29:8989/`.
 
 3. Open the Sonarr WebUI, then open your settings from the left navigation bar.
-4. Towards the bottom of the Settings submenu, open `General`.
+
+4. Towards the bottom of the Settings sub-menu, open `General`.
+
 5. Under the Security subsection, and find and copy the API key - it should be a
 32-character long string of numbers and the letters between A and F.
 
@@ -40,7 +45,9 @@ is _generally_ the recommended option for most users.
         modify Sonarr.
 
 6. Back within TitleCardMaker, paste the API key from Step 5 into the API key
-input box.
+input box and then click <span class="example md-button">Create</span>. TCM will
+reload the page.
+
 7. The next step is to add the top-level directories for each of your Television
 libraries to that TitleCardMaker can automatically detect a Series' Library when
 [Syncing](../first_sync/sonarr.md) from Sonarr. See the following examples for
@@ -56,50 +63,44 @@ guidance on how to enter your library paths.
 
         === "Example 1"
 
-            I have two libraries, called `Anime` and `TV` in my Media Servers
-            that are in __separate__ directories. Within Sonarr, the `Anime`
-            library is located under `/data/media/anime`, and the `TV` library
-            is located under `/data/media/tv`.
+            Within Plex, I have two libraries called `Anime` and `TV` located at
+            `/data/media/Anime` and `/data/media/TV` respectively. My Library
+            Paths setting should look like:
 
-            Within TitleCardMaker, this setting should be entered as:
-
-            | Library Name | Path |
-            | ---: | :--- |
-            | Anime | /data/media/anime |
-            | TV | /data/media/tv |
+            | Media Server | Library Name | Path               |
+            | :----------- | :----------- | :----------------- |
+            | Plex         | Anime        | /data/media/Anime/ |
+            | Plex         | TV           | /data/media/TV/    |
 
         === "Example 2"
 
-            I have two libraries, called `Anime` and `TV` in my Media Servers
-            that are in __separate__ directories. Within Sonarr, the `Anime`
-            library is located under `/data/media/anime`, but the `TV` library
-            is located under two _separate_ directories, `/data/media/tv_4k` and
-            `/data/media/tv_hd`. 
+            Within Jellyfin, I have three libraries called `Anime`, `Anime 4K`,
+            `TV Shows`, and `TV Shows 4K` - they are located at
+            `/data/media/anime`, `/data/media/anime 4k/`, `/data/media/tv/`, and
+            `/data/media/tv 4k` respectively. The Library Paths setting should
+            look like:
 
-            Within TitleCardMaker, this setting should be entered as:
-
-            | Library Name | Path |
-            | ---: | :--- |
-            | Anime | /data/media/anime |
-            | TV | /data/media/tv_4k |
-            | TV | /data/media/tv_hd |
-
-            Notice how each root directory of the TV library needs an entry.
+            | Media Server | Library Name | Path                  |
+            | :----------- | :----------- | :-------------------- |
+            | Jellyfin     | Anime        | /data/media/anime/    |
+            | Jellyfin     | Anime 4K     | /data/media/anime 4k/ |
+            | Jellyfin     | TV           | /data/media/TV/       |
+            | Jellyfin     | TV 4K        | /data/media/TV 4k/    |
 
         === "Example 3"
 
-            I have three libraries, called `Anime`, `TV`, and `TV (4K)` in my
-            Media Servers that are in __separate__ directories. Within Sonarr,
-            the `Anime` library is located under `J:\Anime`, the `TV` library
-            under `K:\TV`, and the `TV (4K)` library is under `K:\TV 4K`. 
+            Within Emby I have two libraries: `TV`, and `Reality TV` located at
+            `C:\TV` and `K:\Reality TV`; within Plex there are two libraries:
+            `Anime` and `Reality TV` located at `C:\Anime` and `K:\Reality TV`
+            (the same directory as within Emby). The Library Paths setting
+            should look like:
 
-            Within TitleCardMaker, this setting should be entered as:
-
-            | Library Name | Path |
-            | ---: | :--- |
-            | Anime | J:\Anime |
-            | TV | K:\TV |
-            | TV (4K) | K:\TV 4K |
+            | Media Server | Library Name | Path          |
+            | :----------- | :----------- | :------------ |
+            | Emby         | TV           | C:\TV         |
+            | Emby         | Reality TV   | K:\Reality TV |
+            | Plex         | Anime        | C:\Anime      |
+            | Plex         | Reality TV   | K:\Reality TV |
 
 8. After entering all the necessary library paths, click
 <span class="example md-button">Save Changes</span>.

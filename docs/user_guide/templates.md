@@ -72,8 +72,9 @@ All Templates have the following options which can be adjusted:
 - ...
 
 Each of these is described in greater detail below. All values can be left
-blank - doing so will direct TCM to use the effective value from the assigned
-Series, Episode, or global setting.
+blank - if blank, TCM will use the next highest priority setting from the
+Series, Episode, or global setting. Setting priorities are listed
+[here](./setting_priority.md).
 
 ### Name
 
@@ -301,6 +302,24 @@ reference value.
         | does not contain | Do not apply to Episodes with extras of the given label | :fontawesome-regular-circle-check:{.green} |
 
 ### Card Type
+
+The card type to apply as part of this Template.
+
+### Font
+
+A [Named Font](./fonts.md) to apply as part of this Template.
+
+### Watched and Unwatched Episode Style
+
+How to [stylize](./settings.md#watched-and-unwatched-episode-styles) watched
+and unwatched Episodes as part of this Template.
+
+### Hide Season Titles
+
+Whether to hide season titles as part of this Template.
+
+### Season Titles
+
 
 
 

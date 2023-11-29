@@ -23,10 +23,14 @@ much higher quality (and wider selection) of images compared to the Media
 Servers. It is also the only Connection which can provided Episode translations,
 Series logos[^1], backdrops, and posters.
 
-1. Click the external link :octicons-link-external-16: icon and open the TMDb
+1. Click the <span class="example md-button">Add Connection</span> button to
+create a blank Connection.
+
+2. Click the external link :octicons-link-external-16: icon next to _API Key_
+and open the TMDb
 [Getting Started](https://developer.themoviedb.org/docs/getting-started) page.
 
-2. Follow their instructions to generate an API key for yourself. You can put
+3. Follow their instructions to generate an API key for yourself. You can put
 whatever you'd like in the application details (such as TCM, nunya, etc.). Copy
 the generated API key.
 
@@ -36,10 +40,7 @@ the generated API key.
         your behalf (although there's no real danger to your TMDb account - I
         mean who would steal a free API key?).
 
-3. Back in TCM, on the Connections page, scroll down towards the bottom and
-click the <span class="example md-button">Add Connection</span> button beneath _TheMovieDatabase_.
-
-4. Paste your API key from Step 2 into the API Key input box.
+4. Paste your API key into the API Key input box.
 
 5. Enter your desired minimum image resolution. This is personal preference
 based on your own quality threshold of images - I personally use `800x400`. If
@@ -76,5 +77,6 @@ select these in the order you which TCM to grab logos in.
 
 [^1]: _Technically_, Emby and Jellyfin can provide logos as well, however their
 logos are not browsable.
+
 [^2]: For more details, see
 [here](../../user_guide/connections.md#ignore-localized-images).
