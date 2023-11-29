@@ -513,7 +513,7 @@ def resolve_card_settings(
     # Turn styles into boolean style toggles
     elif (library and
         (watched := episode.get_watched_status(library['interface_id'],
-                                              library['name'])) is not None):
+                                               library['name'])) is not None):
         prefix = 'watched' if watched else 'unwatched'
         style = card_settings[f'{prefix}_style']
         card_settings['blur'] = 'blur' in style
@@ -524,7 +524,7 @@ def resolve_card_settings(
         card_settings['grayscale'] = False
 
     # Add source file
-    if card_settings.get('source_file', None) is None:
+    if card_settings.get('source_file') is None:
         card_settings['source_file'] = episode.get_source_file(
             card_settings['watched_style' if watched else 'unwatched_style'],
         )
