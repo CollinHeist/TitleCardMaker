@@ -5,7 +5,7 @@ from re import match as re_match
 from typing import Any, Literal, Optional, Union
 
 from pydantic import ( # pylint: disable=no-name-in-module
-    FilePath, PositiveFloat, PositiveInt, conint, constr, root_validator,
+    FilePath, PositiveFloat, PositiveInt, confloat, conint, constr, root_validator,
     validator,
 )
 
@@ -182,8 +182,9 @@ class CutoutCardType(BaseCardModel):
     font_interword_spacing: int = 0
     font_size: PositiveFloat = 1.0
     font_vertical_shift: int = 0
-    overlay_color: BetterColor = 'black'
     blur_edges: bool = False
+    overlay_color: BetterColor = 'black'
+    overlay_transparency: confloat(ge=0.0, le=1.0) = 0.0
 
 TextPosition = Literal[
     'upper left', 'upper right', 'right', 'lower right', 'lower left', 'left'
