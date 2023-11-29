@@ -260,7 +260,7 @@ def download_episode_source_image(
         commit: bool = True,
         raise_exc: bool = False,
         log: Logger = log,
-    ) -> str:
+    ) -> Optional[str]:
     """
     Download the source image for the given Episode.
 
@@ -274,7 +274,8 @@ def download_episode_source_image(
         log: Logger for all log messages.
 
     Returns:
-        URI to the Episode source image.
+        URI to the Episode source image. None if no Source Image was
+        found.
 
     Raises:
         HTTPException (400): The image cannot be downloaded.
@@ -349,7 +350,7 @@ def download_episode_source_image(
         # If no source image was returned, increment attempts counter
         if source_image is None:
             episode.image_source_attempts[interface.INTERFACE_TYPE] += 1
-            log.debug(f'{episode!r} failed to download Source Image from '
+            log.debug(f'{episode} failed to download Source Image from '
                       f'Connection[{interface_id}] {interface.INTERFACE_TYPE}')
             if commit:
                 db.commit()
@@ -379,7 +380,7 @@ def download_episode_source_images(
         commit: bool = True,
         raise_exc: bool = False,
         log: Logger = log,
-    ) -> list[str]:
+    ) -> list[Optional[str]]:
     """
     Download all Source Images for the given Episode.
 

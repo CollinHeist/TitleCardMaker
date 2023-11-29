@@ -387,7 +387,7 @@ def create_card_for_episode(
 
 
 @card_router.post('/key', tags=['Plex', 'Tautulli'])
-def create_cards_for_plex_rating_keys(
+def create_cards_for_plex_rating_key(
         request: Request,
         key: int = Body(...),
         db: Session = Depends(get_database),
@@ -460,7 +460,7 @@ def create_cards_for_plex_rating_keys(
         # Look for source, add translation, create card if source exists
         images = download_episode_source_images(db, episode, log=log)
         translate_episode(db, episode, log=log)
-        if not images:
+        if not any(images):
             log.info(f'{episode.log_str} has no source image - skipping')
             continue
         create_episode_cards(db, None, episode, log=log)
