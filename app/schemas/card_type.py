@@ -46,7 +46,7 @@ class Extra(Base):
     identifier: DictKey
     description: str
     tooltip: Optional[str] = None
-    card_type: str
+    card_type: Optional[str] = None
 
 class BaseCardModel(Base):
     source_file: FilePath

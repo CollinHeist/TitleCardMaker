@@ -33,6 +33,32 @@ USER_CARD_TYPE_URL = (
     'web-ui/cards.json'
 )
 
+# Extra variable overrides
+VARIABLE_OVERRIDES = [
+    Extra(
+        name='Title Text Format', identifier='title_text_format',
+        description='How to format title text',
+        tooltip=(
+            'Applies after all Font replacements, casing, etc. See '
+            'documentation for full list of supported variables.'
+        ),
+    ), Extra(
+        name='Season Text Format', identifier='season_text_format',
+        description='How to format season text',
+        tooltip=(
+            'Applies after any season title ranges. See documentation for full '
+            'list of supported variables.'
+        ),
+    ), Extra(
+        name='Logo Filepath', identifier='logo_file',
+        description='Logo file name or file name format string',
+        tooltip=(
+            'Override the specific logo file. This is relative to the Series '
+            'source directory.'
+        ),
+    )
+]
+
 
 def _get_local_cards(preferences: Preferences) -> list[LocalCardType]:
     """
@@ -178,7 +204,7 @@ def get_all_supported_extras(
         if (show_excluded
             or card_type.identifier not in preferences.excluded_card_types)
         for extra in card_type.supported_extras
-    ]
+    ] + VARIABLE_OVERRIDES
 
 
 @availablility_router.get('/template-filters', status_code=200, tags=['Templates'])
