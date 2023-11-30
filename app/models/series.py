@@ -55,16 +55,14 @@ class Series(Base):
     )
     font_id: Mapped[Optional[int]] = mapped_column(ForeignKey('font.id'), default=None)
     sync_id: Mapped[Optional[int]] = mapped_column(ForeignKey('sync.id'), default=None)
+    
     data_source: Mapped['Connection'] = relationship(back_populates='series',)
     font: Mapped['Font'] = relationship(back_populates='series')
     sync: Mapped['Sync'] = relationship(back_populates='series')
-
     cards: Mapped[list['Card']] = relationship(
         back_populates='series',
         cascade='all,delete-orphan',
     )
-    font: Mapped['Font'] = relationship(back_populates='series')
-    sync: Mapped['Sync'] = relationship(back_populates='series')
     loaded: Mapped[list['Loaded']] = relationship(
         back_populates='series',
         cascade='all,delete-orphan',
