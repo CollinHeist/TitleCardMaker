@@ -1,4 +1,4 @@
-from typing import Any, Optional, TypeVar
+from typing import Optional, TypeVar
 
 
 _Setting = TypeVar('_Setting')
@@ -55,7 +55,7 @@ class TieredSettings:
 
 
     @staticmethod
-    def new_settings(*dicts: tuple[dict[str, Any]]) -> dict[str, Any]:
+    def new_settings(*dicts: dict[str, _Setting]) -> dict[str, _Setting]:
         """
         Resolve the TieredSettings for the given dictionaries, and
         return the created base.
@@ -97,7 +97,7 @@ class TieredSettings:
 
 
     @staticmethod
-    def resolve_singular_setting(*values: tuple[_Setting]) -> Optional[_Setting]:
+    def resolve_singular_setting(*values: _Setting) -> Optional[_Setting]:
         """
         Get the highest priority (non-None) value of the given values.
 
