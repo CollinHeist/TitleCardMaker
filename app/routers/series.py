@@ -36,8 +36,9 @@ series_router = APIRouter(
 
 OrderBy = Literal[
     'alphabetical', 'reverse-alphabetical',
-    'id', 'reverse-id',
     'cards', 'reverse-cards',
+    'id', 'reverse-id',
+    'sync',
     'year', 'reverse-year'
 ]
 @series_router.get('/all', status_code=200)
@@ -60,11 +61,6 @@ def get_all_series(
     elif order_by == 'reverse-alphabetical':
         series = query.order_by(desc(models.series.Series.sort_name))\
             .order_by(models.series.Series.year)
-    # Order by ID
-    elif order_by == 'id':
-        series = query.order_by(models.series.Series.id)
-    elif order_by == 'reverse-id':
-        series = query.order_by(models.series.Series.id.desc())
     # Order by Cards
     elif order_by == 'cards':
         series = query.outerjoin(models.card.Card)\
@@ -74,6 +70,16 @@ def get_all_series(
         series = query.outerjoin(models.card.Card)\
             .group_by(models.series.Series.id)\
             .order_by(func.count(models.series.Series.id).desc())
+    # Order by Sync
+    elif order_by == 'sync':
+        series = query.order_by(models.series.Series.sync_id.desc(),
+                                models.series.Series.sort_name,
+                                models.series.Series.year)
+    # Order by ID
+    elif order_by == 'id':
+        series = query.order_by(models.series.Series.id)
+    elif order_by == 'reverse-id':
+        series = query.order_by(models.series.Series.id.desc())
     # Order by Year > Name
     elif order_by == 'year':
         series = query.order_by(models.series.Series.year)\

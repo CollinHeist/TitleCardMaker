@@ -337,7 +337,7 @@ function _populateSeriesCard(series, template) {
  * Submit an API request to get all the Series at the given page number and add
  * their content to the page.
  * @param {int} [page] - Page number of Series to load 
- * @param {boolean} [keepSelection] - Whether to keep the current selection of
+ * @param {boolean} [keepSelection=false] - Whether to keep the current selection of
  * Series.
  */
 async function getAllSeries(page=undefined, keepSelection=false) {
@@ -493,15 +493,17 @@ function initAll() {
 }
 
 const sortStates = {
-  name:  ['alphabetical', 'reverse-alphabetical'],
-  id:    ['id',           'reverse-id'],
   cards: ['cards',        'reverse-cards'],
+  id:    ['id',           'reverse-id'],
+  name:  ['alphabetical', 'reverse-alphabetical'],
+  sync:  ['sync', 'sync'],
   year:  ['year',         'reverse-year'],
 }
 /**
- * Adjust how the Series are sorted on the home page. This updates the
- * local storage for the sort parameter, and re-queries the current page.
- * @param {string} sortBy - How to sort the Series on the page.
+ * Adjust how the Series are sorted on the home page. This updates the local
+ * storage for the sort parameter, and re-queries the current page.
+ * @param {"cards" | "id" | "name" | "sync" | "year"} sortBy - How to sort the
+ * Series on the page.
  */
 function sortSeries(sortBy) {
   // Get current sort state
