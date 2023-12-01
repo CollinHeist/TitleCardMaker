@@ -1,3 +1,25 @@
+/**
+ * @typedef {Object} SearchResult
+ * @property {string} name
+ * @property {number} year
+ * @property {Array<string>} overview
+ * @property {?string} poster
+ * @property {?boolean} ongoing
+ * @property {?string} emby_id
+ * @property {?string} imdb_id
+ * @property {?string} jellyfin_id
+ * @property {?string} sonarr_id
+ * @property {?string} tmdb_id
+ * @property {?string} tvdb_id
+ * @property {?string} tvrage_id
+ * @property {boolean} added
+ */
+
+/**
+ * @typedef {Object} SearchResultsPage
+ * @property {Array<SearchResult>} items
+*/
+
 /*
  * Add the indicated number of placeholder elements.
  */
@@ -65,9 +87,11 @@ function addSeries(result, resultElementId) {
   });
 }
 
-/*
+/**
  * Submit an API request to import the given global Blueprint - creating
  * the associated Series if it does not exist.
+ * @param {number} blueprintId - ID of the Blueprint to import.
+ * @param {number} elementId - ID of the element in the DOM to update.
  */
 function importBlueprint(blueprintId, elementId) {
   $(`#${elementId}`).toggleClass('loading', true).toggleClass('transition', false);
@@ -297,7 +321,7 @@ async function initAll() {
  * Query for a series. This reads the input, makes the API call and then
  * displays the results as cards.
  */
-async function querySeries() {
+function querySeries() {
   const resultTemplate = document.getElementById('search-result-template');
   const resultSegment = document.getElementById('search-results');
   let query = $('#search-query').val();
@@ -310,41 +334,62 @@ async function querySeries() {
   const interfaceId = $('input[name="interface_id"]').val() || {{preferences.episode_data_source}};
 
   // Submit API request
-  const allResults = await fetch(`/api/series/lookup?name=${query}&interface_id=${interfaceId}`).then(resp => resp.json());
-  const results = allResults.items.map((result, index) => {
-    // Clone template
-    const card = resultTemplate.content.cloneNode(true);
-    // Assign ID
-    card.querySelector('.card').id = `result${index}`;
-    // Add DB ID to image src string in case a proxy URL is needed
-    card.querySelector('img').src = result.poster;
-    // Fill out content
-    card.querySelector('[data-value="name"]').innerText = result.name;
-    card.querySelector('[data-value="year"]').innerText = result.year;
-    if (result.ongoing === null) {
-      card.querySelector('[data-value="ongoing"]').remove();
-    } else {
-      card.querySelector('[data-value="ongoing"]').innerText = result.ongoing ? 'Ongoing' : 'Ended';
-    }
-    card.querySelector('[data-value="overview"]').innerHTML = '<p>' + result.overview.join('</p><p>') + '</p>';
-    // Disable card if already added
-    if (result.added) {
-      card.querySelector('img').classList.add('disabled');
-      card.querySelector('.card').classList.add('disabled'); 
-    } else {
-      // Launch add Series modal when card is clicked
-      card.querySelector('.card').onclick = () => showAddSeriesModal(result, `result${index}`);
-      // Quick-add Series when button is pressed
-      card.querySelector('button[data-action="quick-add"]').onclick = (event) => {
-        // Do not execute parent card onclick function
-        event.stopPropagation();
-        quickAddSeries(result, `result${index}`);
-      }
-    }
+  $.ajax({
+    type: 'GET',
+    url: `/api/series/lookup?name=${query}&interface_id=${interfaceId}`,
+    /**
+     * Lookup successful, populate page.
+     * @param {SearchResultsPage} allResults - Search results for this query.
+    */
+    success: allResults => {
+      const results = allResults.items.map((result, index) => {
+        // Clone template
+        const card = resultTemplate.content.cloneNode(true);
 
-    return card;
+        // Assign ID
+        card.querySelector('.card').id = `result${index}`;
+
+        // Add DB ID to image src string in case a proxy URL is needed
+        card.querySelector('img').src = result.poster;
+
+        // Fill out content
+        card.querySelector('[data-value="name"]').innerText = result.name;
+        card.querySelector('[data-value="year"]').innerText = result.year;
+
+        if (result.ongoing === null) {
+          card.querySelector('[data-value="ongoing"]').remove();
+        } else {
+          card.querySelector('[data-value="ongoing"]').innerText = result.ongoing ? 'Ongoing' : 'Ended';
+        }
+
+        card.querySelector('[data-value="overview"]').innerHTML = '<p>' + result.overview.join('</p><p>') + '</p>';
+        
+        // Disable card if already added
+        if (result.added) {
+          card.querySelector('img').classList.add('disabled');
+          card.querySelector('.card').classList.add('disabled'); 
+        } else {
+          // Launch add Series modal when card is clicked
+          card.querySelector('.card').onclick = () => showAddSeriesModal(result, `result${index}`);
+          // Quick-add Series when button is pressed
+          card.querySelector('button[data-action="quick-add"]').onclick = (event) => {
+            // Do not execute parent card onclick function
+            event.stopPropagation();
+            quickAddSeries(result, `result${index}`);
+          }
+        }
+
+        return card;
+      });
+
+      // Add elements to page, transition them in
+      resultSegment.replaceChildren(...results);
+      refreshTheme();
+      $('#search-results .card').transition({animation: 'fade', interval: 75});
+    },
+    error: response => {
+      showErrorToast({title: 'Error Looking up Series', response});
+      $('#search-results .placeholder').transition({animation: 'fade', interval: 25});
+    },
   });
-  resultSegment.replaceChildren(...results);
-  $('#search-results .card').transition({animation: 'fade', interval: 75});
-  refreshTheme();
 }
