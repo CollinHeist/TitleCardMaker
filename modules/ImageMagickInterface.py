@@ -1,5 +1,5 @@
 from logging import Logger
-from os import environ
+from os import environ, name as os_name
 from pathlib import Path
 from re import findall
 from shlex import split as command_split
@@ -129,6 +129,10 @@ class ImageMagickInterface:
         Returns:
             Tuple of the STDOUT and STDERR of the executed command.
         """
+
+        # Un-escape \( and \) into ( and )
+        if os_name == 'nt':
+            command = command.replace('\(', '(').replace('\)', ')')
 
         # If a docker image ID is specified, execute the command in that container
         # otherwise, execute on the host machine (no docker wrapper)
