@@ -649,7 +649,7 @@ function batchDeleteSeries() {
     contentType: 'application/json',
     success: () => {
       showInfoToast(`Deleted ${selectedSeries.length} Series`);
-      getAllSeries(undefined, true);
+      getAllSeries(undefined, false); // Clear selection
       getAllStatistics();
     },
     error: response => showErrorToast({title: 'Error Deleting Series', response}),
