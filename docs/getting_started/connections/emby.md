@@ -16,12 +16,14 @@ tags:
 
 As a Media Server, Emby can serve as an
 [Episode Data Source](../../user_guide/settings.md#episode-data-source),
-[Image Source](../../user_guide/settings.md#image-source-priority), and
-(obviously) as a location where Title Cards are uploaded to.
+[Image Source](../../user_guide/settings.md#image-source-priority), and as a
+location where Title Cards are uploaded to.
 
-1. Toggle the `Enable Emby` checkbox.
+1. Click the <span class="example md-button">Add Connection</span> button to
+create a blank Connection.
 
-2. Enter the _root_ URL to your Emby server (including the port).
+2. Give this Connection some descriptive name - e.g. `Emby` - and enter the
+_root_ URL to your Emby server __including the port__.
 
     ??? example "Example URL"
 
@@ -40,13 +42,15 @@ icon in the top right.
 the letters between A and F.
 
 7. Back within TitleCardMaker, paste the API key from Step 6 into the API key
-input box and then click <span class="example md-button">Save Changes</span>.
+input box and then click <span class="example md-button">Create</span>. TCM will
+reload the page.
 
-    !!! tip "Tip"
-
-        If your username does not appear, reload the page.
-
-8. Select the username of the account you would like Episode watch-statuses to
-be queried from.
+8. After the page has reloaded, expand the Connection form you just created and
+select the username of the account you would like Episode watch-statuses to be
+queried from.
 
 9. Click <span class="example md-button">Save Changes</span>.
+
+The above process can be repeated for as many Emby Media Servers as you have. I
+do recommend specifying a _unique_ name for each Connection so they can be
+easily distinguished within the UI.

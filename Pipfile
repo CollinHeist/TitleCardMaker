@@ -6,7 +6,7 @@ name = "pypi"
 [packages]
 regex = "==2023.10.3"
 num2words = "==0.5.12"
-pyyaml = "==6.0"
+pyyaml = "==6.0.1"
 requests = "==2.31.0"
 titlecase = "==2.4"
 tqdm = "==4.66.1"

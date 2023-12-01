@@ -109,7 +109,7 @@ TCM - this is `config` - by executing the following command:
         ```
 
 3. We now need to make sure this directory has the correct permissions assigned
-to them.
+to it.
 
     === ":material-linux: Linux"
 

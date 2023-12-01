@@ -171,7 +171,7 @@ def refresh_episode_data(
     )
 
     # Filter Episodes
-    changed, episodes = False, []
+    changed, episodes, new_episodes = False, [], []
     for episode_info, watched in all_episodes:
         # Skip specials if indicated
         if not sync_specials and episode_info.season_number == 0:
@@ -186,7 +186,7 @@ def refresh_episode_data(
 
         # Episode does not exist, add
         if existing is None:
-            log.info(f'{series.log_str} New Episode "{episode_info.title.full_title}"')
+            new_episodes.append(episode_info.title.full_title)
             episode = Episode(
                 series=series,
                 title=episode_info.title.full_title,
@@ -217,6 +217,12 @@ def refresh_episode_data(
                 log.debug(f'{series.log_str} {existing.log_str} Updating watched status')
                 log.debug(f'{existing.watched_statuses=}')
                 changed = True
+
+    # Log any new Episodes
+    if len(new_episodes) > 1:
+        log.info(f'{series} {len(new_episodes)} new Episodes')
+    elif len(new_episodes) == 1:
+        log.info(f'{series} new Episode {new_episodes[0]}')
 
     # Set Episode ID's for all new Episodes as background task or directly
     if background_tasks is None:

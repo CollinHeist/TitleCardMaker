@@ -384,7 +384,11 @@ async function initializeExtraDropdowns(
       found = false;
   cardTypes.forEach(card_type => {
     // Add dividing header for each card type
-    dropdownValues.push({name: card_type, type: 'header', divider: true});
+    dropdownValues.push({
+      name: card_type || 'Variable Overrides',
+      type: 'header',
+      divider: true
+    });
 
     // Add each extra
     allExtras.forEach(extra => {
@@ -413,8 +417,8 @@ async function initializeExtraDropdowns(
   });
 
   // If not found, must be manually specified - add
-  if (!found) {
-    dropdownValues.push({name: 'Variable Overrides', type: 'header', divider: true});
+  if (!found && value) {
+    // dropdownValues.push({name: 'Variable Overrides', type: 'header', divider: true});
     dropdownValues.push({
       name: value,
       value: value,

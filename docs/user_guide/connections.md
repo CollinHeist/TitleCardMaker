@@ -362,7 +362,7 @@ See the examples for details.
 
     === "Example 2"
 
-        Within Jellyfin, I have three libraries called `Anime`, `Anime 4K`,
+        Within Jellyfin, I have four libraries called `Anime`, `Anime 4K`,
         `TV Shows`, and `TV Shows 4K` - they are located at `/data/media/anime`,
         `/data/media/anime 4k/`, `/data/media/tv/`, and `/data/media/tv 4k`
         respectively. The Library Paths setting should look like:

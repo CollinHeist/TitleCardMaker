@@ -383,9 +383,10 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                             f'"{library_name}" has no index - skipping')
                 continue
 
-            # Skip temporary titles
+            # Skip temp titles if title matching and within 2 days of airing
             airdate = plex_episode.originallyAvailableAt
-            if (airdate is not None
+            if (not series_info.match_titles
+                and airdate is not None
                 and self.__TEMP_IGNORE_REGEX.match(plex_episode.title)
                 and airdate + timedelta(days=2) > datetime.now()):
                 log.debug(f'Temporarily ignoring '
