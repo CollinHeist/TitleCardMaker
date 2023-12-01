@@ -348,7 +348,13 @@ async function getAllSeries(page=undefined, keepSelection=false) {
   const sortParam = window.localStorage.getItem('sort-by') || 'alphabetical'
 
   // Fade out existing posters
-  $('#series-list .card').transition({animation: 'scale', interval: 15, reverse: true});
+  {% if not preferences.reduced_animations %}
+    {% if preferences.home_page_table_view %}
+    $('#series-table tr').transition({animation: 'scale', interval: 10, reverse: true});
+    {% else %}
+    $('#series-list .card').transition({animation: 'scale', interval: 10, reverse: true});
+    {% endif %}
+  {% endif %}
 
   // Get this page of Series data
   let allSeriesData = await fetch(`/api/series/all?order_by=${sortParam}&size={{preferences.home_page_size}}&page=${page}`).then(resp => resp.json());
@@ -588,6 +594,26 @@ function batchLoad(reload=false) {
     contentType: 'application/json',
     success: () => showInfoToast(`Loaded Title Cards`),
     error: response => showErrorToast({title: 'Error Loading Title Cards', response}),
+  });
+}
+
+/**
+ * Submit an API request to delete all the Episodes of all the currently
+ * selected Series.
+ */
+function batchDeleteEpisodes() {
+  if (selectedSeries.length === 0) { return; }
+  $.ajax({
+    type: 'DELETE',
+    url: '/api/episodes/batch/delete',
+    data: JSON.stringify(selectedSeries),
+    contentType: 'application/json',
+    success: actions => {
+      showInfoToast(`Deleted Episodes and Title Cards`);
+      getAllSeries(undefined, true);
+      getAllStatistics();
+    },
+    error: response => showErrorToast({title: 'Error Deleting Episodes', response}),
   });
 }
 

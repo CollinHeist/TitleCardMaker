@@ -173,9 +173,7 @@ class Episode(Base):
 
     @property
     def index_str(self) -> str:
-        """
-        Index string as sXeY for this Episode.
-        """
+        """Index string as sXXeYY for this Episode."""
 
         return f'S{self.season_number:02}E{self.episode_number:02}'
 

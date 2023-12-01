@@ -13,6 +13,7 @@ from app import models
 from app.internal.auth import get_current_user
 from app.internal.cards import delete_cards, refresh_remote_card_types
 from app.internal.episodes import set_episode_ids, refresh_episode_data
+from app.models.series import Series
 from app.schemas.base import UNSPECIFIED
 from app.schemas.episode import (
     BatchUpdateEpisode, Episode, NewEpisode, UpdateEpisode
@@ -292,3 +293,25 @@ def get_all_series_episodes(
         sorted_query = query
 
     return paginate(sorted_query)
+
+
+@episodes_router.delete('/batch/delete')
+def batch_delete_episodes(
+        request: Request,
+        series_ids: list[int] = Body(...),
+        db: Session = Depends(get_database),
+    ) -> None:
+    """
+    Perform a batch operation to delete all the Episodes, Cards, and
+    Loaded queries for all the Series with the given IDs.
+    """
+
+    for series in db.query(Series).filter(Series.id.in_(series_ids)).all():
+        delete_cards(
+            db,
+            db.query(models.card.Card).filter_by(series_id=series.id),
+            db.query(models.loaded.Loaded).filter_by(series_id=series.id),
+            log=request.state.log,
+        )
+        db.query(models.episode.Episode).filter_by(series_id=series.id).delete()
+        db.commit()
