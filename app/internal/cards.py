@@ -540,7 +540,7 @@ def resolve_card_settings(
     # Exit if the source file does not exist
     if (CardClass.USES_UNIQUE_SOURCES
         and not card_settings['source_file'].exists()):
-        log.debug(f'{series.log_str} {episode.log_str} Card source image '
+        log.debug(f'{series} {episode} Card source image '
                     f'({card_settings["source_file"].name}) is missing')
         raise MissingSourceImage
 
@@ -666,7 +666,7 @@ def create_episode_card(
 
     # Existing Card file doesn't exist anymore, remove from db and recreate
     if not existing_card.exists:
-        log.debug(f'{series.log_str} {episode.log_str} Card not found - creating')
+        log.debug(f'{series} {episode} Card not found - creating')
         db.delete(existing_card)
         db.commit()
         _start_card_creation()
@@ -689,7 +689,7 @@ def create_episode_card(
 
     # If different, delete existing file, remove from database, create Card
     if different:
-        log.debug(f'{series.log_str} {episode.log_str} Card config changed - recreating')
+        log.debug(f'{series} {episode} Card config changed - recreating')
         Path(existing_card.card_file).unlink(missing_ok=True)
         db.delete(existing_card)
         db.commit()

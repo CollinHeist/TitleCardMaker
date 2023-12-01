@@ -71,8 +71,8 @@ def translate_episode(
                 )
                 if translation is not None:
                     episode.translations[data_key] = translation
-                    log.info(f'{series.log_str} {episode.log_str} translated '
-                             f'{language_code} -> "{translation}" -> {data_key}')
+                    log.info(f'{series} {episode} translated {language_code} -> '
+                             f'"{translation}" -> {data_key}')
                     changed = True
                     break
 

@@ -32,13 +32,13 @@ def download_all_series_logos(*, log: Logger = log) -> None:
             for series in all_series:
                 # If Series is unmonitored, skip
                 if not series.monitored:
-                    log.debug(f'{series.log_str} is not monitored, skipping')
+                    log.debug(f'{series} is not monitored, skipping')
                     continue
 
                 try:
                     download_series_logo(series, log=log)
                 except HTTPException:
-                    log.warning(f'{series.log_str} Skipping logo selection')
+                    log.warning(f'{series} Skipping logo selection')
                     continue
     except Exception as exc:
         log.exception(f'Failed to download series logos', exc)
@@ -164,8 +164,8 @@ def process_svg_logo(
                 detail=f'SVG logo conversion failed'
             )
 
-        log.debug(f'{series.log_str} Converted SVG logo to PNG')
-        log.info(f'{series.log_str} Downloaded logo')
+        log.debug(f'{series} Converted SVG logo to PNG')
+        log.info(f'{series} Downloaded logo')
         return f'/source/{series.path_safe_name}/{logo_file.name}'
 
     # Download failed, raise 400
@@ -238,7 +238,7 @@ def download_series_logo(
 
         # Logo is png and valid, download
         if WebInterface.download_image(logo, logo_file, log=log):
-            log.info(f'{series.log_str} Downloaded logo from '
+            log.info(f'{series} Downloaded logo from '
                      f'{interface.INTERFACE_TYPE}[{interface_id}]')
             return f'/source/{series.path_safe_name}/{logo_file.name}'
 
@@ -358,7 +358,7 @@ def download_episode_source_image(
 
         # Source image is valid, download - error if download fails
         if WebInterface.download_image(source_image, source_file, log=log):
-            log.info(f'{series.log_str} {episode.log_str} Downloaded '
+            log.info(f'{series} {episode} Downloaded '
                      f'"{source_file.name}" from {interface.INTERFACE_TYPE}')
             return f'/source/{series.path_safe_name}/{source_file.name}'
 
@@ -369,7 +369,7 @@ def download_episode_source_image(
             )
 
     # No image source returned a valid image, return None
-    log.debug(f'{series.log_str} {episode.log_str} No source images found')
+    log.debug(f'{series} {episode} No source images found')
     return None
 
 

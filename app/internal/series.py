@@ -47,7 +47,7 @@ def set_all_series_ids(*, log: Logger = log) -> None:
                 try:
                     changed |= set_series_database_ids(series, db, commit=False)
                 except HTTPException:
-                    log.warning(f'{series.log_str} Skipping ID assignment')
+                    log.warning(f'{series} Skipping ID assignment')
                     continue
 
             # Commit changes if any were made
@@ -74,14 +74,14 @@ def load_all_media_servers(*, log: Logger = log) -> None:
             for series in db.query(Series).all():
                 # Skip this Series if it has no library
                 if not series.libraries:
-                    log.debug(f'{series.log_str} has no Library, not loading Title Cards')
+                    log.debug(f'{series} has no Library, not loading Title Cards')
                     continue
 
                 # Load Title Cards for this Series
                 try:
                     load_all_series_title_cards(series, db, log=log)
                 except HTTPException:
-                    log.warning(f'{series.log_str} Skipping Title Card loading')
+                    log.warning(f'{series} Skipping Title Card loading')
                     continue
                 except OperationalError:
                     if (retries := retries + 1) > 10:
@@ -110,7 +110,7 @@ def download_all_series_posters(*, log: Logger = log) -> None:
                 try:
                     download_series_poster(db, series, log=log)
                 except HTTPException:
-                    log.warning(f'{series.log_str} Skipping poster selection')
+                    log.warning(f'{series} Skipping poster selection')
                     continue
     except Exception as e:
         log.exception(f'Failed to download Series posters', e)
@@ -197,7 +197,7 @@ def download_series_poster(
 
     # If no posters were returned, log and exit
     if poster is None:
-        log.warning(f'{series.log_str} no posters found')
+        log.warning(f'{series} no posters found')
         return None
 
     # Get path to the poster to download
@@ -210,7 +210,7 @@ def download_series_poster(
         else:
             path.write_bytes(get(poster, timeout=30).content)
     except Exception as e:
-        log.error(f'{series.log_str} Error downloading poster', e)
+        log.error(f'{series} Error downloading poster', e)
         return None
     series.poster_file = str(path)
     series.poster_url = f'/assets/{series.id}/poster.jpg'
@@ -245,14 +245,14 @@ def process_series(
 
     # Begin processing the Series
     # Refresh episode data, use BackgroundTasks for ID assignment
-    log.debug(f'{series.log_str} Started refreshing Episode data')
+    log.debug(f'{series} Started refreshing Episode data')
     refresh_episode_data(db, series, log=log)
 
     # Update watch statuses
     get_watched_statuses(db, series, series.episodes, log=log)
 
     # Begin downloading Source images - use BackgroundTasks
-    log.debug(f'{series.log_str} Started downloading source images')
+    log.debug(f'{series} Started downloading source images')
     for episode in series.episodes:
         background_tasks.add_task(
             # Function
@@ -262,7 +262,7 @@ def process_series(
         )
 
     # Begin Episode translation - use BackgroundTasks
-    log.debug(f'{series.log_str} Started adding translations')
+    log.debug(f'{series} Started adding translations')
     for episode in series.episodes:
         background_tasks.add_task(
             # Function
@@ -273,7 +273,7 @@ def process_series(
     db.commit()
 
     # Begin Card creation - use BackgroundTasks
-    log.debug(f'{series.log_str} Starting Card creation')
+    log.debug(f'{series} Starting Card creation')
     for episode in series.episodes:
         background_tasks.add_task(
             # Function
@@ -363,10 +363,10 @@ def delete_series(
         small_poster = series_poster.parent / 'poster-750.jpg'
         small_poster.unlink(missing_ok=True)
 
-        log.debug(f'{series.log_str} Deleted poster(s)')
+        log.debug(f'{series} Deleted poster(s)')
 
     # Delete Series; all child objects are deleted on cascade
-    log.info(f'Deleting {series.log_str}')
+    log.info(f'Deleting {series}')
     db.delete(series)
 
     # Commit changes if indicated
@@ -647,7 +647,7 @@ def add_series(
     series = Series(**new_series_dict)
     db.add(series)
     db.commit()
-    log.info(f'Added {series.log_str} to Database')
+    log.info(f'Added {series} to Database')
 
     # Assign Templates
     series.assign_templates(templates, log=log)

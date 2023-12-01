@@ -91,7 +91,7 @@ def download_series_backdrop(
     # Get backdrop, return if exists
     backdrop_file = series.get_series_backdrop(preferences.source_directory)
     if backdrop_file.exists():
-        log.debug(f'{series.log_str} Backdrop file exists')
+        log.debug(f'{series} Backdrop file exists')
         return f'/source/{series.path_safe_name}/backdrop.jpg'
 
     # Download new backdrop
@@ -102,7 +102,7 @@ def download_series_backdrop(
             )
             if (backdrop
                 and WebInterface.download_image(backdrop,backdrop_file,log=log)):
-                log.debug(f'{series.log_str} Downloaded backdrop from TMDb')
+                log.debug(f'{series} Downloaded backdrop from TMDb')
                 return f'/source/{series.path_safe_name}/backdrop.jpg'
 
     raise HTTPException(
@@ -441,7 +441,7 @@ async def set_episode_source_image(
 
     # If file already exists, warn about overwriting
     if source_file.exists():
-        log.info(f'{episode.series.log_str} {episode.log_str} source file '
+        log.info(f'{episode.series} {episode} source file '
                  f'"{source_file.resolve()}" exists - replacing')
 
     # Write new file to the disk
@@ -480,7 +480,7 @@ def mirror_episode_source_image(
     if not source_image.exists():
         raise HTTPException(
             status_code=404,
-            detail=f'Episode {episode.log_str} has no Source Image'
+            detail=f'Episode {episode} has no Source Image'
         )
 
     # Mirror source, overwriting existing file
@@ -545,7 +545,7 @@ async def set_series_logo(
 
     # If file already exists, warn about overwriting
     if file.exists():
-        log.info(f'{series.log_str} logo file exists - replacing')
+        log.info(f'{series} logo file exists - replacing')
 
     # If only URL was required, attempt to download, error if unable
     if url is not None:
@@ -618,7 +618,7 @@ async def set_series_backdrop(
 
     # If file already exists, warn about overwriting
     if file.exists():
-        log.info(f'{series.log_str} backdrop file exists - replacing')
+        log.info(f'{series} backdrop file exists - replacing')
 
     # If only URL was required, attempt to download, error if unable
     if url is not None:

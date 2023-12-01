@@ -184,8 +184,8 @@ def create_cards_for_series(
         try:
             create_episode_cards(db, background_tasks, episode, log=log)
         except HTTPException as e:
-            log.exception(f'{series.log_str} {episode.log_str} Card creation '
-                          f'failed - {e.detail}', e)
+            log.exception(f'{series} {episode} Card creation failed - '
+                          f'{e.detail}', e)
 
     return None
 
@@ -461,7 +461,7 @@ def create_cards_for_plex_rating_key(
         images = download_episode_source_images(db, episode, log=log)
         translate_episode(db, episode, log=log)
         if not any(images):
-            log.info(f'{episode.log_str} has no source image - skipping')
+            log.info(f'{episode} has no source image - skipping')
             continue
         create_episode_cards(db, None, episode, log=log)
 
@@ -573,7 +573,7 @@ def create_cards_for_sonarr_webhook(
         images = download_episode_source_images(db, episode, log=log)
         translate_episode(db, episode, log=log)
         if not images:
-            log.info(f'{episode.log_str} has no source image - skipping')
+            log.info(f'{episode} has no source image - skipping')
             continue
         create_episode_cards(db, None, episode, log=log)
 

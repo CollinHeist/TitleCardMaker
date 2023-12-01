@@ -175,7 +175,7 @@ def refresh_episode_data(
     for episode_info, watched in all_episodes:
         # Skip specials if indicated
         if not sync_specials and episode_info.season_number == 0:
-            log.debug(f'{series.log_str} Skipping {episode_info} - not syncing specials')
+            log.debug(f'{series} Skipping {episode_info} - not syncing specials')
             continue
 
         # Check if this Episode exists in the database already
@@ -208,13 +208,13 @@ def refresh_episode_data(
             if (do_title_match
                 and existing.title != episode_info.title.full_title):
                 existing.title = episode_info.title.full_title
-                log.debug(f'{series.log_str} {existing.log_str} Updating title')
+                log.debug(f'{series} {existing} Updating title')
                 changed = True
                 episodes.append(existing)
 
             # Update watched status
             if existing.add_watched_status(watched):
-                log.debug(f'{series.log_str} {existing.log_str} Updating watched status')
+                log.debug(f'{series} {existing} Updating watched status')
                 log.debug(f'{existing.watched_statuses=}')
                 changed = True
 

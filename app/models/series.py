@@ -55,14 +55,14 @@ class Series(Base):
     )
     font_id: Mapped[Optional[int]] = mapped_column(ForeignKey('font.id'), default=None)
     sync_id: Mapped[Optional[int]] = mapped_column(ForeignKey('sync.id'), default=None)
-    
-    data_source: Mapped['Connection'] = relationship(back_populates='series',)
-    font: Mapped['Font'] = relationship(back_populates='series')
-    sync: Mapped['Sync'] = relationship(back_populates='series')
+
     cards: Mapped[list['Card']] = relationship(
         back_populates='series',
         cascade='all,delete-orphan',
     )
+    data_source: Mapped['Connection'] = relationship(back_populates='series',)
+    font: Mapped['Font'] = relationship(back_populates='series')
+    sync: Mapped['Sync'] = relationship(back_populates='series')
     loaded: Mapped[list['Loaded']] = relationship(
         back_populates='series',
         cascade='all,delete-orphan',
@@ -551,7 +551,6 @@ class Series(Base):
         changed = False
         for id_type, id_ in info.ids.items():
             if id_ and getattr(self, id_type) != id_:
-                # print(f'{self.log_str}.{id_type} | {getattr(self, id_type)} -> {id_}')
                 setattr(self, id_type, id_)
                 changed = True
 

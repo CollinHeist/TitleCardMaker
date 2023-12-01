@@ -1,15 +1,14 @@
-let redMixin = 0;
-/**
+/*
  * Increase the red value of the background of the login element by
  * the given amount.
- * @param {number} [increment=20] - Amount to increase the red hue by.
  */
+let redMixin = 0;
 function makeRedder(increment=20) {
   redMixin = Math.min(Math.max(redMixin + increment, 0), 100);
   document.querySelector(':root').style.setProperty('--red-mixin', `${redMixin}%`);
 }
 
-/**
+/*
  * Submit the API request to submit the OAuth2 form for the given username
  * and password. If the credentials are accepted, the given token is
  * stored in the `tcm_token` Cookie, and then the page is redirected to
@@ -61,6 +60,7 @@ function submitForm() {
   });
 }
 
+// If enter is pressed in the password field, submit form
 $(document).ready(function() {
   // If authentication is disabled, auto-redirect
   {% if not require_auth %}
