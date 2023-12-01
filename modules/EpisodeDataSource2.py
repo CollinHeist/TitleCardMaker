@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from logging import Logger
 from typing import Any, Optional, Union
+from modules.DatabaseInfoContainer import InterfaceID
 
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
@@ -56,6 +57,13 @@ class SearchResult:
             self.overview = overview
 
 
+    def __repr__(self) -> str:
+        return (
+            f'<SearchResult {self.series_info!r}, added={self.added}, poster='
+            f'{self.poster}, ongoing={self.ongoing}, overview={self.overview}>'
+        )
+
+
     def __getattr__(self, attribute: str) -> Any:
         """
         Get an attribute from this object. These can be attributes
@@ -66,7 +74,9 @@ class SearchResult:
         if attribute in self.__slots__:
             return self.__dict__[attribute]
 
-        return getattr(self.series_info, attribute)
+        # Encode interface IDs into strings for serialization
+        value = getattr(self.series_info, attribute)
+        return str(value) if isinstance(value, InterfaceID) else value
 
 
 class WatchedStatus:

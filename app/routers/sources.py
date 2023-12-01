@@ -202,7 +202,7 @@ def get_all_episode_source_images(
                 episode.series.as_series_info,
                 episode.as_episode_info,
                 proxy_url=True,
-                log=log,
+                log=request.state.log,
             )
             if url:
                 plex_images.append({'url': url})
@@ -306,8 +306,6 @@ def delete_series_source_images(
             if source_file.exists():
                 log.debug(f'Deleting {episode} "{source_file.name}"')
                 source_file.unlink(missing_ok=True)
-
-    return None
 
 
 @source_router.get('/episode/{episode_id}', status_code=200)

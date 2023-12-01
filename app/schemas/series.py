@@ -265,13 +265,13 @@ class SearchResult(Base):
     overview: list[str] = ['No overview available']
     poster: Optional[str] = None
     ongoing: Optional[bool] = None
-    emby_id: Any = None
-    imdb_id: Any = None
-    jellyfin_id: Any = None
-    sonarr_id: Any = None
-    tmdb_id: Any = None
-    tvdb_id: Any = None
-    tvrage_id: Any = None
+    emby_id: Optional[str] = None
+    imdb_id: Optional[str] = None
+    jellyfin_id: Optional[str] = None
+    sonarr_id: Optional[str] = None
+    tmdb_id: Optional[int] = None
+    tvdb_id: Optional[int] = None
+    tvrage_id: Optional[int] = None
     added: bool = False
 
 class Template(BaseTemplate):
