@@ -468,8 +468,8 @@ def resolve_card_settings(
     # Apply title text format if indicated
     if (title_format := card_settings.get('title_text_format')) is not None:
         card_settings['title_text'] = FormatString.new(
-            title_format, data=card_settings, name='title text format',
-            series=series, episode=episode, log=log
+            title_format, data=card_settings,
+            name='title text format', series=series, episode=episode, log=log
         )
 
     # Get EpisodeInfo for this Episode

@@ -37,7 +37,7 @@ from app.schemas.sync import (
 from modules.Debug import log
 from modules.EpisodeMap import EpisodeMap
 from modules.PreferenceParser import PreferenceParser
-from modules.SeriesInfo import SeriesInfo
+from modules.SeriesInfo2 import SeriesInfo
 from modules.TieredSettings import TieredSettings
 
 
@@ -648,7 +648,7 @@ def parse_sonarr(
 
     # Get sonarr options, format as list of servers
     sonarrs = _get(yaml_dict, 'sonarr', default={})
-    if isinstance(sonarr, dict):
+    if isinstance(sonarrs, dict):
         sonarrs = [sonarrs]
 
     all_existing = db.query(Connection).filter_by(interface_type='Emby').all()
@@ -1142,14 +1142,6 @@ def parse_series(
     if not isinstance(all_series, dict):
         return []
 
-    # Determine which media server to assume libraries are for
-    if preferences.use_emby:
-        library_type = 'emby_library_name'
-    elif preferences.use_jellyfin:
-        library_type = 'jellyfin_library_name'
-    else:
-        library_type = 'plex_library_name'
-
     # Parse library section
     yaml_libraries = _get(yaml_dict, 'libraries', type_=dict, default={})
 
@@ -1186,10 +1178,7 @@ def parse_series(
             series_info = SeriesInfo(
                 _get(series_dict, 'name', type_=str, default=series_name),
                 _get(series_dict, 'year', type_=int, default=None),
-                emby_id=_get(series_dict, 'emby_id', default=None),
                 imdb_id=_get(series_dict, 'imdb_id', default=None),
-                jellyfin_id=_get(series_dict, 'jellyfin_id', default=None),
-                sonarr_id=_get(series_dict, 'sonarr_id', default=None),
                 tmdb_id=_get(series_dict, 'tmdb_id', default=None),
                 tvdb_id=_get(series_dict, 'tvdb_id', default=None),
                 tvrage_id=_get(series_dict, 'tvrage_id', default=None),
