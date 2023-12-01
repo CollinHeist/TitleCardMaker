@@ -1,6 +1,5 @@
 from modules.Debug import log
 
-
 class StyleSet:
     """
     Set of watched and unwatched styles.

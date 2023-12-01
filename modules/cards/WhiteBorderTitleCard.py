@@ -50,8 +50,8 @@ class WhiteBorderTitleCard(BaseCardType):
         'source_file', 'output_file', 'title_text', 'season_text',
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
         'font_file', 'font_interline_spacing', 'font_kerning', 'font_size',
-        'font_stroke_width', 'font_vertical_shift', 'stroke_color',
-        'border_color', 'episode_text_color', 'font_interword_spacing',
+        'font_stroke_width', 'font_vertical_shift', 'border_color',
+        'stroke_color', 'episode_text_color', 'font_interword_spacing',
         'separator', 'omit_gradient',
     )
 

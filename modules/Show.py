@@ -822,7 +822,7 @@ class Show(YamlReader):
         download_backdrop = self.__apply_styles(select_only=select_only)
 
         # Don't download sources if this card type doesn't use unique images
-        if not self.card_class.USES_UNIQUE_SOURCES:
+        if not download_backdrop and not self.card_class.USES_UNIQUE_SOURCES:
             return None
 
         # Query TMDb for the backdrop if one does not exist and is needed

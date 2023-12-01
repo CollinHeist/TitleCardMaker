@@ -30,8 +30,7 @@ class CollectionPosterMaker(ImageMaker):
             font_size: float = 1.0,
             omit_collection: bool = False,
             borderless: bool = False,
-            omit_gradient: bool = False,
-        ) -> None:
+            omit_gradient: bool = False) -> None:
         """
         Construct a new instance of a CollectionPosterMaker.
 

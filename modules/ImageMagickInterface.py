@@ -9,7 +9,7 @@ from imagesize import get as im_get
 from modules.Debug import log
 
 
-class Dimensions(NamedTuple):
+class Dimensions(NamedTuple): # pylint: disable=missing-class-docstring
     width: float
     height: float
 
@@ -158,7 +158,7 @@ class ImageMagickInterface:
 
     def run_get_output(self, command: str) -> str:
         """
-        Wrapper for run(), but return the byte-decoded stdout.
+        Wrapper for `run()`, but return the byte-decoded stdout.
 
         Args:
             command: The command (as string) being executed.

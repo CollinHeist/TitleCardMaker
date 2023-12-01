@@ -9,6 +9,7 @@ from modules import global_objects
 from modules.SeasonPoster import SeasonPoster
 from modules.YamlReader import YamlReader
 
+
 class SeasonPosterSet(YamlReader):
     """
     This class defines a set of SeasonPoster objects for a single show.
@@ -34,7 +35,8 @@ class SeasonPosterSet(YamlReader):
             episode_map: 'EpisodeMap', # type: ignore
             source_directory: Path,
             media_directory: Path,
-            poster_config: Optional[dict[str, Any]] = None) -> None:
+            poster_config: Optional[dict] = None,
+        ) -> None:
         """
         Construct a new instance of the set. This parses all YAML
         attributes, and looks for input poster images within the given

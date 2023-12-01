@@ -173,5 +173,4 @@ class StylizedSummary(BaseSummary):
         else:
             images = [montage, created_by]
         self.image_magick.delete_intermediate_images(*images)
-
         return None
