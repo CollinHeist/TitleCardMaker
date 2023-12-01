@@ -400,12 +400,11 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         return [
             SearchResult(
                 name=result['Name'],
-                year=result['ProductionYear'], # get_year(result['PremiereDate'])
+                year=result['ProductionYear'],
                 ongoing=result['Status'] == 'Continuing',
                 overview=result.get('Overview', 'No overview available'),
                 poster=f'{self.url}/Items/{result["Id"]}/Images/Primary?quality=75',
                 imdb_id=result.get('ProviderIds', {}).get('IMDB'),
-                jellyfin_id=f'{self._interface_id}:{result["Id"]}', # TODO update for emby + library name
                 tmdb_id=result.get('ProviderIds', {}).get('Tmdb'),
                 tvdb_id=result.get('ProviderIds', {}).get('Tvdb'),
                 tvrage_id=result.get('ProviderIds', {}).get('TvRage'),
@@ -560,14 +559,17 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         return [
             (
-                EpisodeInfo.from_emby_info(episode),
+                EpisodeInfo.from_emby_info(
+                    episode, self._interface_id, library_name
+                ),
                 WatchedStatus(
                     self._interface_id,
                     library_name,
                     episode.get('UserData', {}).get('Played')
                 )
-            ) for episode in
-            self.__get_episodes(library_name, series_info, log=log)
+            ) for episode in self.__get_episodes(
+                library_name, series_info, raise_exc=True, log=log
+            )
         ]
 
 
