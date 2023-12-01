@@ -37,7 +37,7 @@ class FormatString:
         # pylint: disable=eval-used
         self.result = eval(
             compile('f"' + fstring.replace('"', '\\"') + '"', '', 'eval'),
-            {'__builtins__': {}},
+            {'__builtins__': {'NEWLINE': '\n'}},
             data,
         )
 
