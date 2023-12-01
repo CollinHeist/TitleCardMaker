@@ -8,11 +8,14 @@ description: >
 # Configuring Connections
 
 TitleCardMaker can communicate directly with Emby, Jellyfin, Plex, Sonarr,
-Tautulli, and TMDb to get episode data, download images, add translations, and
-load Title Cards.
+Tautulli, and TMDb to automate all aspects of Card creation. Although not
+'required' to run TCM, enabling whichever connections that are applicable to
+your setup will vastly improve TCM's operation.
 
-Although not required to run TCM, enabling whichever connections that are
-applicable to your setup will improve TCM's operation.
+All Connection information should be entered on the Connections page (the
+`/connections` URL), which can be found by clicking `Settings`, and then
+`Connections` from the sidebar within the UI. The following pages contain
+instructions for setting up each type of Connection.
 
 !!! warning "Using Multiple Media Servers"
 
@@ -22,6 +25,3 @@ applicable to your setup will improve TCM's operation.
     filename](../../user_guide/settings.md#multi-library-filename-support)
     setting in order to properly integrate. Carefully read the in-UI help text
     and the linked documentation before enabling this.
-
-Use the sidebar to find the instructions to set up the connections for each type
-of server.

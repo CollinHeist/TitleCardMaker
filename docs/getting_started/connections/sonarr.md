@@ -16,8 +16,8 @@ tags:
 
 Although Sonarr can only serve as an
 [Episode Data Source](../../user_guide/settings.md#episode-data-source), it is
-typically much faster than the other alternatives (Emby, Jellyfin, Plex) and
-is _generally_ the recommended option for most users.
+typically much faster than the other alternatives (especially Emby, Jellyfin, or
+Plex) and is generally the recommended option for most users.
 
 ## Connecting
 
@@ -50,14 +50,15 @@ reload the page.
 
 7. The next step is to add the top-level directories for each of your Television
 libraries to that TitleCardMaker can automatically detect a Series' Library when
-[Syncing](../first_sync/sonarr.md) from Sonarr. See the following examples for
-guidance on how to enter your library paths.
+[Syncing](../first_sync/sonarr.md) from Sonarr. The paths listed here __must__
+be as they appear __within Sonarr__ - not Emby, Jellyfin, or Plex. See the
+following examples for help.
 
     !!! tip "Quick Setup"
 
-        For most users, simply listing the paths in Sonarr under `Settings` >
-        `Media Management` > `Root Folders` and their associated Library names
-        will work.
+        For most users, simply listing the paths, library names, and associated
+        servers for the folders in Sonarr under `Settings` > `Media Management`
+        > `Root Folders` is sufficient.
 
     ??? example "Example Library Paths"
 
@@ -74,7 +75,7 @@ guidance on how to enter your library paths.
 
         === "Example 2"
 
-            Within Jellyfin, I have three libraries called `Anime`, `Anime 4K`,
+            Within Jellyfin, I have four libraries called `Anime`, `Anime 4K`,
             `TV Shows`, and `TV Shows 4K` - they are located at
             `/data/media/anime`, `/data/media/anime 4k/`, `/data/media/tv/`, and
             `/data/media/tv 4k` respectively. The Library Paths setting should
