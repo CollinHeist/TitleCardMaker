@@ -3,8 +3,8 @@ from logging import Logger
 from typing import Any, Optional, Union
 
 from modules.Debug import log
-from modules.EpisodeInfo import EpisodeInfo
-from modules.SeriesInfo import SeriesInfo
+from modules.EpisodeInfo2 import EpisodeInfo
+from modules.SeriesInfo2 import SeriesInfo
 
 
 class SearchResult:

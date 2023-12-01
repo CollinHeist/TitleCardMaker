@@ -1,9 +1,13 @@
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
+
+if TYPE_CHECKING:
+    from app.models.preferences import Preferences
+    from modules.Font import Font
 
 
 class AnimeTitleCard(BaseCardType):
@@ -143,7 +147,7 @@ class AnimeTitleCard(BaseCardType):
             require_kanji: bool = False,
             kanji_vertical_shift: float = 0.0,
             stroke_color: str = 'black',
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
 
@@ -386,7 +390,7 @@ class AnimeTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determines whether the given arguments represent a custom font
         for this card.

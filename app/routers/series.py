@@ -24,8 +24,6 @@ from app.schemas.series import (
     BatchUpdateSeries, NewSeries, SearchResult, Series, UpdateSeries
 )
 
-from modules.TMDbInterface2 import TMDbInterface
-
 
 series_router = APIRouter(
     prefix='/series',
@@ -568,6 +566,7 @@ def batch_delete_series(
 
 @series_router.put('/batch/unmonitor')
 def batch_unmonitor_series(
+        request: Request,
         series_ids: list[int] = Body(...),
         db: Session = Depends(get_database),
     ) -> list[Series]:
@@ -585,7 +584,7 @@ def batch_unmonitor_series(
 
         # Update monitored attribute
         series.monitored = False
-        log.debug(f'{series}.monitored = False')
+        request.state.log.debug(f'{series}.monitored = False')
 
     db.commit()
 
@@ -595,6 +594,7 @@ def batch_unmonitor_series(
 @series_router.post('/batch/process')
 def batch_process_series(
         background_tasks: BackgroundTasks,
+        request: Request,
         series_ids: list[int] = Body(...),
         db: Session = Depends(get_database),
     ) -> None:
@@ -609,5 +609,5 @@ def batch_process_series(
             db,
             get_series(db, series_id, raise_exc=True),
             background_tasks,
-            log=log,
+            log=request.state.log,
         )

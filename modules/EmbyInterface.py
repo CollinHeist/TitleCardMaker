@@ -1,7 +1,7 @@
 from base64 import b64encode
 from datetime import datetime
 from sys import exit as sys_exit
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from modules import global_objects
 from modules.Debug import log
@@ -13,6 +13,9 @@ from modules.MediaServer import MediaServer, SourceImage
 from modules.SeriesInfo import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
+
+if TYPE_CHECKING:
+    from modules.StyleSet import StyleSet
 
 
 class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
@@ -470,7 +473,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             library_name: str,
             series_info: SeriesInfo,
             episode_map: dict[str, Episode],
-            style_set: 'StyleSet', # type: ignore
+            style_set: 'StyleSet',
         ) -> None:
         """
         Modify the Episode objects according to the watched status of

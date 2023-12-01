@@ -1,9 +1,13 @@
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
+
+if TYPE_CHECKING:
+    from app.models.preferences import Preferences
+    from modules.Font import Font
 
 
 class OlivierTitleCard(BaseCardType):
@@ -107,7 +111,7 @@ class OlivierTitleCard(BaseCardType):
             episode_text_font_size: float = 1.0,
             episode_text_vertical_shift: int = 0,
             stroke_color: str = STROKE_COLOR,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
         """
@@ -288,7 +292,7 @@ class OlivierTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determine whether the given arguments represent a custom font
         for this card.

@@ -1,9 +1,13 @@
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
+
+if TYPE_CHECKING:
+    from app.models.preferences import Preferences
+    from modules.Font import Font
 
 
 class LogoTitleCard(BaseCardType):
@@ -139,7 +143,7 @@ class LogoTitleCard(BaseCardType):
             omit_gradient: bool = True,
             use_background_image: bool = False,
             blur_only_image: bool = False,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
         """
@@ -285,7 +289,7 @@ class LogoTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determines whether the given font characteristics constitute a
         default or custom font.

@@ -1,8 +1,13 @@
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from modules.BaseCardType import BaseCardType, Extra, CardDescription, ImageMagickCommands
+from modules.BaseCardType import (
+    BaseCardType, Extra, CardDescription, ImageMagickCommands
+)
 
+if TYPE_CHECKING:
+    from app.models.preferences import Preferences
+    from modules.Font import Font
 
 class CutoutTitleCard(BaseCardType):
     """
@@ -123,7 +128,7 @@ class CutoutTitleCard(BaseCardType):
             blur_profile: str = NUMBER_BLUR_PROFILE,
             overlay_color: str = 'black',
             overlay_transparency: float = 0.0,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
         """
@@ -233,7 +238,7 @@ class CutoutTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.

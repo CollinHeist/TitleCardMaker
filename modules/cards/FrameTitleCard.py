@@ -1,11 +1,17 @@
 from pathlib import Path
-from typing import Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import (
     BaseCardType, CardDescription, Extra, ImageMagickCommands
 )
 
+if TYPE_CHECKING:
+    from app.models.preferences import Preferences
+    from modules.Font import Font
+
+
 Position = Literal['left', 'surround', 'right']
+
 
 class FrameTitleCard(BaseCardType):
     """
@@ -105,7 +111,7 @@ class FrameTitleCard(BaseCardType):
             grayscale: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
             episode_text_position: Position = 'surround',
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
         """
@@ -252,7 +258,7 @@ class FrameTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determines whether the given arguments represent a custom font
         for this card. This CardType only uses custom font cases.

@@ -1,15 +1,23 @@
 from abc import abstractmethod
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 
 from titlecase import titlecase
 
 from app.schemas.card import CardTypeDescription, Extra, TitleCharacteristics
 from modules.ImageMaker import ImageMaker, Dimensions
 
+if TYPE_CHECKING:
+    from modules.Font import Font
+    from app.models.preferences import Preferences
 
 CardDescription = CardTypeDescription
-Extra = Extra # pylint: disable=self-assigning-variable
 ImageMagickCommands = list[str]
+
+
+__all__ = [
+    'CardDescription', 'Extra', 'ImageMagickCommands', 'ImageMaker',
+    'Dimensions', 'Coordinate', 'Rectangle', 'BaseCardType',
+]
 
 
 class Coordinate:
@@ -111,7 +119,7 @@ class BaseCardType(ImageMaker):
     FONT_REPLACEMENTS = {}
 
     """Mapping of 'case' strings to format functions"""
-    CASE_FUNCTIONS = {
+    CASE_FUNCTIONS: dict[str, Callable[[Any], str]] = {
         'blank': lambda _: '',
         'lower': str.lower,
         'source': str,
@@ -135,7 +143,7 @@ class BaseCardType(ImageMaker):
 
     @property
     @abstractmethod
-    def API_DETAILS(self) -> CardDescription:
+    def API_DETAILS(self) -> CardDescription: # pylint: disable=missing-function-docstring
         raise NotImplementedError
 
 
@@ -190,7 +198,7 @@ class BaseCardType(ImageMaker):
             blur: bool = False,
             grayscale: bool = False,
             *,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
         """
@@ -217,7 +225,10 @@ class BaseCardType(ImageMaker):
 
     def __init_subclass__(cls, **kwargs) -> None:
         """
-        
+        Initialize the subclass CardType. After initialization, this
+        performs basic validations on the class for required
+        implementations. This is done on the class itself, not an
+        instance of the class.
         """
 
         super().__init_subclass__(**kwargs)
@@ -286,7 +297,7 @@ class BaseCardType(ImageMaker):
 
     @staticmethod
     @abstractmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Abstract method to determine whether the given font
         characteristics indicate the use of a custom font or not.

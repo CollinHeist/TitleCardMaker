@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from app.models.series import Series
 
 
-class Library(TypedDict):
+class Library(TypedDict): # pylint: disable=missing-class-docstring
     interface: ServerName
     interface_id: int
     name: str
@@ -185,14 +185,6 @@ class Episode(Base):
         )
 
 
-    @property
-    def log_str(self) -> str:
-        """
-        Loggable string that defines this object (i.e. `__repr__`).
-        """
-
-        return f'Episode[{self.id}] {self.as_episode_info}'
-
 
     def get_card_properties(self, library: Optional[Library]) -> dict[str, Any]:
         """
@@ -328,7 +320,7 @@ class Episode(Base):
         changed = False
         for id_type, id_ in info.ids.items():
             if id_ and getattr(self, id_type) != id_:
-                log.debug(f'{self.log_str}.{id_type} | {getattr(self, id_type)} -> {id_}')
+                log.debug(f'{self}.{id_type} | {getattr(self, id_type)} -> {id_}')
                 setattr(self, id_type, id_)
                 changed = True
 

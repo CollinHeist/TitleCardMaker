@@ -1,7 +1,8 @@
 from time import sleep
+from typing import Optional
 
 from fastapi import (
-    APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request
+    APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Request
 )
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy import not_
@@ -20,8 +21,7 @@ from app.internal.cards import (
 )
 from app.internal.episodes import refresh_episode_data
 from app.internal.series import (
-    load_all_series_title_cards, load_episode_title_card,
-    load_series_title_cards
+    load_all_series_title_cards, load_episode_title_card,load_series_title_cards
 )
 from app.internal.snapshot import take_snapshot
 from app.internal.sources import download_episode_source_images
@@ -34,8 +34,7 @@ from app.schemas.episode import Episode as EpisodeSchema
 from app.schemas.font import DefaultFont
 
 from modules.EpisodeInfo2 import EpisodeInfo
-from modules.PlexInterface2 import PlexInterface
-from modules.SeriesInfo import SeriesInfo
+from modules.SeriesInfo2 import SeriesInfo
 from modules.TieredSettings import TieredSettings
 
 

@@ -2,9 +2,8 @@ from fastapi import APIRouter, BackgroundTasks, Body, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_sync
-from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.dependencies import get_database
 from app.internal.auth import get_current_user
-from app.internal.series import delete_series
 from app.internal.sync import add_sync, run_sync
 from app import models
 from app.schemas.sync import (

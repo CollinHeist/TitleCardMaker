@@ -1,8 +1,11 @@
 from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
 from modules.Debug import log
 from modules import global_objects
+
+if TYPE_CHECKING:
+    from modules.Show import Show
 
 
 class ShowArchive:
@@ -44,7 +47,7 @@ class ShowArchive:
 
     def __init__(self,
             archive_directory: Path,
-            base_show: 'Show', # type: ignore
+            base_show: 'Show',
         ) -> None:
         """
         Constructs a new instance of this class. Creates a list of all

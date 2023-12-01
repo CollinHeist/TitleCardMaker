@@ -1,11 +1,15 @@
 from pathlib import Path
-from typing import Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import (
     BaseCardType, CardDescription, Coordinate, Extra, ImageMagickCommands,
     Rectangle,
 )
 from modules.ImageMagickInterface import Dimensions
+
+if TYPE_CHECKING:
+    from app.models.preferences import Preferences
+    from modules.Font import Font
 
 
 class OverlineTitleCard(BaseCardType):
@@ -144,7 +148,7 @@ class OverlineTitleCard(BaseCardType):
             line_width: int = LINE_THICKNESS,
             omit_gradient: bool = False,
             separator: str = '-',
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
         """
@@ -376,7 +380,7 @@ class OverlineTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.

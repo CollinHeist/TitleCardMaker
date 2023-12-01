@@ -9,7 +9,9 @@ from app.schemas.base import (
 )
 from app.schemas.connection import TMDbLanguageCode
 from app.schemas.font import TitleCase
-from app.schemas.ids import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.schemas.ids import (
+    EmbyID, IMDbID, JellyfinID, SonarrID, TMDbID, TVDbID, TVRageID
+)
 from app.schemas.preferences import Style
 
 # Match absolute ranges (1-10), season numbers (1), episode ranges (s1e1-s1e10)

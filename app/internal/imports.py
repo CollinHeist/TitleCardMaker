@@ -41,12 +41,16 @@ from modules.SeriesInfo2 import SeriesInfo
 from modules.TieredSettings import TieredSettings
 
 
-# pylint: disable=unnecessary-lambda-assignment
-Extension = lambda s: str(s) if s.startswith('.') else f'.{s}'
-Percentage = lambda s: float(str(s).split('%', maxsplit=1)[0]) / 100.0
-Width = lambda dims: int(str(dims).lower().split('x', maxsplit=1)[0])
-Height = lambda dims: int(str(dims).lower().split('x')[1])
-# pylint: enable=unnecessary-lambda-assignment
+# pylint: disable=missing-function-docstring
+def Extension(s: str) -> str:
+    return str(s) if s.startswith('.') else f'.{s}'
+def Percentage(s: str) -> str:
+    return float(str(s).split('%', maxsplit=1)[0]) / 100.0
+def Width(dims: str) -> int:
+    return int(str(dims).lower().split('x', maxsplit=1)[0])
+def Height(dims: str) -> int:
+    return int(str(dims).lower().split('x')[1])
+# pylint: enable=missing-function-docstring
 
 
 def parse_raw_yaml(yaml: str) -> dict[str, Any]:
@@ -652,7 +656,7 @@ def parse_sonarr(
         sonarrs = [sonarrs]
 
     all_existing = db.query(Connection).filter_by(interface_type='Emby').all()
-    for id_, sonarr in enumerate(sonarr):
+    for id_, sonarr in enumerate(sonarrs):
         # Existing Connection, update instead of create
         if id_ < len(all_existing):
             update_obj = UpdateSonarr(**_remove_unspecifed_args(
@@ -712,7 +716,8 @@ def parse_tmdb(
     # Get tmdb options
     tmdb = _get(yaml_dict, 'tmdb', default={})
 
-    SplitList = lambda s: str(s).lower().replace(' ', '').split(',')
+    def SplitList(s: str) -> str:
+        return str(s).lower().replace(' ', '').split(',')
 
     # If there is an existing Connection, update instead of create
     existing = db.query(Connection).filter_by(interface_type='TMDb').first()

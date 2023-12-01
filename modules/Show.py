@@ -1,6 +1,6 @@
 from copy import copy
 from pathlib import Path
-from typing import Literal, Optional, Union
+from typing import TYPE_CHECKING, Literal, Optional, Union
 
 from tqdm import tqdm
 
@@ -8,13 +8,12 @@ from modules.CleanPath import CleanPath
 from modules.DataFileInterface import DataFileInterface
 from modules.Debug import log, TQDM_KWARGS
 from modules.EmbyInterface import EmbyInterface
-from modules.Episode import Episode
+from modules.Episode import Episode, MultiEpisode
 from modules.EpisodeInfo import EpisodeInfo
 from modules.EpisodeMap import EpisodeMap
 from modules.Font import Font
 from modules import global_objects
 from modules.JellyfinInterface import JellyfinInterface
-from modules.MultiEpisode import MultiEpisode
 from modules.PlexInterface import PlexInterface
 from modules.Profile import Profile
 from modules.SeasonPosterSet import SeasonPosterSet
@@ -27,7 +26,14 @@ from modules.TMDbInterface import TMDbInterface
 from modules.WebInterface import WebInterface
 from modules.YamlReader import YamlReader
 
+if TYPE_CHECKING:
+    from modules.PreferenceParser import PreferenceParser
+
+
 MediaServer = Literal['emby', 'jellyfin', 'plex']
+
+__all__ = ['Show']
+
 
 class Show(YamlReader):
     """
@@ -58,7 +64,7 @@ class Show(YamlReader):
             name: str,
             yaml_dict: dict,
             source_directory: Path,
-            preferences: 'PreferenceParser', # type: ignore
+            preferences: 'PreferenceParser',
         ) -> None:
         """
         Constructs a new instance of a Show object from the given YAML
@@ -829,7 +835,7 @@ class Show(YamlReader):
         download_backdrop = self.__apply_styles(select_only=select_only)
 
         # Don't download sources if this card type doesn't use unique images
-        if not self.card_class.USES_UNIQUE_SOURCES:
+        if not download_backdrop and not self.card_class.USES_UNIQUE_SOURCES:
             return None
 
         # Query TMDb for the backdrop if one does not exist and is needed

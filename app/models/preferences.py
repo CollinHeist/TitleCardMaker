@@ -1,9 +1,8 @@
 from logging import Logger
 from os import environ
 from pathlib import Path
-from typing import Any, Optional
-
 from pickle import dump, load
+from typing import Optional
 
 from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import CardExtension
@@ -19,6 +18,8 @@ from modules.Version import Version
 
 TCM_ROOT = Path(__file__).parent.parent.parent
 CONFIG_ROOT = TCM_ROOT / 'config'
+
+__all__ = ['TCM_ROOT', 'CONFIG_ROOT', 'Preferences']
 
 
 class Preferences:

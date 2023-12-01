@@ -6,7 +6,9 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.database.query import get_interface
-from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.dependencies import (
+    get_database, get_imagemagick_interface, get_preferences
+)
 from app.internal.templates import get_effective_templates
 from app.models.episode import Episode
 from app.models.series import Library, Series

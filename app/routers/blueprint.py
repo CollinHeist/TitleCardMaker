@@ -2,7 +2,7 @@ from json import dump
 from pathlib import Path
 from random import choice as random_choice
 from shutil import copy as copy_file, make_archive as zip_directory
-from typing import Literal
+from typing import Literal, Optional
 
 from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Request

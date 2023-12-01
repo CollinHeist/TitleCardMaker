@@ -212,7 +212,7 @@ try:
     ImageMagickInterfaceLocal = ImageMagickInterface(
         **PreferencesLocal.imagemagick_arguments
     )
-except Exception as e:
+except Exception:
     pass
 
 EmbyInterfaces: InterfaceGroup[int, EmbyInterface] = InterfaceGroup(EmbyInterface)

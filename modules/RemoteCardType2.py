@@ -4,11 +4,9 @@ import sys
 from typing import Literal, Optional, Union
 
 from pathlib import Path
-from pydantic import parse_obj_as
 from requests import get
 
 from app.schemas.base import Base
-from app.schemas.card import CardTypeDescription, TitleCharacteristics
 from modules.BaseCardType import BaseCardType
 from modules.CleanPath import CleanPath
 from modules.Debug import log

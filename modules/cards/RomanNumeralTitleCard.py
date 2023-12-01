@@ -2,12 +2,16 @@ from collections import namedtuple
 from pathlib import Path
 from random import choice
 from re import compile as re_compile
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
 from modules.Debug import log
+
+if TYPE_CHECKING:
+    from app.models.preferences import Preferences
+    from modules.Font import Font
 
 
 Position = namedtuple('Position', ('location', 'offset', 'rotation'))
@@ -292,7 +296,7 @@ class RomanNumeralTitleCard(BaseCardType):
             background: str = BACKGROUND_COLOR,
             roman_numeral_color: str = ROMAN_NUMERAL_TEXT_COLOR,
             season_text_color: str = SEASON_TEXT_COLOR,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
         """
@@ -687,7 +691,7 @@ class RomanNumeralTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.

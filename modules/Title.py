@@ -1,7 +1,10 @@
 from re import compile as re_compile, IGNORECASE
-from typing import Literal, Optional, Union
+from typing import TYPE_CHECKING, Literal, Optional, Union
 
 from modules.Debug import log
+
+if TYPE_CHECKING:
+    from modules.Profile import Profile
 
 
 class Title:
@@ -124,9 +127,12 @@ class Title:
         """
 
         lines = [[], []]
-        len_l1 = lambda: sum(map(len, lines[0]))
-        len_l2 = lambda: sum(map(len, lines[1]))
-        diff = lambda: abs(len_l2() - len_l1())
+        def len_l1() -> int:
+            return sum(map(len, lines[0]))
+        def len_l2() -> int:
+            return sum(map(len, lines[1]))
+        def diff() -> int:
+            return abs(len_l2() - len_l1())
 
         # Add each word to the shortest line
         words = self.full_title.split()
@@ -277,7 +283,7 @@ class Title:
 
 
     def apply_profile(self,
-            profile: 'Profile', # type: ignore
+            profile: 'Profile',
             **title_characteristics: dict
         ) -> str:
         """

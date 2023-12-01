@@ -8,7 +8,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from app.database.session import BlueprintBase
 from app.schemas.blueprint import ImportBlueprint
 from app.schemas.series import NewSeries
-from modules.SeriesInfo import SeriesInfo
+from modules.SeriesInfo2 import SeriesInfo
 
 
 def regex_replace(pattern, replacement, string):

@@ -1,11 +1,15 @@
 from pathlib import Path
-from typing import Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import (
     BaseCardType, CardDescription, Coordinate, Extra, ImageMagickCommands,
     Rectangle,
 )
 from modules.ImageMagickInterface import Dimensions
+
+if TYPE_CHECKING:
+    from app.models.preferences import Preferences
+    from modules.Font import Font
 
 
 class MarvelTitleCard(BaseCardType):
@@ -161,7 +165,7 @@ class MarvelTitleCard(BaseCardType):
             hide_border: bool = False,
             text_box_color: str = DEFAULT_TEXT_BOX_COLOR,
             text_box_height: int = DEFAULT_TEXT_BOX_HEIGHT,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
         """Construct a new instance of this Card."""
@@ -447,7 +451,7 @@ class MarvelTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.

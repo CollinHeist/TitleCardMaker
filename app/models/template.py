@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from app.models.connection import Connection
     from app.models.episode import Episode
     from app.models.font import Font
+    from app.models.preferences import Preferences
     from app.models.series import Series
     from app.models.sync import Sync
 
@@ -279,9 +280,9 @@ class Template(Base):
 
 
     def meets_filter_criteria(self,
-            preferences: 'Preferences', # type: ignore
-            series: 'Series', # type: ignore
-            episode: Optional['Episode'] = None, # type: ignore
+            preferences: 'Preferences',
+            series: 'Series',
+            episode: Optional['Episode'] = None,
             library: Optional[Library] = None,
         ) -> bool:
         """

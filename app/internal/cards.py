@@ -9,9 +9,9 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Query, Session
 
 from app.database.query import get_interface
-from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.dependencies import get_database, get_preferences
 from app.internal.episodes import refresh_episode_data
-from app.internal.sources import download_episode_source_images 
+from app.internal.sources import download_episode_source_images
 from app.internal.templates import get_effective_templates
 from app.internal.translate import translate_episode
 from app.models.card import Card
@@ -658,7 +658,7 @@ def create_episode_card(
         return None
 
     # Function to get the existing val
-    def _get_existing(attribute: str) -> Any:
+    def _get_existing(attribute: str):
         return existing_card.model_json.get(
             attribute,
             CardTypeModel.__fields__[attribute].default,

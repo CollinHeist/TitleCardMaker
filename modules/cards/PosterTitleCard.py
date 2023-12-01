@@ -1,7 +1,11 @@
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import BaseCardType, Extra, CardDescription
+
+if TYPE_CHECKING:
+    from app.models.preferences import Preferences
+    from modules.Font import Font
 
 
 class PosterTitleCard(BaseCardType):
@@ -90,7 +94,7 @@ class PosterTitleCard(BaseCardType):
             grayscale: bool = False,
             logo_file: Optional[Path] = None,
             episode_text_color: str = None,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
         """
@@ -142,7 +146,7 @@ class PosterTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determines whether the given arguments represent a custom font
         for this card. This CardType does not use custom fonts, so this

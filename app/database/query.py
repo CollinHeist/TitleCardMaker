@@ -1,4 +1,4 @@
-from typing import Any, Literal, Optional, TypeVar, Union, overload
+from typing import Literal, Optional, TypeVar, Union, overload
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session

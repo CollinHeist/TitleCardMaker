@@ -1,9 +1,13 @@
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
+
+if TYPE_CHECKING:
+    from app.models.preferences import Preferences
+    from modules.Font import Font
 
 
 class WhiteBorderTitleCard(BaseCardType):
@@ -110,7 +114,7 @@ class WhiteBorderTitleCard(BaseCardType):
             omit_gradient: bool = False,
             separator: str = '•',
             stroke_color: str = STROKE_COLOR,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
         """Construct a new instance of this Card."""
@@ -258,7 +262,7 @@ class WhiteBorderTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.

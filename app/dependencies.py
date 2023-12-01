@@ -4,6 +4,7 @@ from typing import Any, Iterator, Optional, Union
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import HTTPException, Query, Request
+from requests import get
 from sqlalchemy.orm import Session
 
 from app.database.session import (
@@ -11,9 +12,6 @@ from app.database.session import (
     JellyfinInterfaces, PreferencesLocal, Scheduler, SessionLocal,
     TMDbInterfaces, PlexInterfaces, SonarrInterfaces,
 )
-from requests import get
-from sqlalchemy.orm import Session
-
 from app.models.preferences import Preferences
 
 from modules.Debug import log
@@ -24,6 +22,20 @@ from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
+
+
+__all__ = [
+    'Preferences', 'Session', 'EmbyInterface', 'ImageMagickInterface',
+    'InterfaceGroup',  'JellyfinInterface', 'PlexInterface', 'SonarrInterface',
+    'TMDbInterface', 'get_database', 'get_blueprint_database', 'get_scheduler',
+    'get_preferences', 'get_emby_interfaces', 'require_emby_interface',
+    'refresh_imagemagick_interface', 'get_imagemagick_interface',
+    'get_jellyfin_interfaces', 'require_jellyfin_interface',
+    'get_plex_interfaces', 'require_plex_interface', 'get_sonarr_interfaces',
+    'require_sonarr_interface', 'get_tmdb_interfaces', 'require_tmdb_interface',
+    'require_interface',
+]
+
 
 """Type for any generic interface"""
 AnyInterface = Union[

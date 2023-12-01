@@ -1,7 +1,7 @@
 from typing import Optional
 
 from fastapi import (
-    APIRouter, BackgroundTasks, Depends, Form, HTTPException, Request,
+    APIRouter, BackgroundTasks, Depends, Form, HTTPException, Query, Request,
     UploadFile,
 )
 from fastapi_pagination.ext.sqlalchemy import paginate
@@ -19,8 +19,9 @@ from app.internal.sources import (
     process_svg_logo, resolve_all_source_settings, resolve_source_settings,
 )
 from app import models
+from app.models.preferences import Preferences
 from app.schemas.card import SourceImage, ExternalSourceImage
-
+from modules.InterfaceGroup import InterfaceGroup
 from modules.WebInterface import WebInterface
 
 

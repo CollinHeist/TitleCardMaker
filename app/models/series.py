@@ -397,15 +397,6 @@ class Series(Base):
 
 
     @property
-    def log_str(self) -> str:
-        """
-        Loggable string that defines this object (i.e. `__repr__`).
-        """
-
-        return f'Series[{self.id}] "{self.full_name}"'
-
-
-    @property
     def card_properties(self) -> dict[str, Any]:
         """
         Properties to utilize and merge in Title Card creation.

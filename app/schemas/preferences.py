@@ -2,15 +2,13 @@
 from pathlib import Path
 from typing import Literal, Optional
 
+from num2words import CONVERTER_CLASSES
 from pydantic import DirectoryPath, PositiveInt, constr, validator # pylint: disable=no-name-in-module
 
 from app.schemas.base import (
     Base, InterfaceName, ImageSource, UpdateBase, UNSPECIFIED
 )
-from num2words import CONVERTER_CLASSES
-from pydantic import DirectoryPath, PositiveInt, constr, validator
 
-from app.schemas.base import Base, UpdateBase, UNSPECIFIED
 from modules.TMDbInterface2 import TMDbInterface
 
 
@@ -43,9 +41,6 @@ class StyleOption(NamedOption):
 class ToggleOption(NamedOption):
     selected: bool
 
-# class MediaServerToggle(ToggleOption):
-#     ...
-
 class EpisodeDataSourceToggle(Base):
     interface: InterfaceName
     interface_id: int
@@ -56,16 +51,11 @@ class ImageSourceToggle(EpisodeDataSourceToggle):
     ...
 
 EpisodeDataSource = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr', 'TMDb']
-ImageSource = Literal['Emby', 'Jellyfin', 'Plex', 'TMDb']
 MediaServer = Literal['Emby', 'Jellyfin', 'Plex']
 
 """
 Base classes
 """
-class EpisodeDataSource(Base):
-    interface: Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr', 'TMDb']
-    interface_id: int = 0
-
 class ImageSourceOption(Base):
     interface: ImageSource
     interface_id: int = 0

@@ -1,9 +1,14 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from modules import global_objects
 from modules.ImageMagickInterface import ImageMagickInterface, Dimensions
+
+if TYPE_CHECKING:
+    from app.models.preferences import Preferences
+
+__all__ = ['ImageMagickInterface', 'Dimensions', 'ImageMaker',]
 
 
 class ImageMaker(ABC):
@@ -35,7 +40,7 @@ class ImageMaker(ABC):
     @abstractmethod
     def __init__(self,
             *,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['Preferences'] = None,
         ) -> None:
         """
         Initializes a new instance. This gives all subclasses access to

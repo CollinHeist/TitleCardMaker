@@ -1,10 +1,14 @@
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal, Optional, TYPE_CHECKING
 
 from modules.BaseCardType import (
     BaseCardType, CardDescription, Coordinate, Extra, ImageMagickCommands,
     Rectangle,
 )
+
+if TYPE_CHECKING:
+    from app.models.preferences import Preferences
+    from modules.Font import Font
 
 Element = Literal['index', 'logo', 'omit', 'title']
 MiddleElement = Literal['logo', 'omit']
@@ -198,7 +202,7 @@ class TintedFrameTitleCard(BaseCardType):
             logo_size: float = 1.0,
             logo_vertical_shift: int = 0,
             blur_edges: bool = True,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
         """
@@ -650,7 +654,7 @@ class TintedFrameTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.

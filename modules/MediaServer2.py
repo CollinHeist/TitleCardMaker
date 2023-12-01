@@ -6,7 +6,6 @@ from pathlib import Path
 from PIL import Image
 
 from modules.Debug import log
-from modules.EpisodeDataSource2 import WatchedStatus
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.SeriesInfo2 import SeriesInfo
 

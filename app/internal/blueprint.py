@@ -19,7 +19,7 @@ from app.schemas.font import NewNamedFont
 from app.schemas.series import NewTemplate, UpdateSeries
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
-from modules.SeriesInfo import SeriesInfo
+from modules.SeriesInfo2 import SeriesInfo
 from modules.TieredSettings import TieredSettings
 
 """

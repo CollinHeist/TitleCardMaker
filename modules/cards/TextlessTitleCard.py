@@ -1,7 +1,11 @@
 from pathlib import Path
-from typing import Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import BaseCardType, CardDescription
+
+if TYPE_CHECKING:
+    from app.models.preferences import Preferences
+    from modules.Font import Font
 
 
 class TextlessTitleCard(BaseCardType):
@@ -61,7 +65,7 @@ class TextlessTitleCard(BaseCardType):
             card_file: Path,
             blur: bool = False,
             grayscale: bool = False,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
         """
@@ -77,7 +81,7 @@ class TextlessTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> Literal[False]: # type: ignore
+    def is_custom_font(font: 'Font') -> Literal[False]:
         """
         Determines whether the given font characteristics constitute a
         default or custom font.
