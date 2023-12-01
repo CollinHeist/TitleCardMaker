@@ -1,4 +1,4 @@
-from typing import Optional, TypeVar
+from typing import TypeVar
 
 
 _Setting = TypeVar('_Setting')
@@ -22,7 +22,7 @@ class TieredSettings:
 
     def __init__(self,
             merge_base: dict,
-            *dicts: tuple[dict[str, _Setting]],
+            *dicts: dict[str, _Setting],
         ) -> None:
         """
         Initialize a new TieredSettings object. This merges the given
@@ -78,7 +78,7 @@ class TieredSettings:
 
 
     @staticmethod
-    def filter(settings: dict) -> dict:
+    def filter(settings: dict[str, _Setting]) -> dict[str, _Setting]:
         """
         Filter the given settings dictionary any remove any key-value
         pairs whose value is None.
@@ -97,7 +97,7 @@ class TieredSettings:
 
 
     @staticmethod
-    def resolve_singular_setting(*values: _Setting) -> Optional[_Setting]:
+    def resolve_singular_setting(*values: _Setting) -> _Setting:
         """
         Get the highest priority (non-None) value of the given values.
 
