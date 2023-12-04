@@ -94,8 +94,8 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                             create_episode_cards(
                                 db, None, episode, raise_exc=False, log=log
                             )
-                        except InvalidCardSettings as exc:
-                            log.debug(f'{episode} - skipping Card creation ({exc})')
+                        except InvalidCardSettings:
+                            log.debug(f'{episode} - skipping Card creation')
                             continue
                         except HTTPException as e:
                             if e.status_code != 404:
@@ -529,13 +529,13 @@ def resolve_card_settings(
             card_settings['watched_style' if watched else 'unwatched_style'],
         )
     else:
-        card_settings['source_file'] = preferences.source_directory \
+        card_settings['source_file'] = CleanPath(preferences.source_directory \
             / series.path_safe_name \
-            / FormatString.new_path(
+            / FormatString.new(
                 card_settings['source_file'], data=card_settings,
                 name='source file format', series=series, episode=episode,
                 log=log,
-            )
+            )).sanitize()
 
     # Exit if the source file does not exist
     if (CardClass.USES_UNIQUE_SOURCES
