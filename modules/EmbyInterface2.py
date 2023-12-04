@@ -567,9 +567,8 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                     library_name,
                     episode.get('UserData', {}).get('Played')
                 )
-            ) for episode in self.__get_episodes(
-                library_name, series_info, raise_exc=True, log=log
-            )
+            ) for episode in
+            self.__get_episodes(library_name, series_info, log=log)
         ]
 
 
