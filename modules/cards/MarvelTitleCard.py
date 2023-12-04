@@ -1,10 +1,13 @@
 from pathlib import Path
-from typing import Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import (
     BaseCardType, Coordinate, ImageMagickCommands, Rectangle,
 )
 from modules.ImageMagickInterface import Dimensions
+
+if TYPE_CHECKING:
+    from modules.Font import Font
 
 
 class MarvelTitleCard(BaseCardType):
@@ -375,7 +378,7 @@ class MarvelTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.

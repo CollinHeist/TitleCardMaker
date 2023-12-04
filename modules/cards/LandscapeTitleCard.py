@@ -1,9 +1,12 @@
 from collections import namedtuple
 from pathlib import Path
-from typing import Any, Literal, Optional, Union
+from typing import TYPE_CHECKING, Literal, Optional, Union
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
+
+if TYPE_CHECKING:
+    from modules.Font import Font
 
 
 DarkenOption = Union[Literal['all', 'box'], bool]
@@ -289,7 +292,7 @@ class LandscapeTitleCard(BaseCardType):
 
     @staticmethod
     def modify_extras(
-            extras: dict[str, Any],
+            extras: dict,
             custom_font: bool,
             custom_season_titles: bool,
         ) -> None:
@@ -312,7 +315,7 @@ class LandscapeTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.

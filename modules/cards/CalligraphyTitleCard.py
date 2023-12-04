@@ -1,9 +1,12 @@
 from pathlib import Path
 from random import random
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import BaseCardType, Dimensions, ImageMagickCommands
 from modules.EpisodeInfo import EpisodeInfo
+
+if TYPE_CHECKING:
+    from modules.Font import Font
 
 
 class CalligraphyTitleCard(BaseCardType):
@@ -77,7 +80,7 @@ class CalligraphyTitleCard(BaseCardType):
             grayscale: bool = False,
             add_texture: bool = True,
             deep_blur_if_unwatched: bool = True,
-            episode_text_color: Optional[str] = None,
+            episode_text_color: str = TITLE_COLOR,
             episode_text_font_size: float = 1.0,
             logo_size: float = 1.0,
             offset_titles: bool = True,
@@ -390,7 +393,7 @@ class CalligraphyTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
