@@ -37,7 +37,7 @@ class StarWarsTitleCard(BaseCardType):
             'Title cards intended for Star Wars (or more generically Space-'
             'themed) shows.', 'Similar to the Olivier title card, these cards '
             'feature left-aligned title and episode text', 'A star-filled '
-            'gradient overlay is applied to the source image.',
+            'gradient overlay is applied to the Source Image.',
         ]
     )
     # pylint: enable=line-too-long
@@ -76,7 +76,7 @@ class StarWarsTitleCard(BaseCardType):
         'source_file', 'output_file', 'title_text', 'episode_text',
         'hide_episode_text', 'font_color', 'font_file',
         'font_interline_spacing', 'font_interword_spacing', 'font_size',
-        'episode_text_color', 'episode_prefix',
+        'font_vertical_shift', 'episode_text_color', 'episode_prefix',
     )
 
     def __init__(self,
@@ -90,6 +90,7 @@ class StarWarsTitleCard(BaseCardType):
             font_interline_spacing: int = 0,
             font_interword_spacing: int = 0,
             font_size: float = 1.0,
+            font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
@@ -116,6 +117,7 @@ class StarWarsTitleCard(BaseCardType):
         self.font_interline_spacing = font_interline_spacing
         self.font_interword_spacing = font_interword_spacing
         self.font_size = font_size
+        self.font_vertical_shift = font_vertical_shift
 
         # Attempt to detect prefix text
         self.hide_episode_text = hide_episode_text
@@ -144,6 +146,7 @@ class StarWarsTitleCard(BaseCardType):
 
         size = 124 * self.font_size
         interline_spacing = 20 + self.font_interline_spacing
+        vertical_shift = 829 + self.font_vertical_shift
 
         return [
             f'-font "{self.font_file}"',
@@ -153,7 +156,7 @@ class StarWarsTitleCard(BaseCardType):
             f'-interline-spacing {interline_spacing}',
             f'-interword-spacing {self.font_interword_spacing}',
             f'-fill "{self.font_color}"',
-            f'-annotate +320+829 "{self.title_text}"',
+            f'-annotate +320{vertical_shift:+} "{self.title_text}"',
         ]
 
 
@@ -228,6 +231,7 @@ class StarWarsTitleCard(BaseCardType):
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
             or (font.size != 1.0)
+            or (font.vertical_shift != 0)
         )
 
 

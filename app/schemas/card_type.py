@@ -369,6 +369,7 @@ class StarWarsCardType(BaseCardModel):
     font_interline_spacing: int = 0
     font_interword_spacing: int = 0
     font_size: PositiveFloat = 1.0
+    font_vertical_shift: int = 0
     episode_text_color: BetterColor = StarWarsTitleCard.EPISODE_TEXT_COLOR
 
     @root_validator(skip_on_failure=True)
