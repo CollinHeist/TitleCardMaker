@@ -204,7 +204,7 @@ if ((hasattr(args, 'import_cards') or hasattr(args, 'revert_series'))
             media_interface = JellyfinInterface(**pp.jellyfin_interface_kwargs)
         else:
             media_interface = PlexInterface(**pp.plex_interface_kwargs)
-    except Exception as e:
+    except Exception:
         log.critical(f'Cannot connect to "{args.media_server}" Media Server')
         sys_exit(1)
 

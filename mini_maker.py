@@ -410,7 +410,7 @@ if hasattr(args, 'title_card'):
     card = CardClass(
         source_file=CleanPath(args.title_card[0]).sanitize(),
         card_file=output_file,
-        logo=args.logo,
+        logo_file=args.logo,
         title_text='\n'.join(args.title),
         season_text=('' if not args.season else args.season),
         episode_text=args.episode,
