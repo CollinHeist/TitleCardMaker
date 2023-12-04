@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 from sys import exit as sys_exit
-from typing import Any, Callable, Iterable, Literal, Optional
+from typing import Any, Callable, Iterable, Optional
 
 from tinydb import Query, where
 from tmdbapis import TMDbAPIs, NotFound, Unauthorized, TMDbException
@@ -160,7 +160,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
 
     def __get_condition(self,
-            query_type: Literal['backdrop', 'image', 'logo'],
+            query_type: str,
             series_info: SeriesInfo,
             episode_info: Optional[EpisodeInfo] = None
         ) -> Query:
@@ -244,8 +244,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def __is_blacklisted(self,
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
-            query_type: str,
-        ) -> bool:
+            query_type: str) -> bool:
         """
         Determines if the specified entry is in the blacklist (e.g.
         should not bother querying TMDb.
@@ -279,15 +278,13 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def is_permanently_blacklisted(self,
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
-            query_type: str = 'image',
-        ) -> bool:
+            query_type: str = 'image') -> bool:
         """
         Determines if permanently blacklisted.
 
         Args:
             series_info: The series information
             episode_info: The episode information
-            query_type: 
 
         Returns:
             True if permanently blacklisted, False otherwise.

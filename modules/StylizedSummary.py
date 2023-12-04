@@ -1,8 +1,11 @@
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from modules.Debug import log
 from modules.BaseSummary import BaseSummary
+
+if TYPE_CHECKING:
+    from modules.Show import Show
 
 
 class StylizedSummary(BaseSummary):
@@ -25,7 +28,7 @@ class StylizedSummary(BaseSummary):
 
 
     def __init__(self,
-            show: 'Show', # type: ignore
+            show: 'Show',
             background: str = BACKGROUND_COLOR, # pylint: disable=unused-argument
             created_by: Optional[str] = None
         ) -> None:

@@ -1,5 +1,6 @@
 from pathlib import Path
 from re import match, sub, IGNORECASE
+from typing import TYPE_CHECKING
 
 from modules import global_objects
 from modules.BaseCardType import BaseCardType
@@ -29,6 +30,11 @@ from modules.cards.TextlessTitleCard import TextlessTitleCard
 from modules.cards.TintedFrameTitleCard import TintedFrameTitleCard
 from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
+
+
+if TYPE_CHECKING:
+    from modules.Episode import Episode, MultiEpisode
+    from modules.Profile import Profile
 
 
 class TitleCard:
@@ -99,8 +105,8 @@ class TitleCard:
 
 
     def __init__(self,
-            episode: 'Episode', # type: ignore
-            profile: 'Profile', # type: ignore
+            episode: 'Episode',
+            profile: 'Profile',
             title_characteristics: dict,
             **extra_characteristics,
         ) -> None:
@@ -217,7 +223,7 @@ class TitleCard:
     def get_multi_output_filename(
             format_string: str,
             series_info: SeriesInfo,
-            multi_episode: 'MultiEpisode', # type: ignore
+            multi_episode: 'MultiEpisode',
             media_directory: Path
         ) -> Path:
         """
@@ -252,8 +258,10 @@ class TitleCard:
             range_text = f'{episode_text}-{end_episode_text}'
 
             # Completely modified format string with keys for start/end episodes
-            modified_format_string = sub(r'e?{episode_start.*?}', range_text,
-                                         mod_format_string, flags=IGNORECASE)
+            modified_format_string = sub(
+                r'e?{episode_start.*?}', range_text, mod_format_string,
+                flags=IGNORECASE
+            )
         else:
             # No episode key to modify, format the original string
             modified_format_string = format_string

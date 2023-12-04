@@ -1,7 +1,10 @@
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
+
+if TYPE_CHECKING:
+    from modules.Font import Font
 
 
 class WhiteBorderTitleCard(BaseCardType):
@@ -226,7 +229,7 @@ class WhiteBorderTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.

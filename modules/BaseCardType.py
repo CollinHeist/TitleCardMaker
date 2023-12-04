@@ -1,10 +1,12 @@
 from abc import abstractmethod
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 
 from titlecase import titlecase
 
 from modules.ImageMaker import ImageMaker, Dimensions
 
+if TYPE_CHECKING:
+    from modules.Font import Font
 
 ImageMagickCommands = list[str]
 
@@ -108,7 +110,7 @@ class BaseCardType(ImageMaker):
     FONT_REPLACEMENTS = {}
 
     """Mapping of 'case' strings to format functions"""
-    CASE_FUNCTIONS = {
+    CASE_FUNCTIONS: dict[str, Callable[[Any], str]] = {
         'blank': lambda _: '',
         'lower': str.lower,
         'source': str,
@@ -238,7 +240,7 @@ class BaseCardType(ImageMaker):
 
     @staticmethod
     @abstractmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Abstract method to determine whether the given font
         characteristics indicate the use of a custom font or not.

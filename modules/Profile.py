@@ -1,13 +1,17 @@
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from re import compile as re_compile, match, IGNORECASE
 
 from modules.Debug import log
+from modules.Episode import MultiEpisode
 from modules.EpisodeInfo import EpisodeInfo
 from modules.EpisodeMap import EpisodeMap
 from modules.Font import Font
-from modules.MultiEpisode import MultiEpisode
+from modules.BaseCardType import BaseCardType
 from modules.SeriesInfo import SeriesInfo
+
+if TYPE_CHECKING:
+    from modules.Episode import Episode
 
 
 class Profile:
@@ -73,7 +77,7 @@ class Profile:
 
 
     def get_valid_profiles(self,
-            card_class: 'CardType',
+            card_class: type[BaseCardType],
             all_variations: bool,
         ) -> list[dict[str, str]]:
         """
@@ -157,7 +161,7 @@ class Profile:
 
 
     def convert_extras(self,
-            card_type: 'BaseCardType',
+            card_type: type['BaseCardType'],
             extras: dict[str, Any],
         ) -> None:
         """

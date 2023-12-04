@@ -2,10 +2,13 @@ from abc import abstractmethod
 from math import ceil
 from pathlib import Path
 from random import sample
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from modules.Debug import log
 from modules.ImageMaker import ImageMaker
+
+if TYPE_CHECKING:
+    from modules.Show import Show
 
 
 class BaseSummary(ImageMaker):
@@ -38,7 +41,7 @@ class BaseSummary(ImageMaker):
 
     @abstractmethod
     def __init__(self,
-            show: 'Show', # type: ignore
+            show: 'Show',
             created_by: Optional[str] = None,
         ) -> None:
         """

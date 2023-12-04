@@ -1,6 +1,6 @@
 from pathlib import Path
 from re import compile as re_compile
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Optional
 
 from num2words import num2words
 
@@ -8,6 +8,9 @@ from modules.Debug import log
 from modules import global_objects
 from modules.SeasonPoster import SeasonPoster
 from modules.YamlReader import YamlReader
+
+if TYPE_CHECKING:
+    from modules.EpisodeMap import EpisodeMap
 
 
 class SeasonPosterSet(YamlReader):
@@ -32,7 +35,7 @@ class SeasonPosterSet(YamlReader):
 
 
     def __init__(self,
-            episode_map: 'EpisodeMap', # type: ignore
+            episode_map: 'EpisodeMap',
             source_directory: Path,
             media_directory: Path,
             poster_config: Optional[dict] = None,
@@ -122,7 +125,7 @@ class SeasonPosterSet(YamlReader):
 
     def __prepare_posters(self,
             poster_config: dict,
-            episode_map: 'EpisodeMap', # type: ignore
+            episode_map: 'EpisodeMap',
         ) -> None:
         """
         Create SeasonPoster objects for all available season poster
