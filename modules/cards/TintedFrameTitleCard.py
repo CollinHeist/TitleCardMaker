@@ -274,7 +274,7 @@ class TintedFrameTitleCard(BaseCardType):
 
         # Determine vertical position based on which element this text is
         if self.top_element == 'index':
-            vertical_shift = -708
+            vertical_shift = -705
         else:
             vertical_shift = 722
         vertical_shift += self.episode_text_vertical_shift
@@ -583,6 +583,8 @@ class TintedFrameTitleCard(BaseCardType):
             if 'episode_text_color' in extras:
                 extras['episode_text_color'] =\
                     TintedFrameTitleCard.EPISODE_TEXT_COLOR
+            if 'frame_color' in extras:
+                extras['frame_color'] = TintedFrameTitleCard.TITLE_COLOR
             if 'episode_text_font' in extras:
                 extras['episode_text_font'] =\
                     TintedFrameTitleCard.EPISODE_TEXT_FONT
@@ -590,8 +592,6 @@ class TintedFrameTitleCard(BaseCardType):
                 extras['episode_text_font_size'] = 1.0
             if 'episode_text_vertical_shift' in extras:
                 extras['episode_text_vertical_shift'] = 0
-            if 'frame_color' in extras:
-                extras['frame_color'] = TintedFrameTitleCard.TITLE_COLOR
 
 
     @staticmethod
