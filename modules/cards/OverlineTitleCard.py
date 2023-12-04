@@ -153,9 +153,14 @@ class OverlineTitleCard(BaseCardType):
         else:
             vertical_position += 110
 
+        # Use increased interline spacing for top line positioning
+        if self.line_position == 'top':
+            interline_spacing =  25 + self.font_interline_spacing
+        else:
+            interline_spacing = -25 + self.font_interline_spacing
+
         # Font characteristics
         size = 55 * self.font_size
-        interline_spacing = 25 + self.font_interline_spacing
         interword_spacing = 50 + self.font_interword_spacing
         kerning = -2 * self.font_kerning
         stroke_width = 5 * self.font_stroke_width
