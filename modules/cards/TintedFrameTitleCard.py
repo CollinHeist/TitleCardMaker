@@ -1,11 +1,14 @@
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal, Optional, TYPE_CHECKING
 
 from modules.BaseCardType import (
     BaseCardType, Coordinate, ImageMagickCommands, Rectangle,
 )
 
 SeriesExtra = Optional
+if TYPE_CHECKING:
+    from modules.Font import Font
+
 Element = Literal['index', 'logo', 'omit', 'title']
 MiddleElement = Literal['logo', 'omit']
 
@@ -23,9 +26,9 @@ class TintedFrameTitleCard(BaseCardType):
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
-        'max_line_width': 35,   # Character count to begin splitting titles
-        'max_line_count': 2,    # Maximum number of lines a title can take up
-        'top_heavy': True,      # This class uses top heavy titling
+        'max_line_width': 35,
+        'max_line_count': 2,
+        'top_heavy': 'even',
     }
 
     """Characteristics of the default title font"""
@@ -592,7 +595,7 @@ class TintedFrameTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
