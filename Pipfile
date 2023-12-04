@@ -41,6 +41,7 @@ pylint = "*"
 termynal = "*"
 mkdocs-material = {extras = ["imaging"], version = "*"}
 mkdocs-glightbox = "==0.3.4"
+ruff = "==0.1.6"
 
 [requires]
 python_version = "3.11"

@@ -20,8 +20,13 @@
  * @property {Array<SearchResult>} items
 */
 
-/*
+/**
  * Add the indicated number of placeholder elements.
+ * @param {HTMLElement} element - Element whose children are being replaced with
+ * placeholders.
+ * @param {number} [amount=10] - Number of elements to add to the DOM.
+ * @param {string} [placeholderElementId='result-placeholder-template'] - ID of
+ * the template of the placeholder to clone and add to the DOM.
  */
 function addPlaceholders(element, amount=10, placeholderElementId='result-placeholder-template') {
   const placeholders = Array.from({length: amount}).map(() => {
@@ -31,8 +36,10 @@ function addPlaceholders(element, amount=10, placeholderElementId='result-placeh
   refreshTheme();
 }
 
-/*
+/**
  * Create a NewSeries object for the given result.
+ * @param {SearchResult} result - Result to parse and convert.
+ * @returns {Object} NewSeries object of the given result.
  */
 function generateNewSeriesObject(result) {
   // Comma separate Template IDs
@@ -69,8 +76,10 @@ function generateNewSeriesObject(result) {
   };
 }
 
-/*
+/**
  * Submit the API request to add the Series indicated by the given result.
+ * @param {SearchResult} result - Result being added.
+ * @param {string} resultElementId - ID of the element in the DOM to modify.
  */
 function addSeries(result, resultElementId) {
   $('#add-series-modal form').toggleClass('loading', true);
@@ -91,7 +100,7 @@ function addSeries(result, resultElementId) {
  * Submit an API request to import the given global Blueprint - creating
  * the associated Series if it does not exist.
  * @param {number} blueprintId - ID of the Blueprint to import.
- * @param {number} elementId - ID of the element in the DOM to update.
+ * @param {string} elementId - ID of the element in the DOM to modify.
  */
 function importBlueprint(blueprintId, elementId) {
   $(`#${elementId}`).toggleClass('loading', true).toggleClass('transition', false);
@@ -105,9 +114,12 @@ function importBlueprint(blueprintId, elementId) {
   });
 }
 
-/*
+/**
  * Look for any Blueprints for the given series. Loading the results into
  * the add-Series modal.
+ * @param {SearchResult} result - ID of the result whose Blueprints are being
+ * queried.
+ * @param {string} resultElementId - ID of the element in the DOM to modify.
  */
 async function queryBlueprints(result, resultElementId) {
   const blueprintResults = document.getElementById('blueprint-results');
@@ -132,9 +144,10 @@ async function queryBlueprints(result, resultElementId) {
   refreshTheme();
 }
 
-/*
+/**
  * Query for all Blueprints defined for all Series - load the given page
  * number.
+ * @param {number} [page=1] - Page number of Blueprints to query and display.
  */
 function queryAllBlueprints(page=1) {
   const blueprintResults = document.getElementById('all-blueprint-results');
@@ -192,8 +205,10 @@ function queryAllBlueprints(page=1) {
   });
 }
 
-/*
+/**
  * Show the modal to add a Series. Launched by clicking a search result.
+ * @param {SearchResult} result - Result whose modal is being displayed.
+ * @param {string} resultElementId - ID of the element in the DOM to modify.
  */
 function showAddSeriesModal(result, resultElementId) {
   // Update the elements of the modal before showing
@@ -225,13 +240,19 @@ function showAddSeriesModal(result, resultElementId) {
     .modal('show');
 }
 
-/*
- * Quick-add the indicated result. This uses the last-selected Templates/libraries.
+/**
+ * Quick-add the indicated result. This uses the last-selected Templates and 
+ * libraries.
+ * @param {SearchResult} result - Result being added.
+ * @param {string} resultElementId - ID of the element in the DOM to modify.
  */
 function quickAddSeries(result, resultElementId) {
+  // Mark element as loading
   let resultElement = document.getElementById(resultElementId)
   resultElement.classList.add('loading');
   resultElement.classList.remove('transition');
+
+  // Submit API request to add this result
   $.ajax({
     type: 'POST',
     url: '/api/series/new',
@@ -248,7 +269,7 @@ function quickAddSeries(result, resultElementId) {
   });
 }
 
-/*
+/**
  * Load the interface search dropdown.
  */
 function initializeSearchSource() {
@@ -267,7 +288,7 @@ function initializeSearchSource() {
   });
 }
 
-/*
+/**
  * Initialize the library dropdowns.
  */
 async function initializeLibraryDropdowns() {
@@ -294,9 +315,7 @@ async function initializeLibraryDropdowns() {
   });
 }
 
-/*
- * Initialize the page.
- */
+/** Initialize the page. */
 async function initAll() {
   initializeSearchSource();
   await initializeLibraryDropdowns();
@@ -317,7 +336,7 @@ async function initAll() {
   $('.ui.checkbox').checkbox();
 }
 
-/*
+/**
  * Query for a series. This reads the input, makes the API call and then
  * displays the results as cards.
  */
