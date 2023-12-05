@@ -53,7 +53,7 @@ def add_new_episode(
     db.commit()
 
     # Assign Templates
-    episode.assign_templates(templates, log=log)
+    episode.assign_templates(templates, log=request.state.log)
     db.commit()
 
     # Refresh card types in case new remote type was specified
