@@ -369,6 +369,13 @@ class Series(Base):
 
 
     @property
+    def loaded_count(self) -> int:
+        """Number of Loaded objects linked to this Series."""
+
+        return len(self.loaded)
+
+
+    @property
     def path_safe_name(self) -> str:
         """Name of this Series to be utilized in Path operations"""
 
