@@ -523,6 +523,7 @@ def batch_update_series(
 
 @series_router.put('/batch/monitor')
 def batch_monitor_series(
+        request: Request,
         series_ids: list[int] = Body(...),
         db: Session = Depends(get_database),
     ) -> list[Series]:
@@ -540,7 +541,7 @@ def batch_monitor_series(
 
         # Update monitored attribute
         series.monitored = True
-        log.debug(f'{series}.monitored = True')
+        request.state.log.debug(f'{series}.monitored = True')
 
     db.commit()
 

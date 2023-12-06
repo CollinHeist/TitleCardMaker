@@ -124,6 +124,7 @@ def remove_stale_loaded_objects(*, log: Logger = log) -> None:
         with next(get_database()) as db:
             # Delete Loaded assets with no associated Card
             db.query(Loaded).filter(Loaded.card_id.is_(None)).delete()
+            db.commit()
     except Exception as exc:
         log.exception(f'Failed to clean Loaded records', exc)
 
@@ -541,7 +542,7 @@ def resolve_card_settings(
     if (CardClass.USES_UNIQUE_SOURCES
         and not card_settings['source_file'].exists()):
         log.debug(f'{series} {episode} Card source image '
-                    f'({card_settings["source_file"].name}) is missing')
+                    f'({card_settings["source_file"].resolve()}) is missing')
         raise MissingSourceImage
 
     # Get card folder
