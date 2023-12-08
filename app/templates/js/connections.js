@@ -18,9 +18,9 @@ async function getAvailableLanguages() {
 }
 
 /**
- * Submit the API request to enable authentication. If successful the page
- * is redirected to the login page with a callback to redirect back here
- * if the subsequent login is successful.
+ * Submit the API request to enable authentication. If successful the page is
+ * redirected to the login page with a callback to redirect back here if the
+ * subsequent login is successful.
  */
 function enableAuthentication() {
   $.ajax({
@@ -33,13 +33,13 @@ function enableAuthentication() {
         title: 'Enabled Authentication',
         message: 'You will be redirected to the login page..'
       });
+
       // After 2.5s, redirect to login with redirect back here
       setTimeout(() => {
         window.location.href = '/login?redirect=/connections';
       }, 2500);
-    }, error: response => {
-      showErrorToast({title: 'Error Enabling Authentication', response});
     },
+    error: response => showErrorToast({title: 'Error Enabling Authentication', response}),
   });
 }
 
@@ -55,13 +55,14 @@ function disableAuthentication() {
       // Uncheck checkbox, disable fields
       $('.checkbox[data-value="require_auth"]').checkbox('uncheck');
       $('#auth-settings .field').toggleClass('disabled', true);
+
       // Clear username input
       $('#auth-settings input[name="username"]')[0].value = '';
+
       // Show toast
       $.toast({class: 'warning', title: 'Disabled Authentication'});
-    }, error: response => {
-      showErrorToast({title: 'Error Disabling Authentication', response});
     },
+    error: response => showErrorToast({title: 'Error Disabling Authentication', response}),
   });
 }
 
@@ -71,7 +72,6 @@ function disableAuthentication() {
  * redirected to the login page with a callback to redirect back here.
  */
 function editUserAuth() {
-  // Submit API request to update user credentials
   $.ajax({
     type: 'POST',
     url: '/api/auth/edit',
@@ -93,9 +93,8 @@ function editUserAuth() {
       setTimeout(() => {
         window.location.href = '/login?redirect=/connections';
       }, 1000);
-    }, error: response => {
-      showErrorToast({title: 'Unable to Update Credentials', response});
     },
+    error: response => showErrorToast({title: 'Unable to Update Credentials', response}),
   });
 }
 
@@ -114,9 +113,8 @@ function initializeAuthForm() {
         $('#auth-settings input[name="username"]')[0].value = username;
         $('#auth-settings input[name="password"]')[0].value = 'fake password';
       }
-    }, error: response => {
-      showErrorToast({title: 'Error Querying Authorized Users', response});
     },
+    error: response => showErrorToast({title: 'Error Querying Authorized Users', response}),
   })
 
   // Enable/disable auth fields based on initial state
@@ -141,10 +139,7 @@ function initializeAuthForm() {
   });
 }
 
-/**
- * Add form validation for all the non-Auth and Tautulli connection
- * forms.
- */
+/** Add form validation for all the non-Auth and Tautulli connection forms. */
 function addFormValidation() {
   // Add form validation
   $('form[form-type="emby"]').form({
@@ -205,9 +200,9 @@ function addFormValidation() {
 }
 
 /**
- * Add form validation to the Tautulli integration form, and assign the
- * API request to the form submission.
- * @param {int} plexInterfaceId - ID of the Plex interface associated with the
+ * Add form validation to the Tautulli integration form, and assign the API
+ * request to the form submission.
+ * @param {number} plexInterfaceId - ID of the Plex interface associated with the
  * Tautulli instance.
  */
 function initializeTautulliForm(plexInterfaceId) {
@@ -255,7 +250,8 @@ function initializeTautulliForm(plexInterfaceId) {
 /**
  * Add the required HTML elements for a new Sonarr library field to the Form
  * of the Connection with the given ID.
- * @param {int} connectionId - ID of the Connection whose form to add fields to.
+ * @param {number} connectionId - ID of the Connection whose form to add fields
+ * to.
  */
 function addSonarrLibraryField(connectionId) {
   // Add interface_id dropdown
@@ -280,8 +276,8 @@ function addSonarrLibraryField(connectionId) {
  * Submit an API request to update the given Connection. This parses the given
  * form, and adds any checkboxes or given jsonData to the submitted JSON object.
  * @param {HTMLFormElement} form - Form with Connection details to parse.
- * @param {int} connectionId - ID of the Connection being updated.
- * @param {"Emby" | "Plex" | "Jellyfin" | "Sonarr" | "TMDb"} connectionType -
+ * @param {number} connectionId - ID of the Connection being updated.
+ * @param {import("./.types").InterfaceType} connectionType -
  * Type of Connection being modified.
  * @param {Object} jsonData - Extra JSON data to include in the API request
  * payload.
@@ -329,7 +325,7 @@ function _deleteConnectionRequest(connectionId, deleteCards=false) {
  * with the given ID. If that is successful, then the HTML element(s) for this
  * Connection are removed from the page and the Sonarr connections are
  * re-initialized (so they may display the correct library dropdowns).
- * @param {int} connectionId - ID of the Connection being deleted.
+ * @param {number} connectionId - ID of the Connection being deleted.
  * @param {boolean} [isMediaServer] - Whether the Connection is a media server.
  * If true, then the indicated warning text is slightly modified.
  */
@@ -383,14 +379,18 @@ function initializeEmby() {
   $.ajax({
     type: 'GET',
     url: '/api/connection/emby/all',
+    /**
+     * 
+     * @param {Array<import("./.types").EmbyConnection>} connections 
+     */
     success: connections => {
       const embyTemplate = document.getElementById('emby-connection-template');
-      const embySection = document.getElementById('emby-connections');
 
       // Add accordions for each Connection
       const embyForms = connections.map(connection => {
         const embyForm = embyTemplate.content.cloneNode(true);
 
+        // @ts-ignore
         if ({{preferences.invalid_connections|safe}}.includes(connection.id)) {
           embyForm.querySelector('.title').classList.add('invalid');
         }
@@ -408,7 +408,7 @@ function initializeEmby() {
 
         return embyForm;
       });
-      embySection.replaceChildren(...embyForms);
+      document.getElementById('emby-connections').replaceChildren(...embyForms);
 
       // Initialize elements of Form
       connections.forEach(connection => {
@@ -474,8 +474,7 @@ function initializeJellyfin() {
     url: '/api/connection/jellyfin/all',
     success: connections => {
       const jellyfinTemplate = document.getElementById('emby-connection-template');
-      const jellyfinSection = document.getElementById('jellyfin-connections');
-
+      
       // Add accordions for each Connection
       const jellyfinForms = connections.map(connection => {
         const jellyfinForm = jellyfinTemplate.content.cloneNode(true);
@@ -495,7 +494,7 @@ function initializeJellyfin() {
 
         return jellyfinForm;
       });
-      jellyfinSection.replaceChildren(...jellyfinForms);
+      document.getElementById('jellyfin-connections').replaceChildren(...jellyfinForms);
 
       // Initialize elements of Form
       connections.forEach(connection => {

@@ -2,15 +2,12 @@
 from typing import Any, Literal, Optional, Union
 from pydantic import AnyUrl, constr, validator # pylint: disable=no-name-in-module
 
-from app.schemas.base import Base, UpdateBase, UNSPECIFIED
+from app.schemas.base import Base, InterfaceType, UpdateBase, UNSPECIFIED
 from modules.EmbyInterface2 import EmbyInterface
 from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
-
-# Names of all interface types
-InterfaceType = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr', 'TMDb']
 
 # Names of acceptable server types
 ServerName = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr']

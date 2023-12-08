@@ -6,7 +6,7 @@ from num2words import CONVERTER_CLASSES
 from pydantic import DirectoryPath, PositiveInt, constr, validator # pylint: disable=no-name-in-module
 
 from app.schemas.base import (
-    Base, InterfaceName, ImageSource, UpdateBase, UNSPECIFIED
+    Base, InterfaceType, ImageSource, UpdateBase, UNSPECIFIED
 )
 
 from modules.TMDbInterface2 import TMDbInterface
@@ -42,7 +42,7 @@ class ToggleOption(NamedOption):
     selected: bool
 
 class EpisodeDataSourceToggle(Base):
-    interface: InterfaceName
+    interface: InterfaceType
     interface_id: int
     name: str
     selected: bool

@@ -1,24 +1,27 @@
+{% if False %}
+import {LogEntry, LogEntryPage, LogLevel} from './.types.js';
+{% endif %}
+
+/** @type {Array<string>} */
+let currentPage = [];
+
 /**
- * Download the current page of logs. This parses the HTML for content.
+ * Download the current page of logs. This reads the value of `currentPage`.
  */
 function downloadPage() {
-  // Get arrays of each value
-  const levels = $('#log-data [data-value="level"]').map(function() { return $(this).text(); }).get();
-  const times = $('#log-data [data-value="time"]').map(function() { return $(this).text(); }).get();
-  const context_ids = $('#log-data [data-value="context_id"]').map(function() { return $(this).text(); }).get();
-  const messages = $('#log-data [data-value="message"]').map(function() { return $(this).text(); }).get();
-  // Create combined string of all rows
-  let logStr = '';
-  for (let i = 0; i < levels.length; i++) {
-    logStr += `[${levels[i]}] [${times[i]}] [${context_ids[i]}] ${messages[i]}\n`;
-  }
+  // Skip if no logs to download
+  if (!currentPage || currentPage.length === 0) { return; }
+
+  // Create combined string of all messages
+  const logStr = currentPage.join('\n');
+
   // Download text 
   downloadTextFile('tcm_log.txt', logStr);
 }
 
 /**
  * Set the given level as the currently selected value in the dropdown.
- * @param {"debug" | "info" | "warning" | "error" | "critical"} level - The log
+ * @param {LogLevel} level - The log
  * level to set as the current selection in the dropdown.
  */
 function updateMessageLevel(level) {
@@ -67,53 +70,78 @@ function resetForm() {
   $('#log-filters').form('clear');
 }
 
-async function queryForLogs(page=1) {
+/**
+ * Submit an API request to query for the given page of logs. If successful,
+ * then add those logs to the DOM.
+ * @param {number} [page=1] - Page number of logs to query.
+ */
+function queryForLogs(page=1) {
   // Prepare Form
   const form = new FormData(document.getElementById('log-filters'));
+
   // Remove blank values
   for (let [key, value] of [...form.entries()]) {
     if (value === '') { form.delete(key); }
   }
+
   // Create query param string
   const queryString = [...form.entries()]
     .map(x => `${encodeURIComponent(x[0])}=${encodeURIComponent(x[1])}`)
     .join('&');
+
   // Submit API request
-  const messageData = await fetch(`/api/logs/query?page=${page}&shallow=false&${queryString}`).then(resp => resp.json());
-  const allMessages = messageData.items;
-  
-  // Update table
-  const rows = allMessages.map(message => {
-    // Clone row template
-    const base = document.querySelector(`#${message.level}-message-template`).content.cloneNode(true);
-    // Update rows
-    const shortTime = message.time.match(/^(.[^\.]+\.\d{3}?)\d*$/m);
-    if (shortTime) {
-      base.querySelector('[data-value="time"]').innerText = shortTime[1];
-    } else {
-      base.querySelector('[data-value="time"]').innerText = message.time;
-    }
-    base.querySelector('[data-value="context_id"]').innerText = message.context_id;
-    base.querySelector('[data-value="message"]').innerText = message.message;
+  $.ajax({
+    type: 'GET',
+    url: `/api/logs/query?page=${page}&shallow=false&${queryString}`,
+    /**
+     * Logs queries successfully, add rows for each log message to the DOM.
+     * @param {LogEntryPage} messages - Log messages to update the table with.
+     */
+    success: messages => {
+      currentPage = [];
+      const rows = messages.items.map(message => {
+        // Clone template
+        const row = document.querySelector(`#${message.level}-message-template`).content.cloneNode(true);
 
-    // On click of log level, update filter level
-    base.querySelector('[data-value="level"]').onclick = () => updateMessageLevel(message.level);
-    // On click of timestamp, update before/after fields
-    base.querySelector('[data-value="time"]').onclick = () => updateTimestamp(message.time);
-    // On click of context ID, append current ID to input
-    base.querySelector('[data-value="context_id"]').onclick = () => appendContextID(message.context_id);
+        const shortTime = message.time.match(/^(.[^\.]+\.\d{3}?)\d*$/m);
+        if (shortTime) {
+          row.querySelector('[data-value="time"]').innerText = shortTime[1];
+        } else {
+          row.querySelector('[data-value="time"]').innerText = message.time;
+        }
+        row.querySelector('[data-value="context_id"]').innerText = message.context_id;
+        row.querySelector('[data-value="message"]').innerText = message.message;
 
-    return base;
-  });
-  document.getElementById('log-data').replaceChildren(...rows);
+        // On click of log level, update filter level
+        row.querySelector('[data-value="level"]').onclick = () => updateMessageLevel(message.level);
+        
+        // On click of timestamp, update before/after fields
+        row.querySelector('[data-value="time"]').onclick = () => updateTimestamp(message.time);
+        
+        // On click of context ID, append current ID to input
+        row.querySelector('[data-value="context_id"]').onclick = () => appendContextID(message.context_id);
 
-  // Update pagination
-  updatePagination({
-    paginationElementId: 'pagination',
-    navigateFunction: queryForLogs,
-    page: messageData.page,
-    pages: messageData.pages,
-    amountVisible: 5,
+        // Add message to current page array
+        currentPage.push(`[${message.level.toUpperCase()}] [${message.time}] [${message.context_id}] ${message.message}`);
+
+        return row;
+      });
+
+      // Add rows to page
+      document.getElementById('log-data').replaceChildren(...rows);
+
+      // Update pagination
+      updatePagination({
+        paginationElementId: 'pagination',
+        navigateFunction: queryForLogs,
+        page: messages.page,
+        pages: messages.pages,
+        amountVisible: isSmallScreen() ? 5 : 15,
+      });
+
+      $('.ui.dropdown').dropdown();
+    },
+    error: response => showErrorToast({type: 'Error Querying Logs', response}),
   });
 }
 
@@ -123,8 +151,7 @@ async function queryForLogs(page=1) {
  */
 function initAll() {
   queryForLogs();
-
-  $('.ui.dropdown').dropdown();
+  
   $('#date-after').calendar({
     type: 'datetime',
     endCalendar: $('#date-before'),

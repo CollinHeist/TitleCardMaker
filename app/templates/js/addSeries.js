@@ -1,24 +1,6 @@
-/**
- * @typedef {Object} SearchResult
- * @property {string} name
- * @property {number} year
- * @property {Array<string>} overview
- * @property {?string} poster
- * @property {?boolean} ongoing
- * @property {?string} emby_id
- * @property {?string} imdb_id
- * @property {?string} jellyfin_id
- * @property {?string} sonarr_id
- * @property {?string} tmdb_id
- * @property {?string} tvdb_id
- * @property {?string} tvrage_id
- * @property {boolean} added
- */
-
-/**
- * @typedef {Object} SearchResultsPage
- * @property {Array<SearchResult>} items
-*/
+{% if False %}
+import {SearchResult, Series} from './.types.js';
+{% endif %}
 
 /**
  * Add the indicated number of placeholder elements.
@@ -88,10 +70,15 @@ function addSeries(result, resultElementId) {
     url: '/api/series/new',
     data: JSON.stringify(generateNewSeriesObject(result)),
     contentType: 'application/json',
+    /**
+     * Series added successfully, disable element in DOM and show a success toast.
+     * @param {Series} series - Newly added Series.
+     */
     success: series => {
       document.getElementById(resultElementId).classList.add('disabled');
       showInfoToast(`Added Series "${series.name}"`);
-    }, error: response => showErrorToast({title: 'Error Adding Series', response}),
+    },
+    error: response => showErrorToast({title: 'Error Adding Series', response}),
     complete: () => $('#add-series-modal').modal('hide'),
   });
 }
@@ -107,10 +94,15 @@ function importBlueprint(blueprintId, elementId) {
   $.ajax({
     type: 'POST',
     url: `/api/blueprints/import/blueprint/${blueprintId}`,
+    /**
+     * Blueprint successfully imported, show toast and mark element as disabled.
+     * @param {Series} series - Series which the Blueprint was imported to.
+     */
     success: series => {
       showInfoToast(`Imported Blueprint to "${series.full_name}"`);
       $(`#${elementId}`).toggleClass('loading', false).toggleClass('disabled', true);
-    }, error: response => showErrorToast({title: 'Error Importing Blueprint', response}),
+    },
+    error: response => showErrorToast({title: 'Error Importing Blueprint', response}),
   });
 }
 
@@ -121,27 +113,50 @@ function importBlueprint(blueprintId, elementId) {
  * queried.
  * @param {string} resultElementId - ID of the element in the DOM to modify.
  */
-async function queryBlueprints(result, resultElementId) {
-  const blueprintResults = document.getElementById('blueprint-results');
-  const blueprintTemplate = document.getElementById('blueprint-template');
+function queryBlueprints(result, resultElementId) {
+  // Add placeholder Blueprints while loading
   addPlaceholders(blueprintResults, 2, 'blueprint-placeholder-template');
-  const allBlueprints = await fetch(`/api/blueprints/query/series?name=${result.name}&year=${result.year}`).then(resp => resp.json());
-  if (allBlueprints === null || allBlueprints.length === 0) {
-    $('#add-series-modal .warning.message').toggleClass('hidden', false).toggleClass('visible', true);
-    $('#blueprint-results .card').remove();
-    return;
-  }
-  // Blueprints available, create cards
-  const blueprintCards = allBlueprints.map((blueprint, blueprintId) => {
-    // Clone template, fill out basic info
-    let card = blueprintTemplate.content.cloneNode(true);
-    card = populateBlueprintCard(card, blueprint, `series-blueprint-id${blueprintId}`);
-    // Assign function to import button
-    card.querySelector('a[data-action="import-blueprint"]').onclick = () => importBlueprint(blueprint.id, resultElementId);
-    return card;
+
+  // Generate query URL
+  let query = `name=${result.name}&year=${result.year}`;
+  if (result.imdb_id) { query += `&imdb_id=${result.imdb_id}`; }
+  if (result.tmdb_id) { query += `&tmdb_id=${result.tmdb_id}`; }
+  if (result.tvdb_id) { query += `&tvdb_id=${result.tvdb_id}`; }
+
+  // Query for Blueprints
+  $.ajax({
+    type: 'GET',
+    url: `/api/blueprints/query/series?${query}`,
+    /**
+     * 
+     * @param {Array<import('./.types.js').RemoteBlueprint>} blueprints - Blueprints associated with
+     * this search result.
+     */
+    success: blueprints => {
+      // No results, show warning
+      if (!blueprints || blueprints.length === 0) {
+        $('#add-series-modal .warning.message').toggleClass('hidden', false).toggleClass('visible', true);
+        $('#blueprint-results .card').remove();
+        return;
+      }
+
+      // Blueprints available, create card elements
+      const blueprintTemplate = document.getElementById('blueprint-template');
+      const blueprintCards = blueprints.map((blueprint, blueprintId) => {
+        // Clone template and populate with info
+        const card = populateBlueprintCard(blueprintTemplate.content.cloneNode(true), blueprint, `series-blueprint-id${blueprintId}`);
+
+        // Assign function to import button
+        card.querySelector('a[data-action="import-blueprint"]').onclick = () => importBlueprint(blueprint.id, resultElementId);
+        return card;
+      });
+
+      // Populate page
+      document.getElementById('blueprint-results').replaceChildren(...blueprintCards);
+      refreshTheme();
+    },
+    error: response => showErrorToast({title: 'Error Querying Blueprints', response}),
   });
-  blueprintResults.replaceChildren(...blueprintCards);
-  refreshTheme();
 }
 
 /**
@@ -162,13 +177,18 @@ function queryAllBlueprints(page=1) {
   $.ajax({
     type: 'GET',
     url: `/api/blueprints/query/all?page=${page}&size=15&order_by=${orderBy}&include_missing_series=${includeMissing}&include_imported=${includeImported}`,
+    /**
+     * Query successful, populate page with Blueprint cards.
+     * @param {import('./.types.js').RemoteBlueprintPage} allBlueprints - Page of Blueprints to display.
+     */
     success: allBlueprints => {
       const blueprintCards = allBlueprints.items.map((blueprint, blueprintId) => {
         // Clone template, fill out basic info
-        let card = blueprintTemplate.content.cloneNode(true);
-        card = populateBlueprintCard(card, blueprint, `blueprint-id${blueprintId}`);
+        const card = populateBlueprintCard(blueprintTemplate.content.cloneNode(true), blueprint, `blueprint-id${blueprintId}`);
+
         // Assign function to import button
         card.querySelector('[data-action="import-blueprint"]').onclick = () => importBlueprint(blueprint.id, `blueprint-id${blueprintId}`);
+        
         // Assign blacklist function to hide button
         card.querySelector('[data-action="blacklist-blueprint"]').onclick = () => {
           $(`#blueprint-id${blueprintId}`).transition({animation: 'fade', duration: 1000});
@@ -182,11 +202,13 @@ function queryAllBlueprints(page=1) {
                 document.getElementById(`blueprint-id${blueprintId}`).remove();
                 showInfoToast('Blueprint Hidden');
               }, 800);
-            }, error: response => showErrorToast({title: 'Error Hiding Blueprint', response}),
+            },
+            error: response => showErrorToast({title: 'Error Hiding Blueprint', response}),
           });
         }
         return card;
       });
+
       // Add Blueprints to page
       blueprintResults.replaceChildren(...blueprintCards);
       updatePagination({
@@ -197,11 +219,13 @@ function queryAllBlueprints(page=1) {
         amountVisible: isSmallScreen() ? 5 : 15,
         hideIfSinglePage: true,
       });
+
       // Transition elements in
       $('#all-blueprint-results .card').transition({animation: 'scale', interval: 40});
       $('[data-value="file-count"]').popup({inline: true});
       refreshTheme();
-    }, error: response => showErrorToast({title: 'Unable to Query Blueprints', response}),
+    },
+    error: response => showErrorToast({title: 'Unable to Query Blueprints', response}),
   });
 }
 
@@ -258,10 +282,15 @@ function quickAddSeries(result, resultElementId) {
     url: '/api/series/new',
     data: JSON.stringify(generateNewSeriesObject(result)),
     contentType: 'application/json',
+    /**
+     * Series successfully added; show toast and disable the result.
+     * @param {Series} series - Newly added Series.
+     */
     success: series => {
       resultElement.classList.add('disabled');
       showInfoToast(`Added Series "${series.name}"`);
-    }, error: response => showErrorToast({title: 'Error adding Series', response}),
+    },
+    error: response => showErrorToast({title: 'Error adding Series', response}),
     complete: () => {
       resultElement.classList.remove('loading');
       resultElement.classList.add('transition');
@@ -276,6 +305,11 @@ function initializeSearchSource() {
   $.ajax({
     type: 'GET',
     url: '/api/settings/episode-data-source',
+    /**
+     * Data sources queried, initialize dropdown.
+     * @param {import('./.types.js').EpisodeDataSourceToggle} dataSources - Which data sources are
+     * enabled.
+     */
     success: dataSources => {
       $('.dropdown[data-value="interface_id"]').dropdown({
         placeholder: 'Default',
@@ -291,34 +325,53 @@ function initializeSearchSource() {
 /**
  * Initialize the library dropdowns.
  */
-async function initializeLibraryDropdowns() {
-  const allConnections = await fetch('/api/connection/all').then(resp => resp.json());
+function initializeLibraryDropdowns() {
   $.ajax({
     type: 'GET',
-    url: '/api/available/libraries/all',
-    success: libraries => {
-      $('.dropdown[data-value="libraries"]').dropdown({
-        placeholder: 'None',
-        values: libraries.map(({interface, interface_id, name}) => {
-          const serverName = allConnections.filter(connection => connection.id === interface_id)[0].name || interface;
-          return {
-            name: name,
-            text: `${name} (${serverName})`,
-            value: `${interface}::${interface_id}::${name}`,
-            description: serverName,
-            descriptionVertical: true,
-            selected: false,
-          };
-        }),
+    url: '/api/connection/all',
+    /**
+     * Connections queried, store and then query all libraries.
+     * @param {Array<import('./.types.js').AnyConnection>} connections - All globally
+     * defined and enabled Connections.
+     */
+    success: connections => {
+      $.ajax({
+        type: 'GET',
+        url: '/api/available/libraries/all',
+        /**
+         * Libraries queried successfully, populate the library dropdowns.
+         * @param {import('./.types.js').MediaServerLibrary} libraries 
+         */
+        success: libraries => {
+          $('.dropdown[data-value="libraries"]').dropdown({
+            placeholder: 'None',
+            values: libraries.map(({interface, interface_id, name}) => {
+              const serverName = connections.filter(connection => connection.id === interface_id)[0].name || interface;
+              return {
+                name: name,
+                text: `${name} (${serverName})`,
+                value: `${interface}::${interface_id}::${name}`,
+                description: serverName,
+                descriptionVertical: true,
+                selected: false,
+              };
+            }),
+          });
+        },
+        error: response => showErrorToast({title: 'Error Querying Libraries', response}),
       });
-    }, error: response => showErrorToast({title: 'Error Querying Libraries', response}),
+    },
+    error: response => showErrorToast({title: 'Error Querying Connections', response}),
   });
+
+  const allConnections = await fetch('/api/connection/all').then(resp => resp.json());
+  
 }
 
 /** Initialize the page. */
 async function initAll() {
   initializeSearchSource();
-  await initializeLibraryDropdowns();
+  initializeLibraryDropdowns();
 
   // Initialize search input with query param if provided
   const query = new URLSearchParams(window.location.search).get('q');
@@ -358,7 +411,7 @@ function querySeries() {
     url: `/api/series/lookup?name=${query}&interface_id=${interfaceId}`,
     /**
      * Lookup successful, populate page.
-     * @param {SearchResultsPage} allResults - Search results for this query.
+     * @param {import('./.types.js').SearchResultsPage} allResults - Search results for this query.
     */
     success: allResults => {
       const results = allResults.items.map((result, index) => {

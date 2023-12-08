@@ -99,7 +99,8 @@ function toggleScheduleType() {
     success: () => {
       showInfoToast({title: 'Updated Scheduler', message: 'Reloading page..'});
       setTimeout(() => location.reload(), 2000);
-    }, error: response => {
+    },
+    error: response => {
       document.getElementById('toggle-button').classList.remove('loading');
       showErrorToast({title: 'Error Changing Scheduler', response});
     },
@@ -121,10 +122,11 @@ function runTask(taskId) {
   $.ajax({
     type: 'POST',
     url: `/api/schedule/${taskId}`,
-    success: response => {
+    success: task => {
       showInfoToast(`Task ${taskId} Completed`);
-      $(`tr[data-id="${taskId}"] td[data-column="previous_duration"]`)[0].innerHTML = timeFreqString(response.previous_duration, 2);
-    }, error: response => showErrorToast({title: 'Error Running Task', response}),
+      $(`tr[data-id="${taskId}"] td[data-column="previous_duration"]`)[0].innerHTML = timeFreqString(task.previous_duration, 2);
+    },
+    error: response => showErrorToast({title: 'Error Running Task', response}),
     complete: () => $(`tr[data-id="${taskId}"] td[data-column="runTask"] i`).toggleClass('blue loading', false),
   });
 }

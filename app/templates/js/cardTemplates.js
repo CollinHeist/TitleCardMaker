@@ -1,4 +1,8 @@
-/*
+{% if False %}
+import {Series} as Types from './.types.js';
+{% endif %}
+
+/**
  * Submit an API request to create a new Template. If successful, then all 
  * Templates are reloaded.
  */
@@ -8,10 +12,15 @@ function addTemplate() {
     url: '/api/templates/new',
     data: JSON.stringify({name: ' Blank Template'}),
     contentType: 'application/json',
-    success: response => {
-      showInfoToast(`Created Template #${response.id}`);
+    /**
+     * Template successfully created, show a Toast and re-query all Templates.
+     * @param {Series} template - Newly created Template.
+     */
+    success: template => {
+      showInfoToast(`Created Template #${template.id}`);
       getAllTemplates();
-    }, error: response => showErrorToast({title: 'Error Creating Template', response}),
+    },
+    error: response => showErrorToast({title: 'Error Creating Template', response}),
   });
 }
 

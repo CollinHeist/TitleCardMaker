@@ -1,4 +1,8 @@
-/*
+{% if False %}
+import {FontAnalysis, NamedFont} from './.types.js';
+{% endif %}
+
+/**
  * Submit an API request to create a new Font. If successful, then all Fonts
  * are reloaded.
  */
@@ -9,6 +13,10 @@ function addFont() {
     url: '/api/fonts/new',
     data: JSON.stringify(data),
     contentType: 'application/json',
+    /**
+     * Font created; show toast and re-query all Fonts.
+     * @param {NamedFont} font - Newly created Font.
+     */
     success: font => {
       showInfoToast(`Created Font #${font.id}`);
       getAllFonts();
@@ -17,14 +25,16 @@ function addFont() {
   });
 }
 
-/*
+/**
  * Submit an API request to delete the given Font from the database. If
  * successful, the HTML element for this Font is removed from the page.
+ * @param {NamedFont} font - Font to delete.
  */
 function deleteFont(font) {
   $.ajax({
     type: 'DELETE',
     url: `/api/fonts/${font.id}`,
+    /** Font deleted, show toast and remove this Font's element from the DOM. */
     success: () => {
       showInfoToast(`Deleted Font "${font.name}"`);
       $(`#font-id${font.id}`).remove();
@@ -33,6 +43,16 @@ function deleteFont(font) {
   });
 }
 
+/**
+ * Submit an API request to reload the preview image for the Font with the given
+ * data.
+ * @param {number} fontId - ID of the Font whose preview is being reloaded.
+ * @param {HTMLFormElement} fontForm - Form whose data is being previewed.
+ * @param {HTMLFormElement} previewForm - Form containing preview images.
+ * @param {HTMLElement} cardElement - Element to mark as loading while the
+ * preview is being generated.
+ * @param {HTMLImageElement} imageElement - Element whose `src` to update.
+ */
 function reloadPreview(fontId, fontForm, previewForm, cardElement, imageElement) {
   const fontFormObj = new FormData(fontForm);
   const previewFormObj = new FormData(previewForm);
@@ -59,20 +79,30 @@ function reloadPreview(fontId, fontForm, previewForm, cardElement, imageElement)
     url: '/api/cards/preview',
     data: JSON.stringify(previewCardObj),
     contentType: 'application/json',
+    /**
+     * Preview created; update `imageElement.src`.
+     * @param {string} imageUrl - New URI to the generated preview image.
+     */
     success: imageUrl => imageElement.src = `${imageUrl}?${new Date().getTime()}`,
     error: response => showErrorToast({title: 'Error Creating Preview Card', response}),
     complete: () => cardElement.classList.remove('loading'),
   });
 }
 
-function saveFontForm(fontId, event) {
+/**
+ * Submit an API request to update the Font with the given ID (if the Font Form
+ * is valid). This also uploads the uploaded Font file (if present).
+ * @param {number} fontId - ID of the Font whose form is being parsed and
+ * updated.
+ * @param {EventTarget} eventTarget - Target of the event initializing the save
+ * (the Font Form).
+ */
+function saveFontForm(fontId, eventTarget) {
   // Validate form, exit if invalid
-  if (!$(`#font-id${fontId}`).form('is valid')) {
-    return;
-  }
+  if (!$(`#font-id${fontId}`).form('is valid')) { return; }
 
   // Construct form
-  let form = new FormData(event.target);
+  let form = new FormData(eventTarget);
   let listData = {replacements_in: [], replacements_out: []};
   for (let [key, value] of [...form.entries()]) {
     if (key === 'size' || key === 'kerning' || key === 'stroke_width') {
@@ -92,6 +122,10 @@ function saveFontForm(fontId, event) {
     url: `/api/fonts/${fontId}`,
     data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData}),
     contentType: 'application/json',
+    /**
+     * Font updated, display toast.
+     * @param {NamedFont} font - Updated Font.
+     */
     success: font => showInfoToast(`Updated Font "${font.name}"`),
     error: response => showErrorToast({title: 'Error Updating Font', response}),
   });
@@ -112,20 +146,20 @@ function saveFontForm(fontId, event) {
   });
 }
 
-// Function to add dropdown card types
-async function initCardTypeDropdowns() {
-  loadCardTypes({
-    element: '.ui.card-type.dropdown',
-    isSelected: (identifier) => identifier === '{{preferences.default_card_type}}',
-    showExcluded: false,
-    dropdownArgs: {},
-  });
-}
-
+/**
+ * Perform an analysis of this Font, adding any suggested Font replacements to
+ * the DOM.
+ * @param {number} fontId - ID of the Font being analyzed.
+ * @param {string} elementId - ID of the form associated with this Font.
+ */
 function querySuggestedFontReplacements(fontId, elementId) {
   $.ajax({
     type: 'GET',
     url: `/api/fonts/${fontId}/analysis`,
+    /**
+     * Font analyzed, update DOM with suggested replacements.
+     * @param {FontAnalysis} analysis - Analysis to display.
+     */
     success: analysis => {
       // Disable button now that Font has been analyzed
       $(`#${elementId} .button[data-action="populateReplacements"]`).toggleClass('disabled', true);
@@ -161,153 +195,201 @@ function querySuggestedFontReplacements(fontId, elementId) {
         }
       }
       showInfoToast({title: 'Added Suggested Replacements', message: 'Blank replacements indicate a deleted character'});
-    }, error: response => showErrorToast({title: 'Error Analyzing Font', response}),
+    },
+    error: response => showErrorToast({title: 'Error Analyzing Font', response}),
   });
 }
 
-// Function to get all fonts and add their elements to the page
-async function getAllFonts() {
-  // Query for all Fonts
-  const fonts = await fetch('/api/fonts/all').then(resp => resp.json());
-  const hasManyFonts = fonts.length > 20; // Add headers if >10 Fonts
-  const activeFont = window.location.hash.substring(1);
-  let previewData;
+let previewData;
+/**
+ * 
+ * @param {Node} template - Element being populated.
+ * @param {NamedFont} font - Font object whose details are used to populate the
+ * element.
+ * @param {?string} [activeFontId] - ID of the active font. If `font` is this
+ * same object, then the accordion is created in an initialized state.
+ * @returns {Node} Modified `template`.
+ */
+function populateFontElement(template, font, activeFontId) {
+  // Set Element ID
+  template.querySelector('.accordion').id = `font-id${font.id}`;
 
-  // Create array of elements
-  const fontElements = [];
-  let currentHeader = null;
-
-  fonts.forEach((fontObj) => {
-    // Add header element for this letter if needed
-    const letter = fontObj.sort_name[0].toUpperCase();
-    if (hasManyFonts && letter != currentHeader) {
-      currentHeader = letter;
-      const header = document.createElement('h2');
-      // header.id = letter;
-      header.className = 'ui dividing header';
-      if (letter === ' ') {
-        header.innerText = 'Blank Fonts';
-      } else {
-        header.innerText = letter;
-      }
-      fontElements.push(header);
-    }
-
-    // Add Font accordion
-    const template = document.querySelector('#font-template').content.cloneNode(true);
-    template.querySelector('.accordion').id = `font-id${fontObj.id}`;
-    // Make accordion active if this was indicated in the URL has
-    if (`font-id${fontObj.id}` === activeFont) {
-      template.querySelector('.title').classList.add('active');
-      template.querySelector('.content').classList.add('active');
-    }
-    template.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${fontObj.name}`;
-    template.querySelector('input[name="name"]').value = fontObj.name;
-    const file = template.querySelector('label[data-value="file"]');
-    file.innerText = fontObj.file_name === null ? 'File' : `File (${fontObj.file_name})`;
-    if (fontObj.color !== null) {
-      template.querySelector('input[name="color"]').value = fontObj.color;
-    }
-    if (fontObj.title_case !== null) {
-      template.querySelector('input[name="title_case"]').value = fontObj.title_case;
-    }
-    template.querySelector('input[name="size"]').value = Math.floor(fontObj.size*100);
-    template.querySelector('input[name="kerning"]').value = Math.floor(fontObj.kerning*100);
-    template.querySelector('input[name="stroke_width"]').value = Math.floor(fontObj.stroke_width*100);
-    template.querySelector('input[name="interline_spacing"]').value = fontObj.interline_spacing;
-    template.querySelector('input[name="interword_spacing"]').value = fontObj.interword_spacing;
-    template.querySelector('input[name="vertical_shift"]').value = fontObj.vertical_shift;
-    if (fontObj.delete_missing) {
-      template.querySelector('input[name="delete_missing"]').checked = true;
-    }
-    const inElement = template.querySelector('.field[data-value="in-replacements"]');
-    const outElement = template.querySelector('.field[data-value="out-replacements"]');
-    if (fontObj.replacements) {
-      Object.entries(fontObj.replacements).forEach(([in_, out_]) => {
-        const newInput = document.createElement('input');
-        newInput.name = 'replacements_in'; newInput.type='text';
-        newInput.value = in_;
-        inElement.appendChild(newInput);
-        const newOutput = document.createElement('input');
-        newOutput.name = 'replacements_out'; newOutput.type='text';
-        newOutput.value = out_;
-        outElement.appendChild(newOutput);
-      });
-    }
-    // Query suggested font replacements on button click
-    template.querySelector('.button[data-action="populateReplacements"]').onclick = () => querySuggestedFontReplacements(fontObj.id, `font-id${fontObj.id}`);
-    // Add new input fields on click of addReplacement button
-    template.querySelector('.button[data-action="addReplacement"]').onclick = () => {
-      const blankInput = document.createElement('input');
-      blankInput.name = 'replacements_in'; blankInput.type='text';
-      inElement.appendChild(blankInput);
-      const blankOutput = document.createElement('input');
-      blankOutput.name = 'replacements_out'; blankOutput.type='text';
-      outElement.appendChild(blankOutput);
-    };
-
-    // Set submit form event to submit PATCH API request
-    template.querySelector('form[data-value="font-form"]').id = `font-id${fontObj.id}`;
-    template.querySelector('form[data-value="font-form"]').onsubmit = event => {
-      event.preventDefault();
-      saveFontForm(fontObj.id, event);
-    };
-
-    // Set delete button to submit DELETE API request
-    template.querySelector('.negative.button').onclick = event => {
-      event.preventDefault();
-      deleteFont(fontObj);
-    };
-
-    // Reload preview when button is pressed
-    const previewCard = template.querySelector('.ui.card');
-    const previewImage = template.querySelector('img');
-    const fontForm = template.querySelector('form[data-value="font-form"]');
-    const previewForm =  template.querySelector('form[data-value="preview-form"]');
-    template.querySelector('.button[data-action="refresh"]').onclick = () => reloadPreview(fontObj.id, fontForm, previewForm, previewCard, previewImage);
-    // If this font was indicated in URL, initiate preview load
-    if (`font-id${fontObj.id}` === activeFont) {
-      previewData = [fontObj.id, fontForm, previewForm, previewCard, previewImage];
-    }
-    // Update title text + preview when a-z icon is clicked
-    const titleInput = template.querySelector('form[data-value="preview-form"] input[name="title_text"]');
-    template.querySelector('form[data-value="preview-form"] .field label a').onclick = () => {
-      titleInput.value = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ\\nabcdefghijklmnopqrstuvwxyz';
-      reloadPreview(fontObj.id, fontForm, previewForm, previewCard, previewImage);
-    }
-
-    fontElements.push(template);
-  });
-  // Put new font elements on the page
-  document.getElementById('fonts').replaceChildren(...fontElements);
-
-  // Scroll to active Font if indicated
-  if (activeFont) {
-    document.getElementById(activeFont).scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
-    // Start loading preview
-    reloadPreview(...previewData);
+  // Make accordion active if this was indicated in the URL
+  if (activeFontId && `font-id${font.id}` === activeFontId) {
+    template.querySelector('.title').classList.add('active');
+    template.querySelector('.content').classList.add('active');
   }
 
-  // Enable accordion/dropdown/checkbox elements
-  $('.ui.accordion').accordion();
-  $('.ui.dropdown').dropdown();
-  $('.ui.checkbox').checkbox();
-  // Apply form validations
-  $('.form[data-value="font-form"]').form({
-    on: 'blur',
-    inline: true,
-    fields: {
-      name: ['minLength[1]'],
-      size: ['integer[1..]'],
+  template.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${font.name}`;
+  template.querySelector('input[name="name"]').value = font.name;
+
+  template.querySelector('label[data-value="file"]').innerText = font.file_name === null ? 'File' : `File (${font.file_name})`;
+  
+  if (font.color !== null) {
+    template.querySelector('input[name="color"]').value = font.color;
+  }
+
+  if (font.title_case !== null) {
+    template.querySelector('input[name="title_case"]').value = font.title_case;
+  }
+  template.querySelector('input[name="size"]').value = Math.floor(font.size*100);
+  template.querySelector('input[name="kerning"]').value = Math.floor(font.kerning*100);
+  template.querySelector('input[name="stroke_width"]').value = Math.floor(font.stroke_width*100);
+  template.querySelector('input[name="interline_spacing"]').value = font.interline_spacing;
+  template.querySelector('input[name="interword_spacing"]').value = font.interword_spacing;
+  template.querySelector('input[name="vertical_shift"]').value = font.vertical_shift;
+  if (font.delete_missing) {
+    template.querySelector('input[name="delete_missing"]').checked = true;
+  }
+
+  // Set font replacements
+  const inElement = template.querySelector('.field[data-value="in-replacements"]');
+  const outElement = template.querySelector('.field[data-value="out-replacements"]');
+  if (font.replacements) {
+    Object.entries(font.replacements).forEach(([in_, out_]) => {
+      const newInput = document.createElement('input');
+      newInput.name = 'replacements_in'; newInput.type='text';
+      newInput.value = in_;
+      inElement.appendChild(newInput);
+      const newOutput = document.createElement('input');
+      newOutput.name = 'replacements_out'; newOutput.type='text';
+      newOutput.value = out_;
+      outElement.appendChild(newOutput);
+    });
+  }
+
+  // Query suggested font replacements on button click
+  template.querySelector('.button[data-action="populateReplacements"]').onclick = () => querySuggestedFontReplacements(fontObj.id, `font-id${fontObj.id}`);
+  
+  // Add new input fields on click of addReplacement button
+  template.querySelector('.button[data-action="addReplacement"]').onclick = () => {
+    const blankInput = document.createElement('input');
+    blankInput.name = 'replacements_in'; blankInput.type='text';
+    inElement.appendChild(blankInput);
+    const blankOutput = document.createElement('input');
+    blankOutput.name = 'replacements_out'; blankOutput.type='text';
+    outElement.appendChild(blankOutput);
+  };
+
+  // Set submit form event to submit PATCH API request
+  template.querySelector('form[data-value="font-form"]').id = `font-id${font.id}`;
+  template.querySelector('form[data-value="font-form"]').onsubmit = event => {
+    event.preventDefault();
+    saveFontForm(font.id, event.target);
+  };
+
+  // Set delete button to submit DELETE API request
+  template.querySelector('.negative.button').onclick = event => {
+    event.preventDefault();
+    deleteFont(font);
+  };
+
+  // Reload preview when button is pressed
+  const previewCard = template.querySelector('.ui.card');
+  const previewImage = template.querySelector('img');
+  const fontForm = template.querySelector('form[data-value="font-form"]');
+  const previewForm =  template.querySelector('form[data-value="preview-form"]');
+  template.querySelector('.button[data-action="refresh"]').onclick = () => reloadPreview(font.id, fontForm, previewForm, previewCard, previewImage);
+  // If this font was indicated in URL, initiate preview load
+  if (activeFontId && `font-id${font.id}` === activeFontId) {
+    previewData = [font.id, fontForm, previewForm, previewCard, previewImage];
+  }
+
+  // Update title text + preview when a-z icon is clicked
+  const titleInput = template.querySelector('form[data-value="preview-form"] input[name="title_text"]');
+  template.querySelector('form[data-value="preview-form"] .field label a').onclick = () => {
+    titleInput.value = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ\\nabcdefghijklmnopqrstuvwxyz';
+    reloadPreview(font.id, fontForm, previewForm, previewCard, previewImage);
+  }
+
+  return template;
+}
+
+/**
+ * Submit an API request to query all defined Fonts and add their populated
+ * forms to the DOM.
+ */
+function getAllFonts() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/fonts/all',
+    /**
+     * Fonts queried, add all Font forms to the DOM.
+     * @param {Array<NamedFont>} fonts 
+     */
+    success: fonts => {
+      // Display head if there are many Fonts
+      const hasManyFonts = fonts.length > 20;
+
+      // Get the currently active Font from the URL
+      const activeFontId = window.location.hash.substring(1);
+
+      // Create elements to add to DOM
+      let currentHeader = null,
+          fontElements = [];
+      fonts.forEach(font => {
+        // Add letter header for this Font if necessary
+        const letter = font.sort_name[0].toUpperCase();
+        if (hasManyFonts && letter !== currentHeader) {
+          const header = document.createElement('h2');
+          header.className = 'ui dividing header';
+          header.innerText = (letter === ' ') ? 'Blank Fonts' : letter;
+          fontElements.push(header);
+          currentHeader = letter;
+        }
+
+        // Add accordion for this Font
+        fontElements.push(populateFontElement(
+          document.getElementById('font-template').content.cloneNode(true),
+          font,
+          activeFontId
+        ));
+      });
+
+      // Put new font elements on the page
+      document.getElementById('fonts').replaceChildren(...fontElements);
+
+      // Scroll to active Font if indicated
+      if (activeFontId) {
+        document.getElementById(activeFontId).scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+
+        // Start loading preview
+        reloadPreview(...previewData);
+      }
+
+      // Enable accordion/dropdown/checkbox elements
+      $('.ui.accordion').accordion();
+      $('.ui.dropdown').dropdown();
+      $('.ui.checkbox').checkbox();
+
+      // Fill in card type dropdowns
+      loadCardTypes({
+        element: '.ui.card-type.dropdown',
+        isSelected: (identifier) => identifier === '{{preferences.default_card_type}}',
+        showExcluded: false,
+        dropdownArgs: {},
+      });
+
+      // Refresh theme for any newly added HTML
+      refreshTheme();
+
+      // Apply form validations
+      $('.form[data-value="font-form"]').form({
+        on: 'blur',
+        inline: true,
+        fields: {
+          name: ['minLength[1]'],
+          size: ['integer[1..]'],
+        },
+      });
     },
+    error: response => showErrorToast({title: 'Error Loading Fonts', response}),
   });
+}
 
-  // Fill in card type dropdowns
-  initCardTypeDropdowns();
-
-  // Refresh theme for any newly added HTML
-  refreshTheme();
+function initAll() {
+  getAllFonts();
 }
