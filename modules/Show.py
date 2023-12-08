@@ -57,7 +57,7 @@ class Show(YamlReader):
         'logo', 'backdrop', 'file_interface', 'profile', 'season_poster_set',
         'episodes', 'emby_interface', 'jellyfin_interface', 'plex_interface',
         'sonarr_interface', 'tmdb_interface', '__is_archive', 'media_server',
-        'image_source_priority', '__auto_hide_seasons',
+        'image_source_priority', '_auto_hide_seasons',
     )
 
     def __init__(self,
@@ -191,6 +191,7 @@ class Show(YamlReader):
         self.plex_interface = None
         self.sonarr_interface = None
         self.tmdb_interface = None
+        self._auto_hide_seasons = False
         self.__is_archive = False
 
         return None
@@ -339,7 +340,7 @@ class Show(YamlReader):
             if isinstance(value, bool):
                 self.hide_seasons = value
             elif isinstance(value, str) and value.lower() == 'auto':
-                self.__auto_hide_seasons = True
+                self._auto_hide_seasons = True
             else:
                 log.error(f'Season hiding must be "true", "false" or "auto"')
                 self.valid = False
@@ -519,7 +520,7 @@ class Show(YamlReader):
             )
 
         if (not self.__is_archive
-            and self.__auto_hide_seasons 
+            and self._auto_hide_seasons
             and (seasons - set({0, 1}))):
             self.hide_seasons = True
 
