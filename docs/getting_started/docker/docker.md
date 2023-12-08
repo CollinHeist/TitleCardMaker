@@ -6,11 +6,12 @@ description: >
 
 # Docker Installation
 
-!!! warning "Under Construction"
+!!! info "Pre-Release Instructions"
 
-    This documentation is actively being developed.
+    These instructions are __not applicable__ while TCM is in pre-release.
+    Please refer to [here](../index.md)
 
-!!! info "Benefits of Docker"
+??? info "Benefits of Docker"
 
     For more info on the benefits of Docker, see [here](./index.md).
 

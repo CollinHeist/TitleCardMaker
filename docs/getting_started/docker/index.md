@@ -7,6 +7,11 @@ description: >
 
 # Docker Installation
 
+!!! info "Pre-Release Instructions"
+
+    These instructions are __not applicable__ while TCM is in pre-release.
+    Please refer to [here](../index.md)
+
 Docker is a very convenient way of compartmentalizing a piece of software
 (TitleCardMaker) from the rest of your host machine - like a very lightweight
 Virtual Machine. The TCM Container has the benefit of coming pre-packaged with

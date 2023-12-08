@@ -57,8 +57,8 @@ following examples for help.
     !!! tip "Quick Setup"
 
         For most users, simply listing the paths, library names, and associated
-        servers for the folders in Sonarr under `Settings` > `Media Management`
-        > `Root Folders` is sufficient.
+        servers for the folders in Sonarr under
+        `Settings` > `Media Management` > `Root Folders` is sufficient.
 
     ??? example "Example Library Paths"
 

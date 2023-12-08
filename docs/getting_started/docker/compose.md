@@ -6,6 +6,10 @@ description: >
 
 # Docker Compose
 
+??? info "Benefits of Docker"
+
+    For more info on the benefits of Docker, see [here](./index.md).
+
 Below is a reference Docker compose snippet which can be modified to launch
 TitleCardMaker via `docker -compose up`. Lines which should be reviewed and
 modified are highlighted.

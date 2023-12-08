@@ -6,7 +6,12 @@ description: >
 
 # Synology DSM Docker Installation
 
-!!! info "Benefits of Docker"
+!!! info "Pre-Release Instructions"
+
+    These instructions are __not applicable__ while TCM is in pre-release.
+    Please refer to [here](../index.md)
+
+??? info "Benefits of Docker"
 
     For more info on the benefits of Docker, see [here](./index.md).
 
