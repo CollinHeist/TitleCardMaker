@@ -10,7 +10,6 @@ from modules.Debug import log
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
     from modules.Font import Font
-    from modules.EpisodeInfo2 import EpisodeInfo
 
 
 TextPosition = Literal[
@@ -321,9 +320,7 @@ class ShapeTitleCard(BaseCardType):
 
     @property
     def _title_text_height(self) -> int:
-        """
-        
-        """
+        """The height of the title text. Only calculated once."""
 
         if len(self.title_text) == 0:
             return 0

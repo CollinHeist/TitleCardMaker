@@ -747,7 +747,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 assert id_match or (title_match and release_date_match)
 
                 # Actual match, return "movie"
-                log.info(f'Matched {episode_info} of "{series_info}" to TMDb '
+                log.debug(f'Matched {episode_info} of "{series_info}" to TMDb '
                          f'Movie {movie}')
                 return movie
             except (NotFound, IndexError, AssertionError, TMDbException):
