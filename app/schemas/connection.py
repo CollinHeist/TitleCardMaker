@@ -96,6 +96,7 @@ class NewSonarrConnection(BaseNewServer):
 
 class NewTautulliConnection(BaseNewServer):
     agent_name: str = 'Update TitleCardMaker (v3)'
+    api_key: str
 
 class NewTMDbConnection(Base):
     name: str = 'TMDb'
