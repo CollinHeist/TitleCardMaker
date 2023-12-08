@@ -48,7 +48,7 @@ class StandardTitleCard(BaseCardType):
                     'Either <v>True</v> or <v>False</v>. If <v>True</v>, text '
                     'may appear less legible on brighter images.'
                 ),
-            )
+            ),
         ], description=[
             'The most "generic" type of title card.',
             'This card features center-aligned season, episode, and title text.'
@@ -119,9 +119,7 @@ class StandardTitleCard(BaseCardType):
             preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this card.
-        """
+        """Construct a new instance of this card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)

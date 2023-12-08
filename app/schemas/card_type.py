@@ -364,7 +364,6 @@ class ShapeCardType(BaseCardTypeAllText):
     font_size: PositiveFloat = 1.0
     font_stroke_width: float = 1.0
     font_vertical_shift: int = 0
-
     hide_shape: bool = False
     italicize_season_text: bool = False
     omit_gradient: bool = False

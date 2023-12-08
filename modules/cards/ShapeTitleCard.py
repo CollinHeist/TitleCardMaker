@@ -112,9 +112,20 @@ class ShapeTitleCard(BaseCardType):
                     ' <v>right</v>, <v>lower left</v>, or <v>lower right</v>. '
                     'Default is <v>lower left</v>.'
                 ),
+            ), Extra(
+                name='Gradient Omission',
+                identifier='omit_gradient',
+                description='Whether to omit the gradient overlay',
+                tooltip=(
+                    'Either <v>True</v> or <v>False</v>. If <v>True</v>, text '
+                    'may appear less legible on brighter images.'
+                ),
             ),
         ], description=[
-            '...'
+            'A title card featuring a diamond shape surrounding the text. The '
+            'shape is interesected by the title text.',
+            'This card allows the text (and shape) to be positioned at various '
+            'points around the image.',
         ]
     )
 
@@ -165,6 +176,7 @@ class ShapeTitleCard(BaseCardType):
         'shape_side_length', 'shape_width', 'stroke_color', 'text_position',
         '__title_height',
     )
+
 
     def __init__(self, *,
             source_file: Path,
@@ -241,7 +253,8 @@ class ShapeTitleCard(BaseCardType):
     @property
     def gradient_commands(self) -> ImageMagickCommands:
         """
-        
+        Subcommand to overlay the gradient to this image. This rotates
+        and repositions the gradient overlay based on the text position.
         """
 
         if self.omit_gradient:
@@ -274,7 +287,15 @@ class ShapeTitleCard(BaseCardType):
             gravity: str = 'west',
         ) -> ImageMagickCommands:
         """
-        
+        Subcommands for adding title text to an image.
+
+        Args:
+            x: X-position where the title text should be positioned at.
+            y: Y-position where the title text should be positioned at.
+            gravity: Gravity to utilize for text annotation.
+
+        Returns:
+            List of ImageMagick commands.
         """
 
         if len(self.title_text) == 0:
@@ -288,7 +309,7 @@ class ShapeTitleCard(BaseCardType):
             f'-font "{self.font_file}"',
             f'-interline-spacing {interline_spacing}',
             f'-pointsize {size:.1f}',
-            f'-fill {self.font_color}',
+            f'-fill "{self.font_color}"',
             f'+stroke',
             f'-stroke "{self.stroke_color}"',
             f'-strokewidth {stroke_width:.1f}',
@@ -538,7 +559,15 @@ class ShapeTitleCard(BaseCardType):
             custom_season_titles: Whether the season titles are custom.
         """
 
-        ...
+        if not custom_font:
+            if 'season_text_color' in extras:
+                extras['season_text_color'] = ShapeTitleCard.EPISODE_TEXT_COLOR
+            if 'season_text_font_size' in extras:
+                extras['season_text_font_size'] = 1.0
+            if 'shape_color' in extras:
+                extras['shape_color'] = ShapeTitleCard.SHAPE_COLOR
+            if 'stroke_color' in extras:
+                extras['stroke_color'] = 'black'
 
 
     @staticmethod
@@ -560,6 +589,7 @@ class ShapeTitleCard(BaseCardType):
             or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
+            or (font.stroke_width != 1.0)
             or (font.vertical_shift != 0)
         )
 
