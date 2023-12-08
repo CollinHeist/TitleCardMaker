@@ -24,6 +24,7 @@ from modules.cards.OlivierTitleCard import OlivierTitleCard
 from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
 from modules.cards.RomanNumeralTitleCard import RomanNumeralTitleCard
+from modules.cards.ShapeTitleCard import ShapeTitleCard, TextPosition as ShapeTextPosition
 from modules.cards.StandardTitleCard import StandardTitleCard
 from modules.cards.StarWarsTitleCard import StarWarsTitleCard
 from modules.cards.TintedFrameTitleCard import TintedFrameTitleCard
@@ -34,8 +35,8 @@ LocalCardIdentifiers = Literal[
     'anime', 'calligraphy', 'comic book', 'cutout', 'divider', 'fade', 'frame',
     'generic', 'gundam', 'ishalioh', 'landscape', 'logo', 'marvel', 'musikmann',
     'olivier', 'phendrena', 'photo', 'polymath', 'poster', 'reality tv',
-    'roman', 'roman numeral', 'sherlock', 'standard', 'star wars', 'textless',
-    'tinted glass', '4x3', 'white border',
+    'roman', 'roman numeral', 'shape', 'sherlock', 'standard', 'star wars',
+    'textless', 'tinted glass', '4x3', 'white border',
 ]
 
 """
@@ -352,6 +353,43 @@ class RomanNumeralCardType(BaseCardTypeAllText):
     roman_numeral_color: BetterColor = RomanNumeralTitleCard.ROMAN_NUMERAL_TEXT_COLOR
     season_text_color: BetterColor = RomanNumeralTitleCard.SEASON_TEXT_COLOR
 
+class ShapeCardType(BaseCardTypeAllText):
+    season_text: str
+    episode_text: str
+    font_color: BetterColor = ShapeTitleCard.TITLE_COLOR
+    font_file: FilePath = ShapeTitleCard.TITLE_FONT
+    font_interline_spacing: int = 0
+    font_interword_spacing: int = 0
+    font_kerning: float = 1.0
+    font_size: PositiveFloat = 1.0
+    font_stroke_width: float = 1.0
+    font_vertical_shift: int = 0
+
+    hide_shape: bool = False
+    italicize_season_text: bool = False
+    omit_gradient: bool = False
+    season_text_color: Optional[BetterColor] = None
+    season_text_font_size: PositiveFloat = 1.0
+    season_text_position: Literal['above', 'below'] = 'below'
+    shape_color: BetterColor = 'gold1'
+    shape_inset: PositiveInt = ShapeTitleCard.SHAPE_INSET
+    shape_side_length: conint(ge=50) = ShapeTitleCard.SHAPE_SIDE_LENGTH
+    shape_width: PositiveInt = ShapeTitleCard.SHAPE_WIDTH
+    stroke_color: BetterColor = 'black'
+    text_position: ShapeTextPosition = 'lower left'
+
+    @root_validator(skip_on_failure=True)
+    def validate_extras(cls, values):
+        # Add episode text before title text if not hiding
+        if values.get('hide_episode_text', False) is not True:
+            values['title_text'] = f'{values["episode_text"]} {values["title_text"]}'
+
+        # Convert None colors to the default font color
+        if values['season_text_color'] is None:
+            values['season_text_color'] = values['shape_color']
+
+        return values
+
 class StandardCardType(BaseCardTypeCustomFontAllText):
     font_color: BetterColor = StandardTitleCard.TITLE_COLOR
     font_file: FilePath = StandardTitleCard.TITLE_FONT
@@ -486,6 +524,7 @@ LocalCardTypeModels: dict[str, Base] = {
     'reality tv': LogoCardType,
     'roman': RomanNumeralCardType,
     'roman numeral': RomanNumeralCardType,
+    'shape': ShapeCardType,
     'sherlock': TintedGlassCardType,
     'standard': StandardCardType,
     'star wars': StarWarsCardType,

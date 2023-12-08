@@ -83,7 +83,8 @@ function createEpisodeCard(episodeId) {
       showInfoToast('Created Title Card');
       getCardData();
       $(`#episode-id${episodeId}`).toggleClass('left red marked', false);
-    }, error: response => showErrorToast({title: 'Error Creating Title Card', response}),
+    },
+    error: response => showErrorToast({title: 'Error Creating Title Card', response}),
   });
 }
 
@@ -1643,7 +1644,8 @@ function createTitleCards() {
       getEpisodeData();
       getStatistics();
       getCardData();
-    }, error: response => showErrorToast({title: 'Error creating Title Cards', response}),
+    },
+    error: response => showErrorToast({title: 'Error creating Title Cards', response}),
     complete: () => $('.button[data-action="create-title-cards"]').toggleClass('disabled', false),
   });
 }
@@ -1663,7 +1665,8 @@ function loadCards(interfaceId, libraryName, reload=false) {
     success: () => {
       showInfoToast('Loaded Title Cards');
       getStatistics();
-    }, error: response => showErrorToast({title: 'Error Loading Title Cards', response}),
+    },
+    error: response => showErrorToast({title: 'Error Loading Title Cards', response}),
   });
 }
 
@@ -1694,7 +1697,8 @@ function deleteTitleCards(onSuccess) {
       showInfoToast(`Deleted ${response.deleted} Cards`);
       if (onSuccess !== undefined) { onSuccess(); }
       getCardData();
-    }, error: response => showErrorToast({title: 'Error Deleting Title Cards', response}),
+    },
+    error: response => showErrorToast({title: 'Error Deleting Title Cards', response}),
     complete: () => getStatistics(),
   });
 }

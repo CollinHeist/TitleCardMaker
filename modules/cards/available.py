@@ -12,6 +12,7 @@ from modules.cards.OlivierTitleCard import OlivierTitleCard
 from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
 from modules.cards.RomanNumeralTitleCard import RomanNumeralTitleCard
+from modules.cards.ShapeTitleCard import ShapeTitleCard
 from modules.cards.StandardTitleCard import StandardTitleCard
 from modules.cards.StarWarsTitleCard import StarWarsTitleCard
 from modules.cards.TextlessTitleCard import TextlessTitleCard
@@ -34,6 +35,7 @@ LocalCards = [
     OverlineTitleCard.API_DETAILS,
     PosterTitleCard.API_DETAILS,
     RomanNumeralTitleCard.API_DETAILS,
+    ShapeTitleCard.API_DETAILS,
     StandardTitleCard.API_DETAILS,
     StarWarsTitleCard.API_DETAILS,
     TextlessTitleCard.API_DETAILS,
