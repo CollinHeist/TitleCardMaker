@@ -362,10 +362,7 @@ function initializeLibraryDropdowns() {
       });
     },
     error: response => showErrorToast({title: 'Error Querying Connections', response}),
-  });
-
-  const allConnections = await fetch('/api/connection/all').then(resp => resp.json());
-  
+  }); 
 }
 
 /** Initialize the page. */

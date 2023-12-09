@@ -76,7 +76,7 @@ class ShapeTitleCard(BaseCardType):
                 name='Shape Color',
                 identifier='shape_color',
                 description='Color of the shape',
-                tooltip='Default is <v>gold1</v>.',
+                tooltip='Default is <v>skyblue</v>.',
             ), Extra(
                 name='Shape Inset',
                 identifier='shape_inset',
@@ -145,7 +145,7 @@ class ShapeTitleCard(BaseCardType):
     FONT_REPLACEMENTS = {}
 
     """Characteristics of the episode text"""
-    EPISODE_TEXT_COLOR = 'rgb(255, 215, 0)' # gold1
+    EPISODE_TEXT_COLOR = 'skyblue' # gold1
     EPISODE_TEXT_FONT = REF_DIRECTORY / 'Golca Bold.ttf'
     EPISODE_TEXT_FONT_ITALIC = REF_DIRECTORY / 'Golca Bold Italic.ttf'
     EPISODE_TEXT_FORMAT = '{episode_number}.'
@@ -173,7 +173,7 @@ class ShapeTitleCard(BaseCardType):
         'season_text_font_size', 'hide_shape', 'italicize_season_text',
         'omit_gradient', 'season_text_position', 'shape_color', 'shape_inset',
         'shape_side_length', 'shape_width', 'stroke_color', 'text_position',
-        '__title_height',
+        '__title_width', '__title_height',
     )
 
 
@@ -246,6 +246,7 @@ class ShapeTitleCard(BaseCardType):
         self.text_position: TextPosition = text_position
 
         # Implementation variables
+        self.__title_width = None
         self.__title_height = None
 
 
@@ -319,6 +320,18 @@ class ShapeTitleCard(BaseCardType):
 
 
     @property
+    def _title_text_width(self) -> int:
+        """The width of the title text. Only calculated once."""
+
+        if len(self.title_text) == 0:
+            if self.__title_width is not None:
+                return self.__title_width
+
+        x = self._title_text_height
+        return self.__title_width
+
+
+    @property
     def _title_text_height(self) -> int:
         """The height of the title text. Only calculated once."""
 
@@ -330,11 +343,13 @@ class ShapeTitleCard(BaseCardType):
             return self.__title_height
 
         # Determine and store height
-        self.__title_height =  self.image_magick.get_text_dimensions(
+        w, h = self.image_magick.get_text_dimensions(
             self._base_title_text_commands() + [f'"{self.title_text}"'],
             width='max',
             height='sum',
-        )[1] + 10 # 10px margin
+        )
+        self.__title_width = w
+        self.__title_height = h + 10 # 10px margin
 
         return self.__title_height
 
@@ -452,8 +467,13 @@ class ShapeTitleCard(BaseCardType):
         """Subcommands to add the shape on the left of the image."""
 
         # Determine the length of the line
-        line_length = self.shape_side_length \
-            - (self._title_text_height / 2) - 10 # 10px margin
+        # Very short title lines, do not truncate side
+        if self._title_text_width < self.shape_side_length:
+            line_length = self.shape_side_length
+        # Normal length titles, truncate based on height of title text
+        else:
+            line_length = self.shape_side_length \
+                - (self._title_text_height / 2) - 10 # 10px margin
 
         # Starting y translation is based on text position
         if 'upper' in self.text_position:
@@ -486,8 +506,14 @@ class ShapeTitleCard(BaseCardType):
     def _right_shape_commands(self) -> ImageMagickCommands:
         """Subcommands to add the shape on the right of the image."""
 
-        line_length = self.shape_side_length \
-            - (self._title_text_height / 2) - 10 # 10px margin
+        # Determine the length of the line
+        # Very short title lines, do not truncate side
+        if self._title_text_width < self.shape_side_length:
+            line_length = self.shape_side_length
+        # Normal length titles, truncate based on height of title text
+        else:
+            line_length = self.shape_side_length \
+                - (self._title_text_height / 2) - 10 # 10px margin
 
         # Starting y translation is based on text position
         if 'upper' in self.text_position:
@@ -495,7 +521,7 @@ class ShapeTitleCard(BaseCardType):
         elif 'lower' in self.text_position:
             translation = self.HEIGHT - self.shape_inset
         else:
-            translation = self.HEIGHT / 2 + self.shape_side_length
+            translation = (self.HEIGHT / 2) + self.shape_side_length
 
         return [
             # Translate in from right side (y based on text position)

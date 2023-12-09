@@ -370,7 +370,7 @@ class ShapeCardType(BaseCardTypeAllText):
     season_text_color: Optional[BetterColor] = None
     season_text_font_size: PositiveFloat = 1.0
     season_text_position: Literal['above', 'below'] = 'below'
-    shape_color: BetterColor = 'gold1'
+    shape_color: BetterColor = ShapeTitleCard.SHAPE_COLOR
     shape_inset: PositiveInt = ShapeTitleCard.SHAPE_INSET
     shape_side_length: conint(ge=50) = ShapeTitleCard.SHAPE_SIDE_LENGTH
     shape_width: PositiveInt = ShapeTitleCard.SHAPE_WIDTH
