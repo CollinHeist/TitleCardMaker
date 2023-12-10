@@ -390,7 +390,7 @@ def import_blueprint_and_series(
     """
 
     # Get contextual logger
-    log: Logger = request.state.log
+    log = request.state.log
 
     # Get this Blueprint, raise 404 if DNE
     blueprint = get_blueprint(blueprint_db, blueprint_id, raise_exc=True)
@@ -406,8 +406,7 @@ def import_blueprint_and_series(
         log.debug(f'Blueprint Series {blueprint.series.as_series_info} not '
                   f'found - adding to database')
         series = add_series(
-            NewSeries(name=series_info.name, year=series_info.year),
-            background_tasks, db, log=log,
+            blueprint.series.as_new_series, background_tasks, db, log=log,
         )
 
     # Import Blueprint
