@@ -411,7 +411,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             SearchResult(
                 name=result['Name'],
                 year=result['ProductionYear'],
-                ongoing=result['Status'] == 'Continuing',
+                ongoing=result.get('Status') == 'Continuing',
                 overview=result.get('Overview', 'No overview available'),
                 poster=f'{self.url}/Items/{result["Id"]}/Images/Primary?quality=75',
                 imdb_id=result.get('ProviderIds', {}).get('Imdb'),
