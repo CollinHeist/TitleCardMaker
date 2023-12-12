@@ -259,7 +259,7 @@ function populateFontElement(template, font, activeFontId) {
   }
 
   // Query suggested font replacements on button click
-  template.querySelector('.button[data-action="populateReplacements"]').onclick = () => querySuggestedFontReplacements(fontObj.id, `font-id${fontObj.id}`);
+  template.querySelector('.button[data-action="populateReplacements"]').onclick = () => querySuggestedFontReplacements(font.id, `font-id${font.id}`);
   
   // Add new input fields on click of addReplacement button
   template.querySelector('.button[data-action="addReplacement"]').onclick = () => {
