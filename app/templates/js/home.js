@@ -500,7 +500,7 @@ function initAll() {
 
 const sortStates = {
   cards: ['cards',        'reverse-cards'],
-  id:    ['id',           'reverse-id'],
+  id:    ['reverse-id',   'id',],
   name:  ['alphabetical', 'reverse-alphabetical'],
   sync:  ['sync', 'sync'],
   year:  ['year',         'reverse-year'],
