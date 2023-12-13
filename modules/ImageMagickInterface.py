@@ -4,7 +4,7 @@ from pathlib import Path
 from re import findall
 from shlex import split as command_split
 from subprocess import Popen, PIPE, TimeoutExpired
-from typing import Literal, NamedTuple, Optional
+from typing import Iterable, Literal, NamedTuple, Optional, overload
 
 from imagesize import get as im_get
 
@@ -42,7 +42,7 @@ class ImageMagickInterface:
     TEMPORARY_SVG_FILE = TEMP_DIR / 'temp_logo.svg'
 
     """Characters that must be escaped in commands"""
-    __REQUIRED_ESCAPE_CHARACTERS = ('"', '`', '%')
+    __REQUIRED_ESCAPE_CHARACTERS = ('"', '`', '%', '\\')
 
     """Substrings that must be present in --version output"""
     __REQUIRED_VERSION_SUBSTRINGS = ('Version','Copyright','License','Features')
@@ -93,8 +93,15 @@ class ImageMagickInterface:
         return all(_ in output for _ in self.__REQUIRED_VERSION_SUBSTRINGS)
 
 
+    @overload
     @staticmethod
-    def escape_chars(string: str) -> str:
+    def escape_chars(string: Literal[None]) -> Literal[None]: ...
+    @overload
+    @staticmethod
+    def escape_chars(string: str) -> str: ...
+
+    @staticmethod
+    def escape_chars(string: Optional[str]) -> Optional[str]:
         """
         Escape the necessary characters within the given string so that
         they can be sent to ImageMagick.
@@ -142,7 +149,12 @@ class ImageMagickInterface:
             command = f'{self.prefix}{command}'
 
         # Split command into list of strings for Popen
-        cmd = command_split(command)
+        try:
+            cmd = command_split(command)
+        except ValueError as exc:
+            log.exception(f'Invalid ImageMagick command', exc)
+            log.debug(command)
+            return b'', b''
 
         # Execute, capturing stdout and stderr
         stdout, stderr = b'', b''
@@ -181,7 +193,7 @@ class ImageMagickInterface:
             return b''.join(output).decode('iso8859')
 
 
-    def delete_intermediate_images(self, *paths: tuple[Path]) -> None:
+    def delete_intermediate_images(self, *paths: Path) -> None:
         """
         Delete all the provided intermediate files.
 
@@ -272,7 +284,8 @@ class ImageMagickInterface:
 
         try:
             # Label text produces duplicate Metrics
-            sum_ = lambda v: sum(v)//(2 if ' label:"' in text_command else 1)
+            def sum_(dims: Iterable[float]) -> float:
+                return sum(dims) // (2 if ' label:"' in text_command else 1)
 
             # Process according to given methods
             return Dimensions(

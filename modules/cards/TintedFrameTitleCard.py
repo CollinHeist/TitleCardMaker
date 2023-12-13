@@ -308,7 +308,7 @@ class TintedFrameTitleCard(BaseCardType):
             f'-layers merge',
             f'+repage \)',
             # Overlay text and shadow onto source image
-            f'-geometry +0{vertical_shift:+}',
+            f'-geometry +0{vertical_shift:+.0f}',
             f'-composite',
         ]
 
