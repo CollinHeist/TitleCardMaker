@@ -143,7 +143,12 @@ class ImageMagickInterface:
             command = f'{self.prefix}{command}'
 
         # Split command into list of strings for Popen
-        cmd = command_split(command)
+        try:
+            cmd = command_split(command)
+        except ValueError as exc:
+            log.exception(f'Invalid ImageMagick command', exc)
+            log.debug(command)
+            return b'', b''
 
         # Execute, capturing stdout and stderr
         stdout, stderr = b'', b''
