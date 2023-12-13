@@ -2,10 +2,13 @@ from math import cos, sin, pi as PI
 from pathlib import Path
 from random import uniform
 from re import IGNORECASE, compile as re_compile
-from typing import Literal, Optional, Union
+from typing import TYPE_CHECKING, Literal, Optional, Union
 
 from modules.Debug import log
 from modules.BaseCardType import BaseCardType, Coordinate, ImageMagickCommands
+
+if TYPE_CHECKING:
+    from modules.Font import Font
 
 
 class SvgRectangle:
@@ -530,7 +533,7 @@ class ComicBookTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.

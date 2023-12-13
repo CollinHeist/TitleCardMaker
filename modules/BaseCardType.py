@@ -7,6 +7,7 @@ from modules.ImageMaker import ImageMaker, Dimensions
 
 if TYPE_CHECKING:
     from modules.Font import Font
+    from modules.PreferenceParser import PreferenceParser
 
 ImageMagickCommands = list[str]
 
@@ -183,7 +184,7 @@ class BaseCardType(ImageMaker):
             blur: bool = False,
             grayscale: bool = False,
             *,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
         """

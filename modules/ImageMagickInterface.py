@@ -1,8 +1,7 @@
-from logging import Logger
 from pathlib import Path
 from shlex import split as command_split
 from subprocess import Popen, PIPE, TimeoutExpired
-from typing import Iterable, Literal, NamedTuple, Optional, overload
+from typing import Literal, NamedTuple, Optional, overload
 
 from imagesize import get as im_get
 

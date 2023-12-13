@@ -1,4 +1,3 @@
-from logging import Logger
 from pathlib import Path
 from typing import Union
 
@@ -36,7 +35,8 @@ class WebInterface:
     def __init__(self,
             name: str,
             verify_ssl: bool = True, *,
-            cache: bool = True) -> None:
+            cache: bool = True,
+        ) -> None:
         """
         Construct a new instance of a WebInterface. This creates creates
         cached request and results lists, and establishes a session for
@@ -163,7 +163,8 @@ class WebInterface:
             image = get(image, timeout=30).content
             if len(image) == 0:
                 raise ValueError(f'URL {image} returned no content error')
-            if any(bad_content in image for bad_content in WebInterface.BAD_CONTENT):
+            if any(bad_content in image
+                   for bad_content in WebInterface.BAD_CONTENT):
                 raise ValueError(f'URL {image} returned malformed content')
 
             # Write content to file, return success

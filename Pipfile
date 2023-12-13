@@ -21,6 +21,7 @@ imagesize = "==1.4.1"
 pillow = "==10.0.1"
 
 [dev-packages]
+ruff = "*"
 
 [requires]
 python_version = "3.9"
