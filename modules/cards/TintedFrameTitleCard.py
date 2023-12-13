@@ -4,11 +4,12 @@ from typing import Literal, Optional, TYPE_CHECKING
 from modules.BaseCardType import (
     BaseCardType, Coordinate, ImageMagickCommands, Rectangle,
 )
+from modules.Debug import log
 
-SeriesExtra = Optional
 if TYPE_CHECKING:
     from modules.Font import Font
 
+SeriesExtra = Optional
 Element = Literal['index', 'logo', 'omit', 'title']
 MiddleElement = Literal['logo', 'omit']
 

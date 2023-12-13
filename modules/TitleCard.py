@@ -17,6 +17,7 @@ from modules.cards.CutoutTitleCard import CutoutTitleCard
 from modules.cards.DividerTitleCard import DividerTitleCard
 from modules.cards.FadeTitleCard import FadeTitleCard
 from modules.cards.FrameTitleCard import FrameTitleCard
+from modules.cards.InsetTitleCard import InsetTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
 from modules.cards.MarvelTitleCard import MarvelTitleCard
@@ -24,6 +25,7 @@ from modules.cards.OlivierTitleCard import OlivierTitleCard
 from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
 from modules.cards.RomanNumeralTitleCard import RomanNumeralTitleCard
+from modules.cards.ShapeTitleCard import ShapeTitleCard
 from modules.cards.StandardTitleCard import StandardTitleCard
 from modules.cards.StarWarsTitleCard import StarWarsTitleCard
 from modules.cards.TextlessTitleCard import TextlessTitleCard
@@ -78,6 +80,7 @@ class TitleCard:
         'generic': StandardTitleCard,
         'gundam': PosterTitleCard,
         'import': TextlessTitleCard,
+        'inset': InsetTitleCard,
         'ishalioh': OlivierTitleCard,
         'landscape': LandscapeTitleCard,
         'logo': LogoTitleCard,
@@ -92,6 +95,7 @@ class TitleCard:
         'reality tv': LogoTitleCard,
         'roman': RomanNumeralTitleCard,
         'roman numeral': RomanNumeralTitleCard,
+        'shape': ShapeTitleCard,
         'sherlock': TintedGlassTitleCard,
         'standard': StandardTitleCard,
         'star wars': StarWarsTitleCard,
