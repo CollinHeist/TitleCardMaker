@@ -98,7 +98,7 @@ function getSnapshots() {
         },
         {
           label: 'Title Card Filesize',
-          data: snapshots.map(snapshot => snapshot.filesize),
+          data: snapshots.map(snapshot => snapshot.filesize / 1e6),
           yAxisID: 'yFilesize'
         }
       ];
@@ -166,7 +166,7 @@ function getSnapshots() {
               position: 'right',
               title: {
                 display: true,
-                text: 'Bytes',
+                text: 'Megabytes',
               },
               grid: {
                 drawOnChartArea: false,
