@@ -161,7 +161,7 @@ def run_sync(
                 )
                 if not exists:
                     existing.libraries.append(new)
-                    log.debug(f'Added Library "{new["name"]}" to {existing.log_str}')
+                    log.debug(f'Added Library "{new["name"]}" to {existing}')
 
             # Update IDs
             existing.update_from_series_info(series_info)

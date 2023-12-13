@@ -245,6 +245,10 @@ class ShapeTitleCard(BaseCardType):
         self.stroke_color = stroke_color
         self.text_position: TextPosition = text_position
 
+        # Scale side length by for multiline titles
+        if (num_lines := len(title_text.split('\n'))) > 1:
+            self.shape_side_length *= 1.0 + (0.25 * (num_lines - 1))
+
         # Implementation variables
         self.__title_width = None
         self.__title_height = None
@@ -301,7 +305,7 @@ class ShapeTitleCard(BaseCardType):
         if len(self.title_text) == 0:
             return []
 
-        interline_spacing = 0 + self.font_interline_spacing
+        interline_spacing = -20 + self.font_interline_spacing
         size = 125 * self.font_size
         stroke_width = 4.0 * self.font_stroke_width
 
@@ -335,6 +339,7 @@ class ShapeTitleCard(BaseCardType):
     def _title_text_height(self) -> int:
         """The height of the title text. Only calculated once."""
 
+        # No title text, height of 0
         if len(self.title_text) == 0:
             return 0
 
