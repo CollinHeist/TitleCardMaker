@@ -75,9 +75,8 @@ def get_episode_by_id(
 
     - episode_id: ID of the Episode to retrieve.
     """
-    episode = get_episode(db, episode_id, raise_exc=True)
-    log.info(f'{episode.as_episode_info=!r}')
-    return episode
+
+    return get_episode(db, episode_id, raise_exc=True)
 
 
 @episodes_router.delete('/episode/{episode_id}', status_code=204)
