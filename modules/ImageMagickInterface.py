@@ -2,7 +2,7 @@ from logging import Logger
 from pathlib import Path
 from shlex import split as command_split
 from subprocess import Popen, PIPE, TimeoutExpired
-from typing import Literal, NamedTuple, Optional
+from typing import Iterable, Literal, NamedTuple, Optional, overload
 
 from imagesize import get as im_get
 
@@ -40,7 +40,7 @@ class ImageMagickInterface:
     TEMPORARY_SVG_FILE = TEMP_DIR / 'temp_logo.svg'
 
     """Characters that must be escaped in commands"""
-    __REQUIRED_ESCAPE_CHARACTERS = ('"', '`', '%')
+    __REQUIRED_ESCAPE_CHARACTERS = ('"', '`', '%', '\\')
 
     """Substrings that must be present in --version output"""
     __REQUIRED_VERSION_SUBSTRINGS = ('Version','Copyright','License','Features')
@@ -91,8 +91,15 @@ class ImageMagickInterface:
         return all(_ in output for _ in self.__REQUIRED_VERSION_SUBSTRINGS)
 
 
+    @overload
     @staticmethod
-    def escape_chars(string: str) -> str:
+    def escape_chars(string: Literal[None]) -> Literal[None]: ...
+    @overload
+    @staticmethod
+    def escape_chars(string: str) -> str: ...
+
+    @staticmethod
+    def escape_chars(string: Optional[str]) -> Optional[str]:
         """
         Escape the necessary characters within the given string so that
         they can be sent to ImageMagick.
