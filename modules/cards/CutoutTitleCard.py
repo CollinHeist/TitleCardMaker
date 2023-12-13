@@ -211,7 +211,7 @@ class CutoutTitleCard(BaseCardType):
             f'-kerning {font_kerning}',
             f'-annotate +0+{font_vertical_shift} "{self.title_text}"',
         ]
-    
+
 
     @property
     def transparency_overlay_commands(self) -> ImageMagickCommands:
@@ -220,7 +220,7 @@ class CutoutTitleCard(BaseCardType):
         # Transparency is disabled, return blank command
         if self.overlay_transparency <= 0:
             return []
-        
+
         return [
             # Add source image
             f'\( "{self.source_file.resolve()}"',

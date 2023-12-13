@@ -440,6 +440,12 @@ def resolve_card_settings(
     if card_settings.get('font_replacements', {}):
         replacements = card_settings['font_replacements']
     for repl_in, repl_out in replacements.items():
+        # Skip post-only replacements
+        if repl_in.startswith('post:'):
+            continue
+        # Parse pre-only replacements
+        if repl_in.startswith('pre:'):
+            repl_in = repl_in[4:]
         card_settings['title'] = card_settings['title'].replace(
             repl_in, repl_out
         )
@@ -462,6 +468,12 @@ def resolve_card_settings(
 
     # Apply Font replacements again
     for repl_in, repl_out in replacements.items():
+        # Skip pre-only replacements
+        if repl_in.startswith('pre:'):
+            continue
+        # Parse post-only replacements
+        if repl_in.startswith('post:'):
+            repl_in = repl_in[5:]
         card_settings['title_text'] = card_settings['title_text'].replace(
             repl_in, repl_out
         )
