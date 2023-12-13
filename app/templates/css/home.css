@@ -98,10 +98,6 @@ table .dropdown[data-value="libraries"] .active.item {
   margin-bottom: 0.5em !important;
 }
 
-#pagination {
-  /* Add spacing between pagination menu and series cards */
-  margin-top: 25px;
-}
 @media only screen and (hover: none) and (pointer: coarse) {
   #pagination {
     /* On mobile, wrap pagination if wider than screen */
