@@ -428,6 +428,41 @@ class BaseCardType(ImageMaker):
         ]
 
 
+    def add_drop_shadow(self,
+            commands: ImageMagickCommands,
+            shadow: str,
+            x: int = 0,
+            y: int = 0,
+        ) -> ImageMagickCommands:
+        """
+        Amend the given commands to apply a drop shadow effect.
+
+        Args:
+            commands: List of commands being modified. Must contain some
+                image definition that can be cloned.
+            shadow: IM Shadow string - i.e. `85x10+10+10`.
+            x: X-position of the offset to apply when compositing.
+            y: Y-position of the offset to apply when compositing.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        return [
+            f'\(',
+            *commands,
+            f'\( +clone',
+            f'-background None',
+            f'-shadow {shadow} \)',
+            f'+swap',
+            f'-background None',
+            f'-layers merge',
+            f'+repage \)',
+            f'-geometry {x:+.0f}{y:+.0f}',
+            f'-composite',
+        ]
+
+
     @abstractmethod
     def create(self) -> None:
         """

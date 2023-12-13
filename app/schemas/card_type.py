@@ -17,6 +17,7 @@ from modules.cards.CutoutTitleCard import CutoutTitleCard
 from modules.cards.DividerTitleCard import DividerTitleCard, TextGravity
 from modules.cards.FadeTitleCard import FadeTitleCard
 from modules.cards.FrameTitleCard import FrameTitleCard
+from modules.cards.InsetTitleCard import InsetTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
 from modules.cards.MarvelTitleCard import MarvelTitleCard
@@ -221,6 +222,20 @@ class FrameCardType(BaseCardTypeCustomFontAllText):
     font_file: FilePath = FrameTitleCard.TITLE_FONT
     episode_text_color: BetterColor = FrameTitleCard.EPISODE_TEXT_COLOR
     episode_text_position: Literal['left', 'right', 'surround'] = 'surround'
+
+class InsetCardType(BaseCardTypeAllText):
+    font_color: BetterColor = InsetTitleCard.TITLE_COLOR
+    font_file: FilePath = InsetTitleCard.TITLE_FONT
+    font_interline_spacing: int = 0
+    font_interword_spacing: int = 0
+    font_kerning: float = 1.0
+    font_size: PositiveFloat = 1.0
+    font_vertical_shift: int = 0
+    episode_text_color: BetterColor = InsetTitleCard.EPISODE_TEXT_COLOR
+    episode_text_font_size: PositiveFloat = 1.0
+    omit_gradient: bool = False
+    separator: str = '-'
+    transparency: PositiveFloat = 1.0
 
 BoxAdjustmentRegex = r'^([-+]?\d+)\s+([-+]?\d+)\s+([-+]?\d+)\s+([-+]?\d+)$'
 BoxAdjustments = constr(regex=BoxAdjustmentRegex)
@@ -509,6 +524,7 @@ LocalCardTypeModels: dict[str, Base] = {
     'frame': FrameCardType,
     'generic': StandardCardType,
     'gundam': PosterCardType,
+    'inset': InsetCardType,
     'ishalioh': OlivierCardType,
     'landscape': LandscapeCardType,
     'logo': LogoCardType,
