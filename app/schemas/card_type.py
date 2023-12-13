@@ -34,10 +34,10 @@ from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 
 LocalCardIdentifiers = Literal[
     'anime', 'calligraphy', 'comic book', 'cutout', 'divider', 'fade', 'frame',
-    'generic', 'gundam', 'ishalioh', 'landscape', 'logo', 'marvel', 'musikmann',
-    'olivier', 'phendrena', 'photo', 'polymath', 'poster', 'reality tv',
-    'roman', 'roman numeral', 'shape', 'sherlock', 'standard', 'star wars',
-    'textless', 'tinted glass', '4x3', 'white border',
+    'generic', 'gundam', 'inset', 'ishalioh', 'landscape', 'logo', 'marvel',
+    'musikmann', 'olivier', 'phendrena', 'photo', 'polymath', 'poster',
+    'reality tv', 'roman', 'roman numeral', 'shape', 'sherlock', 'standard',
+    'star wars', 'textless', 'tinted glass', '4x3', 'white border',
 ]
 
 """

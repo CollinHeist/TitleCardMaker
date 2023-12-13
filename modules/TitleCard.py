@@ -17,6 +17,7 @@ from modules.cards.CutoutTitleCard import CutoutTitleCard
 from modules.cards.DividerTitleCard import DividerTitleCard
 from modules.cards.FadeTitleCard import FadeTitleCard
 from modules.cards.FrameTitleCard import FrameTitleCard
+from modules.cards.InsetTitleCard import InsetTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
 from modules.cards.MarvelTitleCard import MarvelTitleCard
@@ -80,6 +81,7 @@ class TitleCard:
         'generic': StandardTitleCard,
         'gundam': PosterTitleCard,
         'import': TextlessTitleCard,
+        'inset': InsetTitleCard,
         'ishalioh': OlivierTitleCard,
         'landscape': LandscapeTitleCard,
         'logo': LogoTitleCard,
