@@ -270,7 +270,7 @@ class ShapeTitleCard(BaseCardType):
             return self.__title_height
 
         # Determine and store height
-        w, h = self.image_magick.get_text_dimensions(
+        w, h = self.get_text_dimensions(
             self._base_title_text_commands() + [f'"{self.title_text}"'],
             width='max',
             height='sum',
@@ -304,7 +304,7 @@ class ShapeTitleCard(BaseCardType):
             center_text = self.title_text[-1]
 
         # Get width of centering text
-        width, _ = self.image_magick.get_text_dimensions(
+        width, _ = self.get_text_dimensions(
             self._base_title_text_commands() + [f'"{center_text}"'],
             width='max', height='sum',
         )
