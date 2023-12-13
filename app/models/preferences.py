@@ -463,11 +463,11 @@ class Preferences:
             return '0', 'Bytes'
 
         for ref_value, unit in (
-                (2**40, 'Terabytes'),
-                (2**30, 'Gigabytes'),
-                (2**20, 'Megabytes'),
-                (2**10, 'Kilobytes'),
-                (1, 'Bytes')):
+                (10**12, 'Terabytes'),
+                (10**9,  'Gigabytes'),
+                (10**6,  'Megabytes'),
+                (10**3,  'Kilobytes'),
+                (1,      'Bytes')):
             if value > ref_value:
                 return f'{value/ref_value:,.1f}', unit
 
