@@ -557,22 +557,12 @@ def load_episode_title_card(
         log.debug(f'{episode.series} {episode} - no associated Card')
         return None
 
-    # Get previously loaded asset for comparison
-    previously_loaded = db.query(Loaded)\
+    # Delete previously Loaded entries
+    db.query(Loaded)\
         .filter_by(episode_id=episode.id,
                    interface_id=interface_id,
                    library_name=library_name)\
-        .first()
-
-    # If this asset's filesize has not changed, no need to reload
-    if (previously_loaded is not None
-        and previously_loaded.filesize == card.filesize):
-        log.debug(f'{episode.series} {episode} Card has not changed')
-        return True
-
-    # New Card is different, delete Loaded entry
-    if previously_loaded is not None:
-        db.delete(previously_loaded)
+        .delete()
 
     loaded_assets = []
     for _ in range(attempts):
