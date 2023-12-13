@@ -71,7 +71,7 @@ class OverlineTitleCard(BaseCardType):
                     'Either <v>True</v> or <v>False</v>. If <v>True</v>, text '
                     'may appear less legible on brighter images.'
                 ),
-            )
+            ),
         ], description=[
             'Simple Title Card with title and episode text at the bottom of '
             'image, and a thin line positioned above (or below) the title '
@@ -151,9 +151,7 @@ class OverlineTitleCard(BaseCardType):
             preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this Card.
-        """
+        """Construct a new instance of this Card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
