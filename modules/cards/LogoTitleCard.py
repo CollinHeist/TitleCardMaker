@@ -82,7 +82,7 @@ class LogoTitleCard(BaseCardType):
             grayscale: bool = False,
             logo: Optional[str] = None,
             background: str = 'black',
-            separator: str = '•', 
+            separator: str = '•',
             stroke_color: str = 'black',
             omit_gradient: bool = True,
             use_background_image: bool = False,

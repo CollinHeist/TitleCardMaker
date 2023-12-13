@@ -57,9 +57,9 @@ class TintedFrameTitleCard(BaseCardType):
         'font_size', 'font_color', 'font_interline_spacing',
         'font_interword_spacing', 'font_kerning', 'font_vertical_shift',
         'episode_text_color', 'separator', 'frame_color', 'logo', 'top_element',
-        'middle_element', 'bottom_element', 'logo_size', 'blur_edges',
-        'episode_text_font', 'frame_width', 'episode_text_font_size',
-        'episode_text_vertical_shift',
+        'middle_element', 'bottom_element', 'logo_size', 'logo_vertical_shift',
+        'blur_edges', 'episode_text_font', 'frame_width',
+        'episode_text_font_size', 'episode_text_vertical_shift',
     )
 
     def __init__(self, *,
@@ -93,6 +93,7 @@ class TintedFrameTitleCard(BaseCardType):
             bottom_element: Element = 'index',
             logo: SeriesExtra[str] = None,
             logo_size: SeriesExtra[float] = 1.0,
+            logo_vertical_shift: int = 0,
             blur_edges: bool = True,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
@@ -188,6 +189,7 @@ class TintedFrameTitleCard(BaseCardType):
         except Exception as exc:
             log.exception(f'Invalid episode text font', exc)
             self.valid = False
+        self.logo_vertical_shift = logo_vertical_shift
 
 
     @property
@@ -250,7 +252,7 @@ class TintedFrameTitleCard(BaseCardType):
             f'-layers merge',
             f'+repage \)',
             # Overlay text and shadow onto source image
-            f'-geometry +0{vertical_shift:+}',
+            f'-geometry +0{vertical_shift:+.0f}',
             f'-composite',
         ]
 
@@ -323,6 +325,7 @@ class TintedFrameTitleCard(BaseCardType):
             vertical_shift = 700
         else:
             vertical_shift = 0
+        vertical_shift += self.logo_vertical_shift
 
         # Determine logo height
         if self.middle_element == 'logo':

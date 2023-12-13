@@ -220,7 +220,7 @@ class CalligraphyTitleCard(BaseCardType):
             f'-background None',
             f'-layers merge',
             f'+repage \)',
-            f'-geometry {x:+}{y:+}',
+            f'-geometry {x:+.0f}{y:+.0f}',
             f'-composite',
         ]
 
