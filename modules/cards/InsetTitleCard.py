@@ -21,8 +21,8 @@ SeasonTextPosition = Literal['above', 'below']
 
 class InsetTitleCard(BaseCardType):
     """
-    This class describes a CardType that produces title cards styled
-    ...
+    This class describes a CardType that produces title cards in which
+    the index text is inset into the title text.
     """
 
     """API Parameters"""
@@ -66,7 +66,8 @@ class InsetTitleCard(BaseCardType):
                 ),
             ),
         ], description=[
-            ''
+            'A title card in which the season and episode text is inset into '
+            '(and appears to "cut out") the title text.'
         ]
     )
 
@@ -246,24 +247,32 @@ class InsetTitleCard(BaseCardType):
         index_width, index_height = self.image_magick.get_text_dimensions(
             index_text_commands
         )
-        crop_width = index_width + 20
-        crop_height = index_height - 20
+        crop_width = index_width + 40 # Increase margin
+        crop_height = index_height - 20 # Reduce margin
         crop_y = self.font_vertical_shift + (self.title_height / 2) \
             - (index_height / 2) + 30
 
         return [
-            # Crop part of source image out
-            # Make semi-transparent
+            # Copy source image
             f'\( "{self.source_file.resolve()}"',
+            # Make source transparent (according to transparency)
             f'-alpha set',
             f'-channel A',
             f'-evaluate multiply {self.transparency:.2f}',
             f'+channel',
+            # Stylize so it matches the background
             *self.resize_and_style,
             *self.gradient_commands,
+            # Crop out the area which the index text will cover
             f'-gravity south',
             f'-crop {crop_width}x{crop_height}+0+{crop_y:.0f}',
-            f'\) -geometry +0+{crop_y:.0f}',
+            f'-gravity center',
+            # Increase canvas size so blurring can extend beyond bounds
+            f'-extent {crop_width+20}x{crop_height+20}',
+            # Blur edges so cropping is not so sharp
+            f'-blur 0x7',
+            f'-gravity south',
+            f'\) -geometry +0+{crop_y-10:.0f}',
             f'-composite',
             # Add index text with a drop shadow
             *self.add_drop_shadow(
@@ -301,7 +310,11 @@ class InsetTitleCard(BaseCardType):
             custom_season_titles: Whether the season titles are custom.
         """
 
-        ...
+        if not custom_font:
+            if 'episode_text_color' in extras:
+                extras['episode_text_color'] = InsetTitleCard.EPISODE_TEXT_COLOR
+            if 'episode_text_font_size' in extras:
+                extras['episode_text_fon_size'] = 1.0
 
 
     @staticmethod
