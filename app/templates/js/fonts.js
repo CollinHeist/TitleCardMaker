@@ -19,6 +19,7 @@ function addFont() {
      */
     success: font => {
       showInfoToast(`Created Font #${font.id}`);
+      window.location.hash = `font-id${font.id}`;
       getAllFonts();
     },
     error: response => showErrorToast({title: 'Error Creating Font', response}),
