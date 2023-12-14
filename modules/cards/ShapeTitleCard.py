@@ -22,8 +22,10 @@ SeasonTextPosition = Literal['above', 'below']
 
 class ShapeTitleCard(BaseCardType):
     """
-    This class describes a CardType that produces title cards styled
-    ...
+    This class describes a CardType that produces title cards featuring
+    a diamond shape surrounding the text. The shape is interesected by
+    the title text. This card allows the text (and shape) to be
+    positioned at various points around the image.
     """
 
     """API Parameters"""
@@ -123,9 +125,9 @@ class ShapeTitleCard(BaseCardType):
         ], description=[
             'A title card featuring a diamond shape surrounding the text. The '
             'shape is interesected by the title text.',
-            'This card allows the text (and shape) to be positioned at various '
-            'points around the image.',
-        ]
+            'The shape and text are completely customizable in color, size, and'
+            'position.'
+        ],
     )
 
     """Directory where all reference files used by this card are stored"""
@@ -239,7 +241,7 @@ class ShapeTitleCard(BaseCardType):
         self.season_text_font_size = season_text_font_size
         self.season_text_position: SeasonTextPosition = season_text_position
         self.shape_color = shape_color
-        self.shape_inset = int(shape_inset)
+        self.shape_inset = shape_inset
         self.shape_side_length = shape_side_length
         self.shape_width = shape_width
         self.stroke_color = stroke_color

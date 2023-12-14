@@ -68,8 +68,7 @@ class TintedFrameTitleCard(BaseCardType):
                 identifier='frame_width',
                 description='Width of the frame',
                 tooltip=(
-                    'Thickness of the frame. Default is <v>3</v>. Unit is '
-                    'pixels.'
+                    'Number ≥<v>0.0</v>. Default is <v>3</v>. Unit is pixels.'
                 ),
             ), Extra(
                 name='Top Element',
