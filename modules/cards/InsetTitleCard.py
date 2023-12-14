@@ -194,8 +194,8 @@ class InsetTitleCard(BaseCardType):
             f'label:"{index_text}" \)',
         ]
         index_width, index_height =self.get_text_dimensions(index_text_commands)
-        crop_width = index_width + 20
-        crop_height = index_height - 20
+        crop_width = index_width + 40 # Increase margin
+        crop_height = index_height - 20 # Reduce margin
         crop_y = self.font_vertical_shift + (self.title_height / 2) \
             - (index_height / 2) + 30
 
