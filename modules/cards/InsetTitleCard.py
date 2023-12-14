@@ -200,18 +200,26 @@ class InsetTitleCard(BaseCardType):
             - (index_height / 2) + 30
 
         return [
-            # Crop part of source image out
-            # Make semi-transparent
+            # Copy source image
             f'\( "{self.source_file.resolve()}"',
+            # Make source transparent (according to transparency)
             f'-alpha set',
             f'-channel A',
             f'-evaluate multiply {self.transparency:.2f}',
             f'+channel',
+            # Stylize so it matches the background
             *self.resize_and_style,
             *self.gradient_commands,
+            # Crop out the area which the index text will cover
             f'-gravity south',
             f'-crop {crop_width}x{crop_height}+0+{crop_y:.0f}',
-            f'\) -geometry +0+{crop_y:.0f}',
+            f'-gravity center',
+            # Increase canvas size so blurring can extend beyond bounds
+            f'-extent {crop_width+20}x{crop_height+20}',
+            # Blur edges so cropping is not so sharp
+            f'-blur 0x7',
+            f'-gravity south',
+            f'\) -geometry +0+{crop_y-10:.0f}',
             f'-composite',
             # Add index text with a drop shadow
             *self.add_drop_shadow(
