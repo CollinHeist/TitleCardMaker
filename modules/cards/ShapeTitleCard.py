@@ -95,7 +95,7 @@ class ShapeTitleCard(BaseCardType):
             hide_shape: bool = False,
             italicize_season_text: bool = False,
             omit_gradient: bool = False,
-            season_text_color : str = EPISODE_TEXT_COLOR,
+            season_text_color : str = None,
             season_text_font_size: float = 1.0,
             season_text_position: SeasonTextPosition = 'below',
             shape_color: str = SHAPE_COLOR,
@@ -138,11 +138,13 @@ class ShapeTitleCard(BaseCardType):
         self.hide_shape = hide_shape
         self.italicize_season_text = italicize_season_text
         self.omit_gradient = omit_gradient
+        if season_text_color is None:
+            season_text_color = shape_color
         self.season_text_color = season_text_color
         self.season_text_font_size = season_text_font_size
         self.season_text_position: SeasonTextPosition = season_text_position.lower()
         self.shape_color = shape_color
-        self.shape_inset = int(shape_inset)
+        self.shape_inset = shape_inset
         self.shape_side_length = shape_side_length
         self.shape_width = shape_width
         self.stroke_color = stroke_color
