@@ -11,6 +11,7 @@ from pydantic import ( # pylint: disable=no-name-in-module
 
 from app.schemas.base import Base, BetterColor, DictKey
 from modules.cards.AnimeTitleCard import AnimeTitleCard
+from modules.cards.BannerTitleCard import BannerTitleCard
 from modules.cards.CalligraphyTitleCard import CalligraphyTitleCard
 from modules.cards.ComicBookTitleCard import ComicBookTitleCard
 from modules.cards.CutoutTitleCard import CutoutTitleCard
@@ -33,11 +34,11 @@ from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 
 LocalCardIdentifiers = Literal[
-    'anime', 'calligraphy', 'comic book', 'cutout', 'divider', 'fade', 'frame',
-    'generic', 'gundam', 'inset', 'ishalioh', 'landscape', 'logo', 'marvel',
-    'musikmann', 'olivier', 'phendrena', 'photo', 'polymath', 'poster',
-    'reality tv', 'roman', 'roman numeral', 'shape', 'sherlock', 'standard',
-    'star wars', 'textless', 'tinted glass', '4x3', 'white border',
+    'anime', 'banner', 'calligraphy', 'comic book', 'cutout', 'divider', 'fade',
+    'frame', 'generic', 'gundam', 'inset', 'ishalioh', 'landscape', 'logo',
+    'marvel', 'musikmann', 'olivier', 'phendrena', 'photo', 'polymath',
+    'poster', 'reality tv', 'roman', 'roman numeral', 'shape', 'sherlock',
+    'standard', 'star wars', 'textless', 'tinted glass', '4x3', 'white border',
 ]
 
 """
@@ -108,6 +109,29 @@ class AnimeCardType(BaseCardTypeCustomFontAllText):
     def validate_kanji(cls, values):
         if values['require_kanji'] and not values['kanji']:
             raise ValueError(f'Kanji is required and not specified')
+
+        return values
+
+class BannerCardType(BaseCardTypeAllText):
+    font_color: BetterColor = BannerTitleCard.TITLE_COLOR
+    font_file: FilePath = BannerTitleCard.TITLE_FONT
+    font_interline_spacing: int = 0
+    font_interword_spacing: int = 0
+    font_kerning: float = 1.0
+    font_size: PositiveFloat = 1.0
+    font_vertical_shift: int = 0
+    alternate_color: BetterColor = BannerTitleCard.EPISODE_TEXT_COLOR
+    banner_color: Optional[BetterColor] = None
+    banner_height: PositiveInt = BannerTitleCard.BANNER_HEIGHT
+    episode_text_font_size: PositiveFloat = 1.0
+    hide_banner: bool = False
+    x_offset: PositiveInt = BannerTitleCard.X_OFFSET
+
+    @root_validator(skip_on_failure=True)
+    def assign_unassigned_color(cls, values):
+        # None means match font color
+        if values['banner_color'] is None:
+            values['banner_color'] = values['font_color']
 
         return values
 
@@ -515,6 +539,7 @@ class WhiteBorderCardType(BaseCardTypeCustomFontAllText):
 LocalCardTypeModels: dict[str, Base] = {
     '4x3': FadeCardType,
     'anime': AnimeCardType,
+    'banner': BannerCardType,
     'blurred border': TintedFrameCardType,
     'calligraphy': CalligraphyCardType,
     'comic book': ComicBookCardType,
