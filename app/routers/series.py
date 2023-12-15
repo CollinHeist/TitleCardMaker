@@ -20,6 +20,8 @@ from app.internal.series import (
     lookup_series, process_series, update_series,
 )
 from app.internal.auth import get_current_user
+from app.models.card import Card
+from app.models.series import Series as SeriesModel
 from app.schemas.series import (
     BatchUpdateSeries, NewSeries, SearchResult, Series, UpdateSeries
 )
@@ -52,39 +54,39 @@ def get_all_series(
     """
 
     # Order by Name > Year
-    query = db.query(models.series.Series)
+    query = db.query(SeriesModel)
     if order_by == 'alphabetical':
-        series = query.order_by(models.series.Series.sort_name)\
-            .order_by(models.series.Series.year)
+        series = query.order_by(SeriesModel.sort_name)\
+            .order_by(SeriesModel.year)
     elif order_by == 'reverse-alphabetical':
-        series = query.order_by(desc(models.series.Series.sort_name))\
-            .order_by(models.series.Series.year)
+        series = query.order_by(desc(SeriesModel.sort_name))\
+            .order_by(SeriesModel.year)
     # Order by Cards
     elif order_by == 'cards':
-        series = query.outerjoin(models.card.Card)\
-            .group_by(models.series.Series.id)\
-            .order_by(func.count(models.series.Series.id))
+        series = query.outerjoin(Card)\
+            .group_by(SeriesModel.id)\
+            .order_by(func.count(SeriesModel.id))
     elif order_by == 'reverse-cards':
-        series = query.outerjoin(models.card.Card)\
-            .group_by(models.series.Series.id)\
-            .order_by(func.count(models.series.Series.id).desc())
+        series = query.outerjoin(Card)\
+            .group_by(SeriesModel.id)\
+            .order_by(func.count(SeriesModel.id).desc())
     # Order by Sync
     elif order_by == 'sync':
-        series = query.order_by(models.series.Series.sync_id.desc(),
-                                models.series.Series.sort_name,
-                                models.series.Series.year)
+        series = query.order_by(SeriesModel.sync_id.desc(),
+                                SeriesModel.sort_name,
+                                SeriesModel.year)
     # Order by ID
     elif order_by == 'id':
-        series = query.order_by(models.series.Series.id)
+        series = query.order_by(SeriesModel.id)
     elif order_by == 'reverse-id':
-        series = query.order_by(models.series.Series.id.desc())
+        series = query.order_by(SeriesModel.id.desc())
     # Order by Year > Name
     elif order_by == 'year':
-        series = query.order_by(models.series.Series.year)\
-            .order_by(func.lower(models.series.Series.sort_name))
+        series = query.order_by(SeriesModel.year)\
+            .order_by(func.lower(SeriesModel.sort_name))
     elif order_by == 'reverse-year':
-        series = query.order_by(models.series.Series.year.desc())\
-            .order_by(func.lower(models.series.Series.sort_name))
+        series = query.order_by(SeriesModel.year.desc())\
+            .order_by(func.lower(SeriesModel.sort_name))
 
     # Return paginated results
     return paginate(series)
@@ -105,15 +107,15 @@ def get_previous_series(
     series = get_series(db, series_id, raise_exc=True)
 
     # pylint: disable=no-value-for-parameter,no-member
-    return db.query(models.series.Series)\
+    return db.query(SeriesModel)\
         .filter(
-            models.series.Series.id != series_id,
-            or_(models.series.Series.comes_before(series.sort_name),
-                and_(models.series.Series.sort_name == series.sort_name,
-                     models.series.Series.year < series.year)))\
-        .order_by(models.series.Series.sort_name.desc(),
-                  models.series.Series.year.desc(),
-                  models.series.Series.id.desc())\
+            SeriesModel.id != series_id,
+            or_(SeriesModel.comes_before(series.sort_name),
+                and_(SeriesModel.sort_name == series.sort_name,
+                     SeriesModel.year < series.year)))\
+        .order_by(SeriesModel.sort_name.desc(),
+                  SeriesModel.year.desc(),
+                  SeriesModel.id.desc())\
         .first()
 
 
@@ -132,15 +134,15 @@ def get_next_series(
     series = get_series(db, series_id, raise_exc=True)
 
     # pylint: disable=no-value-for-parameter,no-member
-    return db.query(models.series.Series)\
+    return db.query(SeriesModel)\
         .filter(
-            models.series.Series.id != series_id,
-            or_(models.series.Series.comes_after(series.sort_name),
-                and_(models.series.Series.sort_name == series.sort_name,
-                     models.series.Series.year > series.year)))\
-        .order_by(models.series.Series.sort_name,
-                  models.series.Series.year,
-                  models.series.Series.id)\
+            SeriesModel.id != series_id,
+            or_(SeriesModel.comes_after(series.sort_name),
+                and_(SeriesModel.sort_name == series.sort_name,
+                     SeriesModel.year > series.year)))\
+        .order_by(SeriesModel.sort_name,
+                  SeriesModel.year,
+                  SeriesModel.id)\
         .first()
 
 
@@ -204,36 +206,36 @@ def search_existing_series(
     conditions = []
     if name is not None:
         conditions.append(or_(
-            models.series.Series.name.contains(name),
-            models.series.Series.fuzzy_matches(name),
+            SeriesModel.name.contains(name),
+            SeriesModel.fuzzy_matches(name),
         ))
     if year is not None:
-        conditions.append(models.series.Series.year==year)
+        conditions.append(SeriesModel.year==year)
     if monitored is not None:
-        conditions.append(models.series.Series.monitored==monitored)
+        conditions.append(SeriesModel.monitored==monitored)
     if font_id is not None:
-        conditions.append(models.series.Series.font_id==font_id)
+        conditions.append(SeriesModel.font_id==font_id)
     if sync_id is not None:
-        conditions.append(models.series.Series.sync_id==sync_id)
+        conditions.append(SeriesModel.sync_id==sync_id)
     if template_id is not None:
         return paginate(
-            db.query(models.series.Series)\
+            db.query(SeriesModel)\
                 .join(models.template.SeriesTemplates.series)\
                 .filter(models.template.SeriesTemplates.template_id==template_id)\
                 .filter(*conditions)\
-                .order_by(models.series.Series.sort_name)
+                .order_by(SeriesModel.sort_name)
         )
 
     # Query by all given conditions - if by name, sort by str difference
     if name is not None:
         return paginate(
-            db.query(models.series.Series).filter(*conditions)\
-                .order_by(models.series.Series.diff_ratio(name))
+            db.query(SeriesModel).filter(*conditions)\
+                .order_by(SeriesModel.diff_ratio(name))
         )
 
     return paginate(
-        db.query(models.series.Series).filter(*conditions)\
-            .order_by(func.lower(models.series.Series.sort_name))
+        db.query(SeriesModel).filter(*conditions)\
+            .order_by(func.lower(SeriesModel.sort_name))
     )
 
 

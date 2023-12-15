@@ -2,7 +2,7 @@ from collections import namedtuple
 from logging import Logger
 
 from re import IGNORECASE, compile as re_compile
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
@@ -33,7 +33,7 @@ class SeasonTitleRanges:
 
     def __init__(self,
             /,
-            ranges: dict,
+            ranges: dict[str, str],
             *,
             fallback: Optional[Callable[[EpisodeInfo], str]] = None,
             log: Logger = log,
@@ -53,7 +53,7 @@ class SeasonTitleRanges:
         """
 
         # Parse ranges into objects
-        self.titles = {}
+        self.titles: dict[Union[AbsoluteRange, EpisodeRange, Season], str] = {}
         for key, title in list(ranges.items())[::-1]:
             if (match := self.ABSOLUTE_RANGE_REGEX.match(key)) is not None:
                 self.titles[AbsoluteRange(*map(int, match.groups()))] = title
@@ -84,26 +84,50 @@ class SeasonTitleRanges:
         """
 
         # Try and match on each season title
+        ep = episode_info
         for range_, title in self.titles.items():
+            # Absolute range, evaluate on absolute number only
             if isinstance(range_, AbsoluteRange):
-                # Episode has no absolute number, warn and skip
-                if episode_info.absolute_number is None:
+                # Episode has no absolute number, skip
+                if ep.absolute_number is None:
                     break
 
-                if range_.start <= episode_info.absolute_number <= range_.end:
+                if range_.start <= ep.absolute_number <= range_.end:
                     return title.format(**card_settings)
-            elif (isinstance(range_, EpisodeRange)
-                and (range_.season_start <= episode_info.season_number <= range_.season_end)
-                and (range_.episode_start <= episode_info.episode_number <= range_.episode_end)):
-                return title.format(**card_settings)
+            # Entire season, evaluate on season number only
             elif (isinstance(range_, Season)
-                and range_.season_number == episode_info.season_number):
+                and range_.season_number == ep.season_number):
                 return title.format(**card_settings)
+            # Episode range, evaluate season and episode number
+            elif isinstance(range_, EpisodeRange):
+                # Evaluate if within a single season
+                if (range_.season_start == range_.season_end
+                    # Episode falls within season range
+                    and range_.season_start <= ep.season_number <= range_.season_end
+                    # Episode falls within episode range
+                    and range_.episode_start <= ep.episode_number <= range_.episode_end):
+                    return title.format(**card_settings)
+                # Spans multiple seasons and episode falls within season range
+                if (range_.season_start < range_.season_end
+                    and range_.season_start <= ep.season_number <= range_.season_end):
+                    # Part of start season, falls within episode range
+                    if range_.season_start == ep.season_number:
+                        if range_.episode_start <= ep.episode_number:
+                            return title.format(**card_settings)
+                    # Part of end season, falls within episode range
+                    elif range_.season_end == ep.season_number:
+                        if ep.episode_number <= range_.episode_end:
+                            return title.format(**card_settings)
+                    # After start season, episode number is irrelevant
+                    elif range_.season_start < ep.season_number:
+                        return title.format(**card_settings)
 
-        # No matching season title range, return fallback or default
+        # No matching season title range
+        # Return fallback if specified
         if self.fallback is not None:
             return self.fallback(episode_info)
 
+        # No fallback, return default titles
         if episode_info.season_number == 0:
             return f'Specials'
 
