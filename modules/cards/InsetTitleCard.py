@@ -43,7 +43,7 @@ class InsetTitleCard(BaseCardType):
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the episode text',
-                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
             ), Extra(
                 name='Separator Character',
                 identifier='separator',

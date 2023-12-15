@@ -67,7 +67,7 @@ class DividerTitleCard(BaseCardType):
             ), Extra(
                 name='Text Position',
                 identifier='text_position',
-                description='Where on the image the text should be positioned',
+                description='Where on the image to position the text',
                 tooltip=(
                     'Either <v>upper left</v>, <v>upper right</v>, '
                     '<v>right</v>, <v>lower right</v>, <v>lower left</v>, or '

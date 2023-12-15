@@ -15,7 +15,7 @@ Models of card types and series extras.
 class TitleCharacteristics(Base):
     max_line_width: PositiveInt
     max_line_count: PositiveInt
-    top_heavy: Union[bool, Literal['even']]
+    top_heavy: Union[bool, Literal['even', 'forced even']]
 
 class Extra(Base):
     name: str
