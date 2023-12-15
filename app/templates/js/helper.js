@@ -50,9 +50,10 @@ function debounce(func, timeout = 850){
  * @returns {bool} Whether this device screen is small, and mobile
  * formatting should apply.
  */
-function isSmallScreen() {
-  return window.screen.availWidth < 768;
-}
+const isSmallScreen = () => window.innerWidth < 768;
+// function isSmallScreen() {
+//   return window.innerWidth < 768;
+// }
 
 /**
  * Format the given number of bytes into a human-readable string.
