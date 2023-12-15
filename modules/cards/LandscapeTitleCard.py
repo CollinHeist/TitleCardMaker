@@ -41,7 +41,9 @@ class LandscapeTitleCard(BaseCardType):
                 name='Bounding Box Toggle',
                 identifier='add_bounding_box',
                 description='Whether to add a bounding box around the title text',
-                tooltip='Either <v>True</v>, or <v>False</v>.',
+                tooltip=(
+                    'Either <v>True</v>, or <v>False</v>. Default <v>True</v>.'
+                ),
             ), Extra(
                 name='Bounding Box Color',
                 identifier='box_color',
@@ -52,18 +54,20 @@ class LandscapeTitleCard(BaseCardType):
                 identifier='box_adjustments',
                 description='Manual adjustments to the bounds of the bounding box',
                 tooltip=(
-                    'Specified like <v>{top} {right} {bottom} {left}</v>. For '
-                    'example: <v>-20 10 0 5</v>. Positive values move that '
-                    'face out, negative values move the face in. Unit is pixels.'
+                    'Specifiy as <v>{top} {right} {bottom} {left}</v> - e.g. '
+                    '<v>-20 10 0 5</v>. Positive values move that face out, '
+                    'negative values move the face in. Default is '
+                    '<v>0 0 0 0</v>. Unit is pixels.'
                 ),
             ), Extra(
                 name='Image Darkening',
                 identifier='darken',
                 description='Whether to dark all or parts of the image',
                 tooltip=(
-                    'Either <v>all</v> to darken the entire image, or '
-                    '<v>box</v> to darken only the bounding box. This is to '
-                    'improve text legibility on very bright images.'
+                    'Either <v>all</v> to darken the entire image, <v>box</v> '
+                    'to darken only the bounding box, or <v>False</v> to not'
+                    'darken the image at all. This is to improve text '
+                    'legibility on very bright images. Default is <v>box</v>.'
                 ),
             ),
         ], description=[
@@ -130,10 +134,10 @@ class LandscapeTitleCard(BaseCardType):
             font_vertical_shift: float = 0,
             blur: bool = False,
             grayscale: bool = False,
-            add_bounding_box: bool = False,
+            add_bounding_box: bool = True,
             box_adjustments: tuple[int, int, int, int] = (0, 0, 0, 0),
             box_color: str = TITLE_COLOR,
-            darken: DarkenOption = False,
+            darken: DarkenOption = 'box',
             preferences: Optional['Preferences'] = None,
             **unused,
         ) ->None:

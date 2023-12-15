@@ -272,10 +272,10 @@ class LandscapeCardType(BaseCardModel):
     font_kerning: float = 1.0
     font_size: PositiveFloat = 1.0
     font_vertical_shift: int = 0
-    add_bounding_box: bool = False
+    add_bounding_box: bool = True
     box_adjustments: BoxAdjustments = (0, 0, 0, 0)
     box_color: Optional[BetterColor] = None
-    darken: Union[Literal['all', 'box'], bool] = False
+    darken: Union[Literal['all', 'box'], bool] = 'box'
 
     @validator('box_adjustments')
     def parse_box_adjustments(cls, val):
