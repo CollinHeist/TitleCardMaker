@@ -739,7 +739,6 @@ async function getEpisodeData(page=1) {
     row.querySelector('input[name="card_file"]').value = episode.card_file;
     {% endif %}
     row.querySelector('td[data-column="extras"] a').onclick = () => editEpisodeExtras(episode);
-    row.querySelector('td[data-column="watched"]').innerHTML = getIcon(episode.watched, false);
     {% if not preferences.simplified_data_table %}
     const embyIdInput = row.querySelector('input[name="emby_id"]');
     if (embyIdInput !== null) { embyIdInput.value = episode.emby_id; }
