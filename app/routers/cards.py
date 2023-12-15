@@ -362,8 +362,9 @@ def delete_title_card(
 @card_router.post('/episode/{episode_id}', tags=['Episodes'],
                   dependencies=[Depends(get_current_user)])
 def create_card_for_episode(
-        episode_id: int,
         request: Request,
+        episode_id: int,
+        query_watched_statuses: bool = Query(default=False),
         db: Session = Depends(get_database),
     ) -> None:
     """
@@ -377,9 +378,10 @@ def create_card_for_episode(
     episode = get_episode(db, episode_id, raise_exc=True)
 
     # Set watch status of the Episode
-    get_watched_statuses(
-        db, episode.series, [episode], log=request.state.log,
-    )
+    if query_watched_statuses:
+        get_watched_statuses(
+            db, episode.series, [episode], log=request.state.log,
+        )
 
     # Create Card for this Episode
     create_episode_cards(db, None, episode, log=request.state.log)
