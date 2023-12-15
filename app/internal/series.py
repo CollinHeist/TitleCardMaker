@@ -245,31 +245,34 @@ def process_series(
 
     # Begin processing the Series
     # Refresh episode data, use BackgroundTasks for ID assignment
-    log.debug(f'{series} Started refreshing Episode data')
-    refresh_episode_data(db, series, log=log)
+    if series.monitored:
+        log.debug(f'{series} Started refreshing Episode data')
+        refresh_episode_data(db, series, log=log)
 
     # Update watch statuses
     get_watched_statuses(db, series, series.episodes, log=log)
 
     # Begin downloading Source images - use BackgroundTasks
-    log.debug(f'{series} Started downloading source images')
-    for episode in series.episodes:
-        background_tasks.add_task(
-            # Function
-            download_episode_source_images,
-            # Arguments
-            db, episode, commit=False, raise_exc=False, log=log,
-        )
+    if series.monitored:
+        log.debug(f'{series} Started downloading source images')
+        for episode in series.episodes:
+            background_tasks.add_task(
+                # Function
+                download_episode_source_images,
+                # Arguments
+                db, episode, commit=False, raise_exc=False, log=log,
+            )
 
     # Begin Episode translation - use BackgroundTasks
-    log.debug(f'{series} Started adding translations')
-    for episode in series.episodes:
-        background_tasks.add_task(
-            # Function
-            translate_episode,
-            # Arguments
-            db, episode, commit=False, log=log,
-        )
+    if series.monitored:
+        log.debug(f'{series} Started adding translations')
+        for episode in series.episodes:
+            background_tasks.add_task(
+                # Function
+                translate_episode,
+                # Arguments
+                db, episode, commit=False, log=log,
+            )
     db.commit()
 
     # Begin Card creation - use BackgroundTasks
