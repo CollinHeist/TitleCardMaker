@@ -144,7 +144,6 @@ class BannerTitleCard(BaseCardType):
         self.output_file = card_file
 
         # Ensure characters that need to be escaped are
-        log.info(f'{title_text!r} {title_text.splitlines()}')
         if len(lines := title_text.split('\n')) > 1:
             top_title = '\n'.join(lines[:-1])
             bottom_title = lines[-1]
@@ -218,7 +217,8 @@ class BannerTitleCard(BaseCardType):
             f'-gravity northwest',
             f'-interline-spacing -65',
             f'-interword-spacing 20',
-            f'-annotate {x:+.0f}{y:+.0f} "{index_text}"',
+            f'-annotate {x:+.0f}{y:+.0f}',
+            f'"{index_text}"',
         ]
 
 
@@ -226,7 +226,27 @@ class BannerTitleCard(BaseCardType):
     def index_text_width(self) -> int:
         """Width of the index text."""
 
-        return self.image_magick.get_text_dimensions(self.index_text_commands)[0]
+        # All text hidden, return 0
+        if self.hide_season_text and self.hide_episode_text:
+            return 0
+
+        # Determine the longest text
+        if self.hide_season_text:
+            text = self.episode_text
+        elif self.hide_episode_text:
+            text = self.season_text
+        else:
+            if len(self.season_text) > len(self.episode_text):
+                text = self.season_text
+            elif len(self.season_text) < len(self.episode_text):
+                text = self.episode_text
+            else:
+                text = self.episode_text
+
+        # Return width of the longest text
+        modified_commands = self.index_text_commands
+        modified_commands[-1] = f'"{text}"'
+        return self.image_magick.get_text_dimensions(modified_commands)[0]
 
 
     @property

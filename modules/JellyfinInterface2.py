@@ -177,7 +177,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             return series_info.jellyfin_id[self._interface_id, library_name]
 
         # Get ID of this library
-        if (library_id := self.libraries.get(library_name, None)) is None:
+        if (library_id := self.libraries.get(library_name)) is None:
             log.error(f'Library "{library_name}" not found in Jellyfin')
             return None
 
