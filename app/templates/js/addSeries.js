@@ -2,6 +2,11 @@
 import {SearchResult, Series} from './.types.js';
 {% endif %}
 
+/** @type {number} Minimum interval between calls to add a new series */
+const _ADD_INTERVAL_MS = 5000;
+/** @type {number} Last execution time (from `Date().getTime()`) of adding a Series */
+let _lastAdded;
+
 /**
  * Add the indicated number of placeholder elements.
  * @param {HTMLElement} element - Element whose children are being replaced with
@@ -64,23 +69,35 @@ function generateNewSeriesObject(result) {
  * @param {string} resultElementId - ID of the element in the DOM to modify.
  */
 function addSeries(result, resultElementId) {
+  // Indicate loading
   $('#add-series-modal form').toggleClass('loading', true);
-  $.ajax({
-    type: 'POST',
-    url: '/api/series/new',
-    data: JSON.stringify(generateNewSeriesObject(result)),
-    contentType: 'application/json',
-    /**
-     * Series added successfully, disable element in DOM and show a success toast.
-     * @param {Series} series - Newly added Series.
-     */
-    success: series => {
-      document.getElementById(resultElementId).classList.add('disabled');
-      showInfoToast(`Added Series "${series.name}"`);
-    },
-    error: response => showErrorToast({title: 'Error Adding Series', response}),
-    complete: () => $('#add-series-modal').modal('hide'),
-  });
+  $('#add-series-modal .actions .button').toggleClass('disabled', false);
+
+  // Wait between calls
+  const remainingTime = _lastAdded ? _ADD_INTERVAL_MS - (new Date().getTime() - _lastAdded) : 0;
+  setTimeout(() => {
+    $.ajax({
+      type: 'POST',
+      url: '/api/series/new',
+      data: JSON.stringify(generateNewSeriesObject(result)),
+      contentType: 'application/json',
+      /**
+       * Series added successfully, disable element in DOM and show a success toast.
+       * @param {Series} series - Newly added Series.
+       */
+      success: series => {
+        document.getElementById(resultElementId).classList.add('disabled');
+        showInfoToast(`Added Series "${series.name}"`);
+      },
+      error: response => showErrorToast({title: 'Error Adding Series', response}),
+      complete: () => {
+        $('#add-series-modal').modal('hide');
+        $('#add-series-modal .actions .button').toggleClass('disabled', true);
+        _lastAdded = new Date().getTime();
+      },
+    });
+  }, remainingTime);
+
 }
 
 /**
@@ -276,26 +293,31 @@ function quickAddSeries(result, resultElementId) {
   resultElement.classList.add('loading');
   resultElement.classList.remove('transition');
 
-  // Submit API request to add this result
-  $.ajax({
-    type: 'POST',
-    url: '/api/series/new',
-    data: JSON.stringify(generateNewSeriesObject(result)),
-    contentType: 'application/json',
-    /**
-     * Series successfully added; show toast and disable the result.
-     * @param {Series} series - Newly added Series.
-     */
-    success: series => {
-      resultElement.classList.add('disabled');
-      showInfoToast(`Added Series "${series.name}"`);
-    },
-    error: response => showErrorToast({title: 'Error adding Series', response}),
-    complete: () => {
-      resultElement.classList.remove('loading');
-      resultElement.classList.add('transition');
-    }
-  });
+  // Wait between calls
+  const remainingTime = _lastAdded ? _ADD_INTERVAL_MS - (new Date().getTime() - _lastAdded) : 0;
+  setTimeout(() => {
+    // Submit API request to add this result
+    $.ajax({
+      type: 'POST',
+      url: '/api/series/new',
+      data: JSON.stringify(generateNewSeriesObject(result)),
+      contentType: 'application/json',
+      /**
+       * Series successfully added; show toast and disable the result.
+       * @param {Series} series - Newly added Series.
+       */
+      success: series => {
+        resultElement.classList.add('disabled');
+        showInfoToast(`Added Series "${series.name}"`);
+      },
+      error: response => showErrorToast({title: 'Error adding Series', response}),
+      complete: () => {
+        resultElement.classList.remove('loading');
+        resultElement.classList.add('transition');
+        _lastAdded = new Date().getTime();
+      }
+    });
+  }, remainingTime);
 }
 
 /**
