@@ -433,6 +433,8 @@ class BaseCardType(ImageMaker):
             shadow: str,
             x: int = 0,
             y: int = 0,
+            *,
+            shadow_color: str = 'black',
         ) -> ImageMagickCommands:
         """
         Amend the given commands to apply a drop shadow effect.
@@ -443,6 +445,7 @@ class BaseCardType(ImageMaker):
             shadow: IM Shadow string - i.e. `85x10+10+10`.
             x: X-position of the offset to apply when compositing.
             y: Y-position of the offset to apply when compositing.
+            shadow_color: Color of the shadow to add.
 
         Returns:
             List of ImageMagick commands.
@@ -452,7 +455,7 @@ class BaseCardType(ImageMaker):
             f'\(',
             *commands,
             f'\( +clone',
-            f'-background None',
+            f'-background "{shadow_color}"',
             f'-shadow {shadow} \)',
             f'+swap',
             f'-background None',

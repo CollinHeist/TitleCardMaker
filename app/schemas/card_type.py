@@ -150,6 +150,7 @@ class CalligraphyCardType(BaseCardTypeCustomFontAllText):
     offset_titles: bool = True
     randomize_texture: bool = True
     separator: str = '-'
+    shadow_color: BetterColor = 'black'
 
     @root_validator(skip_on_failure=True)
     def assign_unassigned_color(cls, values):
