@@ -645,15 +645,14 @@ async function getFileData(page=currentFilePage) {
   document.getElementById('source-images').replaceChildren(...sources);
 
   // Update source image previews
-  const sourceImages = allFiles.items.map(source => {
+  const sourceImages = [];
+  allFiles.items.forEach(source => {
+    if (!source.exists) { return; }
     // Clone template
     const image = document.getElementById('preview-image-template').content.cloneNode(true);
-    if (source.exists) {
-      image.querySelector('.dimmer .content').innerHTML = `<h4>Season ${source.season_number} Episode ${source.episode_number} (${source.source_file_name})</h4>`;
-      image.querySelector('img').src = `${source.source_url}?${source.filesize}`;
-    }
-
-    return image;
+    image.querySelector('.dimmer .content').innerHTML = `<h4>Season ${source.season_number} Episode ${source.episode_number} (${source.source_file_name})</h4>`;
+    image.querySelector('img').src = `${source.source_url}?${source.filesize}`;
+    sourceImages.push(image);
   });
   document.getElementById('source-image-previews').replaceChildren(...sourceImages);
 
