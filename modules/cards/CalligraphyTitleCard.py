@@ -53,7 +53,7 @@ class CalligraphyTitleCard(BaseCardType):
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_file',
-        'font_size', 'font_color', 'font_interline_spacing',
+        'font_size', 'font_color', 'font_interline_spacing', 'shadow_color',
         'font_interword_spacing', 'font_kerning', 'font_vertical_shift',
         'logo_file', 'add_texture', 'episode_text_color', 'logo_size',
         'randomize_texture', 'separator', 'deep_blur', 'episode_text_font_size',
@@ -86,7 +86,8 @@ class CalligraphyTitleCard(BaseCardType):
             offset_titles: bool = True,
             randomize_texture: bool = True,
             separator: str = '-',
-            preferences: Optional['Preferences'] = None, # type: ignore
+            shadow_color: str = 'black',
+            preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
         """Construct a new instance of this Card."""
@@ -128,6 +129,7 @@ class CalligraphyTitleCard(BaseCardType):
         self.logo_size = logo_size
         self.randomize_texture = randomize_texture
         self.separator = separator
+        self.shadow_color = shadow_color
 
 
     @staticmethod
@@ -188,41 +190,6 @@ class CalligraphyTitleCard(BaseCardType):
         title_text = '\n'.join(lines)
 
         return title_text
-
-
-    def __add_drop_shadow(self,
-            commands: ImageMagickCommands,
-            shadow: str,
-            x: int = 0,
-            y: int = 0,
-        ) -> ImageMagickCommands:
-        """
-        Amend the given commands to apply a drop shadow effect.
-
-        Args:
-            commands: List of commands being modified. Must contain some
-                image definition that can be cloned.
-            shadow: IM Shadow string - i.e. `85x10+10+10`.
-            x: X-position of the offset to apply when compositing.
-            y: Y-position of the offset to apply when compositing.
-
-        Returns:
-            List of ImageMagick commands.
-        """
-
-        return [
-            f'\(',
-            *commands,
-            f'\( +clone',
-            f'-background None',
-            f'-shadow {shadow} \)',
-            f'+swap',
-            f'-background None',
-            f'-layers merge',
-            f'+repage \)',
-            f'-geometry {x:+.0f}{y:+.0f}',
-            f'-composite',
-        ]
 
 
     def __get_logo_size(self) -> Dimensions:
@@ -294,7 +261,7 @@ class CalligraphyTitleCard(BaseCardType):
             f'-resize x{logo_height}\>',
         ]
 
-        return self.__add_drop_shadow(base_command, '95x10+0+35', 0, 0)
+        return self.add_drop_shadow(base_command, '95x10+0+35', 0, 0)
 
 
     @property
@@ -321,8 +288,9 @@ class CalligraphyTitleCard(BaseCardType):
             f'label:"{self.title_text}"',
         ]
 
-        return self.__add_drop_shadow(
+        return self.add_drop_shadow(
             base_commands, '95x2+0+17', 0, vertical_shift,
+            shadow_color=self.shadow_color,
         )
 
 
@@ -365,7 +333,10 @@ class CalligraphyTitleCard(BaseCardType):
             f'label:"{index_text}"',
         ]
 
-        return self.__add_drop_shadow(base_commands, '95x2+0+12', 0, y)
+        return self.add_drop_shadow(
+            base_commands, '95x2+0+12', 0, y,
+            shadow_color=self.shadow_color,
+        )
 
 
     @staticmethod
