@@ -274,7 +274,7 @@ class CalligraphyTitleCard(BaseCardType):
 
         # Font characteristics
         size = 160 * self.font_size
-        interline_spacing = -50 + self.font_interline_spacing
+        interline_spacing = -70 + self.font_interline_spacing
         kerning = 1.0 * self.font_kerning
         vertical_shift = 600 + self.font_vertical_shift
 
