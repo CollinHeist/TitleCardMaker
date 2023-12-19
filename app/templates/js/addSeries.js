@@ -92,7 +92,7 @@ function addSeries(result, resultElementId) {
       error: response => showErrorToast({title: 'Error Adding Series', response}),
       complete: () => {
         $('#add-series-modal').modal('hide');
-        $('#add-series-modal .actions .button').toggleClass('disabled', true);
+        $('#add-series-modal .actions .button').toggleClass('disabled', false);
         _lastAdded = new Date().getTime();
       },
     });
@@ -132,7 +132,7 @@ function importBlueprint(blueprintId, elementId) {
  */
 function queryBlueprints(result, resultElementId) {
   // Add placeholder Blueprints while loading
-  addPlaceholders(blueprintResults, 2, 'blueprint-placeholder-template');
+  addPlaceholders(document.getElementById(resultElementId), 2, 'blueprint-placeholder-template');
 
   // Generate query URL
   let query = `name=${result.name}&year=${result.year}`;
