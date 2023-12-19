@@ -11,6 +11,7 @@ from modules.SeriesInfo import SeriesInfo
 
 # Built-in BaseCardType classes
 from modules.cards.AnimeTitleCard import AnimeTitleCard
+from modules.cards.BannerTitleCard import BannerTitleCard
 from modules.cards.CalligraphyTitleCard import CalligraphyTitleCard
 from modules.cards.ComicBookTitleCard import ComicBookTitleCard
 from modules.cards.CutoutTitleCard import CutoutTitleCard
@@ -70,6 +71,7 @@ class TitleCard:
     CARD_TYPES = {
         '4x3': FadeTitleCard,
         'anime': AnimeTitleCard,
+        'banner': BannerTitleCard,
         'blurred border': TintedFrameTitleCard,
         'calligraphy': CalligraphyTitleCard,
         'comic book': ComicBookTitleCard,
