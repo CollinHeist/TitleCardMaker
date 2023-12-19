@@ -29,7 +29,7 @@ class InsetTitleCard(BaseCardType):
     API_DETAILS = CardDescription(
         name='Inset',
         identifier='inset',
-        example='/internal_assets/cards/inset.jpg',
+        example='/internal_assets/cards/inset.webp',
         creators=['CollinHeist'],
         source='builtin',
         supports_custom_fonts=True,
@@ -54,7 +54,7 @@ class InsetTitleCard(BaseCardType):
                 description='How transparent to make inset text.',
                 tooltip=(
                     'Number between <v>0.0</v> and <v>1.0</v>. Default is '
-                    '<v>1.0</v> (fully transparent).'
+                    '<v>1.0</v> (not transparency).'
                 ),
             ), Extra(
                 name='Gradient Omission',

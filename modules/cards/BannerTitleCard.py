@@ -75,9 +75,9 @@ class BannerTitleCard(BaseCardType):
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
-        'max_line_width': 20,
-        'max_line_count': 2,
-        'top_heavy': 'forced even',
+        'max_line_width': 19,
+        'max_line_count': 3,
+        'top_heavy': False,
     }
 
     """Characteristics of the default title font"""
