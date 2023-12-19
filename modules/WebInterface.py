@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union
+from typing import Any, Union
 
 from re import IGNORECASE, compile as re_compile
 from requests import get, Session
@@ -97,7 +97,7 @@ class WebInterface:
         ).json()
 
 
-    def get(self, url: str, params: dict, *, cache: bool = True) -> dict:
+    def get(self, url: str, params: dict, *, cache: bool = True) -> Any:
         """
         Wrapper for getting the JSON return of the specified GET
         request. If the provided URL and parameters are identical to the
@@ -109,7 +109,7 @@ class WebInterface:
             Parameters to pass to GET.
 
         Returns:
-            Dict made from the JSON return of the specified GET request.
+            Parsed JSON return of the specified GET request.
         """
 
         # If not caching, just query and return
@@ -163,8 +163,7 @@ class WebInterface:
             image = get(image, timeout=30).content
             if len(image) == 0:
                 raise ValueError(f'URL {image} returned no content error')
-            if any(bad_content in image
-                   for bad_content in WebInterface.BAD_CONTENT):
+            if any(bad_content in image for bad_content in WebInterface.BAD_CONTENT):
                 raise ValueError(f'URL {image} returned malformed content')
 
             # Write content to file, return success
