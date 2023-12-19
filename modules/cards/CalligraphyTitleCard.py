@@ -23,7 +23,7 @@ class CalligraphyTitleCard(BaseCardType):
     TITLE_CHARACTERISTICS = {
         'max_line_width': 20,
         'max_line_count': 2,
-        'top_heavy': 'even',
+        'top_heavy': 'forced even',
     }
 
     """Characteristics of the default title font"""
