@@ -180,20 +180,31 @@ function queryBlueprints(result, resultElementId) {
  * Query for all Blueprints defined for all Series - load the given page
  * number.
  * @param {number} [page=1] - Page number of Blueprints to query and display.
+ * @param {boolean} [refresh=false] - Whether to force refresh the database.
  */
-function queryAllBlueprints(page=1) {
-  const blueprintResults = document.getElementById('all-blueprint-results');
-  const blueprintTemplate = document.getElementById('all-blueprint-template');
+function queryAllBlueprints(page=1, refresh=false) {
+  // Generate endpoint URL
   const orderBy = $('[data-value="order_by"]').val();
   const includeMissing = $('.checkbox[data-value="include_missing_series"]').checkbox('is unchecked');
   const includeImported = $('.checkbox[data-value="included_imported"]').checkbox('is checked');
+  const query = `page=${page}`
+    + `&size=15`
+    + `&order_by=${orderBy}`
+    + `&include_missing_series=${includeMissing}`
+    + `&include_imported=${includeImported}`
+    + `&refresh_database=${refresh}`;
+  
   // Only add placeholders if on page 1 (first load)
+  const blueprintResults = document.getElementById('all-blueprint-results');
   if (page === 1) {
     addPlaceholders(blueprintResults, 9, 'blueprint-placeholder-template');
   }
+  
+  // Submit API request
+  const blueprintTemplate = document.getElementById('all-blueprint-template');
   $.ajax({
     type: 'GET',
-    url: `/api/blueprints/query/all?page=${page}&size=15&order_by=${orderBy}&include_missing_series=${includeMissing}&include_imported=${includeImported}`,
+    url: `/api/blueprints/query/all?${query}`,
     /**
      * Query successful, populate page with Blueprint cards.
      * @param {import('./.types.js').RemoteBlueprintPage} allBlueprints - Page of Blueprints to display.
@@ -398,6 +409,11 @@ async function initAll() {
     document.getElementById('search-query').value = query;
     querySeries();
   }
+
+  // Add custom right-click action to Browse Blueprints button
+  $('.button[data-action="browse-blueprints"]').on('contextmenu', (event) => {
+    queryAllBlueprints(undefined, true);
+  });
 
   const allTemplates = await fetch('/api/available/templates').then(resp => resp.json());
   $('.dropdown[data-value="template_ids"]').dropdown({
