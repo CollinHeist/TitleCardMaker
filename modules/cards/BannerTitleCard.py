@@ -13,14 +13,14 @@ if TYPE_CHECKING:
 
 class BannerTitleCard(BaseCardType):
     """
-    This class describes a CardType that ...
+    This class describes a CardType that ... # TODO
     """
 
     """API Parameters"""
     API_DETAILS = CardDescription(
         name='Banner',
         identifier='banner',
-        example='/internal_assets/cards/banner.jpg',
+        example='/internal_assets/cards/banner.webp',
         creators=['CollinHeist', 'Danny Beaton'],
         source='builtin',
         supports_custom_fonts=True,
