@@ -394,7 +394,7 @@ def download_series_poster_(
     download_series_poster(db, series, log=request.state.log)
 
 
-@series_router.get('/{series_id}/poster/query', status_code=200)
+@series_router.get('/series/{series_id}/poster/query', status_code=200)
 def query_series_poster(
         series_id: int,
         db: Session = Depends(get_database),
@@ -413,7 +413,7 @@ def query_series_poster(
     return tmdb_interface.get_series_poster(series.as_series_info)
 
 
-@series_router.put('/{series_id}/poster', status_code=201)
+@series_router.put('/series/{series_id}/poster', status_code=201)
 async def set_series_poster(
         series_id: int,
         poster_url: Optional[str] = Form(default=None),
