@@ -444,10 +444,14 @@ class MarvelTitleCard(BaseCardType):
 
         # Generic font, reset episode text and box colors
         if not custom_font:
-            if 'episode_text_color' in extras:
-                extras['episode_text_color'] =MarvelTitleCard.EPISODE_TEXT_COLOR
             if 'border_color' in extras:
-                extras['border_color'] = 'white'
+                extras['border_color'] = MarvelTitleCard.DEFAULT_BORDER_COLOR
+            if 'episode_text_color' in extras:
+                extras['episode_text_color'] =\
+                    MarvelTitleCard.EPISODE_TEXT_COLOR
+            if 'text_box_color' in extras:
+                extras['text_box_color'] =\
+                    MarvelTitleCard.DEFAULT_TEXT_BOX_COLOR
 
 
     @staticmethod

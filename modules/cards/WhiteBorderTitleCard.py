@@ -264,8 +264,9 @@ class WhiteBorderTitleCard(BaseCardType):
             custom_season_titles: Whether the season titles are custom.
         """
 
-        # Generic font, reset episode text and box colors
         if not custom_font:
+            if 'border_color' in extras:
+                extras['border_color'] = 'white'
             if 'episode_text_color' in extras:
                 extras['episode_text_color'] =\
                     WhiteBorderTitleCard.EPISODE_TEXT_COLOR

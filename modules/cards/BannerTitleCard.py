@@ -13,7 +13,9 @@ if TYPE_CHECKING:
 
 class BannerTitleCard(BaseCardType):
     """
-    This class describes a CardType that ... # TODO
+    This class describes a CardType that feature a solid-color banner at
+    the bottom of the image, with all text directly on top of or within
+    the banner. The banner and text can be recolored and resized.
     """
 
     """API Parameters"""
@@ -66,8 +68,11 @@ class BannerTitleCard(BaseCardType):
             ),
         ],
         description=[
-            '...'
-        ]
+            'This class describes a CardType that feature a solid-color banner '
+            'at the bottom of the image, with all text directly on top of or '
+            'within the banner.', 'The banner and text can be recolored and '
+            'resized.'
+        ],
     )
 
     """Directory where all reference files used by this card are stored"""
@@ -345,7 +350,14 @@ class BannerTitleCard(BaseCardType):
         """
 
         if not custom_font:
-            ...
+            if 'alternate_color' in extras:
+                extras['alternate_color'] = BannerTitleCard.EPISODE_TEXT_COLOR
+            if 'banner_color' in extras:
+                extras['banner_color'] = BannerTitleCard.TITLE_COLOR
+            if 'episode_text_font_size' in extras:
+                extras['episode_text_font_size'] = 1.0
+            if 'x_offset' in extras:
+                extras['x_offset'] = BannerTitleCard.X_OFFSET
 
 
     @staticmethod

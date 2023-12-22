@@ -258,7 +258,28 @@ class FrameTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def modify_extras(
+            extras: dict,
+            custom_font: bool,
+            custom_season_titles: bool,
+        ) -> None:
+        """
+        Modify the given extras based on whether font or season titles
+        are custom.
+
+        Args:
+            extras: Dictionary to modify.
+            custom_font: Whether the font are custom.
+            custom_season_titles: Whether the season titles are custom.
+        """
+
+        if not custom_font:
+            if 'episode_text_color' in extras:
+                extras['episode_text_color'] = FrameTitleCard.EPISODE_TEXT_COLOR
+
+
+    @staticmethod
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Determines whether the given arguments represent a custom font
         for this card. This CardType only uses custom font cases.

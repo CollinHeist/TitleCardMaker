@@ -24,7 +24,6 @@ class TintedGlassTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    # pylint: disable=line-too-long
     API_DETAILS = CardDescription(
         name='Tinted Glass',
         identifier='tinted glass',
@@ -41,7 +40,9 @@ class TintedGlassTitleCard(BaseCardType):
             ), Extra(
                 name='Episode Text Position',
                 identifier='episode_text_position',
-                description='Position of the episode text relative to the title text',
+                description=(
+                    'Position of the episode text relative to the title text'
+                ),
                 tooltip=(
                     'Either <v>left</v>, <v>center</v>, or <v>right</v>. '
                     'Default is <v>center</v>.'
@@ -67,7 +68,6 @@ class TintedGlassTitleCard(BaseCardType):
             'cards also feature the name of the series in the episode text.',
         ]
     )
-    # pylint: enable=line-too-long
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'darkened'
@@ -352,12 +352,13 @@ class TintedGlassTitleCard(BaseCardType):
             custom_season_titles: Whether the season titles are custom.
         """
 
-        # Generic font, reset box adjustments and episode text color
         if not custom_font:
             if 'box_adjustments' in extras:
                 del extras['box_adjustments']
             if 'episode_text_color' in extras:
                 del extras['episode_text_color']
+            if 'glass_color' in extras:
+                extras['glass_color'] = TintedGlassTitleCard.DARKEN_COLOR
 
 
     @staticmethod

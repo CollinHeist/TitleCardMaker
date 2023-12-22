@@ -345,10 +345,10 @@ class DividerTitleCard(BaseCardType):
 
         # Generic font, reset stroke color
         if not custom_font:
-            if 'stroke_color' in extras:
-                extras['stroke_color'] = 'black'
             if 'divider_color' in extras:
                 extras['divider_color'] = DividerTitleCard.TITLE_COLOR
+            if 'stroke_color' in extras:
+                extras['stroke_color'] = 'black'
 
 
     @staticmethod
