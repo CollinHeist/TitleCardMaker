@@ -537,6 +537,7 @@ class WhiteBorderCardType(BaseCardTypeCustomFontAllText):
     border_color: BetterColor = 'white'
     stroke_color: BetterColor = WhiteBorderTitleCard.STROKE_COLOR
     episode_text_color: BetterColor = WhiteBorderTitleCard.TITLE_COLOR
+    episode_text_font_size: PositiveFloat = 1.0
 
 LocalCardTypeModels: dict[str, Base] = {
     '4x3': FadeCardType,
