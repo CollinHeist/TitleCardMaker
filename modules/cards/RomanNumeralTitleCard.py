@@ -278,12 +278,14 @@ class RomanNumeralTitleCard(BaseCardType):
         # Store object attributes
         self.output_file = card_file
         self.title_text = self.image_magick.escape_chars(title_text)
+
         self.font_color = font_color
         self.font_interline_spacing = font_interline_spacing
         self.font_interword_spacing = font_interword_spacing
         self.font_file = font_file
         self.font_size = font_size
 
+        # Extras
         self.background = background
         self.roman_numeral_color = roman_numeral_color
         self.season_text_color = season_text_color
@@ -662,23 +664,34 @@ class RomanNumeralTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
 
         Args:
             font: The Font being evaluated.
+            extras: Dictionary of extras for evaluation.
 
         Returns:
             False, as custom fonts aren't used.
         """
 
-        return ((font.color != RomanNumeralTitleCard.TITLE_COLOR)
+        custom_extras = (
+            ('background' in extras
+                and extras['background'] != RomanNumeralTitleCard.BACKGROUND_COLOR)
+            or ('roman_numeral_color' in extras
+                and extras['roman_numeral_color'] != RomanNumeralTitleCard.ROMAN_NUMERAL_TEXT_COLOR)
+            or ('season_text_color' in extras
+                and extras['season_text_color'] != RomanNumeralTitleCard.SEASON_TEXT_COLOR)
+        )
+
+        return (custom_extras
+            or ((font.color != RomanNumeralTitleCard.TITLE_COLOR)
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
             or (font.file != RomanNumeralTitleCard.TITLE_FONT)
-            or (font.size != 1.0)
+            or (font.size != 1.0))
         )
 
 

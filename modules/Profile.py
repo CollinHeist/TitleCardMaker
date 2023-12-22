@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from typing import TYPE_CHECKING, Callable, Literal, Optional, TypedDict
 
 from re import compile as re_compile, match, IGNORECASE
 
@@ -12,6 +12,13 @@ from modules.SeriesInfo import SeriesInfo
 
 if TYPE_CHECKING:
     from modules.Episode import Episode
+
+
+FontProfile = Literal['custom', 'generic']
+SeasonProfile = Literal['custom', 'generic', 'hidden']
+class ProfileDescription(TypedDict): # pylint: disable=missing-class-docstring
+    font: FontProfile
+    seasons: SeasonProfile
 
 
 class Profile:
@@ -79,7 +86,8 @@ class Profile:
     def get_valid_profiles(self,
             card_class: type[BaseCardType],
             all_variations: bool,
-        ) -> list[dict[str, str]]:
+            extras: dict,
+        ) -> list[ProfileDescription]:
         """
         Gets the valid applicable profiles for this profile. For example,
         for a profile with only generic attributes, it's invalid to
@@ -88,6 +96,9 @@ class Profile:
         Args:
             card_class: Implementation of CardType whose valid
                 subprofiles are requested.
+            all_variations: Whether all sub-variations are being
+                analyzed.
+            extras: Dictionary of extras for variation evaluation.
 
         Returns:
             The profiles that can be created as subprofiles from this
@@ -101,7 +112,10 @@ class Profile:
         )
 
         # Determine whether this profile uses a custom font
-        has_custom_font = card_class.is_custom_font(self.font)
+        try:
+            has_custom_font = card_class.is_custom_font(self.font, extras)
+        except TypeError: # Handle old-style function calls
+            has_custom_font = card_class.is_custom_font(self.font)
 
         # If not archiving all variations, return only indicated profile
         if not all_variations:
@@ -134,16 +148,14 @@ class Profile:
         return valid_profiles
 
 
-    def convert_profile(self, seasons: str, font: str) -> None:
+    def convert_profile(self, seasons: SeasonProfile, font: FontProfile) ->None:
         """
         Convert this profile to the provided profile attributes. This
         modifies what characteristics are presented by the object.
 
         Args:
-            seasons: String of how to modify seasons. Must be one of
-                'custom', 'generic', or 'hidden'.
-            font: String of how to modify fonts. Must be 'custom' or
-                'generic'.
+            seasons: String of how to modify seasons.
+            font: String of how to modify fonts.
         """
 
         # Update this object's data
@@ -162,7 +174,7 @@ class Profile:
 
     def convert_extras(self,
             card_type: type['BaseCardType'],
-            extras: dict[str, Any],
+            extras: dict,
         ) -> None:
         """
         Convert the given extras according to this profile's rules.

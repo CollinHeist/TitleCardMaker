@@ -236,26 +236,39 @@ class WhiteBorderTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
 
         Args:
             font: The Font being evaluated.
+            extras: Dictionary of extras for evaluation.
 
         Returns:
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.color != WhiteBorderTitleCard.TITLE_COLOR)
+        custom_extras = (
+            ('border_color' in extras
+                and extras['border_color'] != 'white')
+            or ('episode_text_color' in extras
+                and extras['episode_text_color'] != WhiteBorderTitleCard.EPISODE_TEXT_COLOR)
+            or ('episode_text_font_size' in extras
+                and extras['episode_text_font_size'] != 1.0)
+            or ('stroke_color' in extras
+                and extras['stroke_color'] != WhiteBorderTitleCard.STROKE_COLOR)
+        )
+
+        return (custom_extras
+            or ((font.color != WhiteBorderTitleCard.TITLE_COLOR)
             or (font.file != WhiteBorderTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
             or (font.stroke_width != 1.0)
-            or (font.vertical_shift != 0)
+            or (font.vertical_shift != 0))
         )
 
 
