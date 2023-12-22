@@ -54,8 +54,8 @@ class WhiteBorderTitleCard(BaseCardType):
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
         'font_file', 'font_interline_spacing', 'font_kerning', 'font_size',
         'font_stroke_width', 'font_vertical_shift', 'border_color',
-        'stroke_color', 'episode_text_color', 'font_interword_spacing',
-        'separator', 'omit_gradient',
+        'stroke_color', 'episode_text_color', 'episode_text_font_size',
+        'font_interword_spacing', 'separator', 'omit_gradient',
     )
 
     def __init__(self, *,
@@ -78,6 +78,7 @@ class WhiteBorderTitleCard(BaseCardType):
             grayscale: bool = False,
             border_color: str = 'white',
             episode_text_color: str = TITLE_COLOR,
+            episode_text_font_size: float = 1.0,
             omit_gradient: bool = False,
             separator: str = '•',
             stroke_color: str = STROKE_COLOR,
@@ -112,6 +113,7 @@ class WhiteBorderTitleCard(BaseCardType):
         # Optional extras
         self.border_color = border_color
         self.episode_text_color = episode_text_color
+        self.episode_text_font_size = episode_text_font_size
         self.omit_gradient = omit_gradient
         self.separator = separator
         self.stroke_color = stroke_color
@@ -161,12 +163,14 @@ class WhiteBorderTitleCard(BaseCardType):
                 f'{self.season_text} {self.separator} {self.episode_text}'
             )
 
+        size = 62.5 * self.episode_text_font_size
+
         return [
             # Global text effects
             f'-background transparent',
             f'-gravity south',
             f'-kerning 4',
-            f'-pointsize 62.5',
+            f'-pointsize {size:.2f}',
             f'-interword-spacing 14.5',
             f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
             # Black stroke behind primary text
@@ -219,13 +223,14 @@ class WhiteBorderTitleCard(BaseCardType):
             custom_season_titles: Whether the season titles are custom.
         """
 
-        # Generic font, reset episode text and box colors
         if not custom_font:
             if 'border_color' in extras:
                 extras['border_color'] = 'white'
             if 'episode_text_color' in extras:
                 extras['episode_text_color'] =\
                     WhiteBorderTitleCard.EPISODE_TEXT_COLOR
+            if 'episode_text_font_size' in extras:
+                extras['episode_text_font_size'] = 1.0
             if 'stroke_color' in extras:
                 extras['stroke_color'] = WhiteBorderTitleCard.STROKE_COLOR
 
