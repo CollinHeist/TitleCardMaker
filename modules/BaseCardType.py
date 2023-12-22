@@ -297,7 +297,7 @@ class BaseCardType(ImageMaker):
 
     @staticmethod
     @abstractmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Abstract method to determine whether the given font
         characteristics indicate the use of a custom font or not.

@@ -81,13 +81,14 @@ class TextlessTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> Literal[False]:
+    def is_custom_font(font: 'Font', extras: dict) -> Literal[False]:
         """
         Determines whether the given font characteristics constitute a
         default or custom font.
 
         Args:
             font: The Font being evaluated.
+            extras: Dictionary of extras for evaluation.
 
         Returns:
             False, as fonts are not customizable with this card.

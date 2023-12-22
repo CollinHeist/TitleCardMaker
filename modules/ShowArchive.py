@@ -69,7 +69,7 @@ class ShowArchive:
         # For each applicable sub-profile, create+modify new Show/Summary
         card_class = base_show.card_class
         valid_profiles = base_show.profile.get_valid_profiles(
-            card_class, base_show.archive_all_variations,
+            card_class, base_show.archive_all_variations, base_show.extras,
         )
 
         # Go through each valid profile

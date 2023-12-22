@@ -200,25 +200,32 @@ class FadeTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Determine whether the given arguments represent a custom font
         for this card.
 
         Args:
             font: The Font being evaluated.
+            extras: Dictionary of extras for evaluation.
 
         Returns:
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.color != FadeTitleCard.TITLE_COLOR)
+        custom_extras = (
+            ('episode_text_color' in extras
+                and extras['episode_text_color'] != FadeTitleCard.EPISODE_TEXT_COLOR)
+        )
+
+        return (custom_extras
+            or ((font.color != FadeTitleCard.TITLE_COLOR)
             or  (font.file != FadeTitleCard.TITLE_FONT)
             or  (font.interline_spacing != 0)
             or  (font.interword_spacing != 0)
             or  (font.kerning != 1.0)
             or  (font.size != 1.0)
-            or  (font.vertical_shift != 0)
+            or  (font.vertical_shift != 0))
         )
 
 

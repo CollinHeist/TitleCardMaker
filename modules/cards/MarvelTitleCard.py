@@ -455,25 +455,36 @@ class MarvelTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
 
         Args:
             font: The Font being evaluated.
+            extras: Dictionary of extras for evaluation.
 
         Returns:
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.color != MarvelTitleCard.TITLE_COLOR)
+        custom_extras = (
+            ('border_color' in extras
+                and extras['border_color'] != MarvelTitleCard.DEFAULT_BORDER_COLOR)
+            or ('episode_text_color' in extras
+                and extras['episode_text_color'] != MarvelTitleCard.EPISODE_TEXT_COLOR)
+            or ('text_box_color' in extras
+                and extras['text_box_color'] != MarvelTitleCard.DEFAULT_TEXT_BOX_COLOR)
+        )
+
+        return (custom_extras
+            or ((font.color != MarvelTitleCard.TITLE_COLOR)
             or (font.file != MarvelTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
-            or (font.vertical_shift != 0)
+            or (font.vertical_shift != 0))
         )
 
 

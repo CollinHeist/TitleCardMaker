@@ -344,24 +344,33 @@ class LandscapeTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
 
         Args:
             font: The Font being evaluated.
+            extras: Dictionary of extras for evaluation.
 
         Returns:
             True if the given font is custom, False otherwise.
         """
 
-        return ((font.color != LandscapeTitleCard.TITLE_COLOR)
+        custom_extras = (
+            ('box_adjustments' in extras
+                and extras['box_adjustments'] != '0 0 0 0')
+            or ('box_color' in extras
+                and extras['box_color'] != LandscapeTitleCard.TITLE_COLOR)
+        )
+
+        return (custom_extras
+            or ((font.color != LandscapeTitleCard.TITLE_COLOR)
             or (font.file != LandscapeTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
-            or (font.size != 1.0)
+            or (font.size != 1.0))
         )
 
 

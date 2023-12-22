@@ -30,17 +30,20 @@ class OlivierTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-            ), Extra(
+            ),
+            Extra(
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the episode text',
                 tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
-            ), Extra(
+            ),
+            Extra(
                 name='Episode Text Vertical Shift',
                 identifier='episode_text_vertical_shift',
                 description='Vertical offset to apply to the episode text',
                 tooltip='Unit is pixels.'
-            ), Extra(
+            ),
+            Extra(
                 name='Text Stroke Color',
                 identifier='stroke_color',
                 description='Color to use for the text stroke',
@@ -292,26 +295,39 @@ class OlivierTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Determine whether the given arguments represent a custom font
         for this card.
 
         Args:
             font: The Font being evaluated.
+            extras: Dictionary of extras for evaluation.
 
         Returns:
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.color != OlivierTitleCard.TITLE_COLOR)
+        custom_extras = (
+            ('episode_text_color' in extras
+                and extras['episode_text_color'] != OlivierTitleCard.EPISODE_TEXT_COLOR)
+            or ('episode_text_font_size' in extras
+                and extras['episode_text_font_size'] != 1.0)
+            or ('episode_text_vertical_shift' in extras
+                and extras['episode_text_vertical_shift'] != 0)
+            or ('stroke_color' in extras
+                and extras['stroke_color'] != 'black')
+        )
+
+        return (custom_extras
+            or ((font.color != OlivierTitleCard.TITLE_COLOR)
             or (font.file != OlivierTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
             or (font.stroke_width != 1.0)
-            or (font.vertical_shift != 0)
+            or (font.vertical_shift != 0))
         )
 
 
