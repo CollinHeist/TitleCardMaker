@@ -361,6 +361,8 @@ class CalligraphyTitleCard(BaseCardType):
                 extras['episode_text_color'] = CalligraphyTitleCard.TITLE_COLOR
             if 'episode_text_font_size' in extras:
                 extras['episode_text_font_size'] = 1.0
+            if 'shadow_color' in extras:
+                extras['shadow_color'] = 'black'
 
 
     @staticmethod

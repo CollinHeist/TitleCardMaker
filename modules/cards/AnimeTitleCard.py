@@ -320,8 +320,13 @@ class AnimeTitleCard(BaseCardType):
 
         # Generic font, reset kanji vertical shift key
         if not custom_font:
+            if 'episode_text_color' in extras:
+                extras['episode_text_color'] =\
+                    AnimeTitleCard.SERIES_COUNT_TEXT_COLOR
             if 'kanji_vertical_shift' in extras:
                 extras['kanji_vertical_shift'] = 0
+            if 'stroke_color' in extras:
+                extras['stroke_color'] = 'black'
 
 
     @staticmethod

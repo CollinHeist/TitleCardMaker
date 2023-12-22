@@ -289,10 +289,12 @@ class BannerTitleCard(BaseCardType):
         if not custom_font:
             if 'alternate_color' in extras:
                 extras['alternate_color'] = BannerTitleCard.EPISODE_TEXT_COLOR
-            if 'episode_text_font_size' in extras:
-                extras['episode_text_font_size'] = 1.0
             if 'banner_color' in extras:
                 extras['banner_color'] = BannerTitleCard.TITLE_COLOR
+            if 'episode_text_font_size' in extras:
+                extras['episode_text_font_size'] = 1.0
+            if 'x_offset' in extras:
+                extras['x_offset'] = BannerTitleCard.X_OFFSET
 
 
     @staticmethod

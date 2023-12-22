@@ -334,6 +334,8 @@ class TintedGlassTitleCard(BaseCardType):
                 del extras['box_adjustments']
             if 'episode_text_color' in extras:
                 del extras['episode_text_color']
+            if 'glass_color' in extras:
+                extras['glass_color'] = TintedGlassTitleCard.DARKEN_COLOR
 
 
     @staticmethod
