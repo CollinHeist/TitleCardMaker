@@ -216,7 +216,7 @@ class Preferences:
         self.home_page_size = 100
         self.episode_data_page_size = 50
         self.stylize_unmonitored_posters = False
-        self.sources_as_table = False
+        self.sources_as_table = True
         self.home_page_table_view = True
         self.colorblind_mode = False
         self.reduced_animations = False
