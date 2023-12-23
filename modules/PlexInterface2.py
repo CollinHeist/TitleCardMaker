@@ -832,6 +832,9 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 # If integrating with PMM, remove label
                 if self.integrate_with_pmm:
                     plex_episode.removeLabel(['Overlay'])
+                log.debug(f'{series_info} S{plex_episode.seasonNumber:02}E'
+                          f'{plex_episode.episodeNumber:02} Loaded Card into '
+                          f'"{library_name}"')
             except Exception as e:
                 log.exception(f'Unable to upload {image.resolve()} to '
                               f'{series_info}', e)
