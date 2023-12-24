@@ -66,7 +66,7 @@ class SeasonPosterSet(YamlReader):
         self.logo_is_optional = poster_config.get('omit_logo', False)
 
         # Future list of SeasonPoster objects
-        self.posters = {}
+        self.posters: dict[int, SeasonPoster] = {}
         self.has_posters = False
 
         # Get all paths for this set
@@ -144,8 +144,15 @@ class SeasonPosterSet(YamlReader):
         # Get whether to spell or use digits for season numbers (default spell)
         spell = poster_config.get('spell_numbers', True)
 
-        # Get whether to use top or bottom placement
-        top_placement = poster_config.get('placement', 'bottom').lower() =='top'
+        # Get placement of text and logo
+        text_placement = poster_config.get(
+            'text_placement',
+            poster_config.get('placement', 'bottom')
+        )
+        logo_placement = poster_config.get(
+            'logo_placement',
+            poster_config.get('placement', 'bottom')
+        )
 
         # Get whether to omit gradient and logo
         omit_gradient = poster_config.get('omit_gradient', False)
@@ -190,9 +197,10 @@ class SeasonPosterSet(YamlReader):
                 font_color=self.font_color,
                 font_size=self.font_size,
                 font_kerning=self.font_kerning,
-                top_placement=top_placement,
+                logo_placement=logo_placement,
                 omit_gradient=omit_gradient,
                 omit_logo=omit_logo,
+                text_placement=text_placement,
             )
 
 

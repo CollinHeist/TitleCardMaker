@@ -134,6 +134,10 @@ class ImageMagickInterface:
             Tuple of the STDOUT and STDERR of the executed command.
         """
 
+        # Un-escape \( and \) into ( and )
+        if os_name == 'nt':
+            command = command.replace('\(', '(').replace('\)', ')')
+
         # If a docker image ID is specified, execute the command in that container
         # otherwise, execute on the host machine (no docker wrapper)
         if self.use_docker:
@@ -186,7 +190,7 @@ class ImageMagickInterface:
             return b''.join(output).decode('iso8859')
 
 
-    def delete_intermediate_images(self, *paths: tuple[Path]) -> None:
+    def delete_intermediate_images(self, *paths: Path) -> None:
         """
         Delete all the provided intermediate files.
 
