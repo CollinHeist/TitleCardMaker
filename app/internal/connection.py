@@ -69,7 +69,7 @@ def initialize_connections(
 
             # Skip if disabled
             if not connection.enabled:
-                log.debug(f'Not initializing {connection} - disabled')
+                log.debug(f'Not initializing {connection} (disabled)')
                 continue
 
             try:
@@ -80,8 +80,9 @@ def initialize_connections(
                 preferences.invalid_connections.append(connection.id)
                 log.exception(f'Error initializing {connection} - {exc}', exc)
 
+    # Log any invalid Connections
     if preferences.invalid_connections:
-        log.debug(f'Disabled Connection(s) {preferences.invalid_connections}')
+        log.info(f'Disabled Connection(s) {preferences.invalid_connections}')
 
 
 def add_connection(
