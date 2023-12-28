@@ -1,8 +1,10 @@
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 
+if TYPE_CHECKING:
+    from modules.Font import Font
 
 class CutoutTitleCard(BaseCardType):
     """
@@ -48,7 +50,7 @@ class CutoutTitleCard(BaseCardType):
         'font_color', 'font_file', 'font_interline_spacing',
         'font_interword_spacing', 'font_kerning', 'font_size',
         'font_vertical_shift', 'overlay_color', 'blur_edges',
-        'number_blur_profile',
+        'number_blur_profile', 'overlay_transparency',
     )
 
     def __init__(self,
@@ -65,10 +67,11 @@ class CutoutTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            overlay_color: str = 'black',
             blur_edges: bool = False,
             blur_profile: str = NUMBER_BLUR_PROFILE,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            overlay_color: str = 'black',
+            overlay_transparency: float = 0.0,
+            preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
         """
@@ -98,9 +101,10 @@ class CutoutTitleCard(BaseCardType):
         self.font_vertical_shift = font_vertical_shift
 
         # Optional extras
-        self.overlay_color = overlay_color
         self.blur_edges = blur_edges
         self.number_blur_profile = blur_profile
+        self.overlay_color = overlay_color
+        self.overlay_transparency = overlay_transparency
 
 
     def _format_episode_text(self, episode_text: str) -> str:
@@ -152,8 +156,32 @@ class CutoutTitleCard(BaseCardType):
         ]
 
 
+    @property
+    def transparency_overlay_commands(self) -> ImageMagickCommands:
+        """Subcommand to turn the overlay semi-transparent"""
+
+        # Transparency is disabled, return blank command
+        if self.overlay_transparency <= 0:
+            return []
+
+        return [
+            # Add source image
+            f'\( "{self.source_file.resolve()}"',
+            # Scale the alpha channel by the given transparency
+            f'-alpha set',
+            f'-channel A',
+            f'-evaluate multiply {self.overlay_transparency:.2f}',
+            f'+channel',
+            # Apply styling
+            *self.resize_and_style,
+            f'\)',
+            # Add semi-transparent source on top of composition
+            f'-composite',
+        ]
+
+
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
@@ -198,10 +226,7 @@ class CutoutTitleCard(BaseCardType):
 
 
     def create(self) -> None:
-        """
-        Make the necessary ImageMagick and system calls to create this
-        object's defined title card.
-        """
+        """Create this object's defined Title Card."""
 
         # Masked Alpha Composition layers must be ordered as:
         # [Replace Black Parts of Mask] | [Replace White Parts of Mask] | [Mask]
@@ -234,6 +259,7 @@ class CutoutTitleCard(BaseCardType):
             # Use masked alpha composition to combine images
             f'-gravity center',
             f'-composite',
+            *self.transparency_overlay_commands,
             # Add title text
             *self.title_text_commands,
             # Create card

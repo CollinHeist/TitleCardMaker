@@ -1,7 +1,10 @@
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
+
+if TYPE_CHECKING:
+    from modules.Font import Font
 
 
 class AnimeTitleCard(BaseCardType):
@@ -317,31 +320,47 @@ class AnimeTitleCard(BaseCardType):
 
         # Generic font, reset kanji vertical shift key
         if not custom_font:
+            if 'episode_text_color' in extras:
+                extras['episode_text_color'] =\
+                    AnimeTitleCard.SERIES_COUNT_TEXT_COLOR
             if 'kanji_vertical_shift' in extras:
                 extras['kanji_vertical_shift'] = 0
+            if 'stroke_color' in extras:
+                extras['stroke_color'] = 'black'
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Determines whether the given arguments represent a custom font
         for this card.
 
         Args:
             font: The Font being evaluated.
+            extras: Dictionary of extras for evaluation.
 
         Returns:
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.color != AnimeTitleCard.TITLE_COLOR)
+        custom_extras = (
+            ('episode_text_color' in extras 
+             and extras['episode_text_color'] != AnimeTitleCard.SERIES_COUNT_TEXT_COLOR)
+            or ('kanji_vertical_shift' in extras
+                and extras['kanji_vertical_shift'] != 0)
+            or ('stroke_color' in extras
+                and extras['stroke_color'] != 'black')
+        )
+
+        return (custom_extras
+            or ((font.color != AnimeTitleCard.TITLE_COLOR)
             or (font.file != AnimeTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
             or (font.stroke_width != 1.0)
-            or (font.vertical_shift != 0)
+            or (font.vertical_shift != 0))
         )
 
 
@@ -369,10 +388,7 @@ class AnimeTitleCard(BaseCardType):
 
 
     def create(self) -> None:
-        """
-        Make the necessary ImageMagick and system calls to create this
-        object's defined title card.
-        """
+        """Create this object's defined Title Card."""
 
         # Sub-command to optionally add gradient
         gradient_command = []

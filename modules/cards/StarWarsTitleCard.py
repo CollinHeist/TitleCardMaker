@@ -1,7 +1,10 @@
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
+
+if TYPE_CHECKING:
+    from modules.Font import Font
 
 
 class StarWarsTitleCard(BaseCardType):
@@ -45,7 +48,7 @@ class StarWarsTitleCard(BaseCardType):
         'source_file', 'output_file', 'title_text', 'episode_text',
         'hide_episode_text', 'font_color', 'font_file',
         'font_interline_spacing', 'font_interword_spacing', 'font_size',
-        'episode_text_color', 'episode_prefix',
+        'font_vertical_shift', 'episode_text_color', 'episode_prefix',
     )
 
     def __init__(self,
@@ -59,6 +62,7 @@ class StarWarsTitleCard(BaseCardType):
             font_interline_spacing: int = 0,
             font_interword_spacing: int = 0,
             font_size: float = 1.0,
+            font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
@@ -85,6 +89,7 @@ class StarWarsTitleCard(BaseCardType):
         self.font_interline_spacing = font_interline_spacing
         self.font_interword_spacing = font_interword_spacing
         self.font_size = font_size
+        self.font_vertical_shift = font_vertical_shift
 
         # Attempt to detect prefix text
         self.hide_episode_text = hide_episode_text or len(episode_text) == 0
@@ -113,6 +118,7 @@ class StarWarsTitleCard(BaseCardType):
 
         size = 124 * self.font_size
         interline_spacing = 20 + self.font_interline_spacing
+        vertical_shift = 829 + self.font_vertical_shift
 
         return [
             f'-font "{self.font_file}"',
@@ -122,7 +128,7 @@ class StarWarsTitleCard(BaseCardType):
             f'-interline-spacing {interline_spacing}',
             f'-interword-spacing {self.font_interword_spacing}',
             f'-fill "{self.font_color}"',
-            f'-annotate +320+829 "{self.title_text}"',
+            f'-annotate +320{vertical_shift:+} "{self.title_text}"',
         ]
 
 
@@ -180,23 +186,31 @@ class StarWarsTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Determines whether the given arguments represent a custom font
         for this card.
 
         Args:
             font: The Font being evaluated.
+            extras: Dictionary of extras for evaluation.
 
         Returns:
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.color != StarWarsTitleCard.TITLE_COLOR)
+        custom_extras = (
+            ('episode_text_color' in extras
+                and extras['episode_text_color'] != StarWarsTitleCard.EPISODE_TEXT_COLOR)
+        )
+
+        return (custom_extras
+            or ((font.color != StarWarsTitleCard.TITLE_COLOR)
             or (font.file != StarWarsTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
             or (font.size != 1.0)
+            or (font.vertical_shift != 0))
         )
 
 

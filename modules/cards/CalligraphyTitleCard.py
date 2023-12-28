@@ -1,9 +1,12 @@
 from pathlib import Path
 from random import random
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import BaseCardType, Dimensions, ImageMagickCommands
 from modules.EpisodeInfo import EpisodeInfo
+
+if TYPE_CHECKING:
+    from modules.Font import Font
 
 
 class CalligraphyTitleCard(BaseCardType):
@@ -20,7 +23,7 @@ class CalligraphyTitleCard(BaseCardType):
     TITLE_CHARACTERISTICS = {
         'max_line_width': 20,
         'max_line_count': 2,
-        'top_heavy': 'even',
+        'top_heavy': 'forced even',
     }
 
     """Characteristics of the default title font"""
@@ -50,7 +53,7 @@ class CalligraphyTitleCard(BaseCardType):
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_file',
-        'font_size', 'font_color', 'font_interline_spacing',
+        'font_size', 'font_color', 'font_interline_spacing', 'shadow_color',
         'font_interword_spacing', 'font_kerning', 'font_vertical_shift',
         'logo_file', 'add_texture', 'episode_text_color', 'logo_size',
         'randomize_texture', 'separator', 'deep_blur', 'episode_text_font_size',
@@ -77,13 +80,14 @@ class CalligraphyTitleCard(BaseCardType):
             grayscale: bool = False,
             add_texture: bool = True,
             deep_blur_if_unwatched: bool = True,
-            episode_text_color: Optional[str] = None,
+            episode_text_color: str = TITLE_COLOR,
             episode_text_font_size: float = 1.0,
             logo_size: float = 1.0,
             offset_titles: bool = True,
             randomize_texture: bool = True,
             separator: str = '-',
-            preferences: Optional['Preferences'] = None, # type: ignore
+            shadow_color: str = 'black',
+            preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
         """Construct a new instance of this Card."""
@@ -125,6 +129,7 @@ class CalligraphyTitleCard(BaseCardType):
         self.logo_size = logo_size
         self.randomize_texture = randomize_texture
         self.separator = separator
+        self.shadow_color = shadow_color
 
 
     @staticmethod
@@ -185,41 +190,6 @@ class CalligraphyTitleCard(BaseCardType):
         title_text = '\n'.join(lines)
 
         return title_text
-
-
-    def __add_drop_shadow(self,
-            commands: ImageMagickCommands,
-            shadow: str,
-            x: int = 0,
-            y: int = 0,
-        ) -> ImageMagickCommands:
-        """
-        Amend the given commands to apply a drop shadow effect.
-
-        Args:
-            commands: List of commands being modified. Must contain some
-                image definition that can be cloned.
-            shadow: IM Shadow string - i.e. `85x10+10+10`.
-            x: X-position of the offset to apply when compositing.
-            y: Y-position of the offset to apply when compositing.
-
-        Returns:
-            List of ImageMagick commands.
-        """
-
-        return [
-            f'\(',
-            *commands,
-            f'\( +clone',
-            f'-background None',
-            f'-shadow {shadow} \)',
-            f'+swap',
-            f'-background None',
-            f'-layers merge',
-            f'+repage \)',
-            f'-geometry {x:+}{y:+}',
-            f'-composite',
-        ]
 
 
     def __get_logo_size(self) -> Dimensions:
@@ -291,7 +261,7 @@ class CalligraphyTitleCard(BaseCardType):
             f'-resize x{logo_height}\>',
         ]
 
-        return self.__add_drop_shadow(base_command, '95x10+0+35', 0, 0)
+        return self.add_drop_shadow(base_command, '95x10+0+35', 0, 0)
 
 
     @property
@@ -304,7 +274,7 @@ class CalligraphyTitleCard(BaseCardType):
 
         # Font characteristics
         size = 160 * self.font_size
-        interline_spacing = -50 + self.font_interline_spacing
+        interline_spacing = -70 + self.font_interline_spacing
         kerning = 1.0 * self.font_kerning
         vertical_shift = 600 + self.font_vertical_shift
 
@@ -318,8 +288,9 @@ class CalligraphyTitleCard(BaseCardType):
             f'label:"{self.title_text}"',
         ]
 
-        return self.__add_drop_shadow(
+        return self.add_drop_shadow(
             base_commands, '95x2+0+17', 0, vertical_shift,
+            shadow_color=self.shadow_color,
         )
 
 
@@ -362,7 +333,10 @@ class CalligraphyTitleCard(BaseCardType):
             f'label:"{index_text}"',
         ]
 
-        return self.__add_drop_shadow(base_commands, '95x2+0+12', 0, y)
+        return self.add_drop_shadow(
+            base_commands, '95x2+0+12', x=0, y=y,
+            shadow_color=self.shadow_color,
+        )
 
 
     @staticmethod
@@ -387,28 +361,41 @@ class CalligraphyTitleCard(BaseCardType):
                 extras['episode_text_color'] = CalligraphyTitleCard.TITLE_COLOR
             if 'episode_text_font_size' in extras:
                 extras['episode_text_font_size'] = 1.0
+            if 'shadow_color' in extras:
+                extras['shadow_color'] = 'black'
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
 
         Args:
             font: The Font being evaluated.
+            extras: Dictionary of extras for evaluation.
 
         Returns:
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.color != CalligraphyTitleCard.TITLE_COLOR)
+        custom_extras = (
+            ('episode_text_color' in extras
+                and extras['episode_text_color'] != CalligraphyTitleCard.TITLE_COLOR)
+            or ('episode_text_font_size' in extras
+                and extras['episode_text_font_size'] != 1.0)
+            or ('shadow_color' in extras
+                and extras['shadow_color'] != 'black')
+        )
+
+        return (custom_extras
+            or ((font.color != CalligraphyTitleCard.TITLE_COLOR)
             or (font.file != CalligraphyTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
-            or (font.vertical_shift != 0)
+            or (font.vertical_shift != 0))
         )
 
 
@@ -436,10 +423,7 @@ class CalligraphyTitleCard(BaseCardType):
 
 
     def create(self) -> None:
-        """
-        Make the necessary ImageMagick and system calls to create this
-        object's defined title card.
-        """
+        """Create this object's defined Title Card."""
 
         style_commands = self.resize_and_style
         if self.deep_blur:

@@ -1,7 +1,10 @@
 from re import compile as re_compile, IGNORECASE
-from typing import Literal, Optional, Union
+from typing import TYPE_CHECKING, Literal, Optional, Union
 
 from modules.Debug import log
+
+if TYPE_CHECKING:
+    from modules.Profile import Profile
 
 
 class Title:
@@ -42,7 +45,8 @@ class Title:
 
 
     def __init__(self,
-            title: Union[str, list[str]], *,
+            title: Union[str, list[str]],
+            *,
             original_title: Optional[str] = None
         ) -> None:
         """
@@ -124,9 +128,12 @@ class Title:
         """
 
         lines = [[], []]
-        len_l1 = lambda: sum(map(len, lines[0]))
-        len_l2 = lambda: sum(map(len, lines[1]))
-        diff = lambda: abs(len_l2() - len_l1())
+        def len_l1() -> int:
+            return sum(map(len, lines[0]))
+        def len_l2() -> int:
+            return sum(map(len, lines[1]))
+        def diff() -> int:
+            return abs(len_l2() - len_l1())
 
         # Add each word to the shortest line
         words = self.full_title.split()
@@ -142,6 +149,9 @@ class Title:
                    and len_l1() < len_l2()
                    and diff() >= 2 * len(lines[1][0])):
                 lines[0].append(lines[1].pop(0))
+
+        if not lines[0]:
+            return list(map(' '.join, lines[1:]))
 
         return list(map(' '.join,  lines))
 
@@ -202,7 +212,7 @@ class Title:
     def split(self,
             max_line_width: int,
             max_line_count: int,
-            top_heavy: Union[bool, Literal['even']],
+            top_heavy: Union[bool, Literal['even', 'forced even']],
         ) -> list[str]:
         """
         Split this title's text into multiple lines. If the title cannot
@@ -225,19 +235,25 @@ class Title:
         if self.__manually_specified:
             return self.__title_lines
 
-        # If the title can fit on one line, is one line or one word, return
-        if (len(self.full_title) <= max_line_width
-            or max_line_count <= 1
-            or ' ' not in self.full_title):
+        # Is one word, return
+        if ' ' not in self.full_title:
             return [self.full_title]
 
         # Split title into two "even" width lines
-        if top_heavy == 'even':
+        if top_heavy == 'forced even':
             return self.__evenly_split()
+
+        # If the title can fit on one line, is one line or one word, return
+        if len(self.full_title) <= max_line_width or max_line_count <= 1:
+            return [self.full_title]
 
         # Misformat ahead..
         if len(self.full_title) > max_line_count * max_line_width:
             log.debug(f'Title {self} too long, potential misformat')
+
+        # Evenly split title
+        if top_heavy == 'even':
+            return self.__evenly_split()
 
         if top_heavy:
             return self.__top_split(max_line_width, max_line_count)
@@ -277,8 +293,8 @@ class Title:
 
 
     def apply_profile(self,
-            profile: 'Profile', # type: ignore
-            **title_characteristics: dict
+            profile: 'Profile',
+            **title_characteristics,
         ) -> str:
         """
         Apply the given profile to this title. If this object was

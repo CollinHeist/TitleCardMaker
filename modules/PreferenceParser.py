@@ -67,8 +67,8 @@ class PreferenceParser(YamlReader):
             is_docker: Whether executing within a Docker container.
 
         Raises:
-            SystemExit (1) if any required YAML options are missing from
-                `file`.
+            SystemExit (1): Any required YAML options are missing from
+            `file`.
         """
 
         # Initialize parent YamlReader object - errors are critical

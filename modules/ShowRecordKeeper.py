@@ -1,6 +1,6 @@
 from pathlib import Path
 from hashlib import sha256
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tinydb import where
 
@@ -9,6 +9,9 @@ from modules.Debug import log
 from modules import global_objects
 from modules.PersistentDatabase import PersistentDatabase
 from modules.Version import Version
+
+if TYPE_CHECKING:
+    from modules.Show import Show
 
 
 class ShowRecordKeeper:
@@ -98,7 +101,7 @@ class ShowRecordKeeper:
         hash_obj.update(str(record).encode('utf-8'))
 
 
-    def __get_show_hash(self, show: 'Show') -> int: # type: ignore
+    def __get_show_hash(self, show: 'Show') -> int:
         """
         Get the hash of the given config. This hash is deterministic,
         and is based only on attributes of the config that visually
@@ -131,7 +134,7 @@ class ShowRecordKeeper:
         return int.from_bytes(hash_obj.digest(), 'big')
 
 
-    def is_updated(self, show: 'Show') -> bool: # type: ignore
+    def is_updated(self, show: 'Show') -> bool:
         """
         Determine whether the given show is an update on the recorded
         config.
@@ -162,7 +165,7 @@ class ShowRecordKeeper:
         return False
 
 
-    def add_config(self, show: 'Show') -> None: # type: ignore
+    def add_config(self, show: 'Show') -> None:
         """
         Add the given show's hash to this object's record database.
 

@@ -1,11 +1,15 @@
 from pathlib import Path
-from typing import Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
+if TYPE_CHECKING:
+    from modules.Font import Font
+
 
 SeriesExtra = Optional
+TextGravity = Literal['center', 'east', 'west']
 TitleTextPosition = Literal['left', 'right']
 TextPosition = Literal[
     'upper left', 'upper right', 'right', 'lower right', 'lower left', 'left',
@@ -20,6 +24,7 @@ class DividerTitleCard(BaseCardType):
     positioning of text on the image to be adjusted. The general design
     was inspired by the title card interstitials in Overlord (season 3).
     """
+
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'anime'
@@ -52,7 +57,7 @@ class DividerTitleCard(BaseCardType):
         'font_file', 'font_interline_spacing', 'font_interword_spacing',
         'font_kerning', 'font_size', 'font_stroke_width', 'stroke_color',
         'title_text_position', 'text_position', 'font_vertical_shift',
-        'divider_color',
+        'divider_color', 'text_gravity',
     )
 
     def __init__(self,
@@ -75,14 +80,13 @@ class DividerTitleCard(BaseCardType):
             grayscale: bool = False,
             stroke_color: str = 'black',
             divider_color: str = TITLE_COLOR,
+            text_gravity: Optional[TextGravity] = None,
             title_text_position: TitleTextPosition = 'left',
             text_position: TextPosition = 'lower right',
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this Card.
-        """
+        """Construct a new instance of this Card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -121,13 +125,17 @@ class DividerTitleCard(BaseCardType):
             self.valid = False
         self.text_position = str(text_position).lower()
         self.divider_color = divider_color
+        self.text_gravity = text_gravity
 
 
     @property
     def index_text_command(self) -> ImageMagickCommands:
         """Subcommand for adding the index text to the source image."""
 
-        gravity = 'west' if self.title_text_position == 'left' else 'east'
+        if self.text_gravity:
+            gravity = self.text_gravity
+        else:
+            gravity = 'west' if self.title_text_position == 'left' else 'east'
 
         # Hiding all index text, return empty command
         if self.hide_season_text and self.hide_episode_text:
@@ -282,32 +290,41 @@ class DividerTitleCard(BaseCardType):
 
         # Generic font, reset stroke color
         if not custom_font:
-            if 'stroke_color' in extras:
-                extras['stroke_color'] = 'black'
             if 'divider_color' in extras:
                 extras['divider_color'] = DividerTitleCard.TITLE_COLOR
+            if 'stroke_color' in extras:
+                extras['stroke_color'] = 'black'
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
 
         Args:
             font: The Font being evaluated.
+            extras: Dictionary of extras for evaluation.
 
         Returns:
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.color != DividerTitleCard.TITLE_COLOR)
+        custom_extras = (
+            ('divider_color' in extras
+                and extras['divider_color'] != DividerTitleCard.TITLE_COLOR)
+            or ('stroke_color' in extras
+                and extras['stroke_color'] != 'black')
+        )
+
+        return (custom_extras
+            or ((font.color != DividerTitleCard.TITLE_COLOR)
             or (font.file != DividerTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
-            or (font.stroke_width != 1.0)
+            or (font.stroke_width != 1.0))
         )
 
 
@@ -335,10 +352,7 @@ class DividerTitleCard(BaseCardType):
 
 
     def create(self) -> None:
-        """
-        Make the necessary ImageMagick and system calls to create this
-        object's defined title card.
-        """
+        """Create this object's defined Title Card."""
 
         interline_spacing = -20 + self.font_interline_spacing
         kerning = -0.5 * self.font_kerning

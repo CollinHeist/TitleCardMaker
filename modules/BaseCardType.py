@@ -1,10 +1,13 @@
 from abc import abstractmethod
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 
 from titlecase import titlecase
 
 from modules.ImageMaker import ImageMaker, Dimensions
 
+if TYPE_CHECKING:
+    from modules.Font import Font
+    from modules.PreferenceParser import PreferenceParser
 
 ImageMagickCommands = list[str]
 
@@ -86,6 +89,39 @@ class Rectangle:
         return f'-draw "rectangle {str(self)}"'
 
 
+class Shadow:
+    """Class which defines a shadow string."""
+
+    __slots__ = ('opacity', 'sigma', 'x', 'y')
+
+    def __init__(self,
+            *,
+            opacity: int = 95,
+            sigma: int = 2,
+            x: int = 10,
+            y: int = 10,
+        ) -> None:
+        """Construct a shadow with the given parameters."""
+
+        self.opacity = opacity
+        self.sigma = sigma
+        self.x = x
+        self.y = y
+
+
+    def __str__(self) -> str:
+        """String representation of this shadow effect."""
+
+        return f'{self.opacity}x{self.sigma}{self.x:+}{self.y:+}'
+
+
+    @property
+    def as_command(self) -> str:
+        """Wrapper for `__str__`."""
+
+        return str(self)
+
+
 class BaseCardType(ImageMaker):
     """
     This class describes an abstract card type. A BaseCardType is a
@@ -108,7 +144,7 @@ class BaseCardType(ImageMaker):
     FONT_REPLACEMENTS = {}
 
     """Mapping of 'case' strings to format functions"""
-    CASE_FUNCTIONS = {
+    CASE_FUNCTIONS: dict[str, Callable[[Any], str]] = {
         'blank': lambda _: '',
         'lower': str.lower,
         'source': str,
@@ -181,7 +217,7 @@ class BaseCardType(ImageMaker):
             blur: bool = False,
             grayscale: bool = False,
             *,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
         """
@@ -238,7 +274,7 @@ class BaseCardType(ImageMaker):
 
     @staticmethod
     @abstractmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Abstract method to determine whether the given font
         characteristics indicate the use of a custom font or not.
@@ -366,6 +402,44 @@ class BaseCardType(ImageMaker):
             f'-gravity center',
             f'-resize "{self.preferences.card_dimensions}"',
             f'-extent "{self.preferences.card_dimensions}"',
+        ]
+
+
+    def add_drop_shadow(self,
+            commands: ImageMagickCommands,
+            shadow: Union[str, Shadow],
+            x: int = 0,
+            y: int = 0,
+            *,
+            shadow_color: str = 'black',
+        ) -> ImageMagickCommands:
+        """
+        Amend the given commands to apply a drop shadow effect.
+
+        Args:
+            commands: List of commands being modified. Must contain some
+                image definition that can be cloned.
+            shadow: IM Shadow string - i.e. `85x10+10+10`.
+            x: X-position of the offset to apply when compositing.
+            y: Y-position of the offset to apply when compositing.
+            shadow_color: Color of the shadow to add.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        return [
+            f'\(',
+            *commands,
+            f'\( +clone',
+            f'-background "{shadow_color}"',
+            f'-shadow {shadow} \)',
+            f'+swap',
+            f'-background None',
+            f'-layers merge',
+            f'+repage \)',
+            f'-geometry {x:+.0f}{y:+.0f}',
+            f'-composite',
         ]
 
 

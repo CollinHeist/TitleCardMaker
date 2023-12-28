@@ -1,61 +1,62 @@
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
+from modules.Debug import log
 
 if TYPE_CHECKING:
     from modules.Font import Font
 
 
-class WhiteBorderTitleCard(BaseCardType):
+TextPosition = Literal[
+    'upper left', 'upper right',
+    'left', 'right',
+    'lower left', 'lower right',
+]
+SeasonTextPosition = Literal['above', 'below']
+
+
+class InsetTitleCard(BaseCardType):
     """
-    This class describes a CardType that produces title cards based on
-    the Standard card type, but including a white border to match the
-    style of Musikmann2000's Posters.
+    This class describes a CardType that produces title cards in which
+    the index text is inset into the title text.
     """
 
     """Directory where all reference files used by this card are stored"""
-    REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'white_border'
+    REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'inset'
+    SW_REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'star_wars'
+    GRADIENT = REF_DIRECTORY.parent / 'overline' / 'small_gradient.png'
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
-        'max_line_width': 30,   # Character count to begin splitting titles
+        'max_line_width': 20,   # Character count to begin splitting titles
         'max_line_count': 3,    # Maximum number of lines a title can take up
-        'top_heavy': True,      # This class uses top heavy titling
+        'top_heavy': False,      # This class uses top heavy titling
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'Arial_Bold.ttf').resolve())
+    TITLE_FONT = str((SW_REF_DIRECTORY / 'HelveticaNeue.ttc').resolve())
     TITLE_COLOR = 'white'
     DEFAULT_FONT_CASE = 'upper'
     FONT_REPLACEMENTS = {}
 
     """Characteristics of the episode text"""
-    EPISODE_TEXT_COLOR = TITLE_COLOR
-    EPISODE_TEXT_FONT = REF_DIRECTORY / 'Arial.ttf'
-
-    """Default stroke color"""
-    STROKE_COLOR = 'black'
+    EPISODE_TEXT_COLOR = 'crimson'
+    EPISODE_TEXT_FONT = REF_DIRECTORY / 'HelveticaNeue-BoldItalic.ttf'
 
     """Whether this CardType uses season titles for archival purposes"""
     USES_SEASON_TITLE = True
 
     """Standard class has standard archive name"""
-    ARCHIVE_NAME = 'White Border Style'
-
-    """White border frame image to overlay"""
-    FRAME_IMAGE = REF_DIRECTORY / 'border.png'
-
-    """Gradient image to overlay"""
-    __GRADIENT_IMAGE = REF_DIRECTORY.parent / 'GRADIENT.png'
+    ARCHIVE_NAME = 'Inset Style'
 
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
-        'font_file', 'font_interline_spacing', 'font_kerning', 'font_size',
-        'font_stroke_width', 'font_vertical_shift', 'border_color',
-        'stroke_color', 'episode_text_color', 'episode_text_font_size',
-        'font_interword_spacing', 'separator', 'omit_gradient',
+        'font_file', 'font_interline_spacing', 'font_interword_spacing',
+        'font_kerning', 'font_size', 'font_vertical_shift',
+        'episode_text_color', 'episode_text_font_size', 'omit_gradient',
+        'separator', 'transparency', '_title_height',
     )
 
     def __init__(self, *,
@@ -72,16 +73,14 @@ class WhiteBorderTitleCard(BaseCardType):
             font_interword_spacing: int = 0,
             font_kerning: float = 1.0,
             font_size: float = 1.0,
-            font_stroke_width: float = 1.0,
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            border_color: str = 'white',
-            episode_text_color: str = TITLE_COLOR,
+            episode_text_color: str = EPISODE_TEXT_COLOR,
             episode_text_font_size: float = 1.0,
             omit_gradient: bool = False,
-            separator: str = '•',
-            stroke_color: str = STROKE_COLOR,
+            separator: str = '-',
+            transparency: float = 1.0,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) -> None:
@@ -107,105 +106,140 @@ class WhiteBorderTitleCard(BaseCardType):
         self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_size = font_size
-        self.font_stroke_width = font_stroke_width
         self.font_vertical_shift = font_vertical_shift
 
         # Optional extras
-        self.border_color = border_color
         self.episode_text_color = episode_text_color
         self.episode_text_font_size = episode_text_font_size
         self.omit_gradient = omit_gradient
         self.separator = separator
-        self.stroke_color = stroke_color
+        self.transparency = transparency
+
+        # Implementation variables
+        self._title_height = None
 
 
     @property
     def title_text_commands(self) -> ImageMagickCommands:
-        """Subcommand for adding title text to the image."""
+        """Subcommands to add the title text to the image."""
 
-        # No title text
-        if len(self.title_text) == 0:
+        # No title, return empty commands
+        if not self.title_text:
             return []
 
-        vertical_shift = 250 + self.font_vertical_shift
+        # Font characteristics
+        interline_spacing = -100
+        interword_spacing = 0
+        kerning = 1.0 * self.font_kerning
+        size = 250 * self.font_size
 
         return [
-            # Global text effects
-            f'-gravity south',
+            f'\( -background none',
+            f'-pointsize {size}',
             f'-font "{self.font_file}"',
-            f'-pointsize {160 * self.font_size}',
-            f'-kerning {-1 * self.font_kerning}',
-            f'-interline-spacing {self.font_interline_spacing}',
-            f'-interword-spacing {self.font_interword_spacing}',
-            # Black stroke behind primary text
-            f'-fill "{self.stroke_color}"',
-            f'-stroke "{self.stroke_color}"',
-            f'-strokewidth {4 * self.font_stroke_width}',
-            f'-annotate +0+{vertical_shift} "{self.title_text}"',
-            # Primary text
+            f'-interline-spacing {interline_spacing}',
+            f'-interword-spacing {interword_spacing}',
+            f'-kerning {kerning}',
             f'-fill "{self.font_color}"',
-            f'-annotate +0+{vertical_shift} "{self.title_text}"',
+            f'label:"{self.title_text}" \)',
+            f'-gravity south',
         ]
 
 
     @property
-    def index_text_commands(self) -> ImageMagickCommands:
-        """Subcommand for adding index text to the source image."""
+    def title_height(self) -> int:
+        """The height of the title text."""
 
+        # No title, zero height
+        if not self.title_text:
+            return 0
+
+        # Determine the height of the text
+        if self._title_height is None:
+            # Utilize only the bottom line of text for the line height
+            bottom_line = self.title_text.rsplit('\n', maxsplit=1)[-1]
+            modified_commands = self.title_text_commands
+            modified_commands[-2] = f'label:"{bottom_line}"'
+
+            _, self._title_height = self.get_text_dimensions(modified_commands)
+
+        return self._title_height
+
+
+    @property
+    def index_text_commands(self) -> ImageMagickCommands:
+        """Subcommands to add the index text to the image."""
+
+        # All text is hidden
         if self.hide_season_text and self.hide_episode_text:
             return []
+
+        # Determine index text
         if self.hide_season_text:
             index_text = self.episode_text
         elif self.hide_episode_text:
             index_text = self.season_text
         else:
-            index_text = (
+            index_text =\
                 f'{self.season_text} {self.separator} {self.episode_text}'
-            )
 
-        size = 62.5 * self.episode_text_font_size
+        size = 75 * self.episode_text_font_size # 1-3-1/4 font size base
+
+        index_text_commands = [
+            f'\( -background none',
+            f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
+            f'-fill "{self.episode_text_color}"',
+            f'-pointsize {size}',
+            f'-gravity south',
+            f'label:"{index_text}" \)',
+        ]
+        index_width, index_height =self.get_text_dimensions(index_text_commands)
+        crop_width = index_width + 40 # Increase margin
+        crop_height = index_height - 20 # Reduce margin
+        crop_y = self.font_vertical_shift + (self.title_height / 2) \
+            - (index_height / 2) + 30
 
         return [
-            # Global text effects
-            f'-background transparent',
+            # Copy source image
+            f'\( "{self.source_file.resolve()}"',
+            # Make source transparent (according to transparency)
+            f'-alpha set',
+            f'-channel A',
+            f'-evaluate multiply {self.transparency:.2f}',
+            f'+channel',
+            # Stylize so it matches the background
+            *self.resize_and_style,
+            *self.gradient_commands,
+            # Crop out the area which the index text will cover
             f'-gravity south',
-            f'-kerning 4',
-            f'-pointsize {size:.2f}',
-            f'-interword-spacing 14.5',
-            f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
-            # Black stroke behind primary text
-            f'-fill black',
-            f'-stroke black',
-            f'-strokewidth 6',
-            f'-annotate +0+162 "{index_text}"',
-            # Primary text
-            f'-fill "{self.episode_text_color}"',
-            f'-stroke "{self.episode_text_color}"',
-            f'-strokewidth 0.75',
-            f'-annotate +0+162 "{index_text}"',
+            f'-crop {crop_width}x{crop_height}+0+{crop_y:.0f}',
+            f'-gravity center',
+            # Increase canvas size so blurring can extend beyond bounds
+            f'-extent {crop_width+20}x{crop_height+20}',
+            # Blur edges so cropping is not so sharp
+            f'-blur 0x7',
+            f'-gravity south',
+            f'\) -geometry +0+{crop_y-10:.0f}',
+            f'-composite',
+            # Add index text with a drop shadow
+            *self.add_drop_shadow(
+                index_text_commands, '95x4-6+6', x=3, y=crop_y - 15 - 6,
+            ),
         ]
 
 
     @property
-    def border_color_commands(self) -> ImageMagickCommands:
-        """Subcommand to recolor the border by overlaying rectangles."""
+    def gradient_commands(self) -> ImageMagickCommands:
+        """Subcommand to add the gradient overlay to the image."""
 
-        # Do not recolor if border is white
-        if self.border_color.lower() in ('white', 'rgb(255,255,255)','#ffffff'):
+        if self.omit_gradient:
             return []
 
         return [
-            f'-stroke none',
-            f'-fill "{self.border_color}"',
-            # Top
-            f'-draw "rectangle 0,0,{self.WIDTH},25"',
-            # Right
-            f'-draw "rectangle {self.WIDTH-25},0,{self.WIDTH},{self.HEIGHT}"',
-            # Bottom
-            f'-draw "rectangle 0,{self.HEIGHT-25},{self.WIDTH},{self.HEIGHT}"',
-            # Left
-            f'-draw "rectangle 0,0,25,{self.HEIGHT}"',
+            f'"{self.GRADIENT.resolve()}"',
+            f'-composite',
         ]
+
 
     @staticmethod
     def modify_extras(
@@ -224,15 +258,10 @@ class WhiteBorderTitleCard(BaseCardType):
         """
 
         if not custom_font:
-            if 'border_color' in extras:
-                extras['border_color'] = 'white'
             if 'episode_text_color' in extras:
-                extras['episode_text_color'] =\
-                    WhiteBorderTitleCard.EPISODE_TEXT_COLOR
+                extras['episode_text_color'] = InsetTitleCard.EPISODE_TEXT_COLOR
             if 'episode_text_font_size' in extras:
-                extras['episode_text_font_size'] = 1.0
-            if 'stroke_color' in extras:
-                extras['stroke_color'] = WhiteBorderTitleCard.STROKE_COLOR
+                extras['episode_text_fon_size'] = 1.0
 
 
     @staticmethod
@@ -250,24 +279,19 @@ class WhiteBorderTitleCard(BaseCardType):
         """
 
         custom_extras = (
-            ('border_color' in extras
-                and extras['border_color'] != 'white')
-            or ('episode_text_color' in extras
-                and extras['episode_text_color'] != WhiteBorderTitleCard.EPISODE_TEXT_COLOR)
+            ('episode_text_color' in extras
+                and extras['episode_text_color'] != InsetTitleCard.EPISODE_TEXT_COLOR)
             or ('episode_text_font_size' in extras
                 and extras['episode_text_font_size'] != 1.0)
-            or ('stroke_color' in extras
-                and extras['stroke_color'] != WhiteBorderTitleCard.STROKE_COLOR)
         )
 
         return (custom_extras
-            or ((font.color != WhiteBorderTitleCard.TITLE_COLOR)
-            or (font.file != WhiteBorderTitleCard.TITLE_FONT)
+            or ((font.color != InsetTitleCard.TITLE_COLOR)
+            or (font.file != InsetTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
-            or (font.stroke_width != 1.0)
             or (font.vertical_shift != 0))
         )
 
@@ -289,44 +313,29 @@ class WhiteBorderTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
-        standard_etf = WhiteBorderTitleCard.EPISODE_TEXT_FORMAT.upper()
+        standard_etf = InsetTitleCard.EPISODE_TEXT_FORMAT.upper()
 
         return (custom_episode_map
                 or episode_text_format.upper() != standard_etf)
 
 
     def create(self) -> None:
-        """
-        Make the necessary ImageMagick and system calls to create this
-        object's defined title card.
-        """
-
-        # Command to add the gradient overlay if indicated
-        gradient_command = []
-        if not self.omit_gradient:
-            gradient_command = [
-                f'"{self.__GRADIENT_IMAGE.resolve()}"',
-                f'-composite',
-            ]
+        """Create this object's defined Title Card."""
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
             # Resize and apply styles to source image
             *self.resize_and_style,
-            # Fit within frame
-            f'-gravity center',
-            f'-resize "{self.WIDTH-(25 * 2)}x{self.HEIGHT - (25 * 2)}^"',
-            f'-extent "{self.TITLE_CARD_SIZE}"',
-            # Overlay gradient
-            *gradient_command,
-            # Add remaining sub-components
-            *self.title_text_commands,
+            # Add gradient overlay
+            *self.gradient_commands,
+            # Add title text with a drop shadow
+            *self.add_drop_shadow(
+                self.title_text_commands,
+                '95x6-12+12',
+                x=0, y=self.font_vertical_shift,
+            ),
+            # Add index text
             *self.index_text_commands,
-            # Overlay frame
-            f'"{self.FRAME_IMAGE.resolve()}"',
-            f'-composite',
-            # Recolor frame
-            *self.border_color_commands,
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

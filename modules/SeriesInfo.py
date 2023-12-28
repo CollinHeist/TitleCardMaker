@@ -32,7 +32,7 @@ class SeriesInfo(DatabaseInfoContainer):
             tmdb_id: Optional[int] = None,
             tvdb_id: Optional[int] = None,
             tvrage_id: Optional[int] = None,
-            match_titles: Optional[bool] = True,
+            match_titles: bool = True,
         ) -> None:
         """
         Create a SeriesInfo object that defines a series described by

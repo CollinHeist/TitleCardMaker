@@ -1,11 +1,15 @@
 from pathlib import Path
-from typing import Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
+if TYPE_CHECKING:
+    from modules.Font import Font
+
 
 Position = Literal['left', 'surround', 'right']
+
 
 class FrameTitleCard(BaseCardType):
     """
@@ -226,25 +230,53 @@ class FrameTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def modify_extras(
+            extras: dict,
+            custom_font: bool,
+            custom_season_titles: bool,
+        ) -> None:
+        """
+        Modify the given extras based on whether font or season titles
+        are custom.
+
+        Args:
+            extras: Dictionary to modify.
+            custom_font: Whether the font are custom.
+            custom_season_titles: Whether the season titles are custom.
+        """
+
+        if not custom_font:
+            if 'episode_text_color' in extras:
+                extras['episode_text_color'] = FrameTitleCard.EPISODE_TEXT_COLOR
+
+
+    @staticmethod
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Determines whether the given arguments represent a custom font
         for this card. This CardType only uses custom font cases.
 
         Args:
             font: The Font being evaluated.
+            extras: Dictionary of extras for evaluation.
 
         Returns:
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.color != FrameTitleCard.TITLE_COLOR)
+        custom_extras = (
+            ('episode_text_color' in extras
+                and extras['episode_text_color'] != FrameTitleCard.EPISODE_TEXT_COLOR)
+        )
+
+        return (custom_extras
+            or ((font.color != FrameTitleCard.TITLE_COLOR)
             or (font.file != FrameTitleCard.TITLE_FONT)
             or (font.kerning != 1.0)
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
             or (font.size != 1.0)
-            or (font.vertical_shift != 0)
+            or (font.vertical_shift != 0))
         )
 
 
@@ -272,10 +304,7 @@ class FrameTitleCard(BaseCardType):
 
 
     def create(self) -> None:
-        """
-        Make the necessary ImageMagick and system calls to create this
-        object's defined title card.
-        """
+        """Create this object's defined Title Card."""
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',

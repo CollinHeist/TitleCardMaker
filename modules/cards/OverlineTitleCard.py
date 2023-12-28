@@ -1,10 +1,13 @@
 from pathlib import Path
-from typing import Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import (
     BaseCardType, Coordinate, ImageMagickCommands, Rectangle,
 )
 from modules.ImageMagickInterface import Dimensions
+
+if TYPE_CHECKING:
+    from modules.Font import Font
 
 
 class OverlineTitleCard(BaseCardType):
@@ -85,9 +88,7 @@ class OverlineTitleCard(BaseCardType):
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this Card.
-        """
+        """Construct a new instance of this Card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -150,9 +151,14 @@ class OverlineTitleCard(BaseCardType):
         else:
             vertical_position += 110
 
+        # Use increased interline spacing for top line positioning
+        if self.line_position == 'top':
+            interline_spacing =  25 + self.font_interline_spacing
+        else:
+            interline_spacing = -25 + self.font_interline_spacing
+
         # Font characteristics
         size = 55 * self.font_size
-        interline_spacing = 25 + self.font_interline_spacing
         interword_spacing = 50 + self.font_interword_spacing
         kerning = -2 * self.font_kerning
         stroke_width = 5 * self.font_stroke_width
@@ -314,25 +320,34 @@ class OverlineTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
 
         Args:
             font: The Font being evaluated.
+            extras: Dictionary of extras for evaluation.
 
         Returns:
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.color != OverlineTitleCard.TITLE_COLOR)
+        custom_extras = (
+            ('episode_text_color' in extras
+                and extras['episode_text_color'] != OverlineTitleCard.EPISODE_TEXT_COLOR)
+            or ('line_color' in extras
+                and extras['line_color'] != OverlineTitleCard.TITLE_COLOR)
+        )
+
+        return (custom_extras
+            or ((font.color != OverlineTitleCard.TITLE_COLOR)
             or (font.file != OverlineTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
-            or (font.vertical_shift != 0)
+            or (font.vertical_shift != 0))
         )
 
 

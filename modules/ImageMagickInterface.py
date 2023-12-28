@@ -1,15 +1,15 @@
-from logging import Logger
+from os import environ, name as os_name
 from pathlib import Path
 from shlex import split as command_split
 from subprocess import Popen, PIPE, TimeoutExpired
-from typing import Literal, NamedTuple, Optional
+from typing import Literal, NamedTuple, Optional, overload
 
 from imagesize import get as im_get
 
 from modules.Debug import log
 
 
-class Dimensions(NamedTuple):
+class Dimensions(NamedTuple): # pylint: disable=missing-class-docstring
     width: float
     height: float
 
@@ -40,7 +40,7 @@ class ImageMagickInterface:
     TEMPORARY_SVG_FILE = TEMP_DIR / 'temp_logo.svg'
 
     """Characters that must be escaped in commands"""
-    __REQUIRED_ESCAPE_CHARACTERS = ('"', '`', '%')
+    __REQUIRED_ESCAPE_CHARACTERS = ('"', '`', '%', '\\')
 
     """Substrings that must be present in --version output"""
     __REQUIRED_VERSION_SUBSTRINGS = ('Version','Copyright','License','Features')
@@ -49,7 +49,7 @@ class ImageMagickInterface:
 
 
     def __init__(self,
-            container: Optional[str] = 'ImageMagick',
+            container: Optional[str] = None,
             use_magick_prefix: bool = False,
             timeout: int = COMMAND_TIMEOUT_SECONDS,
         ) -> None:
@@ -91,8 +91,15 @@ class ImageMagickInterface:
         return all(_ in output for _ in self.__REQUIRED_VERSION_SUBSTRINGS)
 
 
+    @overload
     @staticmethod
-    def escape_chars(string: str) -> str:
+    def escape_chars(string: Literal[None]) -> Literal[None]: ...
+    @overload
+    @staticmethod
+    def escape_chars(string: str) -> str: ...
+
+    @staticmethod
+    def escape_chars(string: Optional[str]) -> Optional[str]:
         """
         Escape the necessary characters within the given string so that
         they can be sent to ImageMagick.
@@ -128,6 +135,10 @@ class ImageMagickInterface:
             Tuple of the STDOUT and STDERR of the executed command.
         """
 
+        # Un-escape \( and \) into ( and )
+        if os_name == 'nt':
+            command = command.replace('\(', '(').replace('\)', ')')
+
         # If a docker image ID is specified, execute the command in that container
         # otherwise, execute on the host machine (no docker wrapper)
         if self.use_docker:
@@ -136,7 +147,12 @@ class ImageMagickInterface:
             command = f'{self.prefix}{command}'
 
         # Split command into list of strings for Popen
-        cmd = command_split(command)
+        try:
+            cmd = command_split(command)
+        except ValueError as exc:
+            log.exception(f'Invalid ImageMagick command', exc)
+            log.debug(command)
+            return b'', b''
 
         # Execute, capturing stdout and stderr
         stdout, stderr = b'', b''
@@ -158,7 +174,7 @@ class ImageMagickInterface:
 
     def run_get_output(self, command: str) -> str:
         """
-        Wrapper for run(), but return the byte-decoded stdout.
+        Wrapper for `run()`, but return the byte-decoded stdout.
 
         Args:
             command: The command (as string) being executed.
@@ -175,7 +191,7 @@ class ImageMagickInterface:
             return b''.join(output).decode('iso8859')
 
 
-    def delete_intermediate_images(self, *paths: tuple[Path]) -> None:
+    def delete_intermediate_images(self, *paths: Path) -> None:
         """
         Delete all the provided intermediate files.
 

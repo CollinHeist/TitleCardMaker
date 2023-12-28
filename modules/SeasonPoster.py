@@ -1,10 +1,11 @@
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
-from modules.ImageMaker import ImageMaker
+from modules.ImageMaker import ImageMagickCommands, ImageMaker
 
 
-ImageMagickCommands = list[str]
+_LogoPlacement = Literal['top', 'middle', 'bottom']
+_TextPlacement = Literal['top', 'bottom']
 
 
 class SeasonPoster(ImageMaker):
@@ -28,8 +29,8 @@ class SeasonPoster(ImageMaker):
 
     __slots__ = (
         'source', 'destination', 'logo', 'season_text', 'font', 'font_color',
-        'font_size', 'font_kerning', 'top_placement', 'omit_gradient',
-        'omit_logo',
+        'font_size', 'font_kerning', 'logo_placement', 'omit_gradient',
+        'omit_logo', 'text_placement',
     )
 
 
@@ -42,9 +43,10 @@ class SeasonPoster(ImageMaker):
             font_color: str = SEASON_TEXT_COLOR,
             font_size: float = 1.0,
             font_kerning: float = 1.0,
-            top_placement: bool = False,
+            logo_placement: _LogoPlacement = 'top',
             omit_gradient: bool = False,
             omit_logo: bool = False,
+            text_placement: _TextPlacement = 'top',
         ) -> None:
         """
         Initialize this SeasonPoster object.
@@ -52,17 +54,16 @@ class SeasonPoster(ImageMaker):
         Args:
             source: Path to the source image to use for the poster.
             logo: Path to the logo file to use on the poster.
-            destination: Path to the desination file to write the poster
+            destination: Path to the desination file to create.
             season_text: Season text to utilize on the poster.
             font: Path to the font file to use for the season text.
             font_color: Font color to use for the season text.
             font_size: Font size scalar to use for the season text.
             font_kerning: Font kerning scalar to use for the season text.
-            top_placement: Whether to place the logo and season text on
-                the top of the created poster (True), or the bottom
-                (False).
+            logo_placement: Where to place the logo on the poster.
             omit_gradient: Whether to omit the gradient overlay.
             omit_logo: Whether to omit the logo overlay.
+            text_placement: Where to place text.
         """
 
         # Initialize parent object for the ImageMagickInterface
@@ -81,8 +82,9 @@ class SeasonPoster(ImageMaker):
         self.font_color = font_color
         self.font_size = font_size
         self.font_kerning = font_kerning
-        self.top_placement = top_placement
+        self.logo_placement: _LogoPlacement = logo_placement
         self.omit_gradient = omit_gradient
+        self.text_placement: _TextPlacement = text_placement
 
 
     def __get_logo_height(self) -> int:
@@ -111,19 +113,14 @@ class SeasonPoster(ImageMaker):
 
     @property
     def gradient_commands(self) -> ImageMagickCommands:
-        """
-        Subcommand to overlay the gradient to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommands to overlay the gradient to the source image."""
 
         # If omitting the gradient, return empty commands
         if self.omit_gradient:
             return []
 
         # Top placement, rotate gradient
-        if self.top_placement:
+        if self.text_placement == 'top':
             return [
                 f'\( "{self.GRADIENT_OVERLAY.resolve()}"',
                 f'-rotate 180 \)',
@@ -141,20 +138,17 @@ class SeasonPoster(ImageMaker):
 
     @property
     def logo_commands(self) -> ImageMagickCommands:
-        """
-        Subcommand to overlay the logo to the source image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
+        """Subcommands to overlay the logo to the source image."""
 
         # If omitting the logo, return empty commands
         if self.logo is None:
             return []
 
         # Offset and gravity are determined by placement
-        gravity = 'north' if self.top_placement else 'south'
-        logo_offset = 212 if self.top_placement else 356
+        gravity = {
+            'top': 'north', 'middle': 'center', 'bottom': 'south'
+        }[self.logo_placement]
+        offset = {'top': 212, 'middle': 0, 'bottom': 356}[self.logo_placement]
 
         return [
             # Overlay logo
@@ -166,9 +160,36 @@ class SeasonPoster(ImageMaker):
             # Begin logo merge
             f'-gravity {gravity}',
             f'-compose Atop',
-            f'-geometry +0{logo_offset:+}',
+            f'-geometry +0{offset:+}',
             # Merge logo and source
             f'-composite',
+        ]
+
+
+    @property
+    def text_commands(self) -> ImageMagickCommands:
+        """Subcommands to add the text to the image."""
+
+        font_size = 20.0 * self.font_size
+        kerning = 30 * self.font_kerning
+
+        # Determine season text offset depending on orientation
+        gravity = 'north' if self.text_placement == 'top' else 'south'
+        if self.text_placement == 'top':
+            if self.logo is None or self.logo_placement != 'top':
+                text_offset = 212
+            else:
+                text_offset = 212 + self.__get_logo_height() + 60
+        else:
+            text_offset = 212
+
+        return [
+            f'-gravity {gravity}',
+            f'-font "{self.font.resolve()}"',
+            f'-fill "{self.font_color}"',
+            f'-pointsize {font_size}',
+            f'-kerning {kerning}',
+            f'-annotate +0+{text_offset} "{self.season_text}"',
         ]
 
 
@@ -182,19 +203,6 @@ class SeasonPoster(ImageMaker):
 
         # Create parent directories
         self.destination.parent.mkdir(parents=True, exist_ok=True)
-
-        # Get the scaled values for this poster
-        font_size = 20.0 * self.font_size
-        kerning = 30 * self.font_kerning
-
-        # Determine season text offset depending on orientation
-        if self.top_placement:
-            if self.logo is None:
-                text_offset = 212
-            else:
-                text_offset = 212 + self.__get_logo_height() + 60
-        else:
-            text_offset = 212
 
         # Create the command
         command = ' '.join([
@@ -210,12 +218,7 @@ class SeasonPoster(ImageMaker):
             # Add logo
             *self.logo_commands,
             # Write season text
-            f'-gravity ' + ('north' if self.top_placement else 'south'),
-            f'-font "{self.font.resolve()}"',
-            f'-fill "{self.font_color}"',
-            f'-pointsize {font_size}',
-            f'-kerning {kerning}',
-            f'-annotate +0+{text_offset} "{self.season_text}"',
+            *self.text_commands,
             f'"{self.destination.resolve()}"',
         ])
 

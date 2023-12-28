@@ -1,6 +1,5 @@
-from logging import Logger
 from pathlib import Path
-from typing import Union
+from typing import Any, Union
 
 from re import IGNORECASE, compile as re_compile
 from requests import get, Session
@@ -36,7 +35,8 @@ class WebInterface:
     def __init__(self,
             name: str,
             verify_ssl: bool = True, *,
-            cache: bool = True) -> None:
+            cache: bool = True,
+        ) -> None:
         """
         Construct a new instance of a WebInterface. This creates creates
         cached request and results lists, and establishes a session for
@@ -97,7 +97,7 @@ class WebInterface:
         ).json()
 
 
-    def get(self, url: str, params: dict, *, cache: bool = True) -> dict:
+    def get(self, url: str, params: dict, *, cache: bool = True) -> Any:
         """
         Wrapper for getting the JSON return of the specified GET
         request. If the provided URL and parameters are identical to the
@@ -109,7 +109,7 @@ class WebInterface:
             Parameters to pass to GET.
 
         Returns:
-            Dict made from the JSON return of the specified GET request.
+            Parsed JSON return of the specified GET request.
         """
 
         # If not caching, just query and return

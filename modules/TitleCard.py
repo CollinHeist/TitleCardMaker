@@ -1,5 +1,6 @@
 from pathlib import Path
 from re import match, sub, IGNORECASE
+from typing import TYPE_CHECKING
 
 from modules import global_objects
 from modules.BaseCardType import BaseCardType
@@ -10,12 +11,14 @@ from modules.SeriesInfo import SeriesInfo
 
 # Built-in BaseCardType classes
 from modules.cards.AnimeTitleCard import AnimeTitleCard
+from modules.cards.BannerTitleCard import BannerTitleCard
 from modules.cards.CalligraphyTitleCard import CalligraphyTitleCard
 from modules.cards.ComicBookTitleCard import ComicBookTitleCard
 from modules.cards.CutoutTitleCard import CutoutTitleCard
 from modules.cards.DividerTitleCard import DividerTitleCard
 from modules.cards.FadeTitleCard import FadeTitleCard
 from modules.cards.FrameTitleCard import FrameTitleCard
+from modules.cards.InsetTitleCard import InsetTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
 from modules.cards.MarvelTitleCard import MarvelTitleCard
@@ -23,12 +26,19 @@ from modules.cards.OlivierTitleCard import OlivierTitleCard
 from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
 from modules.cards.RomanNumeralTitleCard import RomanNumeralTitleCard
+from modules.cards.ShapeTitleCard import ShapeTitleCard
 from modules.cards.StandardTitleCard import StandardTitleCard
 from modules.cards.StarWarsTitleCard import StarWarsTitleCard
 from modules.cards.TextlessTitleCard import TextlessTitleCard
 from modules.cards.TintedFrameTitleCard import TintedFrameTitleCard
 from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
+
+
+if TYPE_CHECKING:
+    from modules.Episode import Episode, MultiEpisode
+    from modules.Profile import Profile
+
 
 class TitleCard:
     """
@@ -61,6 +71,7 @@ class TitleCard:
     CARD_TYPES = {
         '4x3': FadeTitleCard,
         'anime': AnimeTitleCard,
+        'banner': BannerTitleCard,
         'blurred border': TintedFrameTitleCard,
         'calligraphy': CalligraphyTitleCard,
         'comic book': ComicBookTitleCard,
@@ -71,6 +82,7 @@ class TitleCard:
         'generic': StandardTitleCard,
         'gundam': PosterTitleCard,
         'import': TextlessTitleCard,
+        'inset': InsetTitleCard,
         'ishalioh': OlivierTitleCard,
         'landscape': LandscapeTitleCard,
         'logo': LogoTitleCard,
@@ -85,6 +97,7 @@ class TitleCard:
         'reality tv': LogoTitleCard,
         'roman': RomanNumeralTitleCard,
         'roman numeral': RomanNumeralTitleCard,
+        'shape': ShapeTitleCard,
         'sherlock': TintedGlassTitleCard,
         'standard': StandardTitleCard,
         'star wars': StarWarsTitleCard,
@@ -98,8 +111,8 @@ class TitleCard:
 
 
     def __init__(self,
-            episode: 'Episode', # type: ignore
-            profile: 'Profile', # type: ignore
+            episode: 'Episode',
+            profile: 'Profile',
             title_characteristics: dict,
             **extra_characteristics,
         ) -> None:
@@ -216,7 +229,7 @@ class TitleCard:
     def get_multi_output_filename(
             format_string: str,
             series_info: SeriesInfo,
-            multi_episode: 'MultiEpisode', # type: ignore
+            multi_episode: 'MultiEpisode',
             media_directory: Path
         ) -> Path:
         """
@@ -251,8 +264,10 @@ class TitleCard:
             range_text = f'{episode_text}-{end_episode_text}'
 
             # Completely modified format string with keys for start/end episodes
-            modified_format_string = sub(r'e?{episode_start.*?}', range_text,
-                                         mod_format_string, flags=IGNORECASE)
+            modified_format_string = sub(
+                r'e?{episode_start.*?}', range_text, mod_format_string,
+                flags=IGNORECASE
+            )
         else:
             # No episode key to modify, format the original string
             modified_format_string = format_string

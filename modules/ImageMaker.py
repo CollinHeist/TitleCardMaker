@@ -2,14 +2,18 @@ from abc import ABC, abstractmethod
 from collections import namedtuple
 from pathlib import Path
 from re import findall
-from typing import Literal, Optional
+from typing import TYPE_CHECKING, Iterable, Literal, Optional
 
 from modules import global_objects
 from modules.Debug import log
 from modules.ImageMagickInterface import ImageMagickInterface
 
+if TYPE_CHECKING:
+    from modules.PreferenceParser import PreferenceParser
+
 
 Dimensions = namedtuple('Dimensions', ('width', 'height'))
+ImageMagickCommands = list[str]
 
 
 class ImageMaker(ABC):
@@ -45,7 +49,9 @@ class ImageMaker(ABC):
 
 
     @abstractmethod
-    def __init__(self, *, preferences: Optional['Preferences'] = None) -> None:
+    def __init__(self, *,
+            preferences: Optional['PreferenceParser'] = None,
+        ) -> None:
         """
         Initializes a new instance. This gives all subclasses access to
         an ImageMagickInterface via the image_magick attribute.
@@ -113,7 +119,8 @@ class ImageMaker(ABC):
 
         try:
             # Label text produces duplicate Metrics
-            sum_ = lambda v: sum(v)//(2 if ' label:"' in text_command else 1)
+            def sum_(v: Iterable[float]) -> float:
+                return sum(v) // (2 if ' label:"' in text_command else 1)
 
             # Process according to given methods
             return Dimensions(

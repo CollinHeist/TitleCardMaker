@@ -1,7 +1,10 @@
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
+
+if TYPE_CHECKING:
+    from modules.Font import Font
 
 
 class StandardTitleCard(BaseCardType):
@@ -18,7 +21,7 @@ class StandardTitleCard(BaseCardType):
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
         'max_line_width': 32,   # Character count to begin splitting titles
-        'max_line_count': 3,    # Maximum number of lines a title can take up
+        'max_line_count': 4,    # Maximum number of lines a title can take up
         'top_heavy': False,     # This class uses bottom heavy titling
     }
 
@@ -49,6 +52,7 @@ class StandardTitleCard(BaseCardType):
         'font_file', 'font_interline_spacing', 'font_interword_spacing',
         'font_kerning', 'font_size', 'font_stroke_width', 'font_vertical_shift',
         'episode_text_color', 'omit_gradient', 'stroke_color', 'separator',
+        'episode_text_font_size',
     )
 
     def __init__(self,
@@ -72,13 +76,12 @@ class StandardTitleCard(BaseCardType):
             separator: str = '•',
             stroke_color: str = 'black',
             episode_text_color: str = SERIES_COUNT_TEXT_COLOR,
+            episode_text_font_size: float = 1.0,
             omit_gradient: bool = False,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this card.
-        """
+        """Construct a new instance of this card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -108,63 +111,63 @@ class StandardTitleCard(BaseCardType):
         self.omit_gradient = omit_gradient
         self.stroke_color = stroke_color
         self.episode_text_color = episode_text_color
+        self.episode_text_font_size = episode_text_font_size
 
 
     @property
     def index_commands(self) -> ImageMagickCommands:
         """Subcommand for adding the index text to the image."""
 
+        # All text hidden, return empty commands
         if self.hide_season_text and self.hide_episode_text:
             return []
+
+        # Base commands
+        size = 67.75 * self.episode_text_font_size
+        base_commands = [
+            f'-background transparent',
+            f'-kerning 5.42',
+            f'-pointsize {size:.2f}',
+            f'-interword-spacing 14.5',
+            f'-gravity north',
+        ]
 
         # Sub-command for adding season/episode text
         if self.hide_season_text:
             return [
-                f'-kerning 5.42',
-                f'-pointsize 67.75',
-                f'-interword-spacing 14.5',
+                *base_commands,
                 f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
-                f'-gravity center',
                 f'-fill black',
                 f'-stroke black',
                 f'-strokewidth 6',
-                f'-annotate +0+697.2 "{self.episode_text}"',
+                f'-annotate +0+1555 "{self.episode_text}"',
                 f'-fill "{self.episode_text_color}"',
                 f'-stroke "{self.episode_text_color}"',
                 f'-strokewidth 0.75',
-                f'-annotate +0+697.2 "{self.episode_text}"',
+                f'-annotate +0+1555 "{self.episode_text}"',
             ]
 
         if self.hide_episode_text:
             return [
-                # Global text effects
-                f'-background transparent',
-                f'-gravity center',
-                f'-kerning 5.42',
-                f'-pointsize 67.75',
-                f'-interword-spacing 14.5',
+                *base_commands,
                 # Black stroke behind primary text
                 f'-fill black',
                 f'-stroke black',
                 f'-strokewidth 6',
                 # Add season text
                 f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
-                f'-annotate +0+697.2 "{self.season_text}"',
+                f'-annotate +0+1555 "{self.episode_text}"',
                 # Primary text
                 f'-fill "{self.episode_text_color}"',
                 f'-stroke "{self.episode_text_color}"',
                 f'-strokewidth 0.75',
                 # Add season text
-                f'-annotate +0+697.2 "{self.season_text}"',
+                f'-annotate +0+1555 "{self.episode_text}"',
             ]
 
         return [
-            # Global text effects
-            f'-background transparent',
+            *base_commands,
             f'-gravity center',
-            f'-kerning 5.42',
-            f'-pointsize 67.75',
-            f'-interword-spacing 14.5',
             # Black stroke behind primary text
             f'\( -fill black',
             f'-stroke black',
@@ -178,9 +181,11 @@ class StandardTitleCard(BaseCardType):
             # Combine season+episode text into one "image"
             f'+smush 25 \)',
             # Add season+episode text "image" to source image
-            f'-geometry +0+697.2',
+            f'-gravity north',
+            f'-geometry +0+1555',
             f'-composite',
             # Primary text
+            f'-gravity center',
             f'\( -fill "{self.episode_text_color}"',
             f'-stroke "{self.episode_text_color}"',
             f'-strokewidth 0.75',
@@ -192,16 +197,15 @@ class StandardTitleCard(BaseCardType):
             f'label:"{self.episode_text}"',
             f'+smush 30 \)',
             # Add text to source image
-            f'-geometry +0+697.2',
+            f'-gravity north',
+            f'-geometry +0+1557',
             f'-composite',
         ]
 
 
     @property
     def black_title_commands(self) -> ImageMagickCommands:
-        """
-        Subcommands for adding the black stroke behind the title text.
-        """
+        """Subcommand to add the black stroke behind the title text."""
 
         # Stroke disabled, return empty command
         if self.font_stroke_width == 0:
@@ -239,31 +243,44 @@ class StandardTitleCard(BaseCardType):
             if 'episode_text_color' in extras:
                 extras['episode_text_color'] = \
                     StandardTitleCard.SERIES_COUNT_TEXT_COLOR
+            if 'episode_text_font_size' in extras:
+                extras['episode_text_font_size'] = 1.0
             if 'stroke_color' in extras:
                 extras['stroke_color'] = 'black'
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
 
         Args:
             font: The Font being evaluated.
+            extras: Dictionary of extras for evaluation.
 
         Returns:
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.color != StandardTitleCard.TITLE_COLOR)
+        custom_extras = (
+            ('episode_text_color' in extras
+                and extras['episode_text_color'] != StandardTitleCard.SERIES_COUNT_TEXT_COLOR)
+            or ('episode_text_font_size' in extras
+                and extras['episode_text_font_size'] != 1.0)
+            or ('stroke_color' in extras
+                and extras['stroke_color'] != 'black')
+        )
+
+        return (custom_extras
+            or ((font.color != StandardTitleCard.TITLE_COLOR)
             or (font.file != StandardTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
             or (font.stroke_width != 1.0)
-            or (font.vertical_shift != 0)
+            or (font.vertical_shift != 0))
         )
 
 

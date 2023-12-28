@@ -52,7 +52,7 @@ class YamlReader:
 
 
     def get(self,
-            *attributes: tuple[str],
+            *attributes: str,
             type_: Optional[Callable] = None,
             default: Any = None,
         ):
@@ -98,7 +98,7 @@ class YamlReader:
             return default
 
 
-    def _is_specified(self, *attributes: tuple[str]) -> bool:
+    def _is_specified(self, *attributes: str) -> bool:
         """
         Determines whether the given attribute/sub-attribute has been
         manually  specified in the show's YAML.

@@ -1,9 +1,12 @@
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.CleanPath import CleanPath
 from modules.Debug import log
+
+if TYPE_CHECKING:
+    from modules.Font import Font
 
 
 class LogoTitleCard(BaseCardType):
@@ -79,7 +82,7 @@ class LogoTitleCard(BaseCardType):
             grayscale: bool = False,
             logo: Optional[str] = None,
             background: str = 'black',
-            separator: str = '•', 
+            separator: str = '•',
             stroke_color: str = 'black',
             omit_gradient: bool = True,
             use_background_image: bool = False,
@@ -222,27 +225,56 @@ class LogoTitleCard(BaseCardType):
             ]
 
 
+
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def modify_extras(
+            extras: dict,
+            custom_font: bool,
+            custom_season_titles: bool,
+        ) -> None:
+        """
+        Modify the given extras based on whether font or season titles
+        are custom.
+
+        Args:
+            extras: Dictionary to modify.
+            custom_font: Whether the font are custom.
+            custom_season_titles: Whether the season titles are custom.
+        """
+
+        if not custom_font:
+            if 'stroke_color' in extras:
+                extras['stroke_color'] = 'black'
+
+
+    @staticmethod
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Determines whether the given font characteristics constitute a
         default or custom font.
 
         Args:
             font: The Font being evaluated.
+            extras: Dictionary of extras for evaluation.
 
         Returns:
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.color != LogoTitleCard.TITLE_COLOR)
+        custom_extras = (
+            ('stroke_color' in extras
+                and extras['stroke_color'] != 'black')
+        )
+
+        return (custom_extras
+            or ((font.color != LogoTitleCard.TITLE_COLOR)
             or (font.file != LogoTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
             or (font.stroke_width != 1.0)
-            or (font.vertical_shift != 0)
+            or (font.vertical_shift != 0))
         )
 
 

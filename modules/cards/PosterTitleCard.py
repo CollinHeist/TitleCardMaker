@@ -1,9 +1,12 @@
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import BaseCardType
 from modules.CleanPath import CleanPath
 from modules.Debug import log
+
+if TYPE_CHECKING:
+    from modules.Font import Font
 
 SeriesExtra = Optional
 
@@ -152,7 +155,7 @@ class PosterTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool: # type: ignore
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Determines whether the given arguments represent a custom font
         for this card. This CardType does not use custom fonts, so this
@@ -160,16 +163,23 @@ class PosterTitleCard(BaseCardType):
 
         Args:
             font: The Font being evaluated.
+            extras: Dictionary of extras for evaluation.
 
         returns:
             False, as fonts are not customizable with this card.
         """
 
-        return ((font.color != PosterTitleCard.TITLE_COLOR)
+        custom_extras = (
+            ('episode_text_color' in extras
+                and extras['episode_text_color'] != PosterTitleCard.EPISODE_TEXT_COLOR)
+        )
+
+        return (custom_extras
+            or ((font.color != PosterTitleCard.TITLE_COLOR)
             or (font.file != PosterTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
-            or (font.size != 1.0)
+            or (font.size != 1.0))
         )
 
 
