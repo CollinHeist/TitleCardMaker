@@ -8,7 +8,13 @@ from modules.ImageMagickInterface import ImageMagickInterface, Dimensions
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
 
-__all__ = ['ImageMagickInterface', 'Dimensions', 'ImageMaker',]
+
+ImageMagickCommands = list[str]
+
+
+__all__ = [
+    'ImageMagickInterface', 'Dimensions', 'ImageMaker', 'ImageMagickCommands'
+]
 
 
 class ImageMaker(ABC):

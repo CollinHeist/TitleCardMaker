@@ -4,19 +4,18 @@ from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 from titlecase import titlecase
 
 from app.schemas.card import CardTypeDescription, Extra, TitleCharacteristics
-from modules.ImageMaker import ImageMaker, Dimensions
+from modules.ImageMaker import Dimensions, ImageMagickCommands, ImageMaker
 
 if TYPE_CHECKING:
     from modules.Font import Font
     from app.models.preferences import Preferences
 
 CardDescription = CardTypeDescription
-ImageMagickCommands = list[str]
 
 
 __all__ = [
-    'CardDescription', 'Extra', 'ImageMagickCommands', 'ImageMaker',
-    'Dimensions', 'Coordinate', 'Rectangle', 'BaseCardType',
+    'BaseCardType', 'CardDescription', 'Coordinate', 'Dimensions', 'Extra',
+    'ImageMagickCommands', 'ImageMaker', 'Rectangle',
 ]
 
 
@@ -95,6 +94,39 @@ class Rectangle:
         """Draw this Rectangle."""
 
         return f'-draw "rectangle {str(self)}"'
+
+
+class Shadow:
+    """Class which defines a shadow string."""
+
+    __slots__ = ('opacity', 'sigma', 'x', 'y')
+
+    def __init__(self,
+            *,
+            opacity: int = 95,
+            sigma: int = 2,
+            x: int = 10,
+            y: int = 10,
+        ) -> None:
+        """Construct a shadow with the given parameters."""
+
+        self.opacity = opacity
+        self.sigma = sigma
+        self.x = x
+        self.y = y
+
+
+    def __str__(self) -> str:
+        """String representation of this shadow effect."""
+
+        return f'{self.opacity}x{self.sigma}{self.x:+}{self.y:+}'
+
+
+    @property
+    def as_command(self) -> str:
+        """Wrapper for `__str__`."""
+
+        return str(self)
 
 
 class BaseCardType(ImageMaker):
@@ -430,7 +462,7 @@ class BaseCardType(ImageMaker):
 
     def add_drop_shadow(self,
             commands: ImageMagickCommands,
-            shadow: str,
+            shadow: Union[str, Shadow],
             x: int = 0,
             y: int = 0,
             *,

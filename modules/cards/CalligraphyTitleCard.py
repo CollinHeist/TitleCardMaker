@@ -36,24 +36,28 @@ class CalligraphyTitleCard(BaseCardType):
                 tooltip=(
                     'Either <v>True</v> or <v>False</v>. Default is <v>True</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Texture Randomization Toggle',
                 identifier='randomize_texture',
                 description='Whether to randomly reposition the texture overlay',
                 tooltip=(
                     'Either <v>True</v> or <v>False</v>. Default is <v>True</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
                 tooltip='Defaults to match the Font color.'
-            ), Extra(
+            ),
+            Extra(
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the episode text',
                 tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
-            ), Extra(
+            ),
+            Extra(
                 name='Offset Title Toggle',
                 identifier='offset_titles',
                 description='Whether to offset multi-line titles',
@@ -62,23 +66,27 @@ class CalligraphyTitleCard(BaseCardType):
                     'multi-line titles will be adjusted so the second line '
                     'hangs below the first. Default is <v>True</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Separator Character',
                 identifier='separator',
                 description='Character to separate season and episode text',
                 tooltip='Default is <v>-</v>.'
-            ), Extra(
+            ),
+            Extra(
                 name='Shadow Color',
                 identifier='shadow_color',
                 description='Color of the text drop shadow.',
                 tooltip='Default is <v>black</v>.',
-            ), Extra(
+            ),
+            Extra(
                 name='Logo Size',
                 identifier='logo_size',
                 description=(
                     'Scalar for how much to scale the size of the logo element'
-                ), tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
-            ), Extra(
+                ), tooltip='Number ><v>0.0</v>. Default is <v>1.0</v>'
+            ),
+            Extra(
                 name='Deep Blur Unwatched Toggle',
                 identifier='deep_blur_if_unwatched',
                 description=(
@@ -90,10 +98,10 @@ class CalligraphyTitleCard(BaseCardType):
                 ),
             ),
         ], description=[
-            'Stylized Card featuring a prominent logo and all text in a '
-            'hand-written calligraphy font. A subtle matte paper texture is '
-            'applied to the image.', 'Looks best when a blurred/grayscale '
-            'style is utilized as the text and texture are more pronounced.'
+            'Stylized Card featuring a prominent logo and all text in a hand-'
+            'written calligraphy font. A subtle matte paper texture is applied '
+            'to the image.', 'Looks best when a blurred/grayscale style is '
+            'utilized as the text and texture are more pronounced.'
         ]
     )
 
@@ -413,7 +421,7 @@ class CalligraphyTitleCard(BaseCardType):
         ]
 
         return self.add_drop_shadow(
-            base_commands, '95x2+0+12', 0, y,
+            base_commands, '95x2+0+12', x=0, y=y,
             shadow_color=self.shadow_color,
         )
 
@@ -502,10 +510,7 @@ class CalligraphyTitleCard(BaseCardType):
 
 
     def create(self) -> None:
-        """
-        Make the necessary ImageMagick and system calls to create this
-        object's defined title card.
-        """
+        """Create this object's defined Title Card."""
 
         style_commands = self.resize_and_style
         if self.deep_blur:

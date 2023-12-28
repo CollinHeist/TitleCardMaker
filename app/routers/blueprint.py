@@ -27,7 +27,7 @@ from app.models.card import Card
 from app.schemas.blueprint import (
     DownloadableFile, ExportBlueprint, RemoteBlueprint,
 )
-from app.schemas.series import NewSeries, Series
+from app.schemas.series import Series
 from modules.SeriesInfo2 import SeriesInfo
 
 
