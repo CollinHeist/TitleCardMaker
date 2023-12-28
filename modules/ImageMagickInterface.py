@@ -1,3 +1,4 @@
+from os import environ, name as os_name
 from pathlib import Path
 from shlex import split as command_split
 from subprocess import Popen, PIPE, TimeoutExpired
