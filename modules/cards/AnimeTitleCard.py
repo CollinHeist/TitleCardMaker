@@ -388,10 +388,7 @@ class AnimeTitleCard(BaseCardType):
 
 
     def create(self) -> None:
-        """
-        Make the necessary ImageMagick and system calls to create this
-        object's defined title card.
-        """
+        """Create this object's defined Title Card."""
 
         # Sub-command to optionally add gradient
         gradient_command = []

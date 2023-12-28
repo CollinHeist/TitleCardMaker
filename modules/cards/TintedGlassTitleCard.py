@@ -328,7 +328,6 @@ class TintedGlassTitleCard(BaseCardType):
             custom_season_titles: Whether the season titles are custom.
         """
 
-        # Generic font, reset box adjustments and episode text color
         if not custom_font:
             if 'box_adjustments' in extras:
                 del extras['box_adjustments']

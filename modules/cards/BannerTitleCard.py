@@ -11,7 +11,9 @@ if TYPE_CHECKING:
 
 class BannerTitleCard(BaseCardType):
     """
-    This class describes a CardType that ...
+    This class describes a CardType that feature a solid-color banner at
+    the bottom of the image, with all text directly on top of or within
+    the banner. The banner and text can be recolored and resized.
     """
 
     """Directory where all reference files used by this card are stored"""
@@ -356,10 +358,7 @@ class BannerTitleCard(BaseCardType):
 
 
     def create(self) -> None:
-        """
-        Make the necessary ImageMagick and system calls to create this
-        object's defined title card.
-        """
+        """Create this object's defined Title Card."""
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',

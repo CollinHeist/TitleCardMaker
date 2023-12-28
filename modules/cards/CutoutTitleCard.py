@@ -226,10 +226,7 @@ class CutoutTitleCard(BaseCardType):
 
 
     def create(self) -> None:
-        """
-        Make the necessary ImageMagick and system calls to create this
-        object's defined title card.
-        """
+        """Create this object's defined Title Card."""
 
         # Masked Alpha Composition layers must be ordered as:
         # [Replace Black Parts of Mask] | [Replace White Parts of Mask] | [Mask]

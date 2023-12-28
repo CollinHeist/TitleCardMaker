@@ -89,6 +89,7 @@ class StarWarsTitleCard(BaseCardType):
         self.font_interline_spacing = font_interline_spacing
         self.font_interword_spacing = font_interword_spacing
         self.font_size = font_size
+        self.font_vertical_shift = font_vertical_shift
 
         # Attempt to detect prefix text
         self.hide_episode_text = hide_episode_text or len(episode_text) == 0

@@ -320,10 +320,7 @@ class InsetTitleCard(BaseCardType):
 
 
     def create(self) -> None:
-        """
-        Make the necessary ImageMagick and system calls to create this
-        object's defined title card.
-        """
+        """Create this object's defined Title Card."""
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',

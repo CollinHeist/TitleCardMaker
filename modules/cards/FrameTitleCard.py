@@ -276,7 +276,7 @@ class FrameTitleCard(BaseCardType):
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
             or (font.size != 1.0)
-            or (font.vertical_shift != 0)
+            or (font.vertical_shift != 0))
         )
 
 
@@ -304,10 +304,7 @@ class FrameTitleCard(BaseCardType):
 
 
     def create(self) -> None:
-        """
-        Make the necessary ImageMagick and system calls to create this
-        object's defined title card.
-        """
+        """Create this object's defined Title Card."""
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',

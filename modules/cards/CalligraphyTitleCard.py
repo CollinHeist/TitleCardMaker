@@ -334,7 +334,7 @@ class CalligraphyTitleCard(BaseCardType):
         ]
 
         return self.add_drop_shadow(
-            base_commands, '95x2+0+12', 0, y,
+            base_commands, '95x2+0+12', x=0, y=y,
             shadow_color=self.shadow_color,
         )
 
@@ -423,10 +423,7 @@ class CalligraphyTitleCard(BaseCardType):
 
 
     def create(self) -> None:
-        """
-        Make the necessary ImageMagick and system calls to create this
-        object's defined title card.
-        """
+        """Create this object's defined Title Card."""
 
         style_commands = self.resize_and_style
         if self.deep_blur:
