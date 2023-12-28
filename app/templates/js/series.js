@@ -108,12 +108,26 @@ function saveEpisodeConfig(episodeId) {
   });
 }
 
+/** Submit an API request to refresh the Episode data for this Series. */
+function refreshEpisodes() {
+  $('.button[data-action="refresh-episodes"]').toggleClass('disabled', true);
+  $.ajax({
+    type: 'POST',
+    url: '/api/episodes/series/{{series.id}}/refresh',
+    success: () => {
+      showInfoToast('Refreshed Episode Data');
+      getEpisodeData();
+    },
+    error: response => showErrorToast({title: 'Failed to Refresh Episode Data', response}),
+    complete: () => $('.button[data-action="refresh-episodes"]').toggleClass('disabled', false),
+  });
+}
+
 /**
  * Submit an API request to batch save all modified Episode configurations. This
  * uses the Episode ID's in the global `editedEpisodeIds` array.
  */
 function saveAllEpisodes() {
-  // Get update objects
   const updateEpisodeObjects = editedEpisodeIds.map(episodeId => {
     return {
       episode_id: episodeId,

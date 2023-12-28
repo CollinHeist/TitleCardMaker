@@ -876,17 +876,21 @@
           <!-- Episode Data Tab -->
           <div class="ui bottom attached tab segment" data-tab="episodes">
             <!-- Mass table editor buttons -->
-            <button id="new-episode" class="ui green tertiary button">
-              <i class="plus square outline icon"></i>
-              Add New Episode
+            <button data-action="refresh-episodes" class="ui green tertiary button" onclick="refreshEpisodes();">
+              <i class="sync icon"></i>
+              Refresh
             </button>
-            <button class="ui blue tertiary button" onclick="saveAllEpisodes();">
+            <button data-action="add-episode" id="new-episode" class="ui green tertiary button">
+              <i class="plus square outline icon"></i>
+              Add
+            </button>
+            <button data-action="save-episodes" class="ui blue tertiary button" onclick="saveAllEpisodes();">
               <i class="save outline icon"></i>
               Save All Changes
             </button>
-            <button class="ui red tertiary button" onclick="deleteAllEpisodes();">
+            <button data-action="delete-episodes" class="ui red tertiary button" onclick="deleteAllEpisodes();">
               <i class="trash alternate outline icon"></i>
-              Delete All Episodes
+              Delete All
             </button>
 
             <!-- Episode data table -->
