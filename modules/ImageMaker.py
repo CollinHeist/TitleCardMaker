@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 
 Dimensions = namedtuple('Dimensions', ('width', 'height'))
+ImageMagickCommands = list[str]
 
 
 class ImageMaker(ABC):
