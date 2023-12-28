@@ -10,7 +10,6 @@ if TYPE_CHECKING:
     from modules.PreferenceParser import PreferenceParser
     from modules.Font import Font
 
-SeriesExtra = Optional
 Element = Literal['index', 'logo', 'omit', 'title']
 MiddleElement = Literal['logo', 'omit']
 
@@ -100,6 +99,7 @@ class TintedFrameTitleCard(BaseCardType):
             logo: str = None,
             logo_size: float = 1.0,
             logo_vertical_shift: int = 0,
+            shadow_color: str = SHADOW_COLOR,
             blur_edges: bool = True,
             preferences: Optional['PreferenceParser'] = None,
             **unused,
