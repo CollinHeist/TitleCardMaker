@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional, Union
 
 from modules.BaseCardType import (
-    BaseCardType, ImageMagickCommands, Extra, CardDescription
+    BaseCardType, ImageMagickCommands, Extra, CardDescription, Shadow
 )
 
 if TYPE_CHECKING:
@@ -27,7 +27,6 @@ class LandscapeTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    # pylint: disable=line-too-long
     API_DETAILS = CardDescription(
         name='Landscape',
         identifier='landscape',
@@ -42,14 +41,17 @@ class LandscapeTitleCard(BaseCardType):
                 identifier='add_bounding_box',
                 description='Whether to add a bounding box around the title text',
                 tooltip=(
-                    'Either <v>True</v>, or <v>False</v>. Default <v>True</v>.'
+                    'Either <v>True</v>, or <v>False</v>. Default is '
+                    '<v>True</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Bounding Box Color',
                 identifier='box_color',
                 description='Color of the bounding box around the title text.',
                 tooltip='Matches the font color by default.',
-            ), Extra(
+            ),
+            Extra(
                 name='Bounding Box Adjustments',
                 identifier='box_adjustments',
                 description='Manual adjustments to the bounds of the bounding box',
@@ -59,7 +61,8 @@ class LandscapeTitleCard(BaseCardType):
                     'negative values move the face in. Default is '
                     '<v>0 0 0 0</v>. Unit is pixels.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Image Darkening',
                 identifier='darken',
                 description='Whether to dark all or parts of the image',
@@ -70,14 +73,19 @@ class LandscapeTitleCard(BaseCardType):
                     'legibility on very bright images. Default is <v>box</v>.'
                 ),
             ),
+            Extra(
+                name='Shadow Color',
+                identifier='shadow_color',
+                description='Color of the text drop shadow.',
+                tooltip='Default is <v>black</v>.',
+            ),
         ], description=[
             'Title-centric title cards that do not feature any text except a '
             'title.', 'These cards are intended for landscape-centric images.',
-            'A bounding box around the title text can be added and adjusted via'
-            ' extras.'
+            'A bounding box around the title text can be added and adjusted '
+            'via extras.'
         ]
     )
-    # pylint: enable=line-too-long
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'landscape'
@@ -110,15 +118,16 @@ class LandscapeTitleCard(BaseCardType):
 
     """Additional spacing (in pixels) between bounding box and title text"""
     BOUNDING_BOX_SPACING = 150
-
     """Color for darkening is black at 30% transparency"""
     DARKEN_COLOR = '#00000030'
+    """Color of the drop shadow"""
+    SHADOW_COLOR = 'black'
 
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'font_color', 'font_file',
         'font_interline_spacing', 'font_interword_spacing', 'font_kerning',
-        'font_size', 'box_color', 'font_vertical_shift', 'darken',
-        'add_bounding_box', 'box_adjustments'
+        'font_size', 'font_vertical_shift', 'add_bounding_box',
+        'box_adjustments', 'box_color', 'darken', 'shadow_color',
     )
 
     def __init__(self,
@@ -138,6 +147,7 @@ class LandscapeTitleCard(BaseCardType):
             box_adjustments: tuple[int, int, int, int] = (0, 0, 0, 0),
             box_color: str = TITLE_COLOR,
             darken: DarkenOption = 'box',
+            shadow_color: str = SHADOW_COLOR,
             preferences: Optional['Preferences'] = None,
             **unused,
         ) ->None:
@@ -152,6 +162,7 @@ class LandscapeTitleCard(BaseCardType):
         self.source_file = source_file
         self.output_file = card_file
         self.title_text = self.image_magick.escape_chars(title_text)
+
         self.font_color = font_color
         self.font_file = font_file
         self.font_interline_spacing = font_interline_spacing
@@ -165,6 +176,7 @@ class LandscapeTitleCard(BaseCardType):
         self.box_adjustments = box_adjustments
         self.box_color = box_color
         self.darken = darken
+        self.shadow_color = shadow_color
 
 
     def darken_commands(self,
@@ -217,38 +229,27 @@ class LandscapeTitleCard(BaseCardType):
         self.image_magick.run(command)
 
 
-    def get_bounding_box_coordinates(self,
-            font_size: float,
-            interline_spacing: float,
-            interword_spacing: int,
-            kerning: float,
-        ) -> BoxCoordinates:
-        """
-        Get the coordinates of the bounding box around the title.
-
-        Args:
-            font_size: Font size.
-            interline_spacing: Font interline spacing.
-            interword_spacing: Font interword spacing.
-            kerning: Font kerning.
-
-        Returns:
-            Tuple of x/y coordinates for the bounding box.
-        """
+    @property
+    def bounding_box_coordinates(self) -> BoxCoordinates:
+        """The coordinates of the bounding box around the title."""
 
         # If no bounding box indicated, return blank command
         if not self.add_bounding_box:
             return BoxCoordinates(0, 0, 0, 0)
 
+        font_size = 150 * self.font_size
+        interline_spacing = 60 + self.font_interline_spacing
+        interword_spacing = 40 + self.font_interword_spacing
+        kerning = 40 * self.font_kerning
+
         # Text-relevant commands
         text_command = [
             f'-font "{self.font_file}"',
-            f'-pointsize {font_size}',
             f'-gravity center',
-            f'-interline-spacing {interline_spacing}',
-            f'-interword-spacing {interword_spacing}',
-            f'-kerning {kerning}',
-            f'-interword-spacing 40',
+            f'-pointsize {font_size:.1f}',
+            f'-interline-spacing {interline_spacing:.1f}',
+            f'-interword-spacing {interword_spacing:.1f}',
+            f'-kerning {kerning:.2f}',
             f'-fill "{self.font_color}"',
             f'label:"{self.title_text}"',
         ]
@@ -296,27 +297,45 @@ class LandscapeTitleCard(BaseCardType):
 
         x_start, y_start, x_end, y_end = coordinates
 
-        return [
-            # Create blank image
-            f'\( -size 3200x1800',
-            f'xc:None',
-            # Create bounding box
-            f'-fill transparent',
-            f'-strokewidth 10',
-            f'-stroke "{self.box_color}"',
-            f'-draw "rectangle {x_start},{y_start},{x_end},{y_end}"',
-            # Create shadow of the bounding box
-            f'\( +clone',
-            f'-background None',
-            f'-shadow 80x3+10+10 \)',
-            # Underlay drop shadow
-            f'+swap',
-            f'-background None',
-            f'-layers merge',
-            f'+repage \)',
-            # Add bounding box and shadow to base image
-            f'-composite',
-        ]
+        return self.add_drop_shadow(
+            [
+                f'-size {self.TITLE_CARD_SIZE}',
+                f'xc:None',
+                f'-fill transparent',
+                f'-strokewidth 10',
+                f'-stroke "{self.box_color}"',
+                f'-draw "rectangle {x_start},{y_start},{x_end},{y_end}"',
+            ],
+            Shadow(opacity=85, sigma=3, x=10, y=10),
+            x=0, y=0,
+            shadow_color=self.shadow_color,
+        )
+
+
+    @property
+    def title_text_commands(self) -> ImageMagickCommands:
+        """Subcommands to add the title text to the image."""
+
+        font_size = 150 * self.font_size
+        interline_spacing = 60 + self.font_interline_spacing
+        interword_spacing = 40 + self.font_interword_spacing
+        kerning = 40 * self.font_kerning
+
+        return self.add_drop_shadow(
+            [
+                f'-font "{self.font_file}"',
+                f'-gravity center',
+                f'-pointsize {font_size:.1f}',
+                f'-interline-spacing {interline_spacing:.1f}',
+                f'-interword-spacing {interword_spacing:.1f}',
+                f'-kerning {kerning:.2f}',
+                f'-fill "{self.font_color}"',
+                f'label:"{self.title_text}"',
+            ],
+            Shadow(opacity=85, sigma=3, x=10, y=10),
+            x=0, y=self.font_vertical_shift,
+            shadow_color=self.shadow_color,
+        )
 
 
     @staticmethod
@@ -395,56 +414,25 @@ class LandscapeTitleCard(BaseCardType):
 
 
     def create(self):
-        """
-        Make the necessary ImageMagick and system calls to create this
-        object's defined title card.
-        """
+        """Create this object's defined Title Card."""
 
         # If title is 0-length, just stylize
         if len(self.title_text) == 0:
             self.__add_no_title()
             return None
 
-        # Scale font size and interline spacing of roman text
-        font_size = int(150 * self.font_size)
-        interline_spacing = int(60 * self.font_interline_spacing)
-        interword_spacing = 40 + int(self.font_interword_spacing)
-        kerning = int(40 * self.font_kerning)
-
         # Get coordinates for bounding box
-        bounding_box = self.get_bounding_box_coordinates(
-            font_size, interline_spacing, interword_spacing, kerning
-        )
+        bounding_box = self.bounding_box_coordinates
 
         # Generate command to create card
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
             # Resize and apply any style modifiers
             *self.resize_and_style,
+            # Add box or image darkening
             *self.darken_commands(bounding_box),
             # Add title text
-            f'\( -background None',
-            f'-font "{self.font_file}"',
-            f'-pointsize {font_size}',
-            f'-gravity center',
-            f'-interline-spacing {interline_spacing}',
-            f'-kerning {kerning}',
-            f'-interword-spacing {interword_spacing}',
-            f'-fill "{self.font_color}"',
-            f'label:"{self.title_text}"',
-            # Create drop shadow of title text
-            f'\( +clone',
-            f'-background None',
-            f'-shadow 80x3+10+10 \)',
-            # Underlay drop shadow
-            f'+swap',
-            f'-background None',
-            f'-layers merge',
-            f'+repage \)',
-            # Add title image(s) to source
-            # Shift images vertically by indicated shift
-            f'-geometry +0+{self.font_vertical_shift}',
-            f'-composite',
+            *self.title_text_commands,
             # Optionally add bounding box
             *self.add_bounding_box_commands(bounding_box),
             # Create card

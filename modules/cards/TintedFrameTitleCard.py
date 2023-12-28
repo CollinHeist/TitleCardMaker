@@ -3,7 +3,7 @@ from typing import Literal, Optional, TYPE_CHECKING
 
 from modules.BaseCardType import (
     BaseCardType, CardDescription, Coordinate, Extra, ImageMagickCommands,
-    Rectangle,
+    Rectangle, Shadow,
 )
 
 if TYPE_CHECKING:
@@ -36,41 +36,48 @@ class TintedFrameTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color of the season and episode text',
-            ), Extra(
+            ),
+            Extra(
                 name='Episode Text Font',
                 identifier='episode_text_font',
                 description='Font to use for the season and episode text',
-            ), Extra(
+            ),
+            Extra(
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the season and episode text',
                 tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
-            ), Extra(
+            ),
+            Extra(
                 name='Episode Text Vertical Shift',
                 identifier='episode_text_vertical_shift',
                 description=(
                     'Additional vertical shift to apply to the season and '
                     'episode text'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Separator Character',
                 identifier='separator',
                 description=(
                     'Character that separates the season and episode text'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Frame Color',
                 identifier='frame_color',
                 description='Color of the frame edges',
                 tooltip='Defaults to match the Font color.',
-            ), Extra(
+            ),
+            Extra(
                 name='Frame Width',
                 identifier='frame_width',
                 description='Width of the frame',
                 tooltip=(
                     'Number ≥<v>0.0</v>. Default is <v>3</v>. Unit is pixels.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Top Element',
                 identifier='top_element',
                 description='Which element to display on the top of the frame',
@@ -80,7 +87,8 @@ class TintedFrameTitleCard(BaseCardType):
                     'display anything, or <v>title</v> to display the title '
                     'text. Default is <v>title</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Middle Element',
                 identifier='middle_element',
                 description='Which element to display in the middle of the frame',
@@ -88,7 +96,8 @@ class TintedFrameTitleCard(BaseCardType):
                     'Either <v>logo</v> to display the logo, or <v>omit</v> to '
                     'not display anything. Default is <v>omit</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Bottom Element',
                 identifier='bottom_element',
                 description='Which element to display on the bottom of the frame',
@@ -98,13 +107,15 @@ class TintedFrameTitleCard(BaseCardType):
                     'display anything, or <v>title</v> to display the title '
                     'text. Default is <v>index</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Logo Size',
                 identifier='logo_size',
                 description=(
                     'Scalar for how much to scale the size of the logo element'
                 ), tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
-            ), Extra(
+            ),
+            Extra(
                 name='Logo Vertical Shift',
                 identifier='logo_vertical_shift',
                 description='Vertical shift to apply to the logo',
@@ -112,13 +123,20 @@ class TintedFrameTitleCard(BaseCardType):
                     'Positive values to shift the logo down, negative values to'
                     'shift it up. Unit is pixels. Default is <v>0.0</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Edge Blurring',
                 identifier='blur_edges',
                 description='Whether to blur the edges around the frame',
                 tooltip=(
                     'Either <v>True</v> or <v>False</v>. Default is <v>True</v>.'
                 ),
+            ),
+            Extra(
+                name='Shadow Color',
+                identifier='shadow_color',
+                description='Color of the drop shadow.',
+                tooltip='Default is <v>black</v>.',
             ),
         ], description=[
             'Title card featuring a rectangular frame with blurred content on '
@@ -155,20 +173,24 @@ class TintedFrameTitleCard(BaseCardType):
     """Standard class has standard archive name"""
     ARCHIVE_NAME = 'Tinted Frame Style'
 
-    """How many pixels from the image edge the box is placed; and box width"""
+    """Implementation details"""
     BOX_OFFSET = 185
     BOX_WIDTH = 3
+    SHADOW_COLOR = 'black'
+
 
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_file',
         'font_size', 'font_color', 'font_interline_spacing',
         'font_interword_spacing', 'font_kerning', 'font_vertical_shift',
-        'episode_text_color', 'separator', 'frame_color', 'logo', 'top_element',
-        'middle_element', 'bottom_element', 'logo_size', 'logo_vertical_shift',
-        'blur_edges', 'episode_text_font', 'frame_width',
-        'episode_text_font_size', 'episode_text_vertical_shift',
+        'blur_edges', 'bottom_element', 'episode_text_color',
+        'episode_text_font', 'episode_text_font_size',
+        'episode_text_vertical_shift', 'frame_color', 'frame_width', 'logo',
+        'logo_size', 'logo_vertical_shift', 'middle_element', 'separator',
+        'shadow_color', 'top_element',
     )
+
 
     def __init__(self, *,
             source_file: Path,
@@ -200,6 +222,7 @@ class TintedFrameTitleCard(BaseCardType):
             logo_file: Optional[Path] = None,
             logo_size: float = 1.0,
             logo_vertical_shift: int = 0,
+            shadow_color: str = SHADOW_COLOR,
             blur_edges: bool = True,
             preferences: Optional['Preferences'] = None,
             **unused,
@@ -244,6 +267,7 @@ class TintedFrameTitleCard(BaseCardType):
         self.logo_vertical_shift = logo_vertical_shift
         self.middle_element = middle_element
         self.separator = separator
+        self.shadow_color = shadow_color
         self.top_element = top_element
 
 
@@ -290,26 +314,21 @@ class TintedFrameTitleCard(BaseCardType):
         else:
             vertical_shift = 722 + self.font_vertical_shift
 
-        return [
-            f'-background transparent',
-            f'\( -font "{self.font_file}"',
-            f'-pointsize {100 * self.font_size}',
-            f'-kerning {1 * self.font_kerning}',
-            f'-interline-spacing {self.font_interline_spacing}',
-            f'-interword-spacing {self.font_interword_spacing}',
-            f'-fill "{self.font_color}"',
-            f'label:"{self.title_text}"',
-            # Create drop shadow
-            f'\( +clone',
-            f'-shadow 80x3+10+10 \)',
-            # Position shadow below text
-            f'+swap',
-            f'-layers merge',
-            f'+repage \)',
-            # Overlay text and shadow onto source image
-            f'-geometry +0{vertical_shift:+.0f}',
-            f'-composite',
-        ]
+        return self.add_drop_shadow(
+            [
+                f'-background transparent',
+                f'-font "{self.font_file}"',
+                f'-pointsize {100 * self.font_size}',
+                f'-kerning {1 * self.font_kerning}',
+                f'-interline-spacing {self.font_interline_spacing}',
+                f'-interword-spacing {self.font_interword_spacing}',
+                f'-fill "{self.font_color}"',
+                f'label:"{self.title_text}"',
+            ],
+            Shadow(opacity=85, sigma=3, x=8, y=8),
+            x=0, y=vertical_shift,
+            shadow_color=self.shadow_color,
+        )
 
 
     @property
@@ -336,25 +355,18 @@ class TintedFrameTitleCard(BaseCardType):
             vertical_shift = 722
         vertical_shift += self.episode_text_vertical_shift
 
-        return [
-            f'-background transparent',
-            f'\( -font "{self.episode_text_font.resolve()}"',
-            f'+kerning +interline-spacing +interword-spacing',
-            f'-pointsize {60 * self.episode_text_font_size}',
-            f'-fill "{self.episode_text_color}"',
-            f'label:"{index_text}"',
-            # Create drop shadow
-            f'\( +clone',
-            f'-shadow 80x3+6+6 \)',
-            # Position shadow below text
-            f'+swap',
-            f'-layers merge',
-            f'+repage \)',
-            # Overlay text and shadow onto source image
-            f'-gravity center',
-            f'-geometry +0{vertical_shift:+}',
-            f'-composite',
-        ]
+        return self.add_drop_shadow(
+            [
+                f'-background transparent',
+                f'-font "{self.episode_text_font.resolve()}"',
+                f'+kerning +interline-spacing +interword-spacing',
+                f'-pointsize {60 * self.episode_text_font_size}',
+                f'-fill "{self.episode_text_color}"',
+                f'label:"{index_text}"',
+            ],
+            Shadow(opacity=85, sigma=3, x=6, y=6),
+            x=0, y=vertical_shift, shadow_color=self.shadow_color,
+        )
 
 
     @property
@@ -576,23 +588,18 @@ class TintedFrameTitleCard(BaseCardType):
         ]
         bottom = self._frame_bottom_commands
 
-        return [
-            # Create blank canvas
-            f'\( -size {self.TITLE_CARD_SIZE}',
-            f'xc:transparent',
-            # Draw all sets of rectangles
-            f'-fill "{self.frame_color}"',
-            *top, *left, *right, *bottom,
-            f'\( +clone',
-            f'-shadow 80x3+4+4 \)',
-            # Position drop shadow below rectangles
-            f'+swap',
-            f'-layers merge',
-            f'+repage \)',
-            # Overlay box and shadow onto source image
-            f'-geometry +0+0',
-            f'-composite',
-        ]
+        return self.add_drop_shadow(
+            [
+                f'-size {self.TITLE_CARD_SIZE}',
+                f'xc:transparent',
+                # Draw all sets of rectangles
+                f'-fill "{self.frame_color}"',
+                *top, *left, *right, *bottom,
+            ],
+            Shadow(opacity=85, sigma=3, x=4, y=4),
+            x=0, y=0,
+            shadow_color=self.shadow_color,
+        )
 
 
     @property
@@ -619,6 +626,7 @@ class TintedFrameTitleCard(BaseCardType):
             ]
 
         return []
+
 
     @staticmethod
     def modify_extras(
@@ -650,6 +658,8 @@ class TintedFrameTitleCard(BaseCardType):
                 extras['episode_text_vertical_shift'] = 0
             if 'frame_color' in extras:
                 extras['frame_color'] = TintedFrameTitleCard.TITLE_COLOR
+            if 'shadow_color' in extras:
+                extras['shadow_color'] = TintedFrameTitleCard.SHADOW_COLOR
 
 
     @staticmethod
@@ -677,6 +687,8 @@ class TintedFrameTitleCard(BaseCardType):
                 and extras['episode_text_vertical_shift'] != 0)
             or ('frame_color' in extras
                 and extras['frame_color'] != TintedFrameTitleCard.TITLE_COLOR)
+            or ('shadow_color' in extras
+                and extras['shadow_color'] != TintedFrameTitleCard.SHADOW_COLOR)
         )
 
         return (custom_extras
@@ -714,10 +726,7 @@ class TintedFrameTitleCard(BaseCardType):
 
 
     def create(self) -> None:
-        """
-        Make the necessary ImageMagick and system calls to create this
-        object's defined title card.
-        """
+        """Create this object's defined Title Card."""
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
