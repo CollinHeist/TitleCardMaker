@@ -32,6 +32,7 @@ python-jose = {version = "==3.3.0", extras = ["cryptography"]}
 passlib = {version = "==1.7.4", extras = ["bcrypt"]}
 pillow = "==10.0.1"
 thefuzz = "==0.20.0"
+charset-normalizer = "==3.3.2"
 
 [dev-packages]
 mkdocs = "*"
