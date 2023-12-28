@@ -318,7 +318,7 @@ class BannerTitleCard(BaseCardType):
                 and extras['alternate_color'] != BannerTitleCard.EPISODE_TEXT_COLOR)
             or ('banner_color' in extras
                 and extras['banner_color'] != BannerTitleCard.TITLE_COLOR)
-            or ('episode_text_font_size'
+            or ('episode_text_font_size' in extras
                 and extras['episode_text_font_size'] != 1.0)
             or ('x_offset' and extras['x_offset'] != BannerTitleCard.X_OFFSET)
         )
