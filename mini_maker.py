@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from os import environ
 from pathlib import Path
 from re import match, IGNORECASE
-from sys import exit
+from sys import exit as sys_exit
 
 try:
     from modules.AspectRatioFixer import AspectRatioFixer
@@ -20,7 +20,7 @@ try:
     from modules.StylizedSummary import StylizedSummary
 except ImportError:
     print(f'Required Python packages are missing - execute "pipenv install"')
-    exit(1)
+    sys_exit(1)
 
 # Environment Variables
 ENV_IS_DOCKER = 'TCM_IS_DOCKER'
@@ -319,7 +319,8 @@ show_summary_group.add_argument(
     type=str,
     default='default',
     metavar='SUMMARY_TYPE',
-    help='Summary type to create - must be "standard" or "sylized"')
+    choices=('default', 'standard', 'stylized'),
+    help='Type of summary image to create')
 
 # Argument group for season posters
 season_poster_group = parser.add_argument_group(
@@ -366,11 +367,17 @@ season_poster_group.add_argument(
     type=str,
     default='100%',
     metavar='SCALE%',
-    help='Specify the font kerning scale (as percentage) for this season poster')
+    help='Specify the font kerning scale (as percentage) in the season poster')
 season_poster_group.add_argument(
-    '--top-placement',
-    action='store_true',
-    help='Create the season poster with the logo and season text at the top')
+    '--logo-placement',
+    choices=('top', 'middle', 'bottom'),
+    default='bottom',
+    help='Where to place the logo in the created season poster')
+season_poster_group.add_argument(
+    '--text-placement',
+    choices=('top', 'bottom'),
+    default='bottom',
+    help='Where to place the text in the created season poster')
 
 # Parse given arguments
 args, unknown = parser.parse_known_args()
@@ -388,7 +395,7 @@ for key, value in arbitrary_data.items():
 
 # Parse preference file for options that might need it
 if not (pp := PreferenceParser(args.preferences, is_docker)).valid:
-    exit(1)
+    sys_exit(1)
 set_preference_parser(pp)
 
 # Execute title card related options
@@ -582,7 +589,8 @@ if hasattr(args, 'season_poster'):
         font_color=args.season_font_color,
         font_size=float(args.season_font_size[:-1])/100.0,
         font_kerning=float(args.season_font_kerning[:-1])/100.0,
-        top_placement=args.top_placement,
+        logo_placement=args.logo_placement,
         omit_gradient=args.no_gradient,
         omit_logo=not hasattr(args, 'season_poster_logo'),
+        text_placement=args.text_placement,
     ).create()

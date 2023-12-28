@@ -407,10 +407,7 @@ class DividerTitleCard(BaseCardType):
 
 
     def create(self) -> None:
-        """
-        Make the necessary ImageMagick and system calls to create this
-        object's defined title card.
-        """
+        """Create this object's defined Title Card."""
 
         interline_spacing = -20 + self.font_interline_spacing
         kerning = -0.5 * self.font_kerning

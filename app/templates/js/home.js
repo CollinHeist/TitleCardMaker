@@ -543,7 +543,7 @@ function batchMonitor() {
 }
 
 /**
- * Submit an API request to mark all the currently selected Series as  unmonitored.
+ * Submit an API request to mark all the currently selected Series as unmonitored.
  */
 function batchUnmonitor() {
   if (selectedSeries.length === 0) { return; }
