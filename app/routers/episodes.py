@@ -140,7 +140,6 @@ def delete_all_series_episodes(
 
 @episodes_router.post('/series/{series_id}/refresh', status_code=201)
 def refresh_episode_data_(
-        background_tasks: BackgroundTasks,
         request: Request,
         series_id: int,
         db: Session = Depends(get_database),
@@ -157,7 +156,7 @@ def refresh_episode_data_(
     series = get_series(db, series_id, raise_exc=True)
 
     # Refresh episode data, use BackgroundTasks for ID assignment
-    refresh_episode_data(db, series, background_tasks, log=request.state.log)
+    refresh_episode_data(db, series, None, log=request.state.log)
 
 
 @episodes_router.patch('/batch', status_code=200)
