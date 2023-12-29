@@ -5,6 +5,40 @@ from modules.CleanPath import CleanPath
 from modules.Debug import InvalidFormatString, log
 
 
+_MAX_ROMAN_NUMERAL = 3999
+def to_roman_numeral(number: int, /) -> str:
+    """
+    Convert the given number to a roman numeral string.
+
+    Args:
+        number: Number to convert to a roman numeral.
+
+    Returns:
+        Roman numeral string representation of the given number.
+
+    Raises:
+        `InvalidFormatString` if the given number is not between 1 and
+            3999.
+    """
+
+    # Verify number can be converted
+    if not 1 <= number <= _MAX_ROMAN_NUMERAL:
+        raise InvalidFormatString
+
+    m_text = ['', 'M', 'MM', 'MMM']
+    c_text = ['', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM']
+    x_text = ['', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC']
+    i_text = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX']
+
+    # Get each places' roman numeral
+    thousands = m_text[number // 1000]
+    hundreds = c_text[(number % 1000) // 100]
+    tens = x_text[(number % 100) // 10]
+    ones = i_text[number % 10]
+
+    return f'{thousands}{hundreds}{tens}{ones}'
+
+
 class FormatString:
     """
     This class describes an arbitrary input fstring parser. Objects can
@@ -37,7 +71,12 @@ class FormatString:
         # pylint: disable=eval-used
         self.result = eval(
             compile('f"' + fstring.replace('"', '\\"') + '"', '', 'eval'),
-            {'__builtins__': {'NEWLINE': '\n'}},
+            {
+                '__builtins__': {
+                    'NEWLINE': '\n',
+                    'to_roman_numeral': to_roman_numeral
+                }
+            },
             data,
         )
 
