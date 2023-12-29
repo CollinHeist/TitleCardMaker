@@ -1,6 +1,7 @@
 [MASTER]
 ignore = archives, assets, docs, fonts, logs, source, title_cards
 init-hook='import sys; sys.path.append("/mnt/user/Media/TitleCardMaker")'
+extension-pkg-whitelist=pydantic
 
 [MESSAGES CONTROL]
 disable = logging-fstring-interpolation,
