@@ -171,7 +171,8 @@ def download_series_poster(
     # If Series poster exists and is not a placeholder, return
     path = Path(series.poster_file)
     if path.name != 'placeholder.jpg' and path.exists():
-        poster_url = f'/assets/{series.id}/poster.jpg'
+        filesize = path.stat().st_size
+        poster_url = f'/assets/{series.id}/poster.jpg?{filesize}'
         if series.poster_url != poster_url:
             series.poster_url = poster_url
             db.commit()
@@ -212,8 +213,9 @@ def download_series_poster(
     except Exception as e:
         log.error(f'{series} Error downloading poster', e)
         return None
+    filesize = path.stat().st_size
     series.poster_file = str(path)
-    series.poster_url = f'/assets/{series.id}/poster.jpg'
+    series.poster_url = f'/assets/{series.id}/poster.jpg?{filesize}'
     db.commit()
 
     # Create resized small poster
