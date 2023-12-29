@@ -23,7 +23,7 @@ SeasonTextPosition = Literal['above', 'below']
 class ShapeTitleCard(BaseCardType):
     """
     This class describes a CardType that produces title cards featuring
-    a diamond shape surrounding the text. The shape is interesected by
+    a diamond shape surrounding the text. The shape is intersected by
     the title text. This card allows the text (and shape) to be
     positioned at various points around the image.
     """
@@ -124,9 +124,8 @@ class ShapeTitleCard(BaseCardType):
             ),
         ], description=[
             'A title card featuring a diamond shape surrounding the text. The '
-            'shape is interesected by the title text.',
-            'The shape and text are completely customizable in color, size, and'
-            'position.'
+            'shape is intersected by the title text.', 'The shape and text are '
+            'completely customizable in color, size, and position.'
         ],
     )
 

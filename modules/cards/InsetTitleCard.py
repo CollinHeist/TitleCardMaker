@@ -39,16 +39,20 @@ class InsetTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-            ), Extra(
+                tooltip='Default is <v>crimson</v>.'
+            ),
+            Extra(
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the episode text',
                 tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
-            ), Extra(
+            ),
+            Extra(
                 name='Separator Character',
                 identifier='separator',
                 description='Character to separate season and episode text',
-            ), Extra(
+            ),
+            Extra(
                 name='Inset Text Transparency',
                 identifier='transparency',
                 description='How transparent to make inset text.',
@@ -56,7 +60,8 @@ class InsetTitleCard(BaseCardType):
                     'Number between <v>0.0</v> and <v>1.0</v>. Default is '
                     '<v>1.0</v> (not transparency).'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Gradient Omission',
                 identifier='omit_gradient',
                 description='Whether to omit the gradient overlay',
