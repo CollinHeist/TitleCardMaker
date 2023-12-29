@@ -1,11 +1,11 @@
 from typing import Literal
-from app.internal.cards import delete_cards
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 
 from app.database.query import get_connection
 from app.dependencies import * # pylint: disable=W0401,W0614,W0621
 from app.internal.auth import get_current_user
+from app.internal.cards import delete_cards
 from app.internal.connection import add_connection, update_connection
 from app.models.card import Card
 from app.models.connection import Connection
@@ -566,6 +566,7 @@ def get_potential_sonarr_libraries(
 def check_tautulli_integration(
         request: Request,
         tautulli_connection: NewTautulliConnection = Body(...),
+        plex_interface_id: int = Query(...),
     ) -> bool:
     """
     Check whether Tautulli is integrated with TCM.
@@ -575,9 +576,10 @@ def check_tautulli_integration(
     """
 
     interface = TautulliInterface(
-        tcm_url=str(request.url).split('/tautulli/check', maxsplit=1)[0],
+        tcm_url=tautulli_connection.tcm_url,
         tautulli_url=tautulli_connection.url,
         api_key=tautulli_connection.api_key.get_secret_value(),
+        plex_interface_id=plex_interface_id,
         use_ssl=tautulli_connection.use_ssl,
         agent_name=tautulli_connection.agent_name,
         log=request.state.log,
@@ -601,11 +603,8 @@ def add_tautulli_integration(
     Notification Agent to search for/create.
     """
 
-    request_url = str(request.url)
-    url = request_url.split('/api/connection/tautulli/integrate', maxsplit=1)[0]
-
     interface = TautulliInterface(
-        tcm_url=url,
+        tcm_url=tautulli_connection.tcm_url,
         tautulli_url=tautulli_connection.url,
         api_key=tautulli_connection.api_key,
         plex_interface_id=plex_interface_id,

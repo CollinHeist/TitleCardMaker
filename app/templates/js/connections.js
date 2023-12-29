@@ -221,11 +221,15 @@ function initializeTautulliForm(plexInterfaceId) {
   }).on('submit', event => {
     // Prevent default event form handler
     event.preventDefault();
+
     // If the form is not valid, exit
     if (!$('#tautulli-agent-form').form('is valid')) { return; }
 
-    // Submit API request
+    // Add tcm_url if not provided
     const data = Object.fromEntries(new FormData(event.target));
+    data.tcm_url = data.tcm_url || window.location.origin;
+
+    // Submit API request
     $('#tautulli-agent-modal button').toggleClass('loading', true);
     $.ajax({
       type: 'POST',
