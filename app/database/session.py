@@ -36,7 +36,11 @@ SQLALCHEMY_DATABASE_URL = 'sqlite:///./config/db.sqlite'
 if IS_DOCKER:
     SQLALCHEMY_DATABASE_URL = 'sqlite:////config/db.sqlite'
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={'check_same_thread': False},
+    SQLALCHEMY_DATABASE_URL,
+    # https://docs.sqlalchemy.org/en/20/core/pooling.html#disconnect-handling-pessimistic
+    pool_pre_ping=True,
+    # https://docs.sqlalchemy.org/en/20/core/pooling.html#pool-disconnects
+    connect_args={'check_same_thread': False, 'timeout': 30},
 )
 
 # URL to the Blueprints SQL database
@@ -189,7 +193,8 @@ BlueprintBase = declarative_base()
 Scheduler = BackgroundScheduler(
     jobstores={
         'default': SQLAlchemyJobStore(url=SQLALCHEMY_DATABASE_URL, engine=engine)
-    }, executors={'default': ThreadPoolExecutor(20)},
+    },
+    executors={'default': ThreadPoolExecutor(20)},
     job_defaults={'coalesce': True, 'misfire_grace_time': 60 * 10},
     misfire_grace_time=600,
 )
