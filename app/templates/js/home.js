@@ -233,7 +233,7 @@ function _populateSeriesRow(series, template) {
 
   // Set poster image src
   const poster = row.querySelector('td[data-row="name"] img');
-  poster.src = `${series.small_poster_url}?${series.year}`;
+  poster.src = series.small_poster_url;
 
   // Add unmonitored class if styling
   {% if preferences.stylize_unmonitored_posters %}

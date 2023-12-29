@@ -1,19 +1,21 @@
-# pylint: disable=missing-class-docstring,missing-function-docstring,no-name-in-module
+# pylint: disable=missing-class-docstring,missing-function-docstring
 from datetime import datetime, timedelta
 from typing import Callable, Optional
 
-from pydantic import PositiveInt # pylint: disable=no-name-in-module
+from pydantic import constr, PositiveInt
 
 from app.schemas.base import Base
 
 """
 Base classes
 """
+CronExpression = constr(strip_whitespace=True, regex=r'^([^ ]+\s+){4}([^ ]+)$')
+
 class NewJob(Base):
     id: str
     function: Callable[..., None]
     seconds: PositiveInt
-    crontab: str
+    crontab: CronExpression
     description: str
     internal: bool = False
     running: bool = False
@@ -29,7 +31,7 @@ class UpdateSchedule(Base):
     hours: PositiveInt = 0
     days: PositiveInt = 0
     weeks: PositiveInt = 0
-    crontab: Optional[str] = '*/10 * * * *'
+    crontab: Optional[CronExpression] = '*/10 * * * *'
 
 """
 Return classes
