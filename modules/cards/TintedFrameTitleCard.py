@@ -152,7 +152,7 @@ class TintedFrameTitleCard(BaseCardType):
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
-        'max_line_width': 35,
+        'max_line_width': 42,
         'max_line_count': 2,
         'top_heavy': 'even',
     }
