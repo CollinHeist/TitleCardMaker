@@ -9,7 +9,7 @@ description: >
 !!! info "Pre-Release Instructions"
 
     These instructions are __not applicable__ while TCM is in pre-release.
-    Please refer to [here](../index.md)
+    Please refer to [here](../index.md).
 
 ??? info "Benefits of Docker"
 

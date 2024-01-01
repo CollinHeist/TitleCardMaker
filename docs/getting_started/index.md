@@ -311,7 +311,8 @@ to it.
 
 The following pages of the tutorial are designed to walk you through all of the
 basics of using TitleCardMaker. It covers each step between installing TCM up
-through creating example Title Cards.
+through creating example Title Cards. You can skip directly to
+[Configuring Connections](./connections/index.md).
 
 It is designed for __completely new users__ of TCM, but is still helpful for
 those migrating from TCM v1.0 (the command line tool). For more detailed

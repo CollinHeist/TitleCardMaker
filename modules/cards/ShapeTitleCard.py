@@ -43,7 +43,8 @@ class ShapeTitleCard(BaseCardType):
                 identifier='season_text_color',
                 description='Color of the season text',
                 tooltip='Defaults to match the shape color.',
-            ), Extra(
+            ),
+            Extra(
                 name='Hide Shape',
                 identifier='hide_shape',
                 description='Whether to hide the shape',
@@ -51,7 +52,8 @@ class ShapeTitleCard(BaseCardType):
                     'Either <v>True</v> or <v>False</v>. Default is '
                     '<v>False</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Italize Season Text',
                 identifier='italicize_season_text',
                 description='Whether to italicize the season text',
@@ -59,12 +61,14 @@ class ShapeTitleCard(BaseCardType):
                     'Either <v>True</v> or <v>False</v>. Default is '
                     '<v>False</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Season Text Font Size',
                 identifier='season_text_font_size',
                 description='Size adjustment for the season text',
                 tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.',
-            ), Extra(
+            ),
+            Extra(
                 name='Season Text Position',
                 identifier='season_text_position',
                 description=(
@@ -74,37 +78,43 @@ class ShapeTitleCard(BaseCardType):
                     'Either <v>above</v> or <v>below</v>. Default is '
                     '<v>below</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Shape Color',
                 identifier='shape_color',
                 description='Color of the shape',
                 tooltip='Default is <v>skyblue</v>.',
-            ), Extra(
+            ),
+            Extra(
                 name='Shape Inset',
                 identifier='shape_inset',
                 description='How far to inset the shape from the edges.',
                 tooltip=(
                     'Number ≥<v>0.0</v>. Default is <v>75</v>. Unit is pixels.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Shape Side Length',
                 identifier='shape_side_length',
                 description='How long each side of the shape is.',
                 tooltip=(
                     'Number ≥<v>50.0</v>. Default is <v>200</v>. Unit is pixels.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Shape Width',
                 identifier='shape_width',
                 description='Width of the shape',
                 tooltip=(
                     'Number ><v>0.0</v>. Default is <v>10</v>. Unit is pixels.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Stroke Text Color',
                 identifier='stroke_color',
                 description='Color to use for the text stroke',
-            ), Extra(
+            ),
+            Extra(
                 name='Text Position',
                 identifier='text_position',
                 description='Where on the image to position the text',
@@ -113,7 +123,8 @@ class ShapeTitleCard(BaseCardType):
                     ' <v>right</v>, <v>lower left</v>, or <v>lower right</v>. '
                     'Default is <v>lower left</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Gradient Omission',
                 identifier='omit_gradient',
                 description='Whether to omit the gradient overlay',

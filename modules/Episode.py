@@ -33,7 +33,7 @@ class Episode:
             base_source: Path,
             destination: Path,
             given_keys: set[str],
-            **extras: dict
+            **extras: Any
         ) -> None:
         """
         Construct a new instance of an Episode.
@@ -196,7 +196,7 @@ class Episode:
 
             # Log deletion
             message = f'Deleted "{self.destination.resolve()}"'
-            if reason is not None:
+            if reason:
                 message += f' [{reason}]'
             log.debug(message)
 

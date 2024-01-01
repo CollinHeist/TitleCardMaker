@@ -69,13 +69,21 @@ class Coordinate:
 class Rectangle:
     """Class that defines movable SVG rectangle."""
 
+
     __slots__ = ('start', 'end')
+
 
     def __init__(self, start: Coordinate, end: Coordinate) -> None:
         """
         Initialize this Rectangle that encompasses the two given start
         and end Coordinates. These Coordinates are the opposite corners
         of the rectangle.
+
+        Args:
+            start: Coordinate which defines one starting corner of the
+                rectangle.
+            end: Coordinate which opposites the `start` coordinate of
+                this rectangle.
         """
 
         self.start = start
@@ -89,6 +97,7 @@ class Rectangle:
         """
 
         return f'{str(self.start)},{str(self.end)}'
+
 
     def draw(self) -> str:
         """Draw this Rectangle."""
