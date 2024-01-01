@@ -270,7 +270,7 @@ function showAddSeriesModal(result, resultElementId) {
   $('#add-series-modal button[data-action="search-blueprints"]').off('click').on('click', (event) => {
     // Do not refresh page
     event.preventDefault();
-    queryBlueprints(result, resultElementId);
+    queryBlueprints(result, 'blueprint-results');
   });
   // Add Series when button is pressed
   $('#add-series-modal button[data-action="add-series"]').off('click').on('click', (event) => {
