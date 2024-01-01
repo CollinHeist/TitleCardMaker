@@ -506,6 +506,7 @@ def resolve_card_settings(
                 name='season text format', series=series, episode=episode,
                 log=log,
             )
+    card_settings['season_text'] = card_settings['season_text'].replace('\\n','\n')
 
     # If no episode text was indicated, determine using ETF
     if card_settings.get('episode_text') is None:
@@ -516,6 +517,7 @@ def resolve_card_settings(
             data=card_settings,
             name='episode text format', series=series, episode=episode, log=log,
         )
+    card_settings['episode_text'] = card_settings['episode_text'].replace('\\n','\n')
 
     # Set style independent of watched status if both styles match
     watched = None
@@ -587,7 +589,7 @@ def resolve_card_settings(
     if not card_file_name.endswith(preferences.VALID_IMAGE_EXTENSIONS):
         new_name = card_file_name + preferences.card_extension
         card_settings['card_file'] = card_settings['card_file'].parent /new_name
-    card_settings['card_file'] = CleanPath(card_settings['card_file']).sanitize()
+    card_settings['card_file'] =CleanPath(card_settings['card_file']).sanitize()
 
     return card_settings
 

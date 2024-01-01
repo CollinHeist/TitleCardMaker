@@ -303,23 +303,24 @@ def get_interface(
             Interface with this ID.
 
     Returns:
-        `Interface` with the given ID, or None (if `raise_exc` is False).
+        `Interface` with the given ID, or None if `raise_exc` is False
+        and there is no `Interface` with that ID.
+
+    Raises:
+        HTTPException (404): If there is no valid and active Interface
+            with the given ID.
     """
 
     # Look for interface under each type
     interface = None
     if not interface and interface_id in EmbyInterfaces:
         interface = EmbyInterfaces[interface_id]
-
     if not interface and interface_id in JellyfinInterfaces:
         interface = JellyfinInterfaces[interface_id]
-
     if not interface and interface_id in PlexInterfaces:
         interface = PlexInterfaces[interface_id]
-
     if not interface and interface_id in SonarrInterfaces:
         interface = SonarrInterfaces[interface_id]
-
     if not interface and interface_id in TMDbInterfaces:
         interface = TMDbInterfaces[interface_id]
 
