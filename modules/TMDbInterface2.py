@@ -1189,15 +1189,23 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             self.__update_blacklist(series_info, episode_info, 'title')
             return None
 
+        # Parse the ISO-3166-1 and ISO-639-1 codes from the given language code
+        if '-' in language_code:
+            lc_3166, lc_639 = language_code.split('-', maxsplit=1)
+            lc_3166 = lc_3166.upper()
+        else:
+            lc_3166, lc_639 = None, language_code
+
         # Look for this translation
         for translation in episode.translations:
-            if language_code in (translation.iso_3166_1, translation.iso_639_1):
+            if (lc_639 == translation.iso_639_1
+                or (lc_3166 is not None and lc_3166 == translation.iso_3166_1)):
                 # If the title translation is blank (i.e. non-existent)
                 if hasattr(translation, 'name'):
                     title = translation.name
                 else:
                     title = translation.title
-                if len(title) == 0:
+                if not title:
                     break
 
                 # If translation is generic, blacklist and skip
