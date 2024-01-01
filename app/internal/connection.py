@@ -78,7 +78,7 @@ def initialize_connections(
                 )
             except Exception as exc:
                 preferences.invalid_connections.append(connection.id)
-                log.exception(f'Error initializing {connection} - {exc}', exc)
+                log.exception(f'Error initializing {connection}', exc)
 
     # Log any invalid Connections
     if preferences.invalid_connections:
