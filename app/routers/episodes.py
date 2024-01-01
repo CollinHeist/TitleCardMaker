@@ -1,6 +1,6 @@
 from typing import Literal
 
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, Request
+from fastapi import APIRouter, Body, Depends, Request
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 

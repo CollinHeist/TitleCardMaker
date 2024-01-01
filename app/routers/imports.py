@@ -144,7 +144,7 @@ def import_sync_yaml(
         sync = models.sync.Sync(**new_sync_dict)
         db.add(sync)
         db.commit()
-        log.info(f'{sync.log_str} imported to Database')
+        log.info(f'{sync} imported to Database')
         all_syncs.append(sync)
 
         # Assign Templates
@@ -193,7 +193,7 @@ def import_fonts_yaml(
         font = models.font.Font(**new_font.dict())
         db.add(font)
         db.commit()
-        log.info(f'{font.log_str} imported to Database')
+        log.info(f'{font} imported to Database')
         all_fonts.append(font)
 
         # If there is a Font file, copy into asset directory
@@ -248,7 +248,7 @@ def import_template_yaml(
     for new_template in new_templates:
         template = models.template.Template(**new_template.dict())
         db.add(template)
-        log.info(f'{template.log_str} imported to Database')
+        log.info(f'{template} imported to Database')
         all_templates.append(template)
     db.commit()
 
@@ -296,7 +296,7 @@ def import_series_yaml(
         series = models.series.Series(**new_series_dict)
         db.add(series)
         db.commit()
-        log.info(f'{series.log_str} imported to Database')
+        log.info(f'{series} imported to Database')
 
         # Assign Templates
         series.assign_templates(templates, log=log)
