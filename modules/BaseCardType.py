@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, Callable, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, Union
 
 from titlecase import titlecase
 
@@ -31,7 +31,40 @@ class Coordinate:
         self.y = y
 
 
-    def __iadd__(self, other: 'Coordinate') -> 'Coordinate':
+    def __iter__(self) -> Iterable[tuple[float, float]]:
+        """
+        Iterate through this object. This can be used to unpack the
+        Coordinate, for example:
+
+        >>> x, y = Coordinate(1, 2) # x=1, y=2
+        """
+
+        return iter((self.x, self.y))
+
+
+    def __add__(self,
+            other: Union['Coordinate', tuple[float, float]],
+        ) -> 'Coordinate':
+        """
+        Add the given coordinates to this object, returning a new
+        combination of the two.
+
+        Args:
+            other: The Coordinate to add.
+
+        Returns:
+            Newly constructed Coordinate object of these coordinates.
+        """
+
+        if isinstance(other, Coordinate):
+            return Coordinate(self.x + other.x, self.y + other.y)
+
+        return Coordinate(self.x + other[0], self.y + other[1])
+
+
+    def __iadd__(self,
+            other: Union['Coordinate', tuple[float, float]],
+        ) -> 'Coordinate':
         """
         Add the given Coordinate to this one. This adds the x/y
         positions individually.
@@ -43,8 +76,12 @@ class Coordinate:
             This object.
         """
 
-        self.x += other.x
-        self.y += other.y
+        if isinstance(other, Coordinate):
+            self.x += other.x
+            self.y += other.y
+        else:
+            self.x += other[0]
+            self.y += other[1]
 
         return self
 
@@ -66,18 +103,47 @@ class Coordinate:
         return f'{self.x:.1f} {self.y:.1f}'
 
 
-class Rectangle:
-    """Class that defines movable SVG rectangle."""
-
+class Line:
+    """Class that defines a drawable SVG line."""
 
     __slots__ = ('start', 'end')
 
+    def __init__(self, start: Coordinate, end: Coordinate) -> None:
+        """
+        Initialize a Line which spans between the given start and end
+        Coordinates.
+
+        Args:
+            start: Coordinate which defines one end of this line.
+            end: Coordinate which defines the other end of this line.
+        """
+
+        self.start = start
+        self.end = end
+
+
+    def __str__(self) -> str:
+        """Represent this Line as a string. This is a SVG-command."""
+
+        return f'M {str(self.start)} L {str(self.end)}'
+
+
+    def draw(self) -> str:
+        """Draw this line."""
+
+        return f'-draw "path \'{str(self)}\'"'
+
+
+class Rectangle:
+    """Class that defines movable SVG rectangle."""
+
+    __slots__ = ('start', 'end')
 
     def __init__(self, start: Coordinate, end: Coordinate) -> None:
         """
-        Initialize this Rectangle that encompasses the two given start
-        and end Coordinates. These Coordinates are the opposite corners
-        of the rectangle.
+        Initialize this Rectangle that encompasses the given start and
+        end Coordinates. These Coordinates are the opposite corners of
+        the rectangle.
 
         Args:
             start: Coordinate which defines one starting corner of the
@@ -146,11 +212,7 @@ class BaseCardType(ImageMaker):
     custom type of title card.
 
     All implementations of BaseCardType must implement this class's
-    abstract properties and methods in order to work with the
-    TitleCardMaker. However, not all CardTypes need to use every
-    argument of these methods. For example, the StandardTitleCard
-    utilizes most all customizations for a title card, while a
-    StarWarsTitleCard hardly uses anything.
+    abstract properties and methods in order to work with TCM.
     """
 
     """Default case string for all title text"""
@@ -169,7 +231,7 @@ class BaseCardType(ImageMaker):
     }
 
     """Default episode text format string, can be overwritten by each class"""
-    EPISODE_TEXT_FORMAT = 'EPISODE {episode_number}'
+    EPISODE_TEXT_FORMAT = 'Episode {episode_number}'
 
     """Whether this class uses unique source images for card creation"""
     USES_UNIQUE_SOURCES = True
@@ -370,9 +432,6 @@ class BaseCardType(ImageMaker):
         """
         ImageMagick commands to only resize an image to the output title
         card size.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         return [
@@ -395,9 +454,6 @@ class BaseCardType(ImageMaker):
     def style(self) -> ImageMagickCommands:
         """
         ImageMagick commands to apply any style modifiers to an image.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         return [
@@ -421,9 +477,6 @@ class BaseCardType(ImageMaker):
         """
         ImageMagick commands to resize and apply any style modifiers to
         an image.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         return [
@@ -453,9 +506,6 @@ class BaseCardType(ImageMaker):
         """
         ImageMagick commands to resize the card to the global card
         dimensions.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         return [
