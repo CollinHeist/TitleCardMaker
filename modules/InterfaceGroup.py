@@ -28,7 +28,7 @@ class InterfaceGroup(Generic[_InterfaceID, _Interface],
     """
 
 
-    __slots__ = ('cls', 'interfaces')
+    __slots__ = ('cls', 'interfaces', '_uninitialized')
 
 
     def __init__(self, cls: type[_Interface]) -> None:
@@ -43,6 +43,7 @@ class InterfaceGroup(Generic[_InterfaceID, _Interface],
 
         self.cls = cls
         self.interfaces: dict[_InterfaceID, _Interface] = {}
+        self._uninitialized: dict[_InterfaceID, dict] = {}
 
 
     def __repr__(self) -> str:
@@ -73,7 +74,9 @@ class InterfaceGroup(Generic[_InterfaceID, _Interface],
 
     def __getitem__(self, interface_id: _InterfaceID) -> Optional[_Interface]:
         """
-        Get the Interface with the given ID.
+        Get the Interface with the given ID. If the Interface with the
+        given ID is defined but not initialized / active, then an
+        attempt is made to re-initialize and return it.
 
         Args:
             interface_id: ID of the Interface to get.
@@ -83,7 +86,18 @@ class InterfaceGroup(Generic[_InterfaceID, _Interface],
             with the given ID.
         """
 
-        return self.interfaces.get(interface_id)
+        if interface_id in self.interfaces:
+            return self.interfaces[interface_id]
+
+        if interface_id in self._uninitialized:
+            try:
+                return self.initialize_interface(
+                    interface_id, self._uninitialized[interface_id]
+                )
+            except Exception:
+                pass
+
+        return None
 
 
     def __setitem__(self,
@@ -106,7 +120,10 @@ class InterfaceGroup(Generic[_InterfaceID, _Interface],
         Whether the given interface ID has an associated Interface.
         """
 
-        return interface_id in self.interfaces
+        return (
+            interface_id in self.interfaces
+            or interface_id in self._uninitialized
+        )
 
 
     def __iter__(self) -> Iterator[tuple[_InterfaceID, _Interface]]:
@@ -194,7 +211,14 @@ class InterfaceGroup(Generic[_InterfaceID, _Interface],
         """
 
         log.debug(f'Initializing {self.cls.__name__}[{interface_id}]...')
-        self.interfaces[interface_id] = self.cls(**interface_kwargs, log=log)
+        try:
+            self.interfaces[interface_id] = self.cls(
+                **interface_kwargs, log=log
+            )
+            self._uninitialized.pop(interface_id, None)
+        except Exception as exc:
+            self._uninitialized[interface_id] = interface_kwargs
+            raise exc
         log.debug(f'Finished initializing {self.cls.__name__}[{interface_id}]')
 
         return self.interfaces[interface_id]
