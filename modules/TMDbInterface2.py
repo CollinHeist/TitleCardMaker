@@ -257,7 +257,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             minimum_source_width: int = 0,
             minimum_source_height: int = 0,
             blacklist_threshold: int = BLACKLIST_THRESHOLD,
-            logo_language_priority: list[LANGUAGE_CODES] = ['en'],
+            logo_language_priority: list[str] = ['en'],
             *,
             interface_id: int = 0,
             log: Logger = log,

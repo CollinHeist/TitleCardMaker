@@ -1,6 +1,5 @@
 from math import cos, sin, pi
 from pathlib import Path
-from re import match
 from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import (
@@ -21,6 +20,7 @@ TextPosition = Literal[
 
 
 class SvgCircle:
+    """Class definition of a circle which can be drawn as an SVG."""
 
     __slots__  = ('radius', 'percentage')
 
@@ -30,7 +30,11 @@ class SvgCircle:
             fill_percentage: float,
         ) -> None:
         """
-        
+        Initialize this circle.
+
+        Args:
+            radius: Radius of the circle.
+            fill_percentage: Percentage of the circle that is filled.
         """
 
         self.radius = radius
@@ -39,7 +43,14 @@ class SvgCircle:
 
     def _angle_to_coordinate(self, angle: float, /) -> tuple[float, float]:
         """
-        
+        Convert the given angle to X/Y coordinates.
+
+        Args:
+            angle: Angle (in degrees) to convert.
+
+        Returns:
+            Tuple of the X and Y coordinates equivalent to the given
+            angle.
         """
 
         angle_radians = angle * pi / 180.0
@@ -55,9 +66,7 @@ class SvgCircle:
 
     @property
     def draw_commands(self) -> ImageMagickCommands:
-        """
-        
-        """
+        """ImageMagick commands to draw this Circle."""
 
         # Starting in bottom left corner; shift to middle top
         positioning = f'M {self.radius},-{2 * self.radius}'
@@ -90,17 +99,16 @@ class SvgCircle:
 
 class GraphTitleCard(BaseCardType):
     """
-    This class describes a CardType that produces title cards featuring
-    a diamond shape surrounding the text. The shape is intersected by
-    the title text. This card allows the text (and shape) to be
-    positioned at various points around the image.
+    This class describes a CardType that produces title cards with a
+    progress bar or "graph" which can be used to indicate total Series
+    progress.
     """
 
     """API Parameters"""
     API_DETAILS = CardDescription(
-        name='Shape',
-        identifier='shape',
-        example='/internal_assets/cards/shape.jpg',
+        name='Graph',
+        identifier='graph',
+        example='/internal_assets/cards/graph.webp',
         creators=['CollinHeist'],
         source='builtin',
         supports_custom_fonts=True,
@@ -109,7 +117,9 @@ class GraphTitleCard(BaseCardType):
             
         ],
         description=[
-            
+            'A title card similiar to the Shape card, but features a bar '
+            '"graph" or progress bar which can be used to indicate total series'
+            'progress.',
         ],
     )
 
@@ -132,13 +142,13 @@ class GraphTitleCard(BaseCardType):
     """Characteristics of the episode text"""
     EPISODE_TEXT_COLOR = 'skyblue'
     EPISODE_TEXT_FONT = REF_DIRECTORY / 'HelveticaNeue-BoldItalic.ttf'
-    EPISODE_TEXT_FORMAT = '{episode_number}'
+    EPISODE_TEXT_FORMAT = '{episode_number} / {season_episode_max}'
 
     """Whether this CardType uses season titles for archival purposes"""
     USES_SEASON_TITLE = True
 
     """Standard class has standard archive name"""
-    ARCHIVE_NAME = 'Shape Style'
+    ARCHIVE_NAME = 'Graph Style'
 
     """Implementation details"""
     GRAPH_COLOR = 'SteelBlue1'
@@ -147,23 +157,13 @@ class GraphTitleCard(BaseCardType):
     GRAPH_RADIUS = 175
     BACKGROUND_GRAPH_COLOR = 'rgba(140,140,140,0.5)'
 
-    """Gradient image"""
-    GRADIENT = REF_DIRECTORY.parent / 'overline' / 'small_gradient.png'
-
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'episode_text',
         'hide_episode_text', 'font_color', 'font_interline_spacing',
         'font_interword_spacing', 'font_file', 'font_kerning', 'font_size',
-        'font_vertical_shift',
-
-        'graph_background_color',
-        'graph_color',
-        'graph_inset',
-        'graph_radius',
-        'graph_width',
-        'fill_scale',
-        'percentage',
-        'text_position',
+        'font_vertical_shift', 'graph_background_color', 'graph_color',
+        'graph_inset', 'graph_radius', 'graph_width', 'fill_scale',
+        'percentage', 'text_position',
     )
 
 
@@ -222,7 +222,7 @@ class GraphTitleCard(BaseCardType):
         self.graph_radius = graph_radius
         self.graph_width = graph_width
         self.fill_scale = fill_scale
-        self.percentage = float(percentage)
+        self.percentage = percentage
         self.text_position: TextPosition = text_position
 
 
@@ -316,6 +316,12 @@ class GraphTitleCard(BaseCardType):
     def fraction_commands(self) -> ImageMagickCommands:
         """Subcommand to draw the numerator and denominator."""
 
+        # Parse numerator and denominator from episode text
+        if '/' in self.episode_text:
+            numerator, denominator = map(str.strip, self.episode_text.split('/', maxsplit=1))
+        else:
+            numerator, denominator = '-', self.episode_text
+
         # Determine coordinates of the positioning
         if 'left' in self.text_position:
             num_x = self.WIDTH - self.graph_inset - self.graph_radius
@@ -349,7 +355,7 @@ class GraphTitleCard(BaseCardType):
                 [
                     *base_commands,
                     f'-fill "{self.graph_color}"',
-                    f'label:"{self.episode_text}"',
+                    f'label:"{numerator}"',
                 ],
                 '95x2+10+10',
                 num_x, num_y,
@@ -360,7 +366,7 @@ class GraphTitleCard(BaseCardType):
                 [
                     *base_commands,
                     f'-fill "white"',
-                    f'label:"10"',
+                    f'label:"{denominator}"',
                 ],
                 '95x2+10+10',
                 den_x, den_y,
@@ -428,7 +434,11 @@ class GraphTitleCard(BaseCardType):
         """
 
         if not custom_font:
-            ...
+            if 'graph_background_color' in extras:
+                extras['graph_background_color'] =\
+                    GraphTitleCard.BACKGROUND_GRAPH_COLOR
+            if 'graph_color' in extras:
+                extras['graph_color'] = GraphTitleCard.GRAPH_COLOR
 
 
     @staticmethod
@@ -446,7 +456,10 @@ class GraphTitleCard(BaseCardType):
         """
 
         custom_extras = (
-            ...
+            ('graph_background_color' in extras
+                and extras['graph_background_color'] != GraphTitleCard.BACKGROUND_GRAPH_COLOR)
+            or ('graph_color' in extras
+                and extras['graph_color'] != GraphTitleCard.GRAPH_COLOR)
         )
 
         return (custom_extras
@@ -485,10 +498,7 @@ class GraphTitleCard(BaseCardType):
 
 
     def create(self) -> None:
-        """
-        Make the necessary ImageMagick and system calls to create this
-        object's defined title card.
-        """
+        """Create this object's defined Title Card."""
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
