@@ -171,6 +171,11 @@ class SeasonPosterSet(YamlReader):
                 poster_file.name
             ).group(1))
 
+            # Look for a per-season logo
+            logo = self.__logo
+            if (logo.parent / f'logo_season{season_number}.png').exists():
+                logo = self.__logo.parent / f'logo_season{season_number}.png'
+
             # Get destination file
             season_folder = global_objects.pp.get_season_folder(season_number)
             filename = f'Season{season_number}.jpg'
@@ -191,7 +196,7 @@ class SeasonPosterSet(YamlReader):
             self.posters[season_number] = SeasonPoster(
                 source=poster_file,
                 destination=destination,
-                logo=self.__logo,
+                logo=logo,
                 season_text=season_text,
                 font=self.font_file,
                 font_color=self.font_color,
