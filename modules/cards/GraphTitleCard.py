@@ -112,7 +112,7 @@ class GraphTitleCard(BaseCardType):
         creators=['CollinHeist'],
         source='builtin',
         supports_custom_fonts=True,
-        supports_custom_seasons=True,
+        supports_custom_seasons=False,
         supported_extras=[
             
         ],
@@ -128,14 +128,14 @@ class GraphTitleCard(BaseCardType):
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
-        'max_line_width': 30,   # Character count to begin splitting titles
+        'max_line_width': 35,   # Character count to begin splitting titles
         'max_line_count': 3,    # Maximum number of lines a title can take up
         'top_heavy': True,      # This class uses top heavy titling
     }
 
     """Characteristics of the default title font"""
     TITLE_FONT = str((REF_DIRECTORY / 'HelveticaNeue-BoldItalic.ttf').resolve())
-    TITLE_COLOR = 'white'
+    TITLE_COLOR = 'rgb(247, 247, 247)'
     DEFAULT_FONT_CASE = 'source'
     FONT_REPLACEMENTS = {}
 
@@ -145,7 +145,7 @@ class GraphTitleCard(BaseCardType):
     EPISODE_TEXT_FORMAT = '{episode_number} / {season_episode_max}'
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE = False
 
     """Standard class has standard archive name"""
     ARCHIVE_NAME = 'Graph Style'
@@ -157,13 +157,16 @@ class GraphTitleCard(BaseCardType):
     GRAPH_RADIUS = 175
     BACKGROUND_GRAPH_COLOR = 'rgba(140,140,140,0.5)'
 
+    """Gradient image"""
+    GRADIENT = REF_DIRECTORY.parent / 'overline' / 'small_gradient.png'
+
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'episode_text',
         'hide_episode_text', 'font_color', 'font_interline_spacing',
         'font_interword_spacing', 'font_file', 'font_kerning', 'font_size',
         'font_vertical_shift', 'graph_background_color', 'graph_color',
-        'graph_inset', 'graph_radius', 'graph_width', 'fill_scale',
-        'percentage', 'text_position',
+        'graph_inset', 'graph_radius', 'graph_width', 'fill_scale', 
+        'omit_gradient', 'percentage', 'text_position',
     )
 
 
@@ -188,6 +191,7 @@ class GraphTitleCard(BaseCardType):
             graph_radius: int = GRAPH_RADIUS,
             graph_width: float = 1.0,
             fill_scale: float = GRAPH_FILL_SCALE,
+            omit_gradient: bool = False,
             percentage: float = 0.75,
             text_position: TextPosition = 'lower left',
             preferences: Optional['Preferences'] = None,
@@ -222,8 +226,40 @@ class GraphTitleCard(BaseCardType):
         self.graph_radius = graph_radius
         self.graph_width = graph_width
         self.fill_scale = fill_scale
+        self.omit_gradient = omit_gradient
         self.percentage = percentage
         self.text_position: TextPosition = text_position
+
+
+    @property
+    def gradient_commands(self) -> ImageMagickCommands:
+        """
+        Subcommand to overlay the gradient to this image. This rotates
+        and repositions the gradient overlay based on the text position.
+        """
+
+        if self.omit_gradient:
+            return []
+
+        if 'lower' in self.text_position:
+            rotation = 0
+            geometry = '+0+0'
+        elif 'upper' in self.text_position:
+            rotation = 180
+            geometry = '+0+0'
+        elif 'left' in self.text_position:
+            rotation = 90
+            geometry = f'-{(self.WIDTH - self.HEIGHT) / 2}+0'
+        else:
+            rotation = 270
+            geometry = f'+{(self.WIDTH - self.HEIGHT) / 2}+0'
+
+        return [
+            f'\( "{self.GRADIENT.resolve()}"',
+            f'-rotate {rotation} \)',
+            f'-geometry {geometry}',
+            f'-composite',
+        ]
 
 
     @property
@@ -244,27 +280,33 @@ class GraphTitleCard(BaseCardType):
 
         graph_width = 25 * self.graph_width
 
-        return [
-            # Draw container ring
-            f'-fill none',
-            f'-stroke "{self.graph_background_color}"',
-            f'-strokewidth {graph_width:.1f}',
-            f'-draw "translate {x},{y}',
-            *SvgCircle(
-                radius=self.graph_radius,
-                fill_percentage=1.0,
-            ).draw_commands,
-            f'"',
-            # Draw filled in ring
-            f'-stroke "{self.graph_color}"',
-            f'-strokewidth {graph_width * self.fill_scale:.1f}',
-            f'-draw "translate {x},{y}',
-            *SvgCircle(
-                radius=self.graph_radius,
-                fill_percentage=self.percentage,
-            ).draw_commands,
-            f'"',
-        ]
+        return self.add_drop_shadow(
+            [
+                f'-size {self.TITLE_CARD_SIZE}',
+                f'xc:none',
+                # Draw container ring
+                f'-fill none',
+                f'-stroke "{self.graph_background_color}"',
+                f'-strokewidth {graph_width:.1f}',
+                f'-draw "translate {x},{y}',
+                *SvgCircle(
+                    radius=self.graph_radius,
+                    fill_percentage=1.0,
+                ).draw_commands,
+                f'"',
+                # Draw filled in ring
+                f'-stroke "{self.graph_color}"',
+                f'-strokewidth {graph_width * self.fill_scale:.1f}',
+                f'-draw "translate {x},{y}',
+                *SvgCircle(
+                    radius=self.graph_radius,
+                    fill_percentage=self.percentage,
+                ).draw_commands,
+                f'"',
+            ],
+            '95x2+4+4',
+            0, 0,
+        )
 
 
     @property
@@ -303,13 +345,24 @@ class GraphTitleCard(BaseCardType):
             ey = (self.HEIGHT / 2) - self.graph_radius + internal_offset
         end = Coordinate(ex, ey)
 
-        return [
-            f'-fill none',
-            f'-stroke "white"',
-            # f'-stroke "{self.BACKGROUND_GRAPH_COLOR}"',
-            f'-strokewidth 8',
-            Line(start, end).draw(),
-        ]
+        # Use graph color if at 100%
+        if self.percentage >= 1.0:
+            color = self.graph_color
+        else:
+            color = 'white'
+
+        return self.add_drop_shadow(
+            [
+                f'-size {self.TITLE_CARD_SIZE}',
+                f'xc:none',
+                f'-fill none',
+                f'-stroke "{color}"',
+                # f'-stroke "{self.BACKGROUND_GRAPH_COLOR}"',
+                f'-strokewidth 8',
+                Line(start, end).draw(),
+            ],
+            '85x3+4+4', 0, 0,
+        )
 
 
     @property
@@ -318,9 +371,16 @@ class GraphTitleCard(BaseCardType):
 
         # Parse numerator and denominator from episode text
         if '/' in self.episode_text:
-            numerator, denominator = map(str.strip, self.episode_text.split('/', maxsplit=1))
+            numerator, denominator = map(
+                str.strip, self.episode_text.split('/', maxsplit=1)
+            )
         else:
             numerator, denominator = '-', self.episode_text
+
+        # Scale font size if either piece is too large
+        size = 1.0
+        if len(numerator) > 2 or len(denominator) > 2:
+            size = min(2 / len(numerator), 2 / len(denominator))
 
         # Determine coordinates of the positioning
         if 'left' in self.text_position:
@@ -339,13 +399,19 @@ class GraphTitleCard(BaseCardType):
             num_y = self.HEIGHT / 2
             den_y = self.HEIGHT / 2
 
+        # Color denominator if at 100%
+        if numerator == denominator or self.percentage >= 1.0:
+            denominator_color = self.graph_color
+        else:
+            denominator_color = 'white'
+
         # Base commands for both numerator and denominator
         base_commands = [
             f'-background None',
             f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
             f'-stroke none',
             f'-strokewidth 0',
-            f'-pointsize 75',
+            f'-pointsize {75 * size:.2f}'
         ]
 
         return [
@@ -354,10 +420,11 @@ class GraphTitleCard(BaseCardType):
             *self.add_drop_shadow(
                 [
                     *base_commands,
+                    # f'-pointsize {75 * size:.2f}',
                     f'-fill "{self.graph_color}"',
                     f'label:"{numerator}"',
                 ],
-                '95x2+10+10',
+                '95x2+8+8',
                 num_x, num_y,
             ),
             # Add denominator
@@ -365,10 +432,12 @@ class GraphTitleCard(BaseCardType):
             *self.add_drop_shadow(
                 [
                     *base_commands,
-                    f'-fill "white"',
+                    # f'-pointsize {75 * denominator_size:.2f}',
+                    f'-fill "{denominator_color}"',
+                    # f'-fill "{self.BACKGROUND_GRAPH_COLOR}"',
                     f'label:"{denominator}"',
                 ],
-                '95x2+10+10',
+                '95x2+8+8',
                 den_x, den_y,
             ),
         ]
@@ -407,12 +476,11 @@ class GraphTitleCard(BaseCardType):
                     f'-fill "{self.font_color}"',
                     f'-pointsize {95 * self.font_size}',
                     f'-interline-spacing {-35 + self.font_interline_spacing}',
-                    f'-interword-spacing {15 + self.font_interword_spacing}',
-                    f'-kerning {1 * self.font_kerning:.2f}',
+                    f'-interword-spacing {25 + self.font_interword_spacing}',
+                    f'-kerning {2 * self.font_kerning:.2f}',
                     f'label:"{self.title_text}"',
                 ],
-                shadow=f'95x2+10+10',
-                x=x, y=y,
+                '95x2+8+8', x, y,
             ),
         ]
 
@@ -505,7 +573,8 @@ class GraphTitleCard(BaseCardType):
             f'-density 100',
             # Resize and apply styles to source image
             *self.resize_and_style,
-            # Add each component of the image
+            # Overlay gradient
+            *self.gradient_commands,
             # Draw the graph
             *self.graph_commands,
             # Draw divider
