@@ -12,6 +12,14 @@
  * @typedef {"blank" | "lower" | "source" | "title" | "upper"} TitleCase
  */
 
+// Availability ----------------------------------------------------------------
+
+/**
+ * @typedef {Object} AvailableTemplate
+ * @property {number} id
+ * @property {string} name
+ */
+
 // Connections -----------------------------------------------------------------
 
 /**
@@ -219,6 +227,21 @@
 /**
  * @typedef {Object} Template
  * 
+ */
+
+// Syncs -----------------------------------------------------------------------
+
+/**
+ * @typedef {Object} Sync
+ * @property {int} id
+ * @property {"Emby" | "Jellyfin" | "Plex" | "Sonarr"} interface
+ * @property {string} name
+ * @property {int} interface_id
+ * @property {Array<int>} template_ids
+ * @property {Array<string>} required_tags
+ * @property {Array<string>} excluded_tags
+ * @property {Array<string>} required_libraries
+ * @property {Array<string>} excluded_libraries
  */
 
 // Blueprints ------------------------------------------------------------------

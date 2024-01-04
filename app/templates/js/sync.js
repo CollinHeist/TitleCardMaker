@@ -1,15 +1,6 @@
-/**
- * @typedef {Object} Sync
- * @property {int} id
- * @property {"Emby" | "Jellyfin" | "Plex" | "Sonarr"} interface
- * @property {string} name
- * @property {int} interface_id
- * @property {Array<int>} template_ids
- * @property {Array<string>} required_tags
- * @property {Array<string>} excluded_tags
- * @property {Array<string>} required_libraries
- * @property {Array<string>} excluded_libraries
- */
+{% if False %}
+import {AnyConnection, AvailableTemplate, MediaServerLibrary, Series, Sync} from './.types.js';
+{% endif %}
 
 /**
  * Submit an API request to get all defined Connections. The dropdowns for each
@@ -20,6 +11,11 @@ function initConnectionDropdowns() {
   $.ajax({
     type: 'GET',
     url: '/api/connection/all',
+    /**
+     * Initialize the Connection selector dropdowns.
+     * @param {Array<AnyConnection>} connections - All defined Connections to
+     * parse for dropdown initialization.
+     */
     success: connections => {
       const emby = connections.filter(({interface_type}) => interface_type === 'Emby');
       const jellyfin = connections.filter(({interface_type}) => interface_type === 'Jellyfin');
@@ -56,7 +52,8 @@ function initConnectionDropdowns() {
       if (jellyfin.length === 0) { $('section[data-connection="jellyfin"]').remove(); }
       if (plex.length === 0) { $('section[data-connection="plex"]').remove(); }
       if (sonarr.length === 0) { $('section[data-connection="sonarr"]').remove(); }
-    }, error: response => showErrorToast({title: 'Error Querying Connections', response}),
+    },
+    error: response => showErrorToast({title: 'Error Querying Connections', response}),
   });
 }
 
@@ -68,6 +65,11 @@ function getLibraries() {
   $.ajax({
     type: 'GET',
     url: '/api/available/libraries/all',
+    /**
+     * Query successful, initialize the dropdowns for each Form.
+     * @param {MediaServerLibrary} libraries - Libraries to initialize dropdowns
+     * with.
+     */
     success: libraries => {
       const emby = libraries.filter(({interface}) => interface === 'Emby').map(({name}) => {
         return {name, value: name, selected: false};
@@ -116,6 +118,10 @@ function getTags() {
   $.ajax({
     type: 'GET',
     url: '/api/available/tags/sonarr',
+    /**
+     * Initialize the Sonarr tag dropdowns with the given values.
+     * @param {Array<string>} tags - List of tags.
+     */
     success: tags => {
       $('.dropdown[dropdown-type="sonarr-tags"]').dropdown({
         allowAdditions: true,
@@ -124,10 +130,12 @@ function getTags() {
           return {name: label, value: label, selected: false};
         })
       })
-    }, error: response => showErrorToast({title: 'Error Querying Tags', response}),
+    },
+    error: response => showErrorToast({title: 'Error Querying Tags', response}),
   });
 }
 
+/** @type {Array<AvailableTemplate>} */
 let allTemplates = [];
 
 /**
@@ -138,6 +146,11 @@ function getTemplates() {
   $.ajax({
     type: 'GET',
     url: '/api/available/templates',
+    /**
+     * Initialize the Template ID dropdowns with the given values.
+     * @param {Array<AvailableTemplate>} availableTemplates - All available
+     * Templates.
+     */
     success: availableTemplates => {
       allTemplates = availableTemplates;
       $('.dropdown[data-value="template_ids"]').dropdown({
@@ -210,10 +223,15 @@ function showEditModel(sync) {
       url: `/api/sync/${sync.id}`,
       data: JSON.stringify(dataObj),
       contentType: 'application/json',
+      /**
+       * Re-query all Syncs.
+       * @param {Sync} updatedSync - Modified Sync object.
+       */
       success: updatedSync => {
         showInfoToast(`Updated Sync "${updatedSync.name}"`);
         getAllSyncs();
-      }, error: response => showErrorToast({title: 'Error Editing Sync', response}),
+      },
+      error: response => showErrorToast({title: 'Error Editing Sync', response}),
       complete: () => {
         $(`#edit-sync${sync.id}`).modal('hide');
         $(`#edit-sync${sync.id}`).remove();
@@ -246,7 +264,8 @@ async function showDeleteSyncModal(syncId) {
         success: () => {
           showInfoToast('Deleted Sync');
           getAllSyncs();
-        }, error: response => {
+        },
+        error: response => {
           showErrorToast({title: 'Error Deleting Sync', response});
           $(`#sync${syncId}`).toggleClass('red double loading', false);
         },
@@ -311,13 +330,17 @@ async function getAllSyncs() {
         $.ajax({
           type: 'POST',
           url: `/api/sync/${id}`,
-          success: response => {
+          /**
+           * Display a toast of all the newly added Series.
+           * @param {Array<Series>} series - List of synced Series.
+           */
+          success: series => {
             let message = '';
-            for (let {id, name} of response) {
+            for (let {id, name} of series) {
               message += `<a class="item" href="/series/${id}">${name}</a>`;
             }
             $.toast({
-              title: `Synced ${response.length} Series`,
+              title: `Synced ${series.length} Series`,
               message: `<ul class="ui ordered animated list">${message}</ul>`,
               displayTime: 0,
               showProgress: 'bottom',
@@ -336,29 +359,36 @@ async function getAllSyncs() {
   });
 }
 
-async function getSyncSchedule() {
-  const {next_run} = await fetch('/api/schedule/SyncInterfaces').then(resp => resp.json());
-  const nextRun = new Date(next_run);
-  const nextRunStr = nextRun.toLocaleString();
+function getSyncSchedule() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/schedule/SyncInterfaces',
+    success: ({next_run}) => {
+      const nextRun = new Date(next_run);
+      const nextRunStr = nextRun.toLocaleString();
 
-  // Get current time
-  const updatePreview = () => {
-    const now = new Date();
-    const timeDifferenceSeconds = Math.floor((nextRun - now) / 1000);
-    const timeDifferenceMinutes = Math.floor(timeDifferenceSeconds / 60);
-    const timeDifferenceHours = Math.floor(timeDifferenceMinutes / 60);
-    const timeDifferenceDays = Math.floor(timeDifferenceHours / 24);
+      // Get current time
+      const updatePreview = () => {
+        const now = new Date();
+        const timeDifferenceSeconds = Math.floor((nextRun - now) / 1000);
+        const timeDifferenceMinutes = Math.floor(timeDifferenceSeconds / 60);
+        const timeDifferenceHours = Math.floor(timeDifferenceMinutes / 60);
+        const timeDifferenceDays = Math.floor(timeDifferenceHours / 24);
 
-    // Create string for next run time, only show up to two time units
-    const timeUnits = [];
-    if (timeDifferenceDays > 0) { timeUnits.push(`${timeDifferenceDays} days`); }
-    if (timeDifferenceHours % 24 > 0) { timeUnits.push(`${timeDifferenceHours%24} hours`); }
-    if (timeDifferenceMinutes % 60 > 0) { timeUnits.push(`${timeDifferenceMinutes%60} minutes`); }
-    if (timeDifferenceSeconds % 60 > 0) { timeUnits.push(`${timeDifferenceSeconds%60} seconds`); }
-    const inStr = timeUnits.slice(0, 2).join(', ');
-    $('#next-sync')[0].innerHTML = `<span>All Syncs will run in <span class="ui blue text">${inStr}</span>, at <span class="ui red text">${nextRunStr}</span></span>`;
-  }
-  setInterval(updatePreview, 1000);
+        // Create string for next run time, only show up to two time units
+        const timeUnits = [];
+        if (timeDifferenceDays > 0) { timeUnits.push(`${timeDifferenceDays} days`); }
+        if (timeDifferenceHours % 24 > 0) { timeUnits.push(`${timeDifferenceHours%24} hours`); }
+        if (timeDifferenceMinutes % 60 > 0) { timeUnits.push(`${timeDifferenceMinutes%60} minutes`); }
+        if (timeDifferenceSeconds % 60 > 0) { timeUnits.push(`${timeDifferenceSeconds%60} seconds`); }
+        const inStr = timeUnits.slice(0, 2).join(', ');
+        if (inStr) {
+          $('#next-sync')[0].innerHTML = `<span>All Syncs will run in <span class="ui blue text">${inStr}</span>, at <span class="ui red text">${nextRunStr}</span>.</span>`;
+        }
+      }
+      setInterval(updatePreview, 1000);
+    },
+  });
 }
 
 async function initAll() {
