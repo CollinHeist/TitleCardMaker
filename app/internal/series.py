@@ -604,7 +604,7 @@ def load_episode_title_card(
 
 def add_series(
         new_series: NewSeries,
-        background_tasks: BackgroundTasks,
+        background_tasks: Optional[BackgroundTasks],
         db: Session,
         *,
         log: Logger = log,
@@ -616,10 +616,9 @@ def add_series(
 
     Args:
         new_series: NewSeries to add to the Database.
-        background_tasks: BackgroundTasks to add the Episode data refresh
-            task to.
+        background_tasks: BackgroundTasks to add the Episode data
+            refresh task to.
         db: Database to add the Series to.
-        *_interface: Interface to query.
         log: Logger for all log messages.
 
     Returns:
@@ -659,12 +658,15 @@ def add_series(
     refresh_remote_card_types(db, log=log)
 
     # Refresh Episode data
-    background_tasks.add_task(
-        # Function
-        refresh_episode_data,
-        # Arguments
-        db, series, background_tasks=background_tasks, log=log,
-    )
+    if background_tasks:
+        background_tasks.add_task(
+            # Function
+            refresh_episode_data,
+            # Arguments
+            db, series, background_tasks=background_tasks, log=log,
+        )
+    else:
+        refresh_episode_data(db, series, background_tasks=None, log=log)
 
     return series
 
