@@ -59,7 +59,7 @@ def take_snapshot(db: Session, *, log: Logger = log) -> None:
         users=db.query(models.user.User).count(),
         filesize=db.query(models.card.Card)\
             .with_entities(func.sum(models.card.Card.filesize))\
-            .scalar(),
+            .scalar() or 0,
         cards_created=cards_created,
     )
     log.debug(f'Took snapshot of database ({snapshot})')
