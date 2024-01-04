@@ -399,8 +399,18 @@ async def set_episode_source_image(
             detail='URL or file are required',
         )
 
-    # If only URL was required, attempt to download, error if unable
-    if url is not None:
+    # Get Episode source file
+    source_file = episode.get_source_file('unique')
+
+    # If file already exists, warn about overwriting
+    if source_file.exists():
+        log.info(f'{episode.series} {episode} source file '
+                 f'"{source_file.resolve()}" exists - replacing')
+
+    # Either download URL or write content directly
+    if url is None:
+        source_file.write_bytes(uploaded_file)
+    else:
         # If proxied, de-proxy using associated interface
         if url.startswith('/api/proxy/plex?url='):
             # Use first Plex Connection if no ID provided
@@ -423,28 +433,11 @@ async def set_episode_source_image(
             else:
                 url = connection.url + url
 
-        try:
-            content = get(url, timeout=30).content
-        except Exception as e:
-            log.exception(f'Download failed', e)
+        if not WebInterface.download_image(url, source_file, log=log):
             raise HTTPException(
                 status_code=400,
-                detail=f'Unable to download image - {e}'
-            ) from e
-    # Use uploaded file if provided
-    else:
-        content = uploaded_file
-
-    # Get Episode source file
-    source_file = episode.get_source_file('unique')
-
-    # If file already exists, warn about overwriting
-    if source_file.exists():
-        log.info(f'{episode.series} {episode} source file '
-                 f'"{source_file.resolve()}" exists - replacing')
-
-    # Write new file to the disk
-    source_file.write_bytes(content)
+                detail=f'Unable to download image'
+            )
 
     # Delete associated Card and Loaded entry to initiate future reload
     delete_cards(
