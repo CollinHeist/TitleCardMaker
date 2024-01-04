@@ -433,6 +433,9 @@ async def set_episode_source_image(
             else:
                 url = connection.url + url
 
+            # Add token to URL as query param
+            url += f'?X-Plex-Token={connection.api_key}'
+
         if not WebInterface.download_image(url, source_file, log=log):
             raise HTTPException(
                 status_code=400,
