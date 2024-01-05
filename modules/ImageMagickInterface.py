@@ -284,8 +284,8 @@ class ImageMagickInterface:
 
         try:
             # Label text produces duplicate Metrics
-            def sum_(dims: Iterable[float]) -> float:
-                return sum(dims) // (2 if ' label:"' in text_command else 1)
+            def sum_(dims: Iterable[float]) -> int:
+                return sum(dims) / (2 if ' label:"' in text_command else 1)
 
             # Process according to given methods
             return Dimensions(
@@ -294,6 +294,7 @@ class ImageMagickInterface:
             )
         except ValueError as e:
             log.debug(f'Cannot identify text dimensions - {e}')
+            log.debug(f'{widths=} {heights=}')
             return Dimensions(0, 0)
 
 
