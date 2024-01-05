@@ -151,7 +151,7 @@ class GraphTitleCard(BaseCardType):
     ARCHIVE_NAME = 'Graph Style'
 
     """Implementation details"""
-    GRAPH_COLOR = 'SteelBlue1'
+    GRAPH_COLOR = 'SteelBlue1' # 'rgb(77,178,136)'
     GRAPH_FILL_SCALE = 0.6
     GRAPH_INSET = 75
     GRAPH_RADIUS = 175
@@ -161,12 +161,13 @@ class GraphTitleCard(BaseCardType):
     GRADIENT = REF_DIRECTORY.parent / 'overline' / 'small_gradient.png'
 
     __slots__ = (
-        'source_file', 'output_file', 'title_text', 'episode_text',
+        'source_file', 'output_file', 'title_text', 'numerator', 'denominator',
         'hide_episode_text', 'font_color', 'font_interline_spacing',
         'font_interword_spacing', 'font_file', 'font_kerning', 'font_size',
-        'font_vertical_shift', 'graph_background_color', 'graph_color',
-        'graph_inset', 'graph_radius', 'graph_width', 'fill_scale', 
-        'omit_gradient', 'percentage', 'text_position',
+        'font_vertical_shift', 'episode_text_font_size',
+        'graph_background_color', 'graph_color', 'graph_inset', 'graph_radius',
+        'graph_width', 'fill_scale', 'omit_gradient', 'percentage',
+        'text_position',
     )
 
 
@@ -185,6 +186,7 @@ class GraphTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
+            episode_text_font_size: float = 1.0,
             graph_background_color: str = BACKGROUND_GRAPH_COLOR,
             graph_color: str = GRAPH_COLOR,
             graph_inset: int = GRAPH_INSET,
@@ -207,7 +209,14 @@ class GraphTitleCard(BaseCardType):
 
         # Ensure characters that need to be escaped are
         self.title_text = self.image_magick.escape_chars(title_text)
-        self.episode_text = self.image_magick.escape_chars(episode_text)
+        if '/' in episode_text:
+            numerator, denominator = map(
+                str.strip, episode_text.split('/', maxsplit=1)
+            )
+        else:
+            numerator, denominator = '-', episode_text
+        self.numerator = self.image_magick.escape_chars(numerator)
+        self.denominator = self.image_magick.escape_chars(denominator)
         self.hide_episode_text = hide_episode_text
 
         # Font/card customizations
@@ -220,6 +229,7 @@ class GraphTitleCard(BaseCardType):
         self.font_vertical_shift = font_vertical_shift
 
         # Extras
+        self.episode_text_font_size = episode_text_font_size
         self.graph_background_color = graph_background_color
         self.graph_color = graph_color
         self.graph_inset = graph_inset
@@ -316,19 +326,30 @@ class GraphTitleCard(BaseCardType):
         denominator.
         """
 
-        # Determine coordinates of the lower left of the divider
-        internal_offset = 85 * (self.graph_radius / 175)
+        # Scale offset from graph sides by graph radius
+        internal_offset = 85 * (self.graph_radius / self.GRAPH_RADIUS)
+
+        # Determine coordinates of the lower left corner of the divider
         if 'left' in self.text_position:
             sx = self.graph_inset + internal_offset
         else:
             sx = self.WIDTH - (2 * self.graph_radius) \
                 - self.graph_inset + internal_offset
-        if 'upper' in self.text_position:
-            sy = self.graph_inset + (2 * self.graph_radius) - internal_offset
-        elif 'lower' in self.text_position:
-            sy = self.HEIGHT - self.graph_inset - internal_offset
+
+        if (slant_mode := len(self.numerator) < 3 and len(self.denominator) <3):
+            if 'upper' in self.text_position:
+                sy = self.graph_inset + (2 * self.graph_radius) - internal_offset
+            elif 'lower' in self.text_position:
+                sy = self.HEIGHT - self.graph_inset - internal_offset
+            else:
+                sy = (self.HEIGHT / 2) + self.graph_radius - internal_offset
         else:
-            sy = (self.HEIGHT / 2) + self.graph_radius - internal_offset
+            if 'upper' in self.text_position:
+                sy = self.graph_inset + self.graph_radius
+            elif 'lower' in self.text_position:
+                sy = self.HEIGHT - self.graph_inset - self.graph_radius
+            else:
+                sy = self.HEIGHT / 2
         start = Coordinate(sx, sy)
 
         # Determine coordinates of the top right of the divider
@@ -336,20 +357,21 @@ class GraphTitleCard(BaseCardType):
             ex = self.graph_inset + (2 * self.graph_radius) - internal_offset
         else:
             ex = self.WIDTH - self.graph_inset - internal_offset
-        if 'upper' in self.text_position:
-            ey = self.graph_inset + internal_offset
-        elif 'lower' in self.text_position:
-            ey = self.HEIGHT - self.graph_inset - (2 * self.graph_radius) \
-                + internal_offset
+
+        if slant_mode:
+            if 'upper' in self.text_position:
+                ey = self.graph_inset + internal_offset
+            elif 'lower' in self.text_position:
+                ey = self.HEIGHT - self.graph_inset - (2 * self.graph_radius) \
+                    + internal_offset
+            else:
+                ey = (self.HEIGHT / 2) - self.graph_radius + internal_offset
         else:
-            ey = (self.HEIGHT / 2) - self.graph_radius + internal_offset
+            ey = sy
         end = Coordinate(ex, ey)
 
         # Use graph color if at 100%
-        if self.percentage >= 1.0:
-            color = self.graph_color
-        else:
-            color = 'white'
+        color = self.graph_color if self.percentage >= 1.0 else 'white'
 
         return self.add_drop_shadow(
             [
@@ -361,7 +383,7 @@ class GraphTitleCard(BaseCardType):
                 f'-strokewidth 8',
                 Line(start, end).draw(),
             ],
-            '85x3+4+4', 0, 0,
+            '90x3+5+5', 0, 0,
         )
 
 
@@ -369,26 +391,28 @@ class GraphTitleCard(BaseCardType):
     def fraction_commands(self) -> ImageMagickCommands:
         """Subcommand to draw the numerator and denominator."""
 
-        # Parse numerator and denominator from episode text
-        if '/' in self.episode_text:
-            numerator, denominator = map(
-                str.strip, self.episode_text.split('/', maxsplit=1)
-            )
+        # Determine gravity
+        if (slant_mode := len(self.numerator) < 3 and len(self.denominator) <3):
+            numerator_gravity = 'southeast'
+            denominator_gravity = 'northwest'
         else:
-            numerator, denominator = '-', self.episode_text
-
-        # Scale font size if either piece is too large
-        size = 1.0
-        if len(numerator) > 2 or len(denominator) > 2:
-            size = min(2 / len(numerator), 2 / len(denominator))
+            numerator_gravity = 'south'
+            denominator_gravity = 'north'
 
         # Determine coordinates of the positioning
-        if 'left' in self.text_position:
-            num_x = self.WIDTH - self.graph_inset - self.graph_radius
-            den_x = self.graph_inset + self.graph_radius
+        if slant_mode:
+            if 'left' in self.text_position:
+                num_x = self.WIDTH - self.graph_inset - self.graph_radius
+                den_x = self.graph_inset + self.graph_radius
+            else:
+                num_x = self.graph_inset + self.graph_radius
+                den_x = self.WIDTH - self.graph_inset - self.graph_radius
         else:
-            num_x = self.graph_inset + self.graph_radius
-            den_x = self.WIDTH - self.graph_inset - self.graph_radius
+            num_x = (self.WIDTH / 2) - self.graph_inset - self.graph_radius
+            num_x *= -1 if 'left' in self.text_position else 1
+            den_x = num_x
+
+        # Determine y coordinate
         if 'upper' in self.text_position:
             num_y = self.HEIGHT - self.graph_inset - self.graph_radius + 10
             den_y = self.graph_inset + self.graph_radius + 10
@@ -400,7 +424,7 @@ class GraphTitleCard(BaseCardType):
             den_y = self.HEIGHT / 2
 
         # Color denominator if at 100%
-        if numerator == denominator or self.percentage >= 1.0:
+        if self.numerator == self.denominator or self.percentage >= 1.0:
             denominator_color = self.graph_color
         else:
             denominator_color = 'white'
@@ -411,31 +435,30 @@ class GraphTitleCard(BaseCardType):
             f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
             f'-stroke none',
             f'-strokewidth 0',
-            f'-pointsize {75 * size:.2f}'
+            f'-kerning {4.0 * self.episode_text_font_size:.2f}',
+            f'-pointsize {75 * self.episode_text_font_size:.2f}'
         ]
 
         return [
             # Add numerator
-            f'-gravity southeast',
+            f'-gravity {numerator_gravity}',
             *self.add_drop_shadow(
                 [
                     *base_commands,
-                    # f'-pointsize {75 * size:.2f}',
                     f'-fill "{self.graph_color}"',
-                    f'label:"{numerator}"',
+                    f'label:"{self.numerator}"',
                 ],
                 '95x2+8+8',
                 num_x, num_y,
             ),
             # Add denominator
-            f'-gravity northwest',
+            f'-gravity {denominator_gravity}',
             *self.add_drop_shadow(
                 [
                     *base_commands,
-                    # f'-pointsize {75 * denominator_size:.2f}',
                     f'-fill "{denominator_color}"',
                     # f'-fill "{self.BACKGROUND_GRAPH_COLOR}"',
-                    f'label:"{denominator}"',
+                    f'label:"{self.denominator}"',
                 ],
                 '95x2+8+8',
                 den_x, den_y,
