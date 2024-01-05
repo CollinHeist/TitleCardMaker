@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 from typing import Callable, Optional
 
-from pydantic import constr, PositiveInt
+from pydantic import conint, constr, PositiveInt
 
 from app.schemas.base import Base
 
@@ -11,10 +11,15 @@ Base classes
 """
 CronExpression = constr(strip_whitespace=True, regex=r'^([^ ]+\s+){4}([^ ]+)$')
 
+def Seconds(v: int, /) -> int: return v
+def Minutes(v: int, /) -> int: return Seconds(v * 60)
+def Hours(v: int, /) -> int: return Minutes(v * 60)
+def Days(v: int, /) -> int: return Hours(v * 24)
+
 class NewJob(Base):
     id: str
     function: Callable[..., None]
-    seconds: PositiveInt
+    seconds: conint(gt=Minutes(10))
     crontab: CronExpression
     description: str
     internal: bool = False
@@ -39,7 +44,7 @@ Return classes
 class ScheduledTask(Base):
     id: str
     description: str
-    frequency: Optional[PositiveInt] = None
+    frequency: Optional[int] = None
     crontab: Optional[str] = None
     next_run: str
     previous_duration: Optional[timedelta] = None
