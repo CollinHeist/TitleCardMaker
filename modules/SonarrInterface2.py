@@ -90,7 +90,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
 
         # Base parameters for sending requests to Sonarr
         self.__standard_params = {'apikey': api_key}
-        self.server_id = interface_id
+        self.interface_id = interface_id
         self.downloaded_only = downloaded_only
 
         # Query system status to verify connection to Sonarr
@@ -200,7 +200,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
                 show['title'],
                 show['year'],
                 imdb_id=show.get('imdbId'),
-                sonarr_id=f'{self.server_id}:{show.get("id")}',
+                sonarr_id=f'{self.interface_id}:{show.get("id")}',
                 tvdb_id=show.get('tvdbId'),
                 tvrage_id=show.get('tvRageId'),
             )
@@ -227,7 +227,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
         """
 
         # If all possible ID's are defined, exit
-        if series_info.has_ids(*self.SERIES_IDS, interface_id=self.server_id):
+        if series_info.has_ids(*self.SERIES_IDS, interface_id=self.interface_id):
             return None
 
         # Search for Series
@@ -256,11 +256,11 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
 
             # Add Sonarr ID if added to this server
             if (sonarr_id := series.get('id')) is not None:
-                reference_series_info.set_sonarr_id(sonarr_id, self.server_id)
-            else:
-                log.debug(f'Found {series_info} via Sonarr, but not in server')
+                reference_series_info.set_sonarr_id(sonarr_id, self.interface_id)
 
             if series_info == reference_series_info:
+                if not reference_series_info.has_id('sonarr', self.interface_id):
+                    log.debug(f'Found {series_info} via Sonarr, but not in server')
                 series_info.copy_ids(reference_series_info)
                 break
 
@@ -309,12 +309,12 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             for image in images:
                 if image['coverType'] == 'poster':
                     url = image['url'].rsplit('?', maxsplit=1)[0]
-                    return f'/api/proxy/sonarr?url={url}&interface_id={self.server_id}'
+                    return f'/api/proxy/sonarr?url={url}&interface_id={self.interface_id}'
 
             return None
 
         def get_sonarr_id(id_: Optional[int]) -> Optional[str]:
-            return None if id_ is None else f'{self.server_id}:{id_}'
+            return None if id_ is None else f'{self.interface_id}:{id_}'
 
         return [
             SearchResult(
@@ -353,14 +353,16 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
         """
 
         # If no ID was returned, error and return an empty list
-        if not series_info.has_id('sonarr_id', self.server_id):
-            log.warning(f'Series "{series_info}" not found in Sonarr')
-            return []
+        if not series_info.has_id('sonarr_id', self.interface_id):
+            self.set_series_ids(None, series_info, log=log)
+            if not series_info.has_id('sonarr_id', self.interface_id):
+                log.debug(f'Series "{series_info}" not found in Sonarr')
+                return []
 
         # Construct GET arguments
         url = f'{self.url}episode/'
         params = {
-            'seriesId': series_info.sonarr_id[self.server_id]
+            'seriesId': series_info.sonarr_id[self.interface_id]
         } | self.__standard_params
 
         # Query Sonarr to get JSON of all episodes for this series
@@ -416,7 +418,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             if episode_info is not None:
                 all_episode_info.append((
                     episode_info,
-                    WatchedStatus(self.server_id),
+                    WatchedStatus(self.interface_id),
                 ))
 
         # If any episodes had TVDb ID's of 0, then warn user to refresh series
