@@ -23,9 +23,7 @@ __all__ = ['TCM_ROOT', 'CONFIG_ROOT', 'Preferences']
 
 
 class Preferences:
-    """
-    Class defining global Preferences.
-    """
+    """Class defining global Preferences."""
 
     """Path to the version file for the Web UI"""
     VERSION_FILE = TCM_ROOT / 'modules' / 'ref' / 'version_webui'
@@ -210,7 +208,7 @@ class Preferences:
         self.blacklisted_blueprints: set[int] = set()
         self.imported_blueprints: set[int] = set()
         self.advanced_scheduling = False
-        self.task_crontabs = {}
+        self.task_crontabs: dict[str, str] = {}
 
         self.require_auth = False
         self.home_page_size = 100
@@ -342,7 +340,7 @@ class Preferences:
                 return None
 
         # If none of the font commands worked, IM might not be installed
-        log.critical(f"ImageMagick doesn't appear to be installed")
+        log.critical("ImageMagick doesn't appear to be installed")
         return None
 
 
@@ -398,13 +396,7 @@ class Preferences:
 
     @property
     def export_properties(self) -> dict[str, str]:
-        """
-        Properties to export in Blueprints.
-
-        Returns:
-            Dictionary of the properties that can be used in a
-            NewNamedFont model to recreate this object.
-        """
+        """Dictionary of the properties to be exported in Blueprints."""
 
         return {
             'card_type': self.default_card_type,
