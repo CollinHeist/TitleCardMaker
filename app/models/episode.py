@@ -194,6 +194,32 @@ class Episode(Base):
             Dictionary of properties.
         """
 
+        eps = [(
+            episode.season_number,
+            episode.episode_number,
+            episode.absolute_number
+        ) for episode in self.series.episodes]
+        # season_episode_count is the number of episodes in the season
+        season_episode_count = len([e for e in eps if e[0]==self.season_number])
+        # season_episode_max is the maximum episode number in the season
+        season_episode_max =max(e[1] for e in eps if e[0] == self.season_number)
+        # season_absolute_max is the maximum absolute number in the season
+        season_absolute_max = max(
+            (e[2] for e in eps
+             if e[0] == self.season_number and e[2] is not None),
+            default=0,
+        )
+        # series_episode_count is the total number of episodes in the series
+        series_episode_count = len(eps)
+        # series_episode_max is the maximum episode number in the series
+        series_episode_max = max(e[1] for e in eps)
+        # series_absolute_max is the maximum absolute number in the series
+        series_absolute_max = max(
+            (e[2] for e in eps if e[2] is not None),
+            default=0,
+        )
+
+        # Add watched status
         watched = None
         if library:
             watched = self.get_watched_status(
@@ -228,6 +254,12 @@ class Episode(Base):
             'episode_tmdb_id': self.tmdb_id,
             'episode_tvdb_id': self.tvdb_id,
             'episode_tvrage_id': self.tvrage_id,
+            'season_episode_count': season_episode_count,
+            'season_episode_max': season_episode_max,
+            'season_absolute_max': season_absolute_max,
+            'series_episode_count': series_episode_count,
+            'series_episode_max': series_episode_max,
+            'series_absolute_max': series_absolute_max,
             **self.as_episode_info.characteristics, # pylint: disable=no-member
         }
 
