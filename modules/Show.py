@@ -507,20 +507,60 @@ class Show(YamlReader):
         self.episodes = {}
 
         # Go through each entry in the file interface
-        seasons = set()
+        seasons, episodes = set(), []
         for entry, given_keys in self.file_interface.read():
+            # Add season number to set
+            episode_info: EpisodeInfo = entry['episode_info']
+            seasons.add(episode_info.season_number)
+
+            # Update episode list(s) for maxima addition
+            episodes.append((
+                episode_info.season_number,
+                episode_info.episode_number,
+                episode_info.abs_number,
+            ))
+
             # Create Episode object for this entry, store under key
-            seasons.add(entry['episode_info'].season_number)
-            self.episodes[entry['episode_info'].key] = Episode(
+            self.episodes[episode_info.key] = Episode(
                 base_source=self.source_directory,
-                destination=self.__get_destination(entry['episode_info']),
+                destination=self.__get_destination(episode_info),
                 card_class=self.card_class,
                 given_keys=given_keys,
                 **entry,
             )
 
-        if (not self.__is_archive
-            and self._auto_hide_seasons
+        for episode in self.episodes.values():
+            episode.add_maxima(
+                # season_episode_count is the number of episodes in the season
+                season_episode_count=len([
+                    e for e in episodes
+                    if e[0] == episode.episode_info.season_number
+                ]),
+                # season_episode_max is the maximum episode number in the season
+                season_episode_max=max(
+                    e[1] for e in episodes
+                    if e[0] == episode.episode_info.season_number
+                ),
+                # season_absolute_max is the maximum absolute number in the season
+                season_absolute_max=max(
+                    (e[2] for e in episodes
+                    if (e[0] == episode.episode_info.season_number
+                        and e[2] is not None)),
+                    default=0,
+                ),
+                # series_episode_count is the total number of episodes in the series
+                series_episode_count=len(episodes),
+                # series_episode_max is the maximum episode number in the series
+                series_episode_max=max(e[1] for e in episodes),
+                # series_absolute_max is the maximum absolute number in the series
+                series_absolute_max=max(
+                    (e[2] for e in episodes if e[2] is not None),
+                    default=0,
+                )
+            )
+
+        if (self._auto_hide_seasons
+            and not self.__is_archive
             and (seasons - set({0, 1}))):
             self.hide_seasons = True
 
