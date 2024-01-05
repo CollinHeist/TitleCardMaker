@@ -32,6 +32,7 @@ from app.schemas.card import CardActions, TitleCard, PreviewTitleCard
 from app.schemas.connection import SonarrWebhook
 from app.schemas.episode import Episode as EpisodeSchema
 from app.schemas.font import DefaultFont
+from modules.Debug import InvalidCardSettings, MissingSourceImage
 
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.SeriesInfo2 import SeriesInfo
@@ -182,9 +183,8 @@ def create_cards_for_series(
     for episode in series.episodes:
         try:
             create_episode_cards(db, background_tasks, episode, log=log)
-        except HTTPException as e:
-            log.exception(f'{series} {episode} Card creation failed - '
-                          f'{e.detail}', e)
+        except Exception as e:
+            log.exception(f'{series} {episode} Card creation failed - {e}', e)
 
     return None
 
@@ -384,7 +384,18 @@ def create_card_for_episode(
         )
 
     # Create Card for this Episode
-    create_episode_cards(db, None, episode, log=request.state.log)
+    try:
+        create_episode_cards(db, None, episode, log=request.state.log)
+    except MissingSourceImage as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=f'Missing the required Source Image',
+        ) from exc
+    except InvalidCardSettings as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=f'Invalid Card settings',
+        ) from exc
 
 
 @card_router.post('/key', tags=['Plex', 'Tautulli'])
