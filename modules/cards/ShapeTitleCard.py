@@ -88,7 +88,7 @@ class ShapeTitleCard(BaseCardType):
             Extra(
                 name='Shape Inset',
                 identifier='shape_inset',
-                description='How far to inset the shape from the edges.',
+                description='How far to inset the shape from the edges',
                 tooltip=(
                     'Number ≥<v>0.0</v>. Default is <v>75</v>. Unit is pixels.'
                 ),
@@ -96,7 +96,7 @@ class ShapeTitleCard(BaseCardType):
             Extra(
                 name='Shape Side Length',
                 identifier='shape_side_length',
-                description='How long each side of the shape is.',
+                description='How long each side of the shape is',
                 tooltip=(
                     'Number ≥<v>50.0</v>. Default is <v>200</v>. Unit is pixels.'
                 ),

@@ -18,6 +18,7 @@ from modules.cards.CutoutTitleCard import CutoutTitleCard
 from modules.cards.DividerTitleCard import DividerTitleCard
 from modules.cards.FadeTitleCard import FadeTitleCard
 from modules.cards.FrameTitleCard import FrameTitleCard
+from modules.cards.GraphTitleCard import GraphTitleCard
 from modules.cards.InsetTitleCard import InsetTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
@@ -81,6 +82,7 @@ class TitleCard:
         'fade': FadeTitleCard,
         'frame': FrameTitleCard,
         'generic': StandardTitleCard,
+        'graph': GraphTitleCard,
         'gundam': PosterTitleCard,
         'import': TextlessTitleCard,
         'inset': InsetTitleCard,

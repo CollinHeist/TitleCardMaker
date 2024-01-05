@@ -39,6 +39,10 @@ document$.subscribe(function() {
   if (previewElements.some(element => element === undefined)) { return; }
   // Link of previews to choose from
   let previewLinks = [
+    'https://github.com/CollinHeist/TitleCardMaker/assets/17693271/d57120cd-8048-4243-9970-27b2652c4fb9', // Banner
+    'https://github.com/CollinHeist/TitleCardMaker/assets/17693271/bb1eb690-5a8e-49ea-8777-d73458d387e8', // Graph
+    'https://github.com/CollinHeist/TitleCardMaker/assets/17693271/7a5b452d-6577-462e-835b-42c4c75342a8', // Inset
+    'https://github.com/CollinHeist/TitleCardMaker/assets/17693271/60d0090b-6729-49e6-9a42-35bba6524acf', // Shape
     'https://user-images.githubusercontent.com/17693271/185820454-4e3dca1c-c0df-4fa0-a7a7-81e070aa9e69.jpg',
     'https://user-images.githubusercontent.com/17693271/275364823-473521f4-e2e3-4236-a514-49eb186f2872.jpg',
     'https://user-images.githubusercontent.com/17693271/243572310-c5f34e46-ec3b-44a9-a563-b9a24db8cd1a.jpg',

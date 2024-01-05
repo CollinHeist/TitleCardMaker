@@ -114,12 +114,81 @@ class GraphTitleCard(BaseCardType):
         supports_custom_fonts=True,
         supports_custom_seasons=False,
         supported_extras=[
-            
+            Extra(
+                name='Graph Background Color',
+                identifier='graph_background_color',
+                description='Background color of the graph',
+                tooltip='Default value is <v>rgba(140,140,140,0.5)</v>.',
+            ),
+            Extra(
+                name='Graph Color',
+                identifier='graph_color',
+                description='Color of the filled-in portion of the graph',
+                tooltip='Default value is <v>SteelBlue1</v>.'
+            ),
+            Extra(
+                name='Graph Inset',
+                identifier='graph_inset',
+                description='How far to inset the graph from the edges',
+                tooltip=(
+                    'Number ≥<v>0.0</v>. Default is <v>75</v>. Unit is pixels.'
+                ),
+            ),
+            Extra(
+                name='Graph Radius',
+                identifier='graph_radius',
+                description='Radius of the graph',
+                tooltip=(
+                    'Number ><v>0</v>. Default is <v>175</v>. Unit is pixels.'
+                ),
+            ),
+            Extra(
+                name='Graph Text Font Size',
+                identifier='graph_text_font_size',
+                description='Size adjustment for the graph text',
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.',
+            ),
+            Extra(
+                name='Graph Width',
+                identifier='graph_width',
+                description='The width of the graph',
+                tooltip='Number ><v>0</v>. Default is <v>25</v>.'
+            ),
+            Extra(
+                name='Fill Scale',
+                identifier='fill_scale',
+                description='Scale for how wide the filled graph should appear',
+                tooltip=(
+                    'Number between <v>0.0</v> and <v>1.0</v>. Default is '
+                    '<v>0.6</v>.'
+                ),
+            ),
+            Extra(
+                name='Gradient Omission',
+                identifier='omit_gradient',
+                description='Whether to omit the gradient overlay',
+                tooltip=(
+                    'Either <v>True</v> or <v>False</v>. If <v>True</v>, text '
+                    'may appear less legible on brighter images.'
+                ),
+            ),
+            Extra(
+                name='Text Position',
+                identifier='text_position',
+                description='Where on the image to position the text',
+                tooltip=(
+                    'Either <v>upper left</v>, <v>upper right</v>, <v>left</v>,'
+                    ' <v>right</v>, <v>lower left</v>, or <v>lower right</v>. '
+                    'Default is <v>lower left</v>.'
+                ),
+            ),
         ],
         description=[
             'A title card similiar to the Shape card, but features a bar '
             '"graph" or progress bar which can be used to indicate total series'
-            'progress.',
+            'progress.', 'The progress is parsed from the Episode Text, which '
+            'defaults to "{episode_number} / {season_episode_max}" to display '
+            'the progress within each season.',
         ],
     )
 
@@ -140,7 +209,6 @@ class GraphTitleCard(BaseCardType):
     FONT_REPLACEMENTS = {}
 
     """Characteristics of the episode text"""
-    EPISODE_TEXT_COLOR = 'skyblue'
     EPISODE_TEXT_FONT = REF_DIRECTORY / 'HelveticaNeue-BoldItalic.ttf'
     EPISODE_TEXT_FORMAT = '{episode_number} / {season_episode_max}'
 
@@ -151,11 +219,12 @@ class GraphTitleCard(BaseCardType):
     ARCHIVE_NAME = 'Graph Style'
 
     """Implementation details"""
+    BACKGROUND_GRAPH_COLOR = 'rgba(140,140,140,0.5)'
     GRAPH_COLOR = 'SteelBlue1' # 'rgb(77,178,136)'
     GRAPH_FILL_SCALE = 0.6
     GRAPH_INSET = 75
     GRAPH_RADIUS = 175
-    BACKGROUND_GRAPH_COLOR = 'rgba(140,140,140,0.5)'
+    GRAPH_WIDTH = 25
 
     """Gradient image"""
     GRADIENT = REF_DIRECTORY.parent / 'overline' / 'small_gradient.png'
@@ -186,12 +255,12 @@ class GraphTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            episode_text_font_size: float = 1.0,
             graph_background_color: str = BACKGROUND_GRAPH_COLOR,
             graph_color: str = GRAPH_COLOR,
             graph_inset: int = GRAPH_INSET,
             graph_radius: int = GRAPH_RADIUS,
-            graph_width: float = 1.0,
+            graph_text_font_size: float = 1.0,
+            graph_width: int = GRAPH_WIDTH,
             fill_scale: float = GRAPH_FILL_SCALE,
             omit_gradient: bool = False,
             percentage: float = 0.75,
@@ -229,7 +298,7 @@ class GraphTitleCard(BaseCardType):
         self.font_vertical_shift = font_vertical_shift
 
         # Extras
-        self.episode_text_font_size = episode_text_font_size
+        self.episode_text_font_size = graph_text_font_size
         self.graph_background_color = graph_background_color
         self.graph_color = graph_color
         self.graph_inset = graph_inset
@@ -237,7 +306,7 @@ class GraphTitleCard(BaseCardType):
         self.graph_width = graph_width
         self.fill_scale = fill_scale
         self.omit_gradient = omit_gradient
-        self.percentage = percentage
+        self.percentage = float(percentage)
         self.text_position: TextPosition = text_position
 
 
@@ -288,8 +357,6 @@ class GraphTitleCard(BaseCardType):
         else:
             y = (self.HEIGHT / 2) + self.graph_radius
 
-        graph_width = 25 * self.graph_width
-
         return self.add_drop_shadow(
             [
                 f'-size {self.TITLE_CARD_SIZE}',
@@ -297,7 +364,7 @@ class GraphTitleCard(BaseCardType):
                 # Draw container ring
                 f'-fill none',
                 f'-stroke "{self.graph_background_color}"',
-                f'-strokewidth {graph_width:.1f}',
+                f'-strokewidth {self.graph_width:.1f}',
                 f'-draw "translate {x},{y}',
                 *SvgCircle(
                     radius=self.graph_radius,
@@ -306,7 +373,7 @@ class GraphTitleCard(BaseCardType):
                 f'"',
                 # Draw filled in ring
                 f'-stroke "{self.graph_color}"',
-                f'-strokewidth {graph_width * self.fill_scale:.1f}',
+                f'-strokewidth {self.graph_width * self.fill_scale:.1f}',
                 f'-draw "translate {x},{y}',
                 *SvgCircle(
                     radius=self.graph_radius,

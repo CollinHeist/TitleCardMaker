@@ -6,6 +6,7 @@ from modules.cards.CutoutTitleCard import CutoutTitleCard
 from modules.cards.DividerTitleCard import DividerTitleCard
 from modules.cards.FadeTitleCard import FadeTitleCard
 from modules.cards.FrameTitleCard import FrameTitleCard
+from modules.cards.GraphTitleCard import GraphTitleCard
 from modules.cards.InsetTitleCard import InsetTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
@@ -31,6 +32,7 @@ LocalCards = [
     DividerTitleCard.API_DETAILS,
     FadeTitleCard.API_DETAILS,
     FrameTitleCard.API_DETAILS,
+    GraphTitleCard.API_DETAILS,
     InsetTitleCard.API_DETAILS,
     LandscapeTitleCard.API_DETAILS,
     LogoTitleCard.API_DETAILS,

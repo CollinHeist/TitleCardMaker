@@ -1,12 +1,12 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from pathlib import Path
 from random import uniform
-from re import match as re_match
+from re import compile as re_compile, match as re_match
 from typing import Any, Literal, Optional, Union
 
 from pydantic import ( # pylint: disable=no-name-in-module
-    FilePath, PositiveFloat, PositiveInt, confloat, conint, constr, root_validator,
-    validator,
+    FilePath, PositiveFloat, PositiveInt, confloat, conint, constr,
+    root_validator, validator,
 )
 
 from app.schemas.base import Base, BetterColor, DictKey
@@ -18,6 +18,9 @@ from modules.cards.CutoutTitleCard import CutoutTitleCard
 from modules.cards.DividerTitleCard import DividerTitleCard, TextGravity
 from modules.cards.FadeTitleCard import FadeTitleCard
 from modules.cards.FrameTitleCard import FrameTitleCard
+from modules.cards.GraphTitleCard import (
+    GraphTitleCard, TextPosition as GraphTextPosition
+)
 from modules.cards.InsetTitleCard import InsetTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
@@ -26,7 +29,9 @@ from modules.cards.OlivierTitleCard import OlivierTitleCard
 from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
 from modules.cards.RomanNumeralTitleCard import RomanNumeralTitleCard
-from modules.cards.ShapeTitleCard import ShapeTitleCard, TextPosition as ShapeTextPosition
+from modules.cards.ShapeTitleCard import (
+    ShapeTitleCard, TextPosition as ShapeTextPosition
+)
 from modules.cards.StandardTitleCard import StandardTitleCard
 from modules.cards.StarWarsTitleCard import StarWarsTitleCard
 from modules.cards.TintedFrameTitleCard import TintedFrameTitleCard
@@ -247,6 +252,45 @@ class FrameCardType(BaseCardTypeCustomFontAllText):
     font_file: FilePath = FrameTitleCard.TITLE_FONT
     episode_text_color: BetterColor = FrameTitleCard.EPISODE_TEXT_COLOR
     episode_text_position: Literal['left', 'right', 'surround'] = 'surround'
+
+_graph_episode_text_regex = re_compile(r'^(\d+)\s*\/\s*(\d+)$')
+class GraphCardType(BaseCardModel):
+    title_text: str
+    episode_text: constr(to_upper=True)
+    hide_episode_text: bool = False
+    font_color: BetterColor
+    font_file: FilePath
+    font_interline_spacing: int = 0
+    font_interword_spacing: int = 0
+    font_kerning: float = 1.0
+    font_size: PositiveFloat = 1.0
+    font_vertical_shift: int = 0
+    episode_text_font_size: Optional[PositiveFloat] = None
+    grayscale: bool = False
+    graph_background_color: str = GraphTitleCard.BACKGROUND_GRAPH_COLOR
+    graph_color: str = GraphTitleCard.GRAPH_COLOR
+    graph_inset: PositiveInt = GraphTitleCard.GRAPH_INSET
+    graph_radius: PositiveInt = GraphTitleCard.GRAPH_RADIUS
+    graph_width: PositiveInt = GraphTitleCard.GRAPH_WIDTH
+    fill_scale: confloat(gt=0.0, le=1.0) = GraphTitleCard.GRAPH_FILL_SCALE
+    percentage: confloat(ge=0.0, le=1.0) = 0.75
+    text_position: GraphTextPosition = 'lower left'
+
+    @root_validator(skip_on_failure=True)
+    def validate_extras(cls, values):
+        # Toggle text hiding
+        values['hide_episode_text'] |= (len(values['episode_text']) == 0)
+
+        # Scale episode text size by radius if not provided
+        if values.get('episode_text_font_size', None) is None:
+            values['episode_text_font_size'] = \
+                values['graph_radius'] / GraphTitleCard.GRAPH_RADIUS
+
+        # Episode text formatted as {nom} / {den}; calculate percentage
+        if (_match := _graph_episode_text_regex.match(values['episode_text'])):
+            values['percentage'] = int(_match[1]) / int(_match[2])
+
+        return values
 
 class InsetCardType(BaseCardTypeAllText):
     font_color: BetterColor = InsetTitleCard.TITLE_COLOR
@@ -551,6 +595,7 @@ LocalCardTypeModels: dict[str, Base] = {
     'fade': FadeCardType,
     'frame': FrameCardType,
     'generic': StandardCardType,
+    'graph': GraphCardType,
     'gundam': PosterCardType,
     'inset': InsetCardType,
     'ishalioh': OlivierCardType,
