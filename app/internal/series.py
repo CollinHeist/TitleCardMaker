@@ -548,13 +548,21 @@ def load_episode_title_card(
         no Card.
     """
 
+    # Determine if in single-library mode
+    single_library_mode = (
+        (not get_preferences().library_unique_cards)
+        or len(episode.series.libraries) == 1
+    )
+
     # Only load if Episode has a Card
-    # Get associated Card
-    card = db.query(Card)\
-        .filter_by(episode_id=episode.id,
-                    interface_id=interface_id,
-                    library_name=library_name)\
-        .first()
+    if single_library_mode:
+        card = db.query(Card).filter_by(episode_id=episode.id).first()
+    else:
+        card = db.query(Card)\
+            .filter_by(episode_id=episode.id,
+                        interface_id=interface_id,
+                        library_name=library_name)\
+            .first()
 
     # Only load if Episode has a Card
     if not card:
