@@ -167,7 +167,7 @@ class TitleCard:
             'blur': episode.blur,
             'grayscale': episode.grayscale,
             'watched': episode.watched,
-        } | profile.font.get_attributes() \
+        } | profile.font.attributes \
           | self.episode.episode_info.indices \
           | extra_characteristics
 

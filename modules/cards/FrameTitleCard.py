@@ -201,7 +201,7 @@ class FrameTitleCard(BaseCardType):
         width, _ = self.image_magick.get_text_dimensions(
             title_only_command, width='max', height='sum'
         )
-        offset = 3200/2 + width/2 + 25
+        offset = (self.WIDTH + width) / 2 + 25
 
         # Add index text to left or right
         if self.episode_text_position in ('left', 'right'):

@@ -209,7 +209,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             'Years': series_info.year,
             'IncludeItemTypes': 'series',
             'SearchTerm': series_info.name,
-            'Fields': 'ProviderIds',
+            'Fields': 'ProviderIds,PremiereDate',
         } | self.__params \
           |({'AnyProviderIdEquals': provider_id_str} if provider_id_str else {})
 
@@ -227,8 +227,15 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             # Go through all items and match name and type, setting database IDs
             for result in response['Items']:
                 if result['Type'] == 'Series':
+                    if (premiere_date := result.get('PremiereDate')) is None:
+                        log.error(f'Series {result["Name"]} has no premiere date')
+                        continue
+                    year = datetime.strptime(
+                        premiere_date, self.AIRDATE_FORMAT
+                    ).year
+                    
                     this_series = SeriesInfo.from_emby_info(
-                        result, library_name, self._interface_id
+                        result, year, library_name, self._interface_id,
                     )
                     if series_info == this_series:
                         return result if raw_obj else result['Id']
@@ -312,9 +319,9 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             series_info: Series to set the ID of.
             log: Logger for all log messages.
         """
-
         # If all possible ID's are defined
-        if series_info.has_ids(*self.SERIES_IDS):
+        if series_info.has_ids(*self.SERIES_IDS, interface_id=self._interface_id,
+                               library_name=library_name):
             return None
 
         # Find series
@@ -328,7 +335,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         # Set database ID's
         series_info.set_emby_id(series['Id'], self._interface_id, library_name)
-        if (imdb_id := series['ProviderIds'].get('IMDB')):
+        if (imdb_id := series['ProviderIds'].get('Imdb')):
             series_info.set_imdb_id(imdb_id)
         if (tmdb_id := series['ProviderIds'].get('Tmdb')):
             series_info.set_tmdb_id(tmdb_id)
@@ -362,10 +369,10 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         # Match to existing info
         for old_episode_info in episode_infos:
-            for new_episode_info in new_episode_infos:
-                if old_episode_info == new_episode_info:
-                    old_episode_info.copy_ids(new_episode_info)
-
+            for new_episode_info, _ in new_episode_infos:
+                if isinstance(old_episode_info, EpisodeInfo) and isinstance(new_episode_info, EpisodeInfo):
+                    if old_episode_info == new_episode_info:
+                        old_episode_info.copy_ids(new_episode_info)
 
     def query_series(self,
             query: str,
@@ -404,7 +411,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 ongoing=result.get('Status') == 'Continuing',
                 overview=result.get('Overview', 'No overview available'),
                 poster=f'{self.url}/Items/{result["Id"]}/Images/Primary?quality=75',
-                imdb_id=result.get('ProviderIds', {}).get('IMDB'),
+                imdb_id=result.get('ProviderIds', {}).get('Imdb'),
                 tmdb_id=result.get('ProviderIds', {}).get('Tmdb'),
                 tvdb_id=result.get('ProviderIds', {}).get('Tvdb'),
                 tvrage_id=result.get('ProviderIds', {}).get('TvRage'),
@@ -482,7 +489,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         params = {
             'Recursive': True,
             'IncludeItemTypes': 'series',
-            'Fields': 'ProviderIds',
+            'Fields': 'ProviderIds,PremiereDate',
         } | self.__params
 
         # Get excluded series ID's if excluding by tags
@@ -520,10 +527,17 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
                 # Process each returned Series
                 for series in response['Items']:
-                    try:
+                    try:                     
+                        if (premiere_date := series.get('PremiereDate')) is None:
+                            log.error(f'Series {series["Name"]} has no premiere date')
+                            continue
+                        year = datetime.strptime(
+                            premiere_date, self.AIRDATE_FORMAT
+                        ).year
+
                         all_series.append((
                             SeriesInfo.from_emby_info(
-                                series, self._interface_id, library
+                                series, year, self._interface_id, library,
                             ),
                             library
                         ))
