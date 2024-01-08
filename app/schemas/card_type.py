@@ -282,9 +282,9 @@ class GraphCardType(BaseCardModel):
         values['hide_episode_text'] |= (len(values['episode_text']) == 0)
 
         # Scale episode text size by radius if not provided
-        if values.get('episode_text_font_size', None) is None:
-            values['episode_text_font_size'] = \
-                values['graph_radius'] / GraphTitleCard.GRAPH_RADIUS
+        if values.get('graph_text_font_size', None) is None:
+            values['graph_text_font_size'] = \
+                (values['graph_radius'] - 0) / GraphTitleCard.GRAPH_RADIUS
 
         # Episode text formatted as {nom} / {den}; calculate percentage
         if (_match := _graph_episode_text_regex.match(values['episode_text'])):
