@@ -340,7 +340,7 @@ class CalligraphyTitleCard(BaseCardType):
         if not self.logo_file or not self.logo_file.exists():
             return []
 
-        logo_height = 750 * self.logo_size
+        logo_height = 725 * self.logo_size
 
         base_command = [
             f'"{self.logo_file.resolve()}"',
