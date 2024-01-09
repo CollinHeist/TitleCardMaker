@@ -356,6 +356,11 @@ def resolve_card_settings(
 
     Returns:
         The resolved Card settings as a dictionary.
+
+    Raises:
+        HTTPException (400): Invalid Card type / class.
+        HTTPException (404): A specified Template / Font is missing.
+        MissingSourceImage: The required Source Image is missing.
     """
 
     # Get effective Template for this Series and Episode
@@ -624,7 +629,7 @@ def create_episode_card(
     series = episode.series
     try:
         card_settings = resolve_card_settings(episode, library, log=log)
-    except HTTPException as exc:
+    except (HTTPException, InvalidCardSettings) as exc:
         if raise_exc:
             raise exc
         return None
