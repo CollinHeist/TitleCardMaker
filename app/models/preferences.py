@@ -49,31 +49,27 @@ class Preferences:
 
     __slots__ = (
         'is_docker', 'asset_directory', 'card_directory', 'source_directory',
-        'file', 'card_width', 'card_height', 'card_filename_format',
-        'card_extension', 'image_source_priority', 'episode_data_source',
-        'valid_image_extensions', 'specials_folder_format',
-        'season_folder_format', 'sync_specials', 'remote_card_types',
-        'default_card_type', 'excluded_card_types', 'default_watched_style',
+        'completely_delete_series', 'file', 'card_width', 'card_height',
+        'card_filename_format', 'card_extension', 'image_source_priority',
+        'episode_data_source', 'valid_image_extensions',
+        'specials_folder_format', 'season_folder_format', 'sync_specials',
+        'delete_missing_episodes', 'remote_card_types', 'default_card_type',
+        'excluded_card_types', 'default_watched_style',
         'default_unwatched_style', 'use_emby', 'use_jellyfin', 'use_plex',
-        'use_sonarr', 'use_tmdb', 'tmdb_api_key', 'tmdb_minimum_width',
-        'tmdb_minimum_height', 'tmdb_skip_localized', 'tmdb_download_logos',
-        'tmdb_logo_language_priority', 'language_codes',
-        'use_magick_prefix', 'current_version', 'available_version',
-        'blacklisted_blueprints', 'advanced_scheduling', 'require_auth',
-        'task_crontabs', 'simplified_data_table', 'home_page_size',
-        'episode_data_page_size', 'stylize_unmonitored_posters',
-        'sources_as_table', 'card_type_directory', 'local_card_types',
-        'imported_blueprints', 'colorblind_mode', 'library_unique_cards',
-        'invalid_connections', 'home_page_table_view', 'reduced_animations',
+        'use_sonarr', 'use_tmdb', 'use_magick_prefix', 'language_codes',
+        'current_version', 'available_version', 'blacklisted_blueprints',
+        'advanced_scheduling', 'require_auth', 'task_crontabs',
+        'simplified_data_table', 'home_page_size', 'episode_data_page_size',
+        'stylize_unmonitored_posters', 'sources_as_table',
+        'card_type_directory', 'local_card_types', 'imported_blueprints',
+        'colorblind_mode', 'library_unique_cards', 'invalid_connections',
+        'home_page_table_view', 'reduced_animations',
         # Arguments required only for the Connection data migrations
-        'emby_url', 'emby_api_key', 'emby_username', 'emby_use_ssl',
-        'emby_filesize_limit_number', 'emby_filesize_limit_unit',
-        'jellyfin_url', 'jellyfin_api_key', 'jellyfin_username',
-        'jellyfin_use_ssl', 'jellyfin_filesize_limit_number',
-        'jellyfin_filesize_limit_unit', 'plex_url', 'plex_token',
-        'plex_use_ssl', 'plex_integrate_with_pmm', 'plex_filesize_limit_number',
-        'plex_filesize_limit_unit', 'sonarr_url', 'sonarr_api_key',
-        'sonarr_use_ssl', 'sonarr_downloaded_only', 'sonarr_libraries',
+        'emby_url', 'emby_api_key', 'emby_username', 'emby_use_ssl', 'emby_filesize_limit_number', 'emby_filesize_limit_unit',
+        'jellyfin_url', 'jellyfin_api_key', 'jellyfin_username', 'jellyfin_use_ssl', 'jellyfin_filesize_limit_number', 'jellyfin_filesize_limit_unit',
+        'plex_url', 'plex_token', 'plex_use_ssl', 'plex_integrate_with_pmm', 'plex_filesize_limit_number', 'plex_filesize_limit_unit',
+        'sonarr_url', 'sonarr_api_key', 'sonarr_use_ssl', 'sonarr_downloaded_only', 'sonarr_libraries',
+        'tmdb_api_key', 'tmdb_logo_language_priority', 'tmdb_minimum_width', 'tmdb_minimum_height', 'tmdb_skip_localized', 'tmdb_download_logos',
     )
 
 
@@ -180,7 +176,9 @@ class Preferences:
         self.specials_folder_format = 'Specials'
         self.season_folder_format = 'Season {season_number}'
 
+        self.completely_delete_series = False
         self.sync_specials = True
+        self.delete_missing_episodes = True
         self.simplified_data_table = True
         self.remote_card_types = {}
         self.local_card_types = {}

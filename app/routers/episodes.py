@@ -1,6 +1,6 @@
 from typing import Literal
 
-from fastapi import APIRouter, Body, Depends, Request
+from fastapi import APIRouter, Body, Depends, Query, Request
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 
@@ -8,11 +8,13 @@ from app.database.query import (
     get_all_templates, get_episode, get_font, get_series
 )
 from app.database.session import Page
-from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
-from app import models
+from app.dependencies import get_database
 from app.internal.auth import get_current_user
 from app.internal.cards import delete_cards, refresh_remote_card_types
 from app.internal.episodes import set_episode_ids, refresh_episode_data
+from app.models.card import Card
+from app.models.episode import Episode as EpisodeModel
+from app.models.loaded import Loaded
 from app.models.series import Series
 from app.schemas.base import UNSPECIFIED
 from app.schemas.episode import (
@@ -48,7 +50,7 @@ def add_new_episode(
     templates = get_all_templates(db, new_episode_dict)
 
     # Create new entry, add to database
-    episode = models.episode.Episode(**new_episode_dict)
+    episode = EpisodeModel(**new_episode_dict)
     db.add(episode)
     db.commit()
 
@@ -65,7 +67,7 @@ def add_new_episode(
     return episode
 
 
-@episodes_router.get('/episode/{episode_id}', status_code=200)
+@episodes_router.get('/episode/{episode_id}')
 def get_episode_by_id(
         episode_id: int,
         db: Session = Depends(get_database),
@@ -97,8 +99,8 @@ def delete_episode(
     # Delete card files, Card objects, and Loaded objects
     delete_cards(
         db,
-        db.query(models.card.Card).filter_by(episode_id=episode_id),
-        db.query(models.loaded.Loaded).filter_by(episode_id=episode_id),
+        db.query(Card).filter_by(episode_id=episode_id),
+        db.query(Loaded).filter_by(episode_id=episode_id),
         log=request.state.log,
     )
 
@@ -107,7 +109,7 @@ def delete_episode(
     db.commit()
 
 
-@episodes_router.delete('/series/{series_id}', status_code=200, tags=['Series'])
+@episodes_router.delete('/series/{series_id}', tags=['Series'])
 def delete_all_series_episodes(
         request: Request,
         series_id: int,
@@ -120,14 +122,14 @@ def delete_all_series_episodes(
     """
 
     # Get list of Episode ID's to delete
-    query = db.query(models.episode.Episode).filter_by(series_id=series_id)
+    query = db.query(EpisodeModel).filter_by(series_id=series_id)
     deleted = [episode.id for episode in query]
 
     # Delete card files, Card objects, and Loaded objects
     delete_cards(
         db,
-        db.query(models.card.Card).filter_by(series_id=series_id),
-        db.query(models.loaded.Loaded).filter_by(series_id=series_id),
+        db.query(Card).filter_by(series_id=series_id),
+        db.query(Loaded).filter_by(series_id=series_id),
         log=request.state.log,
     )
 
@@ -159,7 +161,7 @@ def refresh_episode_data_(
     refresh_episode_data(db, series, None, log=request.state.log)
 
 
-@episodes_router.patch('/batch', status_code=200)
+@episodes_router.patch('/batch')
 def update_multiple_episode_configs(
         request: Request,
         update_episodes: list[BatchUpdateEpisode] = Body(...),
@@ -214,7 +216,7 @@ def update_multiple_episode_configs(
     return episodes
 
 
-@episodes_router.patch('/episode/{episode_id}', status_code=200)
+@episodes_router.patch('/episode/{episode_id}')
 def update_episode_config(
         request: Request,
         episode_id: int,
@@ -265,7 +267,7 @@ def update_episode_config(
     return episode
 
 
-@episodes_router.get('/series/{series_id}', status_code=200, tags=['Series'])
+@episodes_router.get('/series/{series_id}', tags=['Series'])
 def get_all_series_episodes(
         series_id: int,
         order_by: Literal['index', 'absolute', 'id'] = 'index',
@@ -279,14 +281,14 @@ def get_all_series_episodes(
     """
 
     # Query for Episodes of this Series
-    query = db.query(models.episode.Episode).filter_by(series_id=series_id)
+    query = db.query(EpisodeModel).filter_by(series_id=series_id)
 
     # Order by indicated attribute
     if order_by == 'index':
-        sorted_query = query.order_by(models.episode.Episode.season_number)\
-            .order_by(models.episode.Episode.episode_number)
+        sorted_query = query.order_by(EpisodeModel.season_number)\
+            .order_by(EpisodeModel.episode_number)
     elif order_by == 'absolute':
-        sorted_query = query.order_by(models.episode.Episode.absolute_number)
+        sorted_query = query.order_by(EpisodeModel.absolute_number)
     elif order_by == 'id':
         sorted_query = query
 
@@ -297,6 +299,7 @@ def get_all_series_episodes(
 def batch_delete_episodes(
         request: Request,
         series_ids: list[int] = Body(...),
+        delete_title_cards: bool = Query(default=True),
         db: Session = Depends(get_database),
     ) -> None:
     """
@@ -305,11 +308,12 @@ def batch_delete_episodes(
     """
 
     for series in db.query(Series).filter(Series.id.in_(series_ids)).all():
-        delete_cards(
-            db,
-            db.query(models.card.Card).filter_by(series_id=series.id),
-            db.query(models.loaded.Loaded).filter_by(series_id=series.id),
-            log=request.state.log,
-        )
-        db.query(models.episode.Episode).filter_by(series_id=series.id).delete()
+        if delete_title_cards:
+            delete_cards(
+                db,
+                db.query(Card).filter_by(series_id=series.id),
+                db.query(Loaded).filter_by(series_id=series.id),
+                log=request.state.log,
+            )
+        db.query(EpisodeModel).filter_by(series_id=series.id).delete()
         db.commit()

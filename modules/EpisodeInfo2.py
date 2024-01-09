@@ -417,9 +417,16 @@ class EpisodeInfo(DatabaseInfoContainer):
 
     @property
     def key(self) -> str:
-        """Index key for this EpisodeInfo - i.e. s1e1"""
+        """Key for this episode - i.e. s1e1"""
 
         return f's{self.season_number}e{self.episode_number}'
+
+
+    @property
+    def index_str(self) -> str:
+        """Index string for this episode - i.e. S01E01"""
+
+        return f'S{self.season_number:02}E{self.episode_number:02}'
 
 
     @property

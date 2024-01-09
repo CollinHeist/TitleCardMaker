@@ -657,15 +657,15 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         Finds the episode index for the given entry. Searching is done
         in the following priority:
 
-          1. Episode TVDb ID
-          2. Episode IMDb ID (as episode)
-          3. Episode TVRage ID
-          4. Episode IMDb ID (as movie)
-          5. Episode title as movie (if no series TMDb ID is present)
-          6. Series TMDb ID and season+episode index with title match
-          7. Series TMDb ID and season+absolute episode index with title
-             match
-          8. Series TMDb ID and title match on any episode
+        1. Episode TVDb ID
+        2. Episode IMDb ID (as episode)
+        3. Episode TVRage ID
+        4. Episode IMDb ID (as movie)
+        5. Episode title as movie (if no series TMDb ID is present)
+        6. Series TMDb ID and season+episode index with title match
+        7. Series TMDb ID and season+absolute episode index with title
+        match
+        8. Series TMDb ID and fuzzy title match on any episode
 
         Args:
             series_info: The series information.

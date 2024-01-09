@@ -163,7 +163,7 @@ def refresh_episode_data(
     all_episodes = get_all_episode_data(series, raise_exc=True, log=log)
 
     # Get effective episode data source and sync specials toggle
-    series_template = get_effective_series_template(series)
+    series_template = get_effective_series_template(series, as_dict=False)
     sync_specials: bool = TieredSettings.resolve_singular_setting(
         get_preferences().sync_specials,
         getattr(series_template, 'sync_specials', None),
@@ -217,6 +217,15 @@ def refresh_episode_data(
                 log.debug(f'{series} {existing} Updating watched status')
                 log.debug(f'{existing.watched_statuses=}')
                 changed = True
+
+    # Get existing Episodes
+    if get_preferences().delete_missing_episodes:
+        new_keys = set(episode_info.index_str for episode_info, _ in all_episodes)
+        all_existing = {episode.index_str: episode for episode in series.episodes}
+        for delete_key in set(all_existing) - new_keys:
+            log.debug(f'Deleting {all_existing[delete_key]} - not in Episode '
+                      f'Data Source')
+            db.delete(all_existing[delete_key])
 
     # Log any new Episodes
     if len(new_episodes) > 1:

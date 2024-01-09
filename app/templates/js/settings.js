@@ -1,10 +1,14 @@
+{% if False %}
+import {EpisodeDataSourceToggle, ImageSourceToggle, ToggleOption} from './.types.js';
+{% endif %}
+
 // Get all Connection data
 let allConnections;
 async function getAllConnections() {
   allConnections = await fetch('/api/connection/all').then(resp => resp.json());
 }
 
-/*
+/**
  * Get the global Episode data source and initialize the dropdown with all
  * valid Connections.
  */
@@ -12,6 +16,10 @@ function getEpisodeDataSources() {
   $.ajax({
     type: 'GET',
     url: '/api/settings/episode-data-source',
+    /**
+     * Episode Data Sources returned, update dropdown.
+     * @param {EpisodeDataSourceToggle} sources - Selected Episode Data Sources.
+     */
     success: sources => {
       $('.dropdown[data-value="episode_data_source"]').dropdown({
         values: sources.map(({interface_id, name, selected}) => {
@@ -22,7 +30,7 @@ function getEpisodeDataSources() {
   });  
 }
 
-/*
+/**
  * Get the global image source priority and initialize the dropdown with all
  * valid Connections.
  */
@@ -30,8 +38,12 @@ function getImageSourcePriority() {
   $.ajax({
     type: 'GET',
     url: '/api/settings/image-source-priority',
+    /**
+     * Image source priority returned.
+     * @param {ImageSourceToggle} sources - Globally enabled image sources.
+     */
     success: sources => {
-      $('#image-source-priority').dropdown({
+      $('.dropdown[data-value="image_source_priority"]').dropdown({
         values: sources.map(({interface, interface_id, selected}) => {
           // Match this interface to a defined Connection (to get the name)
           for (let {id, name} of allConnections) {
@@ -40,9 +52,10 @@ function getImageSourcePriority() {
             }
           }
           return {name: interface, value: interface_id, selected};
-        })
+        }),
       });
-    }, error: response => showErrorToast({title: 'Error Querying Image Source Priority', response}),
+    },
+    error: response => showErrorToast({title: 'Error Querying Image Source Priority', response}),
   });  
 }
 
@@ -50,6 +63,10 @@ function getLanguageCodes() {
   $.ajax({
     type: 'GET',
     url: '/api/settings/languages',
+    /**
+     * Languages returned, update dropdown.
+     * @param {ToggleOption} languages - Which languages are selected
+     */
     success: languages => {
       $('.dropdown[data-value="language_codes"]').dropdown({
         placeholder: 'English',
@@ -108,6 +125,10 @@ function updatePreviewTitleCard(allCards, previewCardType) {
 }
 
 async function initAll() {
+  // Enable dropdowns, checkboxes, etc.
+  $('.ui.dropdown').dropdown();
+  $('.ui.checkbox').checkbox();
+
   await getAllConnections();
   getEpisodeDataSources();
   getImageSourcePriority();
@@ -115,10 +136,6 @@ async function initAll() {
 
   // Filled in later
   let allCards = [];
-
-  // Enable dropdowns, checkboxes, etc.
-  $('.ui.dropdown').dropdown();
-  $('.ui.checkbox').checkbox();
 
   // Show extension warning based on starting extension
   let currentExtension = $('#card-extension-input').val();

@@ -366,7 +366,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
         } | self.__standard_params
 
         # Query Sonarr to get JSON of all episodes for this series
-        all_episodes = self.get(url, params)
+        all_episodes: list[dict] = self.get(url, params)
         all_episode_info = []
 
         # Go through each episode and get its season/episode number, and title
@@ -404,22 +404,17 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
                 has_bad_ids = True
 
             # Create EpisodeInfo object for this entry
-            episode_info = EpisodeInfo(
-                # series_info,
-                episode['title'],
-                episode['seasonNumber'],
-                episode['episodeNumber'],
-                episode.get('absoluteEpisodeNumber'),
-                tvdb_id=episode.get('tvdbId'),
-                airdate=air_datetime,
-            )
-
-            # Add to episode list
-            if episode_info is not None:
-                all_episode_info.append((
-                    episode_info,
-                    WatchedStatus(self.interface_id),
-                ))
+            all_episode_info.append((
+                EpisodeInfo(
+                    episode['title'],
+                    episode['seasonNumber'],
+                    episode['episodeNumber'],
+                    episode.get('absoluteEpisodeNumber'),
+                    tvdb_id=episode.get('tvdbId'),
+                    airdate=air_datetime,
+                ),
+                WatchedStatus(self.interface_id),
+            ))
 
         # If any episodes had TVDb ID's of 0, then warn user to refresh series
         if has_bad_ids:

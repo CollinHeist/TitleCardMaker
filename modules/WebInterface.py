@@ -49,9 +49,8 @@ class WebInterface:
             name: Name (for logging) of this interface.
             verify_ssl: Whether to verify SSL requests with this
                 interface.
-            cache: (Keyword only) Whether to cache requests with this
-                interface.
-            log: (Keyword) Logger for all log messages.
+            cache: Whether to cache requests with this interface.
+            log: Logger for all log messages.
         """
 
         # Store name of this interface
@@ -88,7 +87,7 @@ class WebInterface:
 
         Args:
             url: The URL of the GET request.
-            params: The params of  the GET request.
+            params: The params of the GET request.
 
         Returns:
             Dict made from the JSON return of the specified GET request.
@@ -111,8 +110,7 @@ class WebInterface:
         Args:
             url: URL to pass to GET.
             Parameters to pass to GET.
-            cache: (Keyword) Whether to utilized cached results for this
-                request.
+            cache: Whether to utilized cached results for this request.
 
         Returns:
             Parsed JSON return of the specified GET request.
@@ -156,7 +154,7 @@ class WebInterface:
             image: URL to the image to download, or bytes of the image
                 to write.
             destination: Destination path to download the image to.
-            log: (Keyword) Logger for all log messages.
+            log: Logger for all log messages.
 
         Returns:
             Whether the image was successfully downloaded.

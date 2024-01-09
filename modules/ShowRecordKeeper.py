@@ -47,8 +47,7 @@ class ShowRecordKeeper:
         it exists, and creates if it does not.
 
         Args:
-            database_directory: Base Path to read/write any databases
-                from.
+            database_directory: Path to read/write any databases from.
         """
 
         # Read record database

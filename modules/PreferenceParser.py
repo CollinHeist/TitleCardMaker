@@ -695,13 +695,15 @@ class PreferenceParser(YamlReader):
                 log.critical(f'Sonarr server must contain "url" and "api_key"')
                 self.valid = False
             else:
-                verify_ssl = reader.get('verify_ssl', type_=bool, default=True)
-                downloaded_only = reader.get(
-                    'downloaded_only', type_=bool, default=False
-                )
                 self.sonarr_kwargs.append({
-                    'url': url, 'api_key': api_key, 'verify_ssl': verify_ssl,
-                    'downloaded_only': downloaded_only,
+                    'url': url,
+                    'api_key': api_key,
+                    'verify_ssl': reader.get(
+                        'verify_ssl', type_=bool, default=True
+                    ),
+                    'downloaded_only': reader.get(
+                        'downloaded_only', type_=bool, default=True
+                    ),
                 })
 
         # If multiple servers were specified, parse all specificiations

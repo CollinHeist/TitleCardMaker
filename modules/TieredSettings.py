@@ -6,7 +6,7 @@ _Setting = TypeVar('_Setting')
 
 class TieredSettings:
     """
-    Class defining some multi-itered Setting dictionaries. All methods
+    Class defining some multi-tiered Setting dictionaries. All methods
     and functions relate to finding the highest-priority non-None value
     of any number of dictionaries.
 

@@ -1,6 +1,6 @@
 from datetime import datetime
 from re import match, compile as re_compile
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional, TypedDict
 
 from plexapi.video import Show as PlexShow
 from sqlalchemy import and_, func, or_
@@ -12,6 +12,23 @@ from modules.DatabaseInfoContainer import DatabaseInfoContainer, InterfaceID
 if TYPE_CHECKING:
     from app.models.series import Series
 
+
+__all__ = ('SeriesInfo', )
+
+# pylint: disable=missing-class-docstring
+class SeriesCharacteristics(TypedDict):
+    series_name: str
+    series_year: int
+
+class SeriesIds(TypedDict):
+    emby_id: str
+    imdb_id:str
+    jellyfin_id: str
+    sonarr_id: str
+    tmdb_id: int
+    tvdb_id: int
+    tvrage_id: int
+# pylint: enable=missing-class-docstring
 
 class SeriesInfo(DatabaseInfoContainer):
     """
@@ -244,7 +261,7 @@ class SeriesInfo(DatabaseInfoContainer):
 
 
     @property
-    def characteristics(self) -> dict[str, Union[str, int]]:
+    def characteristics(self) -> SeriesCharacteristics:
         """Characteristics of this info to be used in Card creation."""
 
         return {
@@ -254,7 +271,7 @@ class SeriesInfo(DatabaseInfoContainer):
 
 
     @property
-    def ids(self) -> dict[str, Union[str, int]]:
+    def ids(self) -> SeriesIds:
         """Dictionary of IDs for this object."""
 
         return {

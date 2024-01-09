@@ -210,7 +210,7 @@ class InterfaceGroup(Generic[_InterfaceID, _Interface],
             Initialized Interface.
         """
 
-        log.debug(f'Initializing {self.cls.__name__}[{interface_id}]...')
+        log.debug(f'Initializing {self.cls.__name__}[{interface_id}]..')
         try:
             self.interfaces[interface_id] = self.cls(
                 **interface_kwargs, log=log

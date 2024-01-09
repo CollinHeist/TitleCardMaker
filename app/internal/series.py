@@ -367,8 +367,13 @@ def delete_series(
         series_poster.unlink(missing_ok=True)
         small_poster = series_poster.parent / 'poster-750.jpg'
         small_poster.unlink(missing_ok=True)
+        log.debug(f'{series} Deleted posters')
 
-        log.debug(f'{series} Deleted poster(s)')
+    # Delete Source directory if necessary
+    if get_preferences().completely_delete_series:
+        for file in Path(series.source_directory).glob('*'):
+            log.debug(f'Deleting "{file}"')
+            file.unlink(missing_ok=True)
 
     # Delete Series; all child objects are deleted on cascade
     log.info(f'Deleting {series}')

@@ -41,67 +41,71 @@
               <i class="folder open outline icon"></i>
               Root Folders
             </h3>
-            <p class="help">Restart TitleCardMaker for changes to either of these directories to take effect.</p>
-            <div class="field">
-              <label>Title Card Directory</label>
-              <input type="text" name="card_directory" placeholder="{{preferences.card_directory}}" value="{{preferences.card_directory}}">
-              <p class="help">
-                Directory to store all Title Cards.
-                <br>
-                Can be overrwitten per-Series.
-              </p>
-            </div>
-            <div class="field">
-              <label>Source Directory</label>
-              <input type="text" name="source_directory" placeholder="{{preferences.source_directory}}" value="{{preferences.source_directory}}">
-              <p class="help">Directory to store all textless source images.</p>
-            </div>
+            <section>
+              <p class="help">Restart TitleCardMaker for changes to either of these directories to take effect.</p>
+              <div class="field">
+                <label>Title Card Directory</label>
+                <input type="text" name="card_directory" placeholder="{{preferences.card_directory}}" value="{{preferences.card_directory}}">
+                <p class="help">
+                  Directory to store all Title Cards.
+                  <br>
+                  Can be overrwitten per-Series.
+                </p>
+              </div>
+
+              <div class="field">
+                <label>Source Directory</label>
+                <input type="text" name="source_directory" placeholder="{{preferences.source_directory}}" value="{{preferences.source_directory}}">
+                <p class="help">Directory to store all textless source images.</p>
+              </div>
+
+              <div class="ui checkbox field">
+                <label>Delete Series Source Images</label>
+                {% if preferences.completely_delete_series %}
+                <input name="completely_delete_series" type="checkbox" checked="checked">
+                {% else %}
+                <input name="completely_delete_series" type="checkbox">
+                {% endif %}
+                <p class="help">Whether to delete Source Images when deleting a Series.</p>
+              </div>
+            </section>
 
             <!-- Episode Data Settings -->
             <h3 class="ui horizontal divider header">
               <i class="layer group icon"></i>
               Episode Data
             </h3>
-            <div class="field">
-              <div class="field">
-                <label>Episode Data Source</label>
-                <div data-value="episode_data_source" class="ui compact selection dropdown">
-                  <input type="hidden" name="episode_data_source">
-                  <i class="dropdown icon"></i>
-                  <div class="default text">Connection</div>
-                  <div class="menu">
-                    <!-- Added asynchronously -->
+            <section>
+              <div class="two fields">
+                <div class="field">
+                  <label>Episode Data Source</label>
+                  <div data-value="episode_data_source" class="ui compact selection dropdown">
+                    <input type="hidden" name="episode_data_source">
+                    <i class="dropdown icon"></i>
+                    <div class="default text">Connection</div>
+                    <div class="menu">
+                      <!-- Added asynchronously -->
+                    </div>
                   </div>
+                  <p class="help">
+                    Default Connection to source Episode Data from, i.e. which Episodes to make Cards for.
+                    <br>
+                    Can be overwritten per-Series.
+                  </p>
                 </div>
-                <p class="help">
-                  Default Connection to source Episode Data from, i.e. which Episodes to make Cards for.
-                  <br>
-                  Can be overwritten per-Series.
-                </p>
-              </div>
-              <div class="field">
-                <label>Image Source Priority</label>
-                <div id="image-source-priority" class="ui compact multiple selection dropdown">
-                  <input id="image-source-priority-input" type="hidden" name="image_source_priority">
-                  <i class="dropdown icon"></i>
-                  <div class="default text">Image Sources</div>
-                  <div class="menu"><!-- Added asynchronousely --></div>
+    
+                <div class="field">
+                  <label>Image Source Priority</label>
+                  <div class="ui compact multiple selection dropdown" data-value="image_source_priority">
+                    <input type="hidden" name="image_source_priority">
+                    <i class="dropdown icon"></i>
+                    <div class="default text">Image Sources</div>
+                    <div class="menu"><!-- Added asynchronousely --></div>
+                  </div>
+                  <p class="help">Order of Connections to try and source textless images from.</p>
                 </div>
-                <p class="help">Order of Connections to try and source textless images from.</p>
               </div>
-              <div class="ui checkbox field">
-                <label>Sync Specials</label>
-                {% if preferences.sync_specials %}
-                <input name="sync_specials" type="checkbox" checked="checked">
-                {% else %}
-                <input name="sync_specials" type="checkbox">
-                {% endif %}
-                <p class="help">
-                  Whether to include Episodes from Season 0.
-                  <br>
-                  Can be overwritten per-Series.
-                </p>
-              </div>
+
               <div class="field">
                 <label>Translation Languages</label>
                 <div data-value="language_codes" class="ui compact multiple selection dropdown">
@@ -116,14 +120,40 @@
                   Not all languages support both Cardinal and Ordinal versions of all numbers.
                 </p>
               </div>
-            </div>
+  
+              <div class="two fields">
+                <div class="ui checkbox field">
+                  <label>Sync Specials</label>
+                  {% if preferences.sync_specials %}
+                  <input name="sync_specials" type="checkbox" checked="checked">
+                  {% else %}
+                  <input name="sync_specials" type="checkbox">
+                  {% endif %}
+                  <p class="help">
+                    Whether to include Episodes from Season 0.
+                    <br>
+                    Can be overwritten per-Series.
+                  </p>
+                </div>
+    
+                <div class="ui checkbox field">
+                  <label>Delete Missing Episodes</label>
+                  {% if preferences.delete_missing_episodes %}
+                  <input name="delete_missing_episodes" type="checkbox" checked="checked">
+                  {% else %}
+                  <input name="delete_missing_episodes" type="checkbox">
+                  {% endif %}
+                  <p class="help">Whether to delete Episodes no longer present in the assigned Episode Data Source.</p>
+                </div>
+              </div>
+            </section>
 
             <!-- Title Card Settings -->
             <h3 class="ui horizontal divider header">
               <i class="images outline icon"></i>
               Title Cards
             </h3>
-            <div class="field">
+            <section>
               <div class="ui stackable grid">
                 <!-- Card settings -->
                 <div class="four wide column">
@@ -253,14 +283,14 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </section>
 
             <!-- Filename Settings -->
             <h3 class="ui horizontal divider header">
               <i class="file outline icon"></i>
               File Naming
             </h3>
-            <div id="filename-settings">
+            <section>
               <div class="field">
                 <label>Card Extension</label>
                 <div id="card-extension" class="ui compact selection dropdown">
@@ -321,93 +351,94 @@
                   <b>If enabled, TitleCardMaker will create one Title Card for each Episode for each Library.</b>
                 </p>
               </div>
-            </div>
+            </section>
 
             <h3 class="ui horizontal divider header">
               <i class="wrench icon"></i>
               Web Interface
             </h3>
-
-            <div class="ui two fields">
-              <div class="eight wide field">
-                <label>Home Page Size</label>
-                <input type="number" name="home_page_size" placeholder="{{preferences.home_page_size}}" value="{{preferences.home_page_size}}">
-                <p class="help">How many Series per page to display on the home screen. Between 1-250.</p>
+            <section>
+              <div class="ui two fields">
+                <div class="eight wide field">
+                  <label>Home Page Size</label>
+                  <input type="number" name="home_page_size" placeholder="{{preferences.home_page_size}}" value="{{preferences.home_page_size}}">
+                  <p class="help">How many Series per page to display on the home screen. Between 1-250.</p>
+                </div>
+    
+                <div class="eight wide field">
+                  <label>Episode Data Table Page Size</label>
+                  <input type="number" name="episode_data_page_size" placeholder="{{preferences.episode_data_page_size}}" value="{{preferences.episode_data_page_size}}">
+                  <p class="help">How many Episodes per page to display in Episode data tables.</p>
+                </div>
               </div>
   
-              <div class="eight wide field">
-                <label>Episode Data Table Page Size</label>
-                <input type="number" name="episode_data_page_size" placeholder="{{preferences.episode_data_page_size}}" value="{{preferences.episode_data_page_size}}">
-                <p class="help">How many Episodes per page to display in Episode data tables.</p>
-              </div>
-            </div>
-
-            <div class="ui two fields">
-              <div class="ui checkbox field" data-value="home_page_table_view">
-                <label>Display Home Page as a Table</label>
-                {% if preferences.home_page_table_view %}
-                <input name="home_page_table_view" type="checkbox" checked="">
-                {% else %}
-                <input name="home_page_table_view" type="checkbox">
-                {% endif %}
-                <p class="help">Whether to display Series on the home page in a table.</p>
+              <div class="ui two fields">
+                <div class="ui checkbox field" data-value="home_page_table_view">
+                  <label>Display Home Page as a Table</label>
+                  {% if preferences.home_page_table_view %}
+                  <input name="home_page_table_view" type="checkbox" checked="">
+                  {% else %}
+                  <input name="home_page_table_view" type="checkbox">
+                  {% endif %}
+                  <p class="help">Whether to display Series on the home page in a table.</p>
+                </div>
+                
+                <div class="ui checkbox field">
+                  <label>Display Source Image Data as a Table</label>
+                  {% if preferences.sources_as_table %}
+                  <input name="sources_as_table" type="checkbox" checked="checked">
+                  {% else %}
+                  <input name="sources_as_table" type="checkbox">
+                  {% endif %}
+                  <p class="help">Whether to display source image data in a table.</p>
+                </div>
               </div>
               
-              <div class="ui checkbox field">
-                <label>Display Source Image Data as a Table</label>
-                {% if preferences.sources_as_table %}
-                <input name="sources_as_table" type="checkbox" checked="checked">
-                {% else %}
-                <input name="sources_as_table" type="checkbox">
-                {% endif %}
-                <p class="help">Whether to display source image data in a table.</p>
-              </div>
-            </div>
-            
-            <div class="ui two fields">
-              <div class="ui checkbox field" data-value="simplified_data_table">
-                <label>Simplified Episode Data Tables</label>
-                {% if preferences.simplified_data_table %}
-                <input name="simplified_data_table" type="checkbox" checked="">
-                {% else %}
-                <input name="simplified_data_table" type="checkbox">
-                {% endif %}
-                <p class="help">Whether to hide "advanced" (uncommonly edited) columns from Episode data tables.</p>
+              <div class="ui two fields">
+                <div class="ui checkbox field" data-value="simplified_data_table">
+                  <label>Simplified Episode Data Tables</label>
+                  {% if preferences.simplified_data_table %}
+                  <input name="simplified_data_table" type="checkbox" checked="">
+                  {% else %}
+                  <input name="simplified_data_table" type="checkbox">
+                  {% endif %}
+                  <p class="help">Whether to hide "advanced" (uncommonly edited) columns from Episode data tables.</p>
+                </div>
+    
+                <div class="ui checkbox field">
+                  <label>Stylize Unmonitored Posters</label>
+                  {% if preferences.stylize_unmonitored_posters %}
+                  <input name="stylize_unmonitored_posters" type="checkbox" checked="checked">
+                  {% else %}
+                  <input name="stylize_unmonitored_posters" type="checkbox">
+                  {% endif %}
+                  <p class="help">Whether to stylize the posters of Unmonitored Series on the home page.</p>
+                </div>
               </div>
   
-              <div class="ui checkbox field">
-                <label>Stylize Unmonitored Posters</label>
-                {% if preferences.stylize_unmonitored_posters %}
-                <input name="stylize_unmonitored_posters" type="checkbox" checked="checked">
-                {% else %}
-                <input name="stylize_unmonitored_posters" type="checkbox">
-                {% endif %}
-                <p class="help">Whether to stylize the posters of Unmonitored Series on the home page.</p>
+              <div class="ui two fields">
+                <div class="ui checkbox field">
+                  <label>Color-Impaired Mode</label>
+                  {% if preferences.colorblind_mode %}
+                  <input name="colorblind_mode" type="checkbox" checked="checked">
+                  {% else %}
+                  <input name="colorblind_mode" type="checkbox">
+                  {% endif %}
+                  <p class="help">Utilize alternate styling with more distinguished colors.</p>
+                </div>
+                <br>
+    
+                <div class="ui checkbox field">
+                  <label>Reduced Animations</label>
+                  {% if preferences.reduced_animations %}
+                  <input name="reduced_animations" type="checkbox" checked="checked">
+                  {% else %}
+                  <input name="reduced_animations" type="checkbox">
+                  {% endif %}
+                  <p class="help">Reduce website animations.</p>
+                </div>
               </div>
-            </div>
-
-            <div class="ui two fields">
-              <div class="ui checkbox field">
-                <label>Color-Impaired Mode</label>
-                {% if preferences.colorblind_mode %}
-                <input name="colorblind_mode" type="checkbox" checked="checked">
-                {% else %}
-                <input name="colorblind_mode" type="checkbox">
-                {% endif %}
-                <p class="help">Utilize alternate styling with more distinguished colors.</p>
-              </div>
-              <br>
-  
-              <div class="ui checkbox field">
-                <label>Reduced Animations</label>
-                {% if preferences.reduced_animations %}
-                <input name="reduced_animations" type="checkbox" checked="checked">
-                {% else %}
-                <input name="reduced_animations" type="checkbox">
-                {% endif %}
-                <p class="help">Reduce website animations.</p>
-              </div>
-            </div>
+            </section>
 
             <!-- Validation message -->
             <div class="ui floating error message"></div>

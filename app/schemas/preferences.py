@@ -66,6 +66,7 @@ Update classes
 class UpdatePreferences(UpdateBase):
     card_directory: DirectoryPath = UNSPECIFIED
     source_directory: DirectoryPath = UNSPECIFIED
+    completely_delete_series: bool = UNSPECIFIED
     card_width: PositiveInt = UNSPECIFIED
     card_height: PositiveInt = UNSPECIFIED
     card_filename_format: str = UNSPECIFIED
@@ -76,6 +77,7 @@ class UpdatePreferences(UpdateBase):
     specials_folder_format: str = UNSPECIFIED
     season_folder_format: str = UNSPECIFIED
     sync_specials: bool = UNSPECIFIED
+    delete_missing_episodes: bool = UNSPECIFIED
     language_codes: list[TextLanguageCodes] = UNSPECIFIED
     simplified_data_table: bool = UNSPECIFIED
     default_card_type: CardTypeIdentifier = UNSPECIFIED
@@ -130,6 +132,7 @@ Return classes
 class Preferences(Base):
     card_directory: Path
     source_directory: Path
+    completely_delete_series: bool
     card_width: PositiveInt
     card_height: PositiveInt
     card_filename_format: str
@@ -141,6 +144,7 @@ class Preferences(Base):
     specials_folder_format: str
     season_folder_format: str
     sync_specials: bool
+    delete_missing_episodes: bool
     language_codes: list[TextLanguageCodes]
     simplified_data_table: bool
     is_docker: bool
