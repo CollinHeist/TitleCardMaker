@@ -1,4 +1,11 @@
+from argparse import ArgumentParser
+from pathlib import Path
 from re import compile as re_compile
+
+try:
+    from modules.Debug import log
+except ImportError:
+    from Debug import log
 
 
 class Version:
@@ -203,3 +210,144 @@ class Version:
         """Subversion of this object - i.e. 1.2.3-branch{x}"""
 
         return self.version[3]
+
+
+class Changelog:
+    """Helper class for converting Markdown changelog files to HTML."""
+
+    """How many spaces corresponds to a single indent"""
+    INDENT_SPACES = 2
+
+    """Regex for matching types of content"""
+    CODE_REGEX = re_compile(r'`([^`]+)`')
+    ITALIC_REGEX = re_compile(r'\s+_([^_]+)_\s+')
+    LINK_REGEX = re_compile(r'\[(.+)]\((.+)\)')
+    HEADER_REGEX = re_compile(r'^#\s+(.+)$')
+    OUTER_BULLET_REGEX = re_compile(r'^-\s+(.+)$')
+    INNER_BULLET_REGEX = re_compile(r'^(\s+)-\s+(.+)$')
+    IMAGE_REGEX = re_compile(r'^\s+<img.*src="(.+)".*\/?>$')
+
+
+    def __init__(self, file: Path, /) -> None:
+        """
+        Parse the Changelog (Markdown) in the given file.
+        
+        Args:
+            file: Path to the file to parse.
+        """
+
+        i_1, i_2, i_3 = self._indent(1), self._indent(2), self._indent(3)
+        html: list[str] = []
+        _prev_indent = 0
+
+        for line in file.read_text().splitlines():
+            # Header -> <h2>
+            if (match := self.HEADER_REGEX.match(line)):
+                # Close previous indented list
+                if _prev_indent:
+                    html.append(f'{i_2}</div>')
+                    html.append(f'{i_1}</div>')
+                # Close previous section list
+                if html:
+                    html.append(f'</div>')
+                # Start new list
+                html.append(f'<h2>{match.group(1)}</h2>')
+                html.append(f'<div class="ui ordered list">')
+                _prev_indent = 0
+            # Outer-level bullet
+            elif (match := self.OUTER_BULLET_REGEX.match(line)):
+                # Was in prior sublist, close list
+                if _prev_indent:
+                    html.append(f'{i_2}</div>') # Close list
+                    html.append(f'{i_1}</div>') # Close item
+
+                html.append(f'{i_1}<div class="item">{self._format(match.group(1))}</div>')
+                _prev_indent = 0
+            # Inner bullet
+            elif (match := self.INNER_BULLET_REGEX.match(line)):
+                curr_indent = len(match.group(1))
+                # This line is below last line, turn last line into list
+                if _prev_indent < curr_indent:
+                    html[-1] = html[-1][:-len('</div>')] # Remove item closing tag
+                    html.append(f'{i_2}<div class="list">')
+                    html.append(f'{i_3}<div class="item">{self._format(match.group(2))}</div>')
+                    _prev_indent = curr_indent
+                # Line is same indent as previous, add as item
+                elif _prev_indent == curr_indent:
+                    html.append(f'{i_3}<div class="item">{self._format(match.group(2))}</div>')
+                # Line is less indented, add as item
+                else:
+                    html.append(f'{i_2}</div>')
+                    html.append(f'{i_2}<div class="item">{self._format(match.group(2))}</div>')
+                    _prev_indent = curr_indent
+            # Image
+            elif (match := self.IMAGE_REGEX.match(line)):
+                html[-1] = html[-1][:-len('</div>')]
+                html.append(f'{i_2}<div class="list">')
+                html.append(f'{i_3}<img width="50%" src="{match.group(1)}">')
+                html.append(f'{i_2}</div>')
+                html.append(f'{i_1}</div>')
+
+        # Close final list
+        html.append(f'</div>')
+
+        # Store resulting HTML string
+        self.html = '\n'.join(html)
+        log.debug(f'Parsed {file}')
+
+
+    def _indent(self, amount: int, /) -> str:
+        """
+        Get the string corresponding to the given level of indentation.
+
+        Args:
+            amount: How much indentation to return.
+
+        Returns:
+            Indentation string.
+        """
+
+        return ' ' * amount * Changelog.INDENT_SPACES
+
+
+    def _format(self, text: str, /) -> str:
+        """
+        Format the given text for HTML. This replaces markdown elements
+        like italics, code highlights, and links with their HTML
+        equivalents.
+
+        >>> print(self._format('This `code` _example_ with [links!](test.com)'))
+        'This <b>code</b> <i>example</i> with <a href="test.com" target="_blank">links!</a>
+
+        Args:
+            text: Text to format.
+
+        Returns:
+            Formatted text.
+        """
+
+        return self.LINK_REGEX.sub(
+            r'<a href="\2" target="_blank">\1</a>',
+            self.CODE_REGEX.sub(
+                r'<b>\1</b>',
+                self.ITALIC_REGEX.sub(
+                    r'<i>\1</i>',
+                    text,
+                )
+            )
+        )
+
+    def write(self, file: Path, /) -> None:
+        """Write this Changelog (HTML) to the given file."""
+
+        file.write_text(self.html)
+        log.info(f'Wrote converted HTML changelog to {file}')
+
+
+if __name__ == '__main__':
+    ap = ArgumentParser()
+    ap.add_argument('changelog', type=Path, help='Markdown file to parse')
+    ap.add_argument('output', type=Path, help='HTML file to write')
+    args = ap.parse_args()
+
+    Changelog(args.changelog).write(args.output)
