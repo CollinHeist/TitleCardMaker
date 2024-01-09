@@ -1,3 +1,7 @@
+{% if False %}
+import {Snapshot} from './.types.js';
+{% endif %}
+
 function initializeCardsGraph(labels, rawData) {
   const chartContext = document.getElementById('titleCardsGraph');
   new Chart(chartContext, {
@@ -52,6 +56,10 @@ function getSnapshots() {
   $.ajax({
     type: 'GET',
     url: '/api/statistics/snapshots',
+    /**
+     * Snapshots queried, populate graph
+     * @param {Snapshot} snapshots - Snapshots to populate the graph with.
+     */
     success: snapshots => {
       const labels = snapshots.map(snapshot => new Date(snapshot.timestamp));
       const datasets = [
@@ -104,6 +112,7 @@ function getSnapshots() {
       ];
 
       const ctx = document.getElementById('graph');
+      const TOTAL_DELAY = 2000;
       new Chart(ctx, {
         type: 'line',
         data: {
@@ -113,6 +122,21 @@ function getSnapshots() {
           datasets: datasets
         },
         options: {
+          animation: {
+            x: {
+              type: 'number',
+              easing: 'linear',
+              duration: TOTAL_DELAY,
+              from: NaN,
+              delay(ctx) {
+                if (ctx.type !== 'data' || ctx.xStarted) {
+                  return 0;
+                }
+                ctx.xStarted = true;
+                return ctx.index * (TOTAL_DELAY / labels.length);
+              }
+            },
+          },
           responsive: true,
           stacked: false,
           interaction: {

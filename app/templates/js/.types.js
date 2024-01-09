@@ -101,7 +101,22 @@
 // Preferences -----------------------------------------------------------------
 
 /**
+ * @typedef {Object} ToggleOption
+ * @property {string} name
+ * @property {string} value
+ * @property {boolean} selected
+ */
+
+/**
  * @typedef {Object} EpisodeDataSourceToggle
+ * @property {InterfaceType} interface
+ * @property {number} interface_id
+ * @property {string} name
+ * @property {boolean} selected
+ */
+
+/**
+ * @typedef {Object} ImageSourceToggle
  * @property {InterfaceType} interface
  * @property {number} interface_id
  * @property {string} name
@@ -306,6 +321,24 @@
  * @property {number} page
  * @property {number} pages
  * 
+ */
+
+// Statistics ------------------------------------------------------------------
+
+/**
+ * @typedef {Object} Snapshot
+ * @property {number} blueprints
+ * @property {number} cards
+ * @property {number} episodes
+ * @property {number} fonts
+ * @property {number} loaded
+ * @property {number} series
+ * @property {number} syncs
+ * @property {number} templates
+ * @property {number} users
+ * @property {number} filesize
+ * @property {number} cards_created
+ * @property {string} timestamp
  */
 
 export const Types = {};
