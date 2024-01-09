@@ -282,9 +282,7 @@ def get_episode_cards(
     - episode_id: ID of the Episode to get the cards of.
     """
 
-    return paginate(
-        db.query(models.card.Card).filter_by(episode_id=episode_id).all()
-    )
+    return paginate(db.query(models.card.Card).filter_by(episode_id=episode_id))
 
 
 @card_router.delete('/series/{series_id}', tags=['Series'],
