@@ -456,6 +456,7 @@ async def set_episode_source_image(
 
 @source_router.put('/episode/{episode_id}/mirror', status_code=200)
 def mirror_episode_source_image(
+        request: Request,
         episode_id: int,
         db: Session = Depends(get_database),
     ) -> SourceImage:
@@ -486,7 +487,7 @@ def mirror_episode_source_image(
         db,
         db.query(models.card.Card).filter_by(episode_id=episode_id),
         db.query(models.loaded.Loaded).filter_by(episode_id=episode_id),
-        log=log,
+        log=request.state.log,
     )
 
     return get_source_image(episode)

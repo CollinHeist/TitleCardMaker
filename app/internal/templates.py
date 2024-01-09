@@ -16,6 +16,16 @@ def get_effective_series_template(
     ) -> dict:
     ...
 
+@overload
+def get_effective_series_template(
+        series: Series,
+        episode: Optional[Episode] = None,
+        library: Optional[Library] = None,
+        *,
+        as_dict: Literal[False] = False,
+    ) -> Optional[Template]:
+    ...
+
 def get_effective_series_template(
         series: Series,
         episode: Optional[Episode] = None,
