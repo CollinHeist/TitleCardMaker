@@ -566,7 +566,7 @@ def load_episode_title_card(
 
     # Only load if Episode has a Card
     if not card:
-        log.debug(f'{episode.series} {episode} - no associated Card')
+        log.debug(f'{episode} - no associated Card')
         return None
 
     # Delete previously Loaded entries
@@ -588,12 +588,12 @@ def load_episode_title_card(
         if loaded_assets:
             break
 
-        log.debug(f'{episode.series} {episode} not found - waiting')
+        log.debug(f'{episode} not found - waiting')
         sleep(30)
 
     # Episode was not loaded, exit
     if not loaded_assets:
-        log.debug(f'{episode.series} {episode} could not be loaded')
+        log.debug(f'{episode} could not be loaded')
         return False
 
     # Episode loaded, create Loaded asset and commit to database
