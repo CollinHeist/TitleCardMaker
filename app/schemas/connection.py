@@ -1,5 +1,6 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from typing import Any, Literal, Optional, Union
+
 from pydantic import AnyUrl, constr, validator # pylint: disable=no-name-in-module
 
 from app.schemas.base import Base, InterfaceType, UpdateBase, UNSPECIFIED
@@ -8,6 +9,7 @@ from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
+
 
 # Names of acceptable server types
 ServerName = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr']
@@ -220,4 +222,4 @@ class WebhookEpisode(Base):
 class SonarrWebhook(Base):
     series: WebhookSeries
     episodes: list[WebhookEpisode] = []
-    eventType: str # Literal['SeriesAdd', 'Download']
+    eventType: str # Literal['SeriesAdd', 'Download', 'SeriesDelete', 'EpisodeFileDelete']

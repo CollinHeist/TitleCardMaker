@@ -42,9 +42,8 @@ table td[data-row="name"] {
   overflow: hidden;
 }
 table td[data-row="name"] .content {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
 }
 /* When in select mode, highlight selected rows */
 #series-table tr.selected {

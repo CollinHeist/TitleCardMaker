@@ -132,4 +132,4 @@ def get_snapshots(db: Session = Depends(get_database)) -> list[Snapshot]:
     
     """
 
-    return db.query(SnapshotModel).all()
+    return db.query(SnapshotModel).all()[::4]
