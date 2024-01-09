@@ -15,16 +15,20 @@ from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard
 from app.database.session import Page
 from app.database.query import get_interface, get_series
 from app import models
+from app.internal.cards import delete_cards
 from app.internal.series import (
-    add_series, delete_series, download_series_poster,
-    lookup_series, process_series, update_series,
+    add_series, delete_series, download_series_poster, lookup_series,
+    process_series, update_series,
 )
 from app.internal.auth import get_current_user
 from app.models.card import Card
+from app.models.loaded import Loaded
 from app.models.series import Series as SeriesModel
+from app.schemas.connection import SonarrWebhook
 from app.schemas.series import (
     BatchUpdateSeries, NewSeries, SearchResult, Series, UpdateSeries
 )
+from modules.SeriesInfo2 import SeriesInfo
 
 
 series_router = APIRouter(
@@ -41,7 +45,7 @@ OrderBy = Literal[
     'sync',
     'year', 'reverse-year'
 ]
-@series_router.get('/all', status_code=200)
+@series_router.get('/all')
 def get_all_series(
         db: Session = Depends(get_database),
         order_by: OrderBy = Query(default='alphabetical'),
@@ -92,7 +96,7 @@ def get_all_series(
     return paginate(series)
 
 
-@series_router.get('/series/{series_id}/previous', status_code=200)
+@series_router.get('/series/{series_id}/previous')
 def get_previous_series(
         series_id: int,
         db: Session = Depends(get_database),
@@ -119,7 +123,7 @@ def get_previous_series(
         .first()
 
 
-@series_router.get('/series/{series_id}/next', status_code=200)
+@series_router.get('/series/{series_id}/next')
 def get_next_series(
         series_id: int,
         db: Session = Depends(get_database),
@@ -163,7 +167,7 @@ def add_new_series(
     return add_series(new_series, background_tasks, db, log=request.state.log)
 
 
-@series_router.delete('/series/{series_id}', status_code=204)
+@series_router.delete('/series/{series_id}')
 def delete_series_(
         series_id: int,
         request: Request,
@@ -182,7 +186,58 @@ def delete_series_(
     delete_series(db, series, log=request.state.log)
 
 
-@series_router.get('/search', status_code=200)
+@series_router.delete('/sonarr')
+def delete_series_via_sonarr_webhook(
+        request: Request,
+        webhook: SonarrWebhook,
+        delete_title_cards: bool = Query(default=True),
+        db: Session = Depends(get_database)
+    ) -> None:
+    """
+    Delete the Series defined in the given Webhook.
+
+    - webhook: Webhook payload containing the details of the Series to
+    delete.
+    - delete_title_cards: Whether to delete Title Cards.
+    """
+
+    # Skip if Webhook type is not a Series deletion
+    if webhook.eventType != 'SeriesDelete':
+        return None
+
+    # Create SeriesInfo for this payload's series
+    series_info = SeriesInfo(
+        name=webhook.series.title,
+        year=webhook.series.year,
+        imdb_id=webhook.series.imdbId,
+        tvdb_id=webhook.series.tvdbId,
+        tvrage_id=webhook.series.tvRageId,
+    )
+
+    # Search for this Series
+    series = db.query(Series)\
+        .filter(series_info.filter_conditions(Series))\
+        .first()
+
+    # Series is not found, exit
+    if series is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f'Series {series_info} not found',
+        )
+
+    # Delete Card, Loaded, and Series, as well all child content
+    if delete_title_cards:
+        delete_cards(
+            db,
+            db.query(Card).filter_by(series_id=series.id),
+            db.query(Loaded).filter_by(series_id=series.id),
+            log=request.state.log,
+        )
+    delete_series(db, series, log=request.state.log)
+
+
+@series_router.get('/search')
 def search_existing_series(
         name: Optional[str] = None,
         year: Optional[int] = None,
@@ -239,7 +294,7 @@ def search_existing_series(
     )
 
 
-@series_router.get('/lookup', status_code=200)
+@series_router.get('/lookup')
 def lookup_new_series(
         request: Request,
         name: str = Query(..., min_length=1),
@@ -260,7 +315,7 @@ def lookup_new_series(
     )
 
 
-@series_router.get('/series/{series_id}', status_code=200)
+@series_router.get('/series/{series_id}')
 def get_series_config(
         series_id: int,
         db: Session = Depends(get_database)
@@ -274,7 +329,7 @@ def get_series_config(
     return get_series(db, series_id, raise_exc=True)
 
 
-@series_router.patch('/series/{series_id}', status_code=200)
+@series_router.patch('/series/{series_id}')
 def update_series_(
         series_id: int,
         request: Request,
@@ -318,7 +373,7 @@ def toggle_series_monitored_status(
     return series
 
 
-@series_router.post('/series/{series_id}/process', status_code=200)
+@series_router.post('/series/{series_id}/process')
 def process_series_(
         background_tasks: BackgroundTasks,
         request: Request,
@@ -346,7 +401,7 @@ def process_series_(
     )
 
 
-@series_router.delete('/series/{series_id}/plex-labels/library', status_code=204)
+@series_router.delete('/series/{series_id}/plex-labels/library')
 def remove_series_labels(
         request: Request,
         series_id: int,
@@ -376,7 +431,7 @@ def remove_series_labels(
     )
 
 
-@series_router.get('/series/{series_id}/poster', status_code=200)
+@series_router.get('/series/{series_id}/poster')
 def download_series_poster_(
         series_id: int,
         request: Request,
@@ -394,7 +449,7 @@ def download_series_poster_(
     download_series_poster(db, series, log=request.state.log)
 
 
-@series_router.get('/series/{series_id}/poster/query', status_code=200)
+@series_router.get('/series/{series_id}/poster/query')
 def query_series_poster(
         series_id: int,
         db: Session = Depends(get_database),
@@ -491,7 +546,7 @@ async def set_series_poster(
     return series.poster_url
 
 
-@series_router.patch('/batch', status_code=200)
+@series_router.patch('/batch')
 def batch_update_series(
         request: Request,
         updates: list[BatchUpdateSeries] = Body(...),
