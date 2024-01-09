@@ -60,5 +60,5 @@ HEALTHCHECK --interval=3m --timeout=10s --start-period=3m \
     CMD curl --fail http://0.0.0.0:4242/api/healthcheck || exit 1
 
 # Entrypoint
-CMD ["python3", "-m", "uvicorn", "app-main:app", "--host", "0.0.0.0", "--port", "4242"]
+CMD ["python3", "-u", "-m", "uvicorn", "app-main:app", "--host", "0.0.0.0", "--port", "4242"]
 ENTRYPOINT ["bash", "./start.sh"]
