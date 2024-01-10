@@ -40,10 +40,12 @@ below.
         | ---: | :--- |
         | Card Directory | /config/cards/ |
         | Source Directory | /config/source/ |
+        | Delete Series Source Images | Unchecked |
         | Episode Data Source | Sonarr | 
         | Image Source Priority | `TMDb` `Plex` `Emby` `Jellyfin` |
+        | Translation Languages | _Preference_ |
         | Sync Specials | Unchecked |
-        | Translation Languages | None |
+        | Delete Missing Episodes | Checked |
         | Default Card Type | _Personal Preference_ |
         | Excluded Card Types | _Personal Preference_ |
         | Watched Episode Style | Unique |
@@ -53,18 +55,20 @@ below.
         | Filename Format | {series_full_name} - S{season_number:02}E{episode_number:02} |
         | Specials Folder Format | Specials |
         | Season Folder Format | Season {season_number} |
-        | Multi-Library Filenames | Unchecked |
+        | Multi-Library Filename Support | _Unchecked_ |
 
     === "Non-Docker"
 
         | Setting | Recommended Value |
-        | ---: |  :--- |
+        | ---: | :--- |
         | Card Directory | ./config/cards/ |
         | Source Directory | ./config/source/ |
-        | Episode Data Source | Sonarr | 
+        | Delete Series Source Images | Unchecked |
+        | Episode Data Source | Sonarr |
         | Image Source Priority | `TMDb` `Plex` `Emby` `Jellyfin` |
+        | Translation Languages | _Preference_ |
         | Sync Specials | Unchecked |
-        | Translation Languages | None |
+        | Delete Missing Episodes | Checked |
         | Default Card Type | _Personal Preference_ |
         | Excluded Card Types | _Personal Preference_ |
         | Watched Episode Style | Unique |
@@ -74,7 +78,7 @@ below.
         | Filename Format | {series_full_name} - S{season_number:02}E{episode_number:02} |
         | Specials Folder Format | Specials |
         | Season Folder Format | Season {season_number} |
-        | Multi-Library Filenames | Unchecked |
+        | Multi-Library Filename Support | _Unchecked_ |
 
 ## Root Folders
 The root folders listed here serve as the primary asset directories for both
@@ -112,13 +116,14 @@ media files are kept), as TCM loads the Title Cards directly into your Media
 Server, bypassing any "local media" matching.
 
 ### Source Directory
-The root folder for all source images downloaded and used by TitleCardMaker.
+
+The root folder for all Source Images downloaded and used by TitleCardMaker.
 Within this directory, each Series added to TitleCardMaker will have a subfolder
-created for it, under which source images (and logos) will be added.
+created for it, under which Source Images (and logos) will be added.
 
 ??? question "What's a Source Image?"
 
-    A source image is the (typically) textless input images which text or
+    A Source Images is the (typically) textless input images which text or
     effects are added on top of (by TCM) to create a Title Card.
 
 ??? example
@@ -140,6 +145,14 @@ created for it, under which source images (and logos) will be added.
         `Breaking Bad` were added to TitleCardMaker, I'd expect to find
         all associated source images (and logos) under the `./config/source/
         Breaking Bad (2008)/` directory.
+
+### Source Image Deletion
+
+Whether to delete Source Images when a Series is deleted from TitleCardMaker.
+
+If enabled, any Series that are deleted (manually or automatically) will have
+their entire source directory cleared - including Source Images, posters, logos,
+and backdrop art.
 
 ---
 
@@ -184,22 +197,6 @@ _in order_ until a source image is found.
     much wider variety of image availability, and is typically much higher
     quality than the auto-scraped images from your Media Server.
 
-### Sync Specials
-
-<!-- md:overwritable Series, Template -->
-
-Whether to ignore Episodes from Season 0 by default.
-
-Many Series have "bonus" content like behind the scenes, featurettes, shorts,
-commercials, etc. listed under Season 0 as _Specials_. If you would like TCM to
-ignore these when grabbing Episode data from you specified Episode data source,
-then uncheck this setting.
-
-??? note "Manually Adding Specials"
-
-    Even if this setting is disabled (so Specials are ignored), Episodes can
-    still be added manually.
-
 ### Translation Languages
 
 Depending on the Card and your indicated episode text format or season titles,
@@ -231,6 +228,28 @@ that text. See the following example for details.
 This is purely to make these languages _available_ for use - you will still need
 to actually change your Card settings to reflect them. This setting __does not__
 change Episode titles; that requires [translations](...).
+
+### Sync Specials
+
+<!-- md:overwritable Series, Template -->
+
+Whether to ignore Episodes from Season 0 by default.
+
+Many Series have "bonus" content like behind the scenes, featurettes, shorts,
+commercials, etc. listed under Season 0 as _Specials_. If you would like TCM to
+ignore these when grabbing Episode data from you specified Episode data source,
+then uncheck this setting.
+
+??? note "Manually Adding Specials"
+
+    Even if this setting is disabled (so Specials are ignored), Episodes can
+    still be added manually.
+
+### Delete Missing Episodes
+
+Whether to delete Episodes (from TCM) which are not present in the assigned
+Episode Data Source. When an Episode is deleted, the associated Title Card file
+is also deleted.
 
 ---
 
@@ -449,6 +468,30 @@ longer load times. Must be between 1 and 250.
 How many Episodes per page to display in Episode data tables. These are the
 tables accessed on a [Series page](./series.md) in the _Episode Data_ tab.
 
+### Home Page Table Display
+
+The home page can be displayed in two ways: as a table, or as a series of
+posters. The tabular view is recommended because it contains more information,
+allows you to perform bulk actions on multiple Series at once, easily edit
+specific Series data, and is generally faster. An example of the two is shown
+below.
+
+=== "Tabular View"
+
+    ![](../assets/home_table_light.webp#only-light){.no-lightbox}
+    ![](../assets/home_table_dark.webp#only-dark){.no-lightbox}
+
+=== "Poster View"
+
+    ![](../assets/home_poster_light.webp#only-light){.no-lightbox}
+    ![](../assets/home_poster_dark.webp#only-dark){.no-lightbox}
+
+### Source Image Data Display
+
+On the _Files_ tab of the [Series](./series.md) page, source image data can be
+presented as "card" elements or inside a table. The same information and actions
+are available in either view.
+
 ### Simplified Episode Data Tables
 
 Whether to hide Advanced (uncommonly edited) columns from Episode data tables.
@@ -464,11 +507,7 @@ navigating the home screen.
 
 Stylized posters have a blurred grayscale effect applied.
 
-### Source Image Data Display
 
-On the _Files_ tab of the [Series](./series.md) page, source image data can be
-presented as "card" elements or inside a table. The same information and actions
-are available in either view.
 
 ### Color Impaired Mode
 

@@ -201,7 +201,7 @@ nav:
     # - Sync: user_guide/sync.md
     - Settings: user_guide/settings.md
     - Connections: user_guide/connections.md
-    # - Scheduler: user_guide/scheduler.md
+    - Scheduler: user_guide/scheduler.md
     # - Importer: user_guide/importer.md
     - Logs: user_guide/logs.md
     - Setting Priority: user_guide/setting_priority.md
