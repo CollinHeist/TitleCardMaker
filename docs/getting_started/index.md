@@ -160,25 +160,25 @@ to it.
         === ":material-linux: Linux"
 
             ```bash
-            docker build -t "titlecardmaker" .
+            docker build -t "titlecardmaker:latest" .
             ```
 
         === ":material-apple: MacOS"
 
             ```bash
-            docker build -t "titlecardmaker" .
+            docker build -t "titlecardmaker:latest" .
             ```
 
         === ":material-powershell: Windows (Powershell)"
 
             ```bash
-            docker build -t "titlecardmaker" .
+            docker build -t "titlecardmaker:latest" .
             ```
 
         === ":material-microsoft-windows: Windows (Non-Powershell)"
 
             ```bash
-            docker build -t "titlecardmaker" .
+            docker build -t "titlecardmaker:latest" .
             ```
 
     2. Determine your timezone, a full list is available
@@ -199,7 +199,7 @@ to it.
                 -e TZ="America/Los_Angeles" \ # (4)!
                 -p 4242:4242 \ # (5)!
                 --name "TitleCardMaker" \ # (6)!
-                titlecardmaker
+                titlecardmaker:latest
             ```
 
             1. Launch the container in the background.
@@ -219,7 +219,7 @@ to it.
                 -e TZ="America/Los_Angeles" \ # (4)!
                 -p 4242:4242 \ # (5)!
                 --name "TitleCardMaker" \ # (6)!
-                titlecardmaker
+                titlecardmaker:latest
             ```
 
             1. Launch the container in the background.
@@ -239,7 +239,7 @@ to it.
                 -e TZ="America/Los_Angeles" ` # (4)!
                 -p 4242:4242 ` # (5)!
                 --name "TitleCardMaker" ` # (6)!
-                titlecardmaker
+                titlecardmaker:latest
             ```
 
             1. Launch the container in the background.
@@ -259,7 +259,7 @@ to it.
                 -e TZ="America/Los_Angeles" ^ # (4)!
                 -p 4242:4242 ^ # (5)!
                 --name "TitleCardMaker" ^ # (6)!
-                titlecardmaker
+                titlecardmaker:latest
             ```
 
             1. Launch the container in the background.
@@ -269,6 +269,17 @@ to it.
             4. Set the internal timezone equal to your local timezone.
             5. Make the TCM WebUI accessible at port 4242 on your machine.
             6. Name the container TitleCardMaker.
+
+    ??? error "Docker `invalid reference format` Error"
+
+        If you get an error from Docker saying `invalid reference format` - this
+        means that the command has some typo. Try specifying the command in one-
+        line (removing the ending character from each line).
+
+        Windows users can also _manually_ specify their install directory rather
+        than using `$(pwd)` or `%cd$`, with all forward slashes (`/`) instead of
+        back slashes - e.g. `C:/Users/Documents/TitleCardMaker-WebUI/config`
+        in place of `$(pwd)\TitleCard\config`.
 
 === ":material-language-python: Non-Docker"
 
