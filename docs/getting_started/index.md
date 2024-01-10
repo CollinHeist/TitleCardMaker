@@ -44,7 +44,7 @@ clone the repository with:
     ```
 
 4. Enter your account Username and the PAT from Step 2. The TCM code
-will now be downloaded into that directory.
+will now be downloaded into a subdirectory named `TitleCardMaker-WebUI`.
 
 ### Running TitleCardMaker
 #### Setup
@@ -58,25 +58,25 @@ will now be downloaded into that directory.
             <!-- termynal -->
 
             ```bash
-            cd "~/Your/Install/Directory"
+            cd "~/Your/Install/Directory/TitleCardMaker-WebUI"
             ```
 
         === ":material-apple: MacOS"
 
             ```bash
-            cd "~/Your/Install/Directory"
+            cd "~/Your/Install/Directory/TitleCardMaker-WebUI"
             ```
 
         === ":material-powershell: Windows (Powershell)"
 
             ```bash
-            cd 'C:\Your\Install\Directory'
+            cd 'C:\Your\Install\Directory\TitleCardMaker-WebUI'
             ```
 
         === ":material-microsoft-windows: Windows (Non-Powershell)"
 
             ```bash
-            cd 'C:\Your\Install\Directory'
+            cd 'C:\Your\Install\Directory\TitleCardMaker-WebUI'
             ```
 
         Replace the example path with the directory from Step 3 above.
