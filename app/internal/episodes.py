@@ -1,4 +1,5 @@
 from logging import Logger
+from pathlib import Path
 from typing import Iterable, Optional
 
 from fastapi import BackgroundTasks, HTTPException
@@ -7,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.database.query import get_interface
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.templates import get_effective_series_template
+from app.models.card import Card
 from app.models.episode import Episode
 from app.models.series import Series
 
@@ -223,9 +225,20 @@ def refresh_episode_data(
         new_keys = set(episode_info.index_str for episode_info, _ in all_episodes)
         all_existing = {episode.index_str: episode for episode in series.episodes}
         for delete_key in set(all_existing) - new_keys:
-            log.debug(f'Deleting {all_existing[delete_key]} - not in Episode '
+            # Delete Title Cards
+            log.info(f'Deleting {all_existing[delete_key]} - not in Episode '
                       f'Data Source')
+            cards = db.query(Card)\
+                .filter_by(episode_id=all_existing[delete_key].id)\
+                .all()
+            for card in cards:
+                if (card_file := Path(card.card_file)).exists():
+                    card_file.unlink(missing_ok=True)
+                    log.info(f'Deleted "{card_file.resolve()}" Title Card')
+
+            # Delete Episode (also deleted associated Loaded + Card objects)
             db.delete(all_existing[delete_key])
+            changed = True
 
     # Log any new Episodes
     if len(new_episodes) > 1:

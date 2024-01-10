@@ -794,9 +794,10 @@ def get_watched_statuses(
 
 def delete_cards(
         db: Session,
-        card_query: Query,
+        card_query: Optional[Query] = None,
         loaded_query: Optional[Query] = None,
         *,
+        commit: bool = True,
         log: Logger = log,
     ) -> list[str]:
     """
@@ -808,6 +809,7 @@ def delete_cards(
         card_query: SQL query for Cards whose card files to delete.
             Query contents itself are also deleted.
         loaded_query: SQL query for loaded assets to delete.
+        commit: Whether to commit the deletion to the database.
         log: Logger for all log messages.
 
     Returns:
@@ -819,13 +821,15 @@ def delete_cards(
     for card in card_query.all():
         if (card_file := Path(card.card_file)).exists():
             card_file.unlink()
-            log.debug(f'Deleted "{card_file.resolve()}" Card')
+            log.debug(f'Deleted "{card_file.resolve()}" Title Card')
             deleted.append(str(card_file))
 
     # Delete from database
-    card_query.delete()
+    if card_query:
+        card_query.delete()
     if loaded_query:
         loaded_query.delete()
-    db.commit()
+    if commit:
+        db.commit()
 
     return deleted
