@@ -265,7 +265,7 @@ class GraphCardType(BaseCardModel):
     font_kerning: float = 1.0
     font_size: PositiveFloat = 1.0
     font_vertical_shift: int = 0
-    episode_text_font_size: Optional[PositiveFloat] = None
+    graph_text_font_size: Optional[PositiveFloat] = None
     grayscale: bool = False
     graph_background_color: str = GraphTitleCard.BACKGROUND_GRAPH_COLOR
     graph_color: str = GraphTitleCard.GRAPH_COLOR
