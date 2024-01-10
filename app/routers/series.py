@@ -186,7 +186,7 @@ def delete_series_(
     delete_series(db, series, log=request.state.log)
 
 
-@series_router.delete('/sonarr')
+@series_router.post('/sonarr/delete')
 def delete_series_via_sonarr_webhook(
         request: Request,
         webhook: SonarrWebhook,
@@ -235,6 +235,7 @@ def delete_series_via_sonarr_webhook(
             log=request.state.log,
         )
     delete_series(db, series, log=request.state.log)
+    return None
 
 
 @series_router.get('/search')
