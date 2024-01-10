@@ -235,7 +235,7 @@ to it.
             ```bash
             docker run -itd ` # (1)!
                 --net="bridge" ` # (2)!
-                -v "$(pwd)\config":"/config/" ` # (3)!
+                -v "${pwd}\config":"/config/" ` # (3)!
                 -e TZ="America/Los_Angeles" ` # (4)!
                 -p 4242:4242 ` # (5)!
                 --name "TitleCardMaker" ` # (6)!
