@@ -42,6 +42,7 @@ def sync_all(*, log: Logger = log) -> None:
                 except OperationalError:
                     log.debug(f'Database is busy, sleeping..')
                     sleep(30)
+                db.commit()
     except Exception as e:
         log.exception(f'Failed to run all Syncs', e)
 
