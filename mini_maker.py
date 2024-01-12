@@ -319,7 +319,8 @@ show_summary_group.add_argument(
     type=str,
     default='default',
     metavar='SUMMARY_TYPE',
-    help='Summary type to create - must be "standard" or "sylized"')
+    choices=('default', 'standard', 'stylized'),
+    help='Type of summary image to create')
 
 # Argument group for season posters
 season_poster_group = parser.add_argument_group(

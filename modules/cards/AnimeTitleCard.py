@@ -192,20 +192,6 @@ class AnimeTitleCard(BaseCardType):
 
 
     @property
-    def __series_count_text_black_stroke(self) -> ImageMagickCommands:
-        """
-        Subcommands for adding the necessary black stroke effects to
-        series count text.
-        """
-
-        return [
-            f'-fill black',
-            f'-stroke black',
-            f'-strokewidth 6',
-        ]
-
-
-    @property
     def title_text_command(self) -> ImageMagickCommands:
         """Subcommands for adding title text to the source image."""
 
@@ -245,9 +231,7 @@ class AnimeTitleCard(BaseCardType):
 
     @property
     def index_text_command(self) -> ImageMagickCommands:
-        """
-        Subcommand for adding the index text to the source image.
-        """
+        """Subcommand for adding the index text to the source image."""
 
         # Hiding all index text, return blank commands
         if self.hide_season_text and self.hide_episode_text:
@@ -258,7 +242,9 @@ class AnimeTitleCard(BaseCardType):
             text = self.episode_text if self.hide_season_text else self.season_text
             return [
                 *self.__series_count_text_global_effects,
-                *self.__series_count_text_black_stroke,
+                f'-fill black',
+                f'-stroke black',
+                f'-strokewidth 6',
                 f'-annotate +75+90 "{text}"',
                 f'-fill "{self.episode_text_color}"',
                 f'-stroke "{self.episode_text_color}"',
@@ -270,7 +256,9 @@ class AnimeTitleCard(BaseCardType):
         return [
             f'-background transparent',
             *self.__series_count_text_global_effects,
-            *self.__series_count_text_black_stroke,
+            f'-fill black',
+            f'-stroke black',
+            f'-strokewidth 6',
             # Black stroke behind season and episode text
             f'\( -gravity center',
             # Black stroke uses same font for season/episode text
@@ -344,8 +332,8 @@ class AnimeTitleCard(BaseCardType):
         """
 
         custom_extras = (
-            ('episode_text_color' in extras 
-             and extras['episode_text_color'] != AnimeTitleCard.SERIES_COUNT_TEXT_COLOR)
+            ('episode_text_color' in extras
+                and extras['episode_text_color'] != AnimeTitleCard.SERIES_COUNT_TEXT_COLOR)
             or ('kanji_vertical_shift' in extras
                 and extras['kanji_vertical_shift'] != 0)
             or ('stroke_color' in extras
