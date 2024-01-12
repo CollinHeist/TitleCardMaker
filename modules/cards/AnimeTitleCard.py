@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Optional
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
+from modules.Debug import log
 
 if TYPE_CHECKING:
     from app.models.preferences import Preferences

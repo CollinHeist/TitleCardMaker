@@ -227,9 +227,7 @@ class TintedFrameTitleCard(BaseCardType):
             preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this Card.
-        """
+        """Construct a new instance of this Card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -410,13 +408,15 @@ class TintedFrameTitleCard(BaseCardType):
         else:
             resize_command = [f'-resize x{logo_height}']
 
-        return [
-            f'\( "{self.logo.resolve()}"',
-            *resize_command,
-            f'\) -gravity center',
-            f'-geometry +0{vertical_shift:+}',
-            f'-composite',
-        ]
+        return self.add_drop_shadow(
+            [
+                f'\( "{self.logo.resolve()}"',
+                *resize_command,
+                f'\) -gravity center',
+            ],
+            shadow=Shadow(opacity=85, sigma=4),
+            x=0, y=vertical_shift,
+        )
 
 
     @property
@@ -735,9 +735,9 @@ class TintedFrameTitleCard(BaseCardType):
             # Add blurred edges (if indicated)
             *self.blur_commands,
             # Add remaining sub-components
+            *self.logo_commands,
             *self.title_text_commands,
             *self.index_text_commands,
-            *self.logo_commands,
             *self.frame_commands,
             # Attempt to overlay mask
             *self.mask_commands,

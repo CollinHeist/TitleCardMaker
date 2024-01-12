@@ -13,6 +13,7 @@ app/assets/preview/card*
 backups/
 config/
 fonts/
+front/node_modules/
 modules/.objects/
 yml/
 *._*
