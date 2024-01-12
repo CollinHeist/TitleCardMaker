@@ -42,7 +42,7 @@ class ImageMagickInterface:
     TEMPORARY_SVG_FILE = TEMP_DIR / 'temp_logo.svg'
 
     """Characters that must be escaped in commands"""
-    __REQUIRED_ESCAPE_CHARACTERS = ('"', '`', '%', '\\')
+    __REQUIRED_ESCAPE_CHARACTERS = ('\\', '"', '`', '%')
 
     """Substrings that must be present in --version output"""
     __REQUIRED_VERSION_SUBSTRINGS = ('Version','Copyright','License','Features')
