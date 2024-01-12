@@ -4,15 +4,15 @@ from typing import Literal, Optional, Union
 
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from passlib.context import CryptContext
 from jose import JWTError, jwt
-
+from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from app import models
 from app.dependencies import get_database, get_preferences
 from app.models.preferences import Preferences
 from app.schemas.auth import User
+from modules.Debug import log
 
 
 ALGORITHM = 'HS256'

@@ -67,13 +67,19 @@ settings_router = APIRouter(
 )
 
 
+@settings_router.get('/settings')
+def get_global_settings(
+        preferences: PreferencesModel = Depends(get_preferences),
+    ) -> Preferences:
+
+    return preferences
+
+
 @settings_router.get('/version', status_code=200)
 def get_current_version(
         preferences: PreferencesModel = Depends(get_preferences),
     ) -> str:
-    """
-    Get the current version of TitleCardMaker.
-    """
+    """Get the current version of TitleCardMaker."""
 
     return preferences.version
 
