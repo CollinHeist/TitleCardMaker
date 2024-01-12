@@ -259,6 +259,11 @@ class BatchUpdateSeries(Base):
 """
 Return classes
 """
+# class SeriesFilter(Base):
+#     argument: SeriesFilterArgument
+#     operation: SeriesFilterOperation
+#     reference: Optional[str] = None
+
 class SearchResult(Base):
     name: str
     year: int

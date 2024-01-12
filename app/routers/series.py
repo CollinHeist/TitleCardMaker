@@ -56,7 +56,17 @@ def get_all_series(
 
     - order_by: How to order the Series in the returned list.
     """
+    # from app.models.loaded import Loaded
+    # from app.models.episode import Episode
+    # from sqlalchemy import distinct, select
 
+    # query = db.query(SeriesModel)\
+    #     .outerjoin(SeriesModel.loaded)\
+    #     .outerjoin(SeriesModel.episodes)\
+    #     .group_by(SeriesModel.id)\
+    #     .having(func.count(Episode.id) == 14)#== func.count(Episode.id))
+
+    # pylint: disable=not-callable
     # Order by Name > Year
     query = db.query(SeriesModel)
     if order_by == 'alphabetical':

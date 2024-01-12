@@ -79,8 +79,11 @@ class LogHandler(StreamHandler):
 
 
 # Get local timezone
-tz = None
-if IS_DOCKER and environ.get('TZ', None) is not None:
+try:
+    tz = datetime.now().astimezone().tzinfo
+except Exception:
+    tz = timezone('UTC')
+if environ.get('TZ', None) is not None:
     try:
         tz = timezone(environ.get('TZ'))
     except UnknownTimeZoneError:
