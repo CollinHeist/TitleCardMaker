@@ -31,7 +31,7 @@ class SvgRectangle:
         self.offset = Coordinate(0, 0)
 
 
-    def rotate(self, angle_degrees: float=0.0) -> 'SvgRectangle':
+    def rotate(self, angle_degrees: float = 0.0) -> 'SvgRectangle':
         """
         Set the rotation of this rectangle.
 

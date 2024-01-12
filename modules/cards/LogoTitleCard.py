@@ -171,7 +171,7 @@ class LogoTitleCard(BaseCardType):
         # Sub-command for adding season/episode text
         if self.hide_season_text:
             return [
-                f'-kerning 5.42',       
+                f'-kerning 5.42',
                 f'-pointsize 67.75',
                 f'-interword-spacing 14.5',
                 f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',

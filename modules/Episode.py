@@ -33,7 +33,7 @@ class Episode:
             base_source: Path,
             destination: Path,
             given_keys: set[str],
-            **extras: dict
+            **extras: Any
         ) -> None:
         """
         Construct a new instance of an Episode.
@@ -87,6 +87,28 @@ class Episode:
                           for attr in self.__slots__)
 
         return f'<Episode {attrs}>'
+
+
+    def add_maxima(self,
+            season_episode_count: int,
+            season_episode_max: int,
+            season_absolute_max: int,
+            series_episode_count: int,
+            series_episode_max: int,
+            series_absolute_max: int
+        ) -> None:
+        """
+        Add the given episode maxima characteristics to this Episode.
+        """
+
+        self.extra_characteristics.update(
+            season_episode_count=season_episode_count,
+            season_episode_max=season_episode_max,
+            season_absolute_max=season_absolute_max,
+            series_episode_count=series_episode_count,
+            series_episode_max=series_episode_max,
+            series_absolute_max=series_absolute_max,
+        )
 
 
     @property
@@ -196,7 +218,7 @@ class Episode:
 
             # Log deletion
             message = f'Deleted "{self.destination.resolve()}"'
-            if reason is not None:
+            if reason:
                 message += f' [{reason}]'
             log.debug(message)
 

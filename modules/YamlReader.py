@@ -18,7 +18,7 @@ class YamlReader:
 
 
     def __init__(self,
-            yaml: dict[str, Any] = {},
+            yaml: dict = {},
             *,
             log_function: Callable[[str], None] = log.error
         ) -> None:
@@ -55,7 +55,7 @@ class YamlReader:
             *attributes: str,
             type_: Optional[Callable] = None,
             default: Any = None,
-        ):
+        ) -> Any:
         """
         Get the value specified by the given attributes/sub-attributes
         of YAML, optionally converting to the given type. Log invalidity

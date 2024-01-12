@@ -215,13 +215,9 @@ class Font(YamlReader):
         self.vertical_shift = 0
 
 
-    def get_attributes(self) -> dict[str, Any]:
-        """
-        Return a dictionary of attributes for this font to be unpacked.
-
-        Returns:
-            Dictionary of attributes.
-        """
+    @property
+    def attributes(self) -> FontAttributes:
+        """Attributes that define this Font."""
 
         return {
             'font_color': self.color,
