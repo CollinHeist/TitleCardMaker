@@ -3,6 +3,7 @@ from logging import Logger
 from typing import Any, Iterator, Optional, Union
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from httpx import AsyncClient
 from fastapi import HTTPException, Query, Request
 from requests import get
 from sqlalchemy.orm import Session
@@ -63,7 +64,7 @@ def get_database() -> Iterator[Session]:
         db.close()
 
 
-def download_blueprint_database(*, log: Logger = log) -> None:
+async def download_blueprint_database(*, log: Logger = log) -> None:
     """
     Download the Blueprint SQL database from the GitHub repository.
 
@@ -71,30 +72,33 @@ def download_blueprint_database(*, log: Logger = log) -> None:
         log: Logger for all log messages.
     """
 
-    DB_URL = 'https://github.com/CollinHeist/TCM-Blueprints-v2/raw/master/blueprints.db'
-
-    response = get(DB_URL, timeout=30)
-
-    # If no file was found, raise
-    if response.status_code == 404:
-        log.error(f'No blueprint database file found at "{DB_URL}"')
-        raise HTTPException(
-            status_code=404,
-            detail=f'No Blueprint database file found',
+    async with AsyncClient() as client:
+        _DB_URL = (
+            'https://github.com/CollinHeist/TCM-Blueprints-v2/raw/master/'
+            'blueprints.db'
         )
+        response = await client.get(_DB_URL, timeout=30)
 
-    # Non-404 error, raise
-    if not response.ok:
-        raise HTTPException(
-            status_code=response.status_code,
-            detail=f'Error downloading Blueprint database',
-        )
+        # If no file was found, raise
+        if response.status_code == 404:
+            log.error(f'No blueprint database file found at "{_DB_URL}"')
+            raise HTTPException(
+                status_code=404,
+                detail=f'No Blueprint database file found',
+            )
 
-    BLUEPRINT_DATABASE_FILE.write_bytes(response.content)
+        # Non-404 error, raise
+        if not response.ok:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=f'Error downloading Blueprint database',
+            )
+
+        BLUEPRINT_DATABASE_FILE.write_bytes(response.content)
 
 
 _db_expiration = datetime.now()
-def get_blueprint_database(
+async def get_blueprint_database(
         request: Request,
         refresh_database: bool = Query(default=False),
     ) -> Iterator[Session]:
@@ -117,7 +121,7 @@ def get_blueprint_database(
     if (refresh_database
         or not BLUEPRINT_DATABASE_FILE.exists()
         or _db_expiration <= datetime.now()):
-        download_blueprint_database()
+        await download_blueprint_database()
         log.debug(f'Downloaded Blueprint database')
         _db_expiration = datetime.now() + timedelta(hours=2)
 
@@ -150,7 +154,7 @@ def get_preferences() -> Preferences:
     return PreferencesLocal
 
 
-def _require_interface(
+async def _require_interface(
         interface_group: InterfaceGroup,
         interface_id: int,
         name: str,
@@ -202,7 +206,7 @@ def get_emby_interfaces() -> InterfaceGroup[int, EmbyInterface]:
     return EmbyInterfaces
 
 
-def require_emby_interface(interface_id: int = Query(...)) -> EmbyInterface:
+async def require_emby_interface(interface_id: int = Query(...)) -> EmbyInterface:
     """
     Dependency to get the `EmbyInterface` with the given ID. This adds
     `interface_id` as a Query parameter.
@@ -222,7 +226,7 @@ def require_emby_interface(interface_id: int = Query(...)) -> EmbyInterface:
     return _require_interface(EmbyInterfaces, interface_id, 'Emby')
 
 
-def refresh_imagemagick_interface() -> None:
+async def refresh_imagemagick_interface() -> None:
     """
     Refresh the global interface to ImageMagick. This reinitializes and
     overrides the object.
@@ -237,7 +241,7 @@ def refresh_imagemagick_interface() -> None:
     )
 
 
-def get_imagemagick_interface() -> ImageMagickInterface:
+async def get_imagemagick_interface() -> ImageMagickInterface:
     """
     Dependency to get the global interface to ImageMagick.
 
@@ -259,7 +263,7 @@ def get_jellyfin_interfaces() -> InterfaceGroup[int, JellyfinInterface]:
     return JellyfinInterfaces
 
 
-def require_jellyfin_interface(interface_id: int = Query(...)) -> JellyfinInterface:
+async def require_jellyfin_interface(interface_id: int = Query(...)) -> JellyfinInterface:
     """
     Dependency to get the `JellyfinInterface` with the given ID. This
     adds `interface_id` as a Query parameter.
@@ -290,7 +294,7 @@ def get_plex_interfaces() -> InterfaceGroup[int, PlexInterface]:
     return PlexInterfaces
 
 
-def require_plex_interface(interface_id: int = Query(...)) -> PlexInterface:
+async def require_plex_interface(interface_id: int = Query(...)) -> PlexInterface:
     """
     Dependency to get the `PlexInterface` with the given ID. This adds
     `interface_id` as a Query parameter.
@@ -321,7 +325,7 @@ def get_sonarr_interfaces() -> InterfaceGroup[int, SonarrInterface]:
     return SonarrInterfaces
 
 
-def require_sonarr_interface(interface_id: int = Query(...)) -> SonarrInterface:
+async def require_sonarr_interface(interface_id: int = Query(...)) -> SonarrInterface:
     """
     Dependency to get the `SonarrInterface` with the given ID. This adds
     `interface_id` as a Query parameter.
@@ -352,7 +356,7 @@ def get_tmdb_interfaces() -> InterfaceGroup[int, TMDbInterface]:
     return TMDbInterfaces
 
 
-def require_tmdb_interface(
+async def require_tmdb_interface(
         interface_id: Optional[int] = Query(default=None)
     ) -> TMDbInterface:
     """
@@ -380,7 +384,7 @@ def require_tmdb_interface(
     return _require_interface(TMDbInterfaces, interface_id, 'tmdb')
 
 
-def require_interface(interface_id: int = Query(...)) -> AnyInterface:
+async def require_interface(interface_id: int = Query(...)) -> AnyInterface:
     """
     Dependency to get the interface with the given ID. This adds
     `interface_id` as a Query parameter.
