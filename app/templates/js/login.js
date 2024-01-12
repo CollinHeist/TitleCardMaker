@@ -34,7 +34,7 @@ function submitForm() {
 
       // Token expires in 1 hour
       const date = new Date();
-      date.setTime(date.getTime() + (1000 * 60 * 60 * 24 * 2));
+      date.setTime(date.getTime() + (1000 * 60 * 60 * 24 * 7));
 
       // Store token as cookie
       document.cookie = `tcm_token=${token.access_token};expires=${date.toUTCString()};path=/;SameSite=Lax`;
