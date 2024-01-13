@@ -58,3 +58,9 @@ class Card(Base):
         """Whether the Card file for this object exists."""
 
         return Path(self.card_file).exists()
+
+    @property
+    def file(self) -> Path:
+        """Path of this Card file."""
+
+        return Path(self.card_file)

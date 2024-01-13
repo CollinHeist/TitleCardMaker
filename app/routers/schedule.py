@@ -1,6 +1,7 @@
 from datetime import datetime
+from functools import wraps
 from logging import Logger
-from typing import Literal, Optional
+from typing import Callable, Literal, Optional
 
 from apscheduler.job import Job
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -12,7 +13,7 @@ from app.dependencies import get_preferences, get_scheduler
 from app.internal.auth import get_current_user
 from app.internal.availability import get_latest_version
 from app.internal.cards import (
-    create_all_title_cards, refresh_all_remote_card_types,
+    create_all_title_cards, refresh_all_remote_card_types, clean_database,
 )
 from app.internal.series import (
     download_all_series_posters, load_all_media_servers, set_all_series_ids
@@ -25,7 +26,7 @@ from app.schemas.schedule import (
     Days, Hours, Minutes, NewJob, ScheduledTask, UpdateSchedule
 )
 
-from modules.Debug import contextualize, log
+from modules.Debug import contextualize, log, tz
 
 
 # Do not allow tasks to be scheduled faster than this interval
@@ -50,14 +51,16 @@ JOB_BACKUP_DATABASE = 'BackupDatabase'
 INTERNAL_JOB_CHECK_FOR_NEW_RELEASE = 'CheckForNewRelease'
 INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES = 'RefreshRemoteCardTypes'
 INTERNAL_JOB_SET_SERIES_IDS = 'SetSeriesIDs'
+INTERNAL_JOB_CLEAN_DATABASE = 'CleanDatabase'
 INTERNAL_JOB_SNAPSHOT_DATABASE = 'SnapshotDatabase'
 
 TaskID = Literal[
-    JOB_SYNC_INTERFACES, JOB_CREATE_TITLE_CARDS, JOB_LOAD_MEDIA_SERVERS,         # type: ignore
-    JOB_DOWNLOAD_SERIES_LOGOS, JOB_DOWNLOAD_SERIES_POSTERS, JOB_BACKUP_DATABASE, # type: ignore
+    JOB_SYNC_INTERFACES, JOB_CREATE_TITLE_CARDS, JOB_LOAD_MEDIA_SERVERS,
+    JOB_DOWNLOAD_SERIES_LOGOS, JOB_DOWNLOAD_SERIES_POSTERS, JOB_BACKUP_DATABASE,
     # Internal jobs
-    INTERNAL_JOB_CHECK_FOR_NEW_RELEASE, INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES,  # type: ignore
-    INTERNAL_JOB_SET_SERIES_IDS, INTERNAL_JOB_SNAPSHOT_DATABASE                  # type: ignore
+    INTERNAL_JOB_CHECK_FOR_NEW_RELEASE, INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES,
+    INTERNAL_JOB_SET_SERIES_IDS, INTERNAL_JOB_CLEAN_DATABASE,
+    INTERNAL_JOB_SNAPSHOT_DATABASE
 ]
 
 """
@@ -65,91 +68,70 @@ Wrap all periodically called functions to set the runnin attributes when
 the job is started and finished.
 """
 # pylint: disable=missing-function-docstring,redefined-outer-name
-def _wrap_before(job_id: str, *, log: Logger = log) -> bool:
-    """
-    Setup function before starting a wrapped Task. This logs and marks
-    the start of Task execution.
+def wrap_scheduled_function(job_id: str) -> Callable[[Optional[Logger]], None]:
+    def decorator(func: Callable[[Optional[Logger]], None]) -> Callable[[Optional[Logger]], None]:
+        @wraps(func)
+        def wrapper(log: Optional[Optional[Logger]] = None) -> None:
+            log = log or contextualize()
+            log.info(f'Task[{job_id}] Started Execution')
+            if BaseJobs[job_id].running:
+                log.info(f'Task[{job_id}] Finished execution - Task is already running')
+                return None
 
-    Args:
-        job_id: ID of the Task / Job being wrapped.
-        log: Logger for all log messages.
+            BaseJobs[job_id].previous_start_time = datetime.now()
+            BaseJobs[job_id].running = True
 
-    Returns:
-        True if the Task can be started (i.e. was not already running);
-        False otherwise.
-    """
+            func(log=log)
 
-    log.info(f'Task[{job_id}] Started execution')
-    if BaseJobs[job_id].running:
-        log.info(f'Task[{job_id}] Finished execution - Task is already running')
-        return False
+            log.info(f'Task[{job_id}] Finished execution')
+            BaseJobs[job_id].previous_end_time = datetime.now()
+            BaseJobs[job_id].running = False
+        return wrapper
+    return decorator
 
-    BaseJobs[job_id].previous_start_time = datetime.now()
-    BaseJobs[job_id].running = True
-    return True
+@wrap_scheduled_function(JOB_CREATE_TITLE_CARDS)
+def wrapped_create_all_title_cards(log: Optional[Logger] = None) -> None:
+    create_all_title_cards(log=log)
 
-def _wrap_after(job_id: str, *, log: Logger = log) -> None:
-    log.info(f'Task[{job_id}] Finished execution')
-    BaseJobs[job_id].previous_end_time = datetime.now()
-    BaseJobs[job_id].running = False
+@wrap_scheduled_function(JOB_DOWNLOAD_SERIES_LOGOS)
+def wrapped_download_all_series_logos(log: Optional[Logger] = None) -> None:
+    download_all_series_logos(log=log)
 
-def wrapped_create_all_title_cards(log: Optional[Logger] = None):
-    log = log or contextualize()
-    if _wrap_before(JOB_CREATE_TITLE_CARDS, log=log):
-        create_all_title_cards(log=log)
-        _wrap_after(JOB_CREATE_TITLE_CARDS, log=log)
+@wrap_scheduled_function(JOB_DOWNLOAD_SERIES_POSTERS)
+def wrapped_download_all_series_posters(log: Optional[Logger] = None) -> None:
+    download_all_series_posters(log=log)
 
-def wrapped_download_all_series_logos(log: Optional[Logger] = None):
-    log = log or contextualize()
-    if _wrap_before(JOB_DOWNLOAD_SERIES_LOGOS, log=log):
-        download_all_series_logos(log=log)
-        _wrap_after(JOB_DOWNLOAD_SERIES_LOGOS, log=log)
+@wrap_scheduled_function(JOB_LOAD_MEDIA_SERVERS)
+def wrapped_load_media_servers(log: Optional[Logger] = None) -> None:
+    load_all_media_servers(log=log)
 
-def wrapped_download_all_series_posters(log: Optional[Logger] = None):
-    log = log or contextualize()
-    if _wrap_before(JOB_DOWNLOAD_SERIES_POSTERS, log=log):
-        download_all_series_posters(log=log)
-        _wrap_after(JOB_DOWNLOAD_SERIES_POSTERS, log=log)
+@wrap_scheduled_function(JOB_SYNC_INTERFACES)
+def wrapped_sync_all(log: Optional[Logger] = None) -> None:
+    sync_all(log=log)
 
-def wrapped_load_media_servers(log: Optional[Logger] = None):
-    log = log or contextualize()
-    if _wrap_before(JOB_LOAD_MEDIA_SERVERS, log=log):
-        load_all_media_servers(log=log)
-        _wrap_after(JOB_LOAD_MEDIA_SERVERS, log=log)
+@wrap_scheduled_function(INTERNAL_JOB_CHECK_FOR_NEW_RELEASE)
+def wrapped_get_latest_version(log: Optional[Logger] = None) -> None:
+    get_latest_version(log=log)
 
-def wrapped_sync_all(log: Optional[Logger] = None):
-    log = log or contextualize()
-    if _wrap_before(JOB_SYNC_INTERFACES, log=log):
-        sync_all(log=log)
-        _wrap_after(JOB_SYNC_INTERFACES, log=log)
+@wrap_scheduled_function(INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES)
+def wrapped_refresh_all_remote_cards(log: Optional[Logger] = None) -> None:
+    refresh_all_remote_card_types(log=log)
 
-def wrapped_get_latest_version(log: Optional[Logger] = None):
-    log = log or contextualize()
-    if _wrap_before(INTERNAL_JOB_CHECK_FOR_NEW_RELEASE, log=log):
-        get_latest_version(log=log)
-        _wrap_after(INTERNAL_JOB_CHECK_FOR_NEW_RELEASE, log=log)
+@wrap_scheduled_function(INTERNAL_JOB_SET_SERIES_IDS)
+def wrapped_set_series_ids(log: Optional[Logger] = None) -> None:
+    set_all_series_ids(log=log)
 
-def wrapped_refresh_all_remote_cards(log: Optional[Logger] = None):
-    log = log or contextualize()
-    if _wrap_before(INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES, log=log):
-        refresh_all_remote_card_types(log=log)
-        _wrap_after(INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES, log=log)
+@wrap_scheduled_function(JOB_BACKUP_DATABASE)
+def wrapped_backup_database(log: Optional[Logger] = None) -> None:
+    backup_data(log=log)
 
-def wrapped_set_series_ids(log: Optional[Logger] = None):
-    log = log or contextualize()
-    if _wrap_before(INTERNAL_JOB_SET_SERIES_IDS, log=log):
-        set_all_series_ids(log=log)
-        _wrap_after(INTERNAL_JOB_SET_SERIES_IDS, log=log)
-
-def wrapped_backup_database(log: Optional[Logger] = None):
-    log = log or contextualize()
-    if _wrap_before(JOB_BACKUP_DATABASE, log=log):
-        backup_data(log=log)
-        _wrap_after(JOB_BACKUP_DATABASE, log=log)
+@wrap_scheduled_function(INTERNAL_JOB_CLEAN_DATABASE)
+def wrapped_clean_database(log: Optional[Logger] = None) -> None:
+    clean_database(log=log)
 
 def wrapped_snapshot_database(log: Optional[Logger] = None):
     log = log or contextualize()
-    BaseJobs[INTERNAL_JOB_SNAPSHOT_DATABASE].previous_start_time = datetime.now()
+    BaseJobs[INTERNAL_JOB_SNAPSHOT_DATABASE].previous_start_time =datetime.now()
     BaseJobs[INTERNAL_JOB_SNAPSHOT_DATABASE].running = True
     snapshot_database(log=log)
     BaseJobs[INTERNAL_JOB_SNAPSHOT_DATABASE].previous_end_time = datetime.now()
@@ -224,9 +206,17 @@ BaseJobs = {
     INTERNAL_JOB_SET_SERIES_IDS: NewJob(
         id=INTERNAL_JOB_SET_SERIES_IDS,
         function=wrapped_set_series_ids,
-        seconds=Days(1),
-        crontab='0 0 */1 * *',
+        seconds=Days(2),
+        crontab='0 0 */2 * *',
         description='Set Series IDs',
+        internal=True,
+    ),
+    INTERNAL_JOB_CLEAN_DATABASE: NewJob(
+        id=INTERNAL_JOB_CLEAN_DATABASE,
+        function=wrapped_clean_database,
+        seconds=Days(2) + Hours(12),
+        crontab='0 */3 * * *',
+        description='Clean the database',
         internal=True,
     ),
     INTERNAL_JOB_SNAPSHOT_DATABASE: NewJob(

@@ -57,35 +57,44 @@ def get_all_statistics(
         Statistic(
             value=card_count, value_text=f'{card_count:,}', unit='Cards',
             description='Number of Title Cards',
-        ), Statistic(
+        ),
+        Statistic(
             value=series_count, value_text=f'{series_count:,}', unit='Series',
             description='Number of Series',
-        ), Statistic(
+        ),
+        Statistic(
             value=monitored_count, value_text=f'{monitored_count:,}',
             unit='Monitored',
             description='Number of Monitored Series',
-        ), Statistic(
+        ),
+        Statistic(
             value=unmonitored_count, value_text=f'{unmonitored_count:,}',
             unit='Unmonitored',
             description='Number of Unmonitored Series',
-        ), Statistic(
+        ),
+        Statistic(
             value=episode_count, value_text=f'{episode_count:,}',
             unit='Episodes',
             description='Number of Episodes',
-        ), Statistic(
+        ),
+        Statistic(
             value=asset_size, value_text=formatted_filesize[0],
             unit=formatted_filesize[1],
             description='File size of all Title Cards',
-        ), Statistic(
+        ),
+        Statistic(
             value=font_count, value_text=f'{font_count:,}', unit='Fonts',
             description='Number of Named Fonts',
-        ), Statistic(
+        ),
+        Statistic(
             value=template_count, value_text=f'{template_count:,}',
             unit='Templates', description='Number of Templates',
-        ), Statistic(
+        ),
+        Statistic(
             value=sync_count, value_text=f'{sync_count:,}', unit='Syncs',
             description='Number of Syncs',
-        ), Statistic(
+        ),
+        Statistic(
             value=loaded_count, value_text=f'{loaded_count:,}',
             unit='Loaded Cards', description='Number of loaded Title Cards',
         )

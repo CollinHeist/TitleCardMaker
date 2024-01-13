@@ -111,22 +111,53 @@ def create_all_title_cards(*, log: Logger = log) -> None:
         log.exception(f'Failed to create title cards', e)
 
 
-def remove_stale_loaded_objects(*, log: Logger = log) -> None:
+def clean_database(*, log: Logger = log) -> None:
     """
     Schedule-able function to remove bad / stale Loaded objects from the
     database.
-
-    Args:
-        log: Logger for all log messages.
     """
 
     try:
         with next(get_database()) as db:
             # Delete Loaded assets with no associated Card
-            db.query(Loaded).filter(Loaded.card_id.is_(None)).delete()
+            bad_loaded = db.query(Loaded).filter(Loaded.card_id.is_(None))
+            if (bad_count := bad_loaded.count()) > 0:
+                log.debug(f'Deleting {bad_count} outdated Loaded record')
+                bad_loaded.delete()
+
+            # Delete Cards with no Series ID, Series, Episode ID, or Episode
+            unlinked_cards = db.query(Card)\
+                .filter(or_(Card.episode_id.is_(None),
+                            Card.series_id.is_(None)))\
+                .all()
+            unlinked_cards += [card for card in db.query(Card)
+                               if card.episode is None or card.series is None]
+            for card in set(unlinked_cards):
+                log.debug(f'Deleting unlinked {card}')
+                card.file.unlink(missing_ok=True)
+                db.delete(card)
+
+            # Delete duplicate Cards
+            for series in db.query(Series).all():
+                episode_ids = db.query(Episode.id)\
+                    .filter_by(series_id=series.id)\
+                    .all()
+
+                for episode_id in episode_ids:
+                    cards = db.query(Card)\
+                        .filter_by(episode_id=episode_id[0])\
+                        .all()
+
+                    if get_preferences().library_unique_cards:
+                        ...
+                    else:
+                        for card in cards[::-1][1:]: # All but the latest Card
+                            log.debug(f'Deleting redundant {card}')
+                            card.file.unlink(missing_ok=True)
+                            db.delete(card)
             db.commit()
     except Exception as exc:
-        log.exception(f'Failed to clean Loaded records', exc)
+        log.exception(f'Failed to clean the database', exc)
 
 
 def refresh_all_remote_card_types(*, log: Logger = log) -> None:
