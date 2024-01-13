@@ -235,16 +235,21 @@ def initialize_scheduler(override: bool = False) -> None:
     """
     Initialize the Scheduler by creating any Jobs in BaseJobs that do
     not already exist.
+
+    Args:
+        override: Whether to override any existing scheduled jobs.
     """
 
-    scheduler: BackgroundScheduler = get_scheduler()
-    preferences: Preferences = get_preferences()
+    scheduler, preferences = get_scheduler(), get_preferences()
 
     # Schedule all defined Jobs
     changed = False
     for job in BaseJobs.values():
-        # If Job is not already scheduled, add
-        if override or scheduler.get_job(job.id) is None:
+        # If overriding, job is not already scheduled, or job schedule
+        # is in the past, add to scheduler
+        if (override
+            or scheduler.get_job(job.id) is None
+            or scheduler.get_job(job.id).next_run_time < datetime.now(tz=tz)):
             if preferences.advanced_scheduling:
                 changed = True
                 # Store crontab in Preferences
