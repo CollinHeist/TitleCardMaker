@@ -5,7 +5,6 @@ from typing import Any, Iterator, Optional, Union
 from apscheduler.schedulers.background import BackgroundScheduler
 from httpx import AsyncClient
 from fastapi import HTTPException, Query, Request
-from requests import get
 from sqlalchemy.orm import Session
 
 from app.database.session import (
@@ -154,7 +153,7 @@ def get_preferences() -> Preferences:
     return PreferencesLocal
 
 
-async def _require_interface(
+def _require_interface(
         interface_group: InterfaceGroup,
         interface_id: int,
         name: str,
@@ -206,7 +205,7 @@ def get_emby_interfaces() -> InterfaceGroup[int, EmbyInterface]:
     return EmbyInterfaces
 
 
-async def require_emby_interface(interface_id: int = Query(...)) -> EmbyInterface:
+def require_emby_interface(interface_id: int = Query(...)) -> EmbyInterface:
     """
     Dependency to get the `EmbyInterface` with the given ID. This adds
     `interface_id` as a Query parameter.
@@ -226,7 +225,7 @@ async def require_emby_interface(interface_id: int = Query(...)) -> EmbyInterfac
     return _require_interface(EmbyInterfaces, interface_id, 'Emby')
 
 
-async def refresh_imagemagick_interface() -> None:
+def refresh_imagemagick_interface() -> None:
     """
     Refresh the global interface to ImageMagick. This reinitializes and
     overrides the object.
@@ -241,7 +240,7 @@ async def refresh_imagemagick_interface() -> None:
     )
 
 
-async def get_imagemagick_interface() -> ImageMagickInterface:
+def get_imagemagick_interface() -> ImageMagickInterface:
     """
     Dependency to get the global interface to ImageMagick.
 
@@ -263,7 +262,7 @@ def get_jellyfin_interfaces() -> InterfaceGroup[int, JellyfinInterface]:
     return JellyfinInterfaces
 
 
-async def require_jellyfin_interface(interface_id: int = Query(...)) -> JellyfinInterface:
+def require_jellyfin_interface(interface_id: int = Query(...)) -> JellyfinInterface:
     """
     Dependency to get the `JellyfinInterface` with the given ID. This
     adds `interface_id` as a Query parameter.
@@ -294,7 +293,7 @@ def get_plex_interfaces() -> InterfaceGroup[int, PlexInterface]:
     return PlexInterfaces
 
 
-async def require_plex_interface(interface_id: int = Query(...)) -> PlexInterface:
+def require_plex_interface(interface_id: int = Query(...)) -> PlexInterface:
     """
     Dependency to get the `PlexInterface` with the given ID. This adds
     `interface_id` as a Query parameter.
@@ -325,7 +324,7 @@ def get_sonarr_interfaces() -> InterfaceGroup[int, SonarrInterface]:
     return SonarrInterfaces
 
 
-async def require_sonarr_interface(interface_id: int = Query(...)) -> SonarrInterface:
+def require_sonarr_interface(interface_id: int = Query(...)) -> SonarrInterface:
     """
     Dependency to get the `SonarrInterface` with the given ID. This adds
     `interface_id` as a Query parameter.
@@ -356,7 +355,7 @@ def get_tmdb_interfaces() -> InterfaceGroup[int, TMDbInterface]:
     return TMDbInterfaces
 
 
-async def require_tmdb_interface(
+def require_tmdb_interface(
         interface_id: Optional[int] = Query(default=None)
     ) -> TMDbInterface:
     """
@@ -384,7 +383,7 @@ async def require_tmdb_interface(
     return _require_interface(TMDbInterfaces, interface_id, 'tmdb')
 
 
-async def require_interface(interface_id: int = Query(...)) -> AnyInterface:
+def require_interface(interface_id: int = Query(...)) -> AnyInterface:
     """
     Dependency to get the interface with the given ID. This adds
     `interface_id` as a Query parameter.
