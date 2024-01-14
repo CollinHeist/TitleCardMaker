@@ -17,6 +17,7 @@ from app.internal.cards import (
 from app.internal.connection import add_connection, update_connection
 from app import models
 from app.models.connection import Connection
+from app.models.episode import Episode
 from app.models.preferences import Preferences
 from app.schemas.base import UNSPECIFIED
 from app.schemas.card import NewTitleCard
@@ -34,7 +35,7 @@ from app.schemas.sync import (
     NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync
 )
 
-from modules.Debug import log
+from modules.Debug import InvalidCardSettings, log
 from modules.EpisodeMap import EpisodeMap
 from modules.PreferenceParser import PreferenceParser
 from modules.SeriesInfo2 import SeriesInfo
@@ -1352,7 +1353,7 @@ def import_cards(
         series: Series,
         directory: Optional[Path],
         image_extension: CardExtension,
-        force_reload: bool,
+        force_reload: bool, # TODO implement?
         *,
         log: Logger = log,
     ) -> None:
@@ -1393,40 +1394,37 @@ def import_cards(
             continue
 
         # Find associated Episode
-        episode = db.query(models.episode.Episode).filter(
-            models.episode.Episode.series_id==series.id,
-            models.episode.Episode.season_number==season_number,
-            models.episode.Episode.episode_number==episode_number,
-        ).first()
+        episode = db.query(Episode)\
+            .filter(Episode.series_id==series.id,
+                    Episode.season_number==season_number,
+                    Episode.episode_number==episode_number)\
+            .first()
 
         # No associated Episode, skip
         if episode is None:
-            log.warning(f'{series.log_str} No associated Episode for '
-                        f'{image.resolve()} - skipping')
+            log.warning(f'{series} No associated Episode for {image.resolve()} '
+                        f'- skipping')
             continue
 
         # Episode has an existing Card, skip if not forced
-        # TODO evaluate w/ multi-conn
         if episode.cards and not force_reload:
-            log.debug(f'{series.log_str} {episode.log_str} has an associated Card - skipping')
+            log.debug(f'{series} {episode} has an associated Card - skipping')
             continue
 
         # Episode has card, delete if reloading
-        # TODO evaluate w/ force-reload and multi-conn
         if episode.cards and force_reload:
             for card in episode.cards:
-                log.debug(f'{card.log_str} deleting record')
+                log.debug(f'{card} deleting record')
                 db.query(models.card.Card).filter_by(id=card.id).delete()
-                log.debug(f'{series.log_str} {episode.log_str} has associated '
-                          f'Card - reloading')
+                log.debug(f'{series} {episode} has associated Card - reloading')
 
         # Get finalized Card settings for this Episode, override card file
         try:
             # TODO eval w/ library?
             card_settings = resolve_card_settings(episode, log=log)
-        except HTTPException as e:
-            log.exception(f'{series.log_str} {episode.log_str} Cannot import '
-                          f'Card - settings are invalid {e}', e)
+        except (HTTPException, InvalidCardSettings) as exc:
+            log.exception(f'{series} {episode} Cannot import Card - settings '
+                          f'are invalid {exc}', exc)
             continue
 
         # Get a validated card class, and card type Pydantic model
@@ -1440,8 +1438,9 @@ def import_cards(
             episode_id=episode.id,
         )
 
-        # TODO revise w/ multi-conn
-        card = add_card_to_database(db, title_card, card_settings['card_file'])
-        log.debug(f'{series.log_str} {episode.log_str} Imported {image.resolve()}')
+        card = add_card_to_database(
+            db, title_card, CardTypeModel, card_settings['card_file'], None
+        )
+        log.debug(f'{series} {episode} Imported {image.resolve()}')
 
     return None
