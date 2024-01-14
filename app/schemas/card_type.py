@@ -527,6 +527,7 @@ class TintedFrameCardType(BaseCardTypeAllText):
     logo_size: PositiveFloat = 1.0
     logo_vertical_shift: int = 0
     blur_edges: bool = True
+    shadow_color: str = TintedFrameTitleCard.SHADOW_COLOR
 
     @root_validator(skip_on_failure=True)
     def validate_extras(cls, values):
