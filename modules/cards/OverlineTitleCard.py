@@ -15,8 +15,8 @@ if TYPE_CHECKING:
 class OverlineTitleCard(BaseCardType):
     """
     This class describes a CardType that produces title cards featuring
-    a thin line over (or under) the title text. This line is
-    interesected by the episode text, and can be recolored.
+    a thin line over (or under) the title text. This line is intersected
+    by the episode text, and can be recolored.
     """
 
     """API Parameters"""
@@ -34,42 +34,52 @@ class OverlineTitleCard(BaseCardType):
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
                 tooltip='Defaults to match the Font color',
-            ), Extra(
+            ),
+            Extra(
                 name='Line Color',
                 identifier='line_color',
                 description='Color of the line',
                 tooltip='Defaults to match the episode text or Font color',
-            ), Extra(
+            ),
+            Extra(
                 name='Line Position',
                 identifier='line_position',
                 description='Position of the line and episode text',
                 tooltip=(
-                    'Either <v>top</v> or <v>bottom</v>. Defaults to <v>top</v>.'
+                    'Either <v>top</v> or <v>bottom</v>. Default is <v>top</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Line Width',
                 identifier='line_width',
                 description='Thickness of the line',
                 tooltip=(
-                    'Thickness of the line. Default is <v>7</v>. Unit is '
+                    'Thickness of the line. Default is <v>9</v>. Unit is '
                     'pixels.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Line Toggle',
                 identifier='hide_line',
                 description='Whether to hide the line completely',
-                tooltip='Either <v>True</v> or <v>False</v>.'
-            ), Extra(
+                tooltip=(
+                    'Either <v>True</v> or <v>False</v>. Default is '
+                    '<v>False</v>.'
+                )
+            ),
+            Extra(
                 name='Separator Character',
                 identifier='separator',
                 description='Character to separate season and episode text',
-            ), Extra(
+            ),
+            Extra(
                 name='Gradient Omission',
                 identifier='omit_gradient',
                 description='Whether to omit the gradient overlay',
                 tooltip=(
                     'Either <v>True</v> or <v>False</v>. If <v>True</v>, text '
-                    'may appear less legible on brighter images.'
+                    'may appear less legible on brighter images. Default is '
+                    '<v>False</v>.'
                 ),
             ),
         ], description=[
@@ -109,7 +119,7 @@ class OverlineTitleCard(BaseCardType):
     ARCHIVE_NAME = 'Overline Style'
 
     """How thick the line is (in pixels)"""
-    LINE_THICKNESS = 7
+    LINE_THICKNESS = 9
 
     """Gradient to overlay"""
     GRADIENT_IMAGE = REF_DIRECTORY / 'small_gradient.png'
@@ -462,6 +472,8 @@ class OverlineTitleCard(BaseCardType):
             *self.index_text_commands,
             # Add line
             *self.line_commands(title_text_dimensions, index_text_dimensions),
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
