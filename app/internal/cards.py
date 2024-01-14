@@ -383,6 +383,7 @@ def resolve_card_settings(
 
     Args:
         episode: Episode whose Card settings are being resolved.
+        library: Library associated with this Card.
         log: Logger for all log messages.
 
     Returns:

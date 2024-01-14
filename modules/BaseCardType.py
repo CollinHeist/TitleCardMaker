@@ -1,9 +1,11 @@
 from abc import abstractmethod
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, Union
 
 from titlecase import titlecase
 
 from app.schemas.card import CardTypeDescription, Extra, TitleCharacteristics
+from modules.Debug import log
 from modules.ImageMaker import Dimensions, ImageMagickCommands, ImageMaker
 
 if TYPE_CHECKING:
@@ -499,6 +501,55 @@ class BaseCardType(ImageMaker):
             # Reset to full colorspace
             f'-set colorspace sRGB',
         ]
+
+
+    def add_overlay_mask(self,
+            file: Path,
+            /,
+            *,
+            pre_processing: Optional[ImageMagickCommands] = None,
+            x: int = 0,
+            y: int = 0,
+        ) -> ImageMagickCommands:
+        """
+        ImageMagick commands to add a top-level mask to the image.
+        
+        Args:
+            file: Path to the file to search for the mask image
+                alongside.
+            pre_processing: Any ImageMagick commands to apply to the
+                mask before it is overlaid.
+            x: Offset X-coordinate to use when compositing the mask.
+            y: Offset Y-coordinate to use when compositing the mask.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        # Do not apply any masks for stylized cards
+        if self.blur or self.grayscale:
+            return []
+
+        # Look for mask file corresponding to this source image
+        mask = file.parent / f'{file.stem}-mask.png'
+
+        # If source mask does not exist, query for global mask
+        mask = mask if mask.exists() else file.parent / 'mask.png'
+
+        # Mask exists, return commands to compose atop image
+        if mask.exists():
+            log.debug(f'Identified mask image "{mask.resolve()}"')
+            if pre_processing is None:
+                pre_processing = self.resize_and_style
+
+            return [
+                f'\( "{mask.resolve()}"',
+                *pre_processing,
+                f'\) -geometry {x:+}{y:+}',
+                f'-composite',
+            ]
+
+        return []
 
 
     @property

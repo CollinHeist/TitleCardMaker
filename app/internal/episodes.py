@@ -244,7 +244,7 @@ def refresh_episode_data(
     if len(new_episodes) > 1:
         log.info(f'{series} {len(new_episodes)} new Episodes')
     elif len(new_episodes) == 1:
-        log.info(f'{series} new Episode {new_episodes[0]}')
+        log.info(f'{series} new Episode "{new_episodes[0]}"')
 
     # Set Episode ID's for all new Episodes as background task or directly
     if background_tasks is None:
