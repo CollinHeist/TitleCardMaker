@@ -435,9 +435,9 @@ function editEpisodeExtras(episode) {
       extraField.append(extra);
       initializeExtraDropdowns(
         key,
-        $(`#episode-extras-modal .dropdown[data-value="extra_keys"]`).first(),
-        $(`#episode-extras-modal  .field[data-value="extras"] .popup .header`).first(),
-        $(`#episode-extras-modal  .field[data-value="extras"] .popup .description`).first(),
+        $(`#episode-extras-modal .dropdown[data-value="extra_keys"]`).last(),
+        $(`#episode-extras-modal  .field[data-value="extras"] .popup .header`).last(),
+        $(`#episode-extras-modal  .field[data-value="extras"] .popup .description`).last(),
       );
     }
     $('#episode-extras-modal .field[data-value="extras"] .link.icon').popup({inline: true});
