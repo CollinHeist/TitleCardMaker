@@ -56,8 +56,8 @@ OPERATIONS: dict[str, Callable[[Any, Any], bool]] = {
 ARGUMENT_KEYS = (
     'Series Name', 'Series Year', 'Number of Seasons', 'Series Library Names',
     'Series Logo', 'Episode Watched Status', 'Season Number', 'Episode Number',
-    'Absolute Number', 'Episode Title', 'Episode Title Length',
-    'Episode Airdate', 'Episode Extras',
+    'Absolute Number', 'Episode Identifier', 'Episode Title',
+    'Episode Title Length', 'Episode Airdate', 'Episode Extras',
 )
 
 """
@@ -194,15 +194,6 @@ class Template(Base):
 
 
     @property
-    def log_str(self) -> str:
-        """
-        Loggable string that defines this object (i.e. `__repr__`).
-        """
-
-        return f'Template[{self.id}] "{self.name}"'
-
-
-    @property
     def card_properties(self) -> dict[str, Any]:
         """
         Properties to utilize and merge in Title Card creation.
@@ -320,6 +311,7 @@ class Template(Base):
                 'Season Number': episode.season_number,
                 'Episode Number': episode.episode_number,
                 'Absolute Number': episode.absolute_number,
+                'Episode Identifier': f'S{episode.season_number:02}E{episode.episode_number:02}',
                 'Episode Title': episode.title,
                 'Episode Title Length': len(episode.title),
                 'Episode Airdate': episode.airdate,
@@ -351,7 +343,7 @@ class Template(Base):
                     return False
             # Operation or Argument are invalid, log and skip
             else:
-                log.debug(f'{self.log_str} [{argument}] [{operation}] '
+                log.debug(f'{self} [{argument}] [{operation}] '
                           f'[{condition["reference"]}] is unevaluatable')
                 continue
 
