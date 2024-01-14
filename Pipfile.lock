@@ -436,14 +436,6 @@
             "markers": "python_version >= '3.8'",
             "version": "==1.0.2"
         },
-        "httpx": {
-            "hashes": [
-                "sha256:451b55c30d5185ea6b23c2c793abf9bb237d2a7dfb901ced6ff69ad37ec1dfaf",
-                "sha256:8915f5a3627c4d47b73e8202457cb28f1266982d1159bd5779d86a80c0eab1cd"
-            ],
-            "index": "pypi",
-            "version": "==0.26.0"
-        },
         "idna": {
             "hashes": [
                 "sha256:9ecdbbd083b06798ae1e86adcbfe8ab1479cf864e4ee30fe4e46a003d12491ca",

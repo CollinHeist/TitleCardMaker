@@ -3,8 +3,8 @@ from logging import Logger
 from typing import Any, Iterator, Optional, Union
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from httpx import AsyncClient
 from fastapi import HTTPException, Query, Request
+from requests import get
 from sqlalchemy.orm import Session
 
 from app.database.session import (
@@ -43,6 +43,9 @@ AnyInterface = Union[
     TMDbInterface
 ]
 
+"""Where to download the Blueprint SQL Database from"""
+BLUEPRINT_DATABASE_URL =\
+    'https://github.com/CollinHeist/TCM-Blueprints-v2/raw/master/blueprints.db'
 """Where to read/write the Blueprint SQL database file"""
 BLUEPRINT_DATABASE_FILE = Preferences.TEMPORARY_DIRECTORY / 'blueprints.db'
 
@@ -63,7 +66,7 @@ def get_database() -> Iterator[Session]:
         db.close()
 
 
-async def download_blueprint_database(*, log: Logger = log) -> None:
+def download_blueprint_database(*, log: Logger = log) -> None:
     """
     Download the Blueprint SQL database from the GitHub repository.
 
@@ -71,33 +74,29 @@ async def download_blueprint_database(*, log: Logger = log) -> None:
         log: Logger for all log messages.
     """
 
-    async with AsyncClient() as client:
-        _DB_URL = (
-            'https://github.com/CollinHeist/TCM-Blueprints-v2/raw/master/'
-            'blueprints.db'
+    response = get(BLUEPRINT_DATABASE_URL, timeout=30)
+
+    # If no file was found, raise
+    if response.status_code == 404:
+        log.error(f'No blueprint database file found at "{BLUEPRINT_DATABASE_URL}"')
+        raise HTTPException(
+            status_code=404,
+            detail=f'No Blueprint database file found',
         )
-        response = await client.get(_DB_URL, timeout=30)
 
-        # If no file was found, raise
-        if response.status_code == 404:
-            log.error(f'No blueprint database file found at "{_DB_URL}"')
-            raise HTTPException(
-                status_code=404,
-                detail=f'No Blueprint database file found',
-            )
+    # Non-404 error, raise
+    if not response.ok:
+        raise HTTPException(
+            status_code=response.status_code,
+            detail=f'Error downloading Blueprint database',
+        )
 
-        # Non-404 error, raise
-        if not response.ok:
-            raise HTTPException(
-                status_code=response.status_code,
-                detail=f'Error downloading Blueprint database',
-            )
-
-        BLUEPRINT_DATABASE_FILE.write_bytes(response.content)
+    # Write database to file
+    BLUEPRINT_DATABASE_FILE.write_bytes(response.content)
 
 
 _db_expiration = datetime.now()
-async def get_blueprint_database(
+def get_blueprint_database(
         request: Request,
         refresh_database: bool = Query(default=False),
     ) -> Iterator[Session]:
@@ -120,7 +119,7 @@ async def get_blueprint_database(
     if (refresh_database
         or not BLUEPRINT_DATABASE_FILE.exists()
         or _db_expiration <= datetime.now()):
-        await download_blueprint_database()
+        download_blueprint_database()
         log.debug(f'Downloaded Blueprint database')
         _db_expiration = datetime.now() + timedelta(hours=2)
 
@@ -376,6 +375,7 @@ def require_tmdb_interface(
         HTTPException (404): There is no interface with the given ID.
     """
 
+    # If no ID was provided, get the first available TMDb interface
     if interface_id is None:
         for _, interface in TMDbInterfaces:
             return interface
