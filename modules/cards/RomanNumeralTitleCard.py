@@ -762,6 +762,7 @@ class RomanNumeralTitleCard(BaseCardType):
             # Create fixed color background
             f'-size "{self.TITLE_CARD_SIZE}"',
             f'xc:"{self.background}"',
+            f'-alpha on',
             # Overlay roman numerals
             *self.create_roman_numeral_command(self.roman_numeral),
             # Overlay season text

@@ -332,8 +332,7 @@ class FrameTitleCard(BaseCardType):
     def create(self) -> None:
         """Create this object's defined Title Card."""
 
-        command = ' '.join([
-            f'convert "{self.source_file.resolve()}"',
+        processing = [
             # Apply any defined styles
             *self.style,
             # Resize to fit within frame
@@ -341,6 +340,11 @@ class FrameTitleCard(BaseCardType):
             f'-resize x1275\<',
             # Increase contrast of source image
             f'-modulate 100,125',
+        ]
+
+        command = ' '.join([
+            f'convert "{self.source_file.resolve()}"',
+            *processing,
             # Fill in background
             f'-background "{self.BACKGROUND_COLOR}"',
             # Extend canvas to card size
@@ -351,6 +355,8 @@ class FrameTitleCard(BaseCardType):
             f'-composite',
             # Add all index/title text
             *self.text_commands,
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file, pre_processing=processing),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

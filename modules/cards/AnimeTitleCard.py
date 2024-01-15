@@ -458,18 +458,24 @@ class AnimeTitleCard(BaseCardType):
                 f'-composite',
             ]
 
+        contrast = [f'-modulate 100,125']
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
             # Resize and optionally blur source image
             *self.resize_and_style,
             # Increase contrast of source image
-            f'-modulate 100,125',
+            *contrast,
             # Overlay gradient
             *gradient_command,
-            # Add title or title+kanji
+            # Add title and/or kanji
             *self.title_text_command,
-            # Add season or season+episode text
+            # Add index text
             *self.index_text_command,
+            # Attempt to overlay mask
+            *self.add_overlay_mask(
+                self.source_file,
+                pre_processing=self.resize_and_style + contrast,
+            ),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

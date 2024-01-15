@@ -441,6 +441,8 @@ class TintedGlassTitleCard(BaseCardType):
             *self.add_title_text_command,
             # Add episode text
             *self.add_episode_text_command(title_box_coordinates),
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

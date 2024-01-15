@@ -433,6 +433,8 @@ class LandscapeTitleCard(BaseCardType):
             *self.title_text_commands,
             # Optionally add bounding box
             *self.add_bounding_box_commands(bounding_box),
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

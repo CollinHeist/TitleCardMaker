@@ -424,12 +424,13 @@ class BannerTitleCard(BaseCardType):
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
-            # f'convert -size 3200x1800 xc:white',
             # Resize and apply styles to source image
             *self.resize_and_style,
             # Add text and banner
             *self.title_text_commands,
             *self.index_text_commands,
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
