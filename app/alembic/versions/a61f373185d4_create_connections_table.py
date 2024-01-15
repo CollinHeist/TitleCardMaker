@@ -302,7 +302,7 @@ def upgrade() -> None:
             isp.append(jellyfin.id)
         elif plex and source == 'Plex':
             isp.append(plex.id)
-        elif source == 'TMDb':
+        elif tmdb and source == 'TMDb':
             isp.append(tmdb.id)
     PreferencesLocal.image_source_priority = isp
     log.debug(f'Migrated Global Image Source Priority to {isp}')
