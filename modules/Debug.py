@@ -27,10 +27,10 @@ def generate_context_id() -> str:
     Generate a unique pseudo-random "unique" ID.
     
     Returns:
-        12 character string of pseudo-random hexadecimal chacters.
+        6 character string of pseudo-random hexadecimal chacters.
     """
 
-    return ''.join(random_choices(hexdigits, k=12)).lower()
+    return ''.join(random_choices(hexdigits, k=6)).lower()
 
 
 """Global tqdm arguments"""

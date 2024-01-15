@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from logging import Logger, LoggerAdapter
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
-from typing import Any, Callable, NamedTuple, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Optional, Union
 
 from fastapi import HTTPException
 from PIL import Image
@@ -22,10 +22,14 @@ from modules.EpisodeDataSource2 import (
 )
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
-from modules.MediaServer2 import _Card, _Episode, MediaServer, SourceImage
+from modules.MediaServer2 import MediaServer, SourceImage
 from modules.SeriesInfo2 import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
+
+if TYPE_CHECKING:
+    from app.models.card import Card
+    from app.models.episode import Episode
 
 
 class EpisodeDetails(NamedTuple): # pylint: disable=missing-class-docstring
@@ -412,7 +416,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
     def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
-            episodes: list[_Episode],
+            episodes: list['Episode'],
             *,
             log: Logger = log,
         ) -> bool:
@@ -774,10 +778,10 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
     def load_title_cards(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_and_cards: list[tuple[_Episode, _Card]],
+            episode_and_cards: list[tuple['Episode', 'Card']],
             *,
             log: Logger = log,
-        ) -> list[tuple[_Episode, _Card]]:
+        ) -> list[tuple['Episode', 'Card']]:
         """
         Load the title cards for the given Series and Episodes.
 
