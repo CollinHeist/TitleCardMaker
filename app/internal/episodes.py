@@ -217,7 +217,6 @@ def refresh_episode_data(
             # Update watched status
             if existing.add_watched_status(watched):
                 log.debug(f'{series} {existing} Updating watched status')
-                log.debug(f'{existing.watched_statuses=}')
                 changed = True
 
     # Get existing Episodes
