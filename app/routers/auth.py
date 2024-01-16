@@ -39,6 +39,7 @@ def enable_authentication(
     # Get contextual logger
     log = request.state.log
 
+    # Enable auth globally
     preferences.require_auth = True
     preferences.commit()
 

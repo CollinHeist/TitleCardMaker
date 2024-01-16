@@ -1,4 +1,5 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
+from pathlib import Path
 from typing import Literal, Optional, Union
 
 from pydantic import PositiveInt, validator, root_validator # pylint: disable=no-name-in-module
@@ -109,12 +110,17 @@ class NewTitleCard(Base):
     series_id: int
     episode_id: int
     card_file: str
+    source_file: str
     filesize: Optional[int] = None
     card_type: str
 
     @validator('card_file', pre=True)
     def convert_paths_to_str(cls, v):
         return str(v)
+    
+    @validator('source_file', pre=True)
+    def convert_path_to_filename(cls, v):
+        return Path(v).name
 
 """
 Update classes

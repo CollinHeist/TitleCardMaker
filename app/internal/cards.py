@@ -49,9 +49,8 @@ def create_all_title_cards(*, log: Logger = log) -> None:
         # Get the Database
         with next(get_database()) as db:
             # Get all Series
-            failures = 0
-            all_series = db.query(Series).all()
-            for series in all_series:
+            failures = 0 
+            for series in db.query(Series).all():
                 try:
                     # Refresh Episode data if Series is monitored
                     if series.monitored:
@@ -729,6 +728,8 @@ def create_episode_card(
     different = (
         # Different card type
         card.card_type != existing_card.card_type
+        # Different Source file
+        or card.source_file != existing_card.source_file
         # Old Card defines an attribute not defined by new Card
         or any(attr not in new_model_json for attr in existing_card.model_json)
         # New Card defines a different value than the old Card

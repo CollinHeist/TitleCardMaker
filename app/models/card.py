@@ -40,6 +40,7 @@ class Card(Base):
     )
 
     card_file: Mapped[str]
+    source_file: Mapped[str]
     filesize: Mapped[int]
     library_name: Mapped[Optional[str]]
 
