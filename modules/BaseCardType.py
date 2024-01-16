@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, Union
 
 from titlecase import titlecase
