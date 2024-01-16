@@ -64,27 +64,20 @@ and store it inside the Source Image directory. Download any image.
 6. Close the image browser. The file for that Episode should now be filled in
 with Source Image information.
 
-7. To tell TCM to _automatically_ gather Source Images, click the
-<span class="example md-button">Download Source Images</span> button on the
-left-hand side.
-
     !!! note "Scheduled Task"
 
         Downloading Source Images happens automatically as a
         [scheduled task](../user_guide/scheduler.md), __unless__ the Series is
         marked as `Unmonitored`.
 
-Now that TCM has started downloading Source Images, we are ready to create Title
-Cards.
-
 ## Title Cards
 
 8. Click <span class="example md-button">Create Title Cards</span> on the
 left-hand side.
 
-9. After TCM has created a few Cards, go to "Files" tab under Title Cards.
+9. After TCM has created a few Cards, go to _Title Cards_ on the _Files_ tab.
 
-10. You'll see that Title Cards in Seasons 1 and 2 were created using our
+10. You should see that Title Cards in Seasons 1 and 2 were created using our
 Standard card type, as this was the higher priority (first) Template "Tier 1 -
 Standard", and these Episodes meet the Filter condition we established of the
 Season Number < 3. All other Title Cards were created with the lower priority
