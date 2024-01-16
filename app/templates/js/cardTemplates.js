@@ -36,10 +36,10 @@ function reloadPreview(watchStatus, formElement, cardElement, imgElement) {
   }
 
   // Set blur/grayscale attribute
-  if (form.get(`${watchStatus}_style`).includes('blur') || form.get('style').includes('blur')) {
+  if (form.get(`${watchStatus}_style`).includes('blur') || (form.has('style') && form.get('style').includes('blur'))) {
     form.set('blur', true);
   }
-  if (form.get(`${watchStatus}_style`).includes('grayscale') || form.get('style').includes('grayscale')) {
+  if (form.get(`${watchStatus}_style`).includes('grayscale') || (form.has('style') && form.get('style').includes('grayscale'))) {
     form.set('grayscale', true);
   }
   
