@@ -1,8 +1,8 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from pathlib import Path
-from random import uniform
+from random import choice as random_choice, uniform
 from re import compile as re_compile, match as re_match
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal, Optional, Union, get_args as get_type_args
 
 from pydantic import ( # pylint: disable=no-name-in-module
     FilePath, PositiveFloat, PositiveInt, confloat, conint, constr,
@@ -30,7 +30,7 @@ from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
 from modules.cards.RomanNumeralTitleCard import RomanNumeralTitleCard
 from modules.cards.ShapeTitleCard import (
-    ShapeTitleCard, TextPosition as ShapeTextPosition
+    Shape, ShapeTitleCard, TextPosition as ShapeTextPosition
 )
 from modules.cards.StandardTitleCard import StandardTitleCard
 from modules.cards.StarWarsTitleCard import StarWarsTitleCard
@@ -437,6 +437,11 @@ class RomanNumeralCardType(BaseCardTypeAllText):
     roman_numeral_color: BetterColor = RomanNumeralTitleCard.ROMAN_NUMERAL_TEXT_COLOR
     season_text_color: BetterColor = RomanNumeralTitleCard.SEASON_TEXT_COLOR
 
+RandomShapeRegex = (
+    r'random\[\s*((circle|diamond|square|down triangle|up triangle)'
+    r'\s*(,\s*(circle|diamond|square|down triangle|up triangle))*)\]'
+)
+RandomShape = constr(regex=RandomShapeRegex)
 class ShapeCardType(BaseCardTypeAllText):
     season_text: str
     episode_text: str
@@ -454,12 +459,26 @@ class ShapeCardType(BaseCardTypeAllText):
     season_text_color: Optional[BetterColor] = None
     season_text_font_size: PositiveFloat = 1.0
     season_text_position: Literal['above', 'below'] = 'below'
+    shape: Union[Shape, Literal['random'], RandomShape] = ShapeTitleCard.DEFAULT_SHAPE
     shape_color: BetterColor = ShapeTitleCard.SHAPE_COLOR
     shape_inset: PositiveInt = ShapeTitleCard.SHAPE_INSET
     shape_side_length: conint(ge=50) = ShapeTitleCard.SHAPE_SIDE_LENGTH
     shape_width: PositiveInt = ShapeTitleCard.SHAPE_WIDTH
     stroke_color: BetterColor = 'black'
     text_position: ShapeTextPosition = 'lower left'
+
+    @validator('shape')
+    def validate_random_shape(cls, val):
+        # If just "random", pick any
+        if val == 'random':
+            return random_choice(get_type_args(Shape))
+        # If shape is randomized, replace with random shape
+        if re_match(RandomShapeRegex, val):
+            return random_choice(tuple(map(
+                str.strip, re_match(RandomShapeRegex, val).group(1).split(',')
+            )))
+
+        return val
 
     @root_validator(skip_on_failure=True)
     def validate_extras(cls, values):

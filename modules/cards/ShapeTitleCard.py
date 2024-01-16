@@ -1,9 +1,10 @@
+from math import asin, atan, cos, pi as PI, sqrt
 from pathlib import Path
 from re import match
 from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, ImageMagickCommands, Extra, CardDescription
+    BaseCardType, Coordinate, ImageMagickCommands, Extra, CardDescription
 )
 from modules.Debug import log
 
@@ -12,20 +13,45 @@ if TYPE_CHECKING:
     from modules.Font import Font
 
 
+Shape = Literal['circle', 'diamond', 'square', 'down triangle', 'up triangle']
+SeasonTextPosition = Literal['above', 'below']
 TextPosition = Literal[
     'upper left', 'upper right',
     'left', 'right',
     'lower left', 'lower right',
 ]
-SeasonTextPosition = Literal['above', 'below']
 
 
 class ShapeTitleCard(BaseCardType):
     """
     This class describes a CardType that produces title cards featuring
-    a diamond shape surrounding the text. The shape is intersected by
-    the title text. This card allows the text (and shape) to be
+    an adjustable shape surrounding the text. The shape is intersected
+    by the title text. This card allows the text (and shape) to be
     positioned at various points around the image.
+
+    Each shape is drawn as follows:
+    Circle: 1 -> 2; 3 -> 4
+        *  *
+     *        *
+    1          2
+    3          4
+     *        *
+        *  *
+    Diamond: 1 -> 2 -> 3; 1 -> 4 -> 3.
+          2
+        *   *
+      *       *
+    1           3
+      *       *
+        *   *
+          4
+    Square: 1 -> 2 -> 3 -> 4; 1 -> 5 -> 6
+    2 * * * * * 3
+    *           *
+    *           4
+    *           6
+    *           *
+    1 * * * * * 5
     """
 
     """API Parameters"""
@@ -78,6 +104,19 @@ class ShapeTitleCard(BaseCardType):
                     'Either <v>above</v> or <v>below</v>. Default is '
                     '<v>below</v>.'
                 ),
+            ),
+            Extra(
+                name='Shape',
+                identifier='shape',
+                description='Which shape to add to the image',
+                tooltip=(
+                    'Either <v>circle</v>, <v>diamond</v>, <v>square</v>, '
+                    '<v>down triangle</v>, or <v>up triangle</v>. Can also be '
+                    'randomized by specifying as <v>random[{shape 1}, ]'
+                    '{shape 2}, {etc.}]</v> - i.e. <v>random[circle, '
+                    'diamond]</v> to randomly select one of those shapes. '
+                    'Default is <v>diamond</v>.'
+                )
             ),
             Extra(
                 name='Shape Color',
@@ -134,9 +173,9 @@ class ShapeTitleCard(BaseCardType):
                 ),
             ),
         ], description=[
-            'A title card featuring a diamond shape surrounding the text. The '
-            'shape is intersected by the title text.', 'The shape and text are '
-            'completely customizable in color, size, and position.'
+            'A title card featuring a customizable shape which surrounds the '
+            'text.', 'The shape itself, along with the text are completely '
+            'customizable in color, size, and position.'
         ],
     )
 
@@ -146,7 +185,7 @@ class ShapeTitleCard(BaseCardType):
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
         'max_line_width': 32,   # Character count to begin splitting titles
-        'max_line_count': 1,    # Maximum number of lines a title can take up
+        'max_line_count': 3,    # Maximum number of lines a title can take up
         'top_heavy': True,      # This class uses top heavy titling
     }
 
@@ -169,6 +208,7 @@ class ShapeTitleCard(BaseCardType):
     ARCHIVE_NAME = 'Shape Style'
 
     """Implementation details"""
+    DEFAULT_SHAPE: Shape = 'diamond'
     SHAPE_COLOR = EPISODE_TEXT_COLOR
     SHAPE_INSET = 75        # How far from each edge to offset the shape
     SHAPE_SIDE_LENGTH = 200 # How long each side of the shape is
@@ -183,9 +223,10 @@ class ShapeTitleCard(BaseCardType):
         'font_interword_spacing', 'font_file', 'font_kerning', 'font_size',
         'font_stroke_width', 'font_vertical_shift', 'season_text_color',
         'season_text_font_size', 'hide_shape', 'italicize_season_text',
-        'omit_gradient', 'season_text_position', 'shape_color', 'shape_inset',
+        'omit_gradient', 'season_text_position',
+        'shape', 'shape_color', 'shape_inset',
         'shape_side_length', 'shape_width', 'stroke_color', 'text_position',
-        '__title_width', '__title_height',
+        '__title_width', '__title_height', '__line_count',
     )
 
 
@@ -211,6 +252,7 @@ class ShapeTitleCard(BaseCardType):
             season_text_color : str = EPISODE_TEXT_COLOR,
             season_text_font_size: float = 1.0,
             season_text_position: SeasonTextPosition = 'below',
+            shape: Shape = DEFAULT_SHAPE,
             shape_color: str = SHAPE_COLOR,
             shape_inset: int = SHAPE_INSET,
             shape_side_length: int = SHAPE_SIDE_LENGTH,
@@ -250,6 +292,7 @@ class ShapeTitleCard(BaseCardType):
         self.season_text_color = season_text_color
         self.season_text_font_size = season_text_font_size
         self.season_text_position: SeasonTextPosition = season_text_position
+        self.shape: Shape = shape
         self.shape_color = shape_color
         self.shape_inset = shape_inset
         self.shape_side_length = shape_side_length
@@ -258,8 +301,9 @@ class ShapeTitleCard(BaseCardType):
         self.text_position: TextPosition = text_position
 
         # Scale side length by for multiline titles
-        if (num_lines := len(title_text.split('\n'))) > 1:
-            self.shape_side_length *= 1.0 + (0.25 * (num_lines - 1))
+        self.__line_count = len(title_text.split('\n'))
+        if self.__line_count > 1:
+            self.shape_side_length *= 1.0 + (0.25 * (self.__line_count - 1))
 
         # Implementation variables
         self.__title_width = None
@@ -339,11 +383,14 @@ class ShapeTitleCard(BaseCardType):
     def _title_text_width(self) -> int:
         """The width of the title text. Only calculated once."""
 
+        # No title text, width of 0
         if len(self.title_text) == 0:
-            if self.__title_width is not None:
-                return self.__title_width
+            return 0
 
-        x = self._title_text_height
+        # Value is not computed, calculate in `_title_text_height` call
+        if self.__title_width is None:
+            _ = self._title_text_height
+
         return self.__title_width
 
 
@@ -411,10 +458,10 @@ class ShapeTitleCard(BaseCardType):
         if 'upper' in self.text_position:
             y = -(self.HEIGHT / 2) + self.shape_inset + self.shape_side_length
         elif 'lower' in self.text_position:
-            y = (self.HEIGHT / 2) - self.shape_inset - self.shape_side_length
+            y = +(self.HEIGHT / 2) - self.shape_inset - self.shape_side_length
         else:
             y = 0
-        y += self.font_vertical_shift
+        y += -5 + self.font_vertical_shift
 
         return [
             *self._base_title_text_commands(x, y, gravity),
@@ -447,6 +494,22 @@ class ShapeTitleCard(BaseCardType):
         x = self.shape_inset + (self.shape_side_length * 2) \
             - title_height + 20 # 20px margin
 
+        # Adjust x positioning based on shape
+        if self.shape == 'circle':
+            x += 60 * self.__line_count
+        elif self.shape == 'square':
+            x += 90 * self.__line_count
+        elif self.shape == 'down triangle': # TODO calculate w/ trig
+            x += title_height - 20 # Remove previous offset
+            dx = -130 if 'below' in self.season_text_position else -10
+            dx *= self.shape_side_length / self.SHAPE_SIDE_LENGTH
+            x += dx
+        elif self.shape == 'up triangle': # TODO calculate w/ trig
+            x += title_height - 20 # Remove previous offset
+            dx = -10 if 'below' in self.season_text_position else -130
+            dx *= self.shape_side_length / self.SHAPE_SIDE_LENGTH
+            x += dx
+
         # Determine y position
         if 'upper' in self.text_position:
             if self.season_text_position == 'above':
@@ -460,7 +523,7 @@ class ShapeTitleCard(BaseCardType):
                 y = self.HEIGHT - self.shape_inset - self.shape_side_length
         else:
             y = self.HEIGHT / 2
-        y += title_height - 10 # 10px margin
+        y += -5 + self.font_vertical_shift + title_height - 10 # 10px margin
 
         # Font characteristics
         size = 75 * self.season_text_font_size
@@ -480,83 +543,451 @@ class ShapeTitleCard(BaseCardType):
 
 
     @property
-    def _left_shape_commands(self) -> ImageMagickCommands:
-        """Subcommands to add the shape on the left of the image."""
+    def _line_length(self) -> float:
+        """
+        The effective shape line length. This acounts for very short
+        titles.
+        """
 
-        # Determine the length of the line
-        # Very short title lines, do not truncate side
         if self._title_text_width < self.shape_side_length:
-            line_length = self.shape_side_length
-        # Normal length titles, truncate based on height of title text
-        else:
-            line_length = self.shape_side_length \
-                - (self._title_text_height / 2) - 10 # 10px margin
+            return self.shape_side_length
 
-        # Starting y translation is based on text position
+        # Normal length titles, truncate based on height of title text; +margin
+        return self.shape_side_length - (self._title_text_height / 2) - 10
+
+
+    @property
+    def __left_shape_translation(self) -> Coordinate:
+        """
+        The coordinate to translate to the starting position of all
+        left shapes.This is one of the following positions (based on
+        the text position).
+
+        - - -      - - -      - - -
+        - - -      - - -      - - -
+        o - -      - - -      - - -
+
+        - - -      - - -      - - -
+        - - -      - - -      - - -
+        o - -      - - -      - - -
+
+        - - -      - - -      - - -
+        - - -      - - -      - - -
+        o - -      - - -      - - -
+        """
+
+        x = self.shape_inset
+
         if 'upper' in self.text_position:
-            translation = self.shape_inset + (2 * self.shape_side_length)
-        elif 'lower' in self.text_position:
-            translation = self.HEIGHT - self.shape_inset
+            return Coordinate(x, self.shape_inset + (2 * self.shape_side_length))
+        if 'lower' in self.text_position:
+            return Coordinate(x, self.HEIGHT - self.shape_inset)
+        return Coordinate(x, (self.HEIGHT / 2) + self.shape_side_length)
+
+
+    @property
+    def __right_shape_translation(self) -> Coordinate:
+        """
+        The coordinate to translate to the starting position of all
+        right shapes. This is one of the following positions (based on
+        the text position).
+
+        - - -      - - -      - - -
+        - - -      - - -      - - -
+        - - -      - - -      - - o
+
+        - - -      - - -      - - -
+        - - -      - - -      - - -
+        - - -      - - -      - - o
+
+        - - -      - - -      - - -
+        - - -      - - -      - - -
+        - - -      - - -      - - o
+        """
+
+        x = self.WIDTH - self.shape_inset
+
+        if 'upper' in self.text_position:
+            return Coordinate(x, self.shape_inset + (2 *self.shape_side_length))
+        if 'lower' in self.text_position:
+            return Coordinate(x, self.HEIGHT - self.shape_inset)
+        return Coordinate(x, (self.HEIGHT / 2) +  self.shape_side_length)
+
+
+    @property
+    def __left_circle(self) -> ImageMagickCommands:
+        """Subcommands to add a circle shape to the left of the image."""
+
+        radius = self.shape_side_length
+        if self._title_text_width < radius:
+            x, y = 2 * radius, 0 # 180 degrees
         else:
-            translation = (self.HEIGHT / 2) + self.shape_side_length
+            y = self._title_text_height / 2 + 10
+            theta = asin(y / radius)            # ϴ = asin(y / r)
+            x = radius + (radius * cos(theta))  # x = r * cos(ϴ)
 
         return [
             # Translate in from left side (y based on text position)
-            f'"translate {self.shape_inset},{translation:.0f}',
+            f'"translate {self.__left_shape_translation}',
+            # Begin shape starting on left corner
+            f'path \'M 0,-{radius}',
+            # Draw top arc
+            f'a {radius},{radius} 0 0 1 {x:+.1f},-{y:.1f}',
+            # Move back to left corner
+            f'M 0,-{radius}',
+            # Draw bottom arc
+            f'a {radius},{radius} 0 0 0 {x:+.1f},+{y:.1f}',
+            f'\'"'
+        ]
+
+
+    @property
+    def __right_circle(self) -> ImageMagickCommands:
+        """Subcommands to add a circle shape to the right of the image."""
+
+        radius = self.shape_side_length
+        if self._title_text_width < radius:
+            x, y = 2 * radius, 0 # 180 degrees
+        else:
+            y = self._title_text_height / 2 + 10
+            theta = asin(y / radius)            # ϴ = asin(y / r)
+            x = radius + (radius * cos(theta))  # x = r * cos(ϴ)
+
+        return [
+            # Translate in from left side (y based on text position)
+            f'"translate {self.__right_shape_translation}',
+            # Begin shape starting on left corner
+            f'path \'M 0,-{radius}',
+            # Draw top arc
+            f'a {radius},{radius} 0 0 0 -{x:.1f},-{y:.1f}',
+            # Move back to left corner
+            f'M 0,-{radius}',
+            # Draw bottom arc
+            f'a {radius},{radius} 0 0 1 -{x:.1f},+{y:.1f}',
+            f'\'"'
+        ]
+
+
+    @property
+    def __left_diamond(self) -> ImageMagickCommands:
+        """
+        ImageMagick commands to draw a diamond shape on the left of the
+        image.
+        """
+
+        return [
+            # Translate in from left side (y based on text position)
+            f'"translate {self.__left_shape_translation}',
             # Begin shape starting on left corner
             f'path \'M 0,-{self.shape_side_length}',
             # Draw up to top corner
             f'l {self.shape_side_length},-{self.shape_side_length}',
             # Draw down to right corner; x/y is cut off by text
-            f'l {line_length},{line_length}',
+            f'l {self._line_length},{self._line_length}',
             # Move back to left corner
             f'M 0,-{self.shape_side_length}',
             # Draw to bottom corner
             f'l {self.shape_side_length},{self.shape_side_length}',
             # Draw up to right corner; x/y is cut off by text
-            f'l {line_length},-{line_length}',
+            f'l {self._line_length},-{self._line_length}',
             f'\'"'
         ]
+
+
+    @property
+    def __right_diamond(self) -> ImageMagickCommands:
+        """
+        ImageMagick commands to draw a diamond shape on the right of the
+        image.
+        """
+
+        return [
+            # Translate in from right side (y based on text position)
+            f'"translate {self.__right_shape_translation}',
+            # Begin shape starting on right corner
+            f'path \'M 0,-{self.shape_side_length}',
+            # Draw up to top corner
+            f'l -{self.shape_side_length},-{self.shape_side_length}',
+            # Draw down to left corner; x/y is cut off by text
+            f'l -{self._line_length},{self._line_length}',
+            # Move back to left corner
+            f'M 0,-{self.shape_side_length}',
+            # Draw to bottom corner
+            f'l -{self.shape_side_length},{self.shape_side_length}',
+            # Draw up to left corner; x/y is cut off by text
+            f'l -{self._line_length},-{self._line_length}',
+            f'\'"'
+        ]
+
+
+    @property
+    def __left_square(self) -> ImageMagickCommands:
+        """"""
+
+        return [
+            # Translate in from left side (y based on text position)
+            f'"translate {self.__left_shape_translation}',
+            # Begin shape starting on lower left corner
+            f'path \'M 0,0',
+            # Draw up to top left corner
+            f'l 0,-{self.shape_side_length * 2}',
+            # Draw to the top right corner
+            f'l {self.shape_side_length * 2},0',
+            # Draw down to right middle; y is cut off by text
+            f'l 0,{self._line_length}',
+            # Move back to lower left corner
+            f'M 0,0',
+            # Draw to lower right corner
+            f'l {self.shape_side_length * 2},0',
+            # Draw up to right middle; y is cut off by text
+            f'l 0,-{self._line_length}',
+            f'\'"'
+        ]
+
+
+    @property
+    def __right_square(self) -> ImageMagickCommands:
+        """"""
+
+        return [
+            # Translate in from left side (y based on text position)
+            f'"translate {self.__right_shape_translation}',
+            # Begin shape starting on lower left corner
+            f'path \'M 0,0',
+            # Draw up to top right corner
+            f'l 0,-{self.shape_side_length * 2}',
+            # Draw to the top left corner
+            f'l -{self.shape_side_length * 2},0',
+            # Draw down to left middle; y is cut off by text
+            f'l 0,{self._line_length}',
+            # Move back to lower right corner
+            f'M 0,0',
+            # Draw to lower left corner
+            f'l -{self.shape_side_length * 2},0',
+            # Draw up to left middle; y is cut off by text
+            f'l 0,-{self._line_length}',
+            f'\'"'
+        ]
+
+
+    @property
+    def __left_down_triangle(self) -> ImageMagickCommands:
+        """
+             l
+           +----/
+           |   /
+        2l |  /
+           | /
+           +
+        """
+
+        # Determine the length of the line
+        # Very short title lines, do not truncate side
+        if self._title_text_width < self.shape_side_length:
+            ratio = 1 / 2
+        # Normal length titles, truncate based on height of title text
+        else:
+            ratio = (
+                (self.shape_side_length - ((self._title_text_height / 2) + 10))
+                / (2 * self.shape_side_length)
+            )
+
+        # Ratio of sides stays equivalent for like-triangles
+        # Determine end coordinate by length ratio of end hypotenuse
+        x = self.shape_side_length * ratio
+        y = 2 * self.shape_side_length * ratio
+
+        return [
+            # Translate in from left side (y based on text position)
+            f'"translate {self.__left_shape_translation}',
+            # Begin shape starting on top left corner
+            f'path \'M 0,-{2 * self.shape_side_length}',
+            # Draw to the top right corner
+            f'l +{self.shape_side_length * 2},0',
+            # Draw down to the bottom middle; y is cut off
+            f'l -{x:.1f},{y:+.1f}',
+            # Move back to the top left corner
+            f'M 0,-{2 * self.shape_side_length}',
+            # Draw down to the bottom middle
+            f'l {self.shape_side_length},{2 * self.shape_side_length}',
+            # Draw up to the top right; y is cut off
+            f'l {x:+.1f},-{y:.1f}',
+            f'\'"'
+        ]
+
+
+    @property
+    def __right_down_triangle(self) -> ImageMagickCommands:
+        """
+          l
+        \----+
+         \   |
+          \  | 2l
+           \ |
+             +
+        """
+
+        # Determine the length of the line
+        # Very short title lines, do not truncate side
+        if self._title_text_width < self.shape_side_length:
+            ratio = 1 / 2
+        # Normal length titles, truncate based on height of title text
+        else:
+            ratio = (
+                (self.shape_side_length - ((self._title_text_height / 2) + 10))
+                / (2 * self.shape_side_length)
+            )
+
+        # Ratio of sides stays equivalent for like-triangles
+        # Determine end coordinate by length ratio of end hypotenuse
+        x = self.shape_side_length * ratio
+        y = 2 * self.shape_side_length * ratio
+
+        return [
+            # Translate in from right side (y based on text position)
+            f'"translate {self.__right_shape_translation}',
+            # Begin shape starting on top right corner
+            f'path \'M 0,-{2 * self.shape_side_length}',
+            # Draw to the top left corner
+            f'l -{self.shape_side_length * 2},0',
+            # Draw down to the bottom middle; y is cut off
+            f'l +{x:.1f},+{y:.1f}',
+            # Move back to the top right corner
+            f'M 0,-{2 * self.shape_side_length}',
+            # Draw down to the bottom middle
+            f'l -{self.shape_side_length},+{2 * self.shape_side_length}',
+            # Draw up to the top left; y is cut off
+            f'l -{x:.1f},-{y:.1f}',
+            f'\'"'
+        ]
+
+
+    @property
+    def __left_up_triangle(self) -> ImageMagickCommands:
+        """
+           +
+           | \
+        2l |  \
+           |   \
+           +----\
+             l
+        """
+
+        # Determine the length of the line
+        # Very short title lines, do not truncate side
+        if self._title_text_width < self.shape_side_length:
+            ratio = 1 / 2
+        # Normal length titles, truncate based on height of title text
+        else:
+            ratio = (
+                (self.shape_side_length - ((self._title_text_height / 2) + 10))
+                / (2 * self.shape_side_length)
+            )
+
+        # Ratio of sides stays equivalent for like-triangles
+        # Determine end coordinate by length ratio of end hypotenuse
+        x = self.shape_side_length * ratio
+        y = 2 * self.shape_side_length * ratio
+
+        return [
+            # Translate in from left side (y based on text position)
+            f'"translate {self.__left_shape_translation}',
+            # Begin shape starting on bottom left corner
+            f'path \'M 0,0',
+            # Draw to the bottom right corner
+            f'l +{self.shape_side_length * 2},0',
+            # Draw up to the bottom middle; y is cut off
+            f'l -{x:.1f},-{y:.1f}',
+            # Move back to the bottom left corner
+            f'M 0,0',
+            # Draw up to the top middle
+            f'l {self.shape_side_length},-{2 * self.shape_side_length}',
+            # Draw down to the bottom right; y is cut off
+            f'l {x:+.1f},+{y:.1f}',
+            f'\'"'
+        ]
+
+
+    @property
+    def __right_up_triangle(self) -> ImageMagickCommands:
+        """
+           +
+           | \
+        2l |  \
+           |   \
+           +----\
+             l
+        """
+
+        # Determine the length of the line
+        # Very short title lines, do not truncate side
+        if self._title_text_width < self.shape_side_length:
+            ratio = 1 / 2
+        # Normal length titles, truncate based on height of title text
+        else:
+            ratio = (
+                (self.shape_side_length - ((self._title_text_height / 2) + 10))
+                / (2 * self.shape_side_length)
+            )
+
+        # Ratio of sides stays equivalent for like-triangles
+        # Determine end coordinate by length ratio of end hypotenuse
+        x = self.shape_side_length * ratio
+        y = 2 * self.shape_side_length * ratio
+
+        return [
+            # Translate in from right side
+            f'"translate {self.__right_shape_translation}',
+            # Begin shape starting on bottom right corner
+            f'path \'M 0,0',
+            # Draw to the bottom left corner
+            f'l -{self.shape_side_length * 2},0',
+            # Draw up to the bottom middle; y is cut off
+            f'l +{x:.1f},-{y:.1f}',
+            # Move back to the bottom right corner
+            f'M 0,0',
+            # Draw up to the top middle
+            f'l -{self.shape_side_length},-{2 * self.shape_side_length}',
+            # Draw down to the bottom left; y is cut off
+            f'l -{x:.1f},+{y:.1f}',
+            f'\'"'
+        ]
+
+
+    @property
+    def _left_shape_commands(self) -> ImageMagickCommands:
+        """Subcommands to add the shape on the left side of the image."""
+
+        if self.shape == 'circle':
+            return self.__left_circle
+        if self.shape == 'diamond':
+            return self.__left_diamond
+        if self.shape == 'square':
+            return self.__left_square
+        if self.shape == 'down triangle':
+            return self.__left_down_triangle
+        if self.shape == 'up triangle':
+            return self.__left_up_triangle
+
+        return []
 
 
     @property
     def _right_shape_commands(self) -> ImageMagickCommands:
         """Subcommands to add the shape on the right of the image."""
 
-        # Determine the length of the line
-        # Very short title lines, do not truncate side
-        if self._title_text_width < self.shape_side_length:
-            line_length = self.shape_side_length
-        # Normal length titles, truncate based on height of title text
-        else:
-            line_length = self.shape_side_length \
-                - (self._title_text_height / 2) - 10 # 10px margin
+        if self.shape == 'circle':
+            return self.__right_circle
+        if self.shape == 'diamond':
+            return self.__right_diamond
+        if self.shape == 'square':
+            return self.__right_square
+        if self.shape == 'down triangle':
+            return self.__right_down_triangle
+        if self.shape == 'up triangle':
+            return self.__right_up_triangle
 
-        # Starting y translation is based on text position
-        if 'upper' in self.text_position:
-            translation = self.shape_inset + (2 * self.shape_side_length)
-        elif 'lower' in self.text_position:
-            translation = self.HEIGHT - self.shape_inset
-        else:
-            translation = (self.HEIGHT / 2) + self.shape_side_length
-
-        return [
-            # Translate in from right side (y based on text position)
-            f'"translate {self.WIDTH - self.shape_inset},{translation:.0f}',
-            # Begin shape starting on right corner
-            f'path \'M 0,-{self.shape_side_length}',
-            # Draw up to top corner
-            f'l -{self.shape_side_length},-{self.shape_side_length}',
-            # Draw down to left corner; x/y is cut off by text
-            f'l -{line_length},{line_length}',
-            # Move back to left corner
-            f'M 0,-{self.shape_side_length}',
-            # Draw to bottom corner
-            f'l -{self.shape_side_length},{self.shape_side_length}',
-            # Draw up to left corner; x/y is cut off by text
-            f'l -{line_length},-{line_length}',
-            f'\'"'
-        ]
+        return []
 
 
     @property
@@ -686,6 +1117,8 @@ class ShapeTitleCard(BaseCardType):
             *self.title_text_commands,
             *self.index_text_commands,
             *self.shape_commands,
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

@@ -3,7 +3,7 @@ from random import random
 from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, CardDescription, Dimensions, Extra, ImageMagickCommands,
+    BaseCardType, CardDescription, Dimensions, Extra, ImageMagickCommands, Shadow,
 )
 from modules.EpisodeInfo2 import EpisodeInfo
 
@@ -376,7 +376,9 @@ class CalligraphyTitleCard(BaseCardType):
         ]
 
         return self.add_drop_shadow(
-            base_commands, '95x2+0+17', 0, vertical_shift,
+            base_commands,
+            Shadow(opacity=95, sigma=2, x=0, y=17),
+            x=0, y=vertical_shift,
             shadow_color=self.shadow_color,
         )
 
