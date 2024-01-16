@@ -2,18 +2,19 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
+from modules.Debug import log
 
 if TYPE_CHECKING:
+    from modules.PreferenceParser import PreferenceParser
     from modules.Font import Font
 
 
 class AnimeTitleCard(BaseCardType):
     """
     This class describes a type of CardType that produces title cards in
-    the anime-styled cards designed by reddit user /u/Recker_Man. These
+    the anime-styled cards designed by Reddit user /u/Recker_Man. These
     cards support custom fonts, and optional kanji text.
     """
-
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'anime'
@@ -82,7 +83,7 @@ class AnimeTitleCard(BaseCardType):
             require_kanji: bool = False,
             kanji_vertical_shift: float = 0.0,
             stroke_color: str = 'black',
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
 
@@ -104,7 +105,7 @@ class AnimeTitleCard(BaseCardType):
         self.kanji = self.image_magick.escape_chars(kanji)
         self.use_kanji = kanji is not None
         self.require_kanji = require_kanji
-        self.kanji_vertical_shift = float(kanji_vertical_shift)
+        self.kanji_vertical_shift = kanji_vertical_shift
 
         # Font customizations
         self.font_color = font_color
@@ -198,34 +199,33 @@ class AnimeTitleCard(BaseCardType):
         # Base offset for the title text
         base_offset = 175 + self.font_vertical_shift
 
-        # If adding kanji, add additional annotate commands for kanji
-        if self.use_kanji:
-            linecount = len(self.title_text.split('\n')) - 1
-            variable_offset = 200 + ((165 + self.font_interline_spacing) * linecount)
-            kanji_offset = base_offset + variable_offset * self.font_size
-            kanji_offset += self.font_vertical_shift + self.kanji_vertical_shift
-
-            return [
-                *self.__title_text_global_effects,
-                *self.__title_text_black_stroke,
-                f'-annotate +75+{base_offset} "{self.title_text}"',
-                *self.__title_text_effects,
-                f'-annotate +75+{base_offset} "{self.title_text}"',
-                f'-font "{self.KANJI_FONT.resolve()}"',
-                *self.__title_text_black_stroke,
-                f'-pointsize {85 * self.font_size}',
-                f'-annotate +75+{kanji_offset} "{self.kanji}"',
-                *self.__title_text_effects,
-                f'-annotate +75+{kanji_offset} "{self.kanji}"',
-            ]
-
-        # No kanji, just add title
-        return [
+        title_commands = [
             *self.__title_text_global_effects,
             *self.__title_text_black_stroke,
             f'-annotate +75+{base_offset} "{self.title_text}"',
             *self.__title_text_effects,
             f'-annotate +75+{base_offset} "{self.title_text}"',
+        ]
+
+        if not self.use_kanji:
+            return title_commands
+
+        # Determine kanji positioning based on height of title text
+        _, title_height = self.image_magick.get_text_dimensions(
+            title_commands, width='max', height='sum'
+        )
+        line_count = len(self.title_text.split('\n'))
+        kanji_offset = base_offset + (title_height / 2) \
+            - (43 * (line_count - 1)) + self.kanji_vertical_shift
+
+        return [
+            *title_commands,
+            f'-font "{self.KANJI_FONT.resolve()}"',
+            *self.__title_text_black_stroke,
+            f'-pointsize {85 * self.font_size}',
+            f'-annotate +75+{kanji_offset} "{self.kanji}"',
+            *self.__title_text_effects,
+            f'-annotate +75+{kanji_offset} "{self.kanji}"',
         ]
 
 
@@ -386,18 +386,24 @@ class AnimeTitleCard(BaseCardType):
                 f'-composite',
             ]
 
+        contrast = [f'-modulate 100,125']
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
             # Resize and optionally blur source image
             *self.resize_and_style,
             # Increase contrast of source image
-            f'-modulate 100,125',
+            *contrast,
             # Overlay gradient
             *gradient_command,
-            # Add title or title+kanji
+            # Add title and/or kanji
             *self.title_text_command,
-            # Add season or season+episode text
+            # Add index text
             *self.index_text_command,
+            # Attempt to overlay mask
+            *self.add_overlay_mask(
+                self.source_file,
+                pre_processing=self.resize_and_style + contrast,
+            ),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
