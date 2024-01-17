@@ -1,7 +1,8 @@
-from math import asin, atan, cos, pi as PI, sqrt
+from math import asin, cos
 from pathlib import Path
-from re import match
-from typing import TYPE_CHECKING, Literal, Optional
+from random import choice as random_choice
+from re import match as re_match
+from typing import TYPE_CHECKING, Literal, Optional, get_args as get_type_args
 
 from modules.BaseCardType import (
     BaseCardType, Coordinate, ImageMagickCommands, Extra, CardDescription
@@ -14,6 +15,10 @@ if TYPE_CHECKING:
 
 
 Shape = Literal['circle', 'diamond', 'square', 'down triangle', 'up triangle']
+RandomShapeRegex = (
+    r'random\[\s*((circle|diamond|square|down triangle|up triangle)'
+    r'\s*(,\s*(circle|diamond|square|down triangle|up triangle))*)\]'
+)
 SeasonTextPosition = Literal['above', 'below']
 TextPosition = Literal[
     'upper left', 'upper right',
@@ -252,7 +257,7 @@ class ShapeTitleCard(BaseCardType):
             season_text_color : str = EPISODE_TEXT_COLOR,
             season_text_font_size: float = 1.0,
             season_text_position: SeasonTextPosition = 'below',
-            shape: Shape = DEFAULT_SHAPE,
+            shape: str = DEFAULT_SHAPE,
             shape_color: str = SHAPE_COLOR,
             shape_inset: int = SHAPE_INSET,
             shape_side_length: int = SHAPE_SIDE_LENGTH,
@@ -292,7 +297,7 @@ class ShapeTitleCard(BaseCardType):
         self.season_text_color = season_text_color
         self.season_text_font_size = season_text_font_size
         self.season_text_position: SeasonTextPosition = season_text_position
-        self.shape: Shape = shape
+        self.shape: Shape = self.__select_shape(shape)
         self.shape_color = shape_color
         self.shape_inset = shape_inset
         self.shape_side_length = shape_side_length
@@ -308,6 +313,39 @@ class ShapeTitleCard(BaseCardType):
         # Implementation variables
         self.__title_width = None
         self.__title_height = None
+
+
+    def __select_shape(self, shape_str: str, /) -> Shape:
+        """
+        Determine a shape from the given string. This will parse random
+        shape strings, as well as explicit ones. For example:
+
+        >>> self.__select_shape('random')
+        'down triangle' # Randomly selected from all available shapes
+        >>> self.__select_shape('random[circle, triangle]')
+        'circle' # Has 50% chance to choose circle or triangle
+        >>> self.__select_shape('triangle')
+        'triangle'
+
+        Args:
+            shape_str: Shape string to parse for shapes.
+
+        Returns:
+            Selected shape as indicated or randomly selected.
+        """
+
+        # If just "random", pick any
+        if shape_str == 'random':
+            return random_choice(get_type_args(Shape))
+
+        # If shape is randomized, replace with random shape
+        if re_match(RandomShapeRegex, shape_str):
+            return random_choice(tuple(map(
+                str.strip,
+                re_match(RandomShapeRegex, shape_str).group(1).split(',')
+            )))
+
+        return shape_str
 
 
     @property
@@ -430,7 +468,7 @@ class ShapeTitleCard(BaseCardType):
         if self.text_position.endswith('left'):
             # If first word is a number - e.g. `14. `, then center that
             first_word = self.title_text.split(' ', maxsplit=1)[0]
-            if (number := match(r'(\d+)\.?', first_word)):
+            if (number := re_match(r'(\d+)\.?', first_word)):
                 center_text = number.group(1)
             # First word is not number, center around first letter
             else:

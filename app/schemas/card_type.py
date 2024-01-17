@@ -354,7 +354,7 @@ class LogoCardType(BaseCardTypeCustomFontAllText):
         return values
 
 class MarvelCardType(BaseCardTypeCustomFontAllText):
-    font_file: Path = MarvelTitleCard.TITLE_FONT
+    font_file: FilePath = MarvelTitleCard.TITLE_FONT
     font_color: BetterColor = MarvelTitleCard.TITLE_COLOR
     border_color: BetterColor = MarvelTitleCard.DEFAULT_BORDER_COLOR
     border_size: PositiveInt = MarvelTitleCard.DEFAULT_BORDER_SIZE
@@ -466,19 +466,6 @@ class ShapeCardType(BaseCardTypeAllText):
     shape_width: PositiveInt = ShapeTitleCard.SHAPE_WIDTH
     stroke_color: BetterColor = 'black'
     text_position: ShapeTextPosition = 'lower left'
-
-    @validator('shape')
-    def validate_random_shape(cls, val):
-        # If just "random", pick any
-        if val == 'random':
-            return random_choice(get_type_args(Shape))
-        # If shape is randomized, replace with random shape
-        if re_match(RandomShapeRegex, val):
-            return random_choice(tuple(map(
-                str.strip, re_match(RandomShapeRegex, val).group(1).split(',')
-            )))
-
-        return val
 
     @root_validator(skip_on_failure=True)
     def validate_extras(cls, values):
