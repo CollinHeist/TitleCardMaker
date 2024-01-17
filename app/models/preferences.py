@@ -5,6 +5,7 @@ from pickle import dump, load
 from typing import Optional
 
 from app.schemas.base import UNSPECIFIED
+from app.schemas.card import LocalCardType
 from app.schemas.preferences import CardExtension
 
 from modules.BaseCardType import BaseCardType
@@ -181,7 +182,7 @@ class Preferences:
         self.delete_missing_episodes = True
         self.simplified_data_table = True
         self.remote_card_types = {}
-        self.local_card_types = {}
+        self.local_card_types: dict[str, LocalCardType] = {}
         self.default_card_type = 'standard'
         self.excluded_card_types = []
         self.default_watched_style = 'unique'

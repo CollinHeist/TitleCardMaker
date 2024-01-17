@@ -200,7 +200,8 @@ def get_all_supported_extras(
 
     return [
         {'card_type': card_type.identifier} | extra.dict()
-        for card_type in LocalCards + _get_remote_cards(log=request.state.log)
+        for card_type in LocalCards + _get_remote_cards(log=request.state.log) \
+        + list(preferences.local_card_types.values())
         if (show_excluded
             or card_type.identifier not in preferences.excluded_card_types)
         for extra in card_type.supported_extras

@@ -318,10 +318,10 @@ def validate_card_type_model(
         )
 
     # Get Pydantic model for this card type
-    if card_settings['card_type'] in LocalCardTypeModels: # Local card type
-        CardTypeModel = LocalCardTypeModels[card_settings['card_type']]
-    else: # Remote card type
-        CardTypeModel = CardClass.CardModel
+    if card_settings['card_type'] in LocalCardTypeModels:
+        CardTypeModel = LocalCardTypeModels[card_settings['card_type']] # local
+    else:
+        CardTypeModel = CardClass.CardModel # remote
 
     try:
         return CardClass, CardTypeModel(**card_settings)
