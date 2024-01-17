@@ -219,6 +219,7 @@ class Changelog:
     INDENT_SPACES = 2
 
     """Regex for matching types of content"""
+    BOLD_REGEX = re_compile(r'__([^_]+)__')
     CODE_REGEX = re_compile(r'`([^`]+)`')
     ITALIC_REGEX = re_compile(r'\s+_([^_]+)_\s+')
     LINK_REGEX = re_compile(r'\[(.+)]\((.+)\)')
@@ -328,11 +329,14 @@ class Changelog:
 
         return self.LINK_REGEX.sub(
             r'<a href="\2" target="_blank">\1</a>',
-            self.CODE_REGEX.sub(
+            self.BOLD_REGEX.sub(
                 r'<b>\1</b>',
-                self.ITALIC_REGEX.sub(
-                    r'<i>\1</i>',
-                    text,
+                self.CODE_REGEX.sub(
+                    r'<b>\1</b>',
+                    self.ITALIC_REGEX.sub(
+                        r'<i>\1</i>',
+                        text,
+                    )
                 )
             )
         )
