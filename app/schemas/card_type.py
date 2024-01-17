@@ -462,7 +462,7 @@ class ShapeCardType(BaseCardTypeAllText):
     shape: Union[Shape, Literal['random'], RandomShape] = ShapeTitleCard.DEFAULT_SHAPE
     shape_color: BetterColor = ShapeTitleCard.SHAPE_COLOR
     shape_inset: PositiveInt = ShapeTitleCard.SHAPE_INSET
-    shape_side_length: conint(ge=50) = ShapeTitleCard.SHAPE_SIDE_LENGTH
+    shape_size: confloat(gt=0.3) = 1.0
     shape_width: PositiveInt = ShapeTitleCard.SHAPE_WIDTH
     stroke_color: BetterColor = 'black'
     text_position: ShapeTextPosition = 'lower left'

@@ -138,11 +138,13 @@ class ShapeTitleCard(BaseCardType):
                 ),
             ),
             Extra(
-                name='Shape Side Length',
-                identifier='shape_side_length',
-                description='How long each side of the shape is',
+                name='Shape Size',
+                identifier='shape_size',
+                description='How much to scale the length of the shape',
                 tooltip=(
-                    'Number ≥<v>50.0</v>. Default is <v>200</v>. Unit is pixels.'
+                    'Number ≥<v>0.3</v>. Values greater than <v>1.0</v> will '
+                    'increase the size of the shape; values less than '
+                    '<v>1.0</v> will descrease it. Default is <v>1.0</v>.'
                 ),
             ),
             Extra(
@@ -216,8 +218,14 @@ class ShapeTitleCard(BaseCardType):
     DEFAULT_SHAPE: Shape = 'diamond'
     SHAPE_COLOR = EPISODE_TEXT_COLOR
     SHAPE_INSET = 75        # How far from each edge to offset the shape
-    SHAPE_SIDE_LENGTH = 200 # How long each side of the shape is
     SHAPE_WIDTH = 8         # Width of the shape
+    DEFAULT_LENGTHS: dict[Shape, int] = {
+        'circle': 175,
+        'diamond': 200,
+        'down triangle': 225,
+        'square': 150,
+        'up triangle': 225,
+    }
 
     """Gradient image"""
     GRADIENT = REF_DIRECTORY.parent / 'overline' / 'small_gradient.png'
@@ -228,10 +236,9 @@ class ShapeTitleCard(BaseCardType):
         'font_interword_spacing', 'font_file', 'font_kerning', 'font_size',
         'font_stroke_width', 'font_vertical_shift', 'season_text_color',
         'season_text_font_size', 'hide_shape', 'italicize_season_text',
-        'omit_gradient', 'season_text_position',
-        'shape', 'shape_color', 'shape_inset',
-        'shape_side_length', 'shape_width', 'stroke_color', 'text_position',
-        '__title_width', '__title_height', '__line_count',
+        'omit_gradient', 'season_text_position', 'shape', 'shape_color',
+        'shape_inset', 'shape_side_length', 'shape_width', 'stroke_color',
+        'text_position', '__title_width', '__title_height', '__line_count',
     )
 
 
@@ -260,7 +267,7 @@ class ShapeTitleCard(BaseCardType):
             shape: str = DEFAULT_SHAPE,
             shape_color: str = SHAPE_COLOR,
             shape_inset: int = SHAPE_INSET,
-            shape_side_length: int = SHAPE_SIDE_LENGTH,
+            shape_size: float = 1.0,
             shape_width: int = SHAPE_WIDTH,
             stroke_color: str = 'black',
             text_position: TextPosition = 'lower left',
@@ -300,7 +307,7 @@ class ShapeTitleCard(BaseCardType):
         self.shape: Shape = self.__select_shape(shape)
         self.shape_color = shape_color
         self.shape_inset = shape_inset
-        self.shape_side_length = shape_side_length
+        self.shape_side_length = self.DEFAULT_LENGTHS[self.shape] * shape_size
         self.shape_width = shape_width
         self.stroke_color = stroke_color
         self.text_position: TextPosition = text_position
@@ -540,12 +547,12 @@ class ShapeTitleCard(BaseCardType):
         elif self.shape == 'down triangle': # TODO calculate w/ trig
             x += title_height - 20 # Remove previous offset
             dx = -130 if 'below' in self.season_text_position else -10
-            dx *= self.shape_side_length / self.SHAPE_SIDE_LENGTH
+            dx *= self.shape_side_length / self.DEFAULT_LENGTHS[self.shape]
             x += dx
         elif self.shape == 'up triangle': # TODO calculate w/ trig
             x += title_height - 20 # Remove previous offset
             dx = -10 if 'below' in self.season_text_position else -130
-            dx *= self.shape_side_length / self.SHAPE_SIDE_LENGTH
+            dx *= self.shape_side_length / self.DEFAULT_LENGTHS[self.shape]
             x += dx
 
         # Determine y position
