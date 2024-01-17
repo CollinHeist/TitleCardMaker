@@ -211,7 +211,7 @@ class AnimeTitleCard(BaseCardType):
             return title_commands
 
         # Determine kanji positioning based on height of title text
-        _, title_height = self.image_magick.get_text_dimensions(
+        _, title_height = self.get_text_dimensions(
             title_commands, width='max', height='sum'
         )
         line_count = len(self.title_text.split('\n'))
