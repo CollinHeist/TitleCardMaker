@@ -182,7 +182,7 @@ class Preferences:
         self.delete_missing_episodes = True
         self.simplified_data_table = True
         self.remote_card_types = {}
-        self.local_card_types: dict[str, LocalCardType] = {}
+        self.local_card_types: dict[str, BaseCardType] = {}
         self.default_card_type = 'standard'
         self.excluded_card_types = []
         self.default_watched_style = 'unique'

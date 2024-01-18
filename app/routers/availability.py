@@ -198,14 +198,20 @@ def get_all_supported_extras(
     the returned list.
     """
 
+    locals = [
+        {'card_type': identifier} | extra.dict()
+        for identifier, CardClass in preferences.local_card_types.items()
+        if (show_excluded or identifier not in preferences.excluded_card_types)
+        for extra in CardClass.API_DETAILS.supported_extras
+    ]
+
     return [
         {'card_type': card_type.identifier} | extra.dict()
-        for card_type in LocalCards + _get_remote_cards(log=request.state.log) \
-        + list(preferences.local_card_types.values())
+        for card_type in LocalCards + _get_remote_cards(log=request.state.log)
         if (show_excluded
             or card_type.identifier not in preferences.excluded_card_types)
         for extra in card_type.supported_extras
-    ] + VARIABLE_OVERRIDES
+    ] + locals + VARIABLE_OVERRIDES
 
 
 @availablility_router.get('/template-filters', status_code=200, tags=['Templates'])

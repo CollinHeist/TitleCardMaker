@@ -45,12 +45,3 @@ class Loaded(Base):
             f'Loaded[{self.id}] Card[{self.card_id}] {self.filesize:,} '
             f'bytes into "{self.library_name}"'
         )
-
-
-    @property
-    def log_str(self) -> str:
-        """
-        Loggable string that defines this object (i.e. `__repr__`).
-        """
-
-        return f'Loaded[{self.id}] Card[{self.card_id}]'

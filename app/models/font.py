@@ -90,12 +90,7 @@ class Font(Base):
         return func.regex_replace(r'^(a|an|the)(\s)', '', func.lower(cls.name))
 
 
-    @property
-    def log_str(self) -> str:
-        """
-        Loggable string that defines this object (i.e. `__repr__`).
-        """
-
+    def __repr__(self) -> str:
         return f'Font[{self.id}] "{self.name}"'
 
 

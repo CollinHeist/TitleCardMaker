@@ -264,7 +264,7 @@ def import_blueprint(
             is not None):
             font_map[font_id] = existing_font
             log.info(f'Matched Blueprint Font[{font_id}] to existing Font '
-                     f'{existing_font.log_str}')
+                     f'{existing_font}')
             continue
 
         # This Font has a file that can be directly downloaded
@@ -294,7 +294,7 @@ def import_blueprint(
             file_path = font_directory / str(new_font.id) / font.file
             file_path.parent.mkdir(exist_ok=True, parents=True)
             file_path.write_bytes(font_content)
-            log.info(f'{new_font.log_str} Downloaded File "{font.file}"')
+            log.info(f'{new_font} Downloaded File "{font.file}"')
 
             # Update object and database
             new_font.file_name = file_path.name
