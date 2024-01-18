@@ -332,7 +332,7 @@ function getAllFonts() {
         // Add letter header for this Font if necessary
         const letter = font.sort_name[0].toUpperCase();
         if (hasManyFonts && letter !== currentHeader) {
-          const header = document.createElement('h2');
+          const header = document.createElement('h3');
           header.className = 'ui dividing header';
           header.innerText = (letter === ' ') ? 'Blank Fonts' : letter;
           fontElements.push(header);
