@@ -1,10 +1,11 @@
 from datetime import datetime
 from pathlib import Path
-from re import match as re_match
+from re import match as re_match, sub as re_sub, IGNORECASE
 from typing import Any, Callable, Literal, Optional, TypedDict, TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, JSON
+from sqlalchemy import ForeignKey, JSON, func
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -20,6 +21,11 @@ if TYPE_CHECKING:
     from app.models.series import Series
     from app.models.sync import Sync
 
+
+def regex_replace(pattern, replacement, string):
+    """Perform a Regex replacement with the given arguments"""
+
+    return re_sub(pattern, replacement, string, IGNORECASE)
 
 """Format of all refrence dates for before and after operations"""
 DATETIME_FORMAT = '%Y-%m-%d'
@@ -191,6 +197,27 @@ class Template(Base):
         """Returns an unambiguous string representation of the object."""
 
         return f'Template[{self.id}] "{self.name}"'
+
+
+    @hybrid_property
+    def sort_name(self) -> str:
+        """
+        The sort-friendly name of this Template.
+
+        Returns:
+            Sortable name. This is lowercase with any prefix a/an/the
+            removed.
+        """
+
+        return regex_replace(r'^(a|an|the|\[\d+\])(\s)', '', self.name.lower())
+
+    @sort_name.expression
+    def sort_name(cls: 'Font'): # pylint: disable=no-self-argument
+        """Class-expression of `sort_name` property."""
+
+        return func.regex_replace(
+            r'^(a|an|the|\[\d+\])(\s)', '', func.lower(cls.name)
+        )
 
 
     @property

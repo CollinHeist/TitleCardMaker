@@ -281,6 +281,7 @@ class SearchResult(Base):
 
 class Template(BaseTemplate):
     id: int
+    sort_name: str
     season_titles: dict[SeasonTitleRange, str]
     extras: dict[str, Any]
 

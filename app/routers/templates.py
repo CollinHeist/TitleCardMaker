@@ -62,7 +62,7 @@ def get_all_templates(
     if order == 'id':
         return paginate(query.all())
 
-    return paginate(query.order_by(models.template.Template.name).all())
+    return paginate(query.order_by(models.template.Template.sort_name).all())
 
 
 @template_router.get('/{template_id}', status_code=200)
