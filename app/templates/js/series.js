@@ -1,3 +1,8 @@
+{% if False %}
+import {ExternalSourceImage, SourceImagePage} from './.types.js';
+{% endif %}
+
+
 let getStatisticsId;
 /**
  * Submit an API request to get updated Series statistics. If successful, then
@@ -563,124 +568,129 @@ let currentFilePage = 1;
 async function getFileData(page=currentFilePage) {
   const fileTemplate = document.getElementById('file-card-template');
   const rowTemplate = document.getElementById('file-row-template');
-  const allFiles = await fetch(`/api/sources/series/{{series.id}}?page=${page}&size=12`).then(resp => resp.json());
 
-  // Some error occured, toast and exit
-  if (allFiles.detail !== undefined) {
-    $.toast({
-      class: 'error',
-      title: 'Error getting Source details',
-      message: allFiles.detail,
-      displayTime: 0,
-    });
-    return;
-  }
+  $.ajax({
+    type: 'GET',
+    url: `/api/sources/series/{{series.id}}?page=${page}&size=12`,
+    /**
+     * Sources queried, create elements to display on the page.
+     * @param {SourceImagePage} allFiles - Page of Source Images for this Series.
+     */
+    success: allFiles => {
+      // Get sequential list of element IDs
+      const episodeIds = allFiles.items.map(({episode_id}) => episode_id);
 
-  // Update source image table
-  const sources = allFiles.items.map(source => {
-    const elementId = `file-episode${source.episode_id}`;
-    {% if preferences.sources_as_table %}
-    const row = rowTemplate.content.cloneNode(true);
-    row.querySelector('tr').id = elementId;
-    // Season
-    const season = row.querySelector('td[data-column="season_number"]');
-    season.innerText = source.season_number;
-    season.dataset.sortValue = source.season_number;
-    // Episode
-    const episode = row.querySelector('td[data-column="episode_number"]');
-    episode.innerText = source.episode_number;
-    episode.dataset.sortValue = source.episode_number;
-    // Width
-    const width = row.querySelector('td[data-column="width"]');
-    width.innerText = source.width || 'Missing';
-    width.dataset.sortValue = source.width;
-    // Height
-    const height = row.querySelector('td[data-column="height"]');
-    height.innerHTML = source.height || 'Missing';
-    height.dataset.sortValue = source.height;
-    // Filesize
-    const filesize = row.querySelector('td[data-column="filesize"]');
-    if (source.exists) {
-      filesize.innerText = formatBytes(source.filesize, 1);
-      filesize.dataset.sortValue = source.filesize;
-      // Disable search cell
-      row.querySelector('[data-column="search"]').classList.add('disabled');
-      row.querySelector('[data-column="search"] i').classList.add('disabled');
-      // Add mirror API request to mirror icon
-      row.querySelector('a[data-action="mirror"]').onclick = () => mirrorSourceImage(source.episode_id);
-    } else {
-      filesize.innerText = 'Missing'; filesize.dataset.sortValue = 0;
-      width.classList.add('error');
-      height.classList.add('error');
-      filesize.classList.add('error');
-      row.querySelector('a[data-action="search"]').onclick = () => searchEpisodeSourceImage(source.episode_id, elementId);
-      row.querySelector('[data-column="mirror"]').classList.add('disabled');
-      row.querySelector('[data-column="mirror"] i').classList.add('disabled');
-    }
-    // Launch browse modal when clicked
-    row.querySelector('a[data-action="browse"]').onclick = () => browseSourceImages(source.episode_id, elementId);
-    // Launch upload source modal when upload icon is clicked
-    row.querySelector('a[data-action="upload"]').onclick = () => uploadEpisodeSource(source.episode_id);
+      const sources = allFiles.items.map(source => {
+        // Current element ID on the page
+        const elementId = `file-episode${source.episode_id}`;
 
-    return row;
-    {% else %}
-    const file = fileTemplate.content.cloneNode(true);
-    // Fill in the card values present on all files
-    file.querySelector('.card').id = elementId;
-    file.querySelector('[data-value="index"]').innerHTML = `Season ${source.season_number} Episode ${source.episode_number}`;
-    file.querySelector('[data-value="path"]').innerHTML = source.source_file_name;
-    // Launch TMDb browse modal when TMDb logo is clicked
-    file.querySelector('[data-action="browse"]').onclick = () => browseSourceImages(source.episode_id, elementId);
-    // Launch upload source modal when upload icon is clicked
-    file.querySelector('i[data-action="upload"]').onclick = () => uploadEpisodeSource(source.episode_id);
-    if (source.exists) {
-      // Remove search icon
-      file.querySelector('i[data-action="search"]').remove();
-      // Add mirror API request to mirror icon
-      file.querySelector('i[data-action="mirror"]').onclick = () => mirrorSourceImage(source.episode_id);
-      // Remove missing label, fill in dimensions and filesize
-      file.querySelector('[data-value="missing"]').remove();
-      file.querySelector('[data-value="dimension"]').innerHTML = `${source.width}x${source.height}`;
-      file.querySelector('[data-value="filesize"]').innerHTML = formatBytes(source.filesize, 1);
-    } else {
-      // Add download image function to icon click
-      file.querySelector('i[data-action="search"]').onclick = () => searchEpisodeSourceImage(source.episode_id, elementId);
-      // Remove mirror icon
-      file.querySelector('i[data-action="mirror"]').remove();
-      // Make the card red, remove unnecessary elements
-      file.querySelector('.card').classList.add('red');
-      file.querySelector('[data-value="dimension"]').remove();
-      file.querySelector('[data-value="filesize"]').remove();
-    }
-
-    return file;
-    {% endif %}
+        // Create row for this Source
+        {% if preferences.sources_as_table %}
+          const row = rowTemplate.content.cloneNode(true);
+          row.querySelector('tr').id = elementId;
+          // Season
+          const season = row.querySelector('td[data-column="season_number"]');
+          season.innerText = source.season_number;
+          season.dataset.sortValue = source.season_number;
+          // Episode
+          const episode = row.querySelector('td[data-column="episode_number"]');
+          episode.innerText = source.episode_number;
+          episode.dataset.sortValue = source.episode_number;
+          // Width
+          const width = row.querySelector('td[data-column="width"]');
+          width.innerText = source.width || 'Missing';
+          width.dataset.sortValue = source.width;
+          // Height
+          const height = row.querySelector('td[data-column="height"]');
+          height.innerHTML = source.height || 'Missing';
+          height.dataset.sortValue = source.height;
+          // Filesize
+          const filesize = row.querySelector('td[data-column="filesize"]');
+          if (source.exists) {
+            filesize.innerText = formatBytes(source.filesize, 1);
+            filesize.dataset.sortValue = source.filesize;
+            // Disable search cell
+            row.querySelector('[data-column="search"]').classList.add('disabled');
+            row.querySelector('[data-column="search"] i').classList.add('disabled');
+            // Add mirror API request to mirror icon
+            row.querySelector('a[data-action="mirror"]').onclick = () => mirrorSourceImage(source.episode_id);
+          } else {
+            filesize.innerText = 'Missing'; filesize.dataset.sortValue = 0;
+            width.classList.add('error');
+            height.classList.add('error');
+            filesize.classList.add('error');
+            row.querySelector('a[data-action="search"]').onclick = () => searchEpisodeSourceImage(source.episode_id, elementId);
+            row.querySelector('[data-column="mirror"]').classList.add('disabled');
+            row.querySelector('[data-column="mirror"] i').classList.add('disabled');
+          }
+          // Launch browse modal when clicked
+          row.querySelector('a[data-action="browse"]').onclick = () => browseSourceImages(source.episode_id, elementId, episodeIds);
+          // Launch upload source modal when upload icon is clicked
+          row.querySelector('a[data-action="upload"]').onclick = () => uploadEpisodeSource(source.episode_id);
+      
+          return row;
+        // Create "Card" for this Source
+        {% else %}
+          const file = fileTemplate.content.cloneNode(true);
+          // Fill in the card values present on all files
+          file.querySelector('.card').id = elementId;
+          file.querySelector('[data-value="index"]').innerHTML = `Season ${source.season_number} Episode ${source.episode_number}`;
+          file.querySelector('[data-value="path"]').innerHTML = source.source_file_name;
+          // Launch TMDb browse modal when TMDb logo is clicked
+          file.querySelector('[data-action="browse"]').onclick = () => browseSourceImages(source.episode_id, elementId, episodeIds);
+          // Launch upload source modal when upload icon is clicked
+          file.querySelector('i[data-action="upload"]').onclick = () => uploadEpisodeSource(source.episode_id);
+          if (source.exists) {
+            // Remove search icon
+            file.querySelector('i[data-action="search"]').remove();
+            // Add mirror API request to mirror icon
+            file.querySelector('i[data-action="mirror"]').onclick = () => mirrorSourceImage(source.episode_id);
+            // Remove missing label, fill in dimensions and filesize
+            file.querySelector('[data-value="missing"]').remove();
+            file.querySelector('[data-value="dimension"]').innerHTML = `${source.width}x${source.height}`;
+            file.querySelector('[data-value="filesize"]').innerHTML = formatBytes(source.filesize, 1);
+          } else {
+            // Add download image function to icon click
+            file.querySelector('i[data-action="search"]').onclick = () => searchEpisodeSourceImage(source.episode_id, elementId);
+            // Remove mirror icon
+            file.querySelector('i[data-action="mirror"]').remove();
+            // Make the card red, remove unnecessary elements
+            file.querySelector('.card').classList.add('red');
+            file.querySelector('[data-value="dimension"]').remove();
+            file.querySelector('[data-value="filesize"]').remove();
+          }
+      
+          return file;
+        {% endif %}
+      });
+      document.getElementById('source-images').replaceChildren(...sources);
+    
+      // Update source image previews
+      const sourceImages = [];
+      allFiles.items.forEach(source => {
+        if (!source.exists) { return; }
+        // Clone template
+        const image = document.getElementById('preview-image-template').content.cloneNode(true);
+        image.querySelector('.dimmer .content').innerHTML = `<h4>Season ${source.season_number} Episode ${source.episode_number} (${source.source_file_name})</h4>`;
+        image.querySelector('img').src = `${source.source_url}?${source.filesize}`;
+        sourceImages.push(image);
+      });
+      document.getElementById('source-image-previews').replaceChildren(...sourceImages);
+    
+      // Update pagination
+      currentFilePage = page;
+      updatePagination({
+        paginationElementId: 'file-pagination',
+        navigateFunction: getFileData,
+        page: allFiles.page,
+        pages: allFiles.pages,
+        amountVisible: isSmallScreen() ? 6 : 15,
+      });
+      refreshTheme();
+      $('#source-image-previews .image .dimmer').dimmer({transition: 'fade up', on: 'hover'});
+    },
+    error: response => showErrorToast({title: 'Error Loading Series Source Images', response}),
   });
-  document.getElementById('source-images').replaceChildren(...sources);
-
-  // Update source image previews
-  const sourceImages = [];
-  allFiles.items.forEach(source => {
-    if (!source.exists) { return; }
-    // Clone template
-    const image = document.getElementById('preview-image-template').content.cloneNode(true);
-    image.querySelector('.dimmer .content').innerHTML = `<h4>Season ${source.season_number} Episode ${source.episode_number} (${source.source_file_name})</h4>`;
-    image.querySelector('img').src = `${source.source_url}?${source.filesize}`;
-    sourceImages.push(image);
-  });
-  document.getElementById('source-image-previews').replaceChildren(...sourceImages);
-
-  // Update pagination
-  currentFilePage = page;
-  updatePagination({
-    paginationElementId: 'file-pagination',
-    navigateFunction: getFileData,
-    page: allFiles.page,
-    pages: allFiles.pages,
-    amountVisible: isSmallScreen() ? 6 : 15,
-  });
-  refreshTheme();
-  $('#source-image-previews .image .dimmer').dimmer({transition: 'fade up', on: 'hover'});
 }
 
 async function getEpisodeData(page=1) {
@@ -1471,14 +1481,25 @@ function downloadSeriesBackdrop(url) {
 /**
  * Submit an API request to browse the available Source Images for the given
  * Episode.
+ * @param {number} episodeId - ID of the Episode whose Source Images are being
+ * browsed.
+ * @param {string} cardElementId - DOM Element ID of the card to mark as
+ * loading.
+ * @param {?Array<number>} episodeIds - Sequentially array of Episode IDs for
+ * navigating through Source Images.
  */
-function browseSourceImages(episodeId, cardElementId) {
+function browseSourceImages(episodeId, cardElementId, episodeIds) {
   document.getElementById(cardElementId).classList.add('loading');
   $.ajax({
     type: 'GET',
     url: `/api/sources/episode/${episodeId}/browse`,
+    /**
+     * Images available, create image elements for them, add to modal
+     * @param {Array<ExternalSourceImage>} images - List of Source Images for
+     * this Episode.
+     */
     success: images => {
-      // Images returned, add to browse modal
+      // Create image elements
       const imageElements = images.map(({url, width, height}, index) => {
         const location = index % 2 ? 'right' : 'left';
         if (width === null || height === null) {
@@ -1486,9 +1507,29 @@ function browseSourceImages(episodeId, cardElementId) {
         }
         return `<a class="ui image" onclick="selectTmdbImage(${episodeId}, '${url}')"><div class="ui blue ${location} ribbon label">${width}x${height}</div><img src="${url}"/></a>`;
       });
+
+      // Add to the modal
       $('#browse-tmdb-modal .content .images')[0].innerHTML = imageElements.join('');
+
+      // Update next/previous links
+      const previousEpisodeId = episodeIds[episodeIds.indexOf(episodeId) - 1];
+      $('#browse-tmdb-modal [data-action="previous-episode"]')[0].onclick =
+        (previousEpisodeId
+        ? () => browseSourceImages(previousEpisodeId, `file-episode${previousEpisodeId}`, episodeIds)
+        : () => showInfoToast('No previous Episode on current Page'))
+      ;
+
+      const nextEpisodeId = episodeIds[episodeIds.indexOf(episodeId) + 1];
+      $('#browse-tmdb-modal [data-action="next-episode"]')[0].onclick =
+        (nextEpisodeId
+        ? () => browseSourceImages(nextEpisodeId, `file-episode${nextEpisodeId}`, episodeIds)
+        : () => showInfoToast('No next Episode on current Page'))
+      ;
+
+      // Display modal
       $('#browse-tmdb-modal').modal('show');
-    }, error: response => showErrorToast({title: 'Unable to Query Images', response}),
+    },
+    error: response => showErrorToast({title: 'Unable to Query Images', response}),
     complete: () => document.getElementById(cardElementId).classList.remove('loading'),
   });
 }

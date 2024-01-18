@@ -74,8 +74,8 @@ def translate_episode(
                               f'{language_code}')
                 else:
                     episode.translations[data_key] = translation
-                    log.debug(f'{episode} translated {language_code} -> '
-                              f'"{translation}" -> {data_key}')
+                    log.debug(f'{episode} translated {language_code} '
+                              f'({data_key}) as "{translation}"')
                     changed = True
                     break
 

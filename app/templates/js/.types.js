@@ -20,6 +20,46 @@
  * @property {string} name
  */
 
+// Cards -----------------------------------------------------------------------
+
+/**
+ * @typedef {Object} TMDbLanguage
+ * @property {string} english_name
+ * @property {string} iso_639_1
+ * @property {string} name
+ */
+
+/**
+ * @typedef {Object} ExternalSourceImage
+ * @property {string} url
+ * @property {?number} width
+ * @property {?number} height
+ * @property {?TMDbLanguage} language
+ */
+
+/**
+ * @typedef {Object} SourceImage
+ * @property {number} episode_id
+ * @property {number} season_number
+ * @property {number} season_number
+ * @property {number} source_file_name
+ * @property {string} source_file
+ * @property {string} source_url
+ * @property {boolean} exists
+ * @property {number} filesize
+ * @property {number} width
+ * @property {number} height
+ */
+
+/**
+ * @typedef {Object} SourceImagePage
+ * @property {Array<SourceImage>} items
+ * @property {number} total
+ * @property {number} size
+ * @property {number} page
+ * @property {number} pages
+ */
+
 // Connections -----------------------------------------------------------------
 
 /**
