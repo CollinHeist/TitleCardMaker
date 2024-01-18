@@ -336,9 +336,9 @@ def update_series(
 
     # If any values were changed, commit to database
     if changed:
-        refresh_remote_card_types(db, log=log)
         if commit:
             db.commit()
+        refresh_remote_card_types(db, log=log)
 
     return changed
 
