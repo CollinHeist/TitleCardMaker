@@ -7,7 +7,9 @@ from typing import Any, Literal, Optional
 from fastapi import HTTPException
 
 from modules.Debug import log
-from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult, WatchedStatus
+from modules.EpisodeDataSource2 import (
+    EpisodeDataSource, SearchResult, WatchedStatus
+)
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
 from modules.SeriesInfo2 import SeriesInfo
