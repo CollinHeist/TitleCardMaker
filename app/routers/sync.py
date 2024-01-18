@@ -1,9 +1,10 @@
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, Request
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, Query, Request
 from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_sync
 from app.dependencies import get_database
 from app.internal.auth import get_current_user
+from app.internal.series import delete_series
 from app.internal.sync import add_sync, run_sync
 from app import models
 from app.schemas.sync import (
@@ -128,7 +129,7 @@ def edit_sync(
 def delete_sync(
         request: Request,
         sync_id: int,
-        delete_series: bool = False,
+        delete_series_: bool = Query(default=False, alias='delete_series'),
         db: Session = Depends(get_database),
     ) -> None:
     """
@@ -143,7 +144,7 @@ def delete_sync(
     sync = get_sync(db, sync_id, raise_exc=True)
 
     # If deleting Series, iterate and delete Series and all Episodes
-    if delete_series:
+    if delete_series_:
         for series in sync.series:
             delete_series(
                 db, series, commit_changes=False, log=request.state.log
