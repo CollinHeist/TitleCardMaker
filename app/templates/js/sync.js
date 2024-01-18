@@ -173,7 +173,7 @@ function showEditModel(sync) {
   editModal.id = `edit-sync${sync.id}`;
   editModal.querySelector('form').id =  `edit-sync${sync.id}-form`;
   document.querySelector('body').append(editModal);
-  $('.ui.dropdown[dropdown-type="server-tags"]').dropdown({allowAdditions: true});
+  $('.ui.dropdown.additions').dropdown({allowAdditions: true});
   $('.ui.checkbox').checkbox();
   // Fill out existing data
   $(`#edit-sync${sync.id} .header`)[0].innerText = `Editing Sync "${sync.name}"`;
@@ -187,6 +187,7 @@ function showEditModel(sync) {
   $(`#edit-sync${sync.id} .dropdown[data-value="required_tags"]`).dropdown('set selected', sync.required_tags);
   $(`#edit-sync${sync.id} .dropdown[data-value="required_libraries"]`).dropdown('set selected', sync.required_libraries);
   $(`#edit-sync${sync.id} .dropdown[data-value="required_series_type"]`).dropdown('set selected', sync.required_series_type);
+  $(`#edit-sync${sync.id} .dropdown[data-value="required_root_folders"]`).dropdown('set selected', sync.required_root_folders);
   $(`#edit-sync${sync.id} .dropdown[data-value="excluded_tags"]`).dropdown('set selected', sync.excluded_tags);
   $(`#edit-sync${sync.id} .dropdown[data-value="excluded_libraries"]`).dropdown('set selected', sync.excluded_libraries);
   $(`#edit-sync${sync.id} .dropdown[data-value="excluded_series_type"]`).dropdown('set selected', sync.excluded_series_type);
@@ -212,7 +213,8 @@ function showEditModel(sync) {
     let form = new FormData(document.getElementById(`edit-sync${sync.id}-form`));
     let dataObj = {downloaded_only: false, monitored_only: false};
     for (let [name, value] of [...form.entries()]) {
-      if (name.includes('_tags') || name.includes('_libraries') || name === 'template_ids') {
+      if (name.includes('_tags') || name.includes('_libraries')
+          || name === 'required_root_folders' || name === 'template_ids') {
         if (value !== '') { dataObj[name] = value.split(',');
         } else { dataObj[name] = []; }
       } else if (value !== '') { dataObj[name] = value; }
@@ -292,7 +294,51 @@ async function showDeleteSyncModal(syncId) {
   $('#delete-sync-modal').modal('show');
 }
 
-async function getAllSyncs() {
+/**
+ * Run the Sync with the given ID. This submits an API request and then
+ * displays a toast of any added Series.
+ * @param {number} syncId - ID of the Sync to run.
+ */
+function runSync(syncId) {
+  // Add loading indicator, show toast
+  $(`#sync${syncId} >* i.sync`).toggleClass('loading blue', true);
+  showInfoToast(`Started Syncing "${name}"`);
+
+  // Submit API request, show toast of results
+  $.ajax({
+    type: 'POST',
+    url: `/api/sync/${syncId}`,
+    /**
+     * Display a toast of all the newly added Series.
+     * @param {Array<Series>} series - List of synced Series.
+     */
+    success: series => {
+      if (series.length === 0) {
+        showInfoToast('No Series Added');
+      } else {
+        let message = '';
+        for (let {id, name} of series) {
+          message += `<a class="item" href="/series/${id}">${name}</a>`;
+        }
+        $.toast({
+          title: `Synced ${series.length} Series`,
+          message: `<ul class="ui ordered animated list">${message}</ul>`,
+          displayTime: 0,
+          showProgress: 'bottom',
+          classProgress: 'black',
+        });
+      }
+    },
+    error: response => showErrorToast({title: 'Error Syncing', response}),
+    complete: () => $(`#sync${syncId} >* i.sync`).toggleClass('loading blue', false),
+  });
+}
+
+/**
+ * Get all defined Syncs for all defined Connections and add their Sync elements
+ * to the page.
+ */
+function getAllSyncs() {
   const syncElements = [
     {source: 'emby', elementID: 'emby-syncs'},
     {source: 'jellyfin', elementID: 'jellyfin-syncs'},
@@ -300,62 +346,48 @@ async function getAllSyncs() {
     {source: 'sonarr', elementID: 'sonarr-syncs'},
   ];
 
-  syncElements.forEach(async ({source, elementID}) => {
+  syncElements.forEach(({source, elementID}) => {
     // Skip if this element is not present, e.g. interface is disabled
     const syncElement = document.getElementById(elementID);
     if (!syncElement) { return; }
 
-    const syncs = await fetch(`/api/sync/${source}/all`).then(resp => resp.json());
-    const templateElement = document.querySelector('#sync-card-template');
-    const newChildren = syncs.map(syncObject => {
-      const {id, name} = syncObject;
-      // Clone the card template, adjust header and meta text
-      const clone = templateElement.content.cloneNode(true);
-      clone.querySelector('.card').id = `sync${id}`;
-      clone.querySelector('.header').innerText = name;
-      clone.querySelector('.sync-meta').innerText = `Sync ID ${id}`;
+    // Get all Syncs for this source
+    const templateElement = document.getElementById('sync-card-template');
+    $.ajax({
+      type: 'GET',
+      url: `/api/sync/${source}/all`,
+      /**
+       * Syncs returned, add elements for each defined object to the page.
+       * @param {Array<Sync>} allSyncs - All Sync objects defined for this
+       * Connection type.
+       */
+      success: allSyncs => {
+        // Create elements for each Sync 
+        const syncElements = allSyncs.map(sync => {
+          // Clone the card template, adjust header and meta text
+          const clone = templateElement.content.cloneNode(true);
+          clone.querySelector('.card').id = `sync${sync.id}`;
+          clone.querySelector('.header').innerText = sync.name;
+          clone.querySelector('.sync-meta').innerText = `Sync ID ${sync.id}`;
 
-      // Edit sync if clicked
-      clone.querySelector('i.edit').onclick = () => showEditModel(syncObject);
+          // Edit sync if clicked
+          clone.querySelector('i.edit').onclick = () => showEditModel(sync);
 
-      // Launch delete sync modal on click of the delete icon
-      clone.querySelector('i.trash').onclick = () => showDeleteSyncModal(id);
+          // Launch delete sync modal on click of the delete icon
+          clone.querySelector('i.trash').onclick = () => showDeleteSyncModal(sync.id);
 
-      // Add sync API request to sync icon
-      clone.querySelector('i.sync').onclick = () => {
-        // Add loading indicator, create toast
-        $(`#sync${id} >* i.sync`).toggleClass('loading blue', true);
-        showInfoToast(`Started Syncing "${name}"`);
-        // Submit API request, show toast of results
-        $.ajax({
-          type: 'POST',
-          url: `/api/sync/${id}`,
-          /**
-           * Display a toast of all the newly added Series.
-           * @param {Array<Series>} series - List of synced Series.
-           */
-          success: series => {
-            let message = '';
-            for (let {id, name} of series) {
-              message += `<a class="item" href="/series/${id}">${name}</a>`;
-            }
-            $.toast({
-              title: `Synced ${series.length} Series`,
-              message: `<ul class="ui ordered animated list">${message}</ul>`,
-              displayTime: 0,
-              showProgress: 'bottom',
-              classProgress: 'black',
-            });
-          },
-          error: response => showErrorToast({title: 'Error encountered while Syncing', response}),
-          complete: () => $(`#sync${id} >* i.sync`).toggleClass('loading blue', false),
+          // Add sync API request to sync icon
+          clone.querySelector('i.sync').onclick = () => runSync(sync.id);
+
+          return clone;
         });
-      }
 
-      return clone;
+        // Do not replace first element as it is the add button
+        syncElement.replaceChildren(syncElement.firstElementChild, ...syncElements);
+        refreshTheme();
+      },
+      error: response => showErrorToast({title: `Error Querying ${source} Syncs`, response}),
     });
-    syncElement.replaceChildren(syncElement.firstElementChild, ...newChildren);
-    refreshTheme();
   });
 }
 
@@ -391,7 +423,7 @@ function getSyncSchedule() {
   });
 }
 
-async function initAll() {
+function initAll() {
   initConnectionDropdowns();
   getLibraries();
   getTags();
@@ -405,7 +437,7 @@ async function initAll() {
     clearable: true,
     default: 'None',
   });
-  $('.ui.dropdown[dropdown-type="server-tags"]').dropdown({allowAdditions: true});
+  $('.ui.dropdown.additions').dropdown({allowAdditions: true});
 
   // Attach button clicks to modal hiding
   $('#add-emby-sync-modal').modal('attach events', '#add-emby-sync', 'show');
@@ -434,7 +466,8 @@ async function initAll() {
 
       let dataObj = {};
       for (let [name, value] of [...form.entries()]) {
-        if (name.includes('_tags') || name.includes('_libraries') || name === 'template_ids') {
+        if (name.includes('_tags') || name.includes('_libraries')
+            || name === 'required_root_folders' || name === 'template_ids') {
           if (value !== '') {
             dataObj[name] = value.split(',');
           }
@@ -442,18 +475,24 @@ async function initAll() {
           dataObj[name] = value;
         }
       }
+
       // Submit API request to add this sync
       $.ajax({
         type: 'POST',
         url: `/api/sync/${interface}/new`,
         data: JSON.stringify(dataObj),
         contentType: 'application/json',
-        success: response => {
-          showInfoToast(`Created Sync "${response.name}"`);
+        /**
+         * Sync created, log and re-query all Syncs.
+         * @param {Sync} sync - Newly created Sync object.
+         */
+        success: sync => {
+          showInfoToast(`Created Sync "${sync.name}"`);
           getAllSyncs();
           $(`#${modalID}`).modal('hide');
           $(`#${formID}`).form('clear');
-        }, error: response => showErrorToast({title: 'Error Creating Sync', response}),
+        },
+        error: response => showErrorToast({title: 'Error Creating Sync', response}),
       });
     });
   });

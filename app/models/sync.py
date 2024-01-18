@@ -19,6 +19,7 @@ SonarrKwargs = TypedDict('SonarrKwargs', {
     'required_tags': list[str], 'excluded_tags': list[str],
     'monitored_only': bool, 'downloaded_only': bool,
     'required_series_type': str, 'excluded_series_type': str,
+    'required_root_folders': list[str]
 })
 NonSonarrKwargs = TypedDict('NonSonarrKwargs', {
     'required_libraries': list[str], 'excluded_libraries': list[str],
@@ -55,15 +56,15 @@ class Sync(Base):
     interface: Mapped[SyncInterface] = mapped_column(String)
 
     required_tags: Mapped[list[str]] = mapped_column(JSON, default=[])
-    required_libraries: Mapped[list[str]] = mapped_column(JSON, default=[])
-
     excluded_tags: Mapped[list[str]] = mapped_column(JSON, default=[])
+    required_libraries: Mapped[list[str]] = mapped_column(JSON, default=[])
     excluded_libraries: Mapped[list[str]] = mapped_column(JSON, default=[])
+    required_series_type: Mapped[Optional[str]]
+    excluded_series_type: Mapped[Optional[str]]
 
     downloaded_only: Mapped[bool] = mapped_column(default=False)
     monitored_only: Mapped[bool] = mapped_column(default=False)
-    required_series_type: Mapped[Optional[str]]
-    excluded_series_type: Mapped[Optional[str]]
+    required_root_folders: Mapped[list[str]] = mapped_column(JSON, default=[])
 
 
     def __repr__(self) -> str:
@@ -142,6 +143,7 @@ class Sync(Base):
                 'downloaded_only': self.downloaded_only,
                 'required_series_type': self.required_series_type,
                 'excluded_series_type': self.excluded_series_type,
+                'required_root_folders': self.required_root_folders,
             }
 
         return {

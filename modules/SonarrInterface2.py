@@ -132,6 +132,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             downloaded_only: bool = False,
             required_series_type: Optional[SeriesType] = None,
             excluded_series_type: Optional[SeriesType] = None,
+            required_root_folders: list[str] = [],
             *,
             log: Logger = log,
         ) -> list[tuple[SeriesInfo, str]]:
@@ -148,7 +149,12 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
                 that are unmonitored within Sonarr.
             downloaded_only: Whether to filter return to exclude series
                 that do not have any downloaded episodes.
-            series_type: Optional series type to filter series by.
+            required_series_type: Type of series that must is required
+                to be included.
+            excluded_series_type: Type of series to exclude from the
+                return.
+            required_root_folders: List of root folders to filter the
+                returned series by.
             log: Logger for all log messages.
 
         Returns:
@@ -192,6 +198,9 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
                     and show['seriesType'] != required_series_type)
                 or (excluded_series_type
                     and show['seriesType'] == excluded_series_type)
+                or (required_root_folders
+                    and not any(show['rootFolderPath'].startswith(folder)
+                                for folder in required_root_folders))
                 or show['year'] == 0):
                 continue
 

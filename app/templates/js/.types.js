@@ -257,6 +257,7 @@
  * @property {Array<string>} excluded_tags
  * @property {Array<string>} required_libraries
  * @property {Array<string>} excluded_libraries
+ * @property {Array<string>} required_root_folders
  */
 
 // Blueprints ------------------------------------------------------------------

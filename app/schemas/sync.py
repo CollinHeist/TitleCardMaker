@@ -46,6 +46,7 @@ class NewSonarrSync(NewBaseSync):
     monitored_only: bool = False
     required_series_type: Optional[SonarrSeriesType] = None
     excluded_series_type: Optional[SonarrSeriesType] = None
+    required_root_folders: list[str] = []
 
 class ExistingBaseSync(NewBaseSync):
     id: int
@@ -76,6 +77,7 @@ class UpdateSync(UpdateBase):
     excluded_libraries: list[str] = UNSPECIFIED
     downloaded_only: bool = UNSPECIFIED
     monitored_only: bool = UNSPECIFIED
+    required_root_folders: list[str] = UNSPECIFIED
     required_series_type: Optional[SonarrSeriesType] = UNSPECIFIED
     excluded_series_type: Optional[SonarrSeriesType] = UNSPECIFIED
 
