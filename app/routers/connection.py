@@ -451,7 +451,7 @@ def delete_connection(
     """
 
     # Get contextual logger
-    log: Logger = request.state.log
+    log = request.state.log
 
     # Get Connection with this ID
     connection = get_connection(db, interface_id, raise_exc=True)
