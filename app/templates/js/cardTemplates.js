@@ -157,7 +157,20 @@ async function getAllTemplates() {
   const allTranslations = await fetch('/api/available/translations').then(resp => resp.json());
   await queryAvailableExtras();
   await getAllCardTypes();
-  const elements = allTemplates.items.map(templateObj => {
+  const elements = [],
+        hasManyTemplates = allTemplates.items.length > 10;
+  let currentHeader = '';
+  allTemplates.items.forEach(templateObj => {
+    // Add letter header for this Font if necessary
+    const letter = templateObj.sort_name[0].toUpperCase();
+    if (hasManyTemplates && letter !== currentHeader) {
+      const header = document.createElement('h3');
+      header.className = 'ui dividing header';
+      header.innerText = (letter === ' ') ? 'Blank Templates' : letter;
+      elements.push(header);
+      currentHeader = letter;
+    }
+
     // Clone template
     const base = document.querySelector('#template').content.cloneNode(true);
     base.querySelector('.accordion').id = `template-id${templateObj.id}`;
@@ -215,8 +228,9 @@ async function getAllTemplates() {
       reloadPreview('watched', form, watchedCard, watchedImg);
       reloadPreview('unwatched', form, unwatchedCard, unwatchedImg);
     }
-    return base;
+    elements.push(base);
   });
+
   document.getElementById('templates').replaceChildren(...elements);
   $('.ui.accordion').accordion();
   $('.ui.checkbox').checkbox();
