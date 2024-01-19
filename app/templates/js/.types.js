@@ -30,6 +30,13 @@
  */
 
 /**
+ * @typedef {Object} EpisodeData
+ * @property {number} season_number
+ * @property {number} episode_number
+ * @property {?number} absolute_number
+ */
+
+/**
  * @typedef {Object} ExternalSourceImage
  * @property {string} url
  * @property {?number} width
@@ -53,7 +60,28 @@
 
 /**
  * @typedef {Object} SourceImagePage
- * @property {Array<SourceImage>} items
+ * @property {SourceImage[]} items
+ * @property {number} total
+ * @property {number} size
+ * @property {number} page
+ * @property {number} pages
+ */
+
+/**
+ * @typedef {Object} TitleCard
+ * @property {number} id
+ * @property {number} series_id
+ * @property {number} episode_id
+ * @property {EpisodeData} episode
+ * @property {string} card_file
+ * @property {number} filesize
+ * @property {Object} model_json
+ * @property {?string} library_name
+ */
+
+/**
+ * @typedef {Object} TitleCardPage
+ * @property {TitleCard[]} items
  * @property {number} total
  * @property {number} size
  * @property {number} page
@@ -118,7 +146,7 @@
  * @property {string} api_key
  * @property {boolean} use_ssl
  * @property {boolean} downloaded_only
- * @property {Array<SonarrLibrary>} libraries
+ * @property {SonarrLibrary[]} libraries
  */
 
 /**
@@ -130,12 +158,54 @@
  * @property {string} api_key
  * @property {string} minimum_dimensions
  * @property {boolean} skip_localized
- * @property {Array<string>} logo_language_priority
+ * @property {string[]} logo_language_priority
  */
 
 /**
  * @typedef {EmbyConnection | JellyfinConnection | PlexConnection |
  *           SonarrConnection | TMDbConnection} AnyConnection
+ */
+
+// Episodes --------------------------------------------------------------------
+
+/**
+ * @typedef {Object} Episode
+ * @property {number} id
+ * @property {number} series_id
+ * @property {number[]} template_ids
+ * @property {?number} font_id
+ * @property {?string} source_file
+ * @property {?string} card_file
+ * @property {number} season_number
+ * @property {number} episode_number
+ * @property {?number} absolute_number
+ * @property {string} title
+ * @property {?boolean} match_title
+ * @property {boolean} auto_split_title
+ * @property {?string} card_type
+ * @property {?boolean} hide_season_text
+ * @property {?string} season_text
+ * @property {?boolean} hide_episode_text
+ * @property {?string} episode_text
+ * @property {?string} unwatched_style
+ * @property {?string} watched_style
+ * @property {?string} font_color
+ * @property {?number} font_size
+ * @property {?number} font_kerning
+ * @property {?number} font_stroke_width
+ * @property {?number} font_interline_spacing
+ * @property {?number} font_interword_spacing
+ * @property {?number} font_vertical_shift
+ * @property {?Date} airdate
+ * @property {string} emby_id
+ * @property {string} imdb_id
+ * @property {string} jellyfin_id
+ * @property {number} tmdb_id
+ * @property {number} tvdb_id
+ * @property {number} tvrage_id
+ * @property {?Object.<string, any>} extras
+ * @property {Object.<string, string>} translations
+ * @property {Card[]} cards
  */
 
 // Preferences -----------------------------------------------------------------
@@ -168,7 +238,7 @@
 /**
  * @typedef {Object} FontAnalysis
  * @property {Object} replacements
- * @property {Array<string>} missing
+ * @property {string[]} missing
  */
 
 /**
@@ -209,7 +279,7 @@
  * @typedef {Object} SearchResult
  * @property {string} name
  * @property {number} year
- * @property {Array<string>} overview
+ * @property {string[]} overview
  * @property {?string} poster
  * @property {?boolean} ongoing
  * @property {?string} emby_id
@@ -224,7 +294,7 @@
 
 /**
  * @typedef {Object} SearchResultsPage
- * @property {Array<SearchResult>} items
+ * @property {SearchResult[]} items
  * @property {number} total
  * @property {number} size
  * @property {number} page
@@ -240,7 +310,7 @@
  * @property {number} id
  * @property {?number} sync_id
  * @property {?number} font_id
- * @property {Array<number>} template_ids
+ * @property {number[]} template_ids
  * @property {boolean} monitored
  * @property {boolean} match_titles
  * @property {?boolean} sync_specials
@@ -251,12 +321,12 @@
  * @property {?Style} watched_style
  * @property {?Style} unwatched_style
  * @property {?boolean} hide_season_text
- * @property {Array<Object>} season_titles
+ * @property {Object.<string, string>} season_titles
  * @property {?boolean} hide_episode_text
  * @property {?string} episode_text_format
- * @property {?Array<Translation>} translations
- * @property {Array<Object>} extras
- * @property {Array<MediaServerLibrary>} libraries
+ * @property {?Translation[]} translations
+ * @property {?Object.<string, string>[]} extras
+ * @property {MediaServerLibrary[]} libraries
  * @property {?string} font_color
  * @property {?TitleCase} title_case
  * @property {?number} font_size
@@ -292,24 +362,46 @@
  * @property {"Emby" | "Jellyfin" | "Plex" | "Sonarr"} interface
  * @property {string} name
  * @property {int} interface_id
- * @property {Array<int>} template_ids
- * @property {Array<string>} required_tags
- * @property {Array<string>} excluded_tags
- * @property {Array<string>} required_libraries
- * @property {Array<string>} excluded_libraries
- * @property {Array<string>} required_root_folders
+ * @property {number[]} template_ids
+ * @property {string[]} required_tags
+ * @property {string[]} excluded_tags
+ * @property {string[]} required_libraries
+ * @property {string[]} excluded_libraries
+ * @property {string[]} required_root_folders
  */
 
 // Blueprints ------------------------------------------------------------------
 
 /**
+ * @typedef {Object} BlueprintFont
+ * @property {string} name - The name of the font.
+ * @property {?string} color - The color of the font. Optional.
+ * @property {boolean} delete_missing - Boolean flag for deleting missing elements.
+ * @property {?string} file - The file associated with the font. Optional.
+ * @property {?number} kerning - The kerning value for the font. Optional.
+ * @property {?number} interline_spacing - The interline spacing for the font. Optional.
+ * @property {?number} interword_spacing - The interword spacing for the font. Optional.
+ * @property {?string[]} replacements_in - List of strings for replacements. Optional.
+ * @property {?string[]} replacements_out - List of strings for replacements. Optional.
+ * @property {?number} size - The size of the font. Optional.
+ * @property {?number} stroke_width - The stroke width for the font. Optional.
+ * @property {?TitleCase} title_case - TitleCase information. Optional.
+ * @property {?number} vertical_shift - The vertical shift for the font. Optional.
+ */
+
+/**
+ * @typedef {BlueprintFont} RemoteBlueprintFont
+ * @property {?string} file_download_url
+ */
+
+/**
  * @typedef {Object} Blueprint
  * @property {BlueprintSeries} series
  * @property {BlueprintEpisode} episodes
- * @property {Array<BlueprintTemplate>} templates
- * @property {Array<BlueprintFont>} fonts
- * @property {Array<string>} previews
- * @property {Array<string>} description
+ * @property {BlueprintTemplate[]} templates
+ * @property {RemoteBlueprintFont[]} fonts
+ * @property {string[]} previews
+ * @property {string[]} description
  */
 
 /**
@@ -333,7 +425,7 @@
 
 /**
  * @typedef {Object} RemoteBlueprintPage
- * @property {Array<RemoteBlueprint>} items
+ * @property {RemoteBlueprint[]} items
  * @property {number} total
  * @property {number} size
  * @property {number} page
@@ -356,7 +448,7 @@
 
 /**
  * @typedef {Object} LogEntryPage
- * @property {Array<LogEntry>} items
+ * @property {LogEntry[]} items
  * @property {number} total
  * @property {number} size
  * @property {number} page

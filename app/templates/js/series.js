@@ -1,5 +1,6 @@
 {% if False %}
-import {ExternalSourceImage, SourceImagePage} from './.types.js';
+import {Blueprint, Episode, ExternalSourceImage, LogEntryPage, RemoteBlueprint,
+        Series, SourceImagePage, TitleCardPage} from './.types.js';
 {% endif %}
 
 
@@ -19,10 +20,11 @@ function getStatistics() {
       
       // Determine maximum number of cards
       {% if preferences.library_unique_cards %}
-      const maxCards = episodeStat.value * {{series.libraries|safe}}.length;
+        const maxCards = episodeStat.value * {{series.libraries|safe}}.length;
       {% else %}
-      const maxCards = episodeStat.value;
+        const maxCards = episodeStat.value;
       {% endif %}
+
       // Update progress bar
       $('#card-progress').progress({
         total: maxCards,
@@ -109,7 +111,8 @@ function saveEpisodeConfig(episodeId) {
       showInfoToast('Updated Episode'),
       // Remove this ID from the array of edited Episodes
       editedEpisodeIds = editedEpisodeIds.filter(id => id !== episodeId);
-    }, error: response => showErrorToast({title: 'Error Updating Episode', response}),
+    },
+    error: response => showErrorToast({title: 'Error Updating Episode', response}),
   });
 }
 
@@ -150,7 +153,8 @@ function saveAllEpisodes() {
       // Updated successfully, show toast and reset list
       showInfoToast(`Updated ${updateEpisodeObjects.length} Episodes`);
       editedEpisodeIds = [];
-    }, error: response => showErrorToast({title: 'Error Updating Episodes', response}),
+    },
+    error: response => showErrorToast({title: 'Error Updating Episodes', response}),
   });
 }
 
@@ -194,7 +198,8 @@ async function initalizeSeriesConfig() {
           };
         }),
       });
-    }, error: response => showErrorToast({title: 'Error Querying Libraries', response}),
+    },
+    error: response => showErrorToast({title: 'Error Querying Libraries', response}),
   });
 
   // Episode data sources
@@ -383,13 +388,19 @@ function queryTMDbPoster() {
   $.ajax({
     type: 'GET',
     url: '/api/series/series/{{series.id}}/poster/query',
+    /**
+     * Query successful, populate the URL field or display a toast of
+     * no poster returned.
+     * @param {?string} posterUrl - URL to the poster returned by TMDb
+     */
     success: posterUrl => {
       if (posterUrl === null) {
         $.ajax({class: 'error', title: 'TMDb returned no images'});
       } else {
         $('#edit-poster-modal input[name="poster_url"]').val(posterUrl);
       }
-    }, error: () => $.ajax({class: 'error', title: 'TMDb returned no images'}),
+    },
+    error: () => $.ajax({class: 'error', title: 'TMDb returned no images'}),
   });
 }
 
@@ -403,10 +414,15 @@ function deleteObject(args) {
     success: () => {
       showInfoToast(`Deleted ${label}`);
       $(deleteElements).remove();
-    }, error: response => showErrorToast({title: `Error Deleting ${label}`, response}),
+    },
+    error: response => showErrorToast({title: `Error Deleting ${label}`, response}),
   });
 }
 
+/**
+ * 
+ * @param {Episode} episode - Episode whose extras are being edited.
+ */
 function editEpisodeExtras(episode) {
   // Clear existing values
   $('#episode-extras-modal .field > .field, #episode-extras-modal .fields > .field > input').remove();
@@ -477,13 +493,18 @@ function editEpisodeExtras(episode) {
       url: `/api/episodes/episode/${episode.id}`,
       data: JSON.stringify(data),
       contentType: 'application/json',
+      /**
+       * Edit successful, show toast and update the extras for this Episode.
+       * @param {Episode} updatedEpisode - Newly edited Episode.
+       */
       success: updatedEpisode => {
         showInfoToast('Updated Episode');
         // Update the extras/translation modal for this Episode
         $(`#episode-id${episode.id} td[data-column="extras"] a`)
           .off('click')
           .on('click', () => editEpisodeExtras(updatedEpisode));
-      }, error: response => showErrorToast({title: 'Error Updating Episode', response}),
+      },
+      error: response => showErrorToast({title: 'Error Updating Episode', response}),
     });
   });
 }
@@ -537,7 +558,8 @@ function uploadEpisodeSource(episodeId) {
       success: () => {
         showInfoToast('Updated Source Image');
         getFileData();
-      }, error: response => showErrorToast({title: 'Error Updating Source Image', response}),
+      },
+      error: response => showErrorToast({title: 'Error Updating Source Image', response}),
       complete: () => $('#upload-source-form')[0].reset(),
     });
   });
@@ -742,9 +764,9 @@ async function getEpisodeData(page=1) {
     row.querySelector('td[data-column="title"]').dataset.sortValue = episode.title;
     row.querySelector('td[data-column="match_title"]').innerHTML = getIcon(episode.match_title, true);
     row.querySelector('td[data-column="auto_split_title"]').innerHTML = getIcon(episode.auto_split_title, false);
-      // Template ID
-      // Font ID
-      // Card type
+    // Template ID
+    // Font ID
+    // Card type
     row.querySelector('td[data-column="hide_season_text"]').innerHTML = getIcon(episode.hide_season_text, true);
     row.querySelector('input[name="season_text"]').value = episode.season_text;
     row.querySelector('td[data-column="hide_episode_text"]').innerHTML = getIcon(episode.hide_episode_text, true);
@@ -752,27 +774,27 @@ async function getEpisodeData(page=1) {
     {% if not preferences.simplified_data_table %}
       // Unwatched style
       // Watched style
-    row.querySelector('input[name="font_color"]').value = episode.font_color;
-    row.querySelector('input[name="font_size"]').value = episode.font_size;
-    row.querySelector('input[name="font_stroke_width"]').value = episode.font_stroke_width;
-    row.querySelector('input[name="font_interline_spacing"]').value = episode.font_interline_spacing;
-    row.querySelector('input[name="font_interword_spacing"]').value = episode.font_interword_spacing;
-    row.querySelector('input[name="font_vertical_shift"]').value = episode.font_vertical_shift;
-    row.querySelector('input[name="source_file"]').value = episode.source_file;
-    row.querySelector('input[name="card_file"]').value = episode.card_file;
+      row.querySelector('input[name="font_color"]').value = episode.font_color;
+      row.querySelector('input[name="font_size"]').value = episode.font_size;
+      row.querySelector('input[name="font_stroke_width"]').value = episode.font_stroke_width;
+      row.querySelector('input[name="font_interline_spacing"]').value = episode.font_interline_spacing;
+      row.querySelector('input[name="font_interword_spacing"]').value = episode.font_interword_spacing;
+      row.querySelector('input[name="font_vertical_shift"]').value = episode.font_vertical_shift;
+      row.querySelector('input[name="source_file"]').value = episode.source_file;
+      row.querySelector('input[name="card_file"]').value = episode.card_file;
     {% endif %}
     row.querySelector('td[data-column="extras"] a').onclick = () => editEpisodeExtras(episode);
     {% if not preferences.simplified_data_table %}
-    const embyIdInput = row.querySelector('input[name="emby_id"]');
-    if (embyIdInput !== null) { embyIdInput.value = episode.emby_id; }
-    row.querySelector('input[name="imdb_id"]').value = episode.imdb_id;
-    const jellyfinIdInput = row.querySelector('input[name="jellyfin_id"]');
-    if (jellyfinIdInput !== null) { jellyfinIdInput.value = episode.jellyfin_id; }
-    const tmdbIdInput = row.querySelector('input[name="tmdb_id"]');
-    if (tmdbIdInput !== null) { tmdbIdInput.value = episode.tmdb_id; }
-    row.querySelector('input[name="tvdb_id"]').value = episode.tvdb_id;
-    const tvrageIdInput = row.querySelector('input[name="tvrage_id"]')
-    if (tvrageIdInput !== null) { tvrageIdInput.value = episode.tvrage_id; }
+      const embyIdInput = row.querySelector('input[name="emby_id"]');
+      if (embyIdInput !== null) { embyIdInput.value = episode.emby_id; }
+      row.querySelector('input[name="imdb_id"]').value = episode.imdb_id;
+      const jellyfinIdInput = row.querySelector('input[name="jellyfin_id"]');
+      if (jellyfinIdInput !== null) { jellyfinIdInput.value = episode.jellyfin_id; }
+      const tmdbIdInput = row.querySelector('input[name="tmdb_id"]');
+      if (tmdbIdInput !== null) { tmdbIdInput.value = episode.tmdb_id; }
+      row.querySelector('input[name="tvdb_id"]').value = episode.tvdb_id;
+      const tvrageIdInput = row.querySelector('input[name="tvrage_id"]')
+      if (tvrageIdInput !== null) { tvrageIdInput.value = episode.tvrage_id; }
     {% endif %}
     row.querySelector('td[data-column="delete"] a').onclick = () => deleteEpisode(episode.id);
     return row;
@@ -853,6 +875,10 @@ function getCardData(page=currentCardPage, transition=false) {
   $.ajax({
     type: 'GET',
     url: `/api/cards/series/{{series.id}}?page=${page}&size=${pageSize}`,
+    /**
+     * Cards queried, populate page / table of Card data.
+     * @param {TitleCardPage} cards - Current page of Title Card data.
+     */
     success: cards => {
       const previewTemplate = document.getElementById('preview-image-template');
       const previews = cards.items.map(card => {
@@ -1007,7 +1033,8 @@ async function initAll() {
         showInfoToast('Updated poster');
         // Reload image
         $('#poster-image')[0].src = `${response}?${new Date().getTime()}`;
-      }, error: response => showErrorToast({title: 'Error updating poster', response}),
+      },
+    error: response => showErrorToast({title: 'Error updating poster', response}),
       complete: () =>  setTimeout(() => $('#submit-poster-button').toggleClass('loading', false), 750),
     });
   });
@@ -1198,7 +1225,8 @@ function deleteListValues(attribute) {
         $('.field[data-value="extras"] > .field').remove();
       }
       showInfoToast('Deleted Values');
-    }, error: response => showErrorToast({title: 'Error Deleting Values', response}),
+    },
+    error: response => showErrorToast({title: 'Error Deleting Values', response}),
   })
 }
 
@@ -1210,6 +1238,10 @@ function toggleMonitorStatus() {
   $.ajax({
     type: 'PUT',
     url: '/api/series/series/{{series.id}}/toggle-monitor',
+    /**
+     * Status changed, display toast and modify icons.
+     * @param {Series} response - Modified Series config.
+     */
     success: response => {
       // Show toast, toggle text and icon to show new status
       if (response.monitored) {
@@ -1222,7 +1254,8 @@ function toggleMonitorStatus() {
         $('#monitor-status span')[0].innerHTML = '<i class="ui eye slash outline red icon"></i>Unmonitored<p class="help">Click to monitor</p>';
       }
       refreshTheme();
-    }, error: response => showErrorToast({title: 'Error Changing Status', response}),
+    },
+    error: response => showErrorToast({title: 'Error Changing Status', response}),
   });
 }
 
@@ -1250,7 +1283,7 @@ function processSeries() {
  * processing, the card element with the given ID is marked as loading. If
  * successful, the page is reloaded.
  * @param {str} cardId - ID of the HTMLElement to mark as loading.
- * @param {Object} blueprint - Blueprint object to import.
+ * @param {RemoteBlueprint} blueprint - Blueprint object to import.
  */
 function importBlueprint(cardId, blueprint) {
   // Indicate loading
@@ -1275,7 +1308,8 @@ function importBlueprint(cardId, blueprint) {
       } else {
         showInfoToast('Blueprint Imported');
       }
-    }, error: response => showErrorToast({title: 'Error Importing Blueprint', response}),
+    },
+    error: response => showErrorToast({title: 'Error Importing Blueprint', response}),
     complete: () => document.getElementById(cardId).classList.remove('slow', 'double', 'blue', 'loading'),
   });
   
@@ -1331,6 +1365,11 @@ function queryBlueprints() {
   $.ajax({
     type: 'GET',
     url: '/api/blueprints/query/series/{{series.id}}',
+    /**
+     * 
+     * @param {Blueprint[]} allBlueprints 
+     * @returns 
+     */
     success: allBlueprints => {
       // Hide info message and disable search button
       $('.tab[data-tab="blueprints"] .info.message').toggleClass('hidden', true);
@@ -1396,7 +1435,8 @@ function exportBlueprint() {
         + `&${url}`,
         '_blank'
       );
-    }, error: response => showErrorToast({title: 'Error Exporting Blueprint', response}),
+    },
+    error: response => showErrorToast({title: 'Error Exporting Blueprint', response}),
   })
 }
 
@@ -1422,7 +1462,8 @@ function selectTmdbImage(episodeId, url) {
       showInfoToast('Updated source image');
       getFileData();
       getCardData();
-    }, error: response => showErrorToast({title: 'Error Updating Source Image', response}),
+    },
+    error: response => showErrorToast({title: 'Error Updating Source Image', response}),
   });
 }
 
@@ -1485,7 +1526,7 @@ function downloadSeriesBackdrop(url) {
  * browsed.
  * @param {string} cardElementId - DOM Element ID of the card to mark as
  * loading.
- * @param {?Array<number>} episodeIds - Sequentially array of Episode IDs for
+ * @param {?Array<number>} episodeIds - Sequential array of Episode IDs for
  * navigating through Source Images.
  */
 function browseSourceImages(episodeId, cardElementId, episodeIds) {
@@ -1495,7 +1536,7 @@ function browseSourceImages(episodeId, cardElementId, episodeIds) {
     url: `/api/sources/episode/${episodeId}/browse`,
     /**
      * Images available, create image elements for them, add to modal
-     * @param {Array<ExternalSourceImage>} images - List of Source Images for
+     * @param {ExternalSourceImage[]} images - List of Source Images for
      * this Episode.
      */
     success: images => {
@@ -1542,6 +1583,11 @@ function browseLogos() {
   $.ajax({
     type: 'GET',
     url: '/api/sources/series/{{series.id}}/logo/browse',
+    /**
+     * Logos returned, add to modal and display.
+     * @param {ExternalSourceImage[]} images - List of logos from TMDb for
+     * this Series.
+     */
     success: images => {
       if (images.length === 0) {
         showErrorToast({title: 'TMDb has no logos'});
@@ -1552,7 +1598,8 @@ function browseLogos() {
         $('#browse-tmdb-logo-modal .content .images')[0].innerHTML = imageElements.join('');
         $('#browse-tmdb-logo-modal').modal('show');
       }
-    }, error: response => showErrorToast({title: 'Unable to Query TMDb', response}),
+    },
+    error: response => showErrorToast({title: 'Unable to Query TMDb', response}),
   });
 }
 
@@ -1564,6 +1611,11 @@ function browseBackdrops() {
   $.ajax({
     type: 'GET',
     url: `/api/sources/series/{{series.id}}/backdrop/browse`,
+    /**
+     * Backdrops returned, add to modal and display.
+     * @param {ExternalSourceImage[]} images - List of backdrops from TMDb
+     * for this Series.
+     */
     success: images => {
       if (images.length === 0) {
         showErrorToast({title: 'TMDb returned no images'});
@@ -1576,7 +1628,8 @@ function browseBackdrops() {
         $('#browse-tmdb-modal .content .images')[0].innerHTML = imageElements.join('');
         $('#browse-tmdb-modal').modal('show');
       }
-    }, error: response => showErrorToast({title: 'Unable to Query TMDb', response}),
+    },
+    error: response => showErrorToast({title: 'Unable to Query TMDb', response}),
   });
 }
 
@@ -1611,7 +1664,8 @@ function uploadLogo() {
     success: () => {
       showInfoToast('Updated Logo');
       document.querySelector('#logo').src = `/source/{{series.path_safe_name}}/logo.png?${new Date().getTime()}`;
-    }, error: response => showErrorToast({title: 'Error Updating Logo', response}),
+    },
+    error: response => showErrorToast({title: 'Error Updating Logo', response}),
   });
 }
 
@@ -1646,7 +1700,8 @@ function uploadBackdrop() {
     success: () => {
       showInfoToast('Updated Backdrop');
       document.querySelector('#backdrop').src = `/source/{{series.path_safe_name}}/backdrop.jpg?${new Date().getTime()}`;
-    }, error: response => showErrorToast({title: 'Error Updating Backdrop', response}),
+    },
+    error: response => showErrorToast({title: 'Error Updating Backdrop', response}),
   });
 }
 
@@ -1777,12 +1832,17 @@ function addEpisode(event) {
     url: '/api/episodes/new',
     data: JSON.stringify(Object.fromEntries(form)),
     contentType: 'application/json',
+    /**
+     * Episode created successfully, show toast and re-query data and statistics
+     * @param {Episode} episode - Newly created Episode.
+     */
     success: episode => {
       const {season_number, episode_number} = episode;
       showInfoToast(`Created Season ${season_number} Episode ${episode_number}`);
       getEpisodeData();
       getStatistics();
-    }, error: response => showErrorToast({title: 'Error Creating Episode', response}),
+    },
+    error: response => showErrorToast({title: 'Error Creating Episode', response}),
   });
 }
 
@@ -1799,7 +1859,8 @@ function deleteAllEpisodes() {
       $('#episode-data-table tr').remove();
       getFileData();
       getStatistics();
-    }, error: response => showErrorToast({title: 'Error Deleting Episodes', response}),
+    },
+    error: response => showErrorToast({title: 'Error Deleting Episodes', response}),
   });
 }
 
@@ -1822,7 +1883,8 @@ function deleteEpisode(id) {
       getStatistics();
       getCardData();
       getFileData();
-    }, error: response => showErrorToast({title: 'Error Deleting Episode', response}),
+    },
+    error: response => showErrorToast({title: 'Error Deleting Episode', response}),
   });
 }
 
@@ -1837,6 +1899,10 @@ function navigateSeries(next_or_previous) {
   $.ajax({
     type: 'GET',
     url: `/api/series/series/{{series.id}}/${next_or_previous}`,
+    /**
+     * There is a next/previous Series, redirect the current page.
+     * @param {?Series} series - Series to navigate to.
+     */
     success: series => {
       // No Series to navigate, disable button
       if (series === null) {
@@ -1844,7 +1910,8 @@ function navigateSeries(next_or_previous) {
       } else {
         window.location.href = `/series/${series.id}${window.location.hash}`;
       }
-    }, error: response => showErrorToast({title: 'Navigation Failed', response}),
+    },
+    error: response => showErrorToast({title: 'Navigation Failed', response}),
   });
 }
 
