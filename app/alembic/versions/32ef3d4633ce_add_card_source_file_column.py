@@ -60,7 +60,11 @@ def upgrade() -> None:
 
     # Initialize with default source_file
     for card in session.query(Card).all():
-        card.source_file = f's{card.episode.season_number}e{card.episode.episode_number}.jpg'
+        if card.episode is None:
+            log.warning(f'Card[{card.id}] has no Episode, deleting..')
+            session.delete(card)
+        else:
+            card.source_file = f's{card.episode.season_number}e{card.episode.episode_number}.jpg'
     log.debug(f'Initialized Card.source_file with default values')
     # Commit changes
     session.commit()
