@@ -68,7 +68,7 @@ def query_logs(
 
     # Function to filter log results by
     level_no = {'debug': 0, 'info': 1, 'warning': 2, 'error': 3, 'critical': 4}
-    contains = None if contains is  None else contains.lower()
+    contains = None if contains is None else contains.lower().split('|')
     def meets_filters(data: dict[str, Any]) -> bool:
         # Level criteria
         if level_no[data['level']] < level_no[level]:
@@ -84,7 +84,10 @@ def query_logs(
             return False
 
         # Contains substring
-        return contains is None or contains in data['message'].lower()
+        return (
+            contains is None
+            or any(cont in data['message'].lower() for cont in contains)
+        )
 
     # Convert raw logs to LogEntry objects/dicts
     log_entries, last_entry_is_valid = [], False
