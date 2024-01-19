@@ -2,8 +2,10 @@ import sys
 from importlib.util import spec_from_file_location, module_from_spec
 
 from pathlib import Path
+from typing import Optional
 from requests import get
 from tinydb import where
+from modules.BaseCardType import BaseCardType
 
 from modules.CleanPath import CleanPath
 from modules.Debug import log
@@ -49,6 +51,7 @@ class RemoteCardType:
         """
 
         # Get database of loaded assets/cards
+        self.card_class: Optional[BaseCardType] = None
         self.loaded = PersistentDatabase(self.LOADED)
         self.valid = True
 

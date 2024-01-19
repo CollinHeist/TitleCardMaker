@@ -13,6 +13,7 @@ from modules.EpisodeInfo import EpisodeInfo
 from modules.EpisodeMap import EpisodeMap
 from modules.Font import Font
 from modules import global_objects
+from modules.ImageMagickInterface import ImageMagickInterface
 from modules.JellyfinInterface import JellyfinInterface
 from modules.PlexInterface import PlexInterface
 from modules.Profile import Profile
@@ -286,7 +287,7 @@ class Show(YamlReader):
             self.info_set.set_tvrage_id(self.series_info, value)
 
         if (value := self.get('card_type', type_=str)) is not None:
-            self._parse_card_type(value)
+            self.card_class = self._parse_card_type(value)
             self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
 
         if (value := self.get('episode_text_format', type_=str)) is not None:
@@ -295,7 +296,7 @@ class Show(YamlReader):
         if (value := self.get('archive', type_=bool)) is not None:
             self.archive = value
 
-        if (value :=self.get('archive_all_variations',type_=bool)) is not None:
+        if (value :=self.get('archive_all_variations', type_=bool)) is not None:
             self.archive_all_variations = value
 
         if (value := self.get('archive_name', type_=str)) is not None:
@@ -761,7 +762,7 @@ class Show(YamlReader):
             if url.endswith('.svg'):
                 # Download .svgs to temporary location pre-conversion
                 success = self.tmdb_interface.download_image(
-                    url, self.card_class.TEMPORARY_SVG_FILE
+                    url, ImageMagickInterface.TEMPORARY_SVG_FILE
                 )
 
                 # If failed to download, skip
@@ -771,7 +772,7 @@ class Show(YamlReader):
 
                 # Convert temporary SVG to PNG at logo filepath
                 logo = self.card_class.convert_svg_to_png(
-                    self.card_class.TEMPORARY_SVG_FILE, self.logo,
+                    ImageMagickInterface.TEMPORARY_SVG_FILE, self.logo,
                 )
                 if logo is None:
                     log.warning(f'SVG to PNG conversion failed for {self}')

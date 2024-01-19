@@ -100,7 +100,7 @@ class PreferenceParser(YamlReader):
         # Setup default values that can be overwritten by YAML
         self.series_files = []
         self.execution_mode = Manager.DEFAULT_EXECUTION_MODE
-        self._parse_card_type(TitleCard.DEFAULT_CARD_TYPE) # Sets self.card_type
+        self.card_class = self._parse_card_type(TitleCard.DEFAULT_CARD_TYPE)
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.card_extension = TitleCard.DEFAULT_CARD_EXTENSION
         self.card_dimensions = TitleCard.DEFAULT_CARD_DIMENSIONS
@@ -425,7 +425,7 @@ class PreferenceParser(YamlReader):
                         f'created')
 
         if (value := self.get('options', 'card_type', type_=str)) is not None:
-            self._parse_card_type(value)
+            self.card_class = self._parse_card_type(value)
 
         if (value := self.get('options', 'card_extension', type_=str)) is not None:
             extension = ('' if value[0] == '.' else '.') + value
