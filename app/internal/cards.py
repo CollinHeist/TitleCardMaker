@@ -742,7 +742,7 @@ def create_episode_card(
 
     # If different, delete existing file, remove from database, create Card
     if different:
-        log.debug(f'{series} {episode} Card config changed - recreating')
+        log.debug(f'{episode} Card config changed - recreating')
         Path(existing_card.card_file).unlink(missing_ok=True)
         db.delete(existing_card)
         db.commit()
