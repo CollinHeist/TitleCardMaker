@@ -412,7 +412,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         return all_episodes
 
 
-    @catch_and_log('Error updating watched statuses')
+    @catch_and_log('Error updating watched statuses', default=False)
     def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
@@ -671,7 +671,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         # Verify this Episode does not have the PMM overlay label (if not proxying)
         if any(label.tag in bad_labels for label in plex_episode.labels):
-            log.warning(f'{series_info} {episode_info} Cannot use Plex '
+            log.debug(f'{series_info} {episode_info} Cannot use Plex '
                         f'thumbnail, has existing Overlay or Title Card')
             return None
 

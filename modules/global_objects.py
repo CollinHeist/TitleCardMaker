@@ -1,4 +1,11 @@
 from pathlib import Path
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from modules.FontValidator import FontValidator
+    from modules.MediaInfoSet import MediaInfoSet
+    from modules.PreferenceParser import PreferenceParser
+    from modules.ShowRecordKeeper import ShowRecordKeeper
 
 
 class TemporaryPreferenceParser:
@@ -31,7 +38,7 @@ def set_font_validator(to: 'FontValidator') -> None: # type: ignore
     global fv
     fv = to
 
-info_set = None
+info_set: Optional['MediaInfoSet'] = None
 def set_media_info_set(to: 'MediaInfoSet') -> None: # type: ignore
     """Update the global MediaInfoSet `info_set` object."""
 

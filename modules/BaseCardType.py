@@ -88,6 +88,10 @@ class Coordinate:
         return self
 
 
+    def __repr__(self) -> str:
+        return f'Coordinate({self.x}, {self.y})'
+
+
     def __str__(self) -> str:
         """
         Represent this Coordinate as a string.
