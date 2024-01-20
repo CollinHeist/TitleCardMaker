@@ -37,7 +37,8 @@ class TintedGlassTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-            ), Extra(
+            ),
+            Extra(
                 name='Episode Text Position',
                 identifier='episode_text_position',
                 description=(
@@ -47,7 +48,8 @@ class TintedGlassTitleCard(BaseCardType):
                     'Either <v>left</v>, <v>center</v>, or <v>right</v>. '
                     'Default is <v>center</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Bounding Box Adjustments',
                 identifier='box_adjustments',
                 description='Manual adjustments to the bounds of the box',
@@ -56,7 +58,8 @@ class TintedGlassTitleCard(BaseCardType):
                     'example: <v>-20 10 0 5</v>. Positive values move that '
                     'face out, negative values move the face in. Unit is pixels.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Glass Color',
                 identifier='glass_color',
                 description='Color of the "glass" beneath the text',
