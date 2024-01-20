@@ -1,8 +1,8 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from pathlib import Path
-from random import choice as random_choice, uniform
+from random import uniform
 from re import compile as re_compile, match as re_match
-from typing import Any, Literal, Optional, Union, get_args as get_type_args
+from typing import Any, Literal, Optional, Union
 
 from pydantic import ( # pylint: disable=no-name-in-module
     FilePath, PositiveFloat, PositiveInt, confloat, conint, constr,

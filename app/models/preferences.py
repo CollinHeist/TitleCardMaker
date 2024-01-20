@@ -5,7 +5,6 @@ from pickle import dump, load
 from typing import Optional
 
 from app.schemas.base import UNSPECIFIED
-from app.schemas.card import LocalCardType
 from app.schemas.preferences import CardExtension
 
 from modules.BaseCardType import BaseCardType

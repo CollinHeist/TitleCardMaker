@@ -412,33 +412,46 @@ def load_series_title_cards(
         log: Logger for all log messages.
     """
 
-    # Determine if in single-library mode
-    if len(series.libraries) == 1:
-        card_query = dict(episode_id=episode.id)
-        loaded_query = dict(card_id=card.id)
-    elif (len(series.libraries) > 1
-        and not get_preferences().library_unique_cards):
-        card_query = dict(episode_id=episode.id)
-        loaded_query = dict(
-            episode_id=episode.id,
-            interface_id=interface_id,
-            library_name=library_name,
-        )
-    else:
-        card_query = dict(
-            episode_id=episode.id,
-            interface_id=interface_id,
-            library_name=library_name,
-        )
-        loaded_query = card_query
-
     # Get list of Episodes to reload
     changed, episodes_to_load = False, []
     for episode in series.episodes:
+        # Determine queries based on library mode
+        if len(series.libraries) == 1:
+            card_query = dict(episode_id=episode.id)
+            loaded_query = dict(card_id=card.id)
+        elif (len(series.libraries) > 1
+            and not get_preferences().library_unique_cards):
+            card_query = dict(episode_id=episode.id)
+            loaded_query = dict(
+                episode_id=episode.id,
+                interface_id=interface_id,
+                library_name=library_name,
+            )
+        else:
+            card_query = dict(
+                episode_id=episode.id,
+                interface_id=interface_id,
+                library_name=library_name,
+            )
+            loaded_query = card_query
+
         # Only load if Episode has a Card
         if not (card := db.query(Card).filter_by(**card_query).first()):
             log.debug(f'{episode} - no associated Card')
             continue
+
+        # Determine query for Loaded assets
+        if len(series.libraries) == 1:
+            loaded_query = dict(card_id=card.id)
+        elif (len(series.libraries) > 1
+            and not get_preferences().library_unique_cards):
+            loaded_query = dict(
+                episode_id=episode.id,
+                interface_id=interface_id,
+                library_name=library_name,
+            )
+        else:
+            loaded_query = card_query
 
         # Find existing associated Loaded object(s)
         previously_loaded = db.query(Loaded).filter_by(**loaded_query).all()
@@ -556,27 +569,33 @@ def load_episode_title_card(
     # Determine if in single-library mode
     if len(episode.series.libraries) == 1:
         card_query = dict(episode_id=episode.id)
-        loaded_query = dict(card_id=card.id)
     elif (len(episode.series.libraries) > 1
         and not get_preferences().library_unique_cards):
         card_query = dict(episode_id=episode.id)
-        loaded_query = dict(
-            episode_id=episode.id,
-            interface_id=interface_id,
-            library_name=library_name,
-        )
     else:
         card_query = dict(
             episode_id=episode.id,
             interface_id=interface_id,
             library_name=library_name,
         )
-        loaded_query = card_query
 
     # Only load if Episode has a Card
     if not (card := db.query(Card).filter_by(**card_query).first()):
         log.debug(f'{episode} - no associated Card')
         return None
+
+    # Determine query for Loaded assets
+    if len(episode.series.libraries) == 1:
+        loaded_query = dict(card_id=card.id)
+    elif (len(episode.series.libraries) > 1
+        and not get_preferences().library_unique_cards):
+        loaded_query = dict(
+            episode_id=episode.id,
+            interface_id=interface_id,
+            library_name=library_name,
+        )
+    else:
+        loaded_query = card_query
 
     # Delete previously Loaded entries
     db.query(Loaded).filter_by(**loaded_query).delete()
