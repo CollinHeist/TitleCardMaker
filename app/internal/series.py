@@ -418,22 +418,15 @@ def load_series_title_cards(
         # Determine queries based on library mode
         if len(series.libraries) == 1:
             card_query = dict(episode_id=episode.id)
-            loaded_query = dict(card_id=card.id)
         elif (len(series.libraries) > 1
             and not get_preferences().library_unique_cards):
             card_query = dict(episode_id=episode.id)
-            loaded_query = dict(
-                episode_id=episode.id,
-                interface_id=interface_id,
-                library_name=library_name,
-            )
         else:
             card_query = dict(
                 episode_id=episode.id,
                 interface_id=interface_id,
                 library_name=library_name,
             )
-            loaded_query = card_query
 
         # Only load if Episode has a Card
         if not (card := db.query(Card).filter_by(**card_query).first()):

@@ -163,13 +163,14 @@ nav:
   - Home: index.md
   - Getting Started:
     - getting_started/index.md
-    - Installation - Docker:
-      - getting_started/docker/index.md
-      - Docker: getting_started/docker/docker.md
-      - Docker Compose: getting_started/docker/compose.md
-      - Synology DSM: getting_started/docker/synology.md
-      - UnRAID: getting_started/docker/unraid.md
-    - Installation - Local: getting_started/local.md
+    - Terminology: getting_started/terminology.md
+    # - Installation - Docker:
+    #   - getting_started/docker/index.md
+    #   - Docker: getting_started/docker/docker.md
+    #   - Docker Compose: getting_started/docker/compose.md
+    #   - Synology DSM: getting_started/docker/synology.md
+    #   - UnRAID: getting_started/docker/unraid.md
+    # - Installation - Local: getting_started/local.md
     - Importing YAML Settings: getting_started/import_settings.md
     - Configuring Connections:
       - getting_started/connections/index.md
