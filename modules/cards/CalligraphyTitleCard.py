@@ -71,7 +71,7 @@ class CalligraphyTitleCard(BaseCardType):
                 name='Separator Character',
                 identifier='separator',
                 description='Character to separate season and episode text',
-                tooltip='Default is <v>-</v>.'
+                tooltip='Default is <v>-</v>.',
             ),
             Extra(
                 name='Shadow Color',
@@ -82,9 +82,8 @@ class CalligraphyTitleCard(BaseCardType):
             Extra(
                 name='Logo Size',
                 identifier='logo_size',
-                description=(
-                    'Scalar for how much to scale the size of the logo element'
-                ), tooltip='Number ><v>0.0</v>. Default is <v>1.0</v>'
+                description='Scalar for how much to scale the size of the logo',
+                tooltip='Number ><v>0.0</v>. Default is <v>1.0</v>',
             ),
             Extra(
                 name='Deep Blur Unwatched Toggle',
