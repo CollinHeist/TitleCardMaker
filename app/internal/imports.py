@@ -1408,7 +1408,7 @@ def import_cards(
 
         # Episode has an existing Card, skip if not forced
         if episode.cards and not force_reload:
-            log.debug(f'{series} {episode} has an associated Card - skipping')
+            log.debug(f'{episode} has an associated Card - skipping')
             continue
 
         # Episode has card, delete if reloading
@@ -1416,14 +1416,14 @@ def import_cards(
             for card in episode.cards:
                 log.debug(f'{card} deleting record')
                 db.query(models.card.Card).filter_by(id=card.id).delete()
-                log.debug(f'{series} {episode} has associated Card - reloading')
+                log.debug(f'{episode} has associated Card - reloading')
 
         # Get finalized Card settings for this Episode, override card file
         try:
             # TODO eval w/ library?
             card_settings = resolve_card_settings(episode, log=log)
         except (HTTPException, InvalidCardSettings) as exc:
-            log.exception(f'{series} {episode} Cannot import Card - settings '
+            log.exception(f'{episode} Cannot import Card - settings '
                           f'are invalid {exc}', exc)
             continue
 
@@ -1441,6 +1441,6 @@ def import_cards(
         card = add_card_to_database(
             db, title_card, CardTypeModel, card_settings['card_file'], None
         )
-        log.debug(f'{series} {episode} Imported {image.resolve()}')
+        log.debug(f'{episode} Imported {image.resolve()}')
 
     return None

@@ -24,7 +24,7 @@ retrieve the TCM code from git. Check the `repo` scope section. Copy this code.
 
     ??? question "Why is this necessary?"
 
-        Because the repository is Private, the `git clone` command requires
+        Because the repository is private, the `git clone` command requires
         authentication. You _can_ download the zipped code from the website, but
         this makes getting updates difficult.
 

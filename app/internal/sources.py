@@ -360,7 +360,7 @@ def download_episode_source_image(
 
         # Source image is valid, download - error if download fails
         if WebInterface.download_image(source_image, source_file, log=log):
-            log.info(f'{series} {episode} Downloaded '
+            log.info(f'{episode} Downloaded '
                      f'"{source_file.name}" from {interface.INTERFACE_TYPE}')
             return f'/source/{series.path_safe_name}/{source_file.name}'
 
@@ -371,7 +371,7 @@ def download_episode_source_image(
             )
 
     # No image source returned a valid image, return None
-    log.debug(f'{series} {episode} No source images found')
+    log.debug(f'{episode} No source images found')
     return None
 
 

@@ -365,7 +365,7 @@ class Template(Base):
                         return False
                 # Evaluation raised an error, log and return False
                 except Exception as e:
-                    log.exception(f'{series} {episode} Condition evaluation '
+                    log.exception(f'{episode} Condition evaluation '
                                   f'raised an error', e)
                     return False
             # Operation or Argument are invalid, log and skip
