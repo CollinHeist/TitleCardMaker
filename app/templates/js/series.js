@@ -861,6 +861,45 @@ async function getEpisodeData(page=1) {
   });
 }
 
+function querySeriesLogs() {
+  const toTitleCase = (text) => text.charAt(0).toUpperCase() + text.slice(1);
+  $.ajax({
+    type: 'GET',
+    url: '/api/logs/query?contains=Series[{{series.id}}]|{{series.name}}&level=debug',
+    /**
+     * 
+     * @param {LogEntryPage} logs 
+     */
+    success: logs => {
+      const eventTemplate = document.getElementById('log-event-template');
+
+      const events = logs.items.map(log => {
+        const event = eventTemplate.content.cloneNode(true);
+
+        const color = log.level === 'critical'
+          ? 'red'
+          : log.level === 'error'
+            ? 'orange'
+            : log.level === 'warning'
+              ? 'yellow'
+              : log.level === 'info'
+                ? 'blue'
+                : 'grey'
+        ;
+        event.querySelector('.label .icon').classList.add(color);
+        event.querySelector('.summary span').innerText = `${toTitleCase(log.level)} Log Message`;
+        event.querySelector('.date').innerText = timeDiffString(log.time);
+        event.querySelector('.extra').innerText = log.message;
+
+        return event;
+      })
+
+      document.querySelector('.feed').replaceChildren(...events);
+      refreshTheme();
+    },
+  });
+}
+
 let currentCardPage = 1;
 /**
  * Submit an API request to load the given page of  Title Card previews. If
@@ -960,6 +999,8 @@ async function initAll() {
   getStatistics();
   getStatisticsId = setInterval(getStatistics, 60000); // Refresh stats every 30s
   setInterval(getCardData, 60000);
+
+  querySeriesLogs();
 
   // Open tab indicated by URL param
   const tab = window.location.hash.substring(1) || 'options';
