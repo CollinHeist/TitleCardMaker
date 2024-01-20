@@ -400,7 +400,10 @@ def load_series_title_cards(
 
     Args:
         series: Series to load the Title Cards of.
-        media_server: Where to load the Title Cards into.
+        library_name: Name of the library to load these Title Cards
+            into.
+        interface_id: ID of the Interface to associated with the
+            loaded Title Cards.
         db: Database to look for and add Loaded records from/to.
         interface: Interfaces to the applicable Media Server to load
             Title Cards into.
@@ -410,10 +413,7 @@ def load_series_title_cards(
     """
 
     # Determine if in single-library mode
-    single_library_mode = (
-        (not get_preferences().library_unique_cards)
-        or len(series.libraries) == 1
-    )
+    single_library_mode = len(series.libraries) == 1
 
     # Get list of Episodes to reload
     changed, episodes_to_load = False, []
@@ -435,7 +435,7 @@ def load_series_title_cards(
 
         # Find existing associated Loaded object
         if single_library_mode:
-            previously_loaded = db.query(Loaded).filter_by(card_id=card.id).all()
+            previously_loaded =db.query(Loaded).filter_by(card_id=card.id).all()
         else:
             previously_loaded = db.query(Loaded)\
                 .filter_by(card_id=card.id,
