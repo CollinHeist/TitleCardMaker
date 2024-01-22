@@ -304,7 +304,7 @@ class InsetCardType(BaseCardTypeAllText):
     episode_text_font_size: PositiveFloat = 1.0
     omit_gradient: bool = False
     separator: str = '-'
-    transparency: PositiveFloat = 1.0
+    transparency: confloat(ge=0.0, le=1.0) = 1.0
 
 BoxAdjustmentRegex = r'^([-+]?\d+)\s+([-+]?\d+)\s+([-+]?\d+)\s+([-+]?\d+)$'
 BoxAdjustments = constr(regex=BoxAdjustmentRegex)
