@@ -134,6 +134,9 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
         Args:
             api_key: The API key to communicate with TMDb.
+
+        Raises:
+            SystemExit (1): The API key is invalid.
         """
 
         super().__init__('TMDb')
@@ -162,7 +165,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def __get_condition(self,
             query_type: str,
             series_info: SeriesInfo,
-            episode_info: Optional[EpisodeInfo] = None
+            episode_info: Optional[EpisodeInfo] = None,
         ) -> Query:
         """
         Get the tinydb query condition for the given query.
@@ -196,7 +199,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def __update_blacklist(self,
             series_info: SeriesInfo,
             episode_info: Optional[EpisodeInfo],
-            query_type: str) -> None:
+            query_type: str,
+        ) -> None:
         """
         Adds the given request to the blacklist; indicating that this
         exact request shouldn't be queried to TMDb for another day.
@@ -244,7 +248,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def __is_blacklisted(self,
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
-            query_type: str) -> bool:
+            query_type: str,
+        ) -> bool:
         """
         Determines if the specified entry is in the blacklist (e.g.
         should not bother querying TMDb.
@@ -278,7 +283,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def is_permanently_blacklisted(self,
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
-            query_type: str = 'image') -> bool:
+            query_type: str = 'image',
+        ) -> bool:
         """
         Determines if permanently blacklisted.
 
@@ -583,8 +589,9 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         def _match_by_index(episode_info, season_number, episode_number):
             # Find episode with series TMDb ID and given index
             try:
-                episode = self.api.tv_episode(series_info.tmdb_id,
-                                              season_number, episode_number)
+                episode = self.api.tv_episode(
+                    series_info.tmdb_id, season_number, episode_number
+                )
                 episode.reload()
             except (NotFound, TMDbException):
                 return None
@@ -652,23 +659,23 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             *,
             is_source_image: bool = True,
             skip_localized: bool = False,
-        ) -> dict[str, Any]:
+        ) -> dict:
         """
-        Determine the best image and return it's contents from within the
-        database return JSON.
+        Determine the best image and return it's contents from within
+        the database return JSON.
 
         Args:
-            images: The results from the database. Each entry is a new image to
-                be considered.
-            is_source_image: (Keyword only) Whether the images being selected
-                are source images or not. If True, then images must meet the
+            images: The results from the database. Each entry is a new
+                image to be considered.
+            is_source_image: Whether the images being selected are
+                source images or not. If True, then images must meet the
                 minimum resolution requirements.
-            skip_localized: (Keyword only) Whether to skip localized images.
+            skip_localized: Whether to skip localized images.
 
         Args:
-            The "best" image for title card creation. This is determined using
-            the images dimensions. Priority given to largest image. None if
-            there are no valid images.
+            The "best" image for title card creation. This is determined
+            using the images dimensions. Priority given to largest
+            image. None if there are no valid images.
         """
 
         # Pick the best image based on image dimensions, and then vote average
@@ -701,7 +708,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     @catch_and_log('Error getting source image', default=None)
     def get_source_image(self,
             series_info: SeriesInfo,
-            episode_info: EpisodeInfo, *,
+            episode_info: EpisodeInfo,
+            *,
             title_match: bool = True,
             skip_localized_images: bool = False,
         ) -> Optional[str]:
@@ -712,9 +720,9 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         Args:
             series_info: SeriesInfo for this entry.
             episode_info: EpisodeInfo for this entry.
-            title_match:  (Keyword only) Whether to require the episode
+            title_match:  Whether to require the episode
                 title to match when querying TMDb.
-            skip_localized_images: (Keyword only) Whether to skip images
+            skip_localized_images: Whether to skip images
                 with a non-null language code - i.e. skipping localized
                 images.
 
@@ -821,16 +829,14 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             return None
 
         # Get episode
-        episode = self.__find_episode(series_info, episode_info)
-        if episode is None:
+        if (episode := self.__find_episode(series_info, episode_info)) is None:
             self.__update_blacklist(series_info, episode_info, 'title')
             return None
 
         # Look for this translation
         for translation in episode.translations:
             codes = (translation.iso_639_1, translation.iso_3166_1)
-            combined_code = '-'.join(codes)
-            if (('-' in language_code and language_code == combined_code)
+            if (('-' in language_code and language_code == '-'.join(codes))
                 or language_code in codes):
                 # If the title translation is blank (i.e. non-existent)
                 if hasattr(translation, 'name'):
@@ -862,7 +868,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
         Returns:
             URL to the 'best' logo for the given series, and None if no
-            images  are available.
+            images are available.
         """
 
         # Don't query the database if this series' logo is blacklisted

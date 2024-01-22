@@ -69,7 +69,7 @@ class FormatString:
         """
 
         # pylint: disable=eval-used
-        self.result = eval(
+        self.result: str = eval(
             compile('f"' + fstring.replace('"', '\\"') + '"', '', 'eval'),
             {
                 '__builtins__': {

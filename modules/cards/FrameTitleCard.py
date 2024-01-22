@@ -40,10 +40,12 @@ class FrameTitleCard(BaseCardType):
                     'Either <v>left</v>, <v>surround</v>, or <v>right</v>. '
                     'Default is <v>surround</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to use for the episode text',
+                tooltip='Default is <v>rgb(80, 80, 80)</v>.'
             ),
         ], description=[
             'Title card styled to look like a Polaroid photo.',
