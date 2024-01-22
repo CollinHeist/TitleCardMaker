@@ -92,6 +92,7 @@ def download_blueprint_database(*, log: Logger = log) -> None:
         )
 
     # Write database to file
+    BLUEPRINT_DATABASE_FILE.parent.mkdir(exist_ok=True, parents=True)
     BLUEPRINT_DATABASE_FILE.write_bytes(response.content)
 
 
