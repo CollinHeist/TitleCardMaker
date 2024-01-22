@@ -74,7 +74,8 @@ class AnimeTitleCard(BaseCardType):
             Extra(
                 name='Stroke Text Color',
                 identifier='stroke_color',
-                description='Color to use for the text stroke',
+                description='Color of the text stroke',
+                tooltip='Defaults to <v>black</v>.'
             ),
             Extra(
                 name='Gradient Omission',
@@ -87,9 +88,9 @@ class AnimeTitleCard(BaseCardType):
                 ),
             ),
             Extra(
-                name='Episode Stroke Color',
+                name='Episode Text Stroke Color',
                 identifier='episode_stroke_color',
-                description='Color of the text stroke',
+                description='Color of the text stroke for the episode text',
                 tooltip='Defaults to <v>black</v>.'
             ),
         ], description=[

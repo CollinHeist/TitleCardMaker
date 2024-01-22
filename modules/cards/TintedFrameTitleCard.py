@@ -1,4 +1,6 @@
 from pathlib import Path
+from random import choice as random_choice
+from re import compile as re_compile, IGNORECASE
 from typing import Literal, Optional, TYPE_CHECKING
 
 from modules.BaseCardType import (
@@ -10,6 +12,8 @@ if TYPE_CHECKING:
     from app.models.preferences import Preferences
     from modules.Font import Font
 
+
+RandomColorRegex = re_compile(r'random\[([^[\]]*(?:,[^[\]]*)*)\]', IGNORECASE)
 Element = Literal['index', 'logo', 'omit', 'title']
 MiddleElement = Literal['logo', 'omit']
 
@@ -259,7 +263,7 @@ class TintedFrameTitleCard(BaseCardType):
         self.episode_text_font = episode_text_font
         self.episode_text_font_size = episode_text_font_size
         self.episode_text_vertical_shift = episode_text_vertical_shift
-        self.frame_color = frame_color
+        self.frame_color = self.__select_color(frame_color)
         self.frame_width = frame_width
         self.logo_size = logo_size
         self.logo_vertical_shift = logo_vertical_shift
@@ -267,6 +271,33 @@ class TintedFrameTitleCard(BaseCardType):
         self.separator = separator
         self.shadow_color = shadow_color
         self.top_element = top_element
+
+
+    def __select_color(self, color_str: str, /) -> str:
+        """
+        Determine a color from the given string. This will parse random
+        strings, as well as explicit ones. For example:
+
+        >>> self.__select_color('random[blue, red]')
+        'blue' # Has 50% chance to choose blue or red
+        >>> self.__select_color('red')
+        'red'
+
+        Args:
+            color_str: Color string to parse for colors.
+
+        Returns:
+            Selected color as indicated or randomly selected.
+        """
+
+        # If color is randomized, select from specification
+        if (match := RandomColorRegex.match(color_str)):
+            return random_choice(list(map(
+                str.strip,
+                match.group(1).split(',')
+            )))
+
+        return color_str
 
 
     @property
