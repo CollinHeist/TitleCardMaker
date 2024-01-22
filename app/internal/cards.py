@@ -123,6 +123,7 @@ def clean_database(*, log: Logger = log) -> None:
             if (bad_count := bad_loaded.count()) > 0:
                 log.debug(f'Deleting {bad_count} outdated Loaded record')
                 bad_loaded.delete()
+            db.commit()
 
             # Delete Cards with no Series ID, Series, Episode ID, or Episode
             unlinked_cards = db.query(Card)\
@@ -135,6 +136,14 @@ def clean_database(*, log: Logger = log) -> None:
                 log.debug(f'Deleting unlinked {card}')
                 card.file.unlink(missing_ok=True)
                 db.delete(card)
+            db.commit()
+
+            # Delete Episodes with no Series ID, or Series
+            for episode in db.query(Episode).all():
+                if episode.series_is is None or episode.series is None:
+                    log.debug(f'Deleting unlinked Episode{episode.id}')
+                    db.delete(episode)
+            db.commit()
 
             # Delete duplicate Cards
             for series in db.query(Series).all():
