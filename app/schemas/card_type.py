@@ -10,6 +10,7 @@ from pydantic import ( # pylint: disable=no-name-in-module
 )
 
 from app.schemas.base import Base, BetterColor, DictKey
+from modules.FormatString import FormatString
 from modules.cards.AnimeTitleCard import AnimeTitleCard
 from modules.cards.BannerTitleCard import BannerTitleCard
 from modules.cards.CalligraphyTitleCard import CalligraphyTitleCard
@@ -104,14 +105,16 @@ class AnimeCardType(BaseCardTypeCustomFontAllText):
     font_file: FilePath = AnimeTitleCard.TITLE_FONT
     kanji: Optional[str] = None
     require_kanji: bool = False
+    kanji_color: Optional[str] = AnimeTitleCard.TITLE_COLOR
     kanji_vertical_shift: int = 0
     separator: str = '·'
     omit_gradient: bool = False
     stroke_color: BetterColor = 'black'
+    episode_stroke_color: str = AnimeTitleCard.EPISODE_STROKE_COLOR
     episode_text_color: BetterColor = AnimeTitleCard.SERIES_COUNT_TEXT_COLOR
 
     @root_validator(skip_on_failure=True)
-    def validate_kanji(cls, values):
+    def validate_kanji(cls, values: dict) -> dict:
         if values['require_kanji'] and not values['kanji']:
             raise ValueError(f'Kanji is required and not specified')
 
@@ -539,7 +542,7 @@ class TintedFrameCardType(BaseCardTypeAllText):
     def validate_episode_text_font_file(cls, values: dict) -> dict:
         etf = values['episode_text_font']
         # Episode text font does not exist, search alongside source image
-        if isinstance(etf, Path) and not val.exists():
+        if isinstance(etf, Path) and not etf.exists():
             if (new_etf := values['source_file'].parent / etf.name).exists():
                 values['episode_text_font'] = new_etf
 

@@ -23,7 +23,7 @@ class AnimeTitleCard(BaseCardType):
         name='Anime',
         identifier='anime',
         example='/internal_assets/cards/anime.jpg',
-        creators=['/u/Recker_Man', 'CollinHeist'],
+        creators=['/u/Recker_Man', 'CollinHeist', 'Reicha7'],
         source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=True,
@@ -56,6 +56,12 @@ class AnimeTitleCard(BaseCardType):
                 ),
             ),
             Extra(
+                name='Kanji Color',
+                identifier='kanji_color',
+                description='Color of the kanji text',
+                tooltip='Defaults to <v>white</v>.'
+            ),
+            Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
@@ -79,6 +85,12 @@ class AnimeTitleCard(BaseCardType):
                     'may appear less legible on brighter images. Default is '
                     '<v>False</v>.'
                 ),
+            ),
+            Extra(
+                name='Episode Stroke Color',
+                identifier='episode_stroke_color',
+                description='Color of the text stroke',
+                tooltip='Defaults to <v>black</v>.'
             ),
         ], description=[
             'Title card with all text aligned in the lower left of the image.',
@@ -119,6 +131,7 @@ class AnimeTitleCard(BaseCardType):
     """Font characteristics for the series count text"""
     SERIES_COUNT_FONT = REF_DIRECTORY / 'Avenir.ttc'
     SERIES_COUNT_TEXT_COLOR = '#CFCFCF'
+    EPISODE_STROKE_COLOR = 'black'
 
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
@@ -127,7 +140,7 @@ class AnimeTitleCard(BaseCardType):
         'font_interline_spacing', 'font_interword_spacing',
         'font_vertical_shift', 'omit_gradient', 'stroke_color', 'separator',
         'kanji', 'use_kanji', 'require_kanji', 'kanji_vertical_shift',
-        'episode_text_color',
+        'episode_text_color', 'kanji_color', 'episode_stroke_color',
     )
 
     def __init__(self, *,
@@ -149,11 +162,13 @@ class AnimeTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             kanji: Optional[str] = None,
+            episode_stroke_color: str = EPISODE_STROKE_COLOR,
             episode_text_color: str = SERIES_COUNT_TEXT_COLOR,
             separator: str = '·',
             omit_gradient: bool = False,
             require_kanji: bool = False,
             kanji_vertical_shift: float = 0.0,
+            kanji_color: str = TITLE_COLOR,
             stroke_color: str = 'black',
             preferences: Optional['Preferences'] = None,
             **unused,
@@ -190,9 +205,11 @@ class AnimeTitleCard(BaseCardType):
         self.font_vertical_shift = font_vertical_shift
 
         # Optional extras
+        self.episode_stroke_color = episode_stroke_color
         self.episode_text_color = episode_text_color
-        self.separator = separator
         self.omit_gradient = omit_gradient
+        self.kanji_color = kanji_color
+        self.separator = separator
         self.stroke_color = stroke_color
 
 
@@ -266,7 +283,9 @@ class AnimeTitleCard(BaseCardType):
 
     @property
     def title_text_command(self) -> ImageMagickCommands:
-        """Subcommands for adding title text to the source image."""
+        """
+        Subcommands for adding title and kanji text to the source image.
+        """
 
         # Base offset for the title text
         base_offset = 175 + self.font_vertical_shift
@@ -297,6 +316,7 @@ class AnimeTitleCard(BaseCardType):
             f'-pointsize {85 * self.font_size}',
             f'-annotate +75+{kanji_offset} "{self.kanji}"',
             *self.__title_text_effects,
+            f'-fill "{self.kanji_color}"',
             f'-annotate +75+{kanji_offset} "{self.kanji}"',
         ]
 
@@ -314,8 +334,8 @@ class AnimeTitleCard(BaseCardType):
             text = self.episode_text if self.hide_season_text else self.season_text
             return [
                 *self.__series_count_text_global_effects,
-                f'-fill black',
-                f'-stroke black',
+                f'-fill "{self.episode_stroke_color}"',
+                f'-stroke "{self.episode_stroke_color}"',
                 f'-strokewidth 6',
                 f'-annotate +75+90 "{text}"',
                 f'-fill "{self.episode_text_color}"',
@@ -328,19 +348,19 @@ class AnimeTitleCard(BaseCardType):
         return [
             f'-background transparent',
             *self.__series_count_text_global_effects,
-            f'-fill black',
-            f'-stroke black',
+            f'-fill "{self.episode_stroke_color}"',
+            f'-stroke "{self.episode_stroke_color}"',
             f'-strokewidth 6',
-            # Black stroke behind season and episode text
+            # Stroke behind season and episode text
             f'\( -gravity center',
-            # Black stroke uses same font for season/episode text
+            # Stroke uses same font for season/episode text
             f'label:"{self.season_text} {self.separator}"',
             f'label:"{self.episode_text}"',
-            # Combine season+episode text into one "image"
-            f'+smush 30 \)',        # Smush less for black stroke
+            # Combine season and episode text into one "image"
+            f'+smush 30 \)',        # Smush less for stroke
             f'-gravity southwest',
-            # Overlay black stroke "image"
-            f'-geometry +73+88',    # Different offset for black stroke
+            # Overlay stroke "image"
+            f'-geometry +73+88',    # Different offset for stroke
             f'-composite',
             # Primary season+episode text
             *self.__series_count_text_global_effects,
@@ -380,6 +400,9 @@ class AnimeTitleCard(BaseCardType):
 
         # Generic font, reset kanji vertical shift key
         if not custom_font:
+            if 'episode_stroke_color' in extras:
+                extras['episode_stroke_color'] =\
+                    AnimeTitleCard.EPISODE_STROKE_COLOR
             if 'episode_text_color' in extras:
                 extras['episode_text_color'] =\
                     AnimeTitleCard.SERIES_COUNT_TEXT_COLOR
@@ -404,8 +427,12 @@ class AnimeTitleCard(BaseCardType):
         """
 
         custom_extras = (
-            ('episode_text_color' in extras
+            ('episode_stroke_color' in extras
+                and extras['episode_stroke_color'] != AnimeTitleCard.EPISODE_STROKE_COLOR)
+            or ('episode_text_color' in extras
                 and extras['episode_text_color'] != AnimeTitleCard.SERIES_COUNT_TEXT_COLOR)
+            or ('kanji_color' in extras
+                and extras['kanji_color'] != AnimeTitleCard.TITLE_COLOR)
             or ('kanji_vertical_shift' in extras
                 and extras['kanji_vertical_shift'] != 0)
             or ('stroke_color' in extras
