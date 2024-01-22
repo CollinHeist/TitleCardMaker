@@ -198,7 +198,7 @@ def get_all_supported_extras(
     the returned list.
     """
 
-    locals = [
+    local_extras = [
         {'card_type': identifier} | extra.dict()
         for identifier, CardClass in preferences.local_card_types.items()
         if (show_excluded or identifier not in preferences.excluded_card_types)
@@ -211,7 +211,7 @@ def get_all_supported_extras(
         if (show_excluded
             or card_type.identifier not in preferences.excluded_card_types)
         for extra in card_type.supported_extras
-    ] + locals + VARIABLE_OVERRIDES
+    ] + local_extras + VARIABLE_OVERRIDES
 
 
 @availablility_router.get('/template-filters', status_code=200, tags=['Templates'])
