@@ -8,6 +8,7 @@ from pydantic import DirectoryPath, PositiveInt, constr, validator # pylint: dis
 from app.schemas.base import (
     Base, InterfaceType, ImageSource, UpdateBase, UNSPECIFIED
 )
+from modules.FormatString import FormatString
 
 from modules.TMDbInterface2 import TMDbInterface
 
@@ -93,15 +94,18 @@ class UpdatePreferences(UpdateBase):
     reduced_animations: bool = UNSPECIFIED
 
     @validator('card_filename_format', pre=True)
-    def validate_card_filename_format(cls, v):
+    def validate_card_filename_format(cls, v: str) -> str:
         try:
-            v.format(
-                series_name='test', series_full_name='test (2000)',
-                year=2000, title='Test Title', season_number=1, episode_number=1,
-                absolute_number=1, absolute_episode_number=1,
-                emby_id='0:TV:abc123', imdb_id='tt1234',
-                jellyfin_id='0:TV:abc123', tmdb_id=123, tvdb_id=123,
-                tvrage_id=123,
+            FormatString(
+                v,
+                data=dict(
+                    series_name='test', series_full_name='test (2000)',
+                    year=2000, title='Test Title', season_number=1,
+                    episode_number=1, absolute_number=1,
+                    absolute_episode_number=1, emby_id='0:TV:abc123',
+                    imdb_id='tt1234', jellyfin_id='0:TV:abc123', tmdb_id=123,
+                    tvdb_id=123, tvrage_id=123,
+                )
             )
         except KeyError as exc:
             raise ValueError(
@@ -115,9 +119,14 @@ class UpdatePreferences(UpdateBase):
         return [v] if isinstance(v, str) else v
 
     @validator('specials_folder_format', 'season_folder_format', pre=True)
-    def validate_folder_formats(cls, v):
+    def validate_folder_formats(cls, v: str) -> str:
         try:
-            v.format(season_number=1, episode_number=1, absolute_number=1)
+            FormatString(
+                v,
+                data={
+                    'season_number': 1, 'episode_number': 1, 'absolute_number':1
+                }
+            )
         except KeyError as exc:
             raise ValueError(
                 f'Invalid folder format - use "season_number", "episode_numer" '
