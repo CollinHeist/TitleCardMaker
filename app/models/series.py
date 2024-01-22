@@ -48,19 +48,23 @@ class Series(Base):
     __tablename__ = 'series'
 
     # Referencial arguments
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     data_source_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey('connection.id'),
         default=None
     )
-    font_id: Mapped[Optional[int]] = mapped_column(ForeignKey('font.id'), default=None)
-    sync_id: Mapped[Optional[int]] = mapped_column(ForeignKey('sync.id'), default=None)
+    font_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey('font.id'), default=None
+    )
+    sync_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey('sync.id'), default=None
+    )
 
     cards: Mapped[list['Card']] = relationship(
         back_populates='series',
         cascade='all,delete-orphan',
     )
-    data_source: Mapped['Connection'] = relationship(back_populates='series',)
+    data_source: Mapped['Connection'] = relationship(back_populates='series')
     font: Mapped['Font'] = relationship(back_populates='series')
     sync: Mapped['Sync'] = relationship(back_populates='series')
     loaded: Mapped[list['Loaded']] = relationship(
@@ -87,9 +91,11 @@ class Series(Base):
     year: Mapped[int]
     monitored: Mapped[bool]
     poster_file: Mapped[str] = mapped_column(
-        default=str(INTERNAL_ASSET_DIRECTORY/'placeholder.jpg')
+        default=str(INTERNAL_ASSET_DIRECTORY / 'placeholder.jpg')
     )
-    poster_url: Mapped[str] = mapped_column(default='/internal_assets/placeholder.jpg')
+    poster_url: Mapped[str] = mapped_column(
+        default='/internal_assets/placeholder.jpg'
+    )
 
     # Series config arguments
     directory: Mapped[Optional[str]]
