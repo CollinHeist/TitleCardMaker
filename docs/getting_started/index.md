@@ -187,88 +187,33 @@ to it.
     `America/Los_Angeles` - for the next step.
 
     3. Create (and launch) the Docker container by executing the following
-    command - make sure to replace `America/Los_Angeles` with _your_ timezone
-    from the previous step.
+    command[^1] - make sure to replace `America/Los_Angeles` with _your_
+    timezone from the previous step.
 
         === ":material-linux: Linux"
 
             ```bash
-            docker run -itd \ # (1)!
-                --net="bridge" \ # (2)!
-                -v "$(pwd)/config/":"/config/" \ # (3)!
-                -e TZ="America/Los_Angeles" \ # (4)!
-                -p 4242:4242 \ # (5)!
-                --name "TitleCardMaker" \ # (6)!
-                titlecardmaker:latest
+            docker run -itd --net="bridge" -v "$(pwd)/config/":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" titlecardmaker
             ```
-
-            1. Launch the container in the background.
-            2. Ensure that TCM has access to the ports of your other Docker
-            containers.
-            3. Make your current directory available inside the container.
-            4. Set the internal timezone equal to your local timezone.
-            5. Make the TCM WebUI accessible at port 4242 on your machine.
-            6. Name the container TitleCardMaker.
 
         === ":material-apple: MacOS"
 
             ```bash
-            docker run -itd \ # (1)!
-                --net="bridge" \ # (2)!
-                -v "$(pwd)/config/":"/config/" \ # (3)!
-                -e TZ="America/Los_Angeles" \ # (4)!
-                -p 4242:4242 \ # (5)!
-                --name "TitleCardMaker" \ # (6)!
-                titlecardmaker:latest
+            docker run -itd --net="bridge" -v "$(pwd)/config/":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" titlecardmaker
             ```
-
-            1. Launch the container in the background.
-            2. Ensure that TCM has access to the ports of your other Docker
-            containers.
-            3. Make your current directory available inside the container.
-            4. Set the internal timezone equal to your local timezone.
-            5. Make the TCM WebUI accessible at port 4242 on your machine.
-            6. Name the container TitleCardMaker.
 
         === ":material-powershell: Windows (Powershell)"
 
             ```bash
-            docker run -itd ` # (1)!
-                --net="bridge" ` # (2)!
-                -v "${pwd}\config":"/config/" ` # (3)!
-                -e TZ="America/Los_Angeles" ` # (4)!
-                -p 4242:4242 ` # (5)!
-                --name "TitleCardMaker" ` # (6)!
-                titlecardmaker:latest
+            docker run -itd --net="bridge" -v "$(pwd)\config":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" titlecardmaker
             ```
-
-            1. Launch the container in the background.
-            2. Ensure that TCM has access to the ports of your other Docker
-            containers.
-            3. Make your current directory available inside the container.
-            4. Set the internal timezone equal to your local timezone.
-            5. Make the TCM WebUI accessible at port 4242 on your machine.
-            6. Name the container TitleCardMaker.
 
         === ":material-microsoft-windows: Windows (Non-Powershell)"
 
             ```bash
-            docker run -itd ^ # (1)!
-                --net="bridge" ^ # (2)!
-                -v "%cd%\config":"/config/" ^ # (3)!
-                -e TZ="America/Los_Angeles" ^ # (4)!
-                -p 4242:4242 ^ # (5)!
-                --name "TitleCardMaker" ^ # (6)!
-                titlecardmaker:latest
+            docker run -itd --net="bridge" -v "%cd%\config":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" titlecardmaker
             ```
 
-            1. Launch the container in the background.
-            2. Ensure that TCM has access to the ports of your other Docker
-            containers.
-            3. Make your current directory available inside the container.
-            4. Set the internal timezone equal to your local timezone.
-            5. Make the TCM WebUI accessible at port 4242 on your machine.
-            6. Name the container TitleCardMaker.
 
     ??? error "Docker `invalid reference format` Error"
 
@@ -329,3 +274,23 @@ It is designed for __completely new users__ of TCM, but is still helpful for
 those migrating from TCM v1.0 (the command line tool). For more detailed
 information about specific aspects of TitleCardMaker, look at the
 [User Guide](../user_guide/index.md).
+
+
+[^1]: The exact purpose of this command breaks down as follow:
+    ```bash
+    docker run -itd ^ # (1)!
+        --net="bridge" ^ # (2)!
+        -v "%cd%\config":"/config/" ^ # (3)!
+        -e TZ="America/Los_Angeles" ^ # (4)!
+        -p 4242:4242 ^ # (5)!
+        --name "TitleCardMaker" ^ # (6)!
+        titlecardmaker
+    ```
+
+    1. Launch the container in the background.
+    2. Ensure that TCM has access to the ports of your other Docker
+    containers.
+    3. Make your current directory available inside the container.
+    4. Set the internal timezone equal to your local timezone.
+    5. Make the TCM WebUI accessible at port 4242 on your machine.
+    6. Name the container TitleCardMaker.
