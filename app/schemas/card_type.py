@@ -536,6 +536,16 @@ class TintedFrameCardType(BaseCardTypeAllText):
     shadow_color: str = TintedFrameTitleCard.SHADOW_COLOR
 
     @root_validator(skip_on_failure=True)
+    def validate_episode_text_font_file(cls, values: dict) -> dict:
+        etf = values['episode_text_font']
+        # Episode text font does not exist, search alongside source image
+        if isinstance(etf, Path) and not val.exists():
+            if (new_etf := values['source_file'].parent / etf.name).exists():
+                values['episode_text_font'] = new_etf
+
+        return values
+
+    @root_validator(skip_on_failure=True)
     def validate_extras(cls, values):
         # Logo indicated, verify it exists
         top = values['top_element']
