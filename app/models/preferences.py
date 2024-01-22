@@ -10,6 +10,7 @@ from app.schemas.preferences import CardExtension
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
+from modules.FormatString import FormatString
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.RemoteCardType2 import RemoteCardType
 from modules.TitleCard import TitleCard
@@ -502,11 +503,13 @@ class Preferences:
             Name of the season subfolder for the given Episode.
         """
 
-        # Format Specials differently
-        if episode_info.season_number == 0:
-            return self.specials_folder_format.format(**episode_info.indices)[:254]
+        fstring = (
+            self.specials_folder_format
+            if episode_info.season_number == 0 else
+            self.season_folder_format
+        )
 
-        return self.season_folder_format.format(**episode_info.indices)[:254]
+        return FormatString(fstring, data=episode_info.indices).result[:254]
 
 
     def get_card_type_class(self,
