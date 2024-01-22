@@ -34,9 +34,9 @@ def translate_episode(
         return None
 
     # Evaluate per-library
-    changed = False
-    series = episode.series
-    for library in series.libraries:
+    changed, series = False, episode.series
+    libraries = series.libraries if series.libraries else [None]
+    for library in libraries:
         # Get the Series and Episode Template
         series_template, episode_template = get_effective_templates(
             series, episode, library,
