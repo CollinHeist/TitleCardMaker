@@ -1181,12 +1181,14 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         # Don't query the database if this episode is in the blacklist
         if (not bypass_blacklist
             and self.__is_blacklisted(series_info, episode_info, 'title')):
+            log.debug(f'{series_info} {episode_info} is blacklisted - skipping')
             return None
 
         # Get episode
         episode = self.__find_episode(series_info, episode_info, log=log)
         if episode is None:
             self.__update_blacklist(series_info, episode_info, 'title')
+            log.debug(f'{series_info} {episode_info} not found - skipping')
             return None
 
         # Parse the ISO-3166-1 and ISO-639-1 codes from the given language code
