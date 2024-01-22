@@ -58,7 +58,7 @@ class InsetTitleCard(BaseCardType):
                 description='How transparent to make inset text.',
                 tooltip=(
                     'Number between <v>0.0</v> and <v>1.0</v>. Default is '
-                    '<v>1.0</v> (not transparency).'
+                    '<v>1.0</v> (not transparent).'
                 ),
             ),
             Extra(
@@ -182,8 +182,8 @@ class InsetTitleCard(BaseCardType):
             return []
 
         # Font characteristics
-        interline_spacing = -100
-        interword_spacing = 0
+        interline_spacing = -100 + self.font_interline_spacing
+        interword_spacing = 0 + self.font_interword_spacing
         kerning = 1.0 * self.font_kerning
         size = 250 * self.font_size
 
