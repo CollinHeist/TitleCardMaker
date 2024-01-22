@@ -148,14 +148,14 @@ to it.
     You now have the choice of building and running the Docker container
     yourself, or launching the Python script directly.
 
-    The Docker container is the recommended method.
+    The Docker container is the recommended method for all operating systems.
 
 #### Launching the Interface
 
 === ":material-docker: Docker"
 
-    1. Build the Docker image under the label `titlecardmaker`, by executing the
-    following command:
+    1. Build the Docker image under the tag `titlecardmaker:latest`, by
+    executing the following command:
 
         === ":material-linux: Linux"
 
@@ -193,27 +193,26 @@ to it.
         === ":material-linux: Linux"
 
             ```bash
-            docker run -itd --net="bridge" -v "$(pwd)/config/":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" titlecardmaker
+            docker run -itd --net="bridge" -v "$(pwd)/config/":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" "titlecardmaker:latest"
             ```
 
         === ":material-apple: MacOS"
 
             ```bash
-            docker run -itd --net="bridge" -v "$(pwd)/config/":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" titlecardmaker
+            docker run -itd --net="bridge" -v "$(pwd)/config/":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" "titlecardmaker:latest"
             ```
 
         === ":material-powershell: Windows (Powershell)"
 
             ```bash
-            docker run -itd --net="bridge" -v "$(pwd)\config":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" titlecardmaker
+            docker run -itd --net="bridge" -v "$(pwd)\config":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" "titlecardmaker:latest"
             ```
 
         === ":material-microsoft-windows: Windows (Non-Powershell)"
 
             ```bash
-            docker run -itd --net="bridge" -v "%cd%\config":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" titlecardmaker
+            docker run -itd --net="bridge" -v "%cd%\config":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" "titlecardmaker:latest"
             ```
-
 
     ??? error "Docker `invalid reference format` Error"
 
