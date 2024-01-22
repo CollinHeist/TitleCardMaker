@@ -1,6 +1,6 @@
 {% if False %}
-import {Blueprint, Episode, ExternalSourceImage, LogEntryPage, RemoteBlueprint,
-        Series, SourceImagePage, TitleCardPage} from './.types.js';
+import {Blueprint, Episode, ExternalSourceImage, Extra, LogEntryPage,
+        RemoteBlueprint, Series, SourceImagePage, TitleCardPage} from './.types.js';
 {% endif %}
 
 
@@ -865,10 +865,10 @@ function querySeriesLogs() {
   const toTitleCase = (text) => text.charAt(0).toUpperCase() + text.slice(1);
   $.ajax({
     type: 'GET',
-    url: '/api/logs/query?contains=Series[{{series.id}}]|{{series.name}}&level=debug',
+    url: '/api/logs/query?contains=Series[{{series.id}}]|{{series.full_name}}&level=debug',
     /**
-     * 
-     * @param {LogEntryPage} logs 
+     * Logs queried, add elements to the timeline in the DOM.
+     * @param {LogEntryPage} logs - Logs associated with this Series.
      */
     success: logs => {
       const eventTemplate = document.getElementById('log-event-template');

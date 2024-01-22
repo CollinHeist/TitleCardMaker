@@ -1,6 +1,7 @@
-/*
+/**
  * Increase the red value of the background of the login element by
  * the given amount.
+ * @param {number} [increment=20] How much to increment the red by.
  */
 let redMixin = 0;
 function makeRedder(increment=20) {
@@ -8,7 +9,7 @@ function makeRedder(increment=20) {
   document.querySelector(':root').style.setProperty('--red-mixin', `${redMixin}%`);
 }
 
-/*
+/**
  * Submit the API request to submit the OAuth2 form for the given username
  * and password. If the credentials are accepted, the given token is
  * stored in the `tcm_token` Cookie, and then the page is redirected to
@@ -32,7 +33,7 @@ function submitForm() {
       // Incrementally reset red mixin on success
       setInterval(() => makeRedder(-10), 45);
 
-      // Token expires in 1 hour
+      // Token expires in 7 days
       const date = new Date();
       date.setTime(date.getTime() + (1000 * 60 * 60 * 24 * 7));
 
@@ -49,7 +50,8 @@ function submitForm() {
         if (redirectURL) { window.location.href = redirectURL; }
         else {             window.location.href = '/';         }
       }, 1000);
-    }, error: response => {
+    },
+    error: response => {
       $.toast({
         class: 'error',
         title: 'Authentication Error',

@@ -20,6 +20,15 @@
  * @property {string} name
  */
 
+/**
+ * @typedef {Object} Extra
+ * @property {string} name
+ * @property {DictKey} identifier
+ * @property {string} description
+ * @property {?string} tooltip
+ * @property {?string} card_type
+ */
+
 // Cards -----------------------------------------------------------------------
 
 /**
