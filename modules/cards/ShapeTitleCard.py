@@ -419,7 +419,6 @@ class ShapeTitleCard(BaseCardType):
             f'-stroke "{self.stroke_color}"',
             f'-strokewidth {stroke_width:.1f}',
             f'-gravity {gravity}',
-            # f'-undercolor "rgba(12,12,12,0.5)"',
             f'-annotate {x:+.0f}{y:+.0f}',
         ]
 

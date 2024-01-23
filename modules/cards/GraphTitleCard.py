@@ -503,7 +503,7 @@ class GraphTitleCard(BaseCardType):
             f'-stroke none',
             f'-strokewidth 0',
             f'-kerning {4.0 * self.episode_text_font_size:.2f}',
-            f'-pointsize {75 * self.episode_text_font_size:.2f}'
+            f'-pointsize {70 * self.episode_text_font_size:.2f}'
         ]
 
         return [
