@@ -15,7 +15,7 @@ plexapi = "==4.15.4"
 tenacity = "==8.2.3"
 tinydb = "==4.8.0"
 schedule = "==1.2.1"
-tmdbapis = "==1.2.2"
+tmdbapis = "==1.2.6"
 "ruamel.yaml" = "==0.17.21"
 uvicorn = "==0.22.0"
 fastapi = "==0.99.1"
@@ -30,7 +30,7 @@ tzdata = "==2023.3"
 fastapi-pagination = "==0.12.5"
 python-jose = {version = "==3.3.0", extras = ["cryptography"]}
 passlib = {version = "==1.7.4", extras = ["bcrypt"]}
-pillow = "==10.0.1"
+pillow = "==10.2.0"
 thefuzz = "==0.20.0"
 charset-normalizer = "==3.3.2"
 
