@@ -191,7 +191,7 @@ def get_all_episode_source_images(
         match_title=match_title,
         bypass_blacklist=True,
         log=request.state.log,
-    ) or []
+    )
 
     # Get Source Images from Plex if possible
     plex_images = []

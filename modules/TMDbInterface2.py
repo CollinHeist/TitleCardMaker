@@ -907,7 +907,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         return images[best_image['index']] if valid_image else None
 
 
-    @catch_and_log('Error getting all source images', default=None)
+    @catch_and_log('Error getting all source images', default=[])
     def get_all_source_images(self,
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
@@ -915,7 +915,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             match_title: bool = True,
             bypass_blacklist: bool = False,
             log: Logger = log,
-        ) -> Optional[list[TMDbStill]]:
+        ) -> list[TMDbStill]:
         """
         Get all source images for the requested entry.
 
@@ -929,7 +929,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
         Returns:
             List of tmdbapis.objs.image.Still objects. If the episode is
-            blacklisted or not found on TMDb, then None is returned.
+            blacklisted or not found on TMDb, then an empty list is
+            returned.
 
         Raises:
             HTTPException (404) if the given Series+Episode is not found
@@ -939,7 +940,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         # Don't query the database if this episode is in the blacklist
         if (not bypass_blacklist
             and self.__is_blacklisted(series_info, episode_info, 'image')):
-            return None
+            return []
 
         # Get Episode object for this episode
         episode = self.__find_episode(
@@ -1098,7 +1099,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             return None
 
         # If None, either blacklisted or Episode was not found
-        if all_images is None:
+        if not all_images:
             return None
 
         # Exit if no images for this Episode
