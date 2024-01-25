@@ -1,8 +1,8 @@
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, Query, Request
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_sync
-from app.dependencies import get_database
+from app.dependencies import get_database, get_preferences
 from app.internal.auth import get_current_user
 from app.internal.series import delete_series
 from app.internal.sync import add_sync, run_sync
@@ -236,6 +236,13 @@ def run_sync_(
 
     - sync_id: ID of the Sync to run.
     """
+
+    # Do not run Sync if any Sync is already running
+    if (running_sync := get_preferences().currently_running_sync) is not None:
+        raise HTTPException(
+            status_code=422,
+            detail=f'Sync {running_sync} is already running',
+        )
 
     # Get existing Sync, raise 404 if DNE
     sync = get_sync(db, sync_id, raise_exc=True)

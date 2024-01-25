@@ -166,7 +166,7 @@ class Connection(Base):
         return {}
 
 
-    def determine_libraries(self,directory: str, /) -> list[tuple[int, str]]:
+    def determine_libraries(self, directory: str, /) -> list[tuple[int, str]]:
         """
         Determine the libraries of the series in the given directory.
         >>> connection.libraries = [

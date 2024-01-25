@@ -1,27 +1,21 @@
 from logging import Logger
 from time import sleep
 from typing import Optional, Union
-from app.schemas.series import NewSeries
 
 from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_interface
-from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.dependencies import get_database, get_preferences
+from app.internal.series import add_series
 from app.models.connection import Connection
 from app.models.series import Series
 from app.models.sync import Sync
+from app.schemas.series import NewSeries
 from app.schemas.sync import (
     NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync
 )
-from app.internal.series import add_series
-from app.models.sync import Sync
-from app.schemas.sync import (
-    NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync,
-)
-
-
 from modules.Debug import log
 
 
@@ -45,6 +39,7 @@ def sync_all(*, log: Logger = log) -> None:
                 db.commit()
     except Exception as e:
         log.exception(f'Failed to run all Syncs', e)
+    get_preferences().currently_running_sync = None
 
 
 def add_sync(
@@ -101,12 +96,17 @@ def run_sync(
         log: Logger for all log messages.
     """
 
+    # Mark Sync as running
+    preferences = get_preferences()
+    preferences.currently_running_sync = sync.id
+
     # Get specified Interface
     interface = get_interface(sync.interface_id, raise_exc=True)
 
     # Get this Interface's Connection
     if (connection := sync.connection) is None:
         log.error(f'Unable to communicate with {sync.interface}')
+        preferences.currently_running_sync = None
         raise HTTPException(
             status_code=404,
             detail=f'Unable to communicate with {sync.interface}',
@@ -180,6 +180,7 @@ def run_sync(
         log.debug(f'{sync} No new Series synced')
 
     # Process each newly added Series
+    preferences.currently_running_sync = None
     return [
         add_series(new_series, background_tasks, db, log=log)
         for new_series in added

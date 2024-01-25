@@ -46,6 +46,7 @@ class Preferences:
     __read_only = (
         'is_docker', 'file', 'asset_directory', 'card_type_directory',
         'remote_card_types', 'local_card_types', 'invalid_connections',
+        'currently_running_sync',
     )
 
     __slots__ = (
@@ -64,7 +65,7 @@ class Preferences:
         'stylize_unmonitored_posters', 'sources_as_table',
         'card_type_directory', 'local_card_types', 'imported_blueprints',
         'colorblind_mode', 'library_unique_cards', 'invalid_connections',
-        'home_page_table_view', 'reduced_animations',
+        'home_page_table_view', 'reduced_animations', 'currently_running_sync',
         # Arguments required only for the Connection data migrations
         'emby_url', 'emby_api_key', 'emby_username', 'emby_use_ssl', 'emby_filesize_limit_number', 'emby_filesize_limit_unit',
         'jellyfin_url', 'jellyfin_api_key', 'jellyfin_username', 'jellyfin_use_ssl', 'jellyfin_filesize_limit_number', 'jellyfin_filesize_limit_unit',
@@ -188,6 +189,7 @@ class Preferences:
         self.default_watched_style = 'unique'
         self.default_unwatched_style = 'unique'
 
+        self.currently_running_sync = None
         self.invalid_connections: list[int] = []
         self.use_emby = False
         self.use_jellyfin = False
