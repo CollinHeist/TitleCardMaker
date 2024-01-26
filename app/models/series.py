@@ -432,6 +432,7 @@ class Series(Base):
             'font_interword_spacing': self.font_interword_spacing,
             'font_vertical_shift': self.font_vertical_shift,
             'directory': self.directory,
+            'source_directory': self.source_directory,
             'card_type': self.card_type,
             'hide_season_text': self.hide_season_text,
             'season_titles': self.season_titles,
@@ -448,6 +449,7 @@ class Series(Base):
             'series_tvdb_id': self.tvdb_id,
             'series_tvrage_id': self.tvrage_id,
         }
+
 
     @property
     def export_properties(self) -> dict[str, Any]:
