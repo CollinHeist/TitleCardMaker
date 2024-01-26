@@ -43,10 +43,10 @@ def catch_and_log(
         def inner(*args, **kwargs) -> Any:
             try:
                 return function(*args, **kwargs)
-            except TMDbException as exc:
+            except TMDbException:
                 # Get contextual logger if provided as argument to function
                 if ('log' in kwargs
-                    and isinstance(kwargs['log'], (Logger, LoggerAdapter))):
+                    and hasattr(kwargs['log'], 'error')):
                     clog = kwargs['log']
                 else:
                     clog = log
@@ -54,7 +54,7 @@ def catch_and_log(
                 # Log message and exception
                 clog.error(message)
                 clog.exception(f'TMDbException from {function.__name__}'
-                                f'({args}, {kwargs})', exc)
+                                f'({args}, {kwargs})')
                 return default
 
         return inner
@@ -624,7 +624,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 try:
                     episode.reload()
                 except NotFound:
-                    log.error(f'TMDb error - skipping {episode}')
+                    log.exception(f'TMDb error - skipping {episode}')
                     continue
 
                 episode_info = EpisodeInfo(
