@@ -12,6 +12,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.session import Base
 from app.schemas.connection import ServerName
 from modules.Debug import log
+from modules.FormatString import FormatString
 
 if TYPE_CHECKING:
     from app.models.connection import Connection
@@ -55,7 +56,7 @@ OPERATIONS: dict[str, Callable[[Any, Any], bool]] = {
     'is greater than or equal': lambda v, r: float(v) >= float(r),
     'is before': lambda v, r: v < datetime.strptime(r, DATETIME_FORMAT),
     'is after': lambda v, r: v > datetime.strptime(r, DATETIME_FORMAT),
-    'file exists': lambda v, r: Path(v).exists(),
+    'file exists': lambda v, r: Path(r).exists() if r is not None else Path(v).exists(),
 }
 
 """Supported Argument keywords."""
@@ -64,6 +65,7 @@ ARGUMENT_KEYS = (
     'Series Logo', 'Episode Watched Status', 'Season Number', 'Episode Number',
     'Absolute Number', 'Episode Identifier', 'Episode Title',
     'Episode Title Length', 'Episode Airdate', 'Episode Extras',
+    'Reference File',
 )
 
 """
@@ -330,6 +332,7 @@ class Template(Base):
             'Series Library Names': library_names,
             'Series Logo': series.get_logo_file(preferences.source_directory),
             'Number of Seasons': series.number_of_seasons,
+            'Reference File': None,
         }
         if episode is None:
             ARGUMENTS = SERIES_ARGUMENTS
@@ -355,18 +358,27 @@ class Template(Base):
             operation = condition['operation']
             argument = condition['argument']
             if operation in OPERATIONS and argument in ARGUMENTS:
+                # Attempt to treat reference as FormatString
+                if (reference := condition['reference']) is not None:
+                    try:
+                        data = series.card_properties \
+                            | episode.get_card_properties(library)
+                        reference = FormatString(reference, data=data).result
+                    except Exception:
+                        pass
+
                 # Return False if the condition evaluates to False
                 try:
                     meets_condition = OPERATIONS[operation](
                         ARGUMENTS[argument],
-                        condition['reference'],
+                        reference,
                     )
                     if not meets_condition:
                         return False
                 # Evaluation raised an error, log and return False
-                except Exception as e:
+                except Exception:
                     log.exception(f'{episode} Condition evaluation '
-                                  f'raised an error', e)
+                                  f'raised an error')
                     return False
             # Operation or Argument are invalid, log and skip
             else:
