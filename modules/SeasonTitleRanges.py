@@ -6,6 +6,7 @@ from typing import Callable, Optional, Union
 
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
+from modules.FormatString import FormatString
 
 
 AbsoluteRange = namedtuple('AbsoluteRange', ('start', 'end'))
@@ -93,11 +94,11 @@ class SeasonTitleRanges:
                     break
 
                 if range_.start <= ep.absolute_number <= range_.end:
-                    return title.format(**card_settings)
+                    return FormatString(title, data=card_settings).result
             # Entire season, evaluate on season number only
             elif (isinstance(range_, Season)
                 and range_.season_number == ep.season_number):
-                return title.format(**card_settings)
+                return FormatString(title, data=card_settings).result
             # Episode range, evaluate season and episode number
             elif isinstance(range_, EpisodeRange):
                 # Evaluate if within a single season
@@ -106,26 +107,28 @@ class SeasonTitleRanges:
                     and range_.season_start <= ep.season_number <= range_.season_end
                     # Episode falls within episode range
                     and range_.episode_start <= ep.episode_number <= range_.episode_end):
-                    return title.format(**card_settings)
+                    return FormatString(title, data=card_settings).result
                 # Spans multiple seasons and episode falls within season range
                 if (range_.season_start < range_.season_end
                     and range_.season_start <= ep.season_number <= range_.season_end):
                     # Part of start season, falls within episode range
                     if range_.season_start == ep.season_number:
                         if range_.episode_start <= ep.episode_number:
-                            return title.format(**card_settings)
+                            return FormatString(title, data=card_settings).result
                     # Part of end season, falls within episode range
                     elif range_.season_end == ep.season_number:
                         if ep.episode_number <= range_.episode_end:
-                            return title.format(**card_settings)
+                            return FormatString(title, data=card_settings).result
                     # After start season, episode number is irrelevant
                     elif range_.season_start < ep.season_number:
-                        return title.format(**card_settings)
+                        return FormatString(title, data=card_settings).result
 
         # No matching season title range
         # Return fallback if specified
         if self.fallback is not None:
-            return self.fallback(episode_info)
+            return FormatString(
+                self.fallback(episode_info), data=card_settings
+            ).result
 
         # No fallback, return default titles
         if episode_info.season_number == 0:
