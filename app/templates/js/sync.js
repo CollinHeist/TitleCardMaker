@@ -1,5 +1,7 @@
 {% if False %}
-import {AnyConnection, AvailableTemplate, MediaServerLibrary, Series, Sync} from './.types.js';
+import {
+  AnyConnection, AvailableTemplate, MediaServerLibrary, Series, Sync
+} from './.types.js';
 {% endif %}
 
 /**
@@ -13,7 +15,7 @@ function initConnectionDropdowns() {
     url: '/api/connection/all',
     /**
      * Initialize the Connection selector dropdowns.
-     * @param {Array<AnyConnection>} connections - All defined Connections to
+     * @param {AnyConnection[]} connections - All defined Connections to
      * parse for dropdown initialization.
      */
     success: connections => {
@@ -67,7 +69,7 @@ function getLibraries() {
     url: '/api/available/libraries/all',
     /**
      * Query successful, initialize the dropdowns for each Form.
-     * @param {MediaServerLibrary} libraries - Libraries to initialize dropdowns
+     * @param {MediaServerLibrary[]} libraries - Libraries to initialize dropdowns
      * with.
      */
     success: libraries => {
@@ -120,7 +122,7 @@ function getTags() {
     url: '/api/available/tags/sonarr',
     /**
      * Initialize the Sonarr tag dropdowns with the given values.
-     * @param {Array<string>} tags - List of tags.
+     * @param {string[]} tags - List of tags.
      */
     success: tags => {
       $('.dropdown[dropdown-type="sonarr-tags"]').dropdown({
@@ -135,7 +137,7 @@ function getTags() {
   });
 }
 
-/** @type {Array<AvailableTemplate>} */
+/** @type {AvailableTemplate[]} */
 let allTemplates = [];
 
 /**
@@ -148,7 +150,7 @@ function getTemplates() {
     url: '/api/available/templates',
     /**
      * Initialize the Template ID dropdowns with the given values.
-     * @param {Array<AvailableTemplate>} availableTemplates - All available
+     * @param {AvailableTemplate[]} availableTemplates - All available
      * Templates.
      */
     success: availableTemplates => {
@@ -298,11 +300,12 @@ async function showDeleteSyncModal(syncId) {
  * Run the Sync with the given ID. This submits an API request and then
  * displays a toast of any added Series.
  * @param {number} syncId - ID of the Sync to run.
+ * @param {string} name - Name of the Sync being run.
  */
-function runSync(syncId) {
+function runSync(syncId, name) {
   // Add loading indicator, show toast
   $(`#sync${syncId} >* i.sync`).toggleClass('loading blue', true);
-  showInfoToast(`Started Syncing "${name}"`);
+  showInfoToast(`Started Syncing "${name}"..`);
 
   // Submit API request, show toast of results
   $.ajax({
@@ -310,7 +313,7 @@ function runSync(syncId) {
     url: `/api/sync/${syncId}`,
     /**
      * Display a toast of all the newly added Series.
-     * @param {Array<Series>} series - List of synced Series.
+     * @param {Series[]} series - List of synced Series.
      */
     success: series => {
       if (series.length === 0) {
@@ -358,7 +361,7 @@ function getAllSyncs() {
       url: `/api/sync/${source}/all`,
       /**
        * Syncs returned, add elements for each defined object to the page.
-       * @param {Array<Sync>} allSyncs - All Sync objects defined for this
+       * @param {Sync[]} allSyncs - All Sync objects defined for this
        * Connection type.
        */
       success: allSyncs => {
@@ -377,7 +380,7 @@ function getAllSyncs() {
           clone.querySelector('i.trash').onclick = () => showDeleteSyncModal(sync.id);
 
           // Add sync API request to sync icon
-          clone.querySelector('i.sync').onclick = () => runSync(sync.id);
+          clone.querySelector('i.sync').onclick = () => runSync(sync.id, sync.name);
 
           return clone;
         });
