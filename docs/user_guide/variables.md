@@ -52,7 +52,7 @@ For reference, each variable example is shown for the same hypothetical
         Previously, cardinal and ordinal spelling of numbers (e.g. `Two`,
         `Second`) were available as direct variables (`season_number_cardinal`).
         These are now accessed by the `to_cardinal()` and `to_ordinal()`
-        functions. See [here](#function-reference)
+        functions. See [here](#function-reference).
 
 === "Calculated Metadata"
 
@@ -138,14 +138,15 @@ For reference, each variable example is shown for the same hypothetical
 In addition to defining many variables which can be used, TCM also implements
 many functions which allow for more customization. Each is described below.
 
-| Function Name        | Description                                       | Example                                   |
-| -------------------- | ------------------------------------------------- | ----------------------------------------- |
-| `titlecase()`        | Write the number in "titlecase" - e.g. "Season"   | `{titlecase(to_cardinal(season_number))}` |
-| `to_cardinal()`      | Convert the given number to its cardinal spelling | `{to_cardinal(episode_number)}`           |
-| `to_cardinal()`      | _See above_, but in another language[^2]          | `{to_cardinal(episode_number, 'fr')}`     |
-| `to_ordinal()`       | Convert the given number to its ordinal spelling  | `{to_ordinal(episode_number)}`            |
-| `to_ordinal()`       | _See above_, but in another language[^2]          | `{to_cardinal(episode_number, 'es')}`     |
-| `to_roman_numeral()` | Convert the given number to a roman numeral       | `{to_roman_numeral(episode_number)}`      |
+| Function Name        | Description                                       | Example Format String                     | Example Output |
+| -------------------- | ------------------------------------------------- | ----------------------------------------- | -------------- |
+| `titlecase()`        | Write the number in "titlecase" - e.g. "Season"   | `{titlecase(to_cardinal(season_number))}` | `Two`          |
+| `to_cardinal()`      | Convert the given number to its cardinal spelling | `{to_cardinal(episode_number)}`           | `two`          |
+| `to_cardinal()`      | _See above_, but in another language[^2]          | `{to_cardinal(episode_number, 'fr')}`     | `deux`         |
+| `to_ordinal()`       | Convert the given number to its ordinal spelling  | `{to_ordinal(episode_number)}`            | `sixth`        |
+| `to_ordinal()`       | _See above_, but in another language[^2]          | `{to_cardinal(episode_number, 'es')}`     | `sexto`        |
+| `to_short_ordinal()` | Convert the given number to a shorthand ordinal spelling | `{to_short_ordinal(season_number)}` | `2nd`         |    
+| `to_roman_numeral()` | Convert the given number to a roman numeral       | `{to_roman_numeral(episode_number)}`      | `II`           |
 
 ??? tip "Support Language Codes"
 
