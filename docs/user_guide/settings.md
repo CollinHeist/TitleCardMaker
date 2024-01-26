@@ -43,7 +43,6 @@ below.
         | Delete Series Source Images | Unchecked |
         | Episode Data Source | Sonarr | 
         | Image Source Priority | `TMDb` `Plex` `Emby` `Jellyfin` |
-        | Translation Languages | _Preference_ |
         | Sync Specials | Unchecked |
         | Delete Missing Episodes | Checked |
         | Default Card Type | _Personal Preference_ |
@@ -66,7 +65,6 @@ below.
         | Delete Series Source Images | Unchecked |
         | Episode Data Source | Sonarr |
         | Image Source Priority | `TMDb` `Plex` `Emby` `Jellyfin` |
-        | Translation Languages | _Preference_ |
         | Sync Specials | Unchecked |
         | Delete Missing Episodes | Checked |
         | Default Card Type | _Personal Preference_ |
@@ -196,38 +194,6 @@ _in order_ until a source image is found.
     Servers (so `TMDb` `Plex`, etc.) is recommended. This is  because TMDb has a
     much wider variety of image availability, and is typically much higher
     quality than the auto-scraped images from your Media Server.
-
-### Translation Languages
-
-Depending on the Card and your indicated episode text format or season titles,
-TCM can add spelled versions of a number to a Title Card - e.g.
-`Season One - Episode Four`. If you would like this text translated into a non-
-English language, the language(s) you would like to make available should be
-selected here.
-
-After selecting any number of languages here, the language code can be appended
-to the end of a cardinal or ordinal variable to use the translated version of
-that text. See the following example for details.
-
-??? example "Example"
-
-    If I would like my Title Card's text to be in French (fr) or Esperanto (eo)
-    then I would select both of those languages in the dropdown. Now, within a
-    Template or Series I can specify the _Episode Text Format_ (or season title)
-    as `Épisode {episode_number_cardinal_fr}` or
-    `{episode_number_ordinal_eo} Epizodo` and my Card's episode text would read
-    as `Épisode un` (Episode One) or `unua Epizodo` (First Episode).
-
-!!! tip "Cardinal vs. Ordinal Mnemonic"
-
-    An easy way to remember whether you want the cardinal or ordinal text is
-    that ++c++ardinal starts with a ++c++ like ++c++ount - so one, two, three,
-    etc.; while ++o++ordinal starts with ++o++ like ++o++rder - so first,
-    second, third, etc.
-
-This is purely to make these languages _available_ for use - you will still need
-to actually change your Card settings to reflect them. This setting __does not__
-change Episode titles; that requires [translations](...).
 
 ### Sync Specials
 

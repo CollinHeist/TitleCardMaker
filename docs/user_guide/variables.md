@@ -26,7 +26,7 @@ For reference, each variable example is shown for the same hypothetical
     | ------------------------- | ----------------------- | ---------------------- |
     | `series_name`             | Name of the Series      | `Breaking Bad`         |
     | `series_full_name`        | Full name of the Series | `Breaking Bad (2008)`  |
-    | `year`                    | Release year of the Series | `2008`              |
+    | `year`                    | Series Release year     | `2008`              |
     | `season_number`           | Season number           | `2`                    |
     | `episode_number`          | Episode number          | `6`                    |
     | `absolute_number`         | Absolute episode number | `13`                   |
@@ -145,10 +145,11 @@ many functions which allow for more customization. Each is described below.
 | `to_cardinal()`      | _See above_, but in another language[^2]          | `{to_cardinal(episode_number, 'fr')}`     | `deux`         |
 | `to_ordinal()`       | Convert the given number to its ordinal spelling  | `{to_ordinal(episode_number)}`            | `sixth`        |
 | `to_ordinal()`       | _See above_, but in another language[^2]          | `{to_cardinal(episode_number, 'es')}`     | `sexto`        |
-| `to_short_ordinal()` | Convert the given number to a shorthand ordinal spelling | `{to_short_ordinal(season_number)}` | `2nd`         |    
+| `to_short_ordinal()` | Convert the given number to a shorthand ordinal spelling | `{to_short_ordinal(season_number)}`| `2nd`          |
+| `to_short_ordinal()` | _See above_, but in another language[^2]          | `{to_short_ordinal(season_number, 'ja')}` | `13番目`        |
 | `to_roman_numeral()` | Convert the given number to a roman numeral       | `{to_roman_numeral(episode_number)}`      | `II`           |
 
-??? tip "Support Language Codes"
+??? note "Support Language Codes"
 
     | Code    | Language             |
     | ------- | -------------------- |
@@ -157,19 +158,14 @@ many functions which allow for more customization. Each is described below.
     | `cz`    | Czech                |
     | `da`    | Danish               |
     | `de`    | German               |
-    | `en`    | English              |
-    | `en_IN` | English (India)      |
+    | `en`    | English (the default)|
     | `eo`    | Esperanto            |
     | `es`    | Spanish              |
-    | `es_CO` | Spanish (Colombia)   |
-    | `es_NI` | Spanish (Nicaragua)  |
-    | `es_VE` | Spanish (Venezuela)  |
     | `fa`    | Farsi                |
     | `fi`    | Finnish              |
     | `fr`    | French               |
     | `fr_BE` | French (Belgium)     |
     | `fr_CH` | French (Switzerland) |
-    | `fr_DZ` | French (Algeria)     |
     | `he`    | Hebrew               |
     | `hu`    | Hungarian            |
     | `id`    | Indonesian           |
@@ -196,6 +192,13 @@ many functions which allow for more customization. Each is described below.
     | `tr`    | Turkish              |
     | `uk`    | Ukrainian            |
     | `vi`    | Vietnamese           |
+
+!!! tip "Cardinal vs. Ordinal Mnemonic"
+
+    An easy way to remember whether you want the cardinal or ordinal text is
+    that ++c++ardinal starts with a ++c++ like ++c++ount - so one, two, three,
+    etc.; while ++o++ordinal starts with ++o++ like ++o++rder - so first,
+    second, third, etc.
 
 [^1]: This is _after_ any Font replacements, font case functions, and line
 splitting.

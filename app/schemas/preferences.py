@@ -2,7 +2,6 @@
 from pathlib import Path
 from typing import Literal, Optional
 
-from num2words import CONVERTER_CLASSES
 from pydantic import DirectoryPath, PositiveInt, constr, validator # pylint: disable=no-name-in-module
 
 from app.schemas.base import (
@@ -27,7 +26,6 @@ Style = Literal[
 ]
 
 LanguageCode = Literal[TMDbInterface.LANGUAGE_CODES]
-TextLanguageCodes = Literal[tuple(CONVERTER_CLASSES.keys())]
 
 """
 Creation classes
@@ -79,7 +77,6 @@ class UpdatePreferences(UpdateBase):
     season_folder_format: str = UNSPECIFIED
     sync_specials: bool = UNSPECIFIED
     delete_missing_episodes: bool = UNSPECIFIED
-    language_codes: list[TextLanguageCodes] = UNSPECIFIED
     simplified_data_table: bool = UNSPECIFIED
     default_card_type: CardTypeIdentifier = UNSPECIFIED
     excluded_card_types: list[CardTypeIdentifier] = UNSPECIFIED
@@ -154,7 +151,6 @@ class Preferences(Base):
     season_folder_format: str
     sync_specials: bool
     delete_missing_episodes: bool
-    language_codes: list[TextLanguageCodes]
     simplified_data_table: bool
     is_docker: bool
     default_card_type: CardTypeIdentifier

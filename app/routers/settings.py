@@ -11,54 +11,6 @@ from app.schemas.preferences import (
 )
 
 
-TEXT_LANGUAGE_CODES = {
-    'am': 'Amharic (am)',
-    'ar': 'Arabic (ar)',
-    'cz': 'Czech (cz)',
-    # 'en': 'English (en)',
-    # 'en_IN': 'English (Indian)', # Only implements altered currency
-    'fa': 'Farsi (fa)',
-    'fr': 'French (France) (fr)',
-    'fr_CH': 'French (Switzerland) (fr_CH)',
-    'fr_BE': 'French (Belgium) (fr_BE)',
-    # 'fr_DZ': 'French (Algeria)', # Only implements altered currency
-    'de': 'German (de)',
-    'fi': 'Finnish (fi)',
-    'eo': 'Esperanto (eo)',
-    'es': 'Spanish (es)',
-    # 'es_CO': 'Spanish (Columbia)', # Only implements altered currency
-    # 'es_NI': 'Spanish (Nicaragua)', # Only implements altered currency
-    # 'es_VE': 'Spanish (Venezuela)', # Only implements altered currency
-    'id': 'Indonesian (id)',
-    'ja': 'Japanese (ja)',
-    'kn': 'Kannada (kn)',
-    'ko': 'Korean (ko)',
-    'kz': 'Kazakh (kz)',
-    'lt': 'Lithuanian (lt)',
-    'lv': 'Latvian (lv)',
-    'pl': 'Polish (pl)',
-    'ro': 'Romanian (ro)',
-    'ru': 'Russian (ru)',
-    'sl': 'Slovene (sl)',
-    'sr': 'Serbian (sr)',
-    'sv': 'Swedish (sv)',
-    'no': 'Norwegian (no)',
-    'dk': 'Danish (dk)',
-    'pt': 'Portuguese (pt)',
-    'pt_BR': 'Portuguese (Brazil) (pt_BR)',
-    'he': 'Hebrew (he)',
-    'it': 'Italian (it)',
-    'vi': 'Vietnamese (vi)',
-    'tg': 'Tajik (tg)',
-    'th': 'Thai (th)',
-    'tr': 'Turkish (tr)',
-    'nl': 'Dutch (nl)',
-    'uk': 'Ukrainian (uk)',
-    'te': 'Telugu (te)',
-    'hu': 'Hungarian (hu)',
-}
-
-
 # Create sub router for all /settings API requests
 settings_router = APIRouter(
     prefix='/settings',
@@ -157,30 +109,3 @@ def get_image_source_priority(
                 'selected': False,
             })
     return sources
-
-
-@settings_router.get('/languages')
-def get_translation_languages(
-        preferences: PreferencesModel = Depends(get_preferences)
-    ) -> list[ToggleOption]:
-    """
-    Get the global language codes supported for numberic translations.
-    """
-
-    languages = []
-    for code in preferences.language_codes:
-        languages.append(ToggleOption(
-            name=TEXT_LANGUAGE_CODES[code],
-            value=code,
-            selected=True,
-        ))
-    for code, language in sorted(TEXT_LANGUAGE_CODES.items(),
-                                 key=lambda kv: kv[1]):
-        if code not in preferences.language_codes:
-            languages.append(ToggleOption(
-                name=language,
-                value=code,
-                selected=False,
-            ))
-
-    return languages

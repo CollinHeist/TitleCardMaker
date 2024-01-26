@@ -28,14 +28,13 @@ For the purposes of this tutorial, the following settings are recommended:
         | Delete Series Source Images | Unchecked |
         | Episode Data Source | Sonarr | 
         | Image Source Priority | `TMDb` `Plex` `Emby` `Jellyfin`[^1] |
-        | Translation Languages | _Preference_[^2] |
         | Sync Specials | Unchecked |
         | Delete Missing Episodes | Checked |
         | Default Card Type | _Personal Preference_ |
         | Excluded Card Types | _Personal Preference_ |
         | Watched Episode Style | Unique |
         | Unwatched Episode Style | _Personal Preference_ |
-        | Card Dimensions | 3200x1800[^3] |
+        | Card Dimensions | 3200x1800[^2] |
         | Card Extension | .jpg |
         | Filename Format | {series_full_name} - S{season_number:02}E{episode_number:02} |
         | Specials Folder Format | Specials |
@@ -51,14 +50,13 @@ For the purposes of this tutorial, the following settings are recommended:
         | Delete Series Source Images | Unchecked |
         | Episode Data Source | Sonarr |
         | Image Source Priority | `TMDb` `Plex` `Emby` `Jellyfin`[^1] |
-        | Translation Languages | _Preference_[^2] |
         | Sync Specials | Unchecked |
         | Delete Missing Episodes | Checked |
         | Default Card Type | _Personal Preference_ |
         | Excluded Card Types | _Personal Preference_ |
         | Watched Episode Style | Unique |
         | Unwatched Episode Style | _Personal Preference_ |
-        | Card Dimensions | 3200x1800[^3] |
+        | Card Dimensions | 3200x1800[^2] |
         | Card Extension | .jpg |
         | Filename Format | {series_full_name} - S{season_number:02}E{episode_number:02} |
         | Specials Folder Format | Specials |
@@ -70,9 +68,6 @@ Source setting to either TMDb or your Media Server.
 
 [^1]: Only include the Connections which you are personally using.
 
-[^2]: If you wish to utilize translated text - e.g. "dos" instead of "two" - you
-can select those languages here. This is very rarely utilized.
-
-[^3]: Feel free to reduce this to some ratio of 16:9 (e.g. 1600:900) if you want
+[^2]: Feel free to reduce this to some ratio of 16:9 (e.g. 1600:900) if you want
 to save storage space (at the minor cost of image fidelity). Increasing this is
 not recommended.

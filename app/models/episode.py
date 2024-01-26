@@ -323,7 +323,6 @@ class Episode(Base):
             tvdb_id=self.tvdb_id,
             tvrage_id=self.tvrage_id,
             airdate=self.airdate,
-            languages=get_preferences().language_codes,
         )
 
 

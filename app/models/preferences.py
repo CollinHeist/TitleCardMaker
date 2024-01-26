@@ -58,10 +58,10 @@ class Preferences:
         'delete_missing_episodes', 'remote_card_types', 'default_card_type',
         'excluded_card_types', 'default_watched_style',
         'default_unwatched_style', 'use_emby', 'use_jellyfin', 'use_plex',
-        'use_sonarr', 'use_tmdb', 'use_magick_prefix', 'language_codes',
-        'current_version', 'available_version', 'blacklisted_blueprints',
-        'advanced_scheduling', 'require_auth', 'task_crontabs',
-        'simplified_data_table', 'home_page_size', 'episode_data_page_size',
+        'use_sonarr', 'use_tmdb', 'use_magick_prefix', 'current_version',
+        'available_version', 'blacklisted_blueprints', 'advanced_scheduling',
+        'require_auth', 'task_crontabs', 'simplified_data_table',
+        'home_page_size', 'episode_data_page_size',
         'stylize_unmonitored_posters', 'sources_as_table',
         'card_type_directory', 'local_card_types', 'imported_blueprints',
         'colorblind_mode', 'library_unique_cards', 'invalid_connections',
@@ -204,7 +204,6 @@ class Preferences:
         self.tmdb_download_logos = True
         self.tmdb_logo_language_priority = ['en']
 
-        self.language_codes: list[str] = []
         self.use_magick_prefix = False
         self.blacklisted_blueprints: set[int] = set()
         self.imported_blueprints: set[int] = set()
