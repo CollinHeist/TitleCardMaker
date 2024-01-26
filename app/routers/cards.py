@@ -184,9 +184,7 @@ def create_cards_for_series(
         try:
             create_episode_cards(db, background_tasks, episode, log=log)
         except Exception as e:
-            log.exception(f'{series} {episode} Card creation failed - {e}', e)
-
-    return None
+            log.exception(f'{episode} Card creation failed - {e}', e)
 
 
 @card_router.get('/series/{series_id}', tags=['Series'],

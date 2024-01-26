@@ -99,12 +99,9 @@ class UpdateNamedFont(UpdateBase):
 
     @root_validator
     def validate_paired_lists(cls, values):
-        return validate_argument_lists_to_dict(
-            values, 'character replacements',
-            'replacements_in', 'replacements_out',
-            output_key='replacements',
-            allow_empty_strings=True,
-        )
+        if len(values['replacements_in']) != len(values['replacements_out']):
+            raise ValueError('Must provide same number of in/out replacements')
+        return values
 
 """
 Return classes
@@ -113,13 +110,10 @@ class FontAnalysis(Base):
     replacements: dict[str, str] = {}
     missing: list[str] = []
 
-class SeriesFont(BaseFont):
-    replacements: dict[str, str]
-    delete_missing: bool
-
 class NamedFont(BaseNamedFont):
     id: int
     sort_name: str
     file: Optional[Path]
     file_name: Optional[str]
-    replacements: dict[str, str]
+    replacements_in: list[str]
+    replacements_out: list[str]

@@ -266,7 +266,8 @@
  * @property {boolean} delete_missing
  * @property {?string} file
  * @property {?string} file_name
- * @property {Object} replacements
+ * @property {string[]} replacements_in
+ * @property {string[]} replacements_out
  */
 
 // Series ----------------------------------------------------------------------

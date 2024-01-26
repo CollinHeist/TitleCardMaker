@@ -5,6 +5,7 @@ from typing import Any, Optional, TYPE_CHECKING
 from sqlalchemy import JSON, func
 
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.session import Base
@@ -44,7 +45,14 @@ class Font(Base):
     interline_spacing: Mapped[int] = mapped_column(default=0)
     interword_spacing: Mapped[int] = mapped_column(default=0)
     kerning: Mapped[float] = mapped_column(default=1.0)
-    replacements: Mapped[Optional[dict[str, str]]] = mapped_column(JSON)
+    replacements_in: Mapped[list[str]] = mapped_column(
+        MutableList.as_mutable(JSON),
+        default=[],
+    )
+    replacements_out: Mapped[list[str]] = mapped_column(
+        MutableList.as_mutable(JSON),
+        default=[],
+    )
     size: Mapped[float] = mapped_column(default=1.0)
     stroke_width: Mapped[float] = mapped_column(default=1.0)
     title_case: Mapped[Optional[str]]
@@ -94,6 +102,47 @@ class Font(Base):
         return f'Font[{self.id}] "{self.name}"'
 
 
+    @staticmethod
+    def apply_replacements(
+            text: str,
+            in_: list[str],
+            out_: list[str],
+            *,
+            pre: bool,
+        ) -> str:
+        """
+        Apply the given paired lists of character replacements to the
+        given text.
+
+        Args:
+            text: Input text to apply replacements to.
+            in_: List of input strings to sequentially replace.
+            out_: List of output strings to replace with.
+            pre: Whether this is a pre-replacement. If True, all `post:`
+                prefixed replacements are skipped; if False all `pre:`
+                replacements are skipped.
+
+        Returns:
+            Modified text.
+        """
+
+        for repl_in, repl_out in zip(in_, out_):
+            # Skip replacements from pre if post; post if pre
+            if ((pre and repl_in.startswith('post:'))
+                or (not pre and repl_in.startswith('pre:'))):
+                continue
+
+            # Skip pre: and post: prefix in replacement
+            if repl_in.startswith('pre:'):
+                repl_in = repl_in[4:]
+            elif repl_in.startswith('post:'):
+                repl_in = repl_in[5:]
+
+            text = text.replace(repl_in, repl_out)
+
+        return text
+
+
     @property
     def card_properties(self) -> dict[str, Any]:
         """
@@ -135,8 +184,8 @@ class Font(Base):
             'interline_spacing': self.interline_spacing or None,
             'interword_spacing': self.interword_spacing or None,
             'kerning': None if self.kerning == 1.0 else self.kerning,
-            'replacements_in': list(self.replacements.keys()),
-            'replacements_out': list(self.replacements.values()),
+            'replacements_in': self.replacements_in,
+            'replacements_out': self.replacements_out,
             'size': None if self.size == 1.0 else self.size,
             'stroke_width': None if self.stroke_width == 1.0 else self.stroke_width,
             'title_case': self.title_case,

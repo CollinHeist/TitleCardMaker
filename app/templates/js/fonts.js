@@ -246,17 +246,16 @@ function populateFontElement(template, font, activeFontId) {
   // Set font replacements
   const inElement = template.querySelector('.field[data-value="in-replacements"]');
   const outElement = template.querySelector('.field[data-value="out-replacements"]');
-  if (font.replacements) {
-    Object.entries(font.replacements).forEach(([in_, out_]) => {
-      const newInput = document.createElement('input');
-      newInput.name = 'replacements_in'; newInput.type='text';
-      newInput.value = in_;
+  for (let i = 0; i < font.replacements_in.length; i++) {
+    const newInput = document.createElement('input');
+      newInput.name = 'replacements_in'; newInput.type = 'text';
+      newInput.value = font.replacements_in[i];
       inElement.appendChild(newInput);
+      
       const newOutput = document.createElement('input');
       newOutput.name = 'replacements_out'; newOutput.type='text';
-      newOutput.value = out_;
+      newOutput.value = font.replacements_out[i];
       outElement.appendChild(newOutput);
-    });
   }
 
   // Query suggested font replacements on button click
