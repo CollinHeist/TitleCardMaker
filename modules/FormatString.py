@@ -83,24 +83,24 @@ def to_ordinal(number: int, /, lang: str = 'en') -> str:
     return num2words(number, to='ordinal', lang=lang)
 
 
-def to_short_ordinal(number: int) -> str:
+def to_short_ordinal(number: int, /, lang: str = 'en') -> str:
     """
-    Convert the given number to a shorthand ordinal spelling (in
-    English).
+    Convert the given number to a shorthand ordinal spelling in the
+    given language.
 
     Args:
         number: Number to convert.
+        lang: Language code of the conversion.
 
     Returns:
         Shorthand ordinal - e.g. `2nd`, `12th`, etc.
+
+    Raises:
+        NotImplementedError: The given number cannot be converted in the
+            specified language.
     """
 
-    if 10 <= number % 100 <= 20:
-        suffix = 'th'
-    else:
-        suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(number % 10, 'th')
-
-    return f'{number}{suffix}'
+    return num2words(number, lang=lang, to='ordinal_num')
 
 
 _BUILTINS = {
