@@ -89,6 +89,12 @@ class Coordinate:
 
 
     def __repr__(self) -> str:
+        """
+        Detailed object representation.
+        
+        >>> repr(Coordinate(2, 3))
+        'Coordinate(2, 3)'
+        """
         return f'Coordinate({self.x}, {self.y})'
 
 

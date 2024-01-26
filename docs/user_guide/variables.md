@@ -45,6 +45,15 @@ For reference, each variable example is shown for the same hypothetical
     | `season_text`       | The season text of the Card          | `Season 2`  |
     | `episode_text`      | The episode text of the Card         | `Episode 6` |
 
+=== "Cardinal and Ordinal Numbers"
+
+    !!! warning "Deprecated Variables"
+
+        Previously, cardinal and ordinal spelling of numbers (e.g. `Two`,
+        `Second`) were available as direct variables (`season_number_cardinal`).
+        These are now accessed by the `to_cardinal()` and `to_ordinal()`
+        functions. See [here](#function-reference)
+
 === "Calculated Metadata"
 
     | Variable Name          | Description                                   | Example |
@@ -129,9 +138,67 @@ For reference, each variable example is shown for the same hypothetical
 In addition to defining many variables which can be used, TCM also implements
 many functions which allow for more customization. Each is described below.
 
-| Function Name | Description | Example |
-| --- | --- | --- |
-| `to_roman_numeral()` | Convert the given number to a roman numeral | `{to_roman_numeral(episode_number)}` |
+| Function Name        | Description                                       | Example                                   |
+| -------------------- | ------------------------------------------------- | ----------------------------------------- |
+| `titlecase()`        | Write the number in "titlecase" - e.g. "Season"   | `{titlecase(to_cardinal(season_number))}` |
+| `to_cardinal()`      | Convert the given number to its cardinal spelling | `{to_cardinal(episode_number)}`           |
+| `to_cardinal()`      | _See above_, but in another language[^2]          | `{to_cardinal(episode_number, 'fr')}`     |
+| `to_ordinal()`       | Convert the given number to its ordinal spelling  | `{to_ordinal(episode_number)}`            |
+| `to_ordinal()`       | _See above_, but in another language[^2]          | `{to_cardinal(episode_number, 'es')}`     |
+| `to_roman_numeral()` | Convert the given number to a roman numeral       | `{to_roman_numeral(episode_number)}`      |
+
+??? tip "Support Language Codes"
+
+    | Code    | Language             |
+    | ------- | -------------------- |
+    | `am`    | Amharic              |
+    | `ar`    | Arabic               |
+    | `cz`    | Czech                |
+    | `da`    | Danish               |
+    | `de`    | German               |
+    | `en`    | English              |
+    | `en_IN` | English (India)      |
+    | `eo`    | Esperanto            |
+    | `es`    | Spanish              |
+    | `es_CO` | Spanish (Colombia)   |
+    | `es_NI` | Spanish (Nicaragua)  |
+    | `es_VE` | Spanish (Venezuela)  |
+    | `fa`    | Farsi                |
+    | `fi`    | Finnish              |
+    | `fr`    | French               |
+    | `fr_BE` | French (Belgium)     |
+    | `fr_CH` | French (Switzerland) |
+    | `fr_DZ` | French (Algeria)     |
+    | `he`    | Hebrew               |
+    | `hu`    | Hungarian            |
+    | `id`    | Indonesian           |
+    | `it`    | Italian              |
+    | `ja`    | Japanese             |
+    | `kn`    | Kannada              |
+    | `ko`    | Korean               |
+    | `kz`    | Kazakh               |
+    | `lt`    | Lithuanian           |
+    | `lv`    | Latvian              |
+    | `nl`    | Dutch                |
+    | `no`    | Norwegian            |
+    | `pl`    | Polish               |
+    | `pt`    | Portuguese           |
+    | `pt_BR` | Portuguese (Brazil)  |
+    | `ro`    | Romanian             |
+    | `ru`    | Russian              |
+    | `sl`    | Slovenian            |
+    | `sr`    | Serbian              |
+    | `sv`    | Swedish              |
+    | `te`    | Telugu               |
+    | `tg`    | Tajik                |
+    | `th`    | Thai                 |
+    | `tr`    | Turkish              |
+    | `uk`    | Ukrainian            |
+    | `vi`    | Vietnamese           |
 
 [^1]: This is _after_ any Font replacements, font case functions, and line
 splitting.
+
+[^2]: The second argument to the function is the _language code_. Not all
+languages support cardinal and ordinal numbering. These will raise an error
+during Card creation.
