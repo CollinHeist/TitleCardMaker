@@ -112,7 +112,8 @@ class ComicBookTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-            ), Extra(
+            ),
+            Extra(
                 name='Index Text Position',
                 identifier='index_text_position',
                 description='Position of the index text on the top of the image',
@@ -120,16 +121,19 @@ class ComicBookTitleCard(BaseCardType):
                     'Either <v>left</v>, <v>middle</v>, or <v>right</v>. '
                     'Default is <v>left</v>.'
                 )
-            ), Extra(
+            ),
+            Extra(
                 name='Title Textbox Fill Color',
                 identifier='text_box_fill_color',
                 description='Fill color of the text box for the title text.',
-            ), Extra(
+            ),
+            Extra(
                 name='Title Textbox Edge Color',
                 identifier='text_box_edge_color',
                 description='Edge color of all text boxes',
                 tooltip='Defaults to matching the Font color.',
-            ), Extra(
+            ),
+            Extra(
                 name='Title Text Rotation Angle',
                 identifier='title_text_rotation_angle',
                 description='Rotation of the title text',
@@ -140,7 +144,8 @@ class ComicBookTitleCard(BaseCardType):
                     'down, negative tilted up. Default is <v>-4.0</v>. Unit is '
                     'degrees.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Index Text Rotation Angle',
                 identifier='index_text_rotation_angle',
                 description='Rotation of the index text',
@@ -151,36 +156,43 @@ class ComicBookTitleCard(BaseCardType):
                     'down, negative tilted up. Default is <v>-4.0</v>. Unit is '
                     'degrees.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Banner Fill Color',
                 identifier='banner_fill_color',
                 description=(
                     'Fill color for both the title and episode text banners'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Title Banner Vertical Shift',
                 identifier='title_banner_shift',
                 description=(
                     'Additional vertical shift to apply to the title text banner'
-                ), tooltip=(
-                    'Positive values shift the banner up, negative values '
+                ),
+            tooltip=(
+                    'Negative values shift the banner up, positive values '
                     'shift the banner down. Unit is pixels.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Index Banner Vertical Shift',
                 identifier='index_banner_shift',
                 description=(
                     'Additional vertical shift to apply to the index text banner'
-                ), tooltip=(
-                    'Positive values shift the banner up, negative values '
+                ),
+            tooltip=(
+                    'Negative values shift the banner up, positive values '
                     'shift the banner down. Unit is pixels.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Hide Title Banner',
                 identifier='hide_title_banner',
                 description='Whether to hide the title text banner',
                 tooltip='Either <v>True</v> or <v>False</v>.',
-            ), Extra(
+            ),
+            Extra(
                 name='Hide Index Banner',
                 identifier='hide_index_banner',
                 description='Whether to hide the index text banner',
@@ -518,9 +530,6 @@ class ComicBookTitleCard(BaseCardType):
                 (x * sin(angle) + y * cos(angle))/abs(self.index_text_rotation_angle),
             )
 
-        # Adjust offset by manually indicated shift
-        index_text_rectangle.offset += Coordinate(0, self.index_banner_shift)
-
         # Shift rectangle to placement of index text
         index_text_rectangle.shift_origin(index_text_origin)
 
@@ -540,7 +549,8 @@ class ComicBookTitleCard(BaseCardType):
         )
         index_fill_rectangle.rotate(self.index_text_rotation_angle)
 
-        y_coordinate = 75 + (index_text_height / 2) - (75 + 500)/2
+        y_coordinate = 75 + (index_text_height / 2) - (75 + 500) / 2 \
+            + self.index_banner_shift
         if self.index_text_position == 'left':
             index_fill_rectangle.shift_origin(Coordinate(
                 35,
@@ -558,12 +568,12 @@ class ComicBookTitleCard(BaseCardType):
             ))
 
         return [
-            # Draw border rectangle
+            # Draw banner
             f'-fill "{self.banner_fill_color}"',
             f'-stroke "{self.text_box_edge_color}"',
             f'-strokewidth 5',
             *index_fill_rectangle.draw_commands,
-            # Draw text rectangle
+            # Draw text
             f'-fill "{self.text_box_fill_color}"',
             *index_text_rectangle.draw_commands,
         ]
@@ -598,13 +608,14 @@ class ComicBookTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
 
         Args:
             font: The Font being evaluated.
+            extras: Dictionary of extras for evaluation.
 
         Returns:
             True if a custom font is indicated, False otherwise.
