@@ -1,20 +1,39 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Optional, TypedDict
 from warnings import simplefilter
 
-from re import IGNORECASE, compile as re_compile
 from fastapi import APIRouter, Depends, Query
 from fastapi_pagination import paginate
 from fastapi_pagination.utils import FastAPIPaginationWarning
+from json import loads
 
 from app.database.session import Page
 from app.internal.auth import get_current_user
 from app.schemas.logs import LogEntry, LogLevel
 
-from modules.Debug import LOG_FILE
+from modules.Debug import log, DATETIME_FORMAT, LOG_FILE
 
 # Do not warn about SQL pagination, not used for log filtering
 simplefilter('ignore', FastAPIPaginationWarning)
+
+
+class ExecutionDetails(TypedDict):
+    file: str
+    line: int
+
+class ExceptionDetails(TypedDict):
+    type: str
+    value: str
+    traceback: str
+
+class RawLogData(TypedDict):
+    message: str
+    context_id: str
+    level: LogLevel
+    time: datetime
+    execution: ExecutionDetails
+    exception: Optional[ExceptionDetails]
+
 
 # Create sub router for all /logs API requests
 log_router = APIRouter(
@@ -23,18 +42,14 @@ log_router = APIRouter(
     dependencies=[Depends(get_current_user)],
 )
 
-"""
-Regex to match logdata from a log entry.
-"""
-LOG_REGEX = re_compile(
-    r'^\[(?P<level>[^]]+)\]\s+\[(?P<time>[^]]+)\]\s+\[(?P<context_id>[^]]+)\]\s+(?P<message>.*)$',
-    IGNORECASE
-)
+_LEVEL_NUMBERS: dict[LogLevel, int] = {
+    'DEBUG': 0, 'INFO': 1, 'WARNING': 2, 'ERROR': 3, 'CRITICAL': 4
+}
 
 
-@log_router.get('/query', status_code=201)
+@log_router.get('/query')
 def query_logs(
-        level: LogLevel = Query(default='info'),
+        level: LogLevel = Query(default='DEBUG'),
         after: Optional[datetime] = Query(default=None),
         before: Optional[datetime] = Query(default=None),
         context_id: Optional[str] = Query(default=None, min_length=1),
@@ -54,28 +69,28 @@ def query_logs(
     """
 
     # Read all associated log files from the rotated files
-    logs = []
+    logs: list[RawLogData] = []
 
     # Only read the active log file
     if shallow:
         with LOG_FILE.open('r') as file_handle:
-            logs.extend(file_handle.readlines())
+            logs.extend(list(map(loads, file_handle.readlines())))
     # Read all log files
     else:
         for log_file in LOG_FILE.parent.glob(f'{LOG_FILE.name}*'):
             with log_file.open('r') as file_handle:
-                logs.extend(file_handle.readlines())
+                logs.extend(list(map(loads, file_handle.readlines())))
 
     # Function to filter log results by
-    level_no = {'debug': 0, 'info': 1, 'warning': 2, 'error': 3, 'critical': 4}
     contains = None if contains is None else contains.lower().split('|')
-    def meets_filters(data: dict[str, Any]) -> bool:
+    def meets_filters(data: RawLogData) -> bool:
         # Level criteria
-        if level_no[data['level']] < level_no[level]:
+        if _LEVEL_NUMBERS[data['level']] < _LEVEL_NUMBERS[level]:
             return False
 
         # Context
-        if context_id is not None and data['context_id'] not in context_id:
+        if (data['context_id'] is not None and context_id is not None
+            and data['context_id'] not in context_id):
             return False
 
         # Before/After
@@ -90,28 +105,18 @@ def query_logs(
         )
 
     # Convert raw logs to LogEntry objects/dicts
-    log_entries, last_entry_is_valid = [], False
-    for log_entry in logs:
+    log_entries = []
+    for data in logs:
         # Parse entry into data
-        if (data_match := LOG_REGEX.match(log_entry)):
-            data = data_match.groupdict()
-            data['level'] = data['level'].lower()
-            try:
-                data['time'] = datetime.strptime(data['time'], '%m-%d-%y %H:%M:%S.%f')
-            except ValueError:
-                continue
-        # Cannot parse data, append content to last entry's message (if valid)
-        else:
-            if len(log_entries) > 0 and last_entry_is_valid:
-                log_entries[-1]['message'] += f'\n{log_entry}'
+        try:
+            data['time'] = datetime.strptime(data['time'], DATETIME_FORMAT)
+        except ValueError:
             continue
 
         # Skip if doesn't meet filter criteria
         if not meets_filters(data):
-            last_entry_is_valid = False
             continue
 
-        last_entry_is_valid = True
         log_entries.append(data)
 
     return paginate(

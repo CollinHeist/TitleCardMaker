@@ -33,6 +33,8 @@ passlib = {version = "==1.7.4", extras = ["bcrypt"]}
 pillow = "==10.2.0"
 thefuzz = "==0.20.0"
 charset-normalizer = "==3.3.2"
+loguru = "==0.7.2"
+better-exceptions = "==0.2.1"
 
 [dev-packages]
 mkdocs = "*"

@@ -16,7 +16,8 @@ from app.schemas.connection import (
     NewSonarrConnection, NewTMDbConnection,
     UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb
 )
-from modules.Debug import log, SECRETS
+from modules.Debug import log
+from modules.Debug2 import SECRETS
 from modules.InterfaceGroup import InterfaceGroup
 
 

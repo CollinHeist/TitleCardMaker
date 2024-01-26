@@ -862,10 +862,10 @@ async function getEpisodeData(page=1) {
 }
 
 function querySeriesLogs() {
-  const toTitleCase = (text) => text.charAt(0).toUpperCase() + text.slice(1);
+  const toTitleCase = (text) => text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
   $.ajax({
     type: 'GET',
-    url: '/api/logs/query?contains=Series[{{series.id}}]|{{series.full_name}}&level=debug',
+    url: '/api/logs/query?contains=Series[{{series.id}}]|{{series.full_name}}&level=DEBUG',
     /**
      * Logs queried, add elements to the timeline in the DOM.
      * @param {LogEntryPage} logs - Logs associated with this Series.
@@ -875,17 +875,11 @@ function querySeriesLogs() {
 
       const events = logs.items.map(log => {
         const event = eventTemplate.content.cloneNode(true);
+        const color = {
+          'CRITICAL': 'red', 'ERROR': 'orange', 'WARNING': 'yellow',
+          'INFO': 'blue', 'DEBUG': 'grey'
+        }[log.level];
 
-        const color = log.level === 'critical'
-          ? 'red'
-          : log.level === 'error'
-            ? 'orange'
-            : log.level === 'warning'
-              ? 'yellow'
-              : log.level === 'info'
-                ? 'blue'
-                : 'grey'
-        ;
         event.querySelector('.label .icon').classList.add(color);
         event.querySelector('.summary span').innerText = `${toTitleCase(log.level)} Log Message`;
         event.querySelector('.date').innerText = timeDiffString(log.time);

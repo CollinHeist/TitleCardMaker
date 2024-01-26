@@ -10,6 +10,7 @@ from alembic import op
 import sqlalchemy as sa
 
 from modules.Debug import contextualize
+from modules.Debug2 import logger
 
 # revision identifiers, used by Alembic.
 revision = '65fd10d8732e'
@@ -19,7 +20,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    log = contextualize()
+    log = contextualize(logger)
     log.debug(f'Upgrading SQL Schema to Version[{revision}]..')
 
     op.create_table('user',
@@ -35,7 +36,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    log = contextualize()
+    log = contextualize(logger)
     log.debug(f'Downgrading SQL Schema to Version[{down_revision}]..')
 
     with op.batch_alter_table('user', schema=None) as batch_op:

@@ -7,8 +7,9 @@ Create Date: 2023-11-21 15:40:38.510224
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import sqlite
+
 from modules.Debug import contextualize
+from modules.Debug2 import logger
 
 # revision identifiers, used by Alembic.
 revision = '48872195483e'
@@ -18,7 +19,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    log = contextualize()
+    log = contextualize(logger)
     log.debug(f'Upgrading SQL Schema to Version[{revision}]..')
 
     op.create_table('snapshot',
@@ -44,7 +45,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    log = contextualize()
+    log = contextualize(logger)
     log.debug(f'Downgrading SQL Schema to Version[{down_revision}]..')
 
     with op.batch_alter_table('snapshot', schema=None) as batch_op:

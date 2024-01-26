@@ -444,7 +444,7 @@
 // Logs ------------------------------------------------------------------------
 
 /**
- * @typedef {"debug" | "info" | "warning" | "error" | "critical"} LogLevel
+ * @typedef {"DEBUG" | "INFO" | "WARNING" | "ERROR" | "CRITICAL"} LogLevel
  */
 
 /**

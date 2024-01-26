@@ -20,7 +20,7 @@ $(document).ready(() => {
     const now = encodeURIComponent(dateToISO8601(new Date()));
     $.ajax({
       type: 'GET',
-      url: `/api/logs/query?page=1&after=${last30s}&before=${now}&level=info&shallow=true`,
+      url: `/api/logs/query?page=1&after=${last30s}&before=${now}&level=INFO&shallow=true`,
       success: allMessages => logs = logs.concat(allMessages.items).slice(undefined, 60),
       error: response => {
         // If unauthorized, cancel recurrent requests

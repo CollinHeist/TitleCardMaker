@@ -9,6 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import sqlite
 from modules.Debug import contextualize
+from modules.Debug2 import logger
 
 # revision identifiers, used by Alembic.
 revision = '32ef3d4633ce'
@@ -19,11 +20,7 @@ depends_on = None
 
 # Models necessary for data migration
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.ext.mutable import MutableDict, MutableList
-from sqlalchemy.orm import Mapped, Session, relationship
-from app.database.session import PreferencesLocal
-from app.dependencies import get_preferences
-from modules.CleanPath import CleanPath
+from sqlalchemy.orm import Session, relationship
 
 Base = declarative_base()
 
@@ -47,7 +44,7 @@ class Episode(Base):
 
 
 def upgrade() -> None:
-    log = contextualize()
+    log = contextualize(logger)
     log.debug(f'Upgrading SQL Schema to Version[{revision}]..')
 
     with op.batch_alter_table('card', schema=None) as batch_op:
@@ -73,7 +70,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    log = contextualize()
+    log = contextualize(logger)
     log.debug(f'Downgrading SQL Schema to Version[{down_revision}]..')
 
     with op.batch_alter_table('card', schema=None) as batch_op:

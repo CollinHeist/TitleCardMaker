@@ -26,10 +26,10 @@ function downloadPage() {
  */
 function updateMessageLevel(level) {
   // Uppercase first letter of level
-  const newLevel = level.charAt(0).toUpperCase() + level.slice(1)
+  const newLevel = level.toUpperCase();
   $('.dropdown[data-value="level"]').dropdown('set text', newLevel);
   $('.dropdown[data-value="level"]').dropdown('set selected', newLevel);
-  $('.dropdown[data-value="level"]').dropdown('set value', newLevel.toLowerCase());
+  $('.dropdown[data-value="level"]').dropdown('set value', newLevel);
 }
 
 /**
@@ -101,7 +101,7 @@ function queryForLogs(page=1) {
       currentPage = [];
       const rows = messages.items.map(message => {
         // Clone template
-        const row = document.querySelector(`#${message.level}-message-template`).content.cloneNode(true);
+        const row = document.querySelector(`#${message.level.toLowerCase()}-message-template`).content.cloneNode(true);
 
         const shortTime = message.time.match(/^(.[^\.]+\.\d{3}?)\d*$/m);
         if (shortTime) {
