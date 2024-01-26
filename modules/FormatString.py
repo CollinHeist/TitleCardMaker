@@ -1,6 +1,9 @@
 from logging import Logger
 from typing import Any
 
+from num2words import num2words
+from titlecase import titlecase
+
 from modules.CleanPath import CleanPath
 from modules.Debug import InvalidFormatString, log
 
@@ -23,7 +26,8 @@ def to_roman_numeral(number: int, /) -> str:
 
     # Verify number can be converted
     if not 1 <= number <= _MAX_ROMAN_NUMERAL:
-        raise InvalidFormatString
+        raise InvalidFormatString(f'Number {number} cannot be converted to a '
+                                  f'roman numeral')
 
     m_text = ['', 'M', 'MM', 'MMM']
     c_text = ['', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM']
@@ -37,6 +41,55 @@ def to_roman_numeral(number: int, /) -> str:
     ones = i_text[number % 10]
 
     return f'{thousands}{hundreds}{tens}{ones}'
+
+
+def to_cardinal(number: int, /, lang: str = 'en') -> str:
+    """
+    Convert the given number to its cardinal spelling in the given
+    language.
+
+    Args:
+        number: Number to convert.
+        lang: Language code of the conversion.
+
+    Returns:
+        Cardinal spelling of the give number.
+
+    Raises:
+        NotImplementedError: The given number cannot be converted in the
+            specified language.
+    """
+
+    return num2words(number, to='cardinal', lang=lang)
+
+
+def to_ordinal(number: int, /, lang: str = 'en') -> str:
+    """
+    Convert the given number to its ordinal spelling in the given
+    language.
+
+    Args:
+        number: Number to convert.
+        lang: Language code of the conversion.
+
+    Returns:
+        Cardinal spelling of the give number.
+
+    Raises:
+        NotImplementedError: The given number cannot be converted in the
+            specified language.
+    """
+
+    return num2words(number, to='ordinal', lang=lang)
+
+
+_BUILTINS = {
+    'NEWLINE': r'\n',
+    'titlecase': titlecase,
+    'to_roman_numeral': to_roman_numeral,
+    'to_cardinal': to_cardinal,
+    'to_ordinal': to_ordinal,
+}
 
 
 class FormatString:
@@ -71,12 +124,7 @@ class FormatString:
         # pylint: disable=eval-used
         self.result: str = eval(
             compile('f"' + fstring.replace('"', '\\"') + '"', '', 'eval'),
-            {
-                '__builtins__': {
-                    'NEWLINE': '\n',
-                    'to_roman_numeral': to_roman_numeral
-                }
-            },
+            {'__builtins__': _BUILTINS},
             data,
         )
 
@@ -114,7 +162,7 @@ class FormatString:
             log.error(f'{series} {episode} Cannot format {name} - missing data '
                       f'"{exc}"')
             raise InvalidFormatString from exc
-        except SyntaxError as exc:
+        except (SyntaxError, NotImplementedError) as exc:
             log.error(f'{series} {episode} Cannot format {name} - invalid '
                       f'format "{exc}"')
             raise InvalidFormatString from exc
