@@ -119,9 +119,9 @@ function formatFastAPIError(errorResponse) {
  * @param {string} args.message - Message of the toast - only displayed if
  * args.response is undefined.
  * @param {*} args.response - Response object to format in the message text.
- * @param {number} [args.displayTime=1000] - How long (in ms) to display the toast.
+ * @param {number} [args.displayTime=7500] - How long (in ms) to display the toast.
  */
-function showErrorToast({title, message, response, displayTime=5000}) {
+function showErrorToast({title, message, response, displayTime=7500}) {
   if (response === undefined) {
     $.toast({
       class: 'error',
