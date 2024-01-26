@@ -2,11 +2,9 @@ from datetime import datetime
 from logging import Logger
 from typing import TYPE_CHECKING, Optional, TypedDict, Union
 
-from num2words import num2words
 from plexapi.video import Episode as PlexEpisode
 from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Query
-from titlecase import titlecase
 
 from modules.Debug import log
 from modules.DatabaseInfoContainer import DatabaseInfoContainer, InterfaceID
@@ -55,97 +53,6 @@ class EpisodeIndices(TypedDict):
     absolute_number: Optional[int]
 # pylint: enable=missing-class-docstring
 
-class WordSet(dict):
-    """
-    Dictionary subclass that contains keys for translated word-versions
-    of numbers.
-
-    >>> word_set = WordSet()
-    >>> word_set.add_numeral('season_number', 4)
-    >>> print(word_set)
-    {'season_number_cardinal': 'four', 'season_number_ordinal': 'fourth'}
-    >>> word_set.add_numeral('absolute_number', 2, 'es')
-    {'season_number_cardinal': 'four',
-     'season_number_ordinal': 'fourth',
-     'absolute_number_cardinal_es': 'dos',
-     'absolute_number_ordinal_es': 'segundo'}
-    """
-
-    def add_numeral(self,
-            label: str,
-            number: Optional[int],
-            lang: Optional[str] = None,
-        ) -> None:
-        """
-        Add the cardinal and ordinal versions of the given number under
-        the given label.
-
-        Args:
-            label: Label key to add the converted number under.
-            number: Number to wordify and add into this object.
-            lang: Language to wordify the object into. Appended to any
-                added keys.
-        """
-
-        # If value is None, do nothing
-        if number is None:
-            return None
-
-        # If a specific language was indicated, use in conversion
-        if lang:
-            # Catch exceptions caused by an unsupported language
-            try:
-                cardinal = num2words(number, to='cardinal', lang=lang)
-                self.update({
-                    f'{label}_cardinal_{lang}': cardinal,
-                    f'{label}_cardinal_{lang}_title': titlecase(cardinal),
-                })
-            except NotImplementedError:
-                pass
-            try:
-                ordinal = num2words(number, to='ordinal', lang=lang)
-                self.update({
-                    f'{label}_ordinal_{lang}': ordinal,
-                    f'{label}_ordinal_{lang}_title': titlecase(ordinal),
-                })
-            except NotImplementedError:
-                pass
-        # No language indicated, convert using base language
-        else:
-            cardinal = num2words(number, to='cardinal')
-            ordinal = num2words(number, to='ordinal')
-            self.update({
-                f'{label}_cardinal': cardinal,
-                f'{label}_cardinal_title': f'{titlecase(cardinal)}',
-                f'{label}_ordinal': ordinal,
-                f'{label}_ordinal_title': titlecase(ordinal),
-            })
-
-        return None
-
-
-    def has_number(self, label: str, lang: Optional[str] = None) -> bool:
-        """
-        Whether this object has defined translations for the given label
-        and language combination.
-
-        Args:
-            label: Label key of the converted numbers.
-            lang: Language of the converted numbers.
-
-        Returns:
-            True if the cardinal and ordinal translations are defined
-            for this label and language; False otherwise.
-        """
-
-        if lang:
-            return (
-                f'{label}_cardinal_{lang}' in self
-                and f'{label}_ordinal_{lang}' in self
-            )
-
-        return f'{label}_cardinal' in self and f'{label}_ordinal' in self
-
 
 class EpisodeInfo(DatabaseInfoContainer):
     """
@@ -157,7 +64,7 @@ class EpisodeInfo(DatabaseInfoContainer):
     __slots__ = (
         'title', 'season_number', 'episode_number', 'absolute_number',
         'emby_id', 'imdb_id', 'jellyfin_id', 'tmdb_id', 'tvdb_id', 'tvrage_id',
-        'airdate', '__languages', '__word_set',
+        'airdate',
     )
 
 
@@ -174,7 +81,6 @@ class EpisodeInfo(DatabaseInfoContainer):
             tvdb_id: Optional[int] = None,
             tvrage_id: Optional[int] = None,
             airdate: Optional[datetime] = None,
-            languages: list[str] = [],
         ) -> None:
         """
         Initialize this object with the given title, indices, database
@@ -206,10 +112,6 @@ class EpisodeInfo(DatabaseInfoContainer):
         self.set_tmdb_id(tmdb_id)
         self.set_tvdb_id(tvdb_id)
         self.set_tvrage_id(tvrage_id)
-
-        # Add word variations for each of this episode's indices
-        self.__languages = languages + [None]
-        self.__word_set = WordSet()
 
 
     def __repr__(self) -> str:
@@ -261,36 +163,6 @@ class EpisodeInfo(DatabaseInfoContainer):
             and self.episode_number == other.episode_number
             and self.title.matches(other.title)
         )
-
-
-    @property
-    def word_set(self) -> WordSet[str, str]:
-        """
-        The WordSet for this object. This constructs the translations of
-        the season, episode, and absolute numbers if not already
-        present.
-        """
-
-        # Get fallback absolute number
-        if self.absolute_number is None:
-            absolute_episode = self.episode_number
-        else:
-            absolute_episode = self.absolute_number
-
-        # Add words for the season, episode, absolute, and fallback abs numbers
-        number_sets = (
-            ('season_number', self.season_number),
-            ('episode_number', self.episode_number),
-            ('absolute_number', self.absolute_number),
-            ('absolute_episode_number', absolute_episode),
-        )
-
-        for lang in self.__languages:
-            for label, number in number_sets:
-                if not self.__word_set.has_number(label, lang):
-                    self.__word_set.add_numeral(label, number, lang=lang)
-
-        return self.__word_set
 
 
     @staticmethod
@@ -472,7 +344,6 @@ class EpisodeInfo(DatabaseInfoContainer):
             'absolute_number': self.absolute_number,
             'absolute_episode_number': effective_absolute,
             'airdate': self.airdate,
-            **self.word_set,
         }
 
 
@@ -543,9 +414,7 @@ class EpisodeInfo(DatabaseInfoContainer):
         self._update_attribute('airdate', airdate)
 
 
-    def filter_conditions(self,
-            EpisodeModel: 'Episode',
-        ) -> Query:
+    def filter_conditions(self, EpisodeModel: 'Episode') -> Query:
         """
         Get the SQLAlchemy Query condition for this object.
 

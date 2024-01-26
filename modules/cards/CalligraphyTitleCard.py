@@ -121,7 +121,7 @@ class CalligraphyTitleCard(BaseCardType):
     FONT_REPLACEMENTS = {}
 
     """How to format episode text"""
-    EPISODE_TEXT_FORMAT = 'Episode {episode_number_cardinal_title}'
+    EPISODE_TEXT_FORMAT = 'Episode {titlecase(to_cardinal(episode_number))}'
 
     """Whether this CardType uses season titles for archival purposes"""
     USES_SEASON_TITLE = True
@@ -236,11 +236,7 @@ class CalligraphyTitleCard(BaseCardType):
         if episode_info.season_number == 0:
             return 'Specials'
 
-        try:
-            number = episode_info.word_set['season_number_cardinal_title']
-            return f'Season {number}'
-        except KeyError:
-            return f'Season {episode_info.season_number}'
+        return 'Season {titlecase(to_cardinal(season_number))}'
 
 
     def __offset_title(self, title_text: str) -> str:
