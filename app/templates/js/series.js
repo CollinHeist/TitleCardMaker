@@ -1570,11 +1570,21 @@ function browseSourceImages(episodeId, cardElementId, episodeIds) {
     type: 'GET',
     url: `/api/sources/episode/${episodeId}/browse`,
     /**
-     * Images available, create image elements for them, add to modal
-     * @param {ExternalSourceImage[]} images - List of Source Images for
-     * this Episode.
+     * Images available, create image elements for them, add to modal.
+     * @param {ExternalSourceImage[]} images - List of Source Images for this
+     * Episode.
      */
     success: images => {
+      // Update modal header
+      const season = $(`#${cardElementId}[data-column="season_number"]`).text();
+      const episode = $(`#${cardElementId} [data-column="episode_number"]`).text();
+      if (season === '' || episode === '') {
+        const label = $(`#${cardElementId} [data-value="index"]`).text();
+        $('#browse-tmdb-modal .header span').text(`Source Images - ${label}`);
+      } else {
+        $('#browse-tmdb-modal .header span').text(`Source Images - Season ${season} Episode ${episode}`);
+      }
+
       // Create image elements
       const imageElements = images.map(({url, width, height}, index) => {
         const location = index % 2 ? 'right' : 'left';
