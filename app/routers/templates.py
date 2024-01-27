@@ -108,7 +108,7 @@ def update_template_(
     for attr, value in update_template.dict().items():
         if value != UNSPECIFIED and getattr(template, attr) != value:
             setattr(template, attr, value)
-            log.debug(f'SETTING template[{template_id}].{attr} = {value}')
+            log.debug(f'Template[{template_id}].{attr} = {value}')
             changed = True
 
     # If any values were changed, commit to database

@@ -865,7 +865,7 @@ function querySeriesLogs() {
   const toTitleCase = (text) => text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
   $.ajax({
     type: 'GET',
-    url: '/api/logs/query?contains=Series[{{series.id}}]|{{series.full_name}}&level=DEBUG',
+    url: '/api/logs/query?contains=Series[{{series.id}}]|{{series.full_name}}&level=DEBUG&size=100',
     /**
      * Logs queried, add elements to the timeline in the DOM.
      * @param {LogEntryPage} logs - Logs associated with this Series.
