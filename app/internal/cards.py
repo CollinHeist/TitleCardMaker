@@ -16,6 +16,7 @@ from app.internal.templates import get_effective_templates
 from app.internal.translate import translate_episode
 from app.models.card import Card
 from app.models.episode import Episode
+from app.models.font import Font
 from app.models.loaded import Loaded
 from app.models.series import Library, Series
 from app.models.template import Template
