@@ -104,7 +104,7 @@ def to_short_ordinal(number: int, /, lang: str = 'en') -> str:
 
 
 _BUILTINS = {
-    'NEWLINE': r'\n',
+    'NEWLINE': '\n',
     'titlecase': titlecase,
     'to_roman_numeral': to_roman_numeral,
     'to_cardinal': to_cardinal,
@@ -132,7 +132,13 @@ class FormatString:
     __slots__ = ('result', )
 
 
-    def __init__(self, fstring: str, /, *, data: dict) -> None:
+    def __init__(self,
+            fstring: str,
+            /,
+            *,
+            data: dict,
+            catch: bool = True,
+        ) -> None:
         """
         Initialize this objet with the given string and data. This
         evaluates the compiled fstring, and only stores the result.
@@ -140,14 +146,20 @@ class FormatString:
         Args:
             fstring: String to interpret as an fstring.
             data: Data to make available in the fstring evalaution.
+            catch: Whether to catch any Exceptions.
         """
 
         # pylint: disable=eval-used
-        self.result: str = eval(
-            compile('f"' + fstring.replace('"', '\\"') + '"', '', 'eval'),
-            {'__builtins__': _BUILTINS},
-            data,
-        )
+        try:
+            self.result: str = eval(
+                compile('f"' + fstring.replace('"', '\\"') + '"', '', 'eval'),
+                {'__builtins__': _BUILTINS},
+                data,
+            )
+        except NameError as exc:
+            raise (InvalidFormatString if catch else exc) from exc
+        except (SyntaxError, NotImplementedError) as exc:
+            raise (InvalidFormatString if catch else exc) from exc
 
 
     @staticmethod
@@ -178,7 +190,7 @@ class FormatString:
         """
 
         try:
-            return FormatString(fstring, data=data).result
+            return FormatString(fstring, data=data, catch=False).result
         except NameError as exc:
             log.error(f'{series} {episode} Cannot format {name} - missing data '
                       f'"{exc}"')
@@ -208,6 +220,6 @@ class FormatString:
         return CleanPath.sanitize_name(
             FormatString.new(
                 fstring, data=data, name=name, series=series, episode=episode,
-                log=log
+                log=log,
             )
         )
