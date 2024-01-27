@@ -329,7 +329,7 @@ def lookup_new_series(
 @series_router.get('/series/{series_id}')
 def get_series_config(
         series_id: int,
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> Series:
     """
     Get the config for the given Series.

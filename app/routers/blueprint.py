@@ -410,7 +410,10 @@ def import_blueprint_and_series(
         )
 
     # Import Blueprint
-    import_blueprint(db, series, blueprint, log=log)
+    background_tasks.add_task(
+        import_blueprint,
+        db, series, blueprint, log=log
+    )
 
     return series
 
