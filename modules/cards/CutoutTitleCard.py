@@ -95,7 +95,7 @@ class CutoutTitleCard(BaseCardType):
     ARCHIVE_NAME = 'Cutout Style'
 
     """Default fonts and color for series count text"""
-    EPISODE_TEXT_FORMAT = '{episode_number_cardinal}'
+    EPISODE_TEXT_FORMAT = '{to_cardinal(episode_number)}'
     EPISODE_TEXT_FONT = SW_REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
 
     """Custom blur profiles"""

@@ -73,7 +73,7 @@ class OlivierTitleCard(BaseCardType):
     FONT_REPLACEMENTS = {}
 
     """Characteristics of the episode text"""
-    EPISODE_TEXT_FORMAT = 'EPISODE {episode_number_cardinal}'
+    EPISODE_TEXT_FORMAT = 'EPISODE {to_cardinal(episode_number)}'
     EPISODE_TEXT_COLOR = 'white'
     EPISODE_PREFIX_FONT = SW_REF_DIRECTORY / 'HelveticaNeue.ttc'
     EPISODE_NUMBER_FONT = SW_REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
