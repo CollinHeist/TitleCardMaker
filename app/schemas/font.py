@@ -56,12 +56,9 @@ class NewNamedFont(BaseNamedFont):
 
     @root_validator
     def validate_paired_lists(cls, values):
-        return validate_argument_lists_to_dict(
-            values, 'character replacements',
-            'replacements_in', 'replacements_out',
-            output_key='replacements',
-            allow_empty_strings=True,
-        )
+        if len(values['replacements_in']) != len(values['replacements_out']):
+            raise ValueError('Must provide same number of in/out replacements')
+        return values
 
 class PreviewFont(Base):
     color: Optional[BetterColor] = None
