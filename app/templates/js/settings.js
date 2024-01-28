@@ -192,9 +192,6 @@ async function initAll() {
       // Parse card exclusions
       const excludedCardTypes = form.get('excluded_card_types') === '' ? [] : form.get('excluded_card_types').split(',');
       form.delete('excluded_card_types');
-
-      // Parse language codes
-      const languageCodes = form.get('language_codes') === '' ? [] : form.get('language_codes').split(',');
       
       // Delete blank values
       for (const [key, value] of [...form.entries()]) {
