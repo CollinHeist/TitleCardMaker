@@ -55,7 +55,7 @@ class TintedGlassTitleCard(BaseCardType):
     """Darkened area behind title/episode text is nearly black and 70% opaque"""
     DARKEN_COLOR = 'rgba(25, 25, 25, 0.7)'
 
-    """Blur profile for darkened area behind title/episod text"""
+    """Blur profile for darkened area behind title/episode text"""
     TEXT_BLUR_PROFILE = '0x6'
 
     __slots__ = (
