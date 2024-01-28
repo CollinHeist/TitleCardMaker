@@ -453,9 +453,6 @@ class ComicBookTitleCard(BaseCardType):
                 (x * sin(angle) + y * cos(angle))/abs(self.index_text_rotation_angle),
             )
 
-        # Adjust offset by manually indicated shift
-        index_text_rectangle.offset += Coordinate(0, self.index_banner_shift)
-
         # Shift rectangle to placement of index text
         index_text_rectangle.shift_origin(index_text_origin)
 
@@ -475,7 +472,8 @@ class ComicBookTitleCard(BaseCardType):
         )
         index_fill_rectangle.rotate(self.index_text_rotation_angle)
 
-        y_coordinate = 75 + (index_text_height / 2) - (75 + 500)/2
+        y_coordinate = 75 + (index_text_height / 2) - (75 + 500) / 2 \
+            + self.index_banner_shift
         if self.index_text_position == 'left':
             index_fill_rectangle.shift_origin(Coordinate(
                 35,
@@ -493,12 +491,12 @@ class ComicBookTitleCard(BaseCardType):
             ))
 
         return [
-            # Draw border rectangle
+            # Draw banner
             f'-fill "{self.banner_fill_color}"',
             f'-stroke "{self.text_box_edge_color}"',
             f'-strokewidth 5',
             *index_fill_rectangle.draw_commands,
-            # Draw text rectangle
+            # Draw text
             f'-fill "{self.text_box_fill_color}"',
             *index_text_rectangle.draw_commands,
         ]
@@ -533,13 +531,14 @@ class ComicBookTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
 
         Args:
             font: The Font being evaluated.
+            extras: Dictionary of extras for evaluation.
 
         Returns:
             True if a custom font is indicated, False otherwise.
