@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from os import environ
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
 from sys import exit as sys_exit
@@ -6,6 +7,7 @@ from typing import Any, Callable, Optional, Union
 
 from PIL import Image
 from plexapi.exceptions import PlexApiException
+import plexapi.server
 from plexapi.server import PlexServer, NotFound, Unauthorized
 from plexapi.library import Library as PlexLibrary
 from plexapi.video import (
@@ -82,6 +84,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     """EXIF data to write to images if PMM integration is enabled"""
     EXIF_TAG = {'key': 0x4242, 'data': 'titlecard'}
 
+    """How many seconds to allow for a single transaction"""
+    DEFAULT_TIMEOUT = 30 # seconds
+
     """Episode titles that indicate a placeholder and are to be ignored"""
     __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
 
@@ -92,6 +97,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             verify_ssl: bool = True,
             integrate_with_pmm_overlays: bool = False,
             filesize_limit: int = 10485760,
+            timeout: int = DEFAULT_TIMEOUT,
         ) -> None:
         """
         Constructs a new instance of a Plex Interface.
@@ -105,6 +111,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 overlays in image uploading.
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
+            timeout: How many seconds to allow for a timeout.
 
         Raises:
             SystemExit if an Exception is raised while connecting to
@@ -122,13 +129,19 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         # Create PlexServer object with these arguments
         try:
             self.__token = x_plex_token
-            self.__server = PlexServer(url, x_plex_token, self.__session)
+            self.__server = PlexServer(
+                url, x_plex_token, self.__session, timeout
+            )
         except Unauthorized:
             log.critical(f'Invalid Plex Token "{x_plex_token}"')
             sys_exit(1)
         except Exception as e:
             log.critical(f'Cannot connect to Plex - returned error: "{e}"')
             sys_exit(1)
+
+        # Adjust timeout for PlexServer object and environment variable
+        plexapi.server.TIMEOUT = timeout
+        environ['PLEXAPI_PLEXAPI_TIMEOUT'] = str(timeout)
 
         # Store integration
         self.integrate_with_pmm = integrate_with_pmm_overlays

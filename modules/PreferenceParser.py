@@ -69,7 +69,7 @@ class PreferenceParser(YamlReader):
 
         Raises:
             SystemExit (1): Any required YAML options are missing from
-            `file`.
+                `file`.
         """
 
         # Initialize parent YamlReader object - errors are critical
@@ -153,6 +153,7 @@ class PreferenceParser(YamlReader):
         self.plex_filesize_limit = self.filesize_as_bytes(
             PlexInterface.DEFAULT_FILESIZE_LIMIT
         )
+        self.plex_timeout = PlexInterface.DEFAULT_TIMEOUT
         self.plex_style_set = StyleSet()
         self.plex_yaml_writers = []
         self.plex_yaml_update_args = []
@@ -666,6 +667,9 @@ class PreferenceParser(YamlReader):
 
             if value > self.filesize_as_bytes('10 MB'):
                 log.warning(f'Plex will reject all images larger than 10 MB')
+
+        if (value := self.get('plex', 'timeout', type_=int)) is not None:
+            self.plex_timeout = value
 
         self.plex_style_set = StyleSet(
             self.get('plex', 'watched_style', type_=str, default='unique'),
@@ -1276,6 +1280,7 @@ class PreferenceParser(YamlReader):
             'verify_ssl': self.plex_verify_ssl,
             'integrate_with_pmm_overlays': self.integrate_with_pmm_overlays,
             'filesize_limit': self.plex_filesize_limit,
+            'plex_timeout': self.plex_timeout
         }
 
     @property
