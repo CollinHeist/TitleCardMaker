@@ -128,7 +128,7 @@ class BannerTitleCard(BaseCardType):
             return []
 
         # Draw from bottom left to top right
-        height = self.HEIGHT - self.banner_height - self.font_vertical_shift
+        height = self.HEIGHT - self.banner_height
 
         return [
             f'-fill "{self.banner_color}"',
@@ -154,7 +154,7 @@ class BannerTitleCard(BaseCardType):
 
         # Determine placement
         x = self.x_offset
-        y = self.HEIGHT - self.banner_height - self.font_vertical_shift - 43
+        y = self.HEIGHT - self.banner_height - self.font_vertical_shift - 48
 
         return [
             f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
@@ -242,7 +242,7 @@ class BannerTitleCard(BaseCardType):
             # Positioning the bottom line of text 300px within from end of top
             bottom_x = self.x_offset + top_width - 300
             bottom_y = self.HEIGHT - self.banner_height \
-                - self.font_vertical_shift - 90
+                - self.font_vertical_shift - 90 + self.font_interline_spacing
 
             # Determine the width of the text to avoid overlap
             left_boundary = self.x_offset + self.index_text_width
