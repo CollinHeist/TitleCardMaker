@@ -28,6 +28,8 @@ from app.schemas.blueprint import (
     DownloadableFile, ExportBlueprint, RemoteBlueprint,
 )
 from app.schemas.series import Series
+
+from modules.Debug import generate_context_id
 from modules.SeriesInfo2 import SeriesInfo
 
 
@@ -181,9 +183,10 @@ async def export_series_blueprint_as_zip(
 
     # Directories for zipping
     ZIPS_DIR = preferences.TEMPORARY_DIRECTORY / 'zips'
-    font_zip_dir = ZIPS_DIR / f"fonts_{log.extra['context_id']}"
+    cid = generate_context_id()
+    font_zip_dir = ZIPS_DIR / f"fonts_{cid}"
     font_zip_dir.mkdir(exist_ok=True, parents=True)
-    zip_dir: Path = ZIPS_DIR / log.extra['context_id']
+    zip_dir: Path = ZIPS_DIR / cid
     zip_dir.mkdir(exist_ok=True, parents=True)
 
     # Copy all files into the zip directory
