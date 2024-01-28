@@ -89,8 +89,8 @@ def set_primary_logger(level: str = 'INFO') -> int:
     )
     logger.level('DEBUG', color='<dim><white>')
     logger.level('INFO', color='<light-cyan>')
-    logger.level('WARNING', color='<fg 237,112,46>')
-    logger.level('ERROR', color='<yellow>')
+    logger.level('WARNING', color='<yellow>')
+    logger.level('ERROR', color='<fg 237,112,46>')
     logger.level('CRITICAL', color='<red><bold>')
     return handler_id
 logger_id = set_primary_logger()
