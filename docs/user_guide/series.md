@@ -57,7 +57,7 @@ becomes greyed out, then there is no next or previous Series to navigate to.
 Each Series can be _monitored_ and _unmonitored_. All Series start as monitored
 unless explicitly unmonitored, which can be done by clicking the green / red
 button below the Series poster. Unmonitored Series do __not__ do the following
-actions _automatically_. All actions can still be done manually.
+actions _automatically_ (all actions can still be done manually):
 
 - Refresh Episode data - i.e. check for new Episodes, look for modified
 Episode titles, etc.
