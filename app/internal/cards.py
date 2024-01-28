@@ -5,7 +5,7 @@ from typing import Optional
 
 from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy import and_, or_
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import OperationalError, PendingRollbackError
 from sqlalchemy.orm import Query, Session
 
 from app.database.query import get_interface
@@ -100,7 +100,7 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                         except HTTPException as e:
                             if e.status_code != 404:
                                 log.exception(f'{episode} - skipping Card', e)
-                except OperationalError:
+                except (PendingRollbackError, OperationalError):
                     if failures > 10:
                         log.debug(f'Database is extremely busy, stopping Task')
                         break
