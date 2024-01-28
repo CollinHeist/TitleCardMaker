@@ -209,7 +209,6 @@ async function initAll() {
           ...Object.fromEntries(form),
           image_source_priority: imageSourcePriority,
           excluded_card_types: excludedCardTypes,
-          language_codes: languageCodes,
         }),
         contentType: 'application/json',
         success: () => showInfoToast('Updated Settings'),
