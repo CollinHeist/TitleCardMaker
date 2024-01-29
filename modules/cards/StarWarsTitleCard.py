@@ -58,7 +58,7 @@ class StarWarsTitleCard(BaseCardType):
     FONT_REPLACEMENTS = {'Ō': 'O', 'ō': 'o'}
 
     """Characteristics of the episode text"""
-    EPISODE_TEXT_FORMAT = 'EPISODE {episode_number_cardinal}'
+    EPISODE_TEXT_FORMAT = 'EPISODE {to_cardinal(episode_number)}'
     EPISODE_TEXT_COLOR = '#AB8630'
     EPISODE_TEXT_FONT = REF_DIRECTORY / 'HelveticaNeue.ttc'
     EPISODE_NUMBER_FONT = REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'

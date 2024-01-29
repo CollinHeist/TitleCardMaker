@@ -6,7 +6,7 @@ description: >
 
 # Setting Priority
 
-TitleCardMaker allows for specification of settings in a _tiered_ system of
+TitleCardMaker allows for specification of settings in a tiered system of
 increasing specificity. This means that many settings can be specified in
 multiple places, and TCM will only choose the highest priority option when
 actually taking actions.
@@ -14,8 +14,8 @@ actually taking actions.
 There are two "levels" under which settings are evaluated - these are on the
 Series- and Episode-level. In general these are pretty self explanatory - for
 example: the [Episode Data Source](./settings.md#episode-data-source) setting is
-only evaluated per-Series because an individual Episode cannot have a separate
-data source; while a Card setting like Font color is evaluated per-Episode.
+only evaluated per-Series (because an individual Episode cannot have a separate
+data source); while a Card setting like Font color is evaluated per-Episode.
 
 The following priority is listed below in _ascending_ order, meaning elements at
 the top of the list will __always__ take priority of those below them.
@@ -39,4 +39,4 @@ the top of the list will __always__ take priority of those below them.
 11. Global settings
 12. Card default settings
 
-[^1]: This includes a Named Font assigned to the Template.
+[^1]: This includes any Named Font assigned to the Template.

@@ -8,17 +8,19 @@ tags:
 
 # Available Variables
 
-Throughout TCM, when something is referred to as a "format string", this means
-that any of the internally defined variables can be used, allowing for more
-fine-tuned customization. Accessing these variables is done by specifying the
-variable name in curly brackets (`{}`), such as `{episode_number}`.
+Throughout TCM, when something is referred to as a "format" or "format string",
+this means that any of the internally defined variables can be used, allowing
+for more fine-tuned customization. Accessing these variables is done by
+specifying the variable name in curly brackets (`{}`), such as
+`{episode_number}`.
 
 This page documents all the available variables.
 
 ## Variable Reference
 
-For reference, each variable example is shown for the same hypothetical
-[Episode](...).
+For reference, each variable example is shown for the same
+[Episode](https://www.imdb.com/title/tt1232253/) of Breaking Bad with some
+hypothetical TCM customizations.
 
 === "Inherent Metadata"
 
@@ -93,11 +95,11 @@ For reference, each variable example is shown for the same hypothetical
 
 === "Files"
 
-    | Variable Name    | Description                          | Example |
-    | ---------------- | ------------------------------------ | --------|
-    | source_file      | File path to the Source Image        | `/config/source/Breaking Bad (2008)/s2e6.jpg` |
-    | card_file        | File path to the Title Card          | `/config/cards/Breaking Bad (2008)/Season 2/Breaking Bad (2008) - S02E06.jpg` |
-    | source_directory | Path to the Series' source directory | `/config/source/Breaking Bad (2008)/` |
+    | Variable Name      | Description                          | Example |
+    | ------------------ | ------------------------------------ | --------|
+    | `source_file`      | File path to the Source Image        | `/config/source/Breaking Bad (2008)/s2e6.jpg` |
+    | `card_file`        | File path to the Title Card          | `/config/cards/Breaking Bad (2008)/Season 2/Breaking Bad (2008) - S02E06.jpg` |
+    | `source_directory` | Path to the Series' source directory | `/config/source/Breaking Bad (2008)/` |
 
 === "Database IDs"
 
@@ -148,7 +150,7 @@ many functions which allow for more customization. Each is described below.
 | `to_ordinal()`       | _See above_, but in another language[^2]          | `{to_cardinal(episode_number, 'es')}`     | `sexto`        |
 | `to_short_ordinal()` | Convert the given number to a shorthand ordinal spelling | `{to_short_ordinal(season_number)}`| `2nd`          |
 | `to_short_ordinal()` | _See above_, but in another language[^2]          | `{to_short_ordinal(season_number, 'ja')}` | `13番目`        |
-| `to_roman_numeral()` | Convert the given number to a roman numeral       | `{to_roman_numeral(episode_number)}`      | `II`           |
+| `to_roman_numeral()` | Convert the given number to a roman numeral       | `{to_roman_numeral(episode_number)}`      | `VI`           |
 
 ??? note "Support Language Codes"
 

@@ -34,6 +34,10 @@ After editing any filters, you will need to refresh the log table by clicking
 You can enter any text in the _Message Contains_ input text box to filter out
 logs which do not contain that text. This is case-insensitive.
 
+You may filter messages with "or" logic by entering pipe-separated (`|`) text.
+For example, `Breaking Bad|Better Call Saul` will filter messages which contain
+either "Breaking Bad" _or_ "Better Call Saul".
+
 ### Context IDs
 
 TCM applies a "context ID" to all operations performed via the UI and
@@ -71,10 +75,6 @@ This is often the most critical filter. All log messages are categorized in a
 level of either `Debug`, `Info`, `Warning`, `Error`, or `Critical`. Setting the
 filter at a specific level will not display messages of lower priority than that
 level.
-
-By default the log table is set to `Info` mode, meaning `Debug` messages are
-omitted. When debugging a problem, a good first step is to change this to
-`Debug`.
 
 !!! tip "Table Interaction"
 

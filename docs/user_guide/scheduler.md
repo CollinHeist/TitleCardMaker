@@ -20,8 +20,9 @@ basic to advanced mode.
     In both modes, the fastest a single Task can be scheduled is once every 10
     minutes.
     
-    TCM will also not start once Task while it is already running, so if one
-    Task takes longer than its assigned frequency, the second run will be skipped.
+    TCM will also not start a Task while it is already running, so if a given
+    Task takes longer than its assigned frequency, the second run will be
+    skipped.
 
 ## Basic Mode
 

@@ -8,10 +8,6 @@ tags:
 
 # Settings
 
-!!! warning "Under Construction"
-
-    This documentation is actively being developed.
-
 From the left-hand navigation menu, Global Settings can be accessed and set.
 
 ![](../assets/settings_light.webp#only-light){.no-lightbox}
@@ -354,9 +350,9 @@ A complete list of the available variables is listed [here](./variables.md).
     ```
 
     It is important to note that this can produce _extremely_ long file names
-    - sometimes _too_ long for your OS - if the Episode titles are exceedingly
-    long, in particular for some Anime. TCM will automatically truncate all
-    file names at 254 characters.
+    - sometimes too long for the operating system - if the Episode titles are
+    exceedingly long. TCM will automatically truncate all file names at 254
+    characters.
 
 ### Specials Folder Format
 
