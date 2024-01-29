@@ -71,7 +71,13 @@ class TintedFrameTitleCard(BaseCardType):
                 name='Frame Color',
                 identifier='frame_color',
                 description='Color of the frame edges',
-                tooltip='Defaults to match the Font color.',
+                tooltip=(
+                    'Can be any color or randomized like <v>random[color0, '
+                    'color1, ...]</v>  to select a randomly specified color. '
+                    'If randomly selecting, colors MUST be comma-separated '
+                    'with a space (, ) and any <v>rgb()<v> colors cannot have '
+                    'spaces. Defaults to match the Font color.'
+                ),
             ),
             Extra(
                 name='Frame Width',
@@ -294,7 +300,7 @@ class TintedFrameTitleCard(BaseCardType):
         if (match := RandomColorRegex.match(color_str)):
             return random_choice(list(map(
                 str.strip,
-                match.group(1).split(',')
+                match.group(1).split(', ')
             )))
 
         return color_str
