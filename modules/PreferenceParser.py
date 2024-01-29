@@ -240,6 +240,7 @@ class PreferenceParser(YamlReader):
 
         # If none of the font commands worked, IM might not be installed
         log.critical(f"ImageMagick doesn't appear to be installed")
+        interface.print_command_history()
         self.valid = False
         return None
 
