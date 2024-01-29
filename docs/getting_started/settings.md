@@ -35,6 +35,7 @@ For the purposes of this tutorial, the following settings are recommended:
         | Watched Episode Style | Unique |
         | Unwatched Episode Style | _Personal Preference_ |
         | Card Dimensions | 3200x1800[^2] |
+        | Card Quality | 95 |
         | Card Extension | .jpg |
         | Filename Format | {series_full_name} - S{season_number:02}E{episode_number:02} |
         | Specials Folder Format | Specials |
@@ -57,6 +58,7 @@ For the purposes of this tutorial, the following settings are recommended:
         | Watched Episode Style | Unique |
         | Unwatched Episode Style | _Personal Preference_ |
         | Card Dimensions | 3200x1800[^2] |
+        | Card Quality | 95 |
         | Card Extension | .jpg |
         | Filename Format | {series_full_name} - S{season_number:02}E{episode_number:02} |
         | Specials Folder Format | Specials |

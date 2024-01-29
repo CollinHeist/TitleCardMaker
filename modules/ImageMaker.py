@@ -41,7 +41,7 @@ class ImageMaker(ABC):
     """
     VALID_IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp')
 
-    __slots__ = ('card_dimensions', 'image_magick')
+    __slots__ = ('card_dimensions', 'quality', 'image_magick')
 
 
     @abstractmethod
@@ -61,6 +61,7 @@ class ImageMaker(ABC):
         # No Preferences object, use global
         if preferences is None:
             self.card_dimensions = global_objects.pp.card_dimensions
+            self.quality = global_objects.pp.quality
             self.image_magick = ImageMagickInterface(
                 global_objects.pp.imagemagick_container,
                 global_objects.pp.use_magick_prefix,
@@ -69,6 +70,7 @@ class ImageMaker(ABC):
         # Preferences object provided, use directly
         else:
             self.card_dimensions = preferences.card_dimensions
+            self.quality = preferences.card_quality
             self.image_magick = ImageMagickInterface(
                 use_magick_prefix=preferences.use_magick_prefix,
             )

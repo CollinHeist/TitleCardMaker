@@ -53,7 +53,7 @@ class Preferences:
         'is_docker', 'asset_directory', 'card_directory', 'source_directory',
         'completely_delete_series', 'file', 'card_width', 'card_height',
         'card_filename_format', 'card_extension', 'image_source_priority',
-        'episode_data_source', 'valid_image_extensions',
+        'episode_data_source', 'valid_image_extensions', 'card_quality',
         'specials_folder_format', 'season_folder_format', 'sync_specials',
         'delete_missing_episodes', 'remote_card_types', 'default_card_type',
         'excluded_card_types', 'default_watched_style',
@@ -170,6 +170,7 @@ class Preferences:
         self.card_filename_format = self.DEFAULT_CARD_FILENAME_FORMAT
         self.library_unique_cards = False
         self.card_extension = self.DEFAULT_CARD_EXTENSION
+        self.card_quality = ImageMagickInterface.DEFAULT_CARD_QUALITY
 
         self.image_source_priority: list[int] = []
         self.episode_data_source: Optional[int] = None

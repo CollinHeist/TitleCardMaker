@@ -577,6 +577,7 @@ class BaseCardType(ImageMaker):
             f'-gravity center',
             f'-resize "{self.card_dimensions}"',
             f'-extent "{self.card_dimensions}"',
+            f'-quality {self.quality}',
         ]
 
 

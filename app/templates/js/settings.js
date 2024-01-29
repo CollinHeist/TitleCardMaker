@@ -110,6 +110,14 @@ async function initAll() {
   // Enable dropdowns, checkboxes, etc.
   $('.ui.dropdown').dropdown();
   $('.ui.checkbox').checkbox();
+  $('.slider[data-value="card_quality"]').slider({
+    restrictedLabels: [10, 20, 30, 40, 50, 60, 70, 80, 90],
+    autoAdjustLabels: false,
+    showThumbTooltip: true,
+    min: 1,
+    max: 100,
+    start: {{preferences.card_quality}},
+  });
 
   await getAllConnections();
   getEpisodeDataSources();
@@ -209,6 +217,7 @@ async function initAll() {
           ...Object.fromEntries(form),
           image_source_priority: imageSourcePriority,
           excluded_card_types: excludedCardTypes,
+          card_quality: $('.slider[data-value="card_quality"]').slider('get value'),
         }),
         contentType: 'application/json',
         success: () => showInfoToast('Updated Settings'),

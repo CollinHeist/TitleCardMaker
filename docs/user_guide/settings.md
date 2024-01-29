@@ -50,6 +50,7 @@ below.
         | Watched Episode Style | Unique |
         | Unwatched Episode Style | _Personal Preference_ |
         | Card Dimensions | 3200x1800 |
+        | Card Quality | 95 |
         | Card Extension | .jpg |
         | Filename Format | {series_full_name} - S{season_number:02}E{episode_number:02} |
         | Specials Folder Format | Specials |
@@ -72,6 +73,7 @@ below.
         | Watched Episode Style | Unique |
         | Unwatched Episode Style | _Personal Preference_ |
         | Card Dimensions | 3200x1800 |
+        | Card Quality | 95 |
         | Card Extension | .jpg |
         | Filename Format | {series_full_name} - S{season_number:02}E{episode_number:02} |
         | Specials Folder Format | Specials |
@@ -266,6 +268,27 @@ increased for the opposite effect.
     TCM will not stop you from setting a non-standard (non-16:9) aspect ratio,
     but your created Title Cards __will__ be cropped when loaded into your
     Media Server.
+
+### Card Quality
+
+The JPEG/PNG compression level to apply when creating Title Cards. The minimum
+quality, 1, will result in extremely low quality (highly compressed) Cards; and
+the highest quality, 100, will result in the best quality (but least-compressed)
+Cards. The recommended value is between 92 and 95.
+
+!!! tip "Advanced Details"
+
+    This setting is not exactly linear in the effective quality _or_ reduced
+    file sizes. This means changing the quality from 90 to 45 will not
+    necessarily result in a 50% reduction in filesize or image quality.
+
+    For more details, read the applicable
+    [ImageMagick documentation](https://www.imagemagick.org/script/command-line-options.php#quality).
+
+!!! note "Applicability"
+
+    This setting is only applicable when using a
+    [Card Extension](#card-extension) of `jpg`, `jpeg`, or `png`.
 
 ---
 

@@ -2,7 +2,7 @@
 from pathlib import Path
 from typing import Literal, Optional
 
-from pydantic import DirectoryPath, PositiveInt, constr, validator # pylint: disable=no-name-in-module
+from pydantic import DirectoryPath, PositiveInt, conint, constr, validator # pylint: disable=no-name-in-module
 
 from app.schemas.base import (
     Base, InterfaceType, ImageSource, UpdateBase, UNSPECIFIED
@@ -19,6 +19,7 @@ and local card types (any character .py).
 CardTypeIdentifier = constr(regex=r'^([a-zA-Z ]+|[a-zA-Z]+\/[a-zA-Z]+|.+\.py)$')
 
 CardExtension = Literal['.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp']
+CardQuality = conint(ge=1, le=100)
 
 Style = Literal[
     'art', 'art blur', 'art grayscale', 'art blur grayscale', 'unique',
@@ -70,6 +71,7 @@ class UpdatePreferences(UpdateBase):
     card_height: PositiveInt = UNSPECIFIED
     card_filename_format: str = UNSPECIFIED
     card_extension: CardExtension = UNSPECIFIED
+    card_quality: CardQuality = UNSPECIFIED
     library_unique_cards: bool = UNSPECIFIED
     image_source_priority: list[int] = UNSPECIFIED
     episode_data_source: int = UNSPECIFIED
@@ -143,6 +145,7 @@ class Preferences(Base):
     card_height: PositiveInt
     card_filename_format: str
     card_extension: str
+    card_quality: int
     library_unique_cards: bool
     image_source_priority: list[int]
     episode_data_source: Optional[int]

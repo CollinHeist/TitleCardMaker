@@ -5,6 +5,11 @@
   font-style: italic;
 }
 
+/* Change coloring of slider labels in dark mode */
+.inverted.slider .labels .label {
+  color: #ccc;
+}
+
 /* Formatting for the title card prevew */
 #title-card-preview .card {
   width: 900px; /* 800px */

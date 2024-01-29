@@ -4,6 +4,7 @@
 <head>
   <title>Settings - TitleCardMaker</title>
   {% include "./html_boilerplate.html" %}
+  <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.3/dist/semantic.min.js"></script>
 
   <script type="text/javascript">
     {% include "./js/settings.js" %}
@@ -172,7 +173,7 @@
                     </p>
                   </div>
 
-                  <div id="watched-style" class="field">
+                  <div class="field">
                     <label>Watched Episode Style</label>
                     <div class="ui long compact selection dropdown">
                       <span class="default text">{{preferences.default_watched_style.title()}}</span>
@@ -203,7 +204,7 @@
                     </p>
                   </div>
     
-                  <div id="unwatched-style" class="field">
+                  <div class="field">
                     <label>Unwatched Episode Style</label>
                     <div class="ui long compact selection dropdown">
                       <span class="default text">{{preferences.default_unwatched_style.title()}}</span>
@@ -235,7 +236,7 @@
                     </p>
                   </div>
 
-                  <div id="card-dimensions" class="two equal width dimension fields">
+                  <div class="two equal width dimension fields">
                     <div class="field">
                       <label>Card Width</label>
                       <input name="card_width" type="number" placeholder="{{preferences.card_width}}" value="{{preferences.card_width}}">
@@ -246,6 +247,16 @@
                     </div>
                   </div>
                   <p class="help">Title Card dimensions (in pixels).</p>
+
+                  <div class="field">
+                    <label>Card Quality</label>
+                    <div data-value="card_quality" class="ui labeled ticked blue slider" id="card-quality"></div>
+                    <p class="help">
+                      Compression quality to utilize when creating Title Cards.
+                      <br>
+                      Lower values are more compressed, while higher values are less.
+                    </p>
+                  </div>
                 </div>
 
                 <!-- Card preview -->
