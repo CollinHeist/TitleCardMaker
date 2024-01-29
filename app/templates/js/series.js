@@ -1578,7 +1578,6 @@ function browseSourceImages(episodeId, cardElementId, episodeIds) {
       // Update modal header
       const season = $(`#${cardElementId} [data-column="season_number"]`).text();
       const episode = $(`#${cardElementId} [data-column="episode_number"]`).text();
-      console.log(season); console.log(episode);
       if (season === '' || episode === '') {
         const label = $(`#${cardElementId} [data-value="index"]`).text();
         $('#browse-tmdb-modal .header span').text(`Source Images - ${label}`);
