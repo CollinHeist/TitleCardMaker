@@ -1,5 +1,117 @@
 const changeLog = [
   {
+    version: 'v2.0-alpha.8.1',
+    changelog: `
+<h2>Major Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Add previous and next buttons to the Source Image modal so easily switch between Episodes when manually selecting Source Images</div>
+  <div class="item">Display Series-relevant logs on the Series page</div>
+  <div class="item">Add new <b>Reference File</b> Template filter argument
+    <div class="list">
+      <div class="item">This can be used to filter the Template by the existence of an arbitrary file</div>
+    </div>
+  </div>
+  <div class="item">Add new global "Card quality" setting
+    <div class="list">
+      <div class="item">This setting adjusts the JPEG / PNG compression quality used in Card creation</div>
+      <div class="item">The default value is 95 (slightly higher than the default ImageMagick card quality)</div>
+      <div class="item">Only applies to <b>.jpg</b>, <b>.jpeg</b>, and <b>.png</b> card extensions</div>
+    </div>
+  </div>
+  <div class="item">Rewrite how cardinal and ordinal numbers are specified
+    <div class="list">
+      <div class="item">Old-style <b>_cardinal</b> and <b>_ordinal</b> variable postfixes are removed</div>
+      <div class="item">New style is to call the <b>to_cardinal()</b> and <b>to_ordinal()</b> functions in the format string</div>
+      <div class="item">Add SQL data migration to automatically convert any existing season titles and episode text formats to this new syntax</div>
+      <div class="item"><b>All non-English cardinal/ordinal numbers will need to be changed manually</b> - e.g. <b>{season_number_cardinal_fr}</b> should now be <b>{to_cardinal(season_number, 'fr')}</b></div>
+      <div class="item">Remove global "translation language" option</div>
+      <div class="item">This change will speed up and allow for greater flexibility in Card creation</div>
+    </div>
+  </div>
+  <div class="item">Rewrite all internal logging
+    <div class="list">
+      <div class="item">No longer use builtin <b>logging</b> module, use <b>loguru</b></div>
+      <div class="item">Enable better traceback printouts (tracebacks now display variable values)</div>
+      <div class="item">Log data in <b>.jsonl</b> (JSON-line) format to better handle multi-line log messages</div>
+      <div class="item">Do not write API context IDs to the stdout/stderr output</div>
+    </div>
+  </div>
+</div>
+<h2>Major Fixes </h2>
+<div class="ui ordered list">
+  <div class="item">Fix Series deletion in in Sync delete API endpoint</div>
+  <div class="item">Handle Cards without Episodes in <b>32ef3d4633ce</b> SQL schema migration</div>
+  <div class="item">Correctly load Title Cards for Series with more than one library when not in library-unique-Card mode</div>
+  <div class="item">Correctly apply Series translations when the Series has no libraries</div>
+  <div class="item">Do not allow multiple Syncs to run at once (which could cause a Series to be added multiple times)</div>
+  <div class="item">Do not auto-sort Font replacements
+    <div class="list">
+      <div class="item">Add SQL schema <b>3122c0553b1e</b> to separate the <b>Font.replacements</b> JSON column into the two paired <b>Font.replacements_in</b> and <b>Font.replacements_out</b> list columns</div>
+    </div>
+  </div>
+</div>
+<h2>Minor Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Allow advanced format string specifications in:
+    <div class="list">
+      <div class="item">Season sub folder naming (this will allow users to omit season sub folders completely by specifying format as <b>{''}</b>)</div>
+      <div class="item">Season title ranges</div>
+    </div>
+  </div>
+  <div class="item">Add more verbose logging for when a Translation "fails"</div>
+  <div class="item">Reject "fake" translations which exactly match their original titles</div>
+  <div class="item">Update <b>tmdbapis</b> and <b>pillow</b> dependency version(s)</div>
+  <div class="item">Change the default error toast display time to 7.5 seconds (from 5.0s)</div>
+  <div class="item">Add new <b>titlecase()</b> function to format strings</div>
+  <div class="item">Add new <b>to_short_ordinal()</b> function for format strings</div>
+</div>
+<h2>Minor Fixes</h2>
+<div class="ui ordered list">
+  <div class="item">Commit Series changes to the database<i>before</i>refreshing card types</div>
+  <div class="item">Handle Plex API errors raised during watched status querying</div>
+  <div class="item">Delete unlinked Episodes in clean database Task</div>
+  <div class="item">Auto-increment Series IDs to avoid any cache-clashes after deleting a Series</div>
+  <div class="item">Handle transparencies of <b>0.0</b> in Inset card </div>
+  <div class="item">Correctly utilize custom Font interline and interword spacing in the Inset card</div>
+  <div class="item">Correctly utilize custom Font interline spacing in the Banner card</div>
+  <div class="item">Correct the display toast text when manually starting a Sync</div>
+  <div class="item">Fix the index text banner shift extra in the Comic card</div>
+  <div class="item">Add <b>.ttc</b> fonts to the whitelist for the Font file upload input</div>
+  <div class="item">Import Blueprint within background task when importing Series<i>and</i>Blueprint to avoid missing Blueprint Episode overrides if Series Episode data is still being refreshed</div>
+</div>
+<h2>Title Card Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Anime
+    <div class="list">
+      <div class="item">Add the kanji color and episode stroke color extras (contributed by Reicha7)</div>
+      <div class="item">Do not apply custom Font stroke widths to the kanji text</div>
+    </div>
+  </div>
+  <div class="item">Graph
+    <div class="list">
+      <div class="item">Reduce the default graph text font size from 75 to 70</div>
+    </div>
+  </div>
+  <div class="item">Tinted Frame
+    <div class="list">
+      <div class="item">Automatically search for episode text font files (if specified) next to the Source Image; this means these Font files can be imported directly via Blueprints</div>
+      <div class="item">Allow specification of "random" frame colors - specify as <b>random[color1, color2]</b> - e.g. <b>random[red, blue]</b> will randomly select red or blue</div>
+    </div>
+  </div>
+</div>
+<h2>Documentation Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Create a <a href="https://titlecardmaker.com/getting_started/terminology/" target="_blank">Terminology</a> page to the Getting Started tutorial to explain some of the basic terms of TCM</div>
+  <div class="item">Create a <a href="https://titlecardmaker.com/user_guide/variables/" target="_blank">Variables</a> page which details all the available variables for use in format strings</div>
+  <div class="item">Modify Getting Started commands to list the single-line docker commands (was causing issues on Windows)</div>
+</div>
+<h2>API Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Allow pipe (<b>|</b>) separated query strings in the log endpoint (<b>GET</b> <b>/api/logs/query</b>)</div>
+  <div class="item">Change log level names to their uppercase equivalent</div>
+</div>`
+  },
+  {
     version: 'v2.0-alpha.8.0',
     changelog: `
 <h2>Major Changes</h2>
