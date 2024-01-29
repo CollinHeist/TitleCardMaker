@@ -572,3 +572,27 @@ function populateBlueprintCard(card, blueprint, blueprintId) {
   card.querySelector('[data-value="description"]').innerHTML = '<p>' + blueprint.json.description.join('</p><p>') + '</p>';
   return card;
 }
+
+
+function timeDiffString(previousRun) {
+  const previous = new Date(previousRun);
+
+  // Get current time
+  const diffSeconds = Math.floor((new Date() - previous) / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  // Create string for next run time, only show up to two time units
+  const timeUnits = [];
+  if (diffDays > 1) { timeUnits.push(`${diffDays} days`); }
+  else if (diffDays > 0) { timeUnits.push(`diffDays day`); }
+  if (diffHours % 24 > 1) { timeUnits.push(`${diffHours%24} hours`); }
+  else if (diffHours % 24 > 0) { timeUnits.push(`${diffHours%24} hour`); }
+  if (diffMinutes % 60 > 1) { timeUnits.push(`${diffMinutes%60} minutes`); }
+  else if (diffMinutes % 60 > 0) { timeUnits.push(`${diffMinutes%60} minute`); }
+  if (diffSeconds % 60 > 1) { timeUnits.push(`${diffSeconds%60} seconds`); }
+  else if (diffSeconds % 60 > 0) { timeUnits.push(`<${diffSeconds%60} second`); }
+
+  return timeUnits.slice(0, 2).join(', ') + ' ago';
+}
