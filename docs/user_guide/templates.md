@@ -138,7 +138,7 @@ Below is a summary of all Filter arguments, their valid operations, a
 description of what this Filter accomplishes, and whether it requires a
 reference value.
 
-??? note "All Supported Filter Conditions[^1]"
+!!! note "All Supported Filter Conditions[^1]"
 
     === "Series Name"
 
@@ -197,6 +197,16 @@ reference value.
         | Operation | Description | Reference Value |
         | --------: | :---------- | :-------------: |
         | file exists | Only apply to Series whose logo exists | :fontawesome-regular-circle-xmark:{.red} |
+
+    === "Reference File"
+
+        This Filter condition can be used with [Variables](./variables.md) to
+        dynamically apply a Template based on the existence of some file, such
+        as a poster, per-season logo, etc.
+
+        | Operation | Description | Reference Value |
+        | --------: | :---------- | :-------------: |
+        | file exists | Only apply to Series where the indicated File exists | :fontawesome-regular-circle-check:{.green} |
 
     === "Episode Watched Status"
 

@@ -93,10 +93,11 @@ For reference, each variable example is shown for the same hypothetical
 
 === "Files"
 
-    | Variable Name | Description                   | Example |
-    | ------------- | ----------------------------- | --------|
-    | source_file   | File path to the Source Image | `/config/source/Breaking Bad (2008)/s2e6.jpg` |
-    | card_file     | File path to the Title Card   | `/config/cards/Breaking Bad (2008)/Season 2/Breaking Bad (2008) - S02E06.jpg` |
+    | Variable Name    | Description                          | Example |
+    | ---------------- | ------------------------------------ | --------|
+    | source_file      | File path to the Source Image        | `/config/source/Breaking Bad (2008)/s2e6.jpg` |
+    | card_file        | File path to the Title Card          | `/config/cards/Breaking Bad (2008)/Season 2/Breaking Bad (2008) - S02E06.jpg` |
+    | source_directory | Path to the Series' source directory | `/config/source/Breaking Bad (2008)/` |
 
 === "Database IDs"
 
@@ -126,7 +127,7 @@ For reference, each variable example is shown for the same hypothetical
     | Variable Name | Description                            | Example     |
     | ------------- | -------------------------------------- | ----------- |
     | `extras`      | Any assigned extras                    | _See below_ |
-    | `NEWLINE`     | A character to move text to a new line | `\n`      |
+    | `NEWLINE`     | A character to move text to a new line | `\n`        |
 
     Any assigned extras are added as their variable name. For example, if I
     specify the "Episode Text Color" extra for the Series, then the variable
