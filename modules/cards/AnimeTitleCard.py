@@ -96,8 +96,8 @@ class AnimeTitleCard(BaseCardType):
         ], description=[
             'Title card with all text aligned in the lower left of the image.',
             'Although it is referred to as the "anime" card style, the only '
-            'Anime specific feature is the ability to add Kani (Japanese) text '
-            'above the title text.',
+            'Anime specific feature is the ability to add Kanji (Japanese) '
+            'text above the title text.',
         ]
     )
 
@@ -314,6 +314,7 @@ class AnimeTitleCard(BaseCardType):
             *title_commands,
             f'-font "{self.KANJI_FONT.resolve()}"',
             *self.__title_text_black_stroke,
+            f'-strokewidth 5',
             f'-pointsize {85 * self.font_size}',
             f'-annotate +75+{kanji_offset} "{self.kanji}"',
             *self.__title_text_effects,
