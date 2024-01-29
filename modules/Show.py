@@ -285,7 +285,7 @@ class Show(YamlReader):
             self.info_set.set_tvrage_id(self.series_info, value)
 
         if (value := self.get('card_type', type_=str)) is not None:
-            self._parse_card_type(value)
+            self.card_class = self._parse_card_type(value)
             self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
 
         if (value := self.get('episode_text_format', type_=str)) is not None:
@@ -294,7 +294,7 @@ class Show(YamlReader):
         if (value := self.get('archive', type_=bool)) is not None:
             self.archive = value
 
-        if (value :=self.get('archive_all_variations',type_=bool)) is not None:
+        if (value :=self.get('archive_all_variations', type_=bool)) is not None:
             self.archive_all_variations = value
 
         if (value := self.get('archive_name', type_=str)) is not None:
