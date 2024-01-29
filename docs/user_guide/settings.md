@@ -271,12 +271,17 @@ increased for the opposite effect.
 
 ### Card Quality
 
-The JPEG/PNG compression level to apply when creating Title Cards. The minimum
-quality, 1, will result in extremely low quality (highly compressed) Cards; and
-the highest quality, 100, will result in the best quality (but least-compressed)
+!!! note "Applicability"
+
+    This setting is only applicable when using a
+    [Card Extension](#card-extension) of `jpg`, `jpeg`, or `png`.
+
+The compression level to apply when creating Title Cards. The minimum quality,
+1, will result in extremely low quality (highly compressed) Cards; and the
+highest quality, 100, will result in the best quality (but least-compressed)
 Cards. The recommended value is between 92 and 95.
 
-!!! tip "Advanced Details"
+??? tip "Advanced Details"
 
     This setting is not exactly linear in the effective quality _or_ reduced
     file sizes. This means changing the quality from 90 to 45 will not
@@ -284,11 +289,6 @@ Cards. The recommended value is between 92 and 95.
 
     For more details, read the applicable
     [ImageMagick documentation](https://www.imagemagick.org/script/command-line-options.php#quality).
-
-!!! note "Applicability"
-
-    This setting is only applicable when using a
-    [Card Extension](#card-extension) of `jpg`, `jpeg`, or `png`.
 
 ---
 
@@ -327,55 +327,7 @@ _format_, and will be applied to each individual Title Card. This format can
 contain variable data (wrapped in `{}` curly braces) that is evaluated for each
 Title Card.
 
-A full list of the available variables are listed below.
-
-??? note "Available Variables"
-
-    All the following examples will be for _Mr. Robot_ Season 4 Episode 1
-    (absolute episode 33), titled "401 Unauthorized"
-
-    ## Series Variables
-
-    | Variable | Example |
-    | ---: | :--- |
-    | `{series_name}` | Mr. Robot |
-    | `{series_full_name}` | Mr. Robot (2015) |
-    | `{year}` | 2015 |
-    | `{series_emby_id}` | _Depends_ |
-    | `{series_imdb_id}` | tt4158110 |
-    | `{series_jellyfin_id}` | _Depends_ |
-    | `{series_sonarr_id}` | _Depends_ |
-    | `{series_tmdb_id}` | 62560 |
-    | `{series_tvdb_id}` | 289590 |
-    | `{series_tvrage_id}` | N/A |
-
-    ## Episode Variables
-
-    | Variable | Example |
-    | ---: | :--- |
-    | `{season_number}` | 4 |
-    | `{season_number:02}` | 04 |
-    | `{episode_number}` | 1 |
-    | `{episode_number:02}` | 01 |
-    | `{absolute_number}` | 33 |
-    | `{title}` | 401 Unauthorized |
-    | `{title.lower()}` | 401 unauthorized |
-    | `{title.upper()}` | 401 UNAUTHORIZED |
-    | `{episode_emby_id}` | _Depends_ |
-    | `{episode_imdb_id}` | tt7748418 |
-    | `{episode_jellyfin_id}` | _Depends_ |
-    | `{episode_tmdb_id}` | 1905049 |
-    | `{episode_tvdb_id}` | 7337251 |
-    | `{episode_tvrage_id}` | N/A |
-
-
-    !!! tip "Formatting"
-
-        All number data can be zero-padded with `n` many zeroes. Just specify
-        the variable as `{variable:0n}`.
-
-        All text data can be made fully upper or lowercase. Just specify the
-        variable as `{variable.upper()}` or `{variable.lower()}`.
+A complete list of the available variables is listed [here](./variables.md).
 
 ??? example "Example Formats"
 
@@ -391,7 +343,7 @@ A full list of the available variables are listed below.
 
     Will produce files named like `Breaking Bad [tt0903747] - S1E1 - Pilot`.
 
-??? example "TRaSH Naming Convention"
+??? tip "TRaSH Naming Convention"
 
     If you follow the
     [TRaSH](https://trash-guides.info/Sonarr/Sonarr-recommended-naming-scheme/)
@@ -403,15 +355,41 @@ A full list of the available variables are listed below.
 
     It is important to note that this can produce _extremely_ long file names
     - sometimes _too_ long for your OS - if the Episode titles are exceedingly
-    long, in particular for some Anime.
+    long, in particular for some Anime. TCM will automatically truncate all
+    file names at 254 characters.
 
 ### Specials Folder Format
 
-...
+The format / naming convention for the subfolder of all Title Cards associated
+with Specials (season 0). This format can contain variable data, see a complete
+list of the available variables is listed [here](./variables.md).
+
+??? tip "Hidden Season Subfolder"
+
+    If you would like to completely remove the subfolder - i.e. write these
+    Title Cards directory at the Title Card directory for the  Series - then
+    specify the format as:
+
+    ```
+    {''}
+    ```
 
 ### Season Folder Format
 
-...
+The format / naming convention for the subfolder of all Title Cards associated
+with all non-Specials (anything other than season 0). This format can contain
+variable data, see a complete list of the available variables is listed
+[here](./variables.md).
+
+??? tip "Hidden Season Subfolder"
+
+    If you would like to completely remove the subfolder - i.e. write these
+    Title Cards directory at the Title Card directory for the  Series - then
+    specify the format as:
+
+    ```
+    {''}
+    ```
 
 ### Multi-Library Filename Support
 
@@ -431,11 +409,12 @@ _and_ would like to utilize watched status specific styling.
 Once enabled, TitleCardMaker will keep separate Title Card files created for
 each Library assigned to a Series. 
 
-!!! example "Example"
+??? example "Example"
 
     The following example showcases a use of this setting in a Series with three
-    libraries alongside Templates which utilize watched-status Filters to create
-    completely different Title Cards for each library.
+    libraries alongside Templates which utilize
+    [watched-status Filters](./templates.md#filters) to create completely
+    different Title Cards for each library.
 
     ![](../assets/library_unique_cards_light.webp#only-light){.no-lightbox}
     ![](../assets/library_unique_cards_dark.webp#only-dark){.no-lightbox}
@@ -496,8 +475,6 @@ navigating the home screen.
 
 Stylized posters have a blurred grayscale effect applied.
 
-
-
 ### Color Impaired Mode
 
 Accessibility feature to utilize an alternate coloring which makes certain
@@ -508,5 +485,13 @@ color combinations more distinguishable for those with color impairments.
     If you have feedback or suggestions on improving the accessibility of the
     project, please reach out on the [Discord](https://discord.gg/bJ3bHtw8wH) or
     [GitHub](https://github.com/TitleCardMaker/TitleCardMaker-WebUI/).
+
+### Reduced Animations
+
+Whether to disable various animations within the UI. This can be for improved
+site performance or accessibility.
+
+This does not disable all animations, just the more "egregious" ones like the
+home-page Series loading.
 
 [^1]: This can be toggled on/off.

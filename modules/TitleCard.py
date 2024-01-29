@@ -147,8 +147,8 @@ class TitleCard:
             try:
                 self.converted_title = extra_characteristics['title_text_format'].format(
                     title_text=self.converted_title,
-                    **self.episode.episode_info.characteristics,
-                    **extra_characteristics,
+                    **({**self.episode.episode_info.characteristics}
+                        | {**extra_characteristics}),
                 )
             except Exception as exc:
                 log.error(f'Invalid title text format - {exc}')
