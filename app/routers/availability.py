@@ -264,7 +264,7 @@ def get_emby_libraries(
     return [
         MediaServerLibrary(
             media_server='Emby',
-            interface_id=emby_interface._interface_id,
+            interface_id=emby_interface._interface_id, # pylint: disable=protected-access
             name=library,
         ) for library in emby_interface.get_libraries()
     ]
@@ -281,7 +281,7 @@ def get_jellyfin_libraries(
     return [
         MediaServerLibrary(
             media_server='Jellyfin',
-            interface_id=jellyfin_interface._interface_id,
+            interface_id=jellyfin_interface._interface_id, # pylint: disable=protected-access
             name=library,
         ) for library in jellyfin_interface.get_libraries()
     ]
@@ -298,7 +298,7 @@ def get_plex_libraries(
     return [
         MediaServerLibrary(
             media_server='Plex',
-            interface_id=plex_interface._interface_id,
+            interface_id=plex_interface._interface_id, # pylint: disable=protected-access
             name=library,
         ) for library in plex_interface.get_libraries()
     ]

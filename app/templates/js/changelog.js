@@ -36,6 +36,7 @@ const changeLog = [
       <div class="item">Do not write API context IDs to the stdout/stderr output</div>
     </div>
   </div>
+  <div class="item">Allow for Sonarr Sync filtering by Series root folder</div>
 </div>
 <h2>Major Fixes </h2>
 <div class="ui ordered list">
@@ -78,6 +79,7 @@ const changeLog = [
   <div class="item">Fix the index text banner shift extra in the Comic card</div>
   <div class="item">Add <b>.ttc</b> fonts to the whitelist for the Font file upload input</div>
   <div class="item">Import Blueprint within background task when importing Series<i>and</i>Blueprint to avoid missing Blueprint Episode overrides if Series Episode data is still being refreshed</div>
+  <div class="item">Use <b>""""</b> syntax in format string evaluation to allow for " and ' characters</div>
 </div>
 <h2>Title Card Changes</h2>
 <div class="ui ordered list">
