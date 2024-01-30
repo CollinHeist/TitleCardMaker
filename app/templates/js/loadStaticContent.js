@@ -18,7 +18,8 @@ $(document).ready(function() {
       });
       elements.push(`<a class="search result" href="/add?q=${query}">Search for "${query}"..</a>`);
       return elements.join('');
-    }, message: (message, type) => {
+    },
+    message: (message, type) => {
       if (message === 'Your search returned no results') {
         const query = $('#search-bar input').val();
         return `<a class="search result" href="/add?q=${query}">Search for "${query}"..</a>`;
@@ -31,7 +32,7 @@ $(document).ready(function() {
   // Search bar uses the search API
   $('#search-bar').search({
     apiSettings: {
-      url: '/api/series/search?name={query}&size=8&page=1',
+      url: '/api/series/search?name={query}&size=10&page=1',
       onResponse: serverResponse => { return serverResponse.items; },
     },
   });

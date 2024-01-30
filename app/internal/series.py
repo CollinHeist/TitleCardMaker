@@ -372,7 +372,7 @@ def delete_series(
 
     # Delete Source directory if necessary
     if get_preferences().completely_delete_series:
-        for file in Path(series.source_directory).glob('*'):
+        for file in series.source_directory.glob('*'):
             log.debug(f'Deleting "{file}"')
             file.unlink(missing_ok=True)
 
@@ -673,7 +673,7 @@ def add_series(
     db.commit()
 
     # Create source directory if DNE
-    Path(series.source_directory).mkdir(parents=True, exist_ok=True)
+    series.source_directory.mkdir(parents=True, exist_ok=True)
 
     # Set Series ID's, download poster and logo
     set_series_database_ids(series, db, log=log)

@@ -401,12 +401,11 @@ class Series(Base):
 
 
     @property
-    def source_directory(self) -> str:
+    def source_directory(self) -> Path:
         """Path-safe source subdirectory for this Series."""
 
-        return str(
-            CleanPath(get_preferences().source_directory) / self.path_safe_name
-        )
+        return CleanPath(get_preferences().source_directory) \
+            / self.path_safe_name
 
 
     @property
@@ -432,7 +431,7 @@ class Series(Base):
             'font_interword_spacing': self.font_interword_spacing,
             'font_vertical_shift': self.font_vertical_shift,
             'directory': self.directory,
-            'source_directory': self.source_directory,
+            'source_directory': str(self.source_directory),
             'card_type': self.card_type,
             'hide_season_text': self.hide_season_text,
             'season_titles': self.season_titles,

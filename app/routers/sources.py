@@ -33,7 +33,7 @@ source_router = APIRouter(
 
 
 # TODO implement blacklist bypassing all over?
-@source_router.post('/series/{series_id}', status_code=200)
+@source_router.post('/series/{series_id}')
 def download_series_source_images(
         background_tasks: BackgroundTasks,
         request: Request,
@@ -65,7 +65,7 @@ def download_series_source_images(
         )
 
 
-@source_router.post('/series/{series_id}/backdrop', status_code=200)
+@source_router.post('/series/{series_id}/backdrop')
 def download_series_backdrop(
         series_id: int,
         request: Request,
@@ -112,7 +112,7 @@ def download_series_backdrop(
     )
 
 
-@source_router.post('/series/{series_id}/logo', status_code=200)
+@source_router.post('/series/{series_id}/logo')
 def download_series_logo_(
         series_id: int,
         request: Request,
@@ -135,7 +135,7 @@ def download_series_logo_(
     return download_series_logo(series, log=request.state.log)
 
 
-@source_router.post('/episode/{episode_id}', status_code=200)
+@source_router.post('/episode/{episode_id}')
 def download_episode_source_images_(
         episode_id: int,
         request: Request,
@@ -161,7 +161,7 @@ def download_episode_source_images_(
     )
 
 
-@source_router.get('/episode/{episode_id}/browse', status_code=200)
+@source_router.get('/episode/{episode_id}/browse')
 def get_all_episode_source_images(
         request: Request,
         episode_id: int,
@@ -210,7 +210,7 @@ def get_all_episode_source_images(
     return tmdb_images + plex_images
 
 
-@source_router.get('/series/{series_id}/logo/browse', status_code=200)
+@source_router.get('/series/{series_id}/logo/browse')
 def get_all_series_logos_on_tmdb(
         request: Request,
         series_id: int,
@@ -236,7 +236,7 @@ def get_all_series_logos_on_tmdb(
     return [] if logos is None else logos
 
 
-@source_router.get('/series/{series_id}/backdrop/browse', status_code=200)
+@source_router.get('/series/{series_id}/backdrop/browse')
 def get_all_series_backdrops_on_tmdb(
         request: Request,
         series_id: int,
@@ -261,7 +261,7 @@ def get_all_series_backdrops_on_tmdb(
     ) or []
 
 
-@source_router.get('/series/{series_id}', status_code=200)
+@source_router.get('/series/{series_id}')
 def get_existing_series_source_images(
         series_id: int,
         db: Session = Depends(get_database),
@@ -308,7 +308,7 @@ def delete_series_source_images(
                 source_file.unlink(missing_ok=True)
 
 
-@source_router.get('/episode/{episode_id}', status_code=200)
+@source_router.get('/episode/{episode_id}')
 def get_existing_episode_source_image(
         episode_id: int,
         db: Session = Depends(get_database),
@@ -325,7 +325,7 @@ def get_existing_episode_source_image(
     return get_source_image(episode)
 
 
-@source_router.delete('/episode/{episode_id}', status_code=200)
+@source_router.delete('/episode/{episode_id}')
 def delete_episode_source_images(
         episode_id: int,
         request: Request,
@@ -454,7 +454,7 @@ async def set_episode_source_image(
     return get_source_image(episode)
 
 
-@source_router.put('/episode/{episode_id}/mirror', status_code=200)
+@source_router.put('/episode/{episode_id}/mirror')
 def mirror_episode_source_image(
         request: Request,
         episode_id: int,

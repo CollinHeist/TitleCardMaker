@@ -104,6 +104,7 @@ class PreferenceParser(YamlReader):
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.card_extension = TitleCard.DEFAULT_CARD_EXTENSION
         self.card_dimensions = TitleCard.DEFAULT_CARD_DIMENSIONS
+        self.card_quality = ImageMagickInterface.DEFAULT_CARD_QUALITY
         self.image_source_priority = ('tmdb', 'plex', 'emby', 'jellyfin')
         self.episode_data_source = self.DEFAULT_EPISODE_DATA_SOURCE
         self.validate_fonts = True

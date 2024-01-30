@@ -462,7 +462,7 @@ def resolve_card_settings(
         name='logo filename',
         series=series, episode=episode, log=log,
     )
-    card_settings['logo_file'] = Path(series.source_directory) \
+    card_settings['logo_file'] = series.source_directory \
         / f'{filename}{logo_file.suffix}'
 
     # Get the effective card class

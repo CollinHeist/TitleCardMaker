@@ -426,6 +426,7 @@ def get_source_image(episode: Episode) -> SourceImage:
 
     # Determine Episode (style not used) source file
     _, source_file = resolve_source_settings(episode)
+    image_magick = get_imagemagick_interface()
 
     # All sources have these details
     source = {
@@ -440,11 +441,7 @@ def get_source_image(episode: Episode) -> SourceImage:
 
     # If the source file exists, add the filesize and dimensions
     if source['exists']:
-        # Get image dimensions
-        width, height = get_imagemagick_interface().get_image_dimensions(
-            source_file
-        )
-
+        width, height = image_magick.get_image_dimensions(source_file)
         source |= {
             'filesize': source_file.stat().st_size,
             'width': width,
