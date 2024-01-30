@@ -28,24 +28,44 @@ class LogoTitleCard(BaseCardType):
         supports_custom_seasons=True,
         supported_extras=[
             Extra(
-                name='Separator Character',
-                identifier='separator',
-                description='Character to separate season and episode text',
-            ), Extra(
+                name='Logo Size',
+                identifier='logo_size',
+                description=(
+                    'Scalar for how much to scale the size of the logo element'
+                ), tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
+            ),
+            Extra(
+                name='Logo Vertical Shift',
+                identifier='logo_vertical_shift',
+                description='Vertical shift to apply to the logo',
+                tooltip=(
+                    'Positive values to shift the logo down, negative values to'
+                    'shift it up. Unit is pixels. Default is <v>0.0</v>.'
+                ),
+            ),
+            Extra(
                 name='Background Color',
                 identifier='background',
                 description='Background color to use behind the logo',
                 tooltip='Ignored if a background image is used.',
-            ), Extra(
+            ),
+            Extra(
+                name='Separator Character',
+                identifier='separator',
+                description='Character to separate season and episode text',
+            ),
+            Extra(
                 name='Background Image Enabling',
                 identifier='use_background_image',
                 description='Whether to use a background image (not color)',
                 tooltip='Either <v>True</v>, or <v>False</v>.',
-            ), Extra(
+            ),
+            Extra(
                 name='Stroke Text Color',
                 identifier='stroke_color',
                 description='Color to use for the text stroke',
-            ), Extra(
+            ),
+            Extra(
                 name='Gradient Omission',
                 identifier='omit_gradient',
                 description='Whether to omit the gradient overlay',
@@ -53,7 +73,8 @@ class LogoTitleCard(BaseCardType):
                     'Either <v>True</v> or <v>False</v>. If <v>True</v>, text '
                     'may appear less legible on brighter images.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Blur Image Only',
                 identifier='blur_only_image',
                 description='Whether to only blur the background image.',
@@ -114,8 +135,9 @@ class LogoTitleCard(BaseCardType):
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
         'font_file', 'font_kerning', 'font_interline_spacing',
         'font_interword_spacing', 'font_size', 'font_stroke_width',
-        'font_vertical_shift', 'separator', 'logo', 'omit_gradient',
-        'background', 'stroke_color', 'use_background_image', 'blur_only_image',
+        'font_vertical_shift', 'separator', 'logo', 'logo_size',
+        'logo_vertical_shift', 'omit_gradient', 'background', 'stroke_color',
+        'use_background_image', 'blur_only_image',
     )
 
     def __init__(self,
@@ -136,13 +158,15 @@ class LogoTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            logo_file: Optional[Path] = None,
             background: str = 'black',
+            blur_only_image: bool = False,
+            logo_file: Optional[Path] = None,
+            logo_size: float = 1.0,
+            logo_vertical_shift: int = 0,
+            omit_gradient: bool = True,
             separator: str = '•',
             stroke_color: str = 'black',
-            omit_gradient: bool = True,
             use_background_image: bool = False,
-            blur_only_image: bool = False,
             preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
@@ -180,23 +204,28 @@ class LogoTitleCard(BaseCardType):
         # Optional extras
         self.omit_gradient = omit_gradient
         self.background = background
+        self.logo_size = logo_size
+        self.logo_vertical_shift = logo_vertical_shift
         self.separator = separator
         self.stroke_color = stroke_color
 
 
     def resize_logo(self) -> Path:
         """
-        Resize the logo into at most a 1875x1030 bounding box.
+        Resize the logo into at most a 1875x1030 bounding box (resized 
+        by the indicated logo size).
 
         Returns:
             Path to the created image.
         """
 
+        width, height = 1030 * self.logo_size, 1875 * self.logo_size
+
         command = ' '.join([
             f'convert',
             f'"{self.logo.resolve()}"',
-            f'-resize x1030',
-            f'-resize 1875x1030\>',
+            f'-resize x{width}',
+            f'-resize {height}x{width}\>',
             f'"{self.__RESIZED_LOGO.resolve()}"',
         ])
 
@@ -372,7 +401,7 @@ class LogoTitleCard(BaseCardType):
         # Resize logo, get resized height to determine offset
         resized_logo = self.resize_logo()
         _, height = self.image_magick.get_image_dimensions(resized_logo)
-        offset = 60 + ((1030 - height) // 2)
+        offset = 60 + ((1030 - height) // 2) + self.logo_vertical_shift
 
         # Font customizations
         vertical_shift = 245 + self.font_vertical_shift

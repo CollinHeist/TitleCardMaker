@@ -341,12 +341,14 @@ class LogoCardType(BaseCardTypeCustomFontAllText):
     logo_file: FilePath
     font_color: BetterColor = LogoTitleCard.TITLE_COLOR
     font_file: Path = LogoTitleCard.TITLE_FONT
-    separator: str = '•'
-    stroke_color: BetterColor = 'black'
-    omit_gradient: bool = True
-    use_background_image: bool = False
     background: BetterColor = 'black'
     blur_only_image: bool = False
+    logo_size: PositiveFloat = 1.0
+    logo_vertical_shift: int = 0
+    omit_gradient: bool = True
+    separator: str = '•'
+    stroke_color: BetterColor = 'black'
+    use_background_image: bool = False
 
     @root_validator(skip_on_failure=True)
     def validate_source_file(cls, values):
