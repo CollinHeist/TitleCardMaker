@@ -296,7 +296,8 @@ def search_existing_series(
     if name is not None:
         return paginate(
             db.query(SeriesModel).filter(*conditions)\
-                .order_by(SeriesModel.diff_ratio(name))
+                .order_by(SeriesModel.diff_ratio(name).desc())\
+                .order_by(func.lower(SeriesModel.sort_name))
         )
 
     return paginate(
