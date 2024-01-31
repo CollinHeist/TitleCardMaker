@@ -18,6 +18,9 @@ from modules.cards.ComicBookTitleCard import ComicBookTitleCard
 from modules.cards.CutoutTitleCard import CutoutTitleCard
 from modules.cards.DividerTitleCard import DividerTitleCard, TextGravity
 from modules.cards.FadeTitleCard import FadeTitleCard
+from modules.cards.FormulaOneTitleCard import (
+    FormulaOneTitleCard, Country as FormulaOneCountry
+)
 from modules.cards.FrameTitleCard import FrameTitleCard
 from modules.cards.GraphTitleCard import (
     GraphTitleCard, TextPosition as GraphTextPosition
@@ -41,10 +44,11 @@ from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 
 LocalCardIdentifiers = Literal[
     'anime', 'banner', 'calligraphy', 'comic book', 'cutout', 'divider', 'fade',
-    'frame', 'generic', 'gundam', 'inset', 'ishalioh', 'landscape', 'logo',
-    'marvel', 'musikmann', 'olivier', 'phendrena', 'photo', 'polymath',
-    'poster', 'reality tv', 'roman', 'roman numeral', 'shape', 'sherlock',
-    'standard', 'star wars', 'textless', 'tinted glass', '4x3', 'white border',
+    'formula one', 'frame', 'generic', 'graph', 'gundam', 'inset', 'ishalioh',
+    'landscape', 'logo', 'marvel', 'music', 'musikmann', 'olivier', 'phendrena',
+    'photo', 'polymath', 'poster', 'reality tv', 'roman', 'roman numeral',
+    'shape', 'sherlock', 'standard', 'star wars', 'textless', 'tinted glass',
+    '4x3', 'white border',
 ]
 
 """
@@ -249,6 +253,26 @@ class FadeCardType(BaseCardTypeCustomFontAllText):
     logo_file: Optional[Path] = None
     episode_text_color: BetterColor = FadeTitleCard.EPISODE_TEXT_COLOR
     separator: str = '•'
+
+class FormulaOneCardType(BaseCardTypeAllText):
+    font_color: BetterColor = FormulaOneTitleCard.TITLE_COLOR
+    font_file: FilePath = FormulaOneTitleCard.TITLE_FONT
+    font_size: PositiveFloat = 1.0
+    country: Optional[FormulaOneCountry] = None
+    episode_text_color: str = FormulaOneTitleCard.EPISODE_TEXT_COLOR
+    episode_text_font_size: PositiveFloat = 1.0
+    race: constr(min_length=1) = 'GRAND PRIX'
+
+    @root_validator(skip_on_failure=True)
+    def parse_country(cls, values: dict) -> dict:
+        if values['country'] is None:
+            if values['season_text'].lower() in FormulaOneTitleCard._COUNTRY:
+                values['country'] = values['season_text'].lower()
+            else:
+                values['country'] = 'generic'
+
+        return values
+
 
 class FrameCardType(BaseCardTypeCustomFontAllText):
     font_color: BetterColor = FrameTitleCard.TITLE_COLOR
@@ -616,6 +640,7 @@ LocalCardTypeModels: dict[str, Base] = {
     'divider': DividerCardType,
     'fade': FadeCardType,
     'frame': FrameCardType,
+    'f1': FormulaOneCardType,
     'generic': StandardCardType,
     'graph': GraphCardType,
     'gundam': PosterCardType,

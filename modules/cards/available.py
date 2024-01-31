@@ -5,6 +5,7 @@ from modules.cards.ComicBookTitleCard import ComicBookTitleCard
 from modules.cards.CutoutTitleCard import CutoutTitleCard
 from modules.cards.DividerTitleCard import DividerTitleCard
 from modules.cards.FadeTitleCard import FadeTitleCard
+from modules.cards.FormulaOneTitleCard import FormulaOneTitleCard
 from modules.cards.FrameTitleCard import FrameTitleCard
 from modules.cards.GraphTitleCard import GraphTitleCard
 from modules.cards.InsetTitleCard import InsetTitleCard
@@ -31,6 +32,7 @@ LocalCards = [
     CutoutTitleCard.API_DETAILS,
     DividerTitleCard.API_DETAILS,
     FadeTitleCard.API_DETAILS,
+    FormulaOneTitleCard.API_DETAILS,
     FrameTitleCard.API_DETAILS,
     GraphTitleCard.API_DETAILS,
     InsetTitleCard.API_DETAILS,
