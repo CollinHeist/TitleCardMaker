@@ -784,8 +784,8 @@ function initializeTMDb() {
           connection.enabled ? 'check' : 'uncheck'
         );
         // Ignore localized images
-        $(`#connection${connection.id} .checkbox[data-value="ignore_localized"]`).checkbox(
-          connection.ignore_localized ? 'check' : 'uncheck'
+        $(`#connection${connection.id} .checkbox[data-value="skip_localized"]`).checkbox(
+          connection.skip_localized ? 'check' : 'uncheck'
         );
         // Initialize logo language priority dropdown
         $(`#connection${connection.id} .dropdown[data-value="logo_language_priority"]`).dropdown({
