@@ -1494,7 +1494,7 @@ function selectTmdbImage(episodeId, url) {
     contentType: false,
     processData: false,
     success: () => {
-      showInfoToast('Updated source image');
+      showInfoToast('Updated Source Image');
       getFileData();
       getCardData();
     },
