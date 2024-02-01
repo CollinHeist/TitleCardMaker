@@ -175,6 +175,7 @@ class SeasonPoster(ImageMaker):
 
         # Determine season text offset depending on orientation
         gravity = 'north' if self.text_placement == 'top' else 'south'
+        gravity = 'north'
         if self.text_placement == 'top':
             if self.logo is None or self.logo_placement != 'top':
                 text_offset = 212

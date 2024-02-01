@@ -35,6 +35,7 @@ thefuzz = "==0.20.0"
 charset-normalizer = "==3.3.2"
 loguru = "==0.7.2"
 better-exceptions = "==0.2.1"
+colorama = "==0.4.6"
 
 [dev-packages]
 mkdocs = "*"
