@@ -36,6 +36,7 @@ charset-normalizer = "==3.3.2"
 loguru = "==0.7.2"
 better-exceptions = "==0.2.1"
 colorama = "==0.4.6"
+win32-setctime = "==1.1.0"
 
 [dev-packages]
 mkdocs = "*"
