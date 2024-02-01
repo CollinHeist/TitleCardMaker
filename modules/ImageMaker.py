@@ -61,7 +61,7 @@ class ImageMaker(ABC):
         # No Preferences object, use global
         if preferences is None:
             self.card_dimensions = global_objects.pp.card_dimensions
-            self.quality = global_objects.pp.quality
+            self.quality = global_objects.pp.card_quality
             self.image_magick = ImageMagickInterface(
                 global_objects.pp.imagemagick_container,
                 global_objects.pp.use_magick_prefix,
