@@ -362,6 +362,7 @@ class LandscapeCardType(BaseCardModel):
         return values
 
 class LogoCardType(BaseCardTypeCustomFontAllText):
+    source_file: Optional[Path] = None
     logo_file: FilePath
     font_color: BetterColor = LogoTitleCard.TITLE_COLOR
     font_file: Path = LogoTitleCard.TITLE_FONT
