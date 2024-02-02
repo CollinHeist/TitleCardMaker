@@ -3,6 +3,7 @@ from typing import Any, Callable, Literal, Optional
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
+from modules.FormatString import FormatString
 
 
 class EpisodeMap:
@@ -342,14 +343,20 @@ class EpisodeMap:
         if self.__index_by == 'season':
             if (base_ := target.get(episode_info.season_number)) is not None:
                 # Format this season's title with the episode characteristics
-                return base_.format(**episode_info.characteristics)
+                return FormatString(
+                    base_,
+                    data=episode_info.characteristics
+                ).result
 
             return default(episode_info=episode_info)
 
         # Index by index
         if self.__index_by == 'index':
             if (base_title := target.get(episode_info.index)) is not None:
-                return base_title.format(**episode_info.characteristics)
+                return FormatString(
+                    base_title,
+                    data=episode_info.characteristics,
+                ).result
 
             return default(episode_info=episode_info)
 
@@ -360,7 +367,10 @@ class EpisodeMap:
 
         # Return custom from target
         if (base_title := target.get(index_number)) is not None:
-            return base_title.format(**episode_info.characteristics)
+            return FormatString(
+                base_title,
+                data=episode_info.characteristics
+            ).result
 
         # Use default if index doesn't fall into specified target
         return default(episode_info=episode_info)
@@ -420,11 +430,10 @@ class EpisodeMap:
         # Attempt to format string for this episode index
         if isinstance(source, str):
             try:
-                return source.format(
-                    season_number=episode_info.season_number,
-                    episode_number=episode_info.episode_number,
-                    abs_number=episode_info.abs_number,
-                )
+                return FormatString(
+                    source,
+                    data=episode_info.characteristics,
+                ).result
             except Exception as e:
                 log.warning(f'Cannot format source "{source}" - {e}')
                 return source

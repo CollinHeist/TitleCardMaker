@@ -287,7 +287,8 @@ class Show(YamlReader):
             self.info_set.set_tvrage_id(self.series_info, value)
 
         if (value := self.get('card_type', type_=str)) is not None:
-            self.card_class = self._parse_card_type(value)
+            self.card_class = self._parse_card_type(value) \
+                or self._parse_card_type('standard')
             self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
 
         if (value := self.get('episode_text_format', type_=str)) is not None:

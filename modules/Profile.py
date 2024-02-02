@@ -8,6 +8,7 @@ from modules.EpisodeInfo import EpisodeInfo
 from modules.EpisodeMap import EpisodeMap
 from modules.Font import Font
 from modules.BaseCardType import BaseCardType
+from modules.FormatString import FormatString
 from modules.SeriesInfo import SeriesInfo
 
 if TYPE_CHECKING:
@@ -252,10 +253,13 @@ class Profile:
         # Format MultiEpisode episode text
         if isinstance(episode, MultiEpisode):
             try:
-                return episode.modify_format_string(format_string).format(
-                    **self.__series_info.characteristics,
-                    **episode.characteristics,
-                )
+                return FormatString(
+                    format_string,
+                    data={
+                        **self.__series_info.characteristics,
+                        **episode.characteristics
+                    }
+                ).result
             except Exception as e: # pylint: disable=broad-except
                 log.error(f'Cannot format episode text "{format_string}" for '
                           f'{episode} ({e})')
@@ -263,10 +267,13 @@ class Profile:
 
         # Standard Episode object
         try:
-            return format_string.format(
-                **self.__series_info.characteristics,
-                **episode.characteristics
-            )
+            return FormatString(
+                    format_string,
+                    data={
+                        **self.__series_info.characteristics,
+                        **episode.characteristics
+                    }
+                ).result
         except Exception as e: # pylint: disable=broad-except
             log.error(f'Cannot format episode text "{format_string}" for '
                       f'{episode} ({e})')

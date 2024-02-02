@@ -148,11 +148,14 @@ class TitleCard:
         # Apply any custom title text formatting if supplied
         if 'title_text_format' in extra_characteristics:
             try:
-                self.converted_title = extra_characteristics['title_text_format'].format(
-                    title_text=self.converted_title,
-                    **({**self.episode.episode_info.characteristics}
-                        | {**extra_characteristics}),
-                )
+                self.converted_title = FormatString(
+                    extra_characteristics['title_text_format'],
+                    data={
+                        'title_text': self.converted_title,
+                        **self.episode.episode_info.characteristics,
+                        **extra_characteristics,
+                    }
+                ).result
             except Exception as exc:
                 log.error(f'Invalid title text format - {exc}')
 
@@ -231,15 +234,18 @@ class TitleCard:
         # Get filename from the given format string, with illegals removed
         abs_number = episode_info.abs_number
         filename = CleanPath.sanitize_name(
-            format_string.format(
-                name=series_info.name,
-                full_name=series_info.full_name,
-                year=series_info.year,
-                title=episode_info.title.full_title,
-                season=episode_info.season_number,
-                episode=episode_info.episode_number,
-                abs_number=abs_number if abs_number is not None else 0,
-            )
+            FormatString(
+                format_string,
+                data={
+                    'name': series_info.name,
+                    'full_name': series_info.full_name,
+                    'year': series_info.year,
+                    'title': episode_info.title.full_title,
+                    'season': episode_info.season_number,
+                    'episode': episode_info.episode_number,
+                    'abs_number': abs_number if abs_number is not None else 0,
+                }
+            ).result
         )
 
         # Add card extension
@@ -303,16 +309,19 @@ class TitleCard:
         # Get filename from the modified format string
         abs_number = multi_episode.episode_info.abs_number
         filename = CleanPath.sanitize_name(
-            modified_format_string.format(
-                name=series_info.name,
-                full_name=series_info.full_name,
-                year=series_info.year,
-                title=multi_episode.episode_info.title.full_title,
-                season=multi_episode.season_number,
-                episode_start=multi_episode.episode_start,
-                episode_end=multi_episode.episode_end,
-                abs_number=abs_number if abs_number is not None else 0,
-            )
+            FormatString(
+                modified_format_string,
+                data={
+                    'name': series_info.name,
+                    'full_name': series_info.full_name,
+                    'year': series_info.year,
+                    'title': multi_episode.episode_info.title.full_title,
+                    'season': multi_episode.season_number,
+                    'episode_start': multi_episode.episode_start,
+                    'episode_end': multi_episode.episode_end,
+                    'abs_number': abs_number if abs_number is not None else 0,
+                }
+            ).result
         )
 
         # Add card extension
@@ -336,9 +345,13 @@ class TitleCard:
 
         try:
             # Attempt to format using all the standard keys
-            format_string.format(
-                name='TestName', full_name='TestName (2000)', year=2000,
-                season=1, episode=1, title='Episode Title', abs_number=1,
+            FormatString(
+                format_string,
+                data={
+                    'name': 'TestName', 'full_name': 'TestName (2000)',
+                    'year': 2000, 'season': 1, 'episode': 1, 'abs_number': 1,
+                    'title': 'Example Title', 
+                }
             )
             return True
         except Exception as e:

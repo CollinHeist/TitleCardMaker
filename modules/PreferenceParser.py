@@ -11,6 +11,7 @@ from modules.CleanPath import CleanPath
 from modules.Debug import log, TQDM_KWARGS
 from modules.EmbyInterface import EmbyInterface
 from modules.Font import Font
+from modules.FormatString import FormatString
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.ImageMaker import ImageMaker
 from modules.JellyfinInterface import JellyfinInterface
@@ -1366,9 +1367,12 @@ class PreferenceParser(YamlReader):
 
         # Format season folder as indicated (zero-padding, whatever..)
         try:
-            return self.season_folder_format.format(season=season_number)
-        except Exception as e:
-            log.critical(f'Invalid season folder format - {e}')
+            return FormatString(
+                self.season_folder_format,
+                data={'season': season_number},
+            ).result
+        except Exception:
+            log.exception(f'Invalid season folder format')
             sys_exit(1)
 
 
