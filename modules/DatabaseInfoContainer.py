@@ -58,7 +58,7 @@ class InterfaceID:
 
 
     def __init__(self,
-            /, 
+            /,
             id_: Optional[str] = None,
             *,
             type_: Callable[[str], Any] = str,

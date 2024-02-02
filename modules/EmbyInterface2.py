@@ -233,9 +233,9 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                     year = datetime.strptime(
                         premiere_date, self.AIRDATE_FORMAT
                     ).year
-                    
+
                     this_series = SeriesInfo.from_emby_info(
-                        result, year, library_name, self._interface_id,
+                        result, year, self._interface_id, library_name,
                     )
                     if series_info == this_series:
                         return result if raw_obj else result['Id']
@@ -662,7 +662,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         # If series has no Emby ID, or no episodes, exit
         if len(episode_and_cards) == 0:
-            return None
+            return []
 
         # Load each episode and card
         loaded = []
@@ -708,7 +708,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             episode_info: EpisodeInfo,
             *,
             log: Logger = log,
-        ) -> SourceImage:
+        ) -> Optional[bytes]:
         """
         Get the source image for the given episode within Emby.
 
