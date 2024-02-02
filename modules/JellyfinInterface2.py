@@ -707,7 +707,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             episode_info: EpisodeInfo,
             *,
             log: Logger = log,
-        ) -> SourceImage:
+        ) -> Optional[bytes]:
         """
         Get the source image for the given episode within Jellyfin.
 

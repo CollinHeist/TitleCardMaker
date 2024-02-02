@@ -7,6 +7,7 @@ from modules.BaseCardType import BaseCardType
 from modules.CleanPath import CleanPath
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
+from modules.FormatString import FormatString
 from modules.SeriesInfo import SeriesInfo
 
 # Built-in BaseCardType classes
