@@ -6,7 +6,9 @@ description: >
 hide:
     - navigation
 ---
+
 <script src="../../javascripts/home.js" defer></script>
+
 # Welcome to TitleCardMaker
 
 !!! warning "Under Construction"
@@ -34,7 +36,7 @@ server services like Plex, Jellyfin, or Emby.
   </div>
 </div>
 
-# What is a Title Card?
+## What is a Title Card?
 
 A Title Card is a thumbnail image for an Episode of television that can be used
 to add a unique look within a personal media server like Plex, Emby, or
@@ -45,7 +47,7 @@ TitleCardMaker:
 
 ![Tinted Frame](./assets/card_example0.jpg){id="preview0" width="48%"} ![Anime](./assets/card_example1.jpg){id="preview1" width="48%"}
 
-# Download TitleCardMaker
+## Download the Code
 
 While the TCM Web UI is under active development, it is only accessible to
 project Sponsors. If you are interested, sponsor on
@@ -53,7 +55,44 @@ project Sponsors. If you are interested, sponsor on
 
 Installation and startup instructions are [here](./getting_started/index.md).
 
-# Getting Started
+## Updating 
+
+After the initial install, if you would like to update to the latest version of
+TCM, then you need to do the following:
+
+1. Navigate to your original install directory - like so:
+
+    ```bash
+    cd ~/My/Install/Diretory/TitleCardMaker-WebUI
+    ```
+
+2. Switch to the branch you would like to be on - this is `main` or `develop`:
+
+    ```bash
+    git checkout main
+    ```
+
+3. Pull in the newest changes:
+
+    ```bash
+    git pull
+    ```
+
+4. If you are using Docker, then remove the old container, before re-building
+and running (see [here](./getting_started/index.md#launching-the-interface)).
+
+    ```bash
+    docker container rm TitleCardMaker
+    ```
+
+5. If you are _not_ using Docker, just re-launch the container.
+
+    ```bash
+    pipenv install
+    pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
+    ```
+
+## Getting Started
 
 !!! info "Detailed Tutorial"
 
