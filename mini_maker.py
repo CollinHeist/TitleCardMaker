@@ -92,7 +92,7 @@ title_card_group.add_argument(
     nargs='+',
     default='',
     metavar=('TITLE_LINE'),
-    help="The title text for this card")
+    help="The title text for this card, each value is a new line")
 title_card_group.add_argument(
     '--logo',
     type=Path,
@@ -343,8 +343,9 @@ season_poster_group.add_argument(
 season_poster_group.add_argument(
     '--season-text',
     type=str,
-    default='SEASON ONE',
-    metavar='SEASON_TEXT',
+    nargs='+',
+    default=['SEASON ONE'],
+    metavar=('SEASON_TEXT'),
     help='Season text for the created season poster')
 season_poster_group.add_argument(
     '--season-font',
@@ -585,7 +586,7 @@ if hasattr(args, 'season_poster'):
         source=args.season_poster[0],
         destination=args.season_poster[1],
         logo=logo,
-        season_text=args.season_text,
+        season_text='\n'.join(args.season_text),
         font=args.season_font,
         font_color=args.season_font_color,
         font_size=float(args.season_font_size[:-1])/100.0,
