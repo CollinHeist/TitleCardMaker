@@ -5,7 +5,7 @@ from typing import Literal, Optional, Union
 from pydantic import PositiveInt, validator, root_validator # pylint: disable=no-name-in-module
 
 from app.schemas.base import (
-    Base, DictKey, UpdateBase, validate_argument_lists_to_dict
+    Base, DictKey, ImageSource, UpdateBase, validate_argument_lists_to_dict
 )
 from app.schemas.font import TitleCase
 from app.schemas.preferences import Style
@@ -105,7 +105,6 @@ class PreviewTitleCard(UpdateBase):
             output_key='extras',
         )
 
-
 class NewTitleCard(Base):
     series_id: int
     episode_id: int
@@ -117,7 +116,7 @@ class NewTitleCard(Base):
     @validator('card_file', pre=True)
     def convert_paths_to_str(cls, v):
         return str(v)
-    
+
     @validator('source_file', pre=True)
     def convert_path_to_filename(cls, v):
         return Path(v).name
@@ -135,10 +134,12 @@ class TMDbLanguage(Base):
     name: str
 
 class ExternalSourceImage(Base):
-    url: str
+    data: Optional[str] = None
+    url: Optional[str] = None
     width: Optional[int] = None
     height: Optional[int] = None
     language: Optional[TMDbLanguage] = None
+    interface_type: ImageSource = 'TMDb'
 
 class SourceImage(Base):
     episode_id: int

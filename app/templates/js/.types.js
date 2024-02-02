@@ -47,10 +47,12 @@
 
 /**
  * @typedef {Object} ExternalSourceImage
- * @property {string} url
+ * @property {?string} url
+ * @property {?string} data
  * @property {?number} width
  * @property {?number} height
  * @property {?TMDbLanguage} language
+ * @property {"Emby" | "Jellyfin" | "Plex" | "TMDb"} interface_type
  */
 
 /**

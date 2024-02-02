@@ -1479,7 +1479,7 @@ function exportBlueprint() {
  * Submit an API request to download the given Source Image URL for the Episode
  * with the given ID. If successful, the Series file and Card data is refreshed.
  * @param {int} episodeId - ID of the Episode associated with this image.
- * @param {str} url - URL to download.
+ * @param {str} url - URL (or Base64 encoded bytes) to download.
  */
 function selectTmdbImage(episodeId, url) {
   // Create psuedo form for this URL
@@ -1586,12 +1586,16 @@ function browseSourceImages(episodeId, cardElementId, episodeIds) {
       }
 
       // Create image elements
-      const imageElements = images.map(({url, width, height}, index) => {
+      const imageElements = images.map(({url, data, width, height, interface_type}, index) => {
+        // Alternate ribbon location; choose color of ribbon based on interface
         const location = index % 2 ? 'right' : 'left';
-        if (width === null || height === null) {
-          return `<a class="ui image" onclick="selectTmdbImage(${episodeId}, '${url}')"><div class="ui yellow ${location} ribbon label">Plex</div><img src="${url}"/></a>`;
-        }
-        return `<a class="ui image" onclick="selectTmdbImage(${episodeId}, '${url}')"><div class="ui blue ${location} ribbon label">${width}x${height}</div><img src="${url}"/></a>`;
+        const color = {'Emby': 'green', 'Jellyfin': 'purple', 'Plex': 'yellow', 'TMDb': 'blue'}[interface_type];
+
+        // Return image
+        return `<a class="ui image" onclick="selectTmdbImage(${episodeId}, '${url || data}')">`
+          + `<div class="ui ${color} ${location} ribbon label">`
+          + (interface_type == 'TMDb' ? `${width}x${height}` : interface_type)
+          + `</div><img src="${url || data}"/></a>`;
       });
 
       // Add to the modal

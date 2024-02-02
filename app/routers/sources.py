@@ -166,11 +166,13 @@ def get_all_episode_source_images(
         request: Request,
         episode_id: int,
         db: Session = Depends(get_database),
+        emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
         tmdb_interface: TMDbInterface = Depends(require_tmdb_interface),
+        jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
         plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
     ) -> list[ExternalSourceImage]:
     """
-    Get all Source Images on TMDb for the given Episode.
+    Get all Source Images on all interfaces for the given Episode.
 
     - episode_id: ID of the Episode to get the Source Images of.
     """
@@ -185,7 +187,7 @@ def get_all_episode_source_images(
         match_title = episode.series.match_titles
 
     # Get all Source Images from TMDb
-    tmdb_images = tmdb_interface.get_all_source_images(
+    images = tmdb_interface.get_all_source_images(
         episode.series.as_series_info,
         episode.as_episode_info,
         match_title=match_title,
@@ -193,21 +195,42 @@ def get_all_episode_source_images(
         log=request.state.log,
     )
 
-    # Get Source Images from Plex if possible
-    plex_images = []
-    for library in episode.series.libraries:
-        if (plex_interface := plex_interfaces[library['interface_id']]):
-            url = plex_interface.get_source_image(
+    for interface_type, interface_group in (('Emby', emby_interfaces),
+                                            ('Jellyfin', jellyfin_interfaces)):
+        for library in episode.series.libraries:
+            if not (interface := interface_group[library['interface_id']]):
+                continue
+
+            image = interface.get_source_image(
                 library['name'],
                 episode.series.as_series_info,
                 episode.as_episode_info,
-                proxy_url=True,
                 log=request.state.log,
             )
-            if url:
-                plex_images.append({'url': url})
+            if image:
+                # Encode image bytes as Base64 string
+                image_str = b64encode(image).decode('ascii')
+                images.append({
+                    'data': f'data:image/jpg;base64,{image_str}',
+                    'interface_type': interface_type,
+                })
 
-    return tmdb_images + plex_images
+    # Get Source Images from Plex if possible
+    for library in episode.series.libraries:
+        if not (plex_interface := plex_interfaces[library['interface_id']]):
+            continue
+
+        url = plex_interface.get_source_image(
+            library['name'],
+            episode.series.as_series_info,
+            episode.as_episode_info,
+            proxy_url=True,
+            log=request.state.log,
+        )
+        if url:
+            images.append({'url': url, 'interface_type': 'Plex'})
+
+    return images
 
 
 @source_router.get('/series/{series_id}/logo/browse')
@@ -368,7 +391,8 @@ async def set_episode_source_image(
     replaces the unique image for the Episode, not the art image.
 
     - episode_id: ID of the Episode to set the Source Image of.
-    - url: URL to the Source Image to download and utilize.
+    - url: URL to the Source Image to download and utilize. This can
+    also be a base64 encoded image to decode and write.
     - file: Source Image file content to utilize.
     - interface_id: ID of the interface associated with the proxy URL;
     only required if `url` is a proxied API URL from Plex.
@@ -384,9 +408,13 @@ async def set_episode_source_image(
     uploaded_file = b''
     if file is not None:
         uploaded_file = await file.read()
+    elif url is not None and url.startswith('data:image/jpg;base64,'):
+        uploaded_file = b64decode(url[len('data:image/jpg;base64,'):])
 
     # Send error if both a URL and file were provided
-    if url is not None and len(uploaded_file) > 0:
+    if (url is not None
+        and not url.startswith('data:image/jpg;base64,')
+        and len(uploaded_file) > 0):
         raise HTTPException(
             status_code=422,
             detail='Cannot provide multiple sources'
