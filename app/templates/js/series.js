@@ -883,7 +883,8 @@ function querySeriesLogs() {
         event.querySelector('.label .icon').classList.add(color);
         event.querySelector('.summary span').innerText = `${toTitleCase(log.level)} Log Message`;
         event.querySelector('.date').innerText = timeDiffString(log.time);
-        event.querySelector('.extra').innerText = log.message;
+        event.querySelector('.extra').innerText =
+          log.message.replace('Series[{{series.id}}] {{series.full_name}}', '{{series.full_name}}');
 
         return event;
       })
