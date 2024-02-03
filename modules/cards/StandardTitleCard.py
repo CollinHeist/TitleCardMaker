@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Optional
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
+from modules.Debug import log
 
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
@@ -201,13 +202,13 @@ class StandardTitleCard(BaseCardType):
                 f'-strokewidth 6',
                 # Add season text
                 f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
-                f'-annotate +0+1555 "{self.episode_text}"',
+                f'-annotate +0+1555 "{self.season_text}"',
                 # Primary text
                 f'-fill "{self.episode_text_color}"',
                 f'-stroke "{self.episode_text_color}"',
                 f'-strokewidth 0.75',
                 # Add season text
-                f'-annotate +0+1555 "{self.episode_text}"',
+                f'-annotate +0+1555 "{self.season_text}"',
             ]
 
         return [
