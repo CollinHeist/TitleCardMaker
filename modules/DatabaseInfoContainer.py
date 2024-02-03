@@ -50,9 +50,8 @@ class InterfaceID:
     INTER_ID_KEY = ':'
     INTER_INTERFACE_KEY = ','
 
-    """Regex to match library sub ID components"""
-    LIBRARY_SUB_ID_REGEX = re_compile(r'^(\d+):(.+):(.*)$', IGNORECASE)
-
+    # """Regex to match library sub ID components"""
+    # LIBRARY_SUB_ID_REGEX = re_compile(r'^(\d+):(.+):(.*)$', IGNORECASE)
 
     __slots__ = ('_type', '_ids', '_libraries')
 

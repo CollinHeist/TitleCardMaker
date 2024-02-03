@@ -609,6 +609,7 @@ class TintedGlassCardType(BaseCardTypeCustomFontNoText):
     episode_text_color: BetterColor = TintedGlassTitleCard.EPISODE_TEXT_COLOR
     episode_text_position: EpisodeTextPosition = 'center'
     glass_color: BetterColor = TintedGlassTitleCard.DARKEN_COLOR
+    vertical_adjustment: int = 0
 
     @validator('box_adjustments')
     def parse_box_adjustments(cls, val):
