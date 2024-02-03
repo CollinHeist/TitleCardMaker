@@ -315,7 +315,7 @@ function getAllFonts() {
     url: '/api/fonts/all',
     /**
      * Fonts queried, add all Font forms to the DOM.
-     * @param {Array<NamedFont>} fonts 
+     * @param {NamedFont[]} fonts 
      */
     success: fonts => {
       // Display head if there are many Fonts
@@ -329,7 +329,9 @@ function getAllFonts() {
           fontElements = [];
       fonts.forEach(font => {
         // Add letter header for this Font if necessary
-        const letter = font.sort_name[0].toUpperCase();
+        let letter = font.sort_name[0].toUpperCase();
+        letter = isNaN(parseInt(letter)) ? letter : '#'; // All numbers go under #
+
         if (hasManyFonts && letter !== currentHeader) {
           const header = document.createElement('h3');
           header.className = 'ui dividing header';
