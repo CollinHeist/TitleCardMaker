@@ -11,3 +11,8 @@ img {
 .ui.loading.card::before {
   z-index: 10;
 }
+
+/* Reduce opacity of font file prefix text */
+.field label[data-value="file"] span.prefix {
+  opacity: 50%;
+}
