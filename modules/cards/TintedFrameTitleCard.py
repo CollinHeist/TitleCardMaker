@@ -84,7 +84,7 @@ class TintedFrameTitleCard(BaseCardType):
                 identifier='frame_width',
                 description='Width of the frame',
                 tooltip=(
-                    'Number ≥<v>0.0</v>. Default is <v>3</v>. Unit is pixels.'
+                    'Number ≥<v>0.0</v>. Default is <v>5</v>. Unit is pixels.'
                 ),
             ),
             Extra(
@@ -185,7 +185,7 @@ class TintedFrameTitleCard(BaseCardType):
 
     """Implementation details"""
     BOX_OFFSET = 185
-    BOX_WIDTH = 3
+    BOX_WIDTH = 5
     SHADOW_COLOR = 'black'
 
 
