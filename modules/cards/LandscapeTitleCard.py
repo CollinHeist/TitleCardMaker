@@ -37,7 +37,7 @@ class LandscapeTitleCard(BaseCardType):
         supports_custom_seasons=False,
         supported_extras=[
             Extra(
-                name='Bounding Box Toggle',
+                name='Box Toggle',
                 identifier='add_bounding_box',
                 description='Whether to add a bounding box around the title text',
                 tooltip=(
@@ -46,13 +46,13 @@ class LandscapeTitleCard(BaseCardType):
                 ),
             ),
             Extra(
-                name='Bounding Box Color',
+                name='Box Color',
                 identifier='box_color',
-                description='Color of the bounding box around the title text.',
+                description='Color of the bounding box around the title text',
                 tooltip='Matches the font color by default.',
             ),
             Extra(
-                name='Bounding Box Adjustments',
+                name='Box Adjustments',
                 identifier='box_adjustments',
                 description='Manual adjustments to the bounds of the bounding box',
                 tooltip=(
@@ -60,6 +60,14 @@ class LandscapeTitleCard(BaseCardType):
                     '<v>-20 10 0 5</v>. Positive values move that face out, '
                     'negative values move the face in. Default is '
                     '<v>0 0 0 0</v>. Unit is pixels.'
+                ),
+            ),
+            Extra(
+                name='Box Width',
+                identifier='box_width',
+                description='Thickness of the bounding box',
+                tooltip=(
+                    'Number ><v>0</v>. Default is <v>10</v>. Unit is pixels.'
                 ),
             ),
             Extra(
@@ -118,6 +126,8 @@ class LandscapeTitleCard(BaseCardType):
 
     """Additional spacing (in pixels) between bounding box and title text"""
     BOUNDING_BOX_SPACING = 150
+    """Default box width (in pixels)"""
+    BOX_WIDTH = 10
     """Color for darkening is black at 30% transparency"""
     DARKEN_COLOR = '#00000030'
     """Color of the drop shadow"""
@@ -127,7 +137,7 @@ class LandscapeTitleCard(BaseCardType):
         'source_file', 'output_file', 'title_text', 'font_color', 'font_file',
         'font_interline_spacing', 'font_interword_spacing', 'font_kerning',
         'font_size', 'font_vertical_shift', 'add_bounding_box',
-        'box_adjustments', 'box_color', 'darken', 'shadow_color',
+        'box_adjustments', 'box_color', 'box_width', 'darken', 'shadow_color',
     )
 
     def __init__(self,
@@ -146,6 +156,7 @@ class LandscapeTitleCard(BaseCardType):
             add_bounding_box: bool = True,
             box_adjustments: tuple[int, int, int, int] = (0, 0, 0, 0),
             box_color: str = TITLE_COLOR,
+            box_width: int = BOX_WIDTH,
             darken: DarkenOption = 'box',
             shadow_color: str = SHADOW_COLOR,
             preferences: Optional['Preferences'] = None,
@@ -173,6 +184,7 @@ class LandscapeTitleCard(BaseCardType):
         self.add_bounding_box = add_bounding_box
         self.box_adjustments = box_adjustments
         self.box_color = box_color
+        self.box_width = box_width
         self.darken = darken
         self.shadow_color = shadow_color
 
@@ -260,7 +272,7 @@ class LandscapeTitleCard(BaseCardType):
         # Get start coordinates of the bounding box
         x_start, x_end = 3200/2 - width/2, 3200/2 + width/2
         y_start, y_end = 1800/2 - height/2, 1800/2 + height/2
-        y_end -= 35     # Additional offset necessary for things to work out
+        y_end -= 35 # Additional offset necessary for things to work out
 
         # Shift y coordinates by vertical shift
         y_start += self.font_vertical_shift
@@ -300,7 +312,7 @@ class LandscapeTitleCard(BaseCardType):
                 f'-size {self.TITLE_CARD_SIZE}',
                 f'xc:None',
                 f'-fill transparent',
-                f'-strokewidth 10',
+                f'-strokewidth {self.box_width}',
                 f'-stroke "{self.box_color}"',
                 f'-draw "rectangle {x_start},{y_start},{x_end},{y_end}"',
             ],

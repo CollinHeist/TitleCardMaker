@@ -347,6 +347,7 @@ class LandscapeCardType(BaseCardModel):
     add_bounding_box: bool = True
     box_adjustments: BoxAdjustments = (0, 0, 0, 0)
     box_color: Optional[BetterColor] = None
+    box_width: PositiveInt = LandscapeTitleCard.BOX_WIDTH
     darken: Union[Literal['all', 'box'], bool] = 'box'
 
     @validator('box_adjustments')

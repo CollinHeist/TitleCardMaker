@@ -333,7 +333,7 @@ def get_interface(
         raise HTTPException(
             status_code=404,
             detail=(
-                f'No Connection with {interface_id} - Connection might be '
+                f'No Connection with ID {interface_id} - Connection might be '
                 f'disabled or invalid'
             )
         )
