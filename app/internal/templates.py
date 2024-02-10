@@ -1,13 +1,18 @@
 from typing import Literal, Optional, Union, overload
 
+from sqlalchemy.orm import Session
+
+from app.database.query import get_template
 from app.dependencies import get_preferences
 from app.models.episode import Episode
+from app.models.preferences import Preferences
 from app.models.series import Library, Series
 from app.models.template import Template
 
 
 @overload
-def get_effective_series_template(
+def get_effective_template(
+        obj: Union[Preferences, Series, Episode],
         series: Series,
         episode: Optional[Episode] = None,
         library: Optional[Library] = None,
@@ -17,7 +22,8 @@ def get_effective_series_template(
     ...
 
 @overload
-def get_effective_series_template(
+def get_effective_template(
+        obj: Union[Preferences, Series, Episode],
         series: Series,
         episode: Optional[Episode] = None,
         library: Optional[Library] = None,
@@ -26,7 +32,8 @@ def get_effective_series_template(
     ) -> Optional[Template]:
     ...
 
-def get_effective_series_template(
+def get_effective_template(
+        obj: Union[Preferences, Series, Episode],
         series: Series,
         episode: Optional[Episode] = None,
         library: Optional[Library] = None,
@@ -34,93 +41,103 @@ def get_effective_series_template(
         as_dict: bool = False
     ) -> Union[dict, Optional[Template]]:
     """
-    Get the effective Series Template for the given Series and optional
-    Episode. This evaluates all Template conditions.
+    Get the effective Template for the given object, evaluated with the
+    given Series and optional Episode. This evaluates all Template
+    conditions.
 
     Args:
-        series: Series whose Templates are being evaluated.
+        obj: Object whose Templates are being evaluated.
+        series: Series being used in the Template Condition evaluation.
         episode: Episode that can be used in the Template Condition
             evaluation.
         as_dict: Whether to return the dictionary of the given Template.
 
     Returns:
-        The first Template of the given Series whose Conditions are all
+        The first Template of the given object whose Conditions are all
         met. None (or an empty dictionary if `as_dict` is True) if no
         Template criteria are satisfied, or no Templates are defined.
     """
 
-    # Evaluate each Series Template
-    preferences = get_preferences()
-    for template in series.templates:
-        if template.meets_filter_criteria(preferences, series, episode, library):
-            return template.__dict__ if as_dict else template
+    # Object is global Preferences, query for each Template as evaluated
+    if isinstance(obj, Preferences) and obj.default_templates:
+        db = Session.object_session(series)
+        for template_id in obj.default_templates:
+            if ((template := get_template(db, template_id, raise_exc=False))
+                and template.meets_filter_criteria(obj, series, episode, library)):
+                return template.__dict__ if as_dict else template
+    # Object is Series or Episode, iterate and evaluate
+    elif isinstance(obj, (Series, Episode)):
+        preferences = get_preferences()
+        for template in obj.templates:
+            if template.meets_filter_criteria(preferences, series, episode, library):
+                return template.__dict__ if as_dict else template
 
     return {} if as_dict else None
 
 
-def get_effective_episode_template(
+@overload
+def get_effective_templates(
         series: Series,
-        episode: Episode,
+        episode: Literal[None] = None,
         library: Optional[Library] = None,
-    ) -> Optional[Template]:
-    """
-    Get the effective Episode Template for the given Series and Episode.
-    This evaluates all Template conditions.
-
-    Args:
-        series: Series used in the Template Condition evaluation.
-        episode: Episode whose Templates are being evluated.
-
-    Returns:
-        The first Template of the given SEpisodeeries whose Conditions
-        are all met. None if no Template criteria are satisfied, or no
-        Templates are defined.
-    """
-
-    # Evaluate each Episode Template
-    preferences = get_preferences()
-    for template in episode.templates:
-        if template.meets_filter_criteria(preferences, series, episode, library):
-            return template
-
-    return None
-
+    ) -> Union[tuple[Optional[Template], None, None],
+               tuple[None, Optional[Template], None]]:
+    ...
 
 def get_effective_templates(
         series: Series,
         episode: Optional[Episode] = None,
         library: Optional[Library] = None,
-    ) -> tuple[Optional[Template], Optional[Template]]:
+    ) -> Union[tuple[Optional[Template], None, None],
+               tuple[None, Optional[Template], None],
+               tuple[None, None, Optional[Template]]]:
     """
-    Get the effective Series and Episode Templates for the given Series
-    and optional Episode. This evaluates all Template conditions and
-    assumes all Episode Templates overrides Series Templates.
+    Get the effective Global, Series, and Episode Templates for the given
+    Series and optional Episode. This evaluates all Template conditions
+    and assumes all Series or Episode Templates override global
+    Templates, and all Episode Templates override Series Templates.
 
     Args:
         series: Series whose Templates are being evaluated.
         episode: Episode whose Templates are being evaluated.
 
     Returns:
-        Tuple of the Series and Episode Template objects (or None). If
-        an Episode is provided AND that Episode has Template
+        Tuple of the global, Series and Episode Template objects (or
+        None). If an Episode is provided AND that Episode has Template
         definitions, then the Series Template is always None, while the
         Episode Template is determined by the Filter criteria. Otherwise
         the Series Template is determined by the Filter critera, and the
         Episode Template is always None.
     """
 
-    # No Episode OR Episode has no Templates, return Series Template and None
-    if episode is None or not episode.templates:
-        return get_effective_series_template(series, episode, library), None
+    # Episode defines Templates, return Episode Template
+    if episode and episode.templates:
+        return (
+            None,
+            None,
+            get_effective_template(episode, series, episode, library)
+        )
 
-    # Episode defines Templates, return None and Episode Template
-    return None, get_effective_episode_template(series, episode, library)
+    # No Episode OR Episode has no Templates, return Series Template
+    if series.templates:
+        return (
+            None,
+            get_effective_template(series, series, episode, library),
+            None
+        )
+
+    # No Series or Episode Templates, return global Template
+    return (
+        get_effective_template(get_preferences(), series, episode, library),
+        None,
+        None,
+    )
 
 
 def get_all_effective_templates(
         series: Series,
         episode: Episode,
-    ) -> list[tuple[Optional[Template], Optional[Template]]]:
+    ) -> list[tuple[Optional[Template], Optional[Template],Optional[Template]]]:
     """
     _summary_
 

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.database.query import get_interface
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
-from app.internal.templates import get_effective_series_template
+from app.internal.templates import get_effective_templates
 from app.models.card import Card
 from app.models.episode import Episode
 from app.models.series import Series
@@ -96,11 +96,12 @@ def get_all_episode_data(
             communicated with.
     """
 
-    # Get Series' effective Episode data source
-    series_template_dict = get_effective_series_template(series, as_dict=True)
+    # Determine effective Episode data source
+    g_template, s_template, _ = get_effective_templates(series)
     interface_id = TieredSettings.resolve_singular_setting(
         get_preferences().episode_data_source,
-        series_template_dict.get('data_source_id', None),
+        getattr(g_template, 'data_source_id', None),
+        getattr(s_template, 'data_source_id', None),
         series.data_source_id,
     )
 
@@ -164,10 +165,11 @@ def refresh_episode_data(
     # Get all Episodes for this Series from the Episode data source
     all_episodes = get_all_episode_data(series, raise_exc=True, log=log)
 
-    # Get effective episode data source and sync specials toggle
-    series_template = get_effective_series_template(series, as_dict=False)
+    # Get effective sync specials toggle
+    global_template, series_template, _ = get_effective_templates(series)
     sync_specials: bool = TieredSettings.resolve_singular_setting(
         get_preferences().sync_specials,
+        getattr(global_template, 'sync_specials', None),
         getattr(series_template, 'sync_specials', None),
         series.sync_specials,
     )
@@ -210,13 +212,13 @@ def refresh_episode_data(
             if (do_title_match
                 and existing.title != episode_info.title.full_title):
                 existing.title = episode_info.title.full_title
-                log.debug(f'{series} {existing} Updating title')
+                log.debug(f'{existing} Updating title')
                 changed = True
                 episodes.append(existing)
 
             # Update watched status
             if existing.add_watched_status(watched):
-                log.debug(f'{series} {existing} Updating watched status')
+                log.debug(f'{existing} Updating watched status')
                 changed = True
 
     # Get existing Episodes

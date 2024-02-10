@@ -140,142 +140,151 @@
               Title Cards
             </h3>
             <section>
-              <div class="ui stackable grid">
-                <!-- Card settings -->
-                <div class="four wide column">
-                  <div class="field">
-                    <label>Default Card Type</label>
-                    <div id="default-card-type" class="ui long compact search selection dropdown">
-                      <span class="text"></span>
-                      <input name="default_card_type" type="hidden" value="{{preferences.default_card_type.lower()}}">
-                      <i class="dropdown icon"></i>
-                      <div class="down menu"><!-- Added asynchronously --></div>
-                    </div>
-                    <p class="help">
-                      Default type of Title Cards.
-                      <br>
-                      Can be overwritten per-Series.
-                    </p>
+              <!-- Card settings -->
+              <div class="two fields">
+                <div class="field">
+                  <label>Default Card Type</label>
+                  <div id="default-card-type" class="ui long compact search selection dropdown">
+                    <span class="text"></span>
+                    <input name="default_card_type" type="hidden" value="{{preferences.default_card_type.lower()}}">
+                    <i class="dropdown icon"></i>
+                    <div class="down menu"><!-- Added asynchronously --></div>
                   </div>
-
-                  <div class="field">
-                    <label>Excluded Card Types</label>
-                    <div id="excluded-card-types" class="ui long compact selection multiple dropdown">
-                      <span class="text"></span>
-                      <input name="excluded_card_types" type="hidden">
-                      <i class="dropdown icon"></i>
-                      <div class="down menu"><!-- Added asynchronously --></div>
-                    </div>
-                    <p class="help">
-                      Card types to exclude from dropdowns.
-                      <br>
-                      Purely visual to make selecting types easier.
-                    </p>
-                  </div>
-
-                  <div class="field">
-                    <label>Watched Episode Style</label>
-                    <div class="ui long compact selection dropdown">
-                      <span class="default text">{{preferences.default_watched_style.title()}}</span>
-                      <input name="default_watched_style" type="hidden">
-                      <i class="dropdown icon"></i>
-                      <div class="menu">
-                        <div class="header">Art Variations</div>
-                        <div class="divider"></div>
-                        <div class="item" data-value="art">Art</div>
-                        <div class="item" data-value="art blur">Blurred Art</div>
-                        <div class="item" data-value="art grayscale">Grayscale Art</div>
-                        <div class="item" data-value="art blur grayscale">Blurred Grayscale Art</div>
-                        <div class="header">Unique Variations</div>
-                        <div class="divider"></div>
-                        <div class="item" data-value="unique">Unique</div>
-                        <div class="item" data-value="blur unique">Blurred Unique</div>
-                        <div class="item" data-value="grayscale unique">Grayscale Unique</div>
-                        <div class="item" data-value="blur grayscale unique">Blurred Grayscale Unique</div>
-                      </div>
-                    </div>
-                    <div data-value="style-button" class="ui primary tertiary icon button">
-                      <i class="question circle outline icon"></i>
-                    </div>
-                    <p class="help">
-                      Default style of Title Cards created for watched Episodes.
-                      <br>
-                      Can be overrwitten per-Series.
-                    </p>
-                  </div>
-    
-                  <div class="field">
-                    <label>Unwatched Episode Style</label>
-                    <div class="ui long compact selection dropdown">
-                      <span class="default text">{{preferences.default_unwatched_style.title()}}</span>
-                      <input name="default_unwatched_style" type="hidden">
-                      <i class="dropdown icon"></i>
-                      <div class="menu">
-                        <div class="header">Art</div>
-                        <div class="divider"></div>
-                        <div class="item" data-value="art">Art</div>
-                        <div class="item" data-value="art blur">Blurred Art</div>
-                        <div class="item" data-value="art grayscale">Grayscale Art</div>
-                        <div class="item" data-value="art blur grayscale">Blurred Grayscale Art</div>
-                        
-                        <div class="header">Unique Variations</div>
-                        <div class="divider"></div>
-                        <div class="item" data-value="unique">Unique</div>
-                        <div class="item" data-value="blur unique">Blurred Unique</div>
-                        <div class="item" data-value="grayscale unique">Grayscale Unique</div>
-                        <div class="item" data-value="blur grayscale unique">Blurred Grayscale Unique</div>
-                      </div>
-                    </div>
-                    <div data-value="style-button" class="ui primary tertiary icon button">
-                      <i class="question circle outline icon"></i>
-                    </div>
-                    <p class="help">
-                      Default style of Title Cards created for unwatched Episodes.
-                      <br>
-                      Can be overrwitten per-Series.
-                    </p>
-                  </div>
-
-                  <div class="two equal width dimension fields">
-                    <div class="field">
-                      <label>Card Width</label>
-                      <input name="card_width" type="number" placeholder="{{preferences.card_width}}" value="{{preferences.card_width}}">
-                    </div>
-                    <div class="field">
-                      <label>Card Height</label>
-                      <input name="card_height" type="number" placeholder="{{preferences.card_height}}" value="{{preferences.card_height}}">
-                    </div>
-                  </div>
-                  <p class="help">Title Card dimensions (in pixels).</p>
-
-                  <div class="field">
-                    <label>Card Quality</label>
-                    <div data-value="card_quality" class="ui labeled ticked blue slider" id="card-quality"></div>
-                    <p class="help">
-                      Compression quality to utilize when creating Title Cards.
-                      <br>
-                      Lower values are more compressed, while higher values are less.
-                    </p>
-                  </div>
+                  <p class="help">
+                    Default type of Title Cards.
+                    <br>
+                    Can be overwritten per-Series.
+                  </p>
                 </div>
 
-                <!-- Card preview -->
-                <div id="title-card-preview" class="twelve wide column">
-                  <div class="ui horizontal raised card">
-                    <div class="image">
-                      <img alt="Preview Title Card" id="title-card-image" src="">
+                <div class="field">
+                  <label>Excluded Card Types</label>
+                  <div id="excluded-card-types" class="ui long compact selection multiple dropdown">
+                    <span class="text"></span>
+                    <input name="excluded_card_types" type="hidden">
+                    <i class="dropdown icon"></i>
+                    <div class="down menu"><!-- Added asynchronously --></div>
+                  </div>
+                  <p class="help">
+                    Card types to exclude from dropdowns.
+                    <br>
+                    Purely visual to make selecting types easier.
+                  </p>
+                </div>
+              </div>
+              
+              <div class="two fields">
+                <div class="field">
+                  <label>Watched Episode Style</label>
+                  <div class="ui long compact selection dropdown">
+                    <span class="default text">{{preferences.default_watched_style.title()}}</span>
+                    <input name="default_watched_style" type="hidden">
+                    <i class="dropdown icon"></i>
+                    <div class="menu">
+                      <div class="header">Art Variations</div>
+                      <div class="divider"></div>
+                      <div class="item" data-value="art">Art</div>
+                      <div class="item" data-value="art blur">Blurred Art</div>
+                      <div class="item" data-value="art grayscale">Grayscale Art</div>
+                      <div class="item" data-value="art blur grayscale">Blurred Grayscale Art</div>
+                      <div class="header">Unique Variations</div>
+                      <div class="divider"></div>
+                      <div class="item" data-value="unique">Unique</div>
+                      <div class="item" data-value="blur unique">Blurred Unique</div>
+                      <div class="item" data-value="grayscale unique">Grayscale Unique</div>
+                      <div class="item" data-value="blur grayscale unique">Blurred Grayscale Unique</div>
                     </div>
-                    <div class="content">
-                      <div id="title-card-name" class="header">CARD TYPE</div>
-                      <div class="meta">
-                        <span id="title-card-creators" class="author">AUTHOR(S)</span>
-                        <br><span id="title-card-font-support"><i class="times icon"></i>Custom Fonts</span>
-                        <br><span id="title-card-season-support"><i class="check icon"></i>Custom Season Titles</span>
-                      </div>
-                      <div id="title-card-description" class="description">
-                        <p>DESCRIPTION(S)</p>
-                      </div>
+                  </div>
+                  <div data-value="style-button" class="ui primary tertiary icon button">
+                    <i class="question circle outline icon"></i>
+                  </div>
+                  <p class="help">
+                    Default style of Title Cards created for watched Episodes.
+                    <br>
+                    Can be overrwitten per-Series.
+                  </p>
+                </div>
+  
+                <div class="field">
+                  <label>Unwatched Episode Style</label>
+                  <div class="ui long compact selection dropdown">
+                    <span class="default text">{{preferences.default_unwatched_style.title()}}</span>
+                    <input name="default_unwatched_style" type="hidden">
+                    <i class="dropdown icon"></i>
+                    <div class="menu">
+                      <div class="header">Art</div>
+                      <div class="divider"></div>
+                      <div class="item" data-value="art">Art</div>
+                      <div class="item" data-value="art blur">Blurred Art</div>
+                      <div class="item" data-value="art grayscale">Grayscale Art</div>
+                      <div class="item" data-value="art blur grayscale">Blurred Grayscale Art</div>
+                      
+                      <div class="header">Unique Variations</div>
+                      <div class="divider"></div>
+                      <div class="item" data-value="unique">Unique</div>
+                      <div class="item" data-value="blur unique">Blurred Unique</div>
+                      <div class="item" data-value="grayscale unique">Grayscale Unique</div>
+                      <div class="item" data-value="blur grayscale unique">Blurred Grayscale Unique</div>
                     </div>
+                  </div>
+                  <div data-value="style-button" class="ui primary tertiary icon button">
+                    <i class="question circle outline icon"></i>
+                  </div>
+                  <p class="help">
+                    Default style of Title Cards created for unwatched Episodes.
+                    <br>
+                    Can be overrwitten per-Series.
+                  </p>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Default Templates</label>
+                <div data-value="default_templates" class="ui search selection clearable compact multiple dropdown">
+                  <input name="default_templates" type="hidden">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">None</div>
+                  <div class="menu"><!-- Added asynchronously --></div>
+                </div>
+                <p class="help">Templates to apply to all Series when not directly specified.</p>
+              </div>
+
+              <div class="fields">
+                <div class="four wide field">
+                  <label>Card Width</label>
+                  <input name="card_width" type="number" placeholder="{{preferences.card_width}}" value="{{preferences.card_width}}">
+                </div>
+                <div class="four wide field">
+                  <label>Card Height</label>
+                  <input name="card_height" type="number" placeholder="{{preferences.card_height}}" value="{{preferences.card_height}}">
+                </div>
+                <!-- <p class="help">Title Card dimensions (in pixels).</p> -->
+                
+                <div class="eight wide field">
+                  <label>Card Quality</label>
+                  <div data-value="card_quality" class="ui labeled ticked blue slider" id="card-quality"></div>
+                  <p class="help">
+                    Compression quality to utilize when creating Title Cards.
+                    <br>
+                    Lower values are more compressed, while higher values are less.
+                  </p>
+                </div>
+              </div>
+                
+              <!-- Card preview -->
+              <div class="ui horizontal raised card">
+                <div class="image">
+                  <img alt="Preview Title Card" id="title-card-image" src="">
+                </div>
+                <div class="content">
+                  <div id="title-card-name" class="header">CARD TYPE</div>
+                  <div class="meta">
+                    <span id="title-card-creators" class="author">AUTHOR(S)</span>
+                    <br><span id="title-card-font-support"><i class="times icon"></i>Custom Fonts</span>
+                    <br><span id="title-card-season-support"><i class="check icon"></i>Custom Season Titles</span>
+                  </div>
+                  <div id="title-card-description" class="description">
+                    <p>DESCRIPTION(S)</p>
                   </div>
                 </div>
               </div>
@@ -350,7 +359,8 @@
             </section>
 
             <h3 class="ui horizontal divider header">
-              <i class="wrench icon"></i>
+              <!-- <i class="wrench icon"></i> -->
+              <i class="universal access icon"></i>
               Web Interface
             </h3>
             <section>

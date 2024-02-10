@@ -56,7 +56,7 @@ class Preferences:
         'episode_data_source', 'valid_image_extensions', 'card_quality',
         'specials_folder_format', 'season_folder_format', 'sync_specials',
         'delete_missing_episodes', 'remote_card_types', 'default_card_type',
-        'excluded_card_types', 'default_watched_style',
+        'excluded_card_types', 'default_templates', 'default_watched_style',
         'default_unwatched_style', 'use_emby', 'use_jellyfin', 'use_plex',
         'use_sonarr', 'use_tmdb', 'use_magick_prefix', 'current_version',
         'available_version', 'blacklisted_blueprints', 'advanced_scheduling',
@@ -189,6 +189,7 @@ class Preferences:
         self.excluded_card_types = []
         self.default_watched_style = 'unique'
         self.default_unwatched_style = 'unique'
+        self.default_templates: list[int] = []
 
         self.currently_running_sync = None
         self.invalid_connections: list[int] = []

@@ -38,19 +38,20 @@ def translate_episode(
     libraries = series.libraries if series.libraries else [None]
     for library in libraries:
         # Get the Series and Episode Template
-        series_template, episode_template = get_effective_templates(
+        g_template, s_template, e_template = get_effective_templates(
             series, episode, library,
         )
 
         # Get the highest priority translation setting
         translations = TieredSettings.resolve_singular_setting(
-            getattr(series_template, 'translations', None),
+            getattr(g_template, 'translations', None),
+            getattr(s_template, 'translations', None),
             series.translations,
-            getattr(episode_template, 'translations', None)
+            getattr(e_template, 'translations', None)
         )
 
         # Exit if there are no translations to add
-        if translations is None or len(translations) == 0:
+        if not translations:
             continue
 
         # Look for and add each translation for this Episode

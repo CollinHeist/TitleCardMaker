@@ -10,30 +10,12 @@
   color: #ccc;
 }
 
-/* Formatting for the title card prevew */
-#title-card-preview .card {
-  width: 900px; /* 800px */
-  min-width: 253px; /* 225px */
-  max-height: 253px; /* 225px */
+#settings .horizontal.card {
+  width: 100%;
 }
-#title-card-preview .image {
-  width: 450px; /* 400px */
-}
-/* Wrap long descriptions with scrollbar */
-#title-card-preview .content {
-  overflow: auto;
-  max-height: 253px;
-}
-
-/* Mobile formatting for the title card preview */
-@media (max-width: 768px) {
-  #title-card-preview .card {
-    width: 100%;
-    max-height: none;
-  }
-  #title-card-preview .image {
-    width: 100%;
-  }
+.ui.card.horizontal > .image, .ui.horizontal.cards > .card > .image {
+  width: 400px;
+  max-width: 400px;
 }
 
 /* Reduce opacity of system info labels */

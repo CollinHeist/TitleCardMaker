@@ -1,11 +1,38 @@
 {% if False %}
-import {EpisodeDataSourceToggle, ImageSourceToggle, ToggleOption} from './.types.js';
+import {AvailableTemplate, EpisodeDataSourceToggle, ImageSourceToggle} from './.types.js';
 {% endif %}
 
 // Get all Connection data
 let allConnections;
 async function getAllConnections() {
   allConnections = await fetch('/api/connection/all').then(resp => resp.json());
+}
+
+// Get all available Templates
+/** @type {AvailableTemplate[]} */
+let allTemplates = [];
+/**
+ * Submit an API request to get all the available Templates, initializing the
+ * dropdowns with these values (and a placeholder).
+ */
+function getTemplates() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/available/templates',
+    /**
+     * Initialize the Template ID dropdowns with the given values.
+     * @param {AvailableTemplate[]} availableTemplates - All available
+     * Templates.
+     */
+    success: availableTemplates => {
+      allTemplates = availableTemplates;
+      $('.dropdown[data-value="default_templates"]').dropdown({
+        placeholder: 'None',
+        values: getActiveTemplates({{preferences.default_templates}}, availableTemplates),
+      });
+    },
+    error: response => showErrorToast({'title': 'Error Querying Templates', response}),
+  })
 }
 
 /**
@@ -121,6 +148,7 @@ async function initAll() {
 
   await getAllConnections();
   getEpisodeDataSources();
+  getTemplates();
   getImageSourcePriority();
 
   // Filled in later
@@ -193,14 +221,14 @@ async function initAll() {
       // Prep form
       let form = new FormData(event.target);
 
-      // Parse ISP
+      // Parse comma-separated fields
       const imageSourcePriority = form.get('image_source_priority').split(',');
       form.delete('image_source_priority');
-
-      // Parse card exclusions
       const excludedCardTypes = form.get('excluded_card_types') === '' ? [] : form.get('excluded_card_types').split(',');
       form.delete('excluded_card_types');
-      
+      const defaultTemplates = form.get('default_templates').split(',');
+      form.delete('default_templates');
+
       // Delete blank values
       for (const [key, value] of [...form.entries()]) {
         if (value === '') { form.delete(key); }
@@ -217,6 +245,7 @@ async function initAll() {
           ...Object.fromEntries(form),
           image_source_priority: imageSourcePriority,
           excluded_card_types: excludedCardTypes,
+          default_templates: defaultTemplates,
           card_quality: $('.slider[data-value="card_quality"]').slider('get value'),
         }),
         contentType: 'application/json',

@@ -55,7 +55,10 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                 try:
                     # Refresh Episode data if Series is monitored
                     if series.monitored:
-                        refresh_episode_data(db, series, log=log)
+                        try:
+                            refresh_episode_data(db, series, log=log)
+                        except HTTPException:
+                            log.exception(f'Cannot refresh Episode data of {series}')
                     else:
                         log.debug(f'{series} is unmonitored, not refreshing '
                                   f'Episode data')
@@ -406,17 +409,19 @@ def resolve_card_settings(
 
     # Get effective Template for this Series and Episode
     series = episode.series
-    series_template, episode_template = get_effective_templates(
+    global_template, series_template, episode_template =get_effective_templates(
         series, episode, library
     )
-    series_template_dict, episode_template_dict = {}, {}
+    global_template_dict, series_template_dict, episode_template_dict = {},{},{}
+    if global_template is not None:
+        global_template_dict = global_template.card_properties
     if series_template is not None:
         series_template_dict = series_template.card_properties
     if episode_template is not None:
         episode_template_dict = episode_template.card_properties
 
     # Get effective Font for this Series and Episode
-    series_font_dict, episode_font_dict = {}, {}
+    global_font_dict, series_font_dict, episode_font_dict = {}, {}, {}
     if episode.font:
         episode_font_dict = episode.font.card_properties
     elif episode_template and episode_template.font:
@@ -425,6 +430,8 @@ def resolve_card_settings(
         series_font_dict = series.font.card_properties
     elif series_template and series_template.font:
         series_font_dict = series_template.font.card_properties
+    elif global_template and global_template.font:
+        global_font_dict = global_template.font.card_properties
 
     # Resolve all settings from global -> Episode
     preferences = get_preferences()
@@ -432,10 +439,14 @@ def resolve_card_settings(
         {'hide_season_text': False, 'hide_episode_text': False},
         DefaultFont,
         preferences.card_properties,
+        {'logo_file': series.get_logo_file(preferences.source_directory),
+         'backdrop_file': series.get_series_backdrop(preferences.source_directory),
+         'poster_file': series.get_series_poster(preferences.source_directory)},
+        global_template_dict,
+        global_font_dict,
         series_template_dict,
         series_font_dict,
         series.card_properties,
-        {'logo_file': series.get_logo_file(preferences.source_directory)},
         episode_template_dict,
         episode_font_dict,
         episode.get_card_properties(library),
@@ -443,6 +454,7 @@ def resolve_card_settings(
 
     # Resolve all extras
     card_extras = TieredSettings.new_settings(
+        global_template_dict.get('extras', {}),
         series_template_dict.get('extras', {}),
         series.extras,
         episode_template_dict.get('extras', {}),
@@ -625,6 +637,9 @@ def resolve_card_settings(
         new_name = card_file_name + preferences.card_extension
         card_settings['card_file'] = card_settings['card_file'].parent /new_name
     card_settings['card_file'] =CleanPath(card_settings['card_file']).sanitize()
+
+    # Perform any card-class specific format string evaluations
+    card_settings = CardClass.resolve_format_strings(**card_settings)
 
     return card_settings
 
@@ -815,7 +830,7 @@ def get_watched_statuses(
     # Get statuses for each library of this Series
     changed = False
     for library in series.libraries:
-        if (interface := get_interface(library['interface_id'])):
+        if (interface :=get_interface(library['interface_id'],raise_exc=False)):
             changed |= interface.update_watched_statuses(
                 library['name'], series.as_series_info, episodes, log=log,
             )

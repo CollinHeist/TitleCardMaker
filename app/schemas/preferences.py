@@ -84,6 +84,7 @@ class UpdatePreferences(UpdateBase):
     excluded_card_types: list[CardTypeIdentifier] = UNSPECIFIED
     default_watched_style: Style = UNSPECIFIED
     default_unwatched_style: Style = UNSPECIFIED
+    default_templates: list[int] = UNSPECIFIED
     home_page_size: PositiveInt = UNSPECIFIED
     episode_data_page_size: PositiveInt = UNSPECIFIED
     stylize_unmonitored_posters: bool = UNSPECIFIED
@@ -160,6 +161,7 @@ class Preferences(Base):
     excluded_card_types: list[CardTypeIdentifier]
     default_watched_style: Style
     default_unwatched_style: Style
+    default_templates: list[int]
     home_page_size: PositiveInt
     episode_data_page_size: PositiveInt
     stylize_unmonitored_posters: bool

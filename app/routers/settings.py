@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Body, Depends, Request
 from sqlalchemy.orm import Session
+from app.database.query import get_all_templates, get_template
 
 from app.dependencies import get_database, get_preferences
 from app.internal.auth import get_current_user
 from app.models.connection import Connection
 from app.models.preferences import Preferences as PreferencesModel
+from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import (
     EpisodeDataSourceToggle, ImageSourceToggle, Preferences, ToggleOption,
     UpdatePreferences
@@ -40,6 +42,7 @@ def get_current_version(
 def update_global_settings(
         request: Request,
         update_preferences: UpdatePreferences = Body(...),
+        db: Session = Depends(get_database),
         preferences: PreferencesModel = Depends(get_preferences),
     ) -> Preferences:
     """
@@ -47,6 +50,11 @@ def update_global_settings(
 
     - update_preferences: UpdatePreferences containing fields to update.
     """
+
+    # Verify all specified Templates exist
+    if update_preferences.default_templates != UNSPECIFIED:
+        for template_id in update_preferences.default_templates:
+            get_template(db, template_id, raise_exc=True)
 
     preferences.update_values(**update_preferences.dict(), log=request.state.log)
 

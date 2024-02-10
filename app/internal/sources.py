@@ -63,7 +63,7 @@ def resolve_source_settings(
 
     # Get effective Template for this Series and Episode
     series = episode.series
-    series_template, episode_template = get_effective_templates(
+    global_template, series_template, episode_template =get_effective_templates(
         series, episode, library,
     )
 
@@ -71,6 +71,7 @@ def resolve_source_settings(
     preferences = get_preferences()
     watched_style = TieredSettings.resolve_singular_setting(
         preferences.default_watched_style,
+        getattr(global_template, 'watched_style', None),
         getattr(series_template, 'watched_style', None),
         series.watched_style,
         getattr(series.extras, 'watched_style', None),
@@ -79,6 +80,7 @@ def resolve_source_settings(
     )
     unwatched_style = TieredSettings.resolve_singular_setting(
         preferences.default_unwatched_style,
+        getattr(global_template, 'unwatched_style', None),
         getattr(series_template, 'unwatched_style', None),
         series.unwatched_style,
         getattr(series.extras, 'unwatched_style', None),
@@ -292,7 +294,7 @@ def download_episode_source_image(
         return f'/source/{series.path_safe_name}/{source_file.name}'
 
     # Get effective Templates
-    series_template, episode_template = get_effective_templates(
+    global_template, series_template, episode_template =get_effective_templates(
         series, episode, library,
     )
 
@@ -300,6 +302,7 @@ def download_episode_source_image(
     preferences = get_preferences()
     skip_localized_images = TieredSettings.resolve_singular_setting(
         preferences.tmdb_skip_localized,
+        getattr(global_template, 'skip_localized_images', None),
         getattr(series_template, 'skip_localized_images', None),
         series.skip_localized_images,
         getattr(episode_template, 'skip_localized_images', None),
