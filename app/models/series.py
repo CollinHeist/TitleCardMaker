@@ -624,6 +624,21 @@ class Series(Base):
         return Path(source_base) / self.path_safe_name / 'backdrop.jpg'
 
 
+    def get_series_poster(self, source_base: str) -> Path:
+        """
+        Get the backdrop file for this series.
+
+        Args:
+            source_base: Base source directory.
+
+        Returns:
+            Path to the poster file that corresponds to this series'
+            under the given base source directory.
+        """
+
+        return Path(source_base) / self.path_safe_name / 'poster.jpg'
+
+
     def get_libraries(self,
             interface: Union[int, Literal['Emby', 'Jellyfin', 'Plex']],
         ) -> Iterator[tuple[int, str]]:
