@@ -131,37 +131,6 @@ def get_blueprint_database(
         db.close()
 
 
-# from random import choices as random_choices
-# from string import hexdigits
-# def get_logger() -> Iterator[Logger]:
-#     """
-#     Dependency to get a Session to the SQLite database.
-
-#     Returns:
-#         Iterator that yields a Session to the database then closes the
-#         connection.
-#     """
-
-#     from logging import DEBUG, getLogger, LoggerAdapter
-#     from modules.Debug2 import DatabaseHandler
-#     db = LogSessionMaker()
-#     log_ = getLogger('TCM')
-#     handler = DatabaseHandler(db)
-#     handler.setLevel(DEBUG)
-#     log_.addHandler(handler)
-#     adapter = LoggerAdapter(
-#         log_,
-#         extra={'context_id': ''.join(random_choices(hexdigits, k=6)).lower()},
-#     )
-
-#     try:
-#         print(f'{adapter=}')
-#         yield adapter
-#     finally:
-#         db.commit()
-#         db.close()
-
-
 def get_scheduler() -> BackgroundScheduler:
     """
     Dependency to get the global task Scheduler.
