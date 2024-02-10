@@ -446,9 +446,19 @@ class EpisodeInfo(DatabaseInfoContainer):
         if self.tvrage_id is not None:
             id_conditions.append(EpisodeModel.tvrage_id==self.tvrage_id)
 
+        # If >1 ID condition is present, require any two ID match to
+        # prevent failed matches caused by single ID collision
+        conditions = []
+        if len(id_conditions) >= 2:
+            for i, condition in enumerate(id_conditions):
+                for j in range(i + 1, len(id_conditions)):
+                    conditions.append(and_(condition, id_conditions[j]))
+        else:
+            conditions = id_conditions
+
         return or_(
             # Find by database ID
-            or_(*id_conditions),
+            or_(*conditions),
             # Find by index and title
             and_(
                 EpisodeModel.season_number==self.season_number,
