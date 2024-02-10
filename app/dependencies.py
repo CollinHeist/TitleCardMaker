@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.database.session import (
     BlueprintSessionMaker, EmbyInterfaces, ImageMagickInterfaceLocal,
     JellyfinInterfaces, PreferencesLocal, Scheduler, SessionLocal,
-    TMDbInterfaces, PlexInterfaces, SonarrInterfaces, LogSessionMaker
+    TMDbInterfaces, PlexInterfaces, SonarrInterfaces
 )
 from app.models.preferences import Preferences
 
