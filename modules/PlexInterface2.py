@@ -224,7 +224,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         # Try by name
         try:
-            results = library.search(
+            results: list[PlexShow] = library.search(
                 title=series_info.name, year=series_info.year, libtype='show'
             )
             for series in results:
