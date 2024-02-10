@@ -43,8 +43,8 @@ from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 
 LocalCardIdentifiers = Literal[
-    'anime', 'banner', 'calligraphy', 'comic book', 'cutout', 'divider', 'fade',
-    'formula one', 'frame', 'generic', 'graph', 'gundam', 'inset', 'ishalioh',
+    'anime', 'banner', 'calligraphy', 'comic book', 'cutout', 'divider', 'f1',
+    'fade', 'frame', 'generic', 'graph', 'gundam', 'inset', 'ishalioh',
     'landscape', 'logo', 'marvel', 'music', 'musikmann', 'olivier', 'phendrena',
     'photo', 'polymath', 'poster', 'reality tv', 'roman', 'roman numeral',
     'shape', 'sherlock', 'standard', 'star wars', 'textless', 'tinted glass',
@@ -266,8 +266,8 @@ class FormulaOneCardType(BaseCardTypeAllText):
     @root_validator(skip_on_failure=True)
     def parse_country(cls, values: dict) -> dict:
         if values['country'] is None:
-            if values['season_text'].lower() in FormulaOneTitleCard._COUNTRY:
-                values['country'] = values['season_text'].lower()
+            if values['season_text'] in FormulaOneTitleCard._COUNTRY_FLAGS:
+                values['country'] = values['season_text']
             else:
                 values['country'] = 'generic'
 

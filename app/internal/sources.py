@@ -360,18 +360,18 @@ def download_episode_source_image(
 
         # Source image is valid, download - error if download fails
         if WebInterface.download_image(source_image, source_file, log=log):
-            log.info(f'{episode} Downloaded '
-                     f'"{source_file.name}" from {interface.INTERFACE_TYPE}')
+            log.debug(f'{episode} Downloaded "{source_file.name}" from '
+                      f'{interface.INTERFACE_TYPE}')
             return f'/source/{series.path_safe_name}/{source_file.name}'
 
         if raise_exc:
             raise HTTPException(
                 status_code=400,
-                detail=f'Unable to download source image'
+                detail=f'Unable to download Source Image'
             )
 
     # No image source returned a valid image, return None
-    log.debug(f'{episode} No source images found')
+    log.debug(f'{episode} No Source Images found')
     return None
 
 

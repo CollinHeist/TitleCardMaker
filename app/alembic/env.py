@@ -24,6 +24,9 @@ Schema Version History (oldest to newest):
 - caec4f618689 | Turn Card attributes into Card.model_json
 - a61f373185d4 | Add support for multiple Connections
 - 5318f59eadbf | Utilize ORM Mappings and finalize Column nullability
+- 48872195483e | Add Snapshot table
+- 32ef3d4633ce | Add Card.source_file column
+- b99ce3bfdfbd | Add Sync.required_root_folder column
 """
 
 # this is the Alembic Config object, which provides

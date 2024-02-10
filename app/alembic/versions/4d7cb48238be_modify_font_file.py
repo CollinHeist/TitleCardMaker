@@ -7,7 +7,6 @@ Modify Font table
 Revision ID: 4d7cb48238be
 Revises: 5861246a49f3
 Create Date: 2023-09-11 20:20:14.124994
-
 """
 
 from alembic import op

@@ -331,7 +331,7 @@ def update_series(
     # Update each attribute of the object
     for attr, value in update_series_dict.items():
         if value != UNSPECIFIED and getattr(series, attr) != value:
-            log.debug(f'Series[{series.id}].{attr} = {value}')
+            log.debug(f'Series[{series.id}].{attr} = {value!r}')
             setattr(series, attr, value)
             changed = True
 
