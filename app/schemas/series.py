@@ -208,6 +208,7 @@ class UpdateTemplate(BaseUpdate):
 
 class UpdateSeries(BaseUpdate):
     year: conint(ge=1900) = UNSPECIFIED
+    directory: Optional[str] = UNSPECIFIED
     template_ids: Optional[list[int]] = UNSPECIFIED
     font_id: Optional[int] = UNSPECIFIED
     sync_specials: Optional[bool] = UNSPECIFIED
@@ -237,14 +238,17 @@ class UpdateSeries(BaseUpdate):
     font_interword_spacing: Optional[int] = UNSPECIFIED
     font_vertical_shift: Optional[int] = UNSPECIFIED
 
-    emby_id: EmbyID = UNSPECIFIED
+    emby_id: Optional[EmbyID] = UNSPECIFIED # Not actually optional
     imdb_id: IMDbID = UNSPECIFIED
-    jellyfin_id: JellyfinID = UNSPECIFIED
-    sonarr_id: SonarrID = UNSPECIFIED
+    jellyfin_id: Optional[JellyfinID] = UNSPECIFIED # Not actually optional
+    sonarr_id: Optional[SonarrID] = UNSPECIFIED # Not actually optional
     tmdb_id: TMDbID = UNSPECIFIED
     tvdb_id: TVDbID = UNSPECIFIED
     tvrage_id: TVRageID = UNSPECIFIED
-    directory: Optional[str] = UNSPECIFIED
+
+    @validator('emby_id', 'jellyfin_id', 'sonarr_id', pre=False)
+    def validate_ids(cls, v):
+        return '' if not v else v
 
     @validator('template_ids', pre=False)
     def validate_unique_template_ids(cls, val):
