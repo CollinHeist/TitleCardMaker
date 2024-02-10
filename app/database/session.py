@@ -67,28 +67,29 @@ def backup_data(*, log: Logger = log) -> DataBackup:
     """
 
     # Determine file to back up database to
-    BACKUP_DT_FORMAT = '%Y.%m.%d_%H.%M.%S'
-    now = datetime.now().strftime(BACKUP_DT_FORMAT)
+    BACKUP_DT_FORMAT = '%Y-%m-%d_%H-%M-%S'
+    name = datetime.now().strftime(BACKUP_DT_FORMAT)
     if IS_DOCKER:
         config = Path('/config/config.pickle')
-        config_backup = Path(f'/config/backups/config.pickle.{now}')
+        config_backup = Path(f'/config/backups/config.pickle.{name}')
         database = Path('/config/db.sqlite')
-        database_backup = Path(f'/config/backups/db.sqlite.{now}')
+        database_backup = Path(f'/config/backups/db.sqlite.{name}')
     else:
         config = Path('./config/config.pickle')
-        config_backup = Path(f'./config/backups/config.pickle.{now}')
+        config_backup = Path(f'./config/backups/config.pickle.{name}')
         database = Path('./config/db.sqlite')
-        database_backup = Path(f'./config/backups/db.sqlite.{now}')
+        database_backup = Path(f'./config/backups/db.sqlite.{name}')
 
     # Remove backups older than 3 weeks
     def delete_old_backup(backup_file: Path, base_filename: str) -> None:
         for prior in backup_file.parent.glob(f'{base_filename}.*'):
             try:
                 date = datetime.strptime(
-                    prior.name, f'{base_filename}.{BACKUP_DT_FORMAT}'
+                    prior.name.rsplit('.')[-1],
+                    BACKUP_DT_FORMAT
                 )
             except ValueError:
-                log.warning(f'Cannot identify date of backup file "{prior}"')
+                log.debug(f'Cannot identify date of backup file "{prior}"')
                 continue
 
             if date < datetime.now() - timedelta(weeks=3):
@@ -102,13 +103,13 @@ def backup_data(*, log: Logger = log) -> DataBackup:
     if config.exists():
         config_backup.parent.mkdir(exist_ok=True, parents=True)
         file_copy(config, config_backup)
-        log.info(f'Performed settings backup')
+        log.info(f'Performed settings backup ({config_backup})')
 
     # Backup database
     if database.exists():
         database_backup.parent.mkdir(exist_ok=True, parents=True)
         file_copy(database, database_backup)
-        log.info(f'Performed database backup')
+        log.info(f'Performed database backup ({database_backup})')
 
     return DataBackup(config=config_backup, database=database_backup)
 
@@ -186,6 +187,7 @@ SessionLocal = sessionmaker(
     bind=engine, expire_on_commit=False, autocommit=False, autoflush=False,
 )
 Base = declarative_base()
+
 BlueprintSessionMaker = sessionmaker(bind=blueprint_engine)
 BlueprintBase = declarative_base()
 
