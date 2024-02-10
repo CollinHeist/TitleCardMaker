@@ -1,3 +1,56 @@
+# from datetime import datetime
+# from logging import DEBUG, Handler, Formatter, getLogger, LogRecord, LoggerAdapter
+# from re import compile as re_compile
+
+# from sqlalchemy.orm import Session
+
+# from app.models.event import Event
+
+
+# BaseFormatter = Formatter('%(message)s')
+
+# EpisodeRegex = re_compile(r'\s*Episode\[(\d+)\]\s+')
+# SeriesRegex = re_compile(r'\s*Series\[(\d+)\]\s+')
+
+
+# class DatabaseHandler(Handler):
+
+#     def __init__(self, session: Session) -> None:
+#         """
+#         """
+
+#         super().__init__()
+
+#         self.session: Session = session
+#         self.setFormatter(BaseFormatter)
+#         self.setLevel(DEBUG)
+
+
+#     def emit(self, record: LogRecord):
+#         """
+        
+#         """
+
+#         self.format(record)
+
+#         episode_id = None
+#         if (episode_match := EpisodeRegex.match(record.__dict__['message'])):
+#             episode_id = int(episode_match.group(1))
+
+#         series_id = None
+#         if (series_match := SeriesRegex.match(record.__dict__['message'])):
+#             series_id = int(series_match.group(1))
+
+#         self.session.add(Event(
+#             series_id=series_id,
+#             episode_id=episode_id,
+#             context_id=record.context_id,
+#             level=record.__dict__['levelname'],
+#             time=datetime.utcfromtimestamp(record.created),
+#             message=record.__dict__['message'],
+#         ))
+#         self.session.commit()
+
 from os import environ
 from json import dumps
 from pathlib import Path

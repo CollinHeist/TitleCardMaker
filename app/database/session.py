@@ -4,7 +4,7 @@ from os import environ
 from pathlib import Path
 from re import IGNORECASE, sub as re_sub, match as _regex_match
 from shutil import copy as file_copy
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -49,6 +49,14 @@ if IS_DOCKER:
     BLUEPRINT_SQL_DATABASE_URL = 'sqlite:////maker/modules/.objects/blueprints.db'
 blueprint_engine = create_engine(
     BLUEPRINT_SQL_DATABASE_URL, connect_args={'check_same_thread': False},
+)
+
+# URL to the Logging SQL database
+LOGGING_SQL_DATABASE_URL = 'sqlite:///./config/logs/logs.sqlite'
+if IS_DOCKER:
+    LOGGING_SQL_DATABASE_URL = 'sqlite:////config/logs/logs.sqlite'
+logs_engine = create_engine(
+    LOGGING_SQL_DATABASE_URL, connect_args={'check_same_thread': False},
 )
 
 class DataBackup(NamedTuple): # pylint: disable=missing-class-docstring
@@ -190,6 +198,9 @@ Base = declarative_base()
 
 BlueprintSessionMaker = sessionmaker(bind=blueprint_engine)
 BlueprintBase = declarative_base()
+
+LogSessionMaker = sessionmaker(bind=logs_engine)
+LoggingBase = declarative_base()
 
 # Scheduler
 Scheduler = BackgroundScheduler(
