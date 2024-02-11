@@ -98,7 +98,6 @@ class ComicBookTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    # pylint: disable=line-too-long
     API_DETAILS = CardDescription(
         name='Comic Book',
         identifier='comic book',
@@ -112,6 +111,7 @@ class ComicBookTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
+                tooltip='Default is <v>black</v>.'
             ),
             Extra(
                 name='Index Text Position',
@@ -120,12 +120,13 @@ class ComicBookTitleCard(BaseCardType):
                 tooltip=(
                     'Either <v>left</v>, <v>middle</v>, or <v>right</v>. '
                     'Default is <v>left</v>.'
-                )
+                ),
             ),
             Extra(
                 name='Title Textbox Fill Color',
                 identifier='text_box_fill_color',
                 description='Fill color of the text box for the title text.',
+                tooltip='Default is <v>white</v>.'
             ),
             Extra(
                 name='Title Textbox Edge Color',
@@ -163,6 +164,7 @@ class ComicBookTitleCard(BaseCardType):
                 description=(
                     'Fill color for both the title and episode text banners'
                 ),
+                tooltip='Defaults to <v>rgba(235,73,69,0.6)</v>.'
             ),
             Extra(
                 name='Title Banner Vertical Shift',
@@ -170,7 +172,7 @@ class ComicBookTitleCard(BaseCardType):
                 description=(
                     'Additional vertical shift to apply to the title text banner'
                 ),
-            tooltip=(
+                tooltip=(
                     'Negative values shift the banner up, positive values '
                     'shift the banner down. Unit is pixels.'
                 ),
@@ -181,7 +183,7 @@ class ComicBookTitleCard(BaseCardType):
                 description=(
                     'Additional vertical shift to apply to the index text banner'
                 ),
-            tooltip=(
+                tooltip=(
                     'Negative values shift the banner up, positive values '
                     'shift the banner down. Unit is pixels.'
                 ),
@@ -190,21 +192,27 @@ class ComicBookTitleCard(BaseCardType):
                 name='Hide Title Banner',
                 identifier='hide_title_banner',
                 description='Whether to hide the title text banner',
-                tooltip='Either <v>True</v> or <v>False</v>.',
+                tooltip=(
+                    'Either <v>True</v> or <v>False</v>. Default is '
+                    '<v>False</v>.'
+                ),
             ),
             Extra(
                 name='Hide Index Banner',
                 identifier='hide_index_banner',
                 description='Whether to hide the index text banner',
-                tooltip='Either <v>True</v> or <v>False</v>.',
+                tooltip=(
+                    'Either <v>True</v> or <v>False</v>. Default is '
+                    '<v>False</v>.'
+                ),
             ),
-        ], description=[
+        ],
+        description=[
             'Title card styled after a comic book page.',
             'The top and bottom of the card can each be individually colored, '
             'toggled, and angled.'
         ]
     )
-    # pylint: enable=line-too-long
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'comic_book'
@@ -359,17 +367,17 @@ class ComicBookTitleCard(BaseCardType):
             return []
 
         # Get dimensions of the title text
-        title_text_width, title_text_height = self.image_magick.get_text_dimensions(
+        title_width, title_height = self.image_magick.get_text_dimensions(
             self.title_text_commands,
             width='max',
             height='sum',
         )
-        title_text_height += self.font_interline_spacing
+        title_height += self.font_interline_spacing
 
         # Create the rectangle that will border the title text
         title_text_rectangle = SvgRectangle(
-            title_text_width + self.TEXT_BOX_WIDTH_MARGIN,
-            title_text_height + self.TEXT_BOX_HEIGHT_MARGIN,
+            title_width + self.TEXT_BOX_WIDTH_MARGIN,
+            title_height + self.TEXT_BOX_HEIGHT_MARGIN,
         )
 
         # Rotate by given angle
@@ -381,7 +389,7 @@ class ComicBookTitleCard(BaseCardType):
                 self.WIDTH / 2,
                 self.HEIGHT
                 - self.TITLE_TEXT_VERTICAL_OFFSET
-                - (title_text_height / 2)
+                - (title_height / 2)
             )
         )
 
@@ -406,7 +414,7 @@ class ComicBookTitleCard(BaseCardType):
                 self.WIDTH / 2,
                 self.HEIGHT
                 - self.TITLE_TEXT_VERTICAL_OFFSET
-                - (title_text_height / 2)
+                - (title_height / 2)
                 + (self.TITLE_TEXT_VERTICAL_OFFSET+500)/2
             )
         )
@@ -487,7 +495,7 @@ class ComicBookTitleCard(BaseCardType):
             return []
 
         # Get dimensions of the index text
-        index_text_width, index_text_height = self.image_magick.get_text_dimensions(
+        index_width, index_height = self.image_magick.get_text_dimensions(
             self.index_text_commands,
             width='max',
             height='sum',
@@ -495,22 +503,22 @@ class ComicBookTitleCard(BaseCardType):
 
         # Create the rectangle that will border the index text
         index_text_rectangle = SvgRectangle(
-            index_text_width + (self.TEXT_BOX_WIDTH_MARGIN / 2),
-            index_text_height + (self.TEXT_BOX_HEIGHT_MARGIN / 2),
+            index_width + (self.TEXT_BOX_WIDTH_MARGIN / 2),
+            index_height + (self.TEXT_BOX_HEIGHT_MARGIN / 2),
         )
 
         # Apply indicated rotation
         index_text_rectangle.rotate(self.index_text_rotation_angle)
 
         # Determine new origin of the index text based on placement location
-        y_coordinate = 75 + (index_text_height / 2)
+        y_coordinate = 75 + (index_width / 2)
         if self.index_text_position == 'left':
             # The index text origin is 35px from the left of the image
             index_text_origin = Coordinate(35, y_coordinate)
 
             # Determine the offset to the center of the rotated index text
             angle = self.index_text_rotation_angle * PI / 180
-            x = index_text_width / 2
+            x = index_width / 2
             y = 0
             index_text_rectangle.offset = Coordinate(
                 x * cos(angle) - y * sin(angle),
@@ -523,7 +531,7 @@ class ComicBookTitleCard(BaseCardType):
 
             # Determine the offset to the center of the rotated index text
             angle = self.index_text_rotation_angle * PI / 180
-            x = -index_text_width / 2
+            x = -index_width / 2
             y = 0
             index_text_rectangle.offset = Coordinate(
                 x * cos(angle) - y * sin(angle),
@@ -549,7 +557,7 @@ class ComicBookTitleCard(BaseCardType):
         )
         index_fill_rectangle.rotate(self.index_text_rotation_angle)
 
-        y_coordinate = 75 + (index_text_height / 2) - (75 + 500) / 2 \
+        y_coordinate = 75 + (index_height / 2) - (75 + 500) / 2 \
             + self.index_banner_shift
         if self.index_text_position == 'left':
             index_fill_rectangle.shift_origin(Coordinate(
@@ -621,13 +629,23 @@ class ComicBookTitleCard(BaseCardType):
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.color != ComicBookTitleCard.TITLE_COLOR)
+        custom_extras = (
+            ('text_box_fill_color' in extras
+                and extras['text_box_fill_color'] != 'black')
+            or ('text_box_fill_color' in extras
+                and extras['text_box_fill_color'] != 'white')
+            or ('banner_fill_color' in extras
+                and extras['banner_fill_color'] != 'rgba(235,73,69,0.6)')
+        )
+
+        return (custom_extras
+            or ((font.color != ComicBookTitleCard.TITLE_COLOR)
             or (font.file != ComicBookTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
-            or (font.vertical_shift != 0)
+            or (font.vertical_shift != 0))
         )
 
 
