@@ -8,6 +8,15 @@
  */
 
 /**
+ * @typedef {Object} Extra
+ * @property {string} name
+ * @property {DictKey} identifier
+ * @property {string} description
+ * @property {?string} tooltip
+ * @property {?string} card_type
+ */
+
+/**
  * Toggle the side navigation menu. If on mobile, then the menu is toggled,
  * if on desktop, then this redirects to the home page.
  */
@@ -30,7 +39,7 @@ function toggleNavMenu() {
   }
 }
 
-/*
+/**
  * Debounce the given function with the given timeout. The minimum interval
  * between calls to the return of this function will be `timeout` ms.
  * @arg {function} func - Function to debounce.
@@ -51,9 +60,6 @@ function debounce(func, timeout = 850){
  * formatting should apply.
  */
 const isSmallScreen = () => window.innerWidth < 768;
-// function isSmallScreen() {
-//   return window.innerWidth < 768;
-// }
 
 /**
  * Format the given number of bytes into a human-readable string.
@@ -350,11 +356,14 @@ async function downloadFileBlob(filename, blob) {
   document.body.removeChild(downloadLink);
 }
 
+/** @type {Extra[]} */
+let allExtras;
+
 /**
  * Submit an API request to get all the available extras and populate the
  * allExtras, cardTypeSet, and cardTypes variables.
  */
-let allExtras, cardTypeSet, cardTypes;
+let cardTypeSet, cardTypes;
 async function queryAvailableExtras() {
   if (allExtras === undefined) {
     allExtras = await fetch('/api/available/extras').then(resp => resp.json());
@@ -459,7 +468,7 @@ async function queryLibraries() {
   }
 }
 
-/*
+/**
  *
  */
 async function initializeLibraryDropdowns({
@@ -510,7 +519,7 @@ async function initializeLibraryDropdowns({
   });
 }
 
-/*
+/**
  * Fill out the given Blueprint card element with the details - i.e. the
  * creator, title, image, description, etc.
  */
@@ -595,4 +604,26 @@ function timeDiffString(previousRun) {
   else if (diffSeconds % 60 > 0) { timeUnits.push(`<${diffSeconds%60} second`); }
 
   return timeUnits.slice(0, 2).join(', ') + ' ago';
+}
+
+/**
+ * Convert a string to title case.
+ * 
+ * @param {string} str - The input string to convert to title case.
+ * @returns {string} The input string converted to title case.
+ * 
+ * @example
+ * // returns "Hello World"
+ * toTitleCase("hello world");
+ * 
+ * @example
+ * // returns "I Love JavaScript"
+ * toTitleCase("i love JavaScript");
+ */
+function toTitleCase(str) {
+  return str.replace(/(?:^|\s)\w/g, function(match) {
+    return match.toUpperCase();
+  });
+}
+
 }

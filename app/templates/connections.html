@@ -232,6 +232,7 @@
           <p class="help">Only get data for Episodes which are downloaded.</p>
         </div>
 
+        {% if preferences.use_emby or preferences.use_jellyfin or preferences.use_plex %}
         <div class="ui eight wide field" data-value="libraries">
           <label>Library Paths</label>
           <p class="help">
@@ -274,6 +275,7 @@
             </div>
           </div>
         </div>
+        {% endif %}
 
         <div class="ui error message"></div>
         <button class="ui primary animated button" type="submit" data-action="save">
