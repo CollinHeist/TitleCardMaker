@@ -28,7 +28,7 @@ class FormulaOneTitleCard(BaseCardType):
     """API Parameters"""
     API_DETAILS = CardDescription(
         name='Formula 1',
-        identifier='f1',
+        identifier='formula 1',
         example='/internal_assets/cards/formula.webp',
         creators=['CollinHeist', '/u/heeisenbeerg'],
         source='builtin',

@@ -117,11 +117,11 @@ class ShapeTitleCard(BaseCardType):
                 tooltip=(
                     'Either <v>circle</v>, <v>diamond</v>, <v>square</v>, '
                     '<v>down triangle</v>, or <v>up triangle</v>. Can also be '
-                    'randomized by specifying as <v>random[{shape 1}, ]'
-                    '{shape 2}, {etc.}]</v> - i.e. <v>random[circle, '
-                    'diamond]</v> to randomly select one of those shapes. '
-                    'Default is <v>diamond</v>.'
-                )
+                    'randomized by specifying as <v>random[shape1, shape2, '
+                    'etc.]</v> - i.e. <v>random[circle, diamond]</v> to '
+                    'randomly select one of those shapes. Default is '
+                    '<v>diamond</v>.'
+                ),
             ),
             Extra(
                 name='Shape Color',

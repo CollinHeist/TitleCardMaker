@@ -43,8 +43,8 @@ from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 
 LocalCardIdentifiers = Literal[
-    'anime', 'banner', 'calligraphy', 'comic book', 'cutout', 'divider', 'f1',
-    'fade', 'frame', 'generic', 'graph', 'gundam', 'inset', 'ishalioh',
+    'anime', 'banner', 'calligraphy', 'comic book', 'cutout', 'divider', 'fade',
+    'formula 1', 'frame', 'generic', 'graph', 'gundam', 'inset', 'ishalioh',
     'landscape', 'logo', 'marvel', 'music', 'musikmann', 'olivier', 'phendrena',
     'photo', 'polymath', 'poster', 'reality tv', 'roman', 'roman numeral',
     'shape', 'sherlock', 'standard', 'star wars', 'textless', 'tinted glass',
@@ -296,17 +296,21 @@ class GraphCardType(BaseCardModel):
     grayscale: bool = False
     graph_background_color: str = GraphTitleCard.BACKGROUND_GRAPH_COLOR
     graph_color: str = GraphTitleCard.GRAPH_COLOR
-    graph_inset: PositiveInt = GraphTitleCard.GRAPH_INSET
-    graph_radius: PositiveInt = GraphTitleCard.GRAPH_RADIUS
+    graph_inset: conint(ge=0, le=1800) = GraphTitleCard.GRAPH_INSET
+    graph_radius: conint(ge=50, le=900) = GraphTitleCard.GRAPH_RADIUS
     graph_width: PositiveInt = GraphTitleCard.GRAPH_WIDTH
     fill_scale: confloat(gt=0.0, le=1.0) = GraphTitleCard.GRAPH_FILL_SCALE
     percentage: confloat(ge=0.0, le=1.0) = 0.75
     text_position: GraphTextPosition = 'lower left'
 
     @root_validator(skip_on_failure=True)
-    def validate_extras(cls, values):
+    def validate_extras(cls, values: dict) -> dict:
         # Toggle text hiding
         values['hide_episode_text'] |= (len(values['episode_text']) == 0)
+
+        # Ensure graph width is less than radius
+        if values.get('graph_width', 0) > values.get('graph_radius', 0):
+            values['graph_width'] = values['graph_radius']
 
         # Scale episode text size by radius if not provided
         if values.get('graph_text_font_size', None) is None:

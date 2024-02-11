@@ -40,6 +40,7 @@ class TintedFrameTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color of the season and episode text',
+                tooltip='Defaults to match the Font color.'
             ),
             Extra(
                 name='Episode Text Font',
@@ -66,6 +67,7 @@ class TintedFrameTitleCard(BaseCardType):
                 description=(
                     'Character that separates the season and episode text'
                 ),
+                tooltip='Default is <v>-</v>.'
             ),
             Extra(
                 name='Frame Color',
@@ -75,7 +77,7 @@ class TintedFrameTitleCard(BaseCardType):
                     'Can be any color or randomized like <v>random[color0, '
                     'color1, ...]</v>  to select a randomly specified color. '
                     'If randomly selecting, colors MUST be comma-separated '
-                    'with a space (, ) and any <v>rgb()<v> colors cannot have '
+                    'with a space (, ) and any <v>rgb()</v> colors cannot have '
                     'spaces. Defaults to match the Font color.'
                 ),
             ),
@@ -84,7 +86,7 @@ class TintedFrameTitleCard(BaseCardType):
                 identifier='frame_width',
                 description='Width of the frame',
                 tooltip=(
-                    'Number ≥<v>0.0</v>. Default is <v>5</v>. Unit is pixels.'
+                    'Number ≥<v>0</v>. Default is <v>5</v>. Unit is pixels.'
                 ),
             ),
             Extra(
@@ -123,7 +125,8 @@ class TintedFrameTitleCard(BaseCardType):
                 identifier='logo_size',
                 description=(
                     'Scalar for how much to scale the size of the logo element'
-                ), tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
+                ),
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
             ),
             Extra(
                 name='Logo Vertical Shift',
@@ -148,7 +151,8 @@ class TintedFrameTitleCard(BaseCardType):
                 description='Color of the drop shadow.',
                 tooltip='Default is <v>black</v>.',
             ),
-        ], description=[
+        ],
+        description=[
             'Title card featuring a rectangular frame with blurred content on '
             'the outside of the frame, and unblurred content within.', 'The '
             'frame and all text can be recolored via extras.', 'The top, '

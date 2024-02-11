@@ -992,7 +992,7 @@ async function initAll() {
   
   // Schedule recurring statistics query
   getStatistics();
-  getStatisticsId = setInterval(getStatistics, 60000); // Refresh stats every 30s
+  getStatisticsId = setInterval(getStatistics, 60000);
   setInterval(getCardData, 60000);
 
   querySeriesLogs();

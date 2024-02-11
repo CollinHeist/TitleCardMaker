@@ -206,14 +206,19 @@ class RomanNumeralTitleCard(BaseCardType):
                 name='Background Color',
                 identifier='background',
                 description='Color of the background',
-            ), Extra(
+                tooltip='Default is <v>black</v>.'
+            ),
+            Extra(
                 name='Roman Numeral Color',
                 identifier='roman_numeral_color',
                 description='Color of the roman numerals',
-            ), Extra(
+                tooltip='Default is <v>#AE2317</v>.'
+            ),
+            Extra(
                 name='Season Text Color',
                 identifier='season_text_color',
-                description='Color of the season text around the roman numerals'
+                description='Color of the season text',
+                tooltip='Default is <v>rgb(200, 200, 200)</v>.'
             ),
         ], description=[
             'Imageless title cards featuring large roman numerals indicating '
@@ -274,7 +279,7 @@ class RomanNumeralTitleCard(BaseCardType):
         'output_file', 'title_text', 'season_text', 'hide_season_text',
         'hide_episode_text', 'font_color', 'font_interline_spacing',
         'font_interword_spacing', 'font_size', 'background',
-        'roman_numeral_color', 'roman_numeral', '__roman_text_scalar',
+        'roman_numeral_color', 'roman_numeral', '_roman_text_scalar',
         '__roman_numeral_lines', 'rotation', 'offset', 'season_text_color',
         'font_file',
     )
@@ -371,7 +376,7 @@ class RomanNumeralTitleCard(BaseCardType):
             roman_text = [numeral]
 
         # Update scalar for this text
-        self.__roman_text_scalar = 1.0
+        self._roman_text_scalar = 1.0
         self.__assign_roman_scalar(roman_text)
 
         # Assign combined roman numeral text
@@ -402,7 +407,7 @@ class RomanNumeralTitleCard(BaseCardType):
 
         # Scale roman numeral text if line width is larger than card (+margin)
         if max_width > (card_width - 100):
-            self.__roman_text_scalar = (card_width - 100) / max_width
+            self._roman_text_scalar = (card_width - 100) / max_width
 
 
     def create_roman_numeral_command(self,
@@ -419,8 +424,8 @@ class RomanNumeralTitleCard(BaseCardType):
             return []
 
         # Scale font size and interline spacing of roman text
-        font_size = 1250 * self.__roman_text_scalar
-        interline_spacing = -400 * self.__roman_text_scalar
+        font_size = 1250 * self._roman_text_scalar
+        interline_spacing = -400 * self._roman_text_scalar
 
         return [
             f'-font "{self.ROMAN_NUMERAL_FONT.resolve()}"',
@@ -518,7 +523,7 @@ class RomanNumeralTitleCard(BaseCardType):
             line = top if on_top else bottom
 
             # Shift offset down/up if on top/bottom
-            amount = (425 * self.__roman_text_scalar) * (-1 if on_top else 1)
+            amount = (425 * self._roman_text_scalar) * (-1 if on_top else 1)
             offset += Offset(x=0, y=amount)
 
             # Calculate widths only against relevant line
@@ -566,7 +571,7 @@ class RomanNumeralTitleCard(BaseCardType):
         offset += Offset(x=amount, y=0)
 
         # Adjust offset from center of letter to randomly selected position
-        offset += (random_position.offset * self.__roman_text_scalar)
+        offset += (random_position.offset * self._roman_text_scalar)
 
         return random_position.rotation, offset
 
@@ -591,10 +596,10 @@ class RomanNumeralTitleCard(BaseCardType):
             self.title_text_command, width='width', height='sum'
         )
         box0 = {
-            'start_x': -width/2  + 3200/2,
-            'start_y': -height/2 + 1800/2,
-            'end_x':    width/2  + 3200/2,
-            'end_y':    height/2 + 1800/2,
+            'start_x': (-width  + self.WIDTH)  / 2,
+            'start_y': (-height + self.HEIGHT) / 2,
+            'end_x':   (+width  + self.WIDTH)  / 2,
+            'end_y':   (+height + self.HEIGHT) / 2,
         }
 
         # Inner function to randomize position and determine if overlapping

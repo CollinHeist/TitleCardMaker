@@ -30,9 +30,8 @@ class LogoTitleCard(BaseCardType):
             Extra(
                 name='Logo Size',
                 identifier='logo_size',
-                description=(
-                    'Scalar for how much to scale the size of the logo element'
-                ), tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
+                description='Scale the size of the logo element',
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
             ),
             Extra(
                 name='Logo Vertical Shift',
@@ -40,7 +39,7 @@ class LogoTitleCard(BaseCardType):
                 description='Vertical shift to apply to the logo',
                 tooltip=(
                     'Positive values to shift the logo down, negative values to'
-                    'shift it up. Unit is pixels. Default is <v>0.0</v>.'
+                    'shift it up. Default is <v>0.0</v>. Unit is pixels.'
                 ),
             ),
             Extra(
@@ -53,17 +52,22 @@ class LogoTitleCard(BaseCardType):
                 name='Separator Character',
                 identifier='separator',
                 description='Character to separate season and episode text',
+                tooltip='Default is <v>•</v>.'
             ),
             Extra(
                 name='Background Image Enabling',
                 identifier='use_background_image',
                 description='Whether to use a background image (not color)',
-                tooltip='Either <v>True</v>, or <v>False</v>.',
+                tooltip=(
+                    'Either <v>True</v>, or <v>False</v>. Default is '
+                    '<v>False</v>.'
+                ),
             ),
             Extra(
                 name='Stroke Text Color',
                 identifier='stroke_color',
                 description='Color to use for the text stroke',
+                tooltip='Default is <v>black</v>.'
             ),
             Extra(
                 name='Gradient Omission',
@@ -71,16 +75,17 @@ class LogoTitleCard(BaseCardType):
                 description='Whether to omit the gradient overlay',
                 tooltip=(
                     'Either <v>True</v> or <v>False</v>. If <v>True</v>, text '
-                    'may appear less legible on brighter images.'
+                    'may appear less legible on brighter images. Default is '
+                    '<v>False</v>.'
                 ),
             ),
             Extra(
                 name='Blur Image Only',
                 identifier='blur_only_image',
-                description='Whether to only blur the background image.',
+                description='Whether to only blur the background image',
                 tooltip=(
                     'Either <v>True</v> or <v>False</v>. If <v>True</v>, the '
-                    'logo is not blurred.'
+                    'logo is not blurred. Default is <v>False</v>.'
                 ),
             ),
         ], description=[

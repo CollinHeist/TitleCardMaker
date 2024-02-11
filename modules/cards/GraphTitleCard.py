@@ -118,20 +118,21 @@ class GraphTitleCard(BaseCardType):
                 name='Graph Background Color',
                 identifier='graph_background_color',
                 description='Background color of the graph',
-                tooltip='Default value is <v>rgba(140,140,140,0.5)</v>.',
+                tooltip='Default is <v>rgba(140,140,140,0.5)</v>.',
             ),
             Extra(
                 name='Graph Color',
                 identifier='graph_color',
                 description='Color of the filled-in portion of the graph',
-                tooltip='Default value is <v>SteelBlue1</v>.'
+                tooltip='Default is <v>SteelBlue1</v>.'
             ),
             Extra(
                 name='Graph Inset',
                 identifier='graph_inset',
                 description='How far to inset the graph from the edges',
                 tooltip=(
-                    'Number ≥<v>0.0</v>. Default is <v>75</v>. Unit is pixels.'
+                    'Number between <v>0.0</v> and <v>1800</v>. Default is '
+                    '<v>75</v>. Unit is pixels.'
                 ),
             ),
             Extra(
@@ -139,7 +140,8 @@ class GraphTitleCard(BaseCardType):
                 identifier='graph_radius',
                 description='Radius of the graph',
                 tooltip=(
-                    'Number ><v>0</v>. Default is <v>175</v>. Unit is pixels.'
+                    'Number between <v>0</v> and <v>900</v>. Default is '
+                    '<v>175</v>. Unit is pixels.'
                 ),
             ),
             Extra(
@@ -152,7 +154,10 @@ class GraphTitleCard(BaseCardType):
                 name='Graph Width',
                 identifier='graph_width',
                 description='The width of the graph',
-                tooltip='Number ><v>0</v>. Default is <v>25</v>.'
+                tooltip=(
+                    'Number between <v>2</v> and the graph radius. Default is '
+                    '<v>25</v>. Unit is pixels.'
+                )
             ),
             Extra(
                 name='Fill Scale',
