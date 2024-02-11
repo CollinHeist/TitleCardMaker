@@ -266,7 +266,7 @@ class FormulaOneCardType(BaseCardTypeAllText):
     @root_validator(skip_on_failure=True)
     def parse_country(cls, values: dict) -> dict:
         if values['country'] is None:
-            if values['season_text'] in FormulaOneTitleCard._COUNTRY_FLAGS:
+            if values['season_text'].upper() in FormulaOneTitleCard._COUNTRY_FLAGS:
                 values['country'] = values['season_text']
             else:
                 values['country'] = 'generic'

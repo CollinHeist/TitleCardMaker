@@ -84,9 +84,9 @@ class FormulaOneTitleCard(BaseCardType):
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
-        'max_line_width': 25,   # Character count to begin splitting titles
-        'max_line_count': 2,    # Maximum number of lines a title can take up
-        'top_heavy': False,      # This class uses top heavy titling
+        'max_line_width': 40,   # Character count to begin splitting titles
+        'max_line_count': 1,    # Maximum number of lines a title can take up
+        'top_heavy': False,     # This class uses top heavy titling
     }
 
     """Characteristics of the default title font"""
@@ -110,31 +110,31 @@ class FormulaOneTitleCard(BaseCardType):
     DARKEN_COLOR = 'rgba(0,0,0,0.5)'
     _FRAME = REF_DIRECTORY / 'frame_2024.png'
     _COUNTRY_FLAGS = {
-        'Abu Dhabi': REF_DIRECTORY / 'uae.webp',
-        'Australian': REF_DIRECTORY / 'australia.webp',
-        'Austrian': REF_DIRECTORY / 'austria.webp',
-        'Azerbaijan': REF_DIRECTORY / 'azerbaijan.webp',
-        'Bahrain': REF_DIRECTORY / 'bahrain.webp',
-        'Belgian': REF_DIRECTORY / 'belgium.webp',
-        'British': REF_DIRECTORY / 'british.webp',
-        'Canadian': REF_DIRECTORY / 'canada.webp',
-        'Chinese': REF_DIRECTORY / 'chinese.webp',
-        'Dutch': REF_DIRECTORY / 'dutch.webp',
-        'Hungarian': REF_DIRECTORY / 'hungarian.webp',
-        'Italian': REF_DIRECTORY / 'italian.webp',
-        'Japanese': REF_DIRECTORY / 'japan.webp',
-        'Las Vegas': REF_DIRECTORY / 'unitedstates.webp',
-        'Mexican': REF_DIRECTORY / 'mexico.webp',
-        'Monaco': REF_DIRECTORY / 'monaco.webp',
-        'Qatar': REF_DIRECTORY / 'qatar.webp',
-        'Sao Paulo': REF_DIRECTORY / 'brazil.webp',
-        'Saudi Arabian': REF_DIRECTORY / 'saudiarabia.webp',
-        'Singapore': REF_DIRECTORY / 'singapore.webp',
-        'Spanish': REF_DIRECTORY / 'spain.webp',
-        'Miami': REF_DIRECTORY / 'unitedstates.webp',
-        'United Arab Emirates': REF_DIRECTORY / 'uae.webp',
-        'United States': REF_DIRECTORY / 'unitedstates.webp',
-        'generic': REF_DIRECTORY / 'generic.webp',
+        'ABU DHABI': REF_DIRECTORY / 'uae.webp',
+        'AUSTRALIAN': REF_DIRECTORY / 'australia.webp',
+        'AUSTRIAN': REF_DIRECTORY / 'austria.webp',
+        'AZERBAIJAN': REF_DIRECTORY / 'azerbaijan.webp',
+        'BAHRAIN': REF_DIRECTORY / 'bahrain.webp',
+        'BELGIAN': REF_DIRECTORY / 'belgium.webp',
+        'BRITISH': REF_DIRECTORY / 'british.webp',
+        'CANADIAN': REF_DIRECTORY / 'canada.webp',
+        'CHINESE': REF_DIRECTORY / 'chinese.webp',
+        'DUTCH': REF_DIRECTORY / 'dutch.webp',
+        'HUNGARIAN': REF_DIRECTORY / 'hungarian.webp',
+        'ITALIAN': REF_DIRECTORY / 'italian.webp',
+        'JAPANESE': REF_DIRECTORY / 'japan.webp',
+        'LAS VEGAS': REF_DIRECTORY / 'unitedstates.webp',
+        'MEXICAN': REF_DIRECTORY / 'mexico.webp',
+        'MONACO': REF_DIRECTORY / 'monaco.webp',
+        'QATAR': REF_DIRECTORY / 'qatar.webp',
+        'SAO PAULO': REF_DIRECTORY / 'brazil.webp',
+        'SAUDI ARABIAN': REF_DIRECTORY / 'saudiarabia.webp',
+        'SINGAPORE': REF_DIRECTORY / 'singapore.webp',
+        'SPANISH': REF_DIRECTORY / 'spain.webp',
+        'MIAMI': REF_DIRECTORY / 'unitedstates.webp',
+        'UNITED ARAB EMIRATES': REF_DIRECTORY / 'uae.webp',
+        'UNITED STATES': REF_DIRECTORY / 'unitedstates.webp',
+        'GENERIC': REF_DIRECTORY / 'generic.webp',
     }
 
 
