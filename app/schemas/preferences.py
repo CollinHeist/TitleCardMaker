@@ -13,13 +13,12 @@ from modules.TMDbInterface2 import TMDbInterface
 
 
 """
-Match local identifiers (A-Z and space), remote card types (a-z/a-z, no space),
-and local card types (any character .py).
+Match local identifiers (A-Z and any character), remote card types (a-z/.*, no
+space), and local card types (any character(s).py).
 """
-CardTypeIdentifier = constr(regex=r'^([a-zA-Z ]+|[a-zA-Z]+\/[a-zA-Z]+|.+\.py)$')
+CardTypeIdentifier = constr(regex=r'^([a-zA-Z].*|[a-zA-Z].*\/[a-zA-Z].*|.+\.py)$')
 
 CardExtension = Literal['.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp']
-CardQuality = conint(ge=1, le=100)
 
 Style = Literal[
     'art', 'art blur', 'art grayscale', 'art blur grayscale', 'unique',
@@ -71,7 +70,7 @@ class UpdatePreferences(UpdateBase):
     card_height: PositiveInt = UNSPECIFIED
     card_filename_format: str = UNSPECIFIED
     card_extension: CardExtension = UNSPECIFIED
-    card_quality: CardQuality = UNSPECIFIED
+    card_quality: conint(ge=1, le=100) = UNSPECIFIED
     library_unique_cards: bool = UNSPECIFIED
     image_source_priority: list[int] = UNSPECIFIED
     episode_data_source: int = UNSPECIFIED
