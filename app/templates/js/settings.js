@@ -224,9 +224,13 @@ async function initAll() {
       // Parse comma-separated fields
       const imageSourcePriority = form.get('image_source_priority').split(',');
       form.delete('image_source_priority');
-      const excludedCardTypes = form.get('excluded_card_types') === '' ? [] : form.get('excluded_card_types').split(',');
+      const excludedCardTypes = form.get('excluded_card_types') === ''
+        ? []
+        : form.get('excluded_card_types').split(',');
       form.delete('excluded_card_types');
-      const defaultTemplates = form.get('default_templates').split(',');
+      const defaultTemplates = form.get('default_templates') === ''
+        ? []
+        : form.get('default_templates').split(',');
       form.delete('default_templates');
 
       // Delete blank values
