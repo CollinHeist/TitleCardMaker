@@ -70,7 +70,8 @@ def translate_episode(
                     series.as_series_info, episode.as_episode_info,
                     language_code, log=log,
                 )
-                if translation is None or translation == episode.title:
+                if (translation is None
+                    or translation.lower() == episode.title.lower()):
                     log.debug(f'{episode} no translation available for '
                               f'{language_code}')
                 else:
