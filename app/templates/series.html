@@ -315,6 +315,14 @@
       </div>
     </div>
   </template>
+
+  <template id="extra-input-template">
+    <div class="field">
+      <label>{label}</label>
+      <input type="text">
+      <p class="help">{tooltip}</p>
+    </div>
+  </template>
 </head>
 
 <body onload="initAll()">
@@ -424,7 +432,7 @@
 
         <!-- Data Tabs -->
         <div class="twelve wide column">
-          <div class="ui top attached stackable tabular menu">
+          <div id="series-tabs-menu" class="ui top attached stackable tabular menu">
             <a class="item active" data-tab="options">Options</a>
             <a class="item" data-tab="card-config">Card Configuration</a>
             <a class="item" data-tab="blueprints">Blueprints</a>
@@ -434,7 +442,7 @@
             <a class="item" data-tab="logs">Logs</a>
           </div>
           
-          <!-- Configuration tab -->
+          <!-- Options tab -->
           <div id="series-tabs" class="ui bottom attached tab active segment" data-tab="options">
             <form id="series-config-form" class="ui compact form">
               <!-- Warning if Series is not found in various interfaces -->
@@ -544,7 +552,7 @@
               </div>
 
               <!-- Filename Format -->
-              <div class="ui field" placeholder="Global Default">
+              <div class="ui field">
                 <label>Filename Format</label>
                 {% if series.card_filename_format is none %}
                 <input name="card_filename_format" type="text" placeholder="Default">
@@ -555,7 +563,7 @@
               </div>
 
               <!-- Submit changes button -->
-              <button id="submit-changes" class="ui animated primary button" type="submit">
+              <button id="submit-changes" class="ui animated primary button" onclick="updateSeries('options');">
                 <div class="visible content">Save</div>
                 <div class="hidden content">
                   <i class="right arrow icon"></i>
@@ -800,7 +808,7 @@
                     {% endif %}
                   </div>
 
-                  <h4 class="ui horizontal middle aligned divider header">Miscellaneous</h4>
+                  <h4 class="ui horizontal middle aligned divider header">Translations and Extras</h4>
 
                   <!-- Translations -->
                   <div class="ui field">
@@ -819,22 +827,12 @@
                   </div>
 
                   <!-- Extras -->
-                  <div class="ui eight wide field" data-value="extras">
-                    <label>Extras</label>
-                    <!-- Added later -->
-                  </div>
-                  <div onclick="addBlankSeriesExtra();" class="ui circular mini icon add-field button">
-                    <i class="plus square outline icon"></i>
-                    Add Extra
-                  </div>
-                  <div onclick="deleteListValues('extras')" class="ui circular mini icon add-field red button">
-                    <i class="trash alternate outline icon"></i>
-                    Delete Extras
-                  </div>
-                  <br><br>
+                  <section aria-label="extras">
+                    <div class="ui top attached tabular wrapping menu"></div>
+                  </section>
 
                   <!-- Submit changes button -->
-                  <button id="submit-changes" class="ui animated primary button" type="submit">
+                  <button id="submit-changes" class="ui animated primary button" onclick="updateSeries('card');">
                     <div class="visible content">Save</div>
                     <div class="hidden content">
                       <i class="right arrow icon"></i>
@@ -1089,7 +1087,7 @@
                 <input name="emby_id" type="text" placeholder="None" value="{{series.emby_id}}">
                 {% else %}
                 <label>Emby</label>
-                <input name="emby_id" type="text" placeholder="N/A">
+                <input name="emby_id" type="text" placeholder="None">
                 {% endif %}
                 <p class="help">Enter as {Interface ID}:{Library Name}:{ID} - can be multiple, comma-separated IDs.</p>
               </div>
@@ -1162,7 +1160,7 @@
               </div>
               {% endif %}
 
-              <button class="ui animated primary button" type="submit" form="series-ids-form">
+              <button class="ui animated primary button" onclick="updateSeries('ids');">
                 <div class="visible content">Save</div>
                 <div class="hidden content">
                   <i class="right arrow icon"></i>

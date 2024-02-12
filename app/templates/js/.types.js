@@ -486,4 +486,13 @@
  * @property {string} timestamp
  */
 
+/**
+ * Represents a Statistic object.
+ * @typedef {Object} Statistic
+ * @property {number} value - The numerical value of the statistic.
+ * @property {string} value_text - The textual representation of the statistic value.
+ * @property {string} unit - The unit of measurement for the statistic.
+ * @property {string} description - A description of the statistic.
+ */
+
 export const Types = {};

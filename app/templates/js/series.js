@@ -1,6 +1,8 @@
 {% if False %}
-import {Blueprint, Episode, ExternalSourceImage, Extra, LogEntryPage,
-        RemoteBlueprint, Series, SourceImagePage, TitleCardPage} from './.types.js';
+import {
+  Blueprint, Episode, ExternalSourceImage, Extra, LogEntryPage, RemoteBlueprint,
+  Series, Statistic, SourceImagePage, TitleCardPage
+} from './.types.js';
 {% endif %}
 
 
@@ -13,6 +15,10 @@ function getStatistics() {
   $.ajax({
     type: 'GET',
     url: '/api/statistics/series/{{series.id}}',
+    /**
+     * Statistics queried. Update progress bar and count stats text.
+     * @param {Statistic[]} statistics 
+     */
     success: statistics => {
       // Update card count text
       const [cardStat, episodeStat] = statistics;
@@ -80,7 +86,7 @@ function getUpdateEpisodeObject(episodeId) {
  * Submit an API request to create the Title Card for the Episode with the given
  * ID. If successful, the card data of the current page is reloaded and the
  * Episode's row marking is removed.
- * @param {int} episodeId - ID of the Episode whose Card is being created.
+ * @param {number} episodeId - ID of the Episode whose Card is being created.
  */
 function createEpisodeCard(episodeId) {
   $.ajax({
@@ -98,7 +104,7 @@ function createEpisodeCard(episodeId) {
 /**
  * Submit an API request to save the modified Episode configuration for the
  * given Episode.
- * @param {int} episodeId - ID of the Episode whose config is being changed.
+ * @param {number} episodeId - ID of the Episode whose config is being changed.
  */
 function saveEpisodeConfig(episodeId) {
   const updateEpisodeObject = getUpdateEpisodeObject(episodeId);
@@ -324,27 +330,20 @@ async function initalizeSeriesConfig() {
   }
   {% endif %}
   // Extras
-  {% if series.extras is not none %}
-  if (Object.entries({{series.extras|safe}}).length > 0) {
-    // Add field for each extra
-    const extraField = document.querySelector('.field[data-value="extras"]');
-    for (const [key, value] of Object.entries({{series.extras|safe}})) {
-      const extra = document.getElementById('extra-template').content.cloneNode(true);
-      extra.querySelector('input[name="extra_values"]').value = value;
-      extraField.appendChild(extra);
-    }
-    // Initialize each extra dropdown
-    for (const [index, [key, value]] of Object.entries({{series.extras|safe}}).entries()) {
-      initializeExtraDropdowns(
-        key,
-        $(`#card-config-form .dropdown[data-value="extra_keys"]`).eq(index),
-        $(`#card-config-form .field[data-value="extras"] .popup .header`).eq(index),
-        $(`#card-config-form .field[data-value="extras"] .popup .description`).eq(index),
-      );
-    }
-    $('#card-config-form .field[data-value="extras"] .link.icon').popup({inline: true});
-  }
-  {% endif %}
+  initializeExtras(
+    {% if series.extras %}
+      {{series.extras|safe}},
+    {% else %}
+      [],
+    {% endif %}
+    {% if series.card_type %}
+      '{{series.card_type}}',
+    {% else %}
+      '{{preferences.default_card_type}}',
+    {% endif %}
+    'section[aria-label="extras"]',
+    document.getElementById('extra-input-template'),
+  );
   // Add season title on button press
   $('#card-config-form .button[data-value="addTitle"]').on('click', () => {
     const newRange = document.createElement('input');
@@ -389,8 +388,8 @@ function queryTMDbPoster() {
     type: 'GET',
     url: '/api/series/series/{{series.id}}/poster/query',
     /**
-     * Query successful, populate the URL field or display a toast of
-     * no poster returned.
+     * Query successful, populate the URL field or display a toast of no poster
+     * returned.
      * @param {?string} posterUrl - URL to the poster returned by TMDb
      */
     success: posterUrl => {
@@ -542,7 +541,7 @@ function initStyles() {
 /**
  * Submit an API request to open the upload source image modal and then submit
  * an API request to upload that image when the modal form is submitted.
- * @param {int} episodeId - ID of the Episode whose source image is being
+ * @param {number} episodeId - ID of the Episode whose source image is being
  * uploaded.
  */
 function uploadEpisodeSource(episodeId) {
@@ -569,7 +568,7 @@ function uploadEpisodeSource(episodeId) {
 /**
  * Submit an API request to mirror the source image of the given Episode. If
  * successful, then re-query the File and Card data.
- * @param {int} episodeId: ID of the Episode whose Source Image is being
+ * @param {number} episodeId: ID of the Episode whose Source Image is being
  * modified.
  */
 function mirrorSourceImage(episodeId) {
@@ -900,7 +899,7 @@ let currentCardPage = 1;
  * Submit an API request to load the given page of  Title Card previews. If
  * successful, then the cards are loaded into the page under the appropriate
  * element, and the pagination menu is updated.
- * @param {int} [page] - The page number of card data to query.
+ * @param {number} [page] - The page number of card data to query.
  * @param {bool} [transition] - Whether to transition the HTMLElements when
  * updating the DOM.
  */
@@ -994,12 +993,11 @@ async function initAll() {
   getStatistics();
   getStatisticsId = setInterval(getStatistics, 60000);
   setInterval(getCardData, 60000);
-
   querySeriesLogs();
 
   // Open tab indicated by URL param
   const tab = window.location.hash.substring(1) || 'options';
-  $('.menu .item')
+  $('#series-tabs-menu .item')
     .tab('change tab', tab)
     // When tab is changed, update hash URL field 
     .tab({
@@ -1080,17 +1078,15 @@ async function initAll() {
     on: 'blur',
     inline: true,
     fields: {
-      font_color: {
-        optional: true,
-        rules: [{type: 'minLength[1]'}],
-      },
       font_size: {
         optional: true,
         rules: [{type: 'number', value: 'minValue[1]'}],
-      }, font_kerning: {
+      },
+      font_kerning: {
         optional: true,
         rules: [{type: 'number'}],
-      }, font_stroke_width: {
+      },
+      font_stroke_width: {
         optional: true,
         rules: [{type: 'number'}],
       }, font_interline_spacing: {
@@ -1106,8 +1102,6 @@ async function initAll() {
       }, season_title_values: {
         depends: 'season_title_ranges',
         // rules: [{type: 'minLength[1]'}],
-      }, language_code: {
-        optional: true,
       }, data_key: {
         optional: true,
         depends: 'language_code',
@@ -1129,78 +1123,9 @@ async function initAll() {
     }
   });
 
-  // Submit the updated series config
+  // Prevent page reload for form submission
   $('#series-config-form, #card-config-form, #series-ids-form').on('submit', event => {
     event.preventDefault();
-    if (!$('#series-config-form').form('is valid') || !$('#card-config-form').form('is valid')) { return; }
-    $('#submit-changes').toggleClass('loading', true);
-    // Prepare form data
-    let form = new FormData(event.target);
-    let listData = {
-      extra_keys: [], extra_values: [],
-      season_title_ranges: [], season_title_values: [],
-      language_code: [], data_key: [],
-    };
-    let template_ids = [],
-        libraries = [];
-    for (const [key, value] of [...form.entries()]) {
-      // Handle Templates
-      if (key === 'template_ids' && value != '') {
-        template_ids = value.split(',');
-      }
-      if (key === 'libraries' && value != '') {
-        libraries = value.split(',').map(libraryStr => {
-          const libraryData = libraryStr.split('::');
-          return {interface: libraryData[0], interface_id: libraryData[1], name: libraryData[2]};
-        });
-        form.delete('libraries');
-      }
-      // Add list data fields to listData object
-      if (Object.keys(listData).includes(key) && value !== '') {
-        listData[key].push(value); 
-      }
-      // Handle percentage values
-      else if (value != '' && ['font_size', 'font_kerning', 'font_stroke_width'].includes(key)) {
-        form.set(key, value/100.0);
-      }
-    }
-    // Add translations
-    if (listData.language_code.length > 0) {
-      let translations = [];
-      listData.language_code.forEach((val, index) => {
-        if (val !== '') {
-          translations.push({language_code: val, data_key: listData.data_key[index]});
-        }
-      });
-      listData.translations = translations;
-    }
-    // Remove empty list values, and remove list data keys from form
-    for (let [key, value] of [...Object.entries(listData)]) {
-      if (value.length === 0) { delete listData[key]; }
-      form.delete(key);
-    }
-    // Add checkbox status as true/false
-    $.each($("#series-config-form, #card-config-form, #series-ids-form").find('input[type=checkbox]'), (key, val) => {
-      form.append($(val).attr('name'), $(val).is(':checked'));
-    });
-
-    // Add Templates and libraries if the correct form
-    if (event.target.id === 'card-config-form') {
-      listData.template_ids = template_ids;
-    } else if (event.target.id === 'series-config-form') {
-      listData.libraries = libraries;
-    }
-
-    // Submit API request
-    $.ajax({
-      type: 'PATCH',
-      url: '/api/series/series/{{series.id}}',
-      data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData}),
-      contentType: 'application/json',
-      success: () => showInfoToast('Updated Configuration Values'),
-      error: response => showErrorToast({title: 'Error Updating Configuration', response}),
-      complete: () => $('#submit-changes').toggleClass('loading', false),
-    });
   });
 
   // Create a new episode
@@ -1402,9 +1327,10 @@ function queryBlueprints() {
     type: 'GET',
     url: '/api/blueprints/query/series/{{series.id}}',
     /**
-     * 
-     * @param {Blueprint[]} allBlueprints 
-     * @returns 
+     * Query successful, display available blueprints, or display a warning
+     * message if none are.
+     * @param {Blueprint[]} allBlueprints - List of Blueprints available for
+     * this Series.
      */
     success: allBlueprints => {
       // Hide info message and disable search button
@@ -1461,8 +1387,8 @@ function exportBlueprint() {
 
       // Get URL to pre-fill Blueprint form
       let url = `series_year={{series.year}}&database_ids=${(idStr)}`
-      + `&series_name=${encodeURIComponent('{{series.name}}')}`
-      + `&title=[Blueprint] ${encodeURIComponent('{{series.name}}')}`;
+        + `&series_name=${encodeURIComponent('{{series.name}}')}`
+        + `&title=[Blueprint] ${encodeURIComponent('{{series.name}}')}`;
 
       // Open window for Blueprint submission
       window.open(
@@ -1479,7 +1405,7 @@ function exportBlueprint() {
 /**
  * Submit an API request to download the given Source Image URL for the Episode
  * with the given ID. If successful, the Series file and Card data is refreshed.
- * @param {int} episodeId - ID of the Episode associated with this image.
+ * @param {number} episodeId - ID of the Episode associated with this image.
  * @param {str} url - URL (or Base64 encoded bytes) to download.
  */
 function selectTmdbImage(episodeId, url) {
@@ -1811,7 +1737,7 @@ function createTitleCards() {
 /**
  * Submit an API request to delete this Series' Title Cards. Series
  * statistics are re-queried if successful.
- * @param {int} interfaceId - ID of the library's interface.
+ * @param {number} interfaceId - ID of the library's interface.
  * @param {str} libraryName - Name of the library to load cards into.
  * @param {bool} [reload] - Whether to force reload the cards.
  */
@@ -1838,6 +1764,116 @@ function deleteSeries() {
     url: '/api/series/series/{{series.id}}',
     success: () => window.location.href = '/',
     error: response => showErrorToast({title: 'Error Deleting Series', response}),
+  });
+}
+
+/**
+ * 
+ * @param {"card" | "options" | "ids"} formName 
+ */
+function updateSeries(formName) {
+  /** Parse a percentage input field. */
+  const parsePercentageField = value => value === '' ? null : value / 100.0;
+  /** Parse some list value, converting empty lists to null */
+  const parseList = value => value.length ? value : null;
+
+  // Parse card config data
+  let data = {};
+  if (formName === 'card') {
+    // Validate form
+    if (!$('#card-config-form').form('is valid')) { return; }
+
+    data = {
+      template_ids: $('#card-config-form input[name="template_ids"]').val()
+        ? $('#card-config-form input[name="template_ids"]').val().split(',')
+        : [],
+      card_type: $('#card-config-form input[name="card_type"]').val() || null,
+      font_id: $('#card-config-form input[name="font_id"]').val() || null,
+      watched_style: $('#card-config-form input[name="watched_style"]').val() || null,
+      unwatched_style: $('#card-config-form input[name="unwatched_style"]').val() || null,
+      font_color: $('#card-config-form input[name="font_color"]').val() || null,
+      font_title_case: $('#card-config-form input[name="font_title_case"]').val() || null,
+      font_size: parsePercentageField($('#card-config-form input[name="font_size"]').val()),
+      font_kerning: parsePercentageField($('#card-config-form input[name="font_kerning"]').val()),
+      font_stroke_width: parsePercentageField($('#card-config-form input[name="font_stroke_width"]').val()),
+      font_interline_spacing: $('#card-config-form input[name="font_interline_spacing"]').val() || null,
+      font_interword_spacing: $('#card-config-form input[name="font_interword_spacing"]').val() || null,
+      font_vertical_shift: $('#card-config-form input[name="font_vertical_shift"]').val() || null,
+      hide_season_text: $('#card-config-form input[name="hide_season_text"]').val() || null,
+      season_title_ranges: parseList(
+          Array.from(document.querySelectorAll('#card-config-form input[name="season_title_ranges"]')).map(input => input.value)
+        ),
+      season_title_values: parseList(
+          Array.from(document.querySelectorAll('#card-config-form input[name="season_title_values"]')).map(input => input.value)
+        ),
+      hide_episode_text: $('#card-config-form input[name="hide_episode_text"]').val() || null,
+      episode_text_format: $('#card-config-form input[name="episode_text_format"]').val() || null,
+      translations: parseList(
+          Array.from(document.querySelectorAll('#card-config-form input[name="language_code"]')).map((input, index) => {
+            return {
+              language_code: input.value,
+              data_key: document.querySelectorAll('#card-config-form input[name="data_key"]')[index].value,
+            };
+          })
+        ),
+      extra_keys: parseList(
+          $('#card-config-form section[aria-label="extras"] input').map(function() {
+            if ($(this).val() !== '') { 
+              return $(this).attr('name'); 
+            }
+          }).get()
+        ),
+      extra_values: parseList(
+          $('#card-config-form section[aria-label="extras"] input').map(function() {
+            if ($(this).val() !== '') {
+              return $(this).val(); 
+            }
+          }).get(),
+        ),
+    }
+  }
+  // Parse options data
+  else if (formName === 'options') {
+    data = {
+      libraries: $('#series-config-form input[name="libraries"]').val()
+        ? $('#series-config-form input[name="libraries"]').val().split(',').map(libraryStr => {
+            const data = libraryStr.split('::');
+            return {
+              interface: data[0],
+              interface_id: data[1],
+              name: data[2],
+            };
+          })
+        : [],
+      data_source_id: $('#series-config-form input[name="data_source_id"]').val() || null,
+      match_titles: $('#series-config-form input[name="match_titles"]').is(':checked'),
+      sync_specials: $('#series-config-form input[name="sync_specials"]').val() || null,
+      skip_localized_images: $('#series-config-form input[name="skip_localized_images"]').val() || null,
+      directory: $('#series-config-form input[name="directory"]').val() || null,
+      card_filename_format: $('#series-config-form input[name="card_filename_format"]').val() || null,
+    };
+  } else if (formName === 'ids') {
+    data = {
+      emby_id: $('#series-ids-form input[name="emby_id"]').val() || null,
+      imdb_id: $('#series-ids-form input[name="imdb_id"]').val() || null,
+      jellyfin_id: $('#series-ids-form input[name="jellyfinid"]').val() || null,
+      sonarr_id: $('#series-ids-form input[name="sonarr_id"]').val() || null,
+      tmdb_id: $('#series-ids-form input[name="tmdb_id"]').val() || null,
+      tvdb_id: $('#series-ids-form input[name="tvdb_id"]').val() || null,
+      tvrage_id: $('#series-ids-form input[name="tvrage_id"]').val() || null,
+    };
+  }
+
+  // Submit API request
+  $('#submit-changes').toggleClass('loading', true); // Mark buttons as loading
+  $.ajax({
+    type: 'PATCH',
+    url: '/api/series/series/{{series.id}}',
+    data: JSON.stringify(data),
+    contentType: 'application/json',
+    success: () => showInfoToast('Updated Series'),
+    error: response => showErrorToast({title: 'Error Updating Series', response}),
+    complete: () => $('#submit-changes').toggleClass('loading', false),
   });
 }
 
@@ -1918,7 +1954,7 @@ function deleteAllEpisodes() {
  * Submit an API request to delete the Episode with the given ID. If successful,
  * then the statistics are re-queried and the Episode and file associated with
  * this Episode are removed from the DOM.
- * @param {int} id - Episode ID of the Episode to delete.
+ * @param {number} id - Episode ID of the Episode to delete.
  */
 function deleteEpisode(id) {
   $.ajax({
@@ -1967,7 +2003,7 @@ function navigateSeries(next_or_previous) {
 
 /**
  * Submit an API request to remove the TCM/PMM labels from this Series in Plex.
- * @param {int} interfaceId - ID of the library's interface.
+ * @param {number} interfaceId - ID of the library's interface.
  * @param {str} libraryName - Name of the library to load cards into.
  */
 function removePlexLabels(interfaceId, libraryName) {  

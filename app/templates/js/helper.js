@@ -626,4 +626,86 @@ function toTitleCase(str) {
   });
 }
 
+/**
+ * 
+ * @param {?Object.<string, string>} activeExtras - Object of active extras to
+ * initialize the extra input fields with.
+ * @param {string} activeTab - Name of the tab to mark as active.
+ * @param {string} sectionQuerySelector - Query selector to find the section
+ * being populated.
+ * @param {HTMLTemplateElement} inputTemplateElement - ID of the extra input
+ * element to clone and populate.
+ */
+async function initializeExtras(
+  activeExtras,
+  activeTab,
+  sectionQuerySelector,
+  inputTemplateElement,
+) {
+  if (allExtras === undefined) {
+    await queryAvailableExtras();
+  }
+
+  /** @type {Object.<string, Extra[]>} */
+  const types = {};
+
+  // Create object of card type identifiers to array of extras
+  allExtras.forEach(extra => {
+    extra.card_type = extra.card_type || 'Variable Overrides';
+    if (types[extra.card_type] === undefined) {
+      types[extra.card_type] = [];
+    }
+    types[extra.card_type].push(extra);
+  });
+
+  // Create tabs for each card type
+  const extraMenu = document.querySelector(`${sectionQuerySelector} .menu`);
+  for (const [card_type, extras] of Object.entries(types)) {
+    // Create tab menu item
+    const newMenuItem = document.createElement('a');
+    newMenuItem.className = 'item';
+    newMenuItem.dataset.tab = card_type.replace('/', '_');
+    newMenuItem.innerText = toTitleCase(card_type);
+    extraMenu.appendChild(newMenuItem);
+
+    // Create tab itself
+    const newTab = document.createElement('div');
+    newTab.className = 'ui bottom attached tab segment';
+    newTab.dataset.tab = card_type.replace('/', '_'); // Cannot use / in tab identifiers
+    extraMenu.insertAdjacentElement('afterend', newTab);
+
+    // Add input field for each extra
+    extras.forEach((extra, index) => {
+      const newInput = inputTemplateElement.content.cloneNode(true);
+      newInput.querySelector('label').innerText = extra.name;
+      newInput.querySelector('input').name = extra.identifier;
+      newInput.querySelector('.help').innerHTML = `<b>${extra.description}</b><br>`
+        + (extra.tooltip
+            ? extra.tooltip.replaceAll('<v>', '<span class="ui blue text inverted">')
+                           .replaceAll('</v>', '</span>')
+            : ''
+          );
+
+      // Fill out input if part of active extras
+      if (activeExtras[extra.identifier]) {
+        newInput.querySelector('input').value = activeExtras[extra.identifier];
+      }
+
+      // Group every two fields into a field group
+      if (index % 2 === 0) {
+        const newFields = document.createElement('div');
+        newFields.className = 'two fields';
+        newTab.appendChild(newFields);
+      }
+      newTab.lastChild.appendChild(newInput);
+    });
+  }
+
+  // Change all inputs with the same name when any input is changed
+  $(`${sectionQuerySelector}`).on('change', 'input', function() {
+    $(`${sectionQuerySelector} input[name="${$(this).attr('name')}"]`).val($(this).val());
+  });
+
+  // Initialize tabs
+  $(`${sectionQuerySelector} .item`).tab('change tab', activeTab);
 }
