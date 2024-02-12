@@ -125,48 +125,54 @@ function showDeleteModal(templateId) {
  * Parse the given Form and submit an API request to patch this Template.
  */
 function updateTemplate(form, templateId) {
-  let listData = {
-    argument: [], operation: [], reference: [],
-    extra_keys: [], extra_values: [],
-    season_title_ranges: [], season_title_values: [],
-    language_code: [], data_key: [],
-  };
-  for (const [key, value] of [...form.entries()]) {
-    if (Object.keys(listData).includes(key) && value !== '') {
-      listData[key].push(value); 
-    }
+  /** Parse some list value, converting empty lists to the fallback */
+  const parseList = (value, fallback=[]) => value.length ? value : fallback;
+
+  const data = {
+    card_type: $(`#template-id${templateId} input[name="card_type"]`).val() || null,
+    font_id: $(`#template-id${templateId} input[name="font_id"]`).val() || null,
+    watched_style: $(`#template-id${templateId} input[name="watched_style"]`).val() || null,
+    unwatched_style: $(`#template-id${templateId} input[name="unwatched_style"]`).val() || null,
+    hide_season_text: $(`#template-id${templateId} input[name="hide_season_text"]`).val() || null,
+    season_title_ranges: parseList(
+        Array.from(document.querySelectorAll(`#template-id${templateId} input[name="season_title_ranges"]`)).map(input => input.value),
+      ),
+    season_title_values: parseList(
+        Array.from(document.querySelectorAll(`#template-id${templateId} input[name="season_title_values"]`)).map(input => input.value),
+      ),
+    hide_episode_text: $(`#template-id${templateId} input[name="hide_episode_text"]`).val() || null,
+    episode_text_format: $(`#template-id${templateId} input[name="episode_text_format"]`).val() || null,
+    skip_localized_images: $(`#template-id${templateId} input[name="skip_localized_images"]`).val() || null,
+    data_source_id: $(`#template-id${templateId} input[name="data_source_id"]`).val() || null,
+    sync_specials: $(`#template-id${templateId} input[name="sync_specials"]`).val() || null,
+    translations: parseList(
+        Array.from(document.querySelectorAll(`#template-id${templateId} input[name="language_code"]`)).map((input, index) => {
+          return {
+            language_code: input.value,
+            data_key: document.querySelectorAll(`#template-id${templateId} input[name="data_key"]`)[index].value,
+          };
+        }).filter(({data_key}) => data_key !== '')
+      ),
+    extra_keys: parseList(
+        $(`#template-id${templateId} section[aria-label="extras"] input`).map(function() {
+          if ($(this).val() !== '') { 
+            return $(this).attr('name'); 
+          }
+        }).get()
+      ),
+    extra_values: parseList(
+        $(`#template-id${templateId} section[aria-label="extras"] input`).map(function() {
+          if ($(this).val() !== '') {
+            return $(this).val(); 
+          }
+        }).get(),
+      ),
   }
-  // Parse array of Filters
-  let filters = [];
-  listData.argument.forEach((value, index) => {
-    if (value !== '') {
-      filters.push({
-        argument: value,
-        operation: listData.operation[index],
-        reference: listData.reference[index]
-      });
-    }
-  });
-  // Parse array of Translations
-  let translations = [];
-  listData.language_code.forEach((value, index) => {
-    if (value !== '') {
-      translations.push({
-        language_code: value,
-        data_key: listData.data_key[index]
-      });
-    }
-  });
 
   $.ajax({
     type: 'PATCH',
     url: `/api/templates/${templateId}`,
-    data: JSON.stringify({
-      ...Object.fromEntries(form.entries()),
-      ...listData,
-      translations: translations,
-      filters: filters,
-    }),
+    data: JSON.stringify(data),
     contentType: 'application/json',
     success: updatedTemplate => showInfoToast(`Updated Template "${updatedTemplate.name}"`),
     error: response => showErrorToast({title: 'Error Updating Template', response}),

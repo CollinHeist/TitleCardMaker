@@ -1838,11 +1838,11 @@ function updateSeries(formName) {
     data = {
       libraries: $('#series-config-form input[name="libraries"]').val()
         ? $('#series-config-form input[name="libraries"]').val().split(',').map(libraryStr => {
-            const data = libraryStr.split('::');
+            const libraryData = libraryStr.split('::');
             return {
-              interface: data[0],
-              interface_id: data[1],
-              name: data[2],
+              interface: libraryData[0],
+              interface_id: libraryData[1],
+              name: libraryData[2],
             };
           })
         : [],
