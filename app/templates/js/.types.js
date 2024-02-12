@@ -29,6 +29,19 @@
  * @property {?string} card_type
  */
 
+/**
+ * @typedef {Object} StyleOption
+ * @property {string} name
+ * @property {string} value
+ * @property {"art" | "unique"} style_type
+ */
+
+/**
+ * @typedef {Object} TemplateFilter
+ * @property {string[]} arguments
+ * @property {string[]} operations
+ */
+
 // Cards -----------------------------------------------------------------------
 
 /**
@@ -219,31 +232,6 @@
  * @property {Card[]} cards
  */
 
-// Preferences -----------------------------------------------------------------
-
-/**
- * @typedef {Object} ToggleOption
- * @property {string} name
- * @property {string} value
- * @property {boolean} selected
- */
-
-/**
- * @typedef {Object} EpisodeDataSourceToggle
- * @property {InterfaceType} interface
- * @property {number} interface_id
- * @property {string} name
- * @property {boolean} selected
- */
-
-/**
- * @typedef {Object} ImageSourceToggle
- * @property {InterfaceType} interface
- * @property {number} interface_id
- * @property {string} name
- * @property {boolean} selected
- */
-
 // Fonts -----------------------------------------------------------------------
 
 /**
@@ -270,6 +258,31 @@
  * @property {?string} file_name
  * @property {string[]} replacements_in
  * @property {string[]} replacements_out
+ */
+
+// Preferences -----------------------------------------------------------------
+
+/**
+ * @typedef {Object} ToggleOption
+ * @property {string} name
+ * @property {string} value
+ * @property {boolean} selected
+ */
+
+/**
+ * @typedef {Object} EpisodeDataSourceToggle
+ * @property {InterfaceType} interface
+ * @property {number} interface_id
+ * @property {string} name
+ * @property {boolean} selected
+ */
+
+/**
+ * @typedef {Object} ImageSourceToggle
+ * @property {InterfaceType} interface
+ * @property {number} interface_id
+ * @property {string} name
+ * @property {boolean} selected
  */
 
 // Series ----------------------------------------------------------------------
@@ -362,8 +375,34 @@
  */
 
 /**
- * @typedef {Object} Template
- * 
+ * @typedef {Object} SeriesPage
+ * @property {Series[]} items
+ * @property {number} total
+ * @property {number} size
+ * @property {number} page
+ * @property {number} pages
+ */
+
+/**
+ * @typedef {Object} Condition
+ * @property {string} argument
+ * @property {string} operation
+ * @property {?string} reference
+ */
+
+/**
+ * @typedef {Series} Template
+ * @property {Condition[]} filters
+ * @property {?Translation[]} translations
+ */
+
+/**
+ * @typedef {Object} TemplatePage
+ * @property {Template[]} items
+ * @property {number} total
+ * @property {number} size
+ * @property {number} page
+ * @property {number} pages
  */
 
 // Syncs -----------------------------------------------------------------------

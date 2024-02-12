@@ -38,23 +38,10 @@
   </template>
 
   <template id="extra-template">
-    <div class="ui field">
-      <div class="ui left labeled action input">
-        <div class="ui clearable dropdown long search scrolling label" data-value="extra_keys">
-          <input type="hidden" name="extra_keys">
-          <div class="default text">Extra</div>
-          <i class="dropdown icon"></i>
-          <div class="menu"></div>
-        </div>
-        <div class="ui icon input">
-          <input name="extra_values" type="text" placeholder="Extra Value..">
-          <i class="question circle outline link icon"></i>
-          <div class="ui fixed wide uninvertible popup">
-            <div class="header"></div>
-            <div class="description"></div>
-          </div>
-        </div>
-      </div>
+    <div class="field">
+      <label>{label}</label>
+      <input type="text">
+      <p class="help">{tooltip}</p>
     </div>
   </template>
 
@@ -246,7 +233,7 @@
                 </div>
               </div>
 
-              <h4 class="ui horizontal middle aligned divider header">Miscellaneous</h4>
+              <h4 class="ui horizontal middle aligned divider header">Translations and Extras</h4>
 
               <div class="ui field">
                 <label>Translations</label>
@@ -259,15 +246,10 @@
                 </div>
               </div>
 
-              <div class="ui field" data-value="extras">
-                <label>Extras</label>
-                <!-- Added later -->
-              </div>
-              <div data-value="add-extra" class="ui circular mini icon add-field button">
-                <i class="plus square outline icon"></i>
-                Add Extra
-              </div>
-              <br><br>
+              <!-- Extras -->
+              <section aria-label="extras">
+                <div class="ui top attached tabular wrapping menu"></div>
+              </section>
 
               <!-- Buttons -->
               <button button-type="submit" class="ui primary animated button" type="submit">
@@ -367,7 +349,7 @@
         Delete Template?
       </div>
       <div class="center aligned scrolling content">
-        <span class="ui blue text">This action cannot be undone.</span>
+        <span class="ui red text">This action cannot be undone.</span>
         <br>
         <span class="ui blue text">This Template is linked to the following Series:</span>
         <ul class="ui list" data-value="series-list"></ul>

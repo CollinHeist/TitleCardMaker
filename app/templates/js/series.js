@@ -988,6 +988,7 @@ async function initAll() {
   initStyles();
   getCardData();
   getFileData();
+  refreshTheme();
   
   // Schedule recurring statistics query
   getStatistics();

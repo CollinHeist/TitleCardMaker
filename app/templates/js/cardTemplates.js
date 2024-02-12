@@ -1,5 +1,8 @@
 {% if False %}
-import {Series} as Types from './.types.js';
+import {
+  NamedFont, SeriesPage, StyleOption, Template, TemplateFilter, TemplatePage,
+  Translation
+} from './.types.js';
 {% endif %}
 
 /**
@@ -14,7 +17,7 @@ function addTemplate() {
     contentType: 'application/json',
     /**
      * Template successfully created, show a Toast and re-query all Templates.
-     * @param {Series} template - Newly created Template.
+     * @param {Template} template - Newly created Template.
      */
     success: template => {
       showInfoToast(`Created Template #${template.id}`);
@@ -69,34 +72,56 @@ function reloadPreview(watchStatus, formElement, cardElement, imgElement) {
   });
 }
 
-async function showDeleteModal(templateId) {
-  // Get list of Series associated with this Template
-  const allSeriesResponse = await fetch(`/api/series/search?template_id=${templateId}&size=25`).then(resp => resp.json());
-  const seriesElements = allSeriesResponse.items.map(({name, year}) => {
-    return `<li>${name} (${year})</li>`
-  });
-  // More than 25 Series, add indicator of total amount being deleted
-  if (allSeriesResponse.total > 25) {
-    seriesElements.push(`<li><span class="ui red text">${allSeriesResponse.total-25} more Series...</span></li>`)
-  }
-  $('#delete-template-modal [data-value="series-list"]')[0].innerHTML = seriesElements.join('');
-  // Attach functions to delete buttons
-  $('#delete-template-modal .button[data-action="delete-template"]').off('click').on('click', () => {
-    $.ajax({
-      type: 'DELETE',
-      url: `/api/templates/${templateId}`,
-      success: () => {
-        showInfoToast('Deleted Template');
-        getAllTemplates(); // TODO delete just this one template element
-      },
-      error: response => showErrorToast({title: 'Error Deleting Template', response}),
-    });
-  });
+/**
+ * Submit the API requests to delete the Template with the given ID. This also
+ * queries and displays a list of the Series associated with this Template.
+ * A confirmation modal is shown.
+ * @param {number} templateId - ID of the Template being deleted.
+ */
+function showDeleteModal(templateId) {
+  /** @type {string[]} */
+  let seriesElements = ['<li><span class="ui text">No associated Series</span></li>'];
 
-  $('#delete-template-modal').modal('show');
+  // Get list of Series associated with this Template
+  $.ajax({
+    type: 'GET',
+    url: `/api/series/search?template_id=${templateId}&size=25`,
+    /**
+     * Series queried successfully, populate list to display in modal.
+     * @param {SeriesPage} allSeries - Page of Series associated with the
+     * Template being deleted.
+     */
+    success: allSeries => {
+      seriesElements = allSeries.items.map(({name, year}) => `<li>${name} (${year})</li>`);
+      if (allSeries.total > 25) {
+        seriesElements.push(`<li><span class="ui red text">${allSeries.total-25} more Series...</span></li>`);
+      }
+    },
+    error: response => showErrorToast({title: 'Error Querying Associated Series', response}),
+    /** Fill out and display modal to confirm deletion */
+    complete: () => {
+      // Populate modal with list of Series (or nothing)
+      $('#delete-template-modal [data-value="series-list"]')[0].innerHTML = seriesElements.join('');
+
+      // Assign delete API request to button press
+      $('#delete-template-modal .button[data-action="delete-template"]').off('click').on('click', () => {
+        $.ajax({
+          type: 'DELETE',
+          url: `/api/templates/${templateId}`,
+          success: () => {
+            showInfoToast('Deleted Template');
+            getAllTemplates(); // TODO delete just this one template element
+          },
+          error: response => showErrorToast({title: 'Error Deleting Template', response}),
+        });
+      });
+    
+      $('#delete-template-modal').modal('show');
+    },
+  });
 }
 
-/*
+/**
  * Parse the given Form and submit an API request to patch this Template.
  */
 function updateTemplate(form, templateId) {
@@ -149,11 +174,16 @@ function updateTemplate(form, templateId) {
 }
 
 async function getAllTemplates() {
+  /** @type {TemplateFilter} */
   const allFilterOptions = await fetch('/api/available/template-filters').then(resp => resp.json());
+  /** @type {NamedFont[]} */
   const allFonts = await fetch('/api/fonts/all').then(resp => resp.json());
+  /** @type {StyleOption[]} */
   const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
+  /** @type {TemplatePage} */
   const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
   const allEpisodeDataSources = await fetch('/api/settings/episode-data-source').then(resp => resp.json());
+  /** @type {Translation[]} */
   const allTranslations = await fetch('/api/available/translations').then(resp => resp.json());
   await queryAvailableExtras();
   await getAllCardTypes();
@@ -166,7 +196,7 @@ async function getAllTemplates() {
     if (hasManyTemplates && letter !== currentHeader) {
       const header = document.createElement('h3');
       header.className = 'ui dividing header';
-      header.innerText = (letter === ' ') ? 'Blank Templates' : letter;
+      header.innerText = letter === ' ' ? 'Blank Templates' : letter;
       elements.push(header);
       currentHeader = letter;
     }
@@ -209,15 +239,7 @@ async function getAllTemplates() {
     // Sync specials set later
     // Image source priority set later
     // Translations added later
-    // Extras
-    if (Object.entries(templateObj.extras).length > 0) {
-      const extraField = base.querySelector('.field[data-value="extras"]');
-      for (const [key, value] of Object.entries(templateObj.extras)) {
-        const extra = document.getElementById('extra-template').content.cloneNode(true);
-        extra.querySelector('input[name="extra_values"]').value = value;
-        extraField.appendChild(extra);
-      }
-    }
+    // Extras later
     // Update card preview(s)
     const form = base.querySelector('form');
     const watchedCard = base.querySelector('.card[content-type="watched"]'),
@@ -399,17 +421,12 @@ async function getAllTemplates() {
       }
     }
     // Extras
-    if (Object.entries(templateObj.extras).length > 0) {
-      for (const [index, [key, value]] of Object.entries(templateObj.extras).entries()) {
-        initializeExtraDropdowns(
-          key,
-          $(`#template-id${templateObj.id} .dropdown[data-value="extra_keys"]`).eq(index),
-          $(`#template-id${templateObj.id} .field[data-value="extras"] .popup .header`).eq(index),
-          $(`#template-id${templateObj.id} .field[data-value="extras"] .popup .description`).eq(index),
-        );
-      }
-    }
-    $('.field[data-value="extras"] .link.icon').popup({inline: true});
+    initializeExtras(
+      templateObj.extras,
+      templateObj.card_type || '{{preferences.default_card_type}}',
+      `#template-id${templateObj.id} section[aria-label="extras"]`,
+      document.getElementById('extra-template'),
+    );
     // Add new field with add translation button
     $(`#template-id${templateObj.id} .button[data-add-field="translation"]`).on('click', () => {
       const newTranslation = document.querySelector('#translation-template').content.cloneNode(true);
@@ -432,19 +449,6 @@ async function getAllTemplates() {
           {name: 'Kanji', text: 'kanji', value: 'kanji'},
         ]
       });
-    });
-    // Add new fields with add extra button
-    $(`#template-id${templateObj.id} .button[data-value="add-extra"]`).on('click', () => {
-      const newExtra = document.getElementById('extra-template').content.cloneNode(true);
-      $(`#template-id${templateObj.id} .field[data-value="extras"]`).append(newExtra);
-      initializeExtraDropdowns(
-        null,
-        $(`#template-id${templateObj.id} .dropdown[data-value="extra_keys"]`).last(),
-        $(`#template-id${templateObj.id} .field[data-value="extras"] .popup .header`).last(),
-        $(`#template-id${templateObj.id} .field[data-value="extras"] .popup .description`).last(),
-      );
-      refreshTheme();
-      $('.field[data-value="extras"] .link.icon').popup({inline: true});
     });
     
     // Update via API
