@@ -36,7 +36,8 @@ the top of the list will __always__ take priority of those below them.
 8. Series settings
 9. Series Named Font settings
 10. Series Template settings[^1]
-11. Global settings
-12. Card default settings
+11. Global Template settings[^1]
+12. Global settings
+13. Card-type default settings
 
 [^1]: This includes any Named Font assigned to the Template.

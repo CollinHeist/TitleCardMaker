@@ -187,12 +187,21 @@ reference value.
 
     === "Series Library Names"
 
+        Library names are evaluated as a list of all assigned libraries, meaning
+        the full library name must be specified to filter on this argument. For
+        example, if I had a Series assigned to the `Anime HD` and `Anime 4K`
+        libraries, the reference value `Anime` would __not__ match either of
+        these. The entire name, such as `Anime HD` would be required.
+
         | Operation | Description | Reference Value |
         | --------: | :---------- | :-------------: |
         | contains | Only apply to Series with a library of the given name | :fontawesome-regular-circle-check:{.green} |
         | does not contain | Do not apply to Series with a library of the givens name | :fontawesome-regular-circle-check:{.green} |
 
     === "Series Logo"
+
+        This Filter condition only looks at the _default_ Series logo - e.g.
+        `logo.png` within the source directory.
 
         | Operation | Description | Reference Value |
         | --------: | :---------- | :-------------: |
@@ -283,7 +292,7 @@ reference value.
 
         | Operation | Description | Reference Value |
         | --------: | :---------- | :-------------: |
-        | equals | Only apply to Episodes whose title length is exactly the given numbers | :fontawesome-regular-circle-check:{.green} |
+        | equals | Only apply to Episodes whose title length is exactly the given number | :fontawesome-regular-circle-check:{.green} |
         | does not equal | Do not apply to Episodes whose title length is exactly the given number | :fontawesome-regular-circle-check:{.green} |
         | is less than | Only apply to Episodes whose title length is less than the given number | :fontawesome-regular-circle-check:{.green} |
         | is less than or equal | Only apply to Episodes whose title length is less than or equal to the given number | :fontawesome-regular-circle-check:{.green} |
