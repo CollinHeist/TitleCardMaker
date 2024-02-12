@@ -1,38 +1,16 @@
-/**
- * @typedef {Object} SeriesLibrary
- * @property {"Emby" | "Jellyfin" | "Plex"} interface
- * @property {int} interface_id
- * @property {string} name
- */
+{% if False %}
+import {
+  Series, SeriesPage, Statistic
+} from './.types.js';
+{% endif %}
 
-/**
- * @typedef {Object} Series
- * @property {int} id
- * @property {string} name
- * @property {string} sort_name
- * @property {int} year
- * @property {string} small_poster_url
- * @property {boolean} monitored
- * @property {int} episode_count
- * @property {int} card_count
- * @property {Array<SeriesLibrary>} libraries
- */
-
-/**
- * @typedef {Object} Statistic
- * @property {int} value
- * @property {string} value_text
- * @property {string} unit
- * @property {string} description
- */
-
-/** @type {Array<int>} */
+/** @type {number[]} */
 let allIds = [];
 
 /**
  * Refresh the Card data (progress and card counts) for the Series with the
  * given ID.
- * @param {int} seriesId: ID of the Series to update the card data of.
+ * @param {number} seriesId: ID of the Series to update the card data of.
  */
 function refreshCardData(seriesId) {
   $.ajax({
@@ -58,7 +36,7 @@ function refreshCardData(seriesId) {
 /**
  * Submit an API reuest to toggle the monitored status of the Series with the
  * given ID. This also updates the poster class and the monitored icon.
- * @param {int} seriesId - ID of the Series to toggle.
+ * @param {number} seriesId - ID of the Series to toggle.
  */
 function toggleMonitoredStatus(seriesId) {
   $.ajax({
@@ -81,7 +59,7 @@ function toggleMonitoredStatus(seriesId) {
 
 /**
  * Submit an API request to update the config of the Series with the given ID.
- * @param {int} seriesId - ID of the Series to update. 
+ * @param {number} seriesId - ID of the Series to update. 
  * @param {Object} data - An `UpdateSeries` object to pass to the PATCH request.
  */
 function _updateSeriesConfig(seriesId, data) {
@@ -98,7 +76,7 @@ const updateSeriesConfig = debounce((...args) => _updateSeriesConfig(...args));
 
 /**
  * Submit an API request to begin Processing the Series with the given ID.
- * @param {int} seriesId - ID of the Series to process.
+ * @param {number} seriesId - ID of the Series to process.
  */
 function processSeries(seriesId) {
   $(`#series-id${seriesId} td[data-row="process"]`).toggleClass('disabled', true);
@@ -111,15 +89,15 @@ function processSeries(seriesId) {
   });
 }
 
-/** @type {Array<int>} */
+/** @type {number[]} */
 let selectedSeries = [];
-/** @type {int} */
+/** @type {number} */
 let lastSelection;
 
 /**
  * Toggle the series with the given ID's selection status. This modifies the
  * row's class, checkbox, and updates the `selectedSeries` list.
- * @param {int} seriesId - ID of the Series to toggle the selection of.
+ * @param {number} seriesId - ID of the Series to toggle the selection of.
  * @param {boolean} [force] - Selection value to force for the given Series.
  * @param {PointerEvent} [event] - Click Event triggering the toggle.
  */
@@ -182,7 +160,7 @@ function clearSelection() {
 /**
  * Navigate to the Series page for the Series with the given ID. This only
  * navigates the page if no Series are selected.
- * @param {int} seriesId - ID of the Series to open the page of.
+ * @param {number} seriesId - ID of the Series to open the page of.
  */
 function openSeries(seriesId) {
   if (selectedSeries.length === 0) {
@@ -336,7 +314,7 @@ function _populateSeriesCard(series, template) {
 /**
  * Submit an API request to get all the Series at the given page number and add
  * their content to the page.
- * @param {int} [page] - Page number of Series to load 
+ * @param {number} [page] - Page number of Series to load 
  * @param {boolean} [keepSelection=false] - Whether to keep the current selection of
  * Series.
  */
@@ -357,6 +335,7 @@ async function getAllSeries(page=undefined, keepSelection=false) {
   {% endif %}
 
   // Get this page of Series data
+  /** @type {SeriesPage} */
   let allSeriesData = await fetch(`/api/series/all?order_by=${sortParam}&size={{preferences.home_page_size}}&page=${page}`).then(resp => resp.json());
   await queryLibraries();
   let allSeries = allSeriesData.items;
@@ -470,8 +449,8 @@ function getAllStatistics() {
     type: 'GET',
     url: '/api/statistics',
     /**
-     * API call was successful, populate statistic elements
-     * @param {Array<Statistic>} statistics 
+     * API call was successful, populate statistic elements.
+     * @param {Statistic[]} statistics 
      */
     success: statistics => {
       statistics.forEach(statistic => {

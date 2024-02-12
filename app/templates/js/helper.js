@@ -663,14 +663,14 @@ async function initializeExtras(
   for (const [card_type, extras] of Object.entries(types)) {
     // Create tab menu item
     const newMenuItem = document.createElement('a');
-    newMenuItem.className = 'item';
+    newMenuItem.className = card_type === activeTab ? 'active item' : 'item';
     newMenuItem.dataset.tab = card_type.replace('/', '_');
     newMenuItem.innerText = toTitleCase(card_type);
     extraMenu.appendChild(newMenuItem);
 
     // Create tab itself
     const newTab = document.createElement('div');
-    newTab.className = 'ui bottom attached tab segment';
+    newTab.className = 'ui bottom attached tab segment' + (card_type === activeTab ? ' active' : '');
     newTab.dataset.tab = card_type.replace('/', '_'); // Cannot use / in tab identifiers
     extraMenu.insertAdjacentElement('afterend', newTab);
 
@@ -707,5 +707,6 @@ async function initializeExtras(
   });
 
   // Initialize tabs
-  $(`${sectionQuerySelector} .item`).tab('change tab', activeTab);
+  $(`${sectionQuerySelector} .item`).tab();
+  // $(`${sectionQuerySelector} .item`).tab('change tab', activeTab);
 }
