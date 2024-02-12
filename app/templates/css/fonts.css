@@ -16,3 +16,13 @@ img {
 .field label[data-value="file"] span.prefix {
   opacity: 50%;
 }
+
+.field .inline.color.circle {
+  /* --color: transparent; */
+  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  display: inline-block;
+  background-color: var(--color, transparent);
+  border: 0.5px solid var(--color, #ffffff7d);
+}

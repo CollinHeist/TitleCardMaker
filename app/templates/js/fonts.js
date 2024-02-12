@@ -229,6 +229,13 @@ function populateFontElement(template, font, activeFontId) {
   
   if (font.color !== null) {
     template.querySelector('input[name="color"]').value = font.color;
+    // Update inline circle
+    template.querySelector('.field[data-value="color"] .color.circle').style.setProperty('--color', font.color);
+  }
+  // Add onchange listener to recolor circle
+  template.querySelector('input[name="color"]').oninput = function () {
+    document.querySelector(`#font-id${font.id} .field[data-value="color"] .color.circle`).style.setProperty('--color', $(this).val());
+    console.log($(this).val());
   }
 
   if (font.title_case !== null) {
