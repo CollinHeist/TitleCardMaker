@@ -50,7 +50,7 @@ body > div:first-of-type {
   /* Ensure main content is scrollable */
   overflow-x: hidden;
   /* Add margin for main content to space from header and sidebar */
-  padding: 15px 15px 15px 135px;
+  padding: 15px 15px 15px 115px;
 }
 
 /* Header element alignment */
