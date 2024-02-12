@@ -39,7 +39,8 @@ class MarvelTitleCard(BaseCardType):
                     'Color of the left/top/right borders. Default is '
                     '<v>white</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Border Size',
                 identifier='border_size',
                 description='Size of the border',
@@ -47,11 +48,14 @@ class MarvelTitleCard(BaseCardType):
                     'Size of the left/top/right borders. Default is <v>55</v>. '
                     'Unit is pixels.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-            ), Extra(
+                tooltip='Default is <v>#C9C9C9</v>.'
+            ),
+            Extra(
                 name='Episode Text Location',
                 identifier='episode_text_location',
                 description='Where to position the episode text.',
@@ -60,7 +64,8 @@ class MarvelTitleCard(BaseCardType):
                     'the title text; or <v>fixed</v> to put the text on the '
                     'outer edges of the text box. Default is <v>fixed</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Fit Text',
                 identifier='fit_text',
                 description='Whether to dynamically adjust the font size.',
@@ -69,23 +74,27 @@ class MarvelTitleCard(BaseCardType):
                     'in the bounds of the text box. Either <v>True</v> or '
                     '<v>False</v>. Default is <v>True</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Hide Border',
                 identifier='hide_border',
                 description='Whether to hide the left/top/right borders.',
                 tooltip='Whether to Either <v>True</v> or <v>False</v>.',
-            ), Extra(
+            ),
+            Extra(
                 name='Text Box Color',
                 identifier='text_box_color',
                 description='Color of the (bottom) text box.',
                 tooltip='Default is <v>black</v>.',
-            ), Extra(
+            ),
+            Extra(
                 name='Text Box Height',
                 identifier='text_box_height',
                 description='Height of the (bottom) text box.',
                 tooltip='Default is <v>200</v>. Unit is pixels.',
             ),
-        ], description=[
+        ],
+        description=[
             "Card type styled to match RedHeadJedi's MCU poster set. These "
             'cards feature a white border on the outer edges, with all text '
             'on the bottom of the image.'

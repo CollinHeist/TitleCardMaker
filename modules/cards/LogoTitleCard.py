@@ -30,7 +30,7 @@ class LogoTitleCard(BaseCardType):
             Extra(
                 name='Logo Size',
                 identifier='logo_size',
-                description='Scale the size of the logo element',
+                description='How much to scale the size of the logo',
                 tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
             ),
             Extra(
