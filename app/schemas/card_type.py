@@ -261,7 +261,8 @@ class FormulaOneCardType(BaseCardTypeAllText):
     country: Optional[FormulaOneCountry] = None
     episode_text_color: str = FormulaOneTitleCard.EPISODE_TEXT_COLOR
     episode_text_font_size: PositiveFloat = 1.0
-    race: constr(min_length=1) = 'GRAND PRIX'
+    flag: Optional[Path] = None
+    race: constr(min_length=1, to_upper=True) = 'GRAND PRIX'
 
     @root_validator(skip_on_failure=True)
     def parse_country(cls, values: dict) -> dict:
@@ -271,6 +272,13 @@ class FormulaOneCardType(BaseCardTypeAllText):
             else:
                 values['country'] = 'generic'
 
+        return values
+    
+    @root_validator(skip_on_failure=True)
+    def validate_flag(cls, values: dict) -> dict:
+        if values['flag'] is not None:
+            if not values['flag'].exists():
+                raise ValueError(f'Specified Flag file does not exist')
         return values
 
 

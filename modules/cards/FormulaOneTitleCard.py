@@ -69,6 +69,15 @@ class FormulaOneTitleCard(BaseCardType):
                 description='Size adjustment for the episode text',
                 tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
             ),
+            Extra(
+                name='Flag',
+                identifier='flag',
+                description='Flag file to use on the left frame of the card',
+                tooltip=(
+                    'Path to the flag frame file. If omitted, the flag is '
+                    'determined by the specified country.'
+                ),
+            ),
         ],
         description=[
             'Title Card designed for displaying race details for Formula 1. ',
@@ -167,6 +176,7 @@ class FormulaOneTitleCard(BaseCardType):
             country: Country = 'australia',
             episode_text_color: str = TITLE_COLOR,
             episode_text_font_size: float = 1.0,
+            flag: Optional[Path] = None,
             race: str = 'GRAND PRIX',
             preferences: Optional['Preferences'] = None,
             **unused,
@@ -196,9 +206,12 @@ class FormulaOneTitleCard(BaseCardType):
         # self.font_vertical_shift = font_vertical_shift
 
         # Extras
-        self.country = self._COUNTRY_FLAGS.get(
-            country, self.REF_DIRECTORY / 'generic.webp'
-        )
+        if flag is None or not flag.exists():
+            self.country = self._COUNTRY_FLAGS.get(
+                country, self.REF_DIRECTORY / 'generic.webp'
+            )
+        else:
+            self.country = flag
         self.episode_text_color = episode_text_color
         self.episode_text_font_size = episode_text_font_size
         self.race = race
