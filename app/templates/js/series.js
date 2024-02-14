@@ -377,6 +377,7 @@ async function initalizeSeriesConfig() {
       ]
     });
   });
+  refreshTheme();
 }
 
 /**
@@ -880,7 +881,7 @@ function querySeriesLogs() {
         }[log.level];
 
         event.querySelector('.label .icon').classList.add(color);
-        event.querySelector('.summary span').innerText = `${toTitleCase(log.level)} Log Message`;
+        event.querySelector('.summary span').innerText = `${toTitleCase(log.level)} Message`;
         event.querySelector('.date').innerText = timeDiffString(log.time);
         event.querySelector('.extra').innerText =
           log.message.replace('Series[{{series.id}}] {{series.full_name}}', '{{series.full_name}}');
@@ -937,9 +938,7 @@ function getCardData(page=currentCardPage, transition=false) {
           preview.querySelector('.dimmer .content').innerHTML = `<h5>Season ${card.episode.season_number} Episode ${card.episode.episode_number}</h5>`;
         {% endif %}
 
-        // Use modified URL for the image src
-        const modifiedUrl = card.card_file.replace('{{preferences.card_directory}}', '/cards')
-        preview.querySelector('img').src = `${modifiedUrl}?${card.filesize}`;
+        preview.querySelector('img').src = `${card.file_url}?${card.filesize}`;
 
         return preview;
       });
