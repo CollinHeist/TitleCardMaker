@@ -129,3 +129,16 @@ def query_logs(
     return paginate(
         sorted(log_entries, key=lambda data: data['time'], reverse=True)
     )
+
+
+@log_router.get('/files')
+def get_log_files() -> list[str]:
+    """
+    Get a list of the log files. This returns the log URLs - i.e. /logs
+    prefixed.
+    """
+
+    return [
+        str(file).replace(str(LOG_FILE.parent.resolve()), '/logs')
+        for file in LOG_FILE.parent.glob(f'{LOG_FILE.stem}*{LOG_FILE.suffix}')
+    ]
