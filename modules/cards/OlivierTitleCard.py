@@ -30,26 +30,28 @@ class OlivierTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
+                tooltip='Default is <c>white</c>.'
             ),
             Extra(
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the episode text',
-                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
             ),
             Extra(
                 name='Episode Text Vertical Shift',
                 identifier='episode_text_vertical_shift',
                 description='Vertical offset to apply to the episode text',
-                tooltip='Unit is pixels.'
+                tooltip='Default is <v>0</v>. Unit is pixels.'
             ),
             Extra(
                 name='Text Stroke Color',
                 identifier='stroke_color',
                 description='Color to use for the text stroke',
-                tooltip='Default is <v>black</v>.'
+                tooltip='Default is <c>black</c>.'
             ),
-        ], description=[
+        ],
+        description=[
             'Title card with left-aligned title and episode text.', 'This card '
             'is structurally very similar to the Star Wars card except it does '
             'not feature the star overlay.',

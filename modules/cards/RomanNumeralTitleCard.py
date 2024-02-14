@@ -206,19 +206,19 @@ class RomanNumeralTitleCard(BaseCardType):
                 name='Background Color',
                 identifier='background',
                 description='Color of the background',
-                tooltip='Default is <v>black</v>.'
+                tooltip='Default is <c>black</c>.'
             ),
             Extra(
                 name='Roman Numeral Color',
                 identifier='roman_numeral_color',
                 description='Color of the roman numerals',
-                tooltip='Default is <v>#AE2317</v>.'
+                tooltip='Default is <c>#AE2317</c>.'
             ),
             Extra(
                 name='Season Text Color',
                 identifier='season_text_color',
                 description='Color of the season text',
-                tooltip='Default is <v>rgb(200, 200, 200)</v>.'
+                tooltip='Default is <c>rgb(200, 200, 200)</c>.'
             ),
         ], description=[
             'Imageless title cards featuring large roman numerals indicating '

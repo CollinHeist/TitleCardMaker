@@ -33,13 +33,13 @@ class OverlineTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-                tooltip='Defaults to match the Font color',
+                tooltip='Defaults to match the Font color.',
             ),
             Extra(
                 name='Line Color',
                 identifier='line_color',
                 description='Color of the line',
-                tooltip='Defaults to match the episode text or Font color',
+                tooltip='Defaults to match the episode text or Font color.',
             ),
             Extra(
                 name='Line Position',
@@ -71,6 +71,7 @@ class OverlineTitleCard(BaseCardType):
                 name='Separator Character',
                 identifier='separator',
                 description='Character to separate season and episode text',
+                tooltip='Default is <v>-</v>.'
             ),
             Extra(
                 name='Gradient Omission',
@@ -82,7 +83,8 @@ class OverlineTitleCard(BaseCardType):
                     '<v>False</v>.'
                 ),
             ),
-        ], description=[
+        ],
+        description=[
             'Simple Title Card with title and episode text at the bottom of '
             'image, and a thin line positioned above (or below) the title '
             'text.', 'The line (and episode text) can be repositioned and '

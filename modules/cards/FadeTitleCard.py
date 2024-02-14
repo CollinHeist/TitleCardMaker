@@ -18,7 +18,6 @@ class FadeTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    # pylint: disable=line-too-long
     API_DETAILS = CardDescription(
         name='Fade',
         identifier='fade',
@@ -32,14 +31,15 @@ class FadeTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to use for the episode text',
+                tooltip='Defaults to <c>rgb(163, 163, 163)</c>.'
             ),
-        ], description=[
+        ],
+        description=[
             'Modification of the Standard style that is intended to be used '
-            'for 4:3 aspect-ratio source images.',
-            'A logo can also be placed above the title text.',
+            'for 4:3 aspect-ratio source images.', 'A logo can also be placed '
+            'above the title text.',
         ]
     )
-    # pylint: enable=line-too-long
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'fade'

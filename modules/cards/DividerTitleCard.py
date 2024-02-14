@@ -53,7 +53,9 @@ class DividerTitleCard(BaseCardType):
                 name='Text Stroke Color',
                 identifier='stroke_color',
                 description='Color to use for the text stroke',
-            ), Extra(
+                tooltip='Defaults to <c>black</c>.'
+            ),
+            Extra(
                 name='Title Text Position',
                 identifier='title_text_position',
                 description=(
@@ -64,7 +66,8 @@ class DividerTitleCard(BaseCardType):
                     'Either <v>left</v>, or <v>right</v>. Default is '
                     '<v>left</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Text Position',
                 identifier='text_position',
                 description='Where on the image to position the text',
@@ -73,19 +76,19 @@ class DividerTitleCard(BaseCardType):
                     '<v>right</v>, <v>lower right</v>, <v>lower left</v>, or '
                     '<v>left</v>. Default is <v>lower right</v>.'
                 ),
-            ), Extra(
+            ),
+            Extra(
                 name='Divider Color',
                 identifier='divider_color',
                 description='Color of the divider bar between text',
-                tooltip='Defaults to match the Font color',
+                tooltip='Defaults to match the Font color.',
             )
-        ], description=[
+        ],
+        description=[
             'A simple title card featuring the title and index text separated '
-            'by a vertical divider.',
-            'This card allows the text to be positioned at various points '
-            'around the image.',
-            'Text on this image is unobtrusive, and is intended for shorter '
-            'titles.',
+            'by a vertical divider.', 'This card allows the text to be '
+            'positioned at various points around the image.', 'Text on this '
+            'image is unobtrusive, and is intended for shorter titles.',
         ]
     )
     # pylint: enable=line-too-long

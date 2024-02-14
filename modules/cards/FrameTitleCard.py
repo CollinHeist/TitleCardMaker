@@ -45,9 +45,10 @@ class FrameTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to use for the episode text',
-                tooltip='Default is <v>rgb(80, 80, 80)</v>.'
+                tooltip='Default is <c>rgb(80, 80, 80)</c>.'
             ),
-        ], description=[
+        ],
+        description=[
             'Title card styled to look like a Polaroid photo.',
             'The placement and color of the season and episode text can be '
             'adjusted via extras.',

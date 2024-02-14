@@ -32,7 +32,7 @@ class BannerTitleCard(BaseCardType):
                 name='Alternate Color',
                 identifier='alternate_color',
                 description='Color of the text that appears in the banner',
-                tooltip='Defaults to <v>black</v>.',
+                tooltip='Default is <c>black</c>.',
             ),
             Extra(
                 name='Banner Color',
@@ -52,7 +52,7 @@ class BannerTitleCard(BaseCardType):
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the episode text',
-                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>',
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.',
             ),
             Extra(
                 name='Banner Toggle',
@@ -73,10 +73,9 @@ class BannerTitleCard(BaseCardType):
             ),
         ],
         description=[
-            'This class describes a CardType that feature a solid-color banner '
-            'at the bottom of the image, with all text directly on top of or '
-            'within the banner.', 'The banner and text can be recolored and '
-            'resized.'
+            'Cards of this type feature a solid-color banner at the bottom of '
+            'the image, with all text directly on top of (or within) the '
+            'banner.', 'The banner and text can be recolored and resized.'
         ],
     )
 

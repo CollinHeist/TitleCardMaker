@@ -37,6 +37,7 @@ class TintedGlassTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
+                tooltip='Default is <c>rgb(198, 226, 255)</c>.' # SlateGray1
             ),
             Extra(
                 name='Episode Text Position',
@@ -63,7 +64,7 @@ class TintedGlassTitleCard(BaseCardType):
                 name='Glass Color',
                 identifier='glass_color',
                 description='Color of the "glass" beneath the text',
-                tooltip='Default is <v>rgba(25, 25, 25, 0.7)</v>.',
+                tooltip='Default is <c>rgba(25, 25, 25, 0.7)</c>.',
             ),
             Extra(
                 name='Vertical Adjustment',

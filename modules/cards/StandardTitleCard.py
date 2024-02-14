@@ -33,20 +33,27 @@ class StandardTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-            ), Extra(
+                tooltip='Default is <c>#CFCFCF</c>.'
+            ),
+            Extra(
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the episode text',
-                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
-            ), Extra(
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
+            ),
+            Extra(
                 name='Stroke Text Color',
                 identifier='stroke_color',
                 description='Color to use for the title text stroke',
-            ), Extra(
+                tooltip='Default is <c>black</c>.'
+            ),
+            Extra(
                 name='Separator Character',
                 identifier='separator',
                 description='Character to separate season and episode text',
-            ), Extra(
+                tooltip='Default is <v>•</v>.'
+            ),
+            Extra(
                 name='Gradient Omission',
                 identifier='omit_gradient',
                 description='Whether to omit the gradient overlay',

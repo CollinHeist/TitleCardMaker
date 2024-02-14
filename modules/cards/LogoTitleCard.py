@@ -46,7 +46,10 @@ class LogoTitleCard(BaseCardType):
                 name='Background Color',
                 identifier='background',
                 description='Background color to use behind the logo',
-                tooltip='Ignored if a background image is used.',
+                tooltip=(
+                    'Ignored if a background image is used. Default is '
+                    '<c>black</c>.'
+                ),
             ),
             Extra(
                 name='Separator Character',
@@ -67,7 +70,7 @@ class LogoTitleCard(BaseCardType):
                 name='Stroke Text Color',
                 identifier='stroke_color',
                 description='Color to use for the text stroke',
-                tooltip='Default is <v>black</v>.'
+                tooltip='Default is <c>black</c>.'
             ),
             Extra(
                 name='Gradient Omission',
@@ -88,7 +91,8 @@ class LogoTitleCard(BaseCardType):
                     'logo is not blurred. Default is <v>False</v>.'
                 ),
             ),
-        ], description=[
+        ],
+        description=[
             'Variation of the Standard title card featuring a central logo.',
             'This card is intended to be used for very "spoilery" series, such '
             'as Reality TV shows.', 'The background of this card can either be '

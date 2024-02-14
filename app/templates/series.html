@@ -642,8 +642,14 @@
 
                   <!-- Font color and case -->
                   <div class="two fields">
-                    <div class="field">
-                      <label>Color <a href="https://imagemagick.org/script/color.php#color_names" target="_blank"><i class="external alternate small icon"></i></a></label>
+                    <div class="field" data-value="font_color">
+                      <label>
+                        Color
+                        <span class="inline color circle"></span>
+                        <a href="https://imagemagick.org/script/color.php#color_names" target="_blank">
+                          <i class="external alternate small icon"></i>
+                        </a>
+                      </label>
                       {% if series.font_color is none %}
                       <input name="font_color" type="text" placeholder="Default">
                       {% else %}

@@ -29,12 +29,14 @@ class PosterTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
+                tooltip='Defaults to match the Font color.'
             ),
-        ], description=[
+        ],
+        description=[
             'Title card featuring a vertical poster with a starry background, '
-            'originally designed for the Gundam series.',
-            'This card is designed for vertical source images, and you will '
-            'likely need to manually download and specify posters as source images',
+            'originally designed for the Gundam series.', 'This card is '
+            'designed for vertical source images, and you will likely need to '
+            'manually download and specify posters as source images',
         ]
     )
 

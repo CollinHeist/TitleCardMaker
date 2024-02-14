@@ -31,27 +31,33 @@ class WhiteBorderTitleCard(BaseCardType):
                 name='Border Color',
                 identifier='border_color',
                 description='Color of the border',
-                tooltip='Defaults to <v>white</v>.',
+                tooltip='Defaults to <c>white</c>.',
             ),
             Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color of the season and episode text',
+                tooltip='Default is <c>white</c>.',
             ),
             Extra(
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the episode text',
-                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.',
             ),
             Extra(
                 name='Separator Character',
                 identifier='separator',
-                description='Character that separates the season and episode text',
+                description=(
+                    'Character that separates the season and episode text'
+                ),
+                tooltip='Default is <v>•</v>.',
             ),
-        ], description=[
+        ],
+        description=[
             'Card type based on the Standard card, but modified to include a '
-            "white border frame and a changed Font to match Musikmann2000's posters.",
+            "white border frame and a changed Font to match Musikmann2000's "
+            "posters.",
         ]
     )
 

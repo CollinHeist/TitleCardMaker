@@ -37,7 +37,7 @@ class MarvelTitleCard(BaseCardType):
                 description='Color of the border',
                 tooltip=(
                     'Color of the left/top/right borders. Default is '
-                    '<v>white</v>.'
+                    '<c>white</c>.'
                 ),
             ),
             Extra(
@@ -53,7 +53,7 @@ class MarvelTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-                tooltip='Default is <v>#C9C9C9</v>.'
+                tooltip='Default is <c>#C9C9C9</c>.'
             ),
             Extra(
                 name='Episode Text Location',
@@ -79,13 +79,16 @@ class MarvelTitleCard(BaseCardType):
                 name='Hide Border',
                 identifier='hide_border',
                 description='Whether to hide the left/top/right borders.',
-                tooltip='Whether to Either <v>True</v> or <v>False</v>.',
+                tooltip=(
+                    'Whether to Either <v>True</v> or <v>False</v>. Default is '
+                    '<v>False</v>.'
+                ),
             ),
             Extra(
                 name='Text Box Color',
                 identifier='text_box_color',
                 description='Color of the (bottom) text box.',
-                tooltip='Default is <v>black</v>.',
+                tooltip='Default is <c>black</c>.',
             ),
             Extra(
                 name='Text Box Height',

@@ -62,6 +62,7 @@ class FormulaOneTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
+                tooltip='Defaults to <c>white</c>.'
             ),
             Extra(
                 name='Episode Text Font Size',

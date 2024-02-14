@@ -49,7 +49,7 @@ class LandscapeTitleCard(BaseCardType):
                 name='Box Color',
                 identifier='box_color',
                 description='Color of the bounding box around the title text',
-                tooltip='Matches the font color by default.',
+                tooltip='Defaults to match the Font color.',
             ),
             Extra(
                 name='Box Adjustments',
@@ -85,9 +85,10 @@ class LandscapeTitleCard(BaseCardType):
                 name='Shadow Color',
                 identifier='shadow_color',
                 description='Color of the text drop shadow.',
-                tooltip='Default is <v>black</v>.',
+                tooltip='Default is <c>black</c>.',
             ),
-        ], description=[
+        ],
+        description=[
             'Title-centric title cards that do not feature any text except a '
             'title.', 'These cards are intended for landscape-centric images.',
             'A bounding box around the title text can be added and adjusted '

@@ -118,13 +118,13 @@ class GraphTitleCard(BaseCardType):
                 name='Graph Background Color',
                 identifier='graph_background_color',
                 description='Background color of the graph',
-                tooltip='Default is <v>rgba(140,140,140,0.5)</v>.',
+                tooltip='Default is <c>rgba(140,140,140,0.5)</c>.',
             ),
             Extra(
                 name='Graph Color',
                 identifier='graph_color',
                 description='Color of the filled-in portion of the graph',
-                tooltip='Default is <v>SteelBlue1</v>.'
+                tooltip='Default is <c>rgb(99,184,255)</c>.' # SteelBlue1
             ),
             Extra(
                 name='Graph Inset',

@@ -77,7 +77,7 @@ class CalligraphyTitleCard(BaseCardType):
                 name='Shadow Color',
                 identifier='shadow_color',
                 description='Color of the text drop shadow.',
-                tooltip='Default is <v>black</v>.',
+                tooltip='Default is <c>black</c>.',
             ),
             Extra(
                 name='Logo Size',
@@ -90,13 +90,15 @@ class CalligraphyTitleCard(BaseCardType):
                 identifier='deep_blur_if_unwatched',
                 description=(
                     'Whether to apply a stronger blur to unwatched Episodes'
-                ), tooltip=(
+                ),
+                tooltip=(
                     'Either <v>True</v> or <v>False</v>. Applies a more '
                     'spoiler-free blurring if a Blur style is used and the '
                     'Episode is unwatched. Default is <v>True</v>.'
                 ),
             ),
-        ], description=[
+        ],
+        description=[
             'Stylized Card featuring a prominent logo and all text in a hand-'
             'written calligraphy font. A subtle matte paper texture is applied '
             'to the image.', 'Looks best when a blurred/grayscale style is '

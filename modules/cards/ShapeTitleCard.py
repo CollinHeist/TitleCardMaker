@@ -127,7 +127,7 @@ class ShapeTitleCard(BaseCardType):
                 name='Shape Color',
                 identifier='shape_color',
                 description='Color of the shape',
-                tooltip='Default is <v>skyblue</v>.',
+                tooltip='Default is <c>skyblue</c>.',
             ),
             Extra(
                 name='Shape Inset',
@@ -159,6 +159,7 @@ class ShapeTitleCard(BaseCardType):
                 name='Stroke Text Color',
                 identifier='stroke_color',
                 description='Color to use for the text stroke',
+                tooltip='Defaults to <c>black</c>.'
             ),
             Extra(
                 name='Text Position',
@@ -176,7 +177,8 @@ class ShapeTitleCard(BaseCardType):
                 description='Whether to omit the gradient overlay',
                 tooltip=(
                     'Either <v>True</v> or <v>False</v>. If <v>True</v>, text '
-                    'may appear less legible on brighter images.'
+                    'may appear less legible on brighter images. Default is '
+                    '<v>False</v>.'
                 ),
             ),
         ], description=[

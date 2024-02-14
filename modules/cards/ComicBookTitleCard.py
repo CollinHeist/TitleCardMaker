@@ -111,7 +111,7 @@ class ComicBookTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-                tooltip='Default is <v>black</v>.'
+                tooltip='Default is <c>black</c>.'
             ),
             Extra(
                 name='Index Text Position',
@@ -126,13 +126,13 @@ class ComicBookTitleCard(BaseCardType):
                 name='Title Textbox Fill Color',
                 identifier='text_box_fill_color',
                 description='Fill color of the text box for the title text.',
-                tooltip='Default is <v>white</v>.'
+                tooltip='Default is <c>white</c>.'
             ),
             Extra(
                 name='Title Textbox Edge Color',
                 identifier='text_box_edge_color',
                 description='Edge color of all text boxes',
-                tooltip='Defaults to matching the Font color.',
+                tooltip='Defaults to match the Font color.',
             ),
             Extra(
                 name='Title Text Rotation Angle',
@@ -164,7 +164,7 @@ class ComicBookTitleCard(BaseCardType):
                 description=(
                     'Fill color for both the title and episode text banners'
                 ),
-                tooltip='Defaults to <v>rgba(235,73,69,0.6)</v>.'
+                tooltip='Defaults to <c>rgba(235,73,69,0.6)</c>.'
             ),
             Extra(
                 name='Title Banner Vertical Shift',

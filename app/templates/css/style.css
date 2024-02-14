@@ -53,6 +53,29 @@ body > div:first-of-type {
   padding: 15px 15px 15px 115px;
 }
 
+/* Stylize "code" color text */
+code.color {
+  /* Add stylized bubble */
+  padding: .1em .2em;
+  background-color: rgba(110, 118, 129, 0.4);
+  border-radius: 6px;
+  /* Do not italicize color name */
+  font-style: normal;
+}
+
+/* Color inline color circles */
+span.color.circle {
+  /* --color: transparent; */
+  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  display: inline-block;
+  background-color: var(--color, transparent);
+  border: 0.5px solid var(--color, #ffffff7d);
+  /* Add space between color bubble and name */
+  margin-left: 4px;
+}
+
 /* Header element alignment */
 #page-header {
   align-items: center;

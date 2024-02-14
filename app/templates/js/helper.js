@@ -681,8 +681,13 @@ async function initializeExtras(
       newInput.querySelector('input').name = extra.identifier;
       newInput.querySelector('.help').innerHTML = `<b>${extra.description}</b><br>`
         + (extra.tooltip
-            ? extra.tooltip.replaceAll('<v>', '<span class="ui blue text inverted">')
-                           .replaceAll('</v>', '</span>')
+            ? extra.tooltip
+                .replaceAll('<v>', '<span class="ui blue text inverted">')
+                .replaceAll('</v>', '</span>')
+                .replaceAll(
+                  /<c>(.*?)<\/c>/g,
+                  '<code class="color">$1<span style="--color: $1" class="color circle"></span></code>'
+                )
             : ''
           );
 

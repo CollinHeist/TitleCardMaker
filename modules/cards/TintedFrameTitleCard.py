@@ -149,7 +149,7 @@ class TintedFrameTitleCard(BaseCardType):
                 name='Shadow Color',
                 identifier='shadow_color',
                 description='Color of the drop shadow.',
-                tooltip='Default is <v>black</v>.',
+                tooltip='Default is <c>black</c>.',
             ),
         ],
         description=[

@@ -39,7 +39,7 @@ class InsetTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-                tooltip='Default is <v>crimson</v>.'
+                tooltip='Default is <c>crimson</c>.'
             ),
             Extra(
                 name='Episode Text Font Size',
@@ -70,7 +70,8 @@ class InsetTitleCard(BaseCardType):
                     'may appear less legible on brighter images.'
                 ),
             ),
-        ], description=[
+        ],
+        description=[
             'A title card in which the season and episode text is inset into '
             '(and appears to "cut out") the title text.'
         ]

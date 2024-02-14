@@ -59,23 +59,25 @@ class AnimeTitleCard(BaseCardType):
                 name='Kanji Color',
                 identifier='kanji_color',
                 description='Color of the kanji text',
-                tooltip='Defaults to <v>white</v>.'
+                tooltip='Defaults to <c>white</c>.'
             ),
             Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
+                tooltip='Default is <c>#CFCFCF</c>.'
             ),
             Extra(
                 name='Separator Character',
                 identifier='separator',
                 description='Character to separate season and episode text',
+                tooltip='Default is <v>·</v>.'
             ),
             Extra(
                 name='Stroke Text Color',
                 identifier='stroke_color',
                 description='Color of the text stroke',
-                tooltip='Defaults to <v>black</v>.'
+                tooltip='Defaults to <c>black</c>.'
             ),
             Extra(
                 name='Gradient Omission',
@@ -91,7 +93,7 @@ class AnimeTitleCard(BaseCardType):
                 name='Episode Text Stroke Color',
                 identifier='episode_stroke_color',
                 description='Color of the text stroke for the episode text',
-                tooltip='Defaults to <v>black</v>.'
+                tooltip='Defaults to <c>black</c>.'
             ),
         ], description=[
             'Title card with all text aligned in the lower left of the image.',

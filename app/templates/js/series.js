@@ -283,6 +283,10 @@ async function initalizeSeriesConfig() {
   } else {
     $('.field a[data-value="font-link"]')[0].href = `/fonts#font-id{{series.font_id}}`;
   }
+  // Font color
+  $('#card-config-form input[name="font_color"]').on('input', function () {
+    document.querySelector('#card-config-form .field[data-value="font_color"] .color.circle').style.setProperty('--color', $(this).val());
+  });
   // Font card case
   $('#card-config-form .dropdown[data-value="font_title_case"]').dropdown({
     values: [

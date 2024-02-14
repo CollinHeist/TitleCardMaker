@@ -33,7 +33,7 @@ class CutoutTitleCard(BaseCardType):
                 description='Color of the solid overlay to cut text out of',
                 tooltip=(
                     'This color does not support transparency. Use the Overlay '
-                    'Transparency extra for that.'
+                    'Transparency extra for that. Default is <c>black</c>.'
                 )
             ),
             Extra(
@@ -52,7 +52,7 @@ class CutoutTitleCard(BaseCardType):
                 tooltip=(
                     'Either <v>True</v> or <v>False</v>. If <v>True</v>, then '
                     'the cutout of the episode text is blurred. Default is '
-                    '<v>False</v>'
+                    '<v>False</v>.'
                 ),
             ),
             Extra(
@@ -65,9 +65,11 @@ class CutoutTitleCard(BaseCardType):
                     'blur. Default is <v>0x30</v>.'
                 ),
             ),
-        ], description=[
+        ],
+        description=[
             'Title card featuring a solid color overlaying the source image.',
-            'Episode text cuts out the overlay to reveal the underlying source image.',
+            'Episode text cuts out the overlay to reveal the underlying source '
+            'image.',
         ]
     )
 
