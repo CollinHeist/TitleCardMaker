@@ -172,6 +172,7 @@ class TitleCard(Base):
     episode_id: int
     episode: EpisodeData
     card_file: str
+    file_url: str
     filesize: int
     model_json: dict
     library_name: Optional[str] = None

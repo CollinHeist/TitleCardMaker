@@ -382,8 +382,8 @@ class Template(Base):
                     return False
             # Operation or Argument are invalid, log and skip
             else:
-                log.debug(f'{self} [{argument}] [{operation}] '
-                          f'[{condition["reference"]}] is unevaluatable')
+                # log.debug(f'{self} [{argument}] [{operation}] '
+                #           f'[{condition["reference"]}] is unevaluatable')
                 continue
 
         # All Filter criteria met

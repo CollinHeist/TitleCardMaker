@@ -6,6 +6,7 @@ from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.session import Base
+from app.dependencies import get_preferences
 
 if TYPE_CHECKING:
     from app.models.connection import Connection
@@ -65,3 +66,12 @@ class Card(Base):
         """Path of this Card file."""
 
         return Path(self.card_file)
+
+    @property
+    def file_url(self) -> str:
+        """URL to the Card file."""
+
+        return self.card_file.replace(
+            str(get_preferences().card_directory),
+            '/cards'
+        )
