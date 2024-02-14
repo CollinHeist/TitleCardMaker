@@ -16,7 +16,7 @@ from modules.Debug import log, DATETIME_FORMAT, LOG_FILE
 # Do not warn about SQL pagination, not used for log filtering
 simplefilter('ignore', FastAPIPaginationWarning)
 
-
+# pylint: disable=missing-class-docstring
 class ExecutionDetails(TypedDict):
     file: str
     line: int
@@ -33,7 +33,7 @@ class RawLogData(TypedDict):
     time: datetime
     execution: ExecutionDetails
     exception: Optional[ExceptionDetails]
-
+# pylint: enable=missing-class-docstring
 
 # Create sub router for all /logs API requests
 log_router = APIRouter(
@@ -77,7 +77,7 @@ def query_logs(
             logs.extend(list(map(loads, file_handle.readlines())))
     # Read all log files
     else:
-        for log_file in LOG_FILE.parent.glob(f'{LOG_FILE.name}*'):
+        for log_file in LOG_FILE.parent.glob(f'{LOG_FILE.stem}*{LOG_FILE.suffix}'):
             with log_file.open('r') as file_handle:
                 logs.extend(list(map(loads, file_handle.readlines())))
 
