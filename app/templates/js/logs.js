@@ -2,7 +2,7 @@
 import {LogEntry, LogEntryPage, LogLevel} from './.types.js';
 {% endif %}
 
-/** @type {Array<string>} */
+/** @type {string[]} */
 let currentPage = [];
 
 /**
@@ -17,6 +17,25 @@ function downloadPage() {
 
   // Download text 
   downloadTextFile('tcm_log.txt', logStr);
+}
+
+/**
+ * 
+ * @param {string} name - Name to extract the Date from.
+ * @returns {Date} parsed from the given name.
+ */
+function parseDate(name) {
+  const pattern = /(\d{4}-\d{2}-\d{2})_(\d{2}-\d{2}-\d{2})/;
+
+  try {
+    const [, datePart, timePart] = name.match(pattern);
+    const [year, month, day] = datePart.split("-");
+    const [hour, minute, second] = timePart.split("-");
+    return new Date(year, month - 1, day, hour, minute, second);
+  } catch {
+    return new Date();
+  }
+  
 }
 
 /**
@@ -66,9 +85,7 @@ function appendContextID(id) {
 /**
  * Reset the filter form.
  */
-function resetForm() {
-  $('#log-filters').form('clear');
-}
+const resetForm = () => $('#log-filters').form('clear');
 
 /**
  * Submit an API request to query for the given page of logs. If successful,
@@ -146,12 +163,59 @@ function queryForLogs(page=1) {
 }
 
 /**
+ * Submit an API request to query all available log files. If successful, these
+ * files are displayed on the page.
+ */
+function queryLogFiles() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/logs/files',
+    /**
+     * Log files queried, add to page.
+     * @param {string[]} files - List of file URLs.
+     */
+    success: files => {
+      /** @type {[HTMLElement, Date]} Sorted array of elements to add to page */
+      const fileElements = files.map(file => {
+        // Clone template
+        const template = document.getElementById('log-file-template').content.cloneNode(true);
+
+        // Parse date
+        const date = parseDate(file.replace('/logs/', ''));
+
+        // Fill out template
+        template.querySelector('a').href = file;
+        template.querySelector('[data-value="filename"]').innerText = file.replace('/logs/', '');
+        template.querySelector('[data-value="date"]').innerText = date.toLocaleString('en-US', {
+          month: 'short',
+          day: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        });
+        
+        return [template, date];
+      }).sort((a, b) => b[1] - a[1]);
+
+      // Add to the page
+      const list = document.getElementById('file-list');
+      fileElements.forEach(([file]) => {
+        list.appendChild(file);
+      });
+    },
+    error: response => showErrorToast({title: 'Error Querying Log Files', response}),
+  });
+}
+
+/**
  * Initialize the page. This queries for logs, initializes dropdowns, and
  * initializes the after/before calendar inputs.
  */
 function initAll() {
   queryForLogs();
-  
+  queryLogFiles();
+
   $('#date-after').calendar({
     type: 'datetime',
     endCalendar: $('#date-before'),

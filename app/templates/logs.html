@@ -57,9 +57,15 @@
     </tr>
   </template>
 
-  <script>
-    
-  </script>
+  <template id="log-file-template">
+    <tr>
+      <td class="collapsing" data-value="filename"></td>
+      <td class="collapsing" data-value="date"></td>
+      <td class="collapsing selectable">
+        <a download>Download</a>
+      </td>
+    </tr>
+  </template>
 </head>
 
 <body onload="initAll();">
@@ -160,7 +166,6 @@
         </div>
       </form>
      
-
       <!-- Logs -->
       <table class="ui striped celled compact table ">
         <thead>
@@ -173,9 +178,24 @@
         </thead>
         <tbody id="log-data"></tbody>
       </table>
+
       <!-- Pagination buttons -->
       <div id="pagination" class="ui pagination menu"><!-- Added asynchrously --></div>
+
+      <!-- Log files -->
+      <h2 class="ui header">Log Files</h2>
+      <table class="ui striped compact table">
+        <thead>
+          <tr>
+            <th class="collapsing">Filename</th>
+            <th class="collapsing">Log Date</th>
+            <th class="collapsing">Download</th>
+          </tr>
+        </thead>
+        <tbody id="file-list"></tbody>
+      </table>
     </div>
+
   </div>
 </body>
 </html>
