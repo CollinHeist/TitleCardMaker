@@ -61,7 +61,8 @@ def initialize_connections(
             .all()
 
         # Set use_ toggle
-        setattr(preferences, f'use_{interface_type.lower()}', bool(connections))
+        use_connection = any(connection.enabled for connection in connections)
+        setattr(preferences, f'use_{interface_type.lower()}', use_connection)
 
         # Initialize an Interface for each Connection (if enabled)
         for connection in connections:
