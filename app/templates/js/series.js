@@ -5,8 +5,14 @@ import {
 } from './.types.js';
 {% endif %}
 
+/** @type {string} */
+const series_name = {{series.name|tojson}};
+/** @type {string} */
+const series_full_name = {{series.full_name|tojson}};
 
+/** @type {number} */
 let getStatisticsId;
+
 /**
  * Submit an API request to get updated Series statistics. If successful, then
  * the card stats text and progress bar are updated.
@@ -865,7 +871,7 @@ function querySeriesLogs() {
   const toTitleCase = (text) => text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
   $.ajax({
     type: 'GET',
-    url: '/api/logs/query?contains=Series[{{series.id}}]|{{series.full_name}}&level=DEBUG&size=100',
+    url: `/api/logs/query?contains=Series[{{series.id}}]|${series_full_name}&level=DEBUG&size=100`,
     /**
      * Logs queried, add elements to the timeline in the DOM.
      * @param {LogEntryPage} logs - Logs associated with this Series.
@@ -883,8 +889,8 @@ function querySeriesLogs() {
         event.querySelector('.label .icon').classList.add(color);
         event.querySelector('.summary span').innerText = `${toTitleCase(log.level)} Message`;
         event.querySelector('.date').innerText = timeDiffString(log.time);
-        event.querySelector('.extra').innerText =
-          log.message.replace('Series[{{series.id}}] {{series.full_name}}', '{{series.full_name}}');
+        event.querySelector('.extra').innerText = log.message
+          .replace(`Series[{{series.id}}] ${series_full_name}`, series_full_name);
 
         return event;
       })
@@ -1370,7 +1376,7 @@ function exportBlueprint() {
     xhrFields: {responseType: 'blob'},
     success: zipBlob => {
       // Download zip file
-      downloadFileBlob('{{series.full_name}} Blueprint.zip', zipBlob);
+      downloadFileBlob(`${series_full_name} Blueprint.zip`, zipBlob);
       $.toast({
         class: 'warning',
         title: 'Font Files',
@@ -1387,8 +1393,8 @@ function exportBlueprint() {
 
       // Get URL to pre-fill Blueprint form
       let url = `series_year={{series.year}}&database_ids=${(idStr)}`
-        + `&series_name=${encodeURIComponent('{{series.name|tojson}}')}`
-        + `&title=[Blueprint] ${encodeURIComponent(`{{series.name|tojson}}`)}`;
+        + `&series_name=${encodeURIComponent(series_name)}`
+        + `&title=[Blueprint] ${encodeURIComponent(series_name)}`;
 
       // Open window for Blueprint submission
       window.open(
