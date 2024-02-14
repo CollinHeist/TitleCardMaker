@@ -98,6 +98,7 @@
  * @property {number} episode_id
  * @property {EpisodeData} episode
  * @property {string} card_file
+ * @property {string} file_url
  * @property {number} filesize
  * @property {Object} model_json
  * @property {?string} library_name
