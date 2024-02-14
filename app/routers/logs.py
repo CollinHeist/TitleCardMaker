@@ -13,6 +13,7 @@ from app.schemas.logs import LogEntry, LogLevel
 
 from modules.Debug import log, DATETIME_FORMAT, LOG_FILE
 
+
 # Do not warn about SQL pagination, not used for log filtering
 simplefilter('ignore', FastAPIPaginationWarning)
 
@@ -78,6 +79,12 @@ def query_logs(
     # Read all log files
     else:
         for log_file in LOG_FILE.parent.glob(f'{LOG_FILE.stem}*{LOG_FILE.suffix}'):
+            # Skip files last modified before the minimum after time
+            if (after is not None
+                and after > datetime.fromtimestamp(log_file.stat().st_mtime)):
+                continue
+
+            # Add file contents to the list
             with log_file.open('r') as file_handle:
                 logs.extend(list(map(loads, file_handle.readlines())))
 
