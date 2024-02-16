@@ -188,13 +188,16 @@ def get_all_episode_source_images(
         match_title = episode.series.match_titles
 
     # Get all Source Images from TMDb
-    images = tmdb_interface.get_all_source_images(
-        episode.series.as_series_info,
-        episode.as_episode_info,
-        match_title=match_title,
-        bypass_blacklist=True,
-        log=request.state.log,
-    )
+    try:
+        images = tmdb_interface.get_all_source_images(
+            episode.series.as_series_info,
+            episode.as_episode_info,
+            match_title=match_title,
+            bypass_blacklist=True,
+            log=request.state.log,
+        )
+    except HTTPException:
+        images = []
 
     for interface_type, interface_group in (('Emby', emby_interfaces),
                                             ('Jellyfin', jellyfin_interfaces)):
