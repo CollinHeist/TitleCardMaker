@@ -1,5 +1,5 @@
 {% if False %}
-import {LogEntry, LogEntryPage, LogLevel} from './.types.js';
+import {LogEntryPage, LogLevel} from './.types.js';
 {% endif %}
 
 /** @type {string[]} */
@@ -40,8 +40,8 @@ function parseDate(name) {
 
 /**
  * Set the given level as the currently selected value in the dropdown.
- * @param {LogLevel} level - The log
- * level to set as the current selection in the dropdown.
+ * @param {LogLevel} level - The level to set as the current selection in the
+ * dropdown.
  */
 function updateMessageLevel(level) {
   // Uppercase first letter of level
@@ -216,6 +216,7 @@ function initAll() {
   queryForLogs();
   queryLogFiles();
 
+  // Initialize date range calendars
   $('#date-after').calendar({
     type: 'datetime',
     endCalendar: $('#date-before'),

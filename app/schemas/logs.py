@@ -8,7 +8,7 @@ from app.schemas.base import Base
 """
 Base classes
 """
-LogLevel = Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
+LogLevel = Literal['TRACE', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
 
 
 """

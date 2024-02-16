@@ -75,6 +75,9 @@ logger.remove()
 
 logger_id = None
 def set_primary_logger(level: str = 'INFO') -> int:
+    """
+    """
+
     if logger_id is not None:
         logger.remove(logger_id)
     handler_id = logger.add(
@@ -87,6 +90,7 @@ def set_primary_logger(level: str = 'INFO') -> int:
         diagnose=True,
         enqueue=True,
     )
+    logger.level('TRACE', color='<dim><black>')
     logger.level('DEBUG', color='<dim><white>')
     logger.level('INFO', color='<light-cyan>')
     logger.level('WARNING', color='<yellow>')
@@ -98,7 +102,7 @@ logger_id = set_primary_logger()
 logger.add(
     LOG_FILE,
     # Debug level for log file
-    level='DEBUG',
+    level='TRACE',
     # Format messages
     format=reduced_serializer,
     # Rotate every 12 hours

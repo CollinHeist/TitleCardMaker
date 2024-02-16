@@ -487,7 +487,7 @@
 // Logs ------------------------------------------------------------------------
 
 /**
- * @typedef {"DEBUG" | "INFO" | "WARNING" | "ERROR" | "CRITICAL"} LogLevel
+ * @typedef {"TRACE" | "DEBUG" | "INFO" | "WARNING" | "ERROR" | "CRITICAL"} LogLevel
  */
 
 /**

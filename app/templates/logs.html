@@ -12,6 +12,15 @@
   <link rel="stylesheet" type="text/css" href="/templates/css/logs.css">
 
   <!-- Templates -->
+  <template id="trace-message-template">
+    <tr class="left grey marked">
+      <td data-value="level" class="selectable center aligned">Trace</td>
+      <td data-value="time" class="selectable center aligned collapsing" data-tooltip="Add time as Filter">{time}</td>
+      <td data-value="context_id" class="selectable center aligned collapsing" data-tooltip="Add ID as Filter">{context_id}</td>
+      <td data-value="message">{message}</td>
+    </tr>
+  </template>
+
   <template id="debug-message-template">
     <tr class="left blue marked">
       <td data-value="level" class="selectable center aligned">Debug</td>
@@ -138,6 +147,7 @@
               <i class="dropdown icon"></i>
               <div class="default text">Debug</div>
               <div class="menu">
+                <div data-value="TRACE" class="item">Trace</div>
                 <div data-value="DEBUG" class="item">Debug</div>
                 <div data-value="INFO" class="item">Info</div>
                 <div data-value="WARNING" class="item">Warning</div>
