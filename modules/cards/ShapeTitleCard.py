@@ -157,6 +157,21 @@ class ShapeTitleCard(BaseCardType):
                 ),
             ),
             Extra(
+                name='Shape Stroke Width',
+                identifier='shape_stroke_width',
+                description='Width of the stroke around the shape',
+                tooltip='Number ≥<v>0</v>. Default is <v>0</v> (no stroke).',
+            ),
+            Extra(
+                name='Shape Stroke Color',
+                identifier='shape_stroke_color',
+                description='Color of the shape stroke',
+                tooltip=(
+                    'Only visible if the shape stroke width is greater than 0. '
+                    'Default is <c>black</c>.'
+                ),
+            ),
+            Extra(
                 name='Stroke Text Color',
                 identifier='stroke_color',
                 description='Color to use for the text stroke',
@@ -220,8 +235,9 @@ class ShapeTitleCard(BaseCardType):
     """Implementation details"""
     DEFAULT_SHAPE: Shape = 'diamond'
     SHAPE_COLOR = EPISODE_TEXT_COLOR
-    SHAPE_INSET = 75        # How far from each edge to offset the shape
-    SHAPE_WIDTH = 8         # Width of the shape
+    SHAPE_STROKE_COLOR = 'black'
+    SHAPE_INSET = 75
+    SHAPE_WIDTH = 8
     DEFAULT_LENGTHS: dict[Shape, int] = {
         'circle': 175,
         'diamond': 200,
@@ -240,8 +256,9 @@ class ShapeTitleCard(BaseCardType):
         'font_stroke_width', 'font_vertical_shift', 'season_text_color',
         'season_text_font_size', 'hide_shape', 'italicize_season_text',
         'omit_gradient', 'season_text_position', 'shape', 'shape_color',
-        'shape_inset', 'shape_side_length', 'shape_width', 'stroke_color',
-        'text_position', '__title_width', '__title_height', '__line_count',
+        'shape_inset', 'shape_side_length', 'shape_stroke_color',
+        'shape_stroke_width', 'shape_width', 'stroke_color', 'text_position',
+        '__title_width', '__title_height', '__line_count',
     )
 
 
@@ -271,6 +288,8 @@ class ShapeTitleCard(BaseCardType):
             shape_color: str = SHAPE_COLOR,
             shape_inset: int = SHAPE_INSET,
             shape_size: float = 1.0,
+            shape_stroke_color: str = SHAPE_STROKE_COLOR,
+            shape_stroke_width: float = 0.0,
             shape_width: int = SHAPE_WIDTH,
             stroke_color: str = 'black',
             text_position: TextPosition = 'lower left',
@@ -311,6 +330,8 @@ class ShapeTitleCard(BaseCardType):
         self.shape_color = shape_color
         self.shape_inset = shape_inset
         self.shape_side_length = self.DEFAULT_LENGTHS[self.shape] * shape_size
+        self.shape_stroke_color = shape_stroke_color
+        self.shape_stroke_width = shape_stroke_width
         self.shape_width = shape_width
         self.stroke_color = stroke_color
         self.text_position: TextPosition = text_position
@@ -1053,7 +1074,18 @@ class ShapeTitleCard(BaseCardType):
         else:
             shape_commands = self._right_shape_commands
 
+        stroke_commands = []
+        if self.shape_stroke_width > 0:
+            stroke_commands = [
+                f'-fill none',
+                f'-stroke "{self.shape_stroke_color}"',
+                f'-strokewidth {self.shape_width + self.shape_stroke_width}',
+                f'-draw',
+                *shape_commands,
+            ]
+
         return [
+            *stroke_commands,
             f'-fill none',
             f'-stroke "{self.shape_color}"',
             f'-strokewidth {self.shape_width}',
