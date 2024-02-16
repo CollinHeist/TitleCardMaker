@@ -49,7 +49,9 @@ class AnimeTitleCard(BaseCardType):
             Extra(
                 name='Kanji Vertical Shift',
                 identifier='kanji_vertical_shift',
-                description='Additional vertical offset to apply only to kanji text',
+                description=(
+                    'Additional vertical offset to apply only to kanji text'
+                ),
                 tooltip=(
                     'Positive values shift the Kanji up, negative values shift '
                     'Kanji down. Unit is pixels.'
@@ -319,8 +321,9 @@ class AnimeTitleCard(BaseCardType):
             f'-strokewidth 5',
             f'-pointsize {85 * self.font_size}',
             f'-annotate +75+{kanji_offset} "{self.kanji}"',
-            *self.__title_text_effects,
+            f'-strokewidth 0.5',
             f'-fill "{self.kanji_color}"',
+            f'-stroke "{self.kanji_color}"',
             f'-annotate +75+{kanji_offset} "{self.kanji}"',
         ]
 
