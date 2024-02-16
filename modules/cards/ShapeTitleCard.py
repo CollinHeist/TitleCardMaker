@@ -134,7 +134,8 @@ class ShapeTitleCard(BaseCardType):
                 identifier='shape_inset',
                 description='How far to inset the shape from the edges',
                 tooltip=(
-                    'Number ≥<v>0.0</v>. Default is <v>75</v>. Unit is pixels.'
+                    'Number between <v>0</v> and <v>1800</v>. Default is '
+                    '<v>75</v>. Unit is pixels.'
                 ),
             ),
             Extra(
@@ -605,9 +606,9 @@ class ShapeTitleCard(BaseCardType):
     @property
     def __left_shape_translation(self) -> Coordinate:
         """
-        The coordinate to translate to the starting position of all
-        left shapes.This is one of the following positions (based on
-        the text position).
+        The coordinate to translate to the starting position of all left
+        shapes. This is one of the following positions (based on the
+        text position).
 
         - - -      - - -      - - -
         - - -      - - -      - - -
@@ -628,6 +629,7 @@ class ShapeTitleCard(BaseCardType):
             return Coordinate(x, self.shape_inset + (2 * self.shape_side_length))
         if 'lower' in self.text_position:
             return Coordinate(x, self.HEIGHT - self.shape_inset)
+
         return Coordinate(x, (self.HEIGHT / 2) + self.shape_side_length)
 
 
@@ -657,6 +659,7 @@ class ShapeTitleCard(BaseCardType):
             return Coordinate(x, self.shape_inset + (2 *self.shape_side_length))
         if 'lower' in self.text_position:
             return Coordinate(x, self.HEIGHT - self.shape_inset)
+
         return Coordinate(x, (self.HEIGHT / 2) +  self.shape_side_length)
 
 

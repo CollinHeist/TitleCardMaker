@@ -504,7 +504,7 @@ class ShapeCardType(BaseCardTypeAllText):
     season_text_position: Literal['above', 'below'] = 'below'
     shape: Union[Shape, Literal['random'], RandomShape] = ShapeTitleCard.DEFAULT_SHAPE
     shape_color: BetterColor = ShapeTitleCard.SHAPE_COLOR
-    shape_inset: PositiveInt = ShapeTitleCard.SHAPE_INSET
+    shape_inset: conint(ge=0, le=1800) = ShapeTitleCard.SHAPE_INSET
     shape_size: confloat(gt=0.3) = 1.0
     shape_width: PositiveInt = ShapeTitleCard.SHAPE_WIDTH
     stroke_color: BetterColor = 'black'
