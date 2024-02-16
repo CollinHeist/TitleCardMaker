@@ -31,7 +31,7 @@ class WhiteBorderTitleCard(BaseCardType):
                 name='Border Color',
                 identifier='border_color',
                 description='Color of the border',
-                tooltip='Defaults to <c>white</c>.',
+                tooltip='Default is <c>white</c>.',
             ),
             Extra(
                 name='Episode Text Color',

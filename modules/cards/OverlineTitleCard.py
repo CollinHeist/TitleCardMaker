@@ -33,13 +33,13 @@ class OverlineTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-                tooltip='Defaults to match the Font color.',
+                tooltip='Default is to match the Font color.',
             ),
             Extra(
                 name='Line Color',
                 identifier='line_color',
                 description='Color of the line',
-                tooltip='Defaults to match the episode text or Font color.',
+                tooltip='Default is to match the episode text or Font color.',
             ),
             Extra(
                 name='Line Position',

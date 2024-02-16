@@ -73,7 +73,7 @@ class ShapeTitleCard(BaseCardType):
                 name='Season Text Color',
                 identifier='season_text_color',
                 description='Color of the season text',
-                tooltip='Defaults to match the shape color.',
+                tooltip='Defaults is to match the shape color.',
             ),
             Extra(
                 name='Hide Shape',
@@ -159,7 +159,7 @@ class ShapeTitleCard(BaseCardType):
                 name='Stroke Text Color',
                 identifier='stroke_color',
                 description='Color to use for the text stroke',
-                tooltip='Defaults to <c>black</c>.'
+                tooltip='Default is <c>black</c>.'
             ),
             Extra(
                 name='Text Position',

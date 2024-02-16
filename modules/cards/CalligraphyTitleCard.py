@@ -49,7 +49,7 @@ class CalligraphyTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-                tooltip='Defaults to match the Font color.'
+                tooltip='Default is to match the Font color.'
             ),
             Extra(
                 name='Episode Text Font Size',

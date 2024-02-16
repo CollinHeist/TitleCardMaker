@@ -132,7 +132,7 @@ class ComicBookTitleCard(BaseCardType):
                 name='Title Textbox Edge Color',
                 identifier='text_box_edge_color',
                 description='Edge color of all text boxes',
-                tooltip='Defaults to match the Font color.',
+                tooltip='Default is to match the Font color.',
             ),
             Extra(
                 name='Title Text Rotation Angle',
@@ -164,7 +164,7 @@ class ComicBookTitleCard(BaseCardType):
                 description=(
                     'Fill color for both the title and episode text banners'
                 ),
-                tooltip='Defaults to <c>rgba(235,73,69,0.6)</c>.'
+                tooltip='Default is <c>rgba(235,73,69,0.6)</c>.'
             ),
             Extra(
                 name='Title Banner Vertical Shift',

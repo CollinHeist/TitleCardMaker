@@ -40,7 +40,7 @@ class TintedFrameTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color of the season and episode text',
-                tooltip='Defaults to match the Font color.'
+                tooltip='Default is to match the Font color.'
             ),
             Extra(
                 name='Episode Text Font',
@@ -78,7 +78,7 @@ class TintedFrameTitleCard(BaseCardType):
                     'color1, ...]</v>  to select a randomly specified color. '
                     'If randomly selecting, colors MUST be comma-separated '
                     'with a space (, ) and any <v>rgb()</v> colors cannot have '
-                    'spaces. Defaults to match the Font color.'
+                    'spaces. Default is to match the Font color.'
                 ),
             ),
             Extra(
@@ -142,7 +142,8 @@ class TintedFrameTitleCard(BaseCardType):
                 identifier='blur_edges',
                 description='Whether to blur the edges around the frame',
                 tooltip=(
-                    'Either <v>True</v> or <v>False</v>. Default is <v>True</v>.'
+                    'Either <v>True</v> or <v>False</v>. Default is '
+                    '<v>True</v>.'
                 ),
             ),
             Extra(

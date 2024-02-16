@@ -53,7 +53,7 @@ class DividerTitleCard(BaseCardType):
                 name='Text Stroke Color',
                 identifier='stroke_color',
                 description='Color to use for the text stroke',
-                tooltip='Defaults to <c>black</c>.'
+                tooltip='Default is <c>black</c>.'
             ),
             Extra(
                 name='Title Text Position',
@@ -81,7 +81,7 @@ class DividerTitleCard(BaseCardType):
                 name='Divider Color',
                 identifier='divider_color',
                 description='Color of the divider bar between text',
-                tooltip='Defaults to match the Font color.',
+                tooltip='Default is to match the Font color.',
             )
         ],
         description=[

@@ -31,7 +31,7 @@ class FadeTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to use for the episode text',
-                tooltip='Defaults to <c>rgb(163, 163, 163)</c>.'
+                tooltip='Default is <c>rgb(163, 163, 163)</c>.'
             ),
         ],
         description=[

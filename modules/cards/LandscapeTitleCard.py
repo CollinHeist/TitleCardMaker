@@ -49,7 +49,7 @@ class LandscapeTitleCard(BaseCardType):
                 name='Box Color',
                 identifier='box_color',
                 description='Color of the bounding box around the title text',
-                tooltip='Defaults to match the Font color.',
+                tooltip='Default is to match the Font color.',
             ),
             Extra(
                 name='Box Adjustments',

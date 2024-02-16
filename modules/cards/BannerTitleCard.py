@@ -38,7 +38,7 @@ class BannerTitleCard(BaseCardType):
                 name='Banner Color',
                 identifier='banner_color',
                 description='Color of the banner',
-                tooltip='Defaults to match the Font color.',
+                tooltip='Defaults is to match the Font color.',
             ),
             Extra(
                 name='Banner Height',

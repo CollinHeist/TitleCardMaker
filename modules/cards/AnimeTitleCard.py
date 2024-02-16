@@ -61,7 +61,7 @@ class AnimeTitleCard(BaseCardType):
                 name='Kanji Color',
                 identifier='kanji_color',
                 description='Color of the kanji text',
-                tooltip='Defaults to <c>white</c>.'
+                tooltip='Default is <c>white</c>.'
             ),
             Extra(
                 name='Episode Text Color',
@@ -79,7 +79,7 @@ class AnimeTitleCard(BaseCardType):
                 name='Stroke Text Color',
                 identifier='stroke_color',
                 description='Color of the text stroke',
-                tooltip='Defaults to <c>black</c>.'
+                tooltip='Default is <c>black</c>.'
             ),
             Extra(
                 name='Gradient Omission',
@@ -95,7 +95,7 @@ class AnimeTitleCard(BaseCardType):
                 name='Episode Text Stroke Color',
                 identifier='episode_stroke_color',
                 description='Color of the text stroke for the episode text',
-                tooltip='Defaults to <c>black</c>.'
+                tooltip='Default is <c>black</c>.'
             ),
         ], description=[
             'Title card with all text aligned in the lower left of the image.',

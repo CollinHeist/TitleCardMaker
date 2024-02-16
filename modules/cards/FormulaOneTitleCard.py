@@ -56,13 +56,13 @@ class FormulaOneTitleCard(BaseCardType):
                 name='Race Name',
                 identifier='race',
                 description='Name of the race',
-                tooltip='Defaults to <v>Grand Prix</v>.',
+                tooltip='Default is <v>Grand Prix</v>.',
             ),
             Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-                tooltip='Defaults to <c>white</c>.'
+                tooltip='Default is <c>white</c>.'
             ),
             Extra(
                 name='Episode Text Font Size',
