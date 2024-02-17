@@ -79,6 +79,16 @@ class FormulaOneTitleCard(BaseCardType):
                     'determined by the specified country.'
                 ),
             ),
+            Extra(
+                name='Frame Year',
+                identifier='frame_year',
+                description='Which frame year to utilize',
+                tooltip=(
+                    'Either <v>2023</v> or <v>2024</v>. Default is the year '
+                    'the Episode aired - or, if that is not available, '
+                    '<v>2024</v>.'
+                ),
+            ),
         ],
         description=[
             'Title Card designed for displaying race details for Formula 1. ',
@@ -118,7 +128,10 @@ class FormulaOneTitleCard(BaseCardType):
 
     """Implementation details"""
     DARKEN_COLOR = 'rgba(0,0,0,0.5)'
-    _FRAME = REF_DIRECTORY / 'frame_2024.png'
+    _FRAMES = {
+        2023: REF_DIRECTORY / 'frame_2023.png',
+        2024: REF_DIRECTORY / 'frame_2024.png',
+    }
     _COUNTRY_FLAGS = {
         'ABU DHABI': REF_DIRECTORY / 'uae.webp',
         'AUSTRALIAN': REF_DIRECTORY / 'australia.webp',
@@ -153,7 +166,7 @@ class FormulaOneTitleCard(BaseCardType):
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
         'font_interline_spacing', 'font_interword_spacing', 'font_file',
         'font_kerning', 'font_size', 'font_vertical_shift', 'country',
-        'episode_text_color', 'episode_text_font_size', 'race',
+        'episode_text_color', 'episode_text_font_size', 'frame', 'race',
     )
 
 
@@ -178,6 +191,7 @@ class FormulaOneTitleCard(BaseCardType):
             episode_text_color: str = TITLE_COLOR,
             episode_text_font_size: float = 1.0,
             flag: Optional[Path] = None,
+            frame_year: int = 2024,
             race: str = 'GRAND PRIX',
             preferences: Optional['Preferences'] = None,
             **unused,
@@ -213,6 +227,7 @@ class FormulaOneTitleCard(BaseCardType):
             )
         else:
             self.country = flag
+        self.frame = self._FRAMES[frame_year]
         self.episode_text_color = episode_text_color
         self.episode_text_font_size = episode_text_font_size
         self.race = race
@@ -232,7 +247,7 @@ class FormulaOneTitleCard(BaseCardType):
             f'xc:"{self.DARKEN_COLOR}"',
             f'\) -composite',
             # Add frame
-            f'"{self._FRAME.resolve()}"',
+            f'"{self.frame.resolve()}"',
             f'-composite',
             # Add country banner
             f'"{self.country.resolve()}"',

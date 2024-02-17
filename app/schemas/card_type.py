@@ -1,4 +1,5 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
+from datetime import datetime
 from pathlib import Path
 from random import uniform
 from re import compile as re_compile, match as re_match
@@ -255,6 +256,7 @@ class FadeCardType(BaseCardTypeCustomFontAllText):
     separator: str = '•'
 
 class FormulaOneCardType(BaseCardTypeAllText):
+    airdate: Optional[datetime] = None
     font_color: BetterColor = FormulaOneTitleCard.TITLE_COLOR
     font_file: FilePath = FormulaOneTitleCard.TITLE_FONT
     font_size: PositiveFloat = 1.0
@@ -262,6 +264,7 @@ class FormulaOneCardType(BaseCardTypeAllText):
     episode_text_color: str = FormulaOneTitleCard.EPISODE_TEXT_COLOR
     episode_text_font_size: PositiveFloat = 1.0
     flag: Optional[Path] = None
+    frame_year: Optional[Union[Literal[2023], Literal[2024]]] = None
     race: constr(min_length=1, to_upper=True) = 'GRAND PRIX'
 
     @root_validator(skip_on_failure=True)
@@ -273,12 +276,21 @@ class FormulaOneCardType(BaseCardTypeAllText):
                 values['country'] = 'generic'
 
         return values
-    
+
     @root_validator(skip_on_failure=True)
     def validate_flag(cls, values: dict) -> dict:
         if values['flag'] is not None:
             if not values['flag'].exists():
                 raise ValueError(f'Specified Flag file does not exist')
+        return values
+
+    @root_validator(skip_on_failure=True)
+    def validate_frame_year(cls, values: dict) -> dict:
+        if values['frame_year'] is None:
+            if values.get('airdate'):
+                values['frame_year'] = values['airdate'].year
+            else:
+                values['frame_year'] = 2024
         return values
 
 

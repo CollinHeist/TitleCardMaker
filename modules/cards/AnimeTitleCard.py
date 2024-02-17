@@ -97,7 +97,8 @@ class AnimeTitleCard(BaseCardType):
                 description='Color of the text stroke for the episode text',
                 tooltip='Default is <c>black</c>.'
             ),
-        ], description=[
+        ],
+        description=[
             'Title card with all text aligned in the lower left of the image.',
             'Although it is referred to as the "anime" card style, the only '
             'Anime specific feature is the ability to add Kanji (Japanese) '
