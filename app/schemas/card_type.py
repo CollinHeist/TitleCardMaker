@@ -30,6 +30,9 @@ from modules.cards.InsetTitleCard import InsetTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
 from modules.cards.MarvelTitleCard import MarvelTitleCard
+from modules.cards.MusicTitleCard import (
+    MusicTitleCard, PlayerPosition, PlayerStyle
+)
 from modules.cards.OlivierTitleCard import OlivierTitleCard
 from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
@@ -420,6 +423,74 @@ class MarvelCardType(BaseCardTypeCustomFontAllText):
     text_box_color: BetterColor = MarvelTitleCard.DEFAULT_TEXT_BOX_COLOR
     text_box_height: PositiveInt = MarvelTitleCard.DEFAULT_TEXT_BOX_HEIGHT
 
+class MusicCardType(BaseCardTypeCustomFontAllText):
+    font_file: FilePath = MusicTitleCard.TITLE_FONT
+    font_color: str = MusicTitleCard.TITLE_COLOR
+    album_cover: Optional[FilePath] = None
+    album_size: PositiveFloat = 1.0
+    episode_text_color: str = MusicTitleCard.EPISODE_TEXT_COLOR
+    percentage: Union[float, str, Literal['random']] = 'random'
+    player_color: str = MusicTitleCard.DEFAULT_PLAYER_COLOR
+    player_inset: conint(ge=0, le=1800) = MusicTitleCard.DEFAULT_INSET
+    player_position: PlayerPosition = MusicTitleCard.DEFAULT_PLAYER_POSITION
+    player_style: PlayerStyle = MusicTitleCard.DEFAULT_PLAYER_STYLE
+    player_width: conint(ge=400, le=3200) = MusicTitleCard.DEFAULT_PLAYER_WIDTH
+    round_corners: bool = True
+    subtitle: str = '{series_name}'
+    timeline_color: str = MusicTitleCard.DEFAULT_TIMELINE_COLOR
+    truncate_long_titles: Union[PositiveInt, Literal['False']] = 2
+
+    @root_validator(skip_on_failure=True, pre=True)
+    def finalize_format_strings(cls, values: dict) -> dict:
+        if ((percentage := values.get('percentage', 'random')) is not None
+            and isinstance(percentage, str)
+            and percentage != 'random'):
+            values['percentage'] = float(FormatString(
+                percentage, data=values
+            ).result)
+        if (subtitle := values.get('subtitle', '{series_name}')) is not None:
+            values['subtitle'] = FormatString(subtitle, data=values).result
+
+        return values
+
+    @root_validator(skip_on_failure=True)
+    def truncate_long_titles_(cls, values: dict) -> dict:
+        if (truncate := values.get('truncate_long_titles', 2)) != 'False':
+            if len(lines := values['title_text'].splitlines()) > truncate:
+                values['title_text'] = '\n'.join(lines[:truncate]) + ' ...'
+            if len(values['season_text']) > 3:
+                values['season_text'] = values['season_text'][:3] + '..'
+            if len(values['episode_text']) > 3:
+                values['episode_text'] = values['episode_text'][:3] + '..'
+
+        return values
+
+    @root_validator(skip_on_failure=True, pre=True)
+    def validate_album_cover(cls, values: dict) -> dict:
+        # Set album cover based on indicated player style
+        if values.get('album_cover') is None:
+            style = values.get('player_style', MusicTitleCard.DEFAULT_PLAYER_STYLE)
+            if style == 'artwork':
+                values['album_cover'] = values['backdrop_file']
+            elif style == 'logo':
+                values['album_cover'] = values['logo_file']
+            elif style == 'poster':
+                values['album_cover'] = values['poster_file']
+
+        # Parse format strings in album cover
+        if (cover := values['album_cover']):
+            cover = Path(FormatString(str(cover), data=values).result)
+            if not cover.exists():
+                cover = values['source_file'].parent / cover.name
+            values['album_cover'] = cover
+
+        # If no album cover is indicated and not in basic mode, error
+        if (values.get('album_cover') is None
+            and values['player_style'] != 'basic'):
+            raise ValueError(f'Cover must exist')
+
+        return values
+
 class OlivierCardType(BaseCardTypeCustomFontNoText):
     title_text: str
     episode_text: constr(to_upper=True)
@@ -678,6 +749,7 @@ LocalCardTypeModels: dict[str, Base] = {
     'landscape': LandscapeCardType,
     'logo': LogoCardType,
     'marvel': MarvelCardType,
+    'music': MusicCardType,
     'musikmann': WhiteBorderCardType,
     'olivier': OlivierCardType,
     'overline': OverlineCardType,
