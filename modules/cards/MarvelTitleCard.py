@@ -529,11 +529,12 @@ class MarvelTitleCard(BaseCardType):
         object's defined title card.
         """
 
+        border_size = 0 if self.hide_border else self.border_size
         processing = [
             # Resize and apply styles to source image
             *self.resize_and_style,
             # Resize to only fit in the bounds of the border
-            f'-resize {self.WIDTH - (2 * self.border_size)}x',
+            f'-resize {self.WIDTH - (border_size)}x',
             f'-extent {self.TITLE_CARD_SIZE}',
         ]
 
