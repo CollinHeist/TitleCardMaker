@@ -535,18 +535,20 @@ def resolve_card_settings(
     # Get EpisodeInfo for this Episode
     episode_info = episode.as_episode_info
 
+    # Add season title specification
+    season_title_ranges = SeasonTitleRanges(
+        card_settings.get('season_titles', {}),
+        fallback=getattr(CardClass, 'SEASON_TEXT_FORMATTER', None),
+        log=log,
+    )
+    card_settings['season_title'] = season_title_ranges.get_season_text(
+        episode_info, card_settings,
+    )
+
     # If no season text was indicated, determine
     if card_settings.get('season_text') is None:
-        ranges = SeasonTitleRanges(
-            card_settings.get('season_titles', {}),
-            fallback=getattr(CardClass, 'SEASON_TEXT_FORMATTER', None),
-            log=log,
-        )
-        card_settings['season_text'] = ranges.get_season_text(
-            episode_info, card_settings,
-        )
-
         # Apply season text formatting if indicated
+        card_settings['season_text'] = card_settings['season_title']
         if card_settings.get('season_text_format') is not None:
             card_settings['season_text'] = FormatString.new(
                 card_settings['season_text_format'], data=card_settings,
