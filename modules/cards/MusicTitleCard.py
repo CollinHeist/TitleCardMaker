@@ -168,15 +168,6 @@ class MusicTitleCard(BaseCardType):
                 ),
             ),
             Extra(
-                name='Round Album Corners Toggle',
-                identifier='round_corners',
-                description='Whether to round the corners of the album image',
-                tooltip=(
-                    'Either <v>True</v> or <v>False</v>. Default is '
-                    '<v>True</v>.'
-                ),
-            ),
-            Extra(
                 name='Timeline Color',
                 identifier='timeline_color',
                 description='Color of the filled timeline',
@@ -214,6 +205,15 @@ class MusicTitleCard(BaseCardType):
                     '<v>2</v>.'
                 ),
             ),
+            Extra(
+                name='Round Album Corners Toggle',
+                identifier='round_corners',
+                description='Whether to round the corners of the album image',
+                tooltip=(
+                    'Either <v>True</v> or <v>False</v>. Default is '
+                    '<v>True</v>.'
+                ),
+            ),
         ],
         description=[
             'Card design inspired by a music player featuring an adjustable '
@@ -231,7 +231,7 @@ class MusicTitleCard(BaseCardType):
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
-        'max_line_width': 16,
+        'max_line_width': 17,
         'max_line_count': 4,
         'top_heavy': False,
     }
