@@ -2,6 +2,11 @@
   --badge-color: #526cfe1a;
 }
 
+/* Change the z-index of the header */
+.md-header {
+  z-index: 13;
+}
+
 /* Stylize horizontal marquee / scrollers */
 .scroller {
   max-width: 100%;

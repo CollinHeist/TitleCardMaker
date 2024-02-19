@@ -105,6 +105,22 @@ removed.
         <img src="../assets/music-control.webp"/>
     </div>
 
+
+### Pause or Play Icon
+
+The middle icon on the controls can be toggled between a pause and play icon
+with the _Pause or Play Icon_ extra. If set to `watched`, then the icon (and
+Card) will update any time the watched status of the Episode changes.
+
+??? example "Example"
+
+    <div class="image-compare example-card"
+        data-starting-point="15.5"
+        data-left-label="pause" data-right-label="play">
+        <img src="../assets/music-control-pause.webp"/>
+        <img src="../assets/music-control.webp"/>
+    </div>
+
 ## Heart Icon
 
 A small heart / like icon can also be added to the top right of the player. This
@@ -237,7 +253,7 @@ and vertical spacing.
 
 The width of the player can also be adjusted with the _Player Width_ extra. All
 elements within the player - notably the timeline and any album artwork - are
-dynamically resized with the new width.
+dynamically resized with the specified width.
 
 ??? example "Example"
 
