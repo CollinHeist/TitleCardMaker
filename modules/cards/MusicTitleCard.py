@@ -19,7 +19,7 @@ class ControlColors(NamedTuple): # pylint: disable=missing-class-docstring
     action: str
     next: str
     repeat: str
-PlayerAction = Optional[Literal['pause', 'play']]
+PlayerAction = Literal['pause', 'play', 'watched']
 PlayerPosition = Literal['left', 'middle', 'right']
 PlayerStyle = Literal['basic', 'artwork', 'logo', 'poster']
 
@@ -129,21 +129,22 @@ class MusicTitleCard(BaseCardType):
                 identifier='pause_or_play',
                 description='Which icon to display in the media controls',
                 tooltip=(
-                    'Either <v>pause</v> or <v>play</v>. If omitted, the '
-                    'watched status of the Episode is used; watched uses the '
-                    'pause button, unwatched uses play. Default is <v>play</v>.'
+                    'Either <v>pause</v>, <v>play</v>, or <v>watched</v> to '
+                    'use the watched status of the Episode (watched for pause, '
+                    'unwatched for play). Default is <v>play</v>.'
                 ),
             ),
             Extra(
-                name='Percentage',
+                name='Timeline Fill Percentage',
                 identifier='percentage',
                 description='Filled percentage of the timeline',
                 tooltip=(
-                    'Can be a number (e.g. <v>0.3</v> for 30% filled), '
-                    '<v>random</v> to randomize the filled percentage, or a '
-                    'format string for how to calculate the percentage (e.g. '
-                    '<v>{episode_number / season_episode_max}</v> to calculate '
-                    'as a percentage of the season). Default is <v>random</v>.'
+                    'Can be a number (e.g. <v>0.3</v> for 30% filled) between '
+                    '<v>0.0</v> and <v>1.0</v>, <v>random</v> to randomize the '
+                    'filled percentage, or a format string for how to calculate'
+                    'the percentage (e.g. <v>{episode_number / '
+                    'season_episode_max}</v> to calculate as a percentage of '
+                    'the season). Default is <v>random</v>.'
                 ),
             ),
             Extra(
@@ -926,7 +927,7 @@ class MusicTitleCard(BaseCardType):
         }[self.player_position] - 30
 
         y = self.HEIGHT - self.player_inset \
-            - 150 \
+            - (150 if self.player_style != 'basic' else 125) \
             - (100 if self.add_controls else 0) \
             - (35 if self.subtitle else 0) \
             - (self._title_dimensions.height + 35) \

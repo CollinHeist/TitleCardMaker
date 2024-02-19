@@ -437,7 +437,7 @@ class MusicCardType(BaseCardTypeCustomFontAllText):
     percentage: Union[confloat(ge=0.0, le=1.0), str, Literal['random']] = 'random'
     heart_color: str = 'transparent'
     heart_stroke_color: str = 'white'
-    pause_or_play: PlayerAction = None
+    pause_or_play: PlayerAction = MusicTitleCard.DEFAULT_PLAYER_ACTION
     player_color: str = MusicTitleCard.DEFAULT_PLAYER_COLOR
     player_inset: conint(ge=0, le=1800) = MusicTitleCard.DEFAULT_INSET
     player_position: PlayerPosition = MusicTitleCard.DEFAULT_PLAYER_POSITION
@@ -455,9 +455,12 @@ class MusicCardType(BaseCardTypeCustomFontAllText):
 
     @root_validator(skip_on_failure=True)
     def assign_unassigned_player_action(cls, values: dict) -> dict:
-        if (values['pause_or_play'] is None
-            and values['watched'] is not None):
-            values['pause_or_play']  = 'pause' if values['watched'] else 'play'
+        if values['pause_or_play'] == 'watched':
+            # No watched status, use default
+            if values['watched'] is None:
+                values['pause_or_play'] = MusicTitleCard.DEFAULT_PLAYER_ACTION
+            else:
+                values['pause_or_play']  = 'pause' if values['watched'] else 'play'
         return values
 
     @root_validator(skip_on_failure=True)
