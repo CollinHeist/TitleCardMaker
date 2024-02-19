@@ -157,8 +157,10 @@ class FormatString:
                 data,
             )
         except NameError as exc:
+            log.debug(f'Evaluating ({fstring})')
             raise (InvalidFormatString if catch else exc) from exc
         except (SyntaxError, NotImplementedError) as exc:
+            log.debug(f'Evaluating ({fstring})')
             raise (InvalidFormatString if catch else exc) from exc
 
 
