@@ -330,7 +330,7 @@ Title Cards for Episodes which you do not personally have.
 
 ### Library Paths
 
-If [Syncing](./sync.md) from Sonarr, then this setting is critical to ensure
+If [Syncing](./syncs.md) from Sonarr, then this setting is critical to ensure
 that TCM is able to correctly auto-assign libraries to Series. If you are not
 Syncing from Sonarr, then you can leave this blank.
 

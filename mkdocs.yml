@@ -6,7 +6,7 @@ site_description: >-
 
 repo_name: CollinHeist/TitleCardMaker
 repo_url: https://github.com/CollinHeist/TitleCardMaker
-edi_uri: edit/web-ui/docs/
+# edi_uri: edit/web-ui/docs/
 
 theme:
   logo: ./assets/logo.svg
@@ -199,7 +199,7 @@ nav:
     - Adding Series: user_guide/new_series.md
     - Templates: user_guide/templates.md
     - Fonts: user_guide/fonts.md
-    # - Sync: user_guide/sync.md
+    - Sync: user_guide/syncs.md
     - Settings: user_guide/settings.md
     - Connections: user_guide/connections.md
     - Scheduler: user_guide/scheduler.md
@@ -209,9 +209,10 @@ nav:
     - Setting Priority: user_guide/setting_priority.md
     # - FAQ: user_guide/faq.md
   - Card Types:
-    # - card_types/index.md
-    - Local: card_types/local.md
-    #   - Anime: card_types/local/anime.md
+    - card_types/index.md
+    - Local Files: card_types/local.md
+    - Built-in Card Types:
+      - Anime: card_types/anime.md
     #   - Cutout: card_types/local/cutout.md
     #   - Divider: card_types/local/divider.md
     #   - Fade: card_types/local/fade.md
@@ -219,6 +220,7 @@ nav:
     #   - Landscape: card_types/local/landscape.md
     #   - Logo: card_types/local/logo.md
     #   - Olivier: card_types/local/olivier.md
+      - Music: card_types/music.md
     #   - Poster: card_types/local/poster.md
     #   - Roman Numeral: card_types/local/roman_numeral.md
     #   - Standard: card_types/local/standard.md

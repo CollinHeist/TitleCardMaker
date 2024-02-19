@@ -25,7 +25,7 @@ below:
 - [Adding Series](./new_series.md)
 - [Tempates](./templates.md)
 - [Fonts](./fonts.md)
-<!-- - [Sync](./syncs.md) -->
+- [Sync](./syncs.md)
 - [Settings](./settings.md)
 - [Connections](./connections.md)
 <!-- - [Scheduler](./scheduler.md) -->
