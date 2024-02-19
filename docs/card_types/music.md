@@ -15,15 +15,19 @@ description: >
     This documentation is actively being developed.
 
 This card design was created by [CollinHeist](https://github.com/CollinHeist),
-and is inspired by a music player - specifically Spotify.
+and is inspired by a music player (Spotify in particular).
 
-These cards feature fully adjustable music timeline, media control buttons, and
-artwork. This card is one of the most complex types, featuring many
-customizations via extras.
+These cards feature a fully adjustable music timeline, media control buttons,
+and artwork. This is one of the most complex card types, featuring many
+more than twenty available customizations via extras.
 
 <figure markdown="span" style="max-width: 70%">
   ![Example Music Card](./assets/music.webp)
 </figure>
+
+??? note "Labeled Card Elements"
+
+    ![Labeled Music Card Elements](./assets/music-labeled.webp)
 
 ## Adjusting the Player Style
 
@@ -52,10 +56,12 @@ adjusting the _Player Style_ extra. This can be `basic`, `artwork`, `logo`, or
         <img src="../assets/music-poster-style.webp"/>
     </div>
 
-## Adding Controls
+## Controls
 
-Stylized music controls can be added to the Card, if desired, by setting the
-_Control Toggle_ extra as `True`.
+### Enabling
+
+Stylized music control icons / buttons can be added to the Card, if desired, by
+setting the _Control Toggle_ extra as `True`.
 
 ??? example "Examples"
 
@@ -66,9 +72,9 @@ _Control Toggle_ extra as `True`.
         <img src="../assets/music-control.webp"/>
     </div>
 
-## Recoloring Controls
+### Coloring
 
-If the music controls are [enabled](#adding-controls), then each individual
+If the music controls are [enabled](#enabling), then each individual
 control icon can be recolored (or omitted completely) with the _Control Colors_
 extra.
 
@@ -99,11 +105,104 @@ removed.
         <img src="../assets/music-control.webp"/>
     </div>
 
-## Player Positioning
+## Heart Icon
 
-The player itself can be repositioned at various pre-defined locations on the
-Card. This is controlled by two extras - the _Player Position_ and _Player
-Inset_ extras.
+A small heart / like icon can also be added to the top right of the player. This
+icon can be toggled and recolored with extras.
+
+!!! warning "Icon Overlap"
+
+    TCM does not implement any logic to prevent the heart icon from overlapping
+    album artwork or title text.
+
+### Enabling
+
+The heart icon is disabled by default, but can be enabled by setting the _Heart
+Toggle_ extra as `True`.
+
+??? example "Example"
+
+    <div class="image-compare example-card"
+        data-starting-point="28"
+        data-left-label="False" data-right-label="True">
+        <img src="../assets/music.webp"/>
+        <img src="../assets/music-heart-toggle.webp"/>
+    </div>
+
+### Coloring
+
+The heart icon can be recolored in two ways. The edge / stroke of the icon with
+the _Heart Stroke Color_ extra, and the inside / fill of the icon with the
+_Heart Fill Color_ extra. These are separated so that the heart can be visible
+while not appearing "selected."
+
+??? example "Examples"
+
+    The following shows an adjustment to the _Heart Stroke Color_.
+
+    <div class="image-compare example-card"
+        data-starting-point="27.7"
+        data-left-label="white" data-right-label="rgb(29,185,84)">
+        <img src="../assets/music-heart-toggle.webp"/>
+        <img src="../assets/music-heart-stroke.webp"/>
+    </div>
+
+    The following shows an adjustment to the _Heart Stroke Color_ __and__
+    _Heart Fill Color_ extras.
+
+    <div class="image-compare example-card"
+        data-starting-point="27.7"
+        data-left-label="white" data-right-label="#FF2733">
+        <img src="../assets/music-heart-toggle.webp"/>
+        <img src="../assets/music-heart-fill.webp"/>
+    </div>
+
+## Timeline
+
+### Coloring
+
+The color of the filled portion of the timeline can be adjusted with the
+_Timeline Color_ extra. This only applies to the filled portion - e.g. the
+[percentage](#filled-percentage) - and the "bubble".
+
+??? example "Example"
+
+    <div class="image-compare example-card"
+        data-starting-point="10"
+        data-left-label="rgb(29,185,84)" data-right-label="skyblue">
+        <img src="../assets/music.webp"/>
+        <img src="../assets/music-timeline-color.webp"/>
+    </div>
+
+### Filled Percentage
+
+The filled logic for the timeline is greatly customizable with the _Timeline
+Fill Percentage_ extra.
+
+If this is set to an explicit number - such as `0.3` - then the timeline will
+always be that percent filled. The number will be interpreted as a percentage.
+
+If this is specified as `random` (or left as the default) then each Card will
+utilize a random fill percentage.
+
+Finally, this can also be given as a [Format String](../user_guide/variables.md)
+in which case TCM will calculate the percentage for each Card. For example, by
+setting this extra to `{episode_number / season_episode_max}`, the timeline
+percentage will be "filled" from 0% to 100% for each season.
+
+!!! tip "Advanced Format Strings"
+
+    To see the list of available variables that can be used in format strings to
+    customize the filled percentage, see [here](../user_guide/variables.md).
+
+!!! warning "Warning About Format Strings"
+
+    Be careful when specifying a self-calculating format string for the filled
+    percentage for currently airing Series/seasons. If the format specified
+    changes every time a new Episode aires, then all Cards affected by this
+    change will be remade and reloaded for each new Episode.
+
+## Player Positioning
 
 ### Overall Position
 
@@ -147,6 +246,20 @@ dynamically resized with the new width.
         data-left-label="900" data-right-label="1200">
         <img src="../assets/music.webp"/>
         <img src="../assets/music-width-1200.webp"/>
+    </div>
+
+## Player Color
+
+The background color of the player can be adjusted with the _Player Background
+Color_ extra.
+
+??? example "Example"
+
+    <div class="image-compare example-card"
+        data-starting-point="15"
+        data-left-label="rgba(0,0,0,0.50)" data-right-label="rgba(120,120,120,0.50)">
+        <img src="../assets/music.webp"/>
+        <img src="../assets/music-background-alt.webp"/>
     </div>
 
 <script>
