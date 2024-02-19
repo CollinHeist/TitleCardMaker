@@ -1,6 +1,6 @@
 from pathlib import Path
 from random import random
-from typing import TYPE_CHECKING, Literal, Optional, Union
+from typing import TYPE_CHECKING, Literal, NamedTuple, Optional, Union
 
 from modules.BaseCardType import (
     BaseCardType, CardDescription, Coordinate, Dimensions, ImageMagickCommands,
@@ -13,13 +13,23 @@ if TYPE_CHECKING:
     from app.models.preferences import Preferences
     from modules.Font import Font
 
+class ControlColors(NamedTuple): # pylint: disable=missing-class-docstring
+    shuffle: str
+    previous: str
+    action: str
+    next: str
+    repeat: str
+PlayerAction = Optional[Literal['pause', 'play']]
 PlayerPosition = Literal['left', 'middle', 'right']
 PlayerStyle = Literal['basic', 'artwork', 'logo', 'poster']
 
 
 class MusicTitleCard(BaseCardType):
     """
-    This class describes a CardType that produces title cards ...
+    This class describes a CardType that produces title cards which are
+    styled after a music player. These cards feature a repositionable
+    "player" which can display info like the series name, title, as well
+    as a timeline, and artwork or a logo.
     """
 
     """API Parameters"""
@@ -30,7 +40,7 @@ class MusicTitleCard(BaseCardType):
         creators=['CollinHeist'],
         source='builtin',
         supports_custom_fonts=True,
-        supports_custom_seasons=True,
+        supports_custom_seasons=False,
         supported_extras=[
             Extra(
                 name='Album Size',
@@ -66,8 +76,40 @@ class MusicTitleCard(BaseCardType):
                 identifier='player_width',
                 description='Width of the player',
                 tooltip=(
-                    'Number between <v>400</v> and <v>3200</v>. Default is '
-                    '<v>900</v>. Unit is pixels.'
+                    'Number between <v>400</v> (<v>600</v> if the controls are '
+                    'enabled) and <v>3200</v>. Default is <v>900</v>. Unit is '
+                    'pixels.'
+                ),
+            ),
+            Extra(
+                name='Control Toggle',
+                identifier='add_controls',
+                description='Whether to display the media controls',
+                tooltip=(
+                    'Either <v>True</v> or <v>False</v>. Default is '
+                    '<v>False</v>.'
+                ),
+            ),
+            Extra(
+                name='Control Colors',
+                identifier='control_colors',
+                description='Color of the media control elements',
+                tooltip=(
+                    'Set of five space-separated colors for the controls, '
+                    'applied to elements from the left-to-right. An individual '
+                    'element can be removed if the color is <c>transparent</c>.'
+                    'Default is <c>white</c> <c>white</c> <c>white</c> '
+                    '<c>white</c> <c>white</c>.'
+                ),
+            ),
+            Extra(
+                name='Pause and Play Icon',
+                identifier='pause_or_play',
+                description='Which icon to display in the media controls',
+                tooltip=(
+                    'Either <v>pause</v> or <v>play</v>. If omitted, the '
+                    'watched status of the Episode is used; watched uses the '
+                    'pause button, unwatched uses play. Default is <v>play</v>.'
                 ),
             ),
             Extra(
@@ -109,7 +151,8 @@ class MusicTitleCard(BaseCardType):
                 tooltip=(
                     'Can be literal text (e.g. <v>My Series</v>), or a format '
                     'string (e.g. <v>{series_name}</v>) to dynamically adjust '
-                    'the text. Default is <v>{series_name}</v>.'
+                    'the text. Set as <v>{""}</v> to omit. Default is '
+                    '<v>{series_name}</v>.'
                 ),
             ),
             Extra(
@@ -138,9 +181,36 @@ class MusicTitleCard(BaseCardType):
                     '<v>2</v>.'
                 ),
             ),
+            Extra(
+                name='Heart Toggle',
+                identifier='draw_heart',
+                description='Whether to draw the heart',
+                tooltip=(
+                    'Either <v>True</v> or <v>False</v>. Default is '
+                    '<v>False</v>.'
+                ),
+            ),
+            Extra(
+                name='Heart Fill Color',
+                identifier='heart_color',
+                description='Color to fill the heart with',
+                tooltip='Default is <c>transparent</c>.',
+            ),
+            Extra(
+                name='Heart Stroke Color',
+                identifier='heart_stroke_color',
+                description='Color to use for the edge of the heart',
+                tooltip='Default is <c>white</c>.',
+            ),
         ],
         description=[
-            '',
+            'Card design inspired by a music player featuring an adjustable '
+            'timeline, media control buttons, and player. The type of "album" '
+            'artwork that is displayed above the title and timeline can be '
+            'adjusted via extras.', 'The timeline can be randomized for each '
+            'Card, used as a progress bar for the season or Series, or '
+            'manually set.', 'The individual media controls can also be '
+            'toggled and recolored via extras.',
         ],
     )
 
@@ -149,9 +219,9 @@ class MusicTitleCard(BaseCardType):
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
-        'max_line_width': 15,   # Character count to begin splitting titles
-        'max_line_count': 4,    # Maximum number of lines a title can take up
-        'top_heavy': False,      # This class uses top heavy titling
+        'max_line_width': 16,
+        'max_line_count': 4,
+        'top_heavy': False,
     }
 
     """Characteristics of the default title font"""
@@ -174,26 +244,67 @@ class MusicTitleCard(BaseCardType):
     """Implementation details"""
     SUBTITLE_FONT = REF_DIRECTORY / 'Gotham-Light.otf'
     BACKGROUND_LINE_COLOR = 'rgb(120,120,120)'
+    DEFAULT_CONTROL_COLORS = ('white', 'white', 'white', 'white', 'white')
     DEFAULT_TIMELINE_COLOR = 'rgb(29,185,84)' # Spotify Green
-    DEFAULT_LINE_WIDTH = 9 # pixels
+    DEFAULT_LINE_WIDTH = 9
     DEFAULT_PLAYER_COLOR = 'rgba(0,0,0,0.50)' # Black @ 50% opacity
     DEFAULT_PLAYER_WIDTH = 900
     GLASS_BLUR_PROFILE = '0x12'
     DEFAULT_INSET = 50
+    DEFAULT_PLAYER_ACTION: PlayerAction = 'play'
     DEFAULT_PLAYER_POSITION: PlayerPosition = 'left'
     DEFAULT_PLAYER_STYLE: PlayerStyle = 'logo'
 
     """How far from the bottom of the glass the line is drawn"""
     _LINE_Y_INSET = 85
 
+    """
+    SVG commands for each control element. SVGs made relative with this fiddle
+    https://codepen.io/MausWorks/pen/eLrmmY.
+    """
+    _HEART_SVG = """m0,0c-3.6,-3.6,-9.5,-3.6,-13.2,0l-2.1,2.1l-2.1,-2.1c-3.6,
+    -3.6,-9.5,-3.6,-13.2,0c-3.6,3.6,-3.6,9.5,0,13.2l2.1,2.1l13.2,13.2l13.2,
+    -13.2l2.1,-2.1c3.7,-3.6,3.7,-9.5,0,-13.2z"""
+    _SHUFFLE_SVG = """m0,0c-0.3,-0.2,-0.7,0,-0.7,0.3v3h-5.5c-2.8,0,-4.2,-2,-5.6,
+    -4.3c1.3,-2.4,2.8,-4.3,5.6,-4.3h5.5v3.1c0,0.3,0.4,0.5,0.6,0.3l5.8,-4.4c0.2,
+    -0.2,0.2,-0.5,0,-0.6l-5.8,-4.4c-0.3,-0.2,-0.6,0,-0.6,0.3v3.6h-5.5c-3.3,0,
+    -5.3,2,-6.7,4.3c-1.4,-2.5,-3,-4.9,-6.1,-4.7c-3.7,0.2,-6.8,0,-6.8,0l-0.1,2
+    c0.1,0,3.2,0.2,7,0c2.1,-0.1,3.2,1.7,4.7,4.5c0,0.1,0.1,0.1,0.1,0.2c0,0.1,
+    -0.1,0.1,-0.1,0.2c-1.6,2.9,-2.6,4.7,-4.7,4.5c-3.8,-0.2,-6.9,0,-7,0l0.1,2c0,
+    0,3.1,-0.2,6.8,0c0.1,0,0.2,0,0.3,0c2.9,0,4.5,-2.3,5.8,-4.7c1.4,2.3,3.4,4.3,
+    6.7,4.3h5.5v3.6c0,0.4,0.4,0.6,0.7,0.3l5.7,-4.3c0.2,-0.2,0.2,-0.5,0,-0.7
+    l-5.7,-4.1z"""
+    _PREVIOUS_SVG = """m0,0l-17.1,12.2v-11.3c0,-0.6,-0.4,-1,-1,-1h-4.4c-0.6,0,
+    -1,0.4,-1,1v28.5c0,0.6,0.4,1,1,1h4.4c0.6,0,1,-0.4,1,-1v-12.4l17.1,12.2c0.7,
+    0.5,1.6,0,1.6,-0.8v-27.7c0,-0.7,-0.9,-1.1,-1.6,-0.7z"""
+    _PAUSE_SVG = """m0,0.6c-16.8,0,-30.4,13.6,-30.4,30.4s13.6,30.4,30.4,30.4
+    s30.4,-13.6,30.4,-30.4s-13.6,-30.4,-30.4,-30.4zm-4,48.2h-9.2v-34.9h9.2
+    v34.9zm16,0h-9.2v-34.9h9.2v34.9z"""
+    _PLAY_SVG = """m0,0c-16.8,0,-30.4,13.6,-30.4,30.4s13.6,30.4,30.4,30.4s30.4,
+    -13.6,30.4,-30.4s-13.6,-30.4,-30.4,-30.4zm15.5,29.8l-27.1,14.4c-0.5,0.3,
+    -1.2,-0.1,-1.2,-0.7v-28.8c0,-0.6,0.7,-1,1.2,-0.7l27.1,14.4c0.6,0.2,0.6,1.1,
+    0,1.4z"""
+    _NEXT_SVG = """m0,0h-4.7c-0.5,0,-0.8,0.4,-0.8,0.8v11.4l-17.4,-12.3c-0.6,
+    -0.4,-1.3,0,-1.3,0.7v28.3c0,0.7,0.8,1.1,1.3,0.7l17.4,-12.4v12.5c0,0.5,0.4,
+    0.8,0.8,0.8h4.7c0.5,0,0.8,-0.4,0.8,-0.8v-28.8c0,-0.5,-0.3,-0.9,-0.8,-0.9z"""
+    _REPEAT_SVG_1 = """m0,0h11.9v3c0,0.3,0.3,0.4,0.5,0.3l5.2,-3.8c0.2,-0.1,0.2,
+    -0.4,0,-0.5l-5.2,-3.8c-0.2,-0.2,-0.5,0,-0.5,0.3v2.8l-11.9,-0.2c-3.9,0,-7.9,
+    2.7,-7.9,8.8h2c0,-5.1,3.2,-6.9,5.9,-6.9z"""
+    _REPEAT_SVG_2 = """m16.1,7.6c0,5,-3.2,6.8,-5.9,6.8h-11.9v-3c0,-0.3,-0.3,
+    -0.4,-0.5,-0.3l-5.2,3.8c-0.2,0.1,-0.2,0.4,0,0.5l5.2,3.8c0.2,0.2,0.5,0,0.5,
+    -0.3v-2.9l11.9,0.2c3.9,0,7.9,-2.7,7.9,-8.8h-2z"""
+
+
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
         'font_interline_spacing', 'font_interword_spacing', 'font_file',
-        'font_kerning', 'font_size', 'font_vertical_shift', 'album_cover',
-        'album_size', 'episode_text_color', 'percentage', 'player_color',
-        'player_inset', 'player_position', 'player_style', 'player_width',
-        'round_corners', 'subtitle', 'timeline_color', '__album_dimensions',
+        'font_kerning', 'font_size', 'font_vertical_shift', 'add_controls',
+        'album_cover', 'album_size', 'control_colors', 'draw_heart',
+        'episode_text_color', 'heart_color', 'heart_stroke_color',
+        'pause_or_play', 'percentage', 'player_color', 'player_inset',
+        'player_position', 'player_style', 'player_width', 'round_corners',
+        'subtitle', 'timeline_color', '__album_dimensions',
         '__title_dimensions', '__season_x', '__episode_x', '__cleanup',
     )
 
@@ -215,10 +326,16 @@ class MusicTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
+            add_controls: bool = False,
             album_cover: Optional[Path] = None,
             album_size: float = 1.0,
+            control_colors: tuple[str, str, str, str, str] = DEFAULT_CONTROL_COLORS,
+            draw_heart: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
-            percentage: Union[float, str, Literal['random']] = 'random',
+            heart_color: str = 'transparent',
+            heart_stroke_color: str = 'white',
+            pause_or_play: PlayerAction = DEFAULT_PLAYER_ACTION,
+            percentage: Union[float, Literal['random']] = 'random',
             player_position: PlayerPosition = DEFAULT_PLAYER_POSITION,
             player_color: str = DEFAULT_PLAYER_COLOR,
             player_inset: int = DEFAULT_INSET,
@@ -255,9 +372,15 @@ class MusicTitleCard(BaseCardType):
         self.font_vertical_shift = font_vertical_shift
 
         # Extras
+        self.add_controls = add_controls
         self.album_cover = Path(album_cover) if album_cover else album_cover
         self.album_size = album_size
+        self.control_colors = ControlColors(*control_colors)
+        self.draw_heart = draw_heart
         self.episode_text_color = episode_text_color
+        self.heart_color = heart_color
+        self.heart_stroke_color = heart_stroke_color
+        self.pause_or_play = pause_or_play
         self.percentage = random() if percentage == 'random' else percentage
         self.player_color = player_color
         self.player_inset = player_inset
@@ -286,7 +409,7 @@ class MusicTitleCard(BaseCardType):
                 determined.
 
         Returns:
-            'S{x}' for the given season number.
+            `S{x}` for the given season number.
         """
 
         return f'S{episode_info.season_number}'
@@ -310,7 +433,9 @@ class MusicTitleCard(BaseCardType):
             x = self.WIDTH - self.player_width - self.player_inset + MARGIN
 
         # Determine y position based on whether a subtitle is present
-        y = (240 if self.subtitle else 195) + self.font_vertical_shift
+        y = 195 + self.font_vertical_shift \
+            + (45 if self.subtitle else 0) \
+            + (100 if self.add_controls else 0)
 
         return [
             f'-font "{self.font_file}"',
@@ -363,6 +488,8 @@ class MusicTitleCard(BaseCardType):
         elif self.player_position == 'right':
             x = self.WIDTH - self.player_width - self.player_inset + MARGIN
 
+        y = 185 + (100 if self.add_controls else 0)
+
         return [
             f'-font "{self.SUBTITLE_FONT.resolve()}"',
             f'-fill {self.episode_text_color}',
@@ -370,7 +497,7 @@ class MusicTitleCard(BaseCardType):
             f'-interline-spacing 0',
             f'-interword-spacing 0',
             f'-gravity southwest',
-            f'-annotate +{x}+185 "{self.subtitle}"',
+            f'-annotate +{x}+{y} "{self.subtitle}"',
         ]
 
 
@@ -430,7 +557,8 @@ class MusicTitleCard(BaseCardType):
         """
 
         # y-coordinate for all text
-        y = (self.HEIGHT / 2) - self.player_inset - self._LINE_Y_INSET
+        y = (self.HEIGHT / 2) - self.player_inset - self._LINE_Y_INSET \
+            + (-100 if self.add_controls else 0)
 
         # Determine position of season text
         season_commands = []
@@ -518,7 +646,10 @@ class MusicTitleCard(BaseCardType):
 
     @property
     def add_album_cover(self) -> ImageMagickCommands:
-        """"""
+        """
+        Subcommands to add the album cover. This adds the album based on
+        the specified player style.
+        """
 
         if (self.player_style == 'basic' 
             or not self.album_cover or not self.album_cover.exists()):
@@ -528,8 +659,9 @@ class MusicTitleCard(BaseCardType):
         dimensions = self._album_dimensions
 
         # y-coorindate is adjusted by whether a subtitle is present and text height
-        y = (35 if self.subtitle else 0) + self._title_dimensions.height \
-            + self.font_vertical_shift + 250
+        y = self._title_dimensions.height + self.font_vertical_shift + 235 \
+            + (35 if self.subtitle else 0) \
+            + (100 if self.add_controls else 0)
 
         # Coordinates for composing the cover
         if self.player_position == 'left':
@@ -593,7 +725,9 @@ class MusicTitleCard(BaseCardType):
         # Determine height
         MARGIN = 35 if self.player_style == 'basic' else 50
         height = self._album_dimensions.height + self._title_dimensions.height \
-            + (35 if self.subtitle else 0) + 150 + (2 * MARGIN)
+            + (35 if self.subtitle else 0) \
+            + (100 if self.add_controls else 0) \
+            + 150 + (2 * MARGIN)
         start = Coordinate(
             start_x,
             self.HEIGHT - self.player_inset - height
@@ -634,8 +768,10 @@ class MusicTitleCard(BaseCardType):
         # Determine coordinates for the background timeline
         background_start_x, background_end_x = self.__season_x, self.__episode_x
 
-        # Center y-coordinate for all lines
+        # Center y coordinate for all lines
         y = self.HEIGHT - self.player_inset - self._LINE_Y_INSET - 3 # 3px offset
+        if self.add_controls:
+            y -= 100
 
         # No season text, draw from standard offset
         if background_start_x is None:
@@ -681,6 +817,114 @@ class MusicTitleCard(BaseCardType):
             Rectangle(foreground_start, foreground_end).draw(),
             # Circle at the end of the filled timeline
             f'-draw "translate {circle_center} circle 0,0 15,0"',
+        ]
+
+
+    @property
+    def draw_controls(self) -> ImageMagickCommands:
+        """
+        Subcommands to draw the media controls on the image. This
+        separately draws and colors each control.
+        """
+
+        # Controls are not displayed, return empty commands
+        if not self.add_controls:
+            return []
+
+        # Scale for all SVGs
+        scale = 1.75
+
+        # Player center for all controls
+        x_mid: float = {
+            'left': self.player_inset + (self.player_width / 2),
+            'middle': (self.WIDTH / 2),
+            'right': self.WIDTH - self.player_inset - (self.player_width / 2),
+        }[self.player_position]
+
+        # Center y-coordinate for all lines
+        y_mid = self.HEIGHT - self.player_inset - self._LINE_Y_INSET - 3
+
+        # Start with the left-most controls, work right
+        control_commands = [
+            f'-stroke none',
+            f'-strokewidth 0',
+        ]
+        if self.control_colors.shuffle.lower() not in ('transparent', 'none'):
+            x, y = x_mid - 197, y_mid + 5
+            control_commands += [
+                f'-fill "{self.control_colors.shuffle}"',
+                f'-draw "translate {x:+.0f},{y:+.0f} scale {scale},{scale}',
+                f'path \'{self._SHUFFLE_SVG}\'"',
+            ]
+        if self.control_colors.previous.lower() not in ('transparent', 'none'):
+            x, y = x_mid - 100, y_mid - 22
+            control_commands += [
+                f'-fill "{self.control_colors.previous}"',
+                f'-draw "translate {x:+.0f},{y:+.0f} scale {scale},{scale}',
+                f'path \'{self._PREVIOUS_SVG}\'"',
+            ]
+        if self.control_colors.action.lower() not in ('transparent', 'none'):
+            if self.pause_or_play == 'pause':
+                x, y = x_mid, y_mid - 52
+                control_commands += [
+                    f'-fill "{self.control_colors.action}"',
+                    f'-draw "translate {x:+.0f},{y:+.0f} scale {scale},{scale}',
+                    f'path \'{self._PAUSE_SVG}\'"',
+                ]
+            else:
+                x, y = x_mid, y_mid - 52
+                control_commands += [
+                    f'-fill "{self.control_colors.action}"',
+                    f'-draw "translate {x:+.0f},{y:+.0f} scale {scale},{scale}',
+                    f'path \'{self._PLAY_SVG}\'"',
+                ]
+        if self.control_colors.next.lower() not in ('transparent', 'none'):
+            x, y = x_mid + 139, y_mid - 23
+            control_commands += [
+                f'-fill "{self.control_colors.next}"',
+                f'-draw "translate {x:+.0f},{y:+.0f} scale {scale},{scale}',
+                f'path \'{self._NEXT_SVG}\'"',
+            ]
+        if self.control_colors.repeat.lower() not in ('transparent', 'none'):
+            x, y = x_mid + 210, y_mid - 8
+            control_commands += [
+                f'-fill "{self.control_colors.repeat}"',
+                f'-draw "translate {x:+.0f},{y:+.0f} scale {scale},{scale}',
+                f'path \'{self._REPEAT_SVG_1}\'"',
+                f'-draw "translate {x:+.0f},{y:+.0f} scale {scale},{scale}',
+                f'path \'{self._REPEAT_SVG_2}\'"',
+            ]
+
+        return control_commands
+
+
+    @property
+    def draw_heart_commands(self) -> ImageMagickCommands:
+        """Subcommands to draw the heart SVG icon on the image."""
+
+        # No heart, return empty commands
+        if not self.draw_heart:
+            return []
+
+        x: float = {
+            'left': self.player_inset + self.player_width,
+            'middle': (self.WIDTH + self.player_width) / 2,
+            'right': self.WIDTH - self.player_inset,
+        }[self.player_position] - 30
+
+        y = self.HEIGHT - self.player_inset \
+            - 150 \
+            - (100 if self.add_controls else 0) \
+            - (35 if self.subtitle else 0) \
+            - (self._title_dimensions.height + 35) \
+            - (self._album_dimensions.height + 35)
+
+        return [
+            f'-fill "{self.heart_color}"',
+            f'-stroke "{self.heart_stroke_color}"',
+            f'-strokewidth 2',
+            f'-draw "translate {x-7:+.0f},{y+8:+.0f} scale 1.75,1.75',
+            f'path \'{self._HEART_SVG}\'"',
         ]
 
 
@@ -765,14 +1009,19 @@ class MusicTitleCard(BaseCardType):
             f'-density 100',
             # Resize and apply styles to source image
             *self.resize_and_style,
-
+            # Add background player glass
             *self.glass_command,
+            # Add the indicated album cover art/logo
             *self.add_album_cover,
+            # Add all text
             *self.title_text_commands,
             *self.subtitle_commands,
             *self.index_text_commands,
+            # Draw the timeline
             *self.draw_timeline,
-
+            # Draw the media player controls and heart
+            *self.draw_controls,
+            *self.draw_heart_commands,
             # Attempt to overlay mask
             *self.add_overlay_mask(self.source_file),
             # Create card

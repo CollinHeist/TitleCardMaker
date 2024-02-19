@@ -31,7 +31,7 @@ from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
 from modules.cards.MarvelTitleCard import MarvelTitleCard
 from modules.cards.MusicTitleCard import (
-    MusicTitleCard, PlayerPosition, PlayerStyle
+    MusicTitleCard, PlayerAction, PlayerPosition, PlayerStyle,
 )
 from modules.cards.OlivierTitleCard import OlivierTitleCard
 from modules.cards.OverlineTitleCard import OverlineTitleCard
@@ -423,13 +423,21 @@ class MarvelCardType(BaseCardTypeCustomFontAllText):
     text_box_color: BetterColor = MarvelTitleCard.DEFAULT_TEXT_BOX_COLOR
     text_box_height: PositiveInt = MarvelTitleCard.DEFAULT_TEXT_BOX_HEIGHT
 
+ControlColorRegex = r'^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)$'
+ColorControls = constr(regex=ControlColorRegex)
 class MusicCardType(BaseCardTypeCustomFontAllText):
     font_file: FilePath = MusicTitleCard.TITLE_FONT
     font_color: str = MusicTitleCard.TITLE_COLOR
+    add_controls: bool = False
     album_cover: Optional[FilePath] = None
     album_size: PositiveFloat = 1.0
+    control_colors: ColorControls = MusicTitleCard.DEFAULT_CONTROL_COLORS
+    draw_heart: bool = False
     episode_text_color: str = MusicTitleCard.EPISODE_TEXT_COLOR
     percentage: Union[float, str, Literal['random']] = 'random'
+    heart_color: str = 'transparent'
+    heart_stroke_color: str = 'white'
+    pause_or_play: PlayerAction = None
     player_color: str = MusicTitleCard.DEFAULT_PLAYER_COLOR
     player_inset: conint(ge=0, le=1800) = MusicTitleCard.DEFAULT_INSET
     player_position: PlayerPosition = MusicTitleCard.DEFAULT_PLAYER_POSITION
@@ -439,6 +447,24 @@ class MusicCardType(BaseCardTypeCustomFontAllText):
     subtitle: str = '{series_name}'
     timeline_color: str = MusicTitleCard.DEFAULT_TIMELINE_COLOR
     truncate_long_titles: Union[PositiveInt, Literal['False']] = 2
+    watched: Optional[bool] = None
+
+    @validator('control_colors')
+    def parse_control_colors(cls, val):
+        return tuple(re_match(ControlColorRegex, val).groups())
+
+    @root_validator(skip_on_failure=True)
+    def assign_unassigned_player_action(cls, values: dict) -> dict:
+        if (values['pause_or_play'] is None
+            and values['watched'] is not None):
+            values['pause_or_play']  = 'pause' if values['watched'] else 'play'
+        return values
+
+    @root_validator(skip_on_failure=True)
+    def validate_player_width(cls, values: dict) -> dict:
+        if values['add_controls'] and values['player_width'] < 600:
+            raise ValueError('Player width must be at least 600')
+        return values
 
     @root_validator(skip_on_failure=True, pre=True)
     def finalize_format_strings(cls, values: dict) -> dict:

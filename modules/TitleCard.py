@@ -25,6 +25,7 @@ from modules.cards.InsetTitleCard import InsetTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
 from modules.cards.MarvelTitleCard import MarvelTitleCard
+from modules.cards.MusicTitleCard import MusicTitleCard
 from modules.cards.OlivierTitleCard import OlivierTitleCard
 from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
@@ -93,6 +94,7 @@ class TitleCard:
         'landscape': LandscapeTitleCard,
         'logo': LogoTitleCard,
         'marvel': MarvelTitleCard,
+        'music': MusicTitleCard,
         'musikmann': WhiteBorderTitleCard,
         'olivier': OlivierTitleCard,
         'overline': OverlineTitleCard,
@@ -105,6 +107,7 @@ class TitleCard:
         'roman numeral': RomanNumeralTitleCard,
         'shape': ShapeTitleCard,
         'sherlock': TintedGlassTitleCard,
+        'spotify': MusicTitleCard,
         'standard': StandardTitleCard,
         'star wars': StarWarsTitleCard,
         'textless': TextlessTitleCard,
