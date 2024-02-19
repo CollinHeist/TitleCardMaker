@@ -434,7 +434,7 @@ class MusicCardType(BaseCardTypeCustomFontAllText):
     control_colors: ColorControls = MusicTitleCard.DEFAULT_CONTROL_COLORS
     draw_heart: bool = False
     episode_text_color: str = MusicTitleCard.EPISODE_TEXT_COLOR
-    percentage: Union[float, str, Literal['random']] = 'random'
+    percentage: Union[confloat(ge=0.0, le=1.0), str, Literal['random']] = 'random'
     heart_color: str = 'transparent'
     heart_stroke_color: str = 'white'
     pause_or_play: PlayerAction = None
@@ -471,9 +471,8 @@ class MusicCardType(BaseCardTypeCustomFontAllText):
         if ((percentage := values.get('percentage', 'random')) is not None
             and isinstance(percentage, str)
             and percentage != 'random'):
-            values['percentage'] = float(FormatString(
-                percentage, data=values
-            ).result)
+            p = float(FormatString(percentage, data=values).result)
+            values['percentage'] = max(0.0, min(1.0, p)) # Limit [0.0, 1.0]
         if (subtitle := values.get('subtitle', '{series_name}')) is not None:
             values['subtitle'] = FormatString(subtitle, data=values).result
 
