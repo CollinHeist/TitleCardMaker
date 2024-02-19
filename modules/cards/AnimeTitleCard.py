@@ -22,7 +22,7 @@ class AnimeTitleCard(BaseCardType):
     API_DETAILS = CardDescription(
         name='Anime',
         identifier='anime',
-        example='/internal_assets/cards/anime.jpg',
+        example='/internal_assets/cards/anime.webp',
         creators=['/u/Recker_Man', 'CollinHeist', 'Reicha7'],
         source='builtin',
         supports_custom_fonts=True,

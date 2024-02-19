@@ -21,7 +21,7 @@ class WhiteBorderTitleCard(BaseCardType):
     API_DETAILS = CardDescription(
         name='White Border',
         identifier='white border',
-        example='/internal_assets/cards/white border.jpg',
+        example='/internal_assets/cards/white border.webp',
         creators=['Musikmann2000', 'CollinHeist', 'mvanbaak', 'supermariobruh'],
         source='builtin',
         supports_custom_fonts=True,
