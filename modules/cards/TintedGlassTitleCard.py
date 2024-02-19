@@ -51,9 +51,9 @@ class TintedGlassTitleCard(BaseCardType):
                 ),
             ),
             Extra(
-                name='Bounding Box Adjustments',
+                name='Glass Adjustments',
                 identifier='box_adjustments',
-                description='Manual adjustments to the bounds of the box',
+                description='Manual adjustments to the bounds of the glass',
                 tooltip=(
                     'Specified like <v>{top} {right} {bottom} {left}</v>. For '
                     'example: <v>-20 10 0 5</v>. Positive values move that '

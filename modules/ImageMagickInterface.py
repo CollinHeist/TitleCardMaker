@@ -390,3 +390,51 @@ class ImageMagickInterface:
 
         self.print_command_history()
         return None
+
+
+    def round_image_corners(self,
+            image: Path,
+            commands: list[str],
+            dimensions: Optional[Dimensions] = None,
+            radius: int = 25,
+        ) -> Path:
+        """
+        Round the corners of the given image, writing the resulting
+        image to a new file.
+
+        Args:
+            image: Path to the image to modify.
+            commands: List of ImageMagick commands which contains the
+                image data to modify.
+            dimensions: Dimensions of the image. If not provided, these
+                are calculated.
+            radius: Radius to utilize for the corner rounding.
+
+        Returns:
+            Path to the created file.
+        """
+
+        # Calculate dimensions if not provided
+        if not dimensions:
+            dimensions = self.get_image_dimensions(image)
+
+        # Path to temporary file for rounded image
+        temp_image = image.parent / f'{image.stem}.part.png'
+
+        self.run(' '.join([
+            f'convert',
+            f'-background none',
+            *commands,
+            f'-matte',
+            f'\( -size {dimensions.width}x{dimensions.height}',
+            f'xc:none',
+            f'-draw "roundrectangle',
+            f'0,0 {dimensions.width:.0f},{dimensions.height:.0f}',
+            f'{radius:.0f},{radius:.0f}"',
+            f'\)',
+            f'-compose DstIn',
+            f'-composite',
+            f'"{temp_image.resolve()}"',
+        ]))
+
+        return temp_image
