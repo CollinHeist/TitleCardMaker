@@ -43,12 +43,34 @@ class MusicTitleCard(BaseCardType):
         supports_custom_seasons=False,
         supported_extras=[
             Extra(
+                name='Player Style',
+                identifier='player_style',
+                description='Which style of the player to display',
+                tooltip=(
+                    'Either <v>basic</v> for no image at all, <v>artwork</v> '
+                    'to use the Series backdrop, <v>logo</v> to use the Series '
+                    'logo, or <v>poster</v> to use the Series poster. The '
+                    'default is <v>logo</v>.'
+                ),
+            ),
+            Extra(
                 name='Album Size',
                 identifier='album_size',
                 description=(
                     'Scalar for how much to scale the size of the album image'
                 ),
                 tooltip='Number ><v>0.0</v>. Default is <v>1.0</v>.'
+            ),
+            Extra(
+                name='Album Image',
+                identifier='album_cover',
+                description='File to use for the album image',
+                tooltip=(
+                    'Full file path to utilize for the album image, or the '
+                    'name of the file within the Series source directory. If '
+                    'omitted, the relevant image from the indicated player '
+                    'style is used.'
+                ),
             ),
             Extra(
                 name='Episode Text Color',
@@ -103,7 +125,7 @@ class MusicTitleCard(BaseCardType):
                 ),
             ),
             Extra(
-                name='Pause and Play Icon',
+                name='Pause or Play Icon',
                 identifier='pause_or_play',
                 description='Which icon to display in the media controls',
                 tooltip=(
@@ -134,17 +156,6 @@ class MusicTitleCard(BaseCardType):
                 ),
             ),
             Extra(
-                name='Player Style',
-                identifier='player_style',
-                description='Which style of the player to display',
-                tooltip=(
-                    'Either <v>basic</v> for no image at all, <v>artwork</v> '
-                    'to use the Series backdrop, <v>logo</v> to use the Series '
-                    'logo, or <v>poster</v> to use the Series poster. The '
-                    'default is <v>logo</v>.'
-                ),
-            ),
-            Extra(
                 name='Album Subtitle',
                 identifier='subtitle',
                 description='Text to display below the title',
@@ -156,7 +167,7 @@ class MusicTitleCard(BaseCardType):
                 ),
             ),
             Extra(
-                name='Round Album Corners',
+                name='Round Album Corners Toggle',
                 identifier='round_corners',
                 description='Whether to round the corners of the album image',
                 tooltip=(
@@ -169,17 +180,6 @@ class MusicTitleCard(BaseCardType):
                 identifier='timeline_color',
                 description='Color of the filled timeline',
                 tooltip='Default is <c>rgb(29,185,84)</c>.',
-            ),
-            Extra(
-                name='Long Line Truncation',
-                identifier='truncate_long_titles',
-                description='Whether and how to truncate very long titles',
-                tooltip=(
-                    'Either a number ><v>0</v>, or <v>False</v>. If a number, '
-                    'then titles are cut off after that many lines; if '
-                    '<v>False</v>, then titles are not cut off. Default is '
-                    '<v>2</v>.'
-                ),
             ),
             Extra(
                 name='Heart Toggle',
@@ -199,8 +199,19 @@ class MusicTitleCard(BaseCardType):
             Extra(
                 name='Heart Stroke Color',
                 identifier='heart_stroke_color',
-                description='Color to use for the edge of the heart',
+                description='Color to use for the outline of the heart',
                 tooltip='Default is <c>white</c>.',
+            ),
+            Extra(
+                name='Long Line Truncation',
+                identifier='truncate_long_titles',
+                description='Whether and how to truncate very long titles',
+                tooltip=(
+                    'Either a number ><v>0</v>, or <v>False</v>. If a number, '
+                    'then titles are cut off after that many lines; if '
+                    '<v>False</v>, then titles are not cut off. Default is '
+                    '<v>2</v>.'
+                ),
             ),
         ],
         description=[
@@ -433,7 +444,7 @@ class MusicTitleCard(BaseCardType):
             x = self.WIDTH - self.player_width - self.player_inset + MARGIN
 
         # Determine y position based on whether a subtitle is present
-        y = 195 + self.font_vertical_shift \
+        y = self.player_inset + 145 + self.font_vertical_shift \
             + (45 if self.subtitle else 0) \
             + (100 if self.add_controls else 0)
 
@@ -488,7 +499,7 @@ class MusicTitleCard(BaseCardType):
         elif self.player_position == 'right':
             x = self.WIDTH - self.player_width - self.player_inset + MARGIN
 
-        y = 185 + (100 if self.add_controls else 0)
+        y = self.player_inset + 135 + (100 if self.add_controls else 0)
 
         return [
             f'-font "{self.SUBTITLE_FONT.resolve()}"',
@@ -659,7 +670,9 @@ class MusicTitleCard(BaseCardType):
         dimensions = self._album_dimensions
 
         # y-coorindate is adjusted by whether a subtitle is present and text height
-        y = self._title_dimensions.height + self.font_vertical_shift + 235 \
+        # + 235
+        y = self._title_dimensions.height + self.font_vertical_shift \
+            + self.player_inset + 185 \
             + (35 if self.subtitle else 0) \
             + (100 if self.add_controls else 0)
 
