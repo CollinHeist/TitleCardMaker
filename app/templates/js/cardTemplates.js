@@ -129,6 +129,7 @@ function updateTemplate(form, templateId) {
   const parseList = (value, fallback=[]) => value.length ? value : fallback;
 
   const data = {
+    name: $(`#template-id${templateId} input[name="name"]`).val(),
     card_type: $(`#template-id${templateId} input[name="card_type"]`).val() || null,
     font_id: $(`#template-id${templateId} input[name="font_id"]`).val() || null,
     watched_style: $(`#template-id${templateId} input[name="watched_style"]`).val() || null,
