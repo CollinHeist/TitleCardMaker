@@ -504,7 +504,7 @@ class MusicCardType(BaseCardTypeCustomFontAllText):
                 values['album_cover'] = values['poster_file']
 
         # Parse format strings in album cover
-        if (cover := values['album_cover']):
+        if (cover := values.get('album_cover')):
             cover = Path(FormatString(str(cover), data=values).result)
             if not cover.exists():
                 cover = values['source_file'].parent / cover.name

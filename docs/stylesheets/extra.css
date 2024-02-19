@@ -102,3 +102,26 @@ h2 > img {
   border-end-end-radius: 2px;
   box-shadow: 0 0 0 1px inset var(--badge-color, var(--md-accent-fg-color--transparent));
 }
+
+.example-card {
+  max-width: 75%;
+}
+
+/* Fix image sizing within image comparisons */
+/* https://image-compare-viewer.netlify.app/ */
+.image-compare img {
+  height: 100%;
+  max-width: unset !important;
+}
+/* Keep image comparison slider below the docs toolbar */
+.image-compare .icv__control {
+  z-index: 3 !important;
+}
+/* Move the image compare labels to the top of the image; adjust background */
+.image-compare .icv__label {
+  bottom: unset;
+  top: 1rem;
+  background: rgba(0, 0, 0, 0.50);
+  /* Reduce font size */
+  font-size: 0.65rem;
+}

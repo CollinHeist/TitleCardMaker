@@ -1,3 +1,9 @@
+---
+title: Custom Card Types
+description: >
+    An overview of all the kinds of supported card types.
+---
+
 # Custom Card Types
 
 !!! warning "Under Construction"
@@ -38,7 +44,10 @@ Local
 
 TitleCardMaker currently has the following built-in card types:
 
-...
+| Card Type | Preview |
+| :-------: | :-----: |
+| [Anime](./anime.md) | <img src="./assets/anime.webp" width="300"> |
+| [Music](./music.md) | <img src="./assets/music.webp" width="300"> |
 
 ## User-made Cards
 
