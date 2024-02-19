@@ -1,8 +1,10 @@
 from logging import Logger
 from os import environ, name as os_name
 from pathlib import Path
+from random import choices as random_choices
 from re import findall
 from shlex import split as command_split
+from string import hexdigits
 from subprocess import Popen, PIPE, TimeoutExpired
 from typing import Iterable, Literal, NamedTuple, Optional, overload
 
@@ -419,7 +421,8 @@ class ImageMagickInterface:
             dimensions = self.get_image_dimensions(image)
 
         # Path to temporary file for rounded image
-        temp_image = image.parent / f'{image.stem}.part.png'
+        random_chars = ''.join(random_choices(hexdigits, k=6))
+        temp_image = image.parent / f'{image.stem}.{random_chars}.webp'
 
         self.run(' '.join([
             f'convert',
