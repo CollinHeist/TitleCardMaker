@@ -18,8 +18,8 @@ This card design was created by [CollinHeist](https://github.com/CollinHeist),
 and is inspired by a music player (Spotify in particular).
 
 These cards feature a fully adjustable music timeline, media control buttons,
-and artwork. This is one of the most complex card types, featuring many
-more than twenty available customizations via extras.
+and artwork. This is one of the more complex card types, featuring more than 
+twenty available customizations via extras.
 
 <figure markdown="span" style="max-width: 70%">
   ![Example Music Card](./assets/music.webp)
