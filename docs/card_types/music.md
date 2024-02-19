@@ -277,31 +277,3 @@ Color_ extra.
         <img src="../assets/music.webp"/>
         <img src="../assets/music-background-alt.webp"/>
     </div>
-
-<script>
-  const viewers = document.querySelectorAll(".image-compare");
-  const options = {
-    hoverStart: false,
-    controlShadow: false,
-    addCircle: true,
-    addCircleBlur: true,
-    showLabels: true,
-  };
-  const labelOptions = {onHover: true};
-
-  viewers.forEach((element) => {
-    let view = new ImageCompare(
-        element,
-        {
-            startingPoint: element.dataset?.startingPoint,
-            verticalMode: element.dataset?.verticalMode === "true",
-            labelOptions: {
-                before: element.dataset?.leftLabel,
-                after: element.dataset?.rightLabel,
-                ...labelOptions,
-            },
-            ...options,
-        }
-    ).mount();
-  });
-</script>
