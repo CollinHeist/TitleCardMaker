@@ -130,6 +130,15 @@ function updateTemplate(form, templateId) {
 
   const data = {
     name: $(`#template-id${templateId} input[name="name"]`).val(),
+    filters: parseList(
+        Array.from(document.querySelectorAll(`#template-id${templateId} input[name="operation"]`)).map((input, index) => {
+          return {
+            argument: document.querySelectorAll(`#template-id${templateId} input[name="argument"]`)[index].value,
+            operation: input.value,
+            reference: document.querySelectorAll(`#template-id${templateId} input[name="reference"]`)[index].value,
+          };
+        }).filter(({operation}) => operation !== '')
+      ),
     card_type: $(`#template-id${templateId} input[name="card_type"]`).val() || null,
     font_id: $(`#template-id${templateId} input[name="font_id"]`).val() || null,
     watched_style: $(`#template-id${templateId} input[name="watched_style"]`).val() || null,
