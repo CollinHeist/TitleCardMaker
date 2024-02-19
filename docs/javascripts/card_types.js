@@ -1,7 +1,7 @@
 document$.subscribe(function() {
   // Only run on card type pages
   if (!window.location.pathname.startsWith('/card_types/')) { return; }
-  // console.log('Loading ImageCompares..');
+  console.log('Loading ImageCompares..');
 
   const options = {
     hoverStart: false,
@@ -13,7 +13,7 @@ document$.subscribe(function() {
   const labelOptions = {onHover: true};
 
   document.querySelectorAll('.image-compare').forEach((element) => {
-    // console.log(element);
+    console.log(element);
     new ImageCompare(
       element,
       {

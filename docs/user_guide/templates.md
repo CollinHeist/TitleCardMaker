@@ -107,7 +107,7 @@ Each condition of a Filter is made up of 3 parts. An _Argument_, which is the
 variable pulled from the specific Series or Episode being evaluated; an
 _Operation_ which is what operation is being applied to the _Argument_; and a
 _Reference Value_ which is what the result of the evaluation is compared
-against.
+against. To remove a condition, clear its Operation (the middle column).
 
 !!! example "Example"
 
@@ -133,6 +133,10 @@ being true).
     If you'd like to make marginal perfomance improvements, it is best practice
     to put conditions which are more likely to fail - i.e. the more restrictive
     conditions - first, as this short-circuits the Filter evaluation logic.
+
+    For example, putting a condition for `Episode Number` `equals` _before_
+    `Season Number` `equals` would be ideal since more failures will occur on
+    the Episode number condition than the season number condition.
 
 Below is a summary of all Filter arguments, their valid operations, a
 description of what this Filter accomplishes, and whether it requires a

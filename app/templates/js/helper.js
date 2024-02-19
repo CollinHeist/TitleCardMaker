@@ -128,6 +128,7 @@ function formatFastAPIError(errorResponse) {
  * @param {number} [args.displayTime=7500] - How long (in ms) to display the toast.
  */
 function showErrorToast({title, message, response, displayTime=7500}) {
+  console.log(response);
   if (response === undefined) {
     $.toast({
       class: 'error',

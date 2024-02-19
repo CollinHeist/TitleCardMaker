@@ -10,16 +10,12 @@ description: >
 
 # Music Card Type
 
-!!! warning "Under Construction"
-
-    This documentation is actively being developed.
-
 This card design was created by [CollinHeist](https://github.com/CollinHeist),
 and is inspired by a music player (Spotify in particular).
 
 These cards feature a fully adjustable music timeline, media control buttons,
 and artwork. This is one of the more complex card types, featuring more than 
-twenty available customizations via extras.
+twenty available extra customizations.
 
 <figure markdown="span" style="max-width: 70%">
   ![Example Music Card](./assets/music.webp)
@@ -192,8 +188,8 @@ _Timeline Color_ extra. This only applies to the filled portion - e.g. the
 
 ### Filled Percentage
 
-The filled logic for the timeline is greatly customizable with the _Timeline
-Fill Percentage_ extra.
+The filled logic for the timeline is customizable with the _Timeline Fill
+Percentage_ extra.
 
 If this is set to an explicit number - such as `0.3` - then the timeline will
 always be that percent filled. The number will be interpreted as a percentage.
@@ -206,10 +202,17 @@ in which case TCM will calculate the percentage for each Card. For example, by
 setting this extra to `{episode_number / season_episode_max}`, the timeline
 percentage will be "filled" from 0% to 100% for each season.
 
-!!! tip "Advanced Format Strings"
+!!! tip "Common Uses"
 
-    To see the list of available variables that can be used in format strings to
-    customize the filled percentage, see [here](../user_guide/variables.md).
+    Some common specifications for this percentage are:
+
+    - `{episode_number / season_episode_max}` - progress the timeline for each
+    _season_. Meaning the first Episode of the season would start near 0% 
+    filled, and the last Episode would be 100%.
+    - `{absolute_number / series_absolute_max}` - progress the timeline for the
+    entire Series. Meaning the first Episode of the Series would start near 0%
+    filled, and the last Episode of the Series would be 100%. This will only
+    work for Series with absolute numbering from Sonarr.
 
 !!! warning "Warning About Format Strings"
 
@@ -276,4 +279,68 @@ Color_ extra.
         data-left-label="rgba(0,0,0,0.50)" data-right-label="rgba(120,120,120,0.50)">
         <img src="../assets/music.webp"/>
         <img src="../assets/music-background-alt.webp"/>
+    </div>
+
+## Subtitle Text
+
+The text below the title is referred to as the subtitle. This text can be
+edited via the _Album Subtitle_ extra.
+
+This can be set to a [Format String](../user_guide/variables.md) to dynamically
+adjust the text to your liking. Setting it to `{""}` will remove the subtitle
+completely. See the full list of available variables
+[here](../user_guide/variables.md).
+
+!!! tip "Common Uses"
+
+    Some common specifications for this are:
+
+    - `{series_name}` to put the Series name (the default)
+    - `{series_full_name}` to put the Series name and year
+    - `{series_name}, Season {season_number}` to put the Series name and the
+    season number
+
+??? example "Example"
+
+    <div class="image-compare example-card"
+        data-starting-point="15"
+        data-left-label="{series_name}" data-right-label="{series_full_name}">
+        <img src="../assets/music-control.webp"/>
+        <img src="../assets/music-subtitle.webp"/>
+    </div>
+
+## Album Image Corner Rounding
+
+To add to the "album art" aesthetic, the corners of images are rounded when the
+[Player Style](#adjusting-the-player-style) is set to `artwork` or `poster`.
+
+This can be disabled by setting the _Round Album Corners Toggle_ extra to
+`False`.
+
+??? example "Example"
+
+    <div class="image-compare example-card"
+        data-starting-point="15"
+        data-left-label="True" data-right-label="False">
+        <img src="../assets/music-control.webp"/>
+        <img src="../assets/music-rounded.webp"/>
+    </div>
+
+## Title Line Truncation
+
+Because the player design does not lend itself very well to extremely long
+titles, this card automatically truncates titles (with `...`) which are longer
+than a set number of lines. This behavior can be modified (or disabled) with the
+_Long Line Truncation_ extra.
+
+Setting this to some number will cut off text after that many lines; and setting
+this to `False` will stop truncation altogether.
+
+??? example "Example"
+
+    <div class="image-compare example-card"
+        data-starting-point="15"
+        data-left-label="2" data-right-label="3">
+        <img src="../assets/music-truncate-2.webp"/>
+        <img src="../assets/music-truncate-3.webp"/>
     </div>
