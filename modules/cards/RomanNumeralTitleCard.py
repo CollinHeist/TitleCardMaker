@@ -562,10 +562,10 @@ class RomanNumeralTitleCard(BaseCardType):
             self.title_text_command, width='width', height='sum'
         )
         box0 = {
-            'start_x': -width/2  + 3200/2,
-            'start_y': -height/2 + 1800/2,
-            'end_x':    width/2  + 3200/2,
-            'end_y':    height/2 + 1800/2,
+            'start_x': (-width  + self.WIDTH)  / 2,
+            'start_y': (-height + self.HEIGHT) / 2,
+            'end_x':   (+width  + self.WIDTH)  / 2,
+            'end_y':   (+height + self.HEIGHT) / 2,
         }
 
         # Inner function to randomize position and determine if overlapping
@@ -733,6 +733,7 @@ class RomanNumeralTitleCard(BaseCardType):
             # Create fixed color background
             f'-size "{self.TITLE_CARD_SIZE}"',
             f'xc:"{self.background}"',
+            f'-alpha on',
             # Overlay roman numerals
             *self.create_roman_numeral_command(self.roman_numeral),
             # Overlay season text
