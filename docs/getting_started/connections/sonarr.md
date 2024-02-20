@@ -111,10 +111,10 @@ following examples for help.
 !!! note "Tautulli Alternative"
 
     Tautulli Notification Agents are a much better alternative to Sonarr
-    Webhooks _if_ you are using Plex __and__ Tautulli in your setup.
+    Webhooks if you are using Plex __and__ Tautulli in your setup.
 
     The process of setting this up Tautulli is covered [here](tautulli.md). It
-    is not recommended (or necessary) to enable both integrations.
+    is not recommended to enable both integrations.
 
 !!! warning "Sonarr v4 Required"
 

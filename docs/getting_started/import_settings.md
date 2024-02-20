@@ -7,6 +7,12 @@ description: >
 
 # Import TitleCardMaker YAML Settings
 
+!!! tip "Recommendation"
+
+    Unless you are _really_ against filling out text boxes, I strongly recommend
+    skipping any YAML importing. It is generally more error-prone, and sometimes
+    even slower than entering the info manually.
+
 !!! note "Applicability"
 
     This page is only applicable to users who have old YAML preferences files
