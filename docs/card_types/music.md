@@ -5,7 +5,8 @@ description: >
 ---
 
 <link rel="stylesheet" type="text/css" href="https://unpkg.com/image-compare-viewer/dist/image-compare-viewer.min.css">
-<script src="https://unpkg.com/image-compare-viewer/dist/image-compare-viewer.min.js"></script>
+<!-- <script src="https://unpkg.com/image-compare-viewer/dist/image-compare-viewer.min.js"></script> -->
+<script src="../../javascripts/imageCompare.js" defer></script>
 
 # Music Card Type
 

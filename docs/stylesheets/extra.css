@@ -119,9 +119,9 @@ h2 > img {
   max-width: unset !important;
 }
 /* Keep image comparison slider below the docs toolbar */
-.image-compare .icv__control {
+/* .image-compare .icv__control {
   z-index: 3 !important;
-}
+} */
 /* Move the image compare labels to the top of the image; adjust background */
 .image-compare .icv__label {
   bottom: unset;
