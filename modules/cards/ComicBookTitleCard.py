@@ -544,13 +544,23 @@ class ComicBookTitleCard(BaseCardType):
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.color != ComicBookTitleCard.TITLE_COLOR)
+        custom_extras = (
+            ('text_box_fill_color' in extras
+                and extras['text_box_fill_color'] != 'black')
+            or ('text_box_fill_color' in extras
+                and extras['text_box_fill_color'] != 'white')
+            or ('banner_fill_color' in extras
+                and extras['banner_fill_color'] != 'rgba(235,73,69,0.6)')
+        )
+
+        return (custom_extras
+            or ((font.color != ComicBookTitleCard.TITLE_COLOR)
             or (font.file != ComicBookTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
-            or (font.vertical_shift != 0)
+            or (font.vertical_shift != 0))
         )
 
 
