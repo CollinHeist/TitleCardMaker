@@ -56,6 +56,8 @@ class LandscapeTitleCard(BaseCardType):
 
     """Additional spacing (in pixels) between bounding box and title text"""
     BOUNDING_BOX_SPACING = 150
+    """Default box width (in pixels)"""
+    BOX_WIDTH = 10
     """Color for darkening is black at 30% transparency"""
     DARKEN_COLOR = '#00000030'
     """Color of the drop shadow"""
@@ -65,7 +67,7 @@ class LandscapeTitleCard(BaseCardType):
         'source_file', 'output_file', 'title_text', 'font_color', 'font_file',
         'font_interline_spacing', 'font_interword_spacing', 'font_kerning',
         'font_size', 'font_vertical_shift', 'add_bounding_box',
-        'box_adjustments', 'box_color', 'darken', 'shadow_color',
+        'box_adjustments', 'box_color', 'box_width', 'darken', 'shadow_color',
     )
 
     def __init__(self,
@@ -84,6 +86,7 @@ class LandscapeTitleCard(BaseCardType):
             add_bounding_box: bool = True,
             box_adjustments: Optional[str] = None,
             box_color: str = TITLE_COLOR,
+            box_width: int = BOX_WIDTH,
             darken: DarkenOption = 'box',
             shadow_color: str = SHADOW_COLOR,
             preferences: Optional['PreferenceParser'] = None,
@@ -126,6 +129,7 @@ class LandscapeTitleCard(BaseCardType):
         # Parse box extras
         self.box_color = box_color
         self.box_adjustments = (0, 0, 0, 0)
+        self.box_width = box_width
         self.shadow_color = shadow_color
         if box_adjustments:
             # Verify adjustments are properly provided
@@ -265,7 +269,7 @@ class LandscapeTitleCard(BaseCardType):
                 f'-size {self.TITLE_CARD_SIZE}',
                 f'xc:None',
                 f'-fill transparent',
-                f'-strokewidth 10',
+                f'-strokewidth {self.box_width}',
                 f'-stroke "{self.box_color}"',
                 f'-draw "rectangle {x_start},{y_start},{x_end},{y_end}"',
             ],
