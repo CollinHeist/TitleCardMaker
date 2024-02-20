@@ -63,7 +63,7 @@ class TintedGlassTitleCard(BaseCardType):
         'hide_episode_text', 'font_file', 'font_size', 'font_color',
         'font_interline_spacing', 'font_interword_spacing', 'font_kerning',
         'font_vertical_shift', 'episode_text_color', 'episode_text_position',
-        'box_adjustments', 'glass_color',
+        'box_adjustments', 'glass_color', 'vertical_adjustment',
     )
 
     def __init__(self,
@@ -86,6 +86,7 @@ class TintedGlassTitleCard(BaseCardType):
             box_adjustments: Optional[str] = None,
             glass_color: str = DARKEN_COLOR,
             preferences: Optional['Preferences'] = None, # type: ignore
+            vertical_adjustment: int = 0,
             **unused,
         ) -> None:
 
@@ -137,6 +138,7 @@ class TintedGlassTitleCard(BaseCardType):
                 self.box_adjustments = (0, 0, 0, 0)
                 self.valid = False
         self.glass_color = glass_color
+        self.vertical_adjustment = vertical_adjustment - 50
 
 
     def blur_rectangle_command(self,
@@ -181,7 +183,7 @@ class TintedGlassTitleCard(BaseCardType):
 
 
     @property
-    def add_title_text_command(self) -> ImageMagickCommands:
+    def title_text_commands(self) -> ImageMagickCommands:
         """
         Get the ImageMagick commands necessary to add the title text
         described by this card.
@@ -191,7 +193,8 @@ class TintedGlassTitleCard(BaseCardType):
         kerning = -5 * self.font_kerning
         interline_spacing = -50 + self.font_interline_spacing
         interword_spacing = 40 + self.font_interword_spacing
-        vertical_shift = 300 + self.font_vertical_shift
+        vertical_shift = 300 + self.font_vertical_shift \
+            + self.vertical_adjustment
 
         return [
             f'-gravity south',
@@ -215,7 +218,7 @@ class TintedGlassTitleCard(BaseCardType):
 
         # Get dimensions of text - since text is stacked, do max/sum operations
         width, height = self.get_text_dimensions(
-            self.add_title_text_command, width='max', height='sum'
+            self.title_text_commands, width='max', height='sum'
         )
 
         # Get start coordinates of the bounding box
@@ -228,8 +231,8 @@ class TintedGlassTitleCard(BaseCardType):
         y_start += 12
 
         # Shift y coordinates by vertical shift
-        y_start -= self.font_vertical_shift
-        y_end -= self.font_vertical_shift
+        y_start -= self.font_vertical_shift + self.vertical_adjustment
+        y_end -= self.font_vertical_shift + self.vertical_adjustment
 
         # Adjust upper bounds of box if title is multi-line
         y_start += (65 * (self.__line_count-1)) if self.__line_count > 1 else 0
@@ -264,13 +267,15 @@ class TintedGlassTitleCard(BaseCardType):
         # Determine text position
         if self.episode_text_position == 'center':
             gravity = 'south'
-            position = '+0+150'
+            x, y = 0, 150
         elif self.episode_text_position == 'left':
             gravity = 'southwest'
-            position = f'+{title_coordinates.x0+30}+150'
+            x, y = title_coordinates.x0 + 30, 150
         elif self.episode_text_position == 'right':
             gravity = 'southeast'
-            position = f'+{self.WIDTH-(title_coordinates.x1-20)}+150'
+            x, y = self.WIDTH - title_coordinates.x1 - 20, 150
+        y += self.vertical_adjustment
+        position = f'{x:+.1f}{y:+.1f}'
 
         command = [
             f'-gravity {gravity}',
@@ -303,6 +308,9 @@ class TintedGlassTitleCard(BaseCardType):
 
         # Additional y offset necessary for equal padding
         y_start, y_end = y_start - 7, y_end + 10
+
+        y_start -= self.vertical_adjustment
+        y_end -= self.vertical_adjustment
 
         coordinates = BoxCoordinates(x_start, y_start, x_end, y_end)
 
@@ -414,7 +422,7 @@ class TintedGlassTitleCard(BaseCardType):
             # Blur area behind title text
             *self.blur_rectangle_command(title_box_coordinates, 40),
             # Add title text
-            *self.add_title_text_command,
+            *self.title_text_commands,
             # Add episode text
             *self.add_episode_text_command(title_box_coordinates),
             # Create card
