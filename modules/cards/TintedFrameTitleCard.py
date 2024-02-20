@@ -50,7 +50,7 @@ class TintedFrameTitleCard(BaseCardType):
 
     """Implementation details"""
     BOX_OFFSET = 185
-    BOX_WIDTH = 3
+    BOX_WIDTH = 5
     SHADOW_COLOR = 'black'
 
 
