@@ -23,7 +23,7 @@ class BannerTitleCard(BaseCardType):
     TITLE_CHARACTERISTICS = {
         'max_line_width': 19,
         'max_line_count': 3,
-        'top_heavy': False,
+        'top_heavy': 'forced even',
     }
 
     """Characteristics of the default title font"""
