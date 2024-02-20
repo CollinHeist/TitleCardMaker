@@ -128,10 +128,8 @@ class FormulaOneTitleCard(BaseCardType):
 
     """Implementation details"""
     DARKEN_COLOR = 'rgba(0,0,0,0.5)'
-    _FRAMES = {
-        2023: REF_DIRECTORY / 'frame_2023.png',
-        2024: REF_DIRECTORY / 'frame_2024.png',
-    }
+    FRAME = REF_DIRECTORY / 'frame.png'
+    FRAME_FONT = REF_DIRECTORY / 'Formula1-Numbers.otf'
     _COUNTRY_FLAGS = {
         'ABU DHABI': REF_DIRECTORY / 'uae.webp',
         'AUSTRALIAN': REF_DIRECTORY / 'australia.webp',
@@ -166,7 +164,7 @@ class FormulaOneTitleCard(BaseCardType):
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
         'font_interline_spacing', 'font_interword_spacing', 'font_file',
         'font_kerning', 'font_size', 'font_vertical_shift', 'country',
-        'episode_text_color', 'episode_text_font_size', 'frame', 'race',
+        'episode_text_color', 'episode_text_font_size', 'race', 'year',
     )
 
 
@@ -191,8 +189,8 @@ class FormulaOneTitleCard(BaseCardType):
             episode_text_color: str = TITLE_COLOR,
             episode_text_font_size: float = 1.0,
             flag: Optional[Path] = None,
-            frame_year: int = 2024,
             race: str = 'GRAND PRIX',
+            year: int = 2024,
             preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
@@ -227,10 +225,10 @@ class FormulaOneTitleCard(BaseCardType):
             )
         else:
             self.country = flag
-        self.frame = self._FRAMES[frame_year]
         self.episode_text_color = episode_text_color
         self.episode_text_font_size = episode_text_font_size
         self.race = race
+        self.year = year
 
 
     @property
@@ -247,7 +245,7 @@ class FormulaOneTitleCard(BaseCardType):
             f'xc:"{self.DARKEN_COLOR}"',
             f'\) -composite',
             # Add frame
-            f'"{self.frame.resolve()}"',
+            f'"{self.FRAME.resolve()}"',
             f'-composite',
             # Add country banner
             f'"{self.country.resolve()}"',
@@ -331,6 +329,21 @@ class FormulaOneTitleCard(BaseCardType):
             f'-pointsize {82 * self.episode_text_font_size}',
             f'-annotate +0+275',
             f'"{self.episode_text}"',
+        ]
+
+
+    @property
+    def year_commands(self) -> ImageMagickCommands:
+        """Subcommands to add the race year to the image."""
+
+        return [
+            f'-gravity southeast',
+            f'-font "{self.FRAME_FONT.resolve()}"',
+            f'-fill white',
+            f'-kerning -10',
+            f'-pointsize 165',
+            f'-annotate +1915+625 "{self.year}"',
+            f'+kerning',
         ]
 
 
@@ -426,6 +439,7 @@ class FormulaOneTitleCard(BaseCardType):
             *self.episode_text_commands,
             *self.season_text_commands,
             *self.title_text_commands,
+            *self.year_commands,
 
             # Attempt to overlay mask
             *self.add_overlay_mask(self.source_file),
