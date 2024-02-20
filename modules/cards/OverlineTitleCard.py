@@ -46,7 +46,7 @@ class OverlineTitleCard(BaseCardType):
     ARCHIVE_NAME = 'Overline Style'
 
     """How thick the line is (in pixels)"""
-    LINE_THICKNESS = 7
+    LINE_THICKNESS = 9
 
     """Gradient to overlay"""
     GRADIENT_IMAGE = REF_DIRECTORY / 'small_gradient.png'
