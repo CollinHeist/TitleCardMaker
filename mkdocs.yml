@@ -102,8 +102,8 @@ extra:
 extra_css:
   - stylesheets/extra.css
 
-extra_javascript:
-  - javascripts/imageCompare.js
+# extra_javascript:
+#   - javascripts/imageCompare.js
   # - javascripts/fonts.js
   # - javascripts/home.js
 
