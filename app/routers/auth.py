@@ -15,7 +15,7 @@ from app.models.preferences import Preferences
 from app.schemas.auth import NewUser, Token, UpdateUser, User
 
 
-EXPIRATION_TIME = timedelta(days=2) # timedelta(days=14)
+EXPIRATION_TIME = timedelta(days=7)
 
 
 # Create sub router for all /auth API requests
