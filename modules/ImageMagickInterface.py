@@ -242,6 +242,7 @@ class ImageMagickInterface:
     def get_text_dimensions(self,
             text_command: list[str],
             *,
+            density: Optional[int] = None,
             width: Literal['sum', 'max'] = 'max',
             height: Literal['sum', 'max'] = 'sum',
         ) -> Dimensions:
@@ -263,6 +264,7 @@ class ImageMagickInterface:
         Args:
             text_command: ImageMagick commands that produce text(s) to
                 measure.
+            density: Density of the image.
             width: How to process the width of the produced text(s).
             height: How to process the height of the produced text(s).
 
@@ -277,6 +279,7 @@ class ImageMagickInterface:
         text_command = ' '.join([
             f'convert',
             f'-debug annotate',
+            f'-density {density}' if density else '',
             f'' if '-annotate ' in ' '.join(text_command) else f'xc: ',
             *text_command,
             f'null: 2>&1',

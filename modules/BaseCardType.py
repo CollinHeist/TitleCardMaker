@@ -168,6 +168,12 @@ class Rectangle:
         self.end = end
 
 
+    def __repr__(self) -> str:
+        """Unambigious representation of this object."""
+
+        return f'Rectangle({self.start!r}, {self.end!r})'
+
+
     def __str__(self) -> str:
         """
         Represent this Rectangle as a string. This is the joined string
@@ -175,6 +181,19 @@ class Rectangle:
         """
 
         return f'{str(self.start)},{str(self.end)}'
+
+
+    @property
+    def width(self) -> float:
+        """Width of this Rectangle."""
+
+        return abs(self.start.x - self.end.x)
+
+    @property
+    def height(self) -> float:
+        """Height of this Rectangle."""
+
+        return abs(self.start.y - self.end.y)
 
 
     def draw(self) -> str:
@@ -383,9 +402,10 @@ class BaseCardType(ImageMaker):
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        attributes = ', '.join(f'{attr}={getattr(self, attr)!r}'
-                               for attr in self.__slots__
-                               if not attr.startswith('__'))
+        attributes = ', '.join(
+            f'{attr}={getattr(self, attr)!r}' for attr in self.__slots__
+            if not attr.startswith('__')
+        )
 
         return f'<{self.__class__.__name__} {attributes}>'
 
@@ -420,6 +440,7 @@ class BaseCardType(ImageMaker):
         Returns:
             True if a custom font is indicated, False otherwise.
         """
+
         raise NotImplementedError
 
 
@@ -436,6 +457,7 @@ class BaseCardType(ImageMaker):
         Returns:
             True if a custom season title is indicated, False otherwise.
         """
+
         raise NotImplementedError
 
 

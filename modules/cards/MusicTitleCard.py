@@ -321,6 +321,22 @@ class MusicTitleCard(BaseCardType):
     )
 
 
+    @staticmethod
+    def SEASON_TEXT_FORMATTER(episode_info: EpisodeInfo) -> str:
+        """
+        Fallback season title formatter.
+
+        Args:
+            episode_info: Info of the Episode whose season text is being
+                determined.
+
+        Returns:
+            `S{x}` for the given season number.
+        """
+
+        return f'S{episode_info.season_number}'
+
+
     def __init__(self, *,
             source_file: Path,
             card_file: Path,
@@ -409,22 +425,6 @@ class MusicTitleCard(BaseCardType):
         self.__season_x: Optional[float] = None
         self.__episode_x: Optional[float] = None
         self.__cleanup: list[Path] = []
-
-
-    @staticmethod
-    def SEASON_TEXT_FORMATTER(episode_info: EpisodeInfo) -> str:
-        """
-        Fallback season title formatter.
-
-        Args:
-            episode_info: Info of the Episode whose season text is being
-                determined.
-
-        Returns:
-            `S{x}` for the given season number.
-        """
-
-        return f'S{episode_info.season_number}'
 
 
     @property
