@@ -182,9 +182,13 @@ def download_series_poster(
     series_info, poster = series.as_series_info, None
     for library in series.libraries:
         if (interface := get_interface(library['interface_id'])):
-            poster = interface.get_series_poster(
-                library['name'], series_info, log=log
-            )
+            try:
+                poster = interface.get_series_poster(
+                    library['name'], series_info, log=log
+                )
+            except Exception:
+                log.exception(f'Error downloading poster')
+                continue
 
         # Stop if poster was found
         if poster is not None:
@@ -243,6 +247,7 @@ def process_series(
         db: Database connection.
         series: Series being processed.
         background_tasks: BackgroundTasks to queue processing into.
+        log: Logger for all log messages.
     """
 
     # Begin processing the Series
@@ -712,6 +717,7 @@ def lookup_series(
     Args:
         db: Database to query for whether the Series exists or not.
         interface: Interface to query for results.
+        name: Name of the Series being looked up.
         max_results: Maximum number of results to return.
         log: Logger for all log messages.
 
