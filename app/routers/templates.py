@@ -6,10 +6,11 @@ from sqlalchemy.orm import Session
 
 from app.database.query import get_font, get_template
 from app.database.session import Page
-from app.dependencies import get_database
+from app.dependencies import get_database, get_preferences
 from app.internal.auth import get_current_user
 from app.internal.cards import refresh_remote_card_types
-from app import models
+from app.models.preferences import Preferences
+from app.models.template import Template as TemplateModel
 from app.schemas.base import UNSPECIFIED
 from app.schemas.series import NewTemplate, Template, UpdateTemplate
 
@@ -37,7 +38,7 @@ def create_template(
     # Validate font ID if provided
     get_font(db, new_template.font_id, raise_exc=True)
 
-    template = models.template.Template(**new_template.dict())
+    template = TemplateModel(**new_template.dict())
     db.add(template)
     db.commit()
 
@@ -58,11 +59,11 @@ def get_all_templates(
     - order: How to order the returned Templates.
     """
 
-    query = db.query(models.template.Template)
+    query = db.query(TemplateModel)
     if order == 'id':
         return paginate(query.all())
 
-    return paginate(query.order_by(models.template.Template.sort_name).all())
+    return paginate(query.order_by(TemplateModel.sort_name).all())
 
 
 @template_router.get('/{template_id}', status_code=200)
@@ -125,6 +126,7 @@ def update_template_(
 def delete_template(
         template_id: int,
         db: Session = Depends(get_database),
+        preferences: Preferences = Depends(get_preferences),
     ) -> None:
     """
     Delete the specified Template.
@@ -135,6 +137,13 @@ def delete_template(
     # Query for Template, raise 404 if DNE
     get_template(db, template_id, raise_exc=True)
 
-    # Delete Template, update database
+    # Delete from global template list, if present
+    if template_id in preferences.default_templates:
+        preferences.default_templates = [
+            tid for tid in preferences.default_templates if tid != template_id
+        ]
+        preferences.commit()
+
+    # Delete Template from database
     db.delete(get_template(db, template_id, raise_exc=True))
     db.commit()
