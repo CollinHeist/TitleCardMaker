@@ -702,7 +702,7 @@ class TintedFrameCardType(BaseCardTypeAllText):
     font_vertical_shift: int = 0
     separator: str = '-'
     episode_text_color: Optional[BetterColor] = None
-    episode_text_font: FilePath = TintedFrameTitleCard.EPISODE_TEXT_FONT
+    episode_text_font: Path = TintedFrameTitleCard.EPISODE_TEXT_FONT
     episode_text_font_size: PositiveFloat = 1.0
     episode_text_vertical_shift: int = 0
     frame_color: Optional[BetterColor] = None
@@ -722,6 +722,8 @@ class TintedFrameCardType(BaseCardTypeAllText):
         if isinstance(etf, Path) and not etf.exists():
             if (new_etf := values['source_file'].parent / etf.name).exists():
                 values['episode_text_font'] = new_etf
+        if not Path(values['episode_text_font']).exists():
+            raise ValueError(f'Specified Episode Text Font does not exist')
 
         return values
 
