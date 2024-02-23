@@ -228,6 +228,7 @@ nav:
     #   - Logo: card_types/local/logo.md
     #   - Olivier: card_types/local/olivier.md
       - Music: card_types/music.md
+      - Notification: card_types/notification.md
     #   - Poster: card_types/local/poster.md
     #   - Roman Numeral: card_types/local/roman_numeral.md
     #   - Standard: card_types/local/standard.md

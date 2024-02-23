@@ -44,10 +44,11 @@ Local
 
 TitleCardMaker currently has the following built-in card types:
 
-| Card Type | Preview |
-| :-------: | :-----: |
-| [Anime](./anime.md) | <img src="./assets/anime.webp" width="300"> |
-| [Music](./music.md) | <img src="./assets/music.webp" width="300"> |
+| Card Type                         | Preview                                            |
+| :-------------------------------: | :------------------------------------------------: |
+| [Anime](./anime.md)               | <img src="./assets/anime.webp" width="400">        |
+| [Music](./music.md)               | <img src="./assets/music.webp" width="400">        |
+| [Notification](./notification.md) | <img src="./assets/notification.webp" width="400"> |
 
 ## User-made Cards
 

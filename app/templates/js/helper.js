@@ -171,11 +171,11 @@ function showInfoToast(args) {
 /**
  * Get the list of template values (for a $.dropdown) based on the given
  * IDs.
- * @param {Array<int>} activeIds - Template IDs which are active and to include
+ * @param {int[]} activeIds - Template IDs which are active and to include
  * in the return.
- * @param {Array<Object>} availableTemplates - List of all the available
+ * @param {Object[]} availableTemplates - List of all the available
  * Template objects which should be filtered.
- * @returns {Array<DropdownValue>} List of values which can be used in the 
+ * @returns {DropdownValue[]} List of values which can be used in the 
  * dropdown initialization for the given Template IDs.
  */
 function getActiveTemplates(activeIds, availableTemplates) {
@@ -308,6 +308,11 @@ function initializeNullableBoolean(args) {
   });
 }
 
+/**
+ * Download a text file of the given data to the browser.
+ * @param {string} filename - Name of the file to download as.
+ * @param {string} text - Text to download.
+ */
 function downloadTextFile(filename, text) {
   // Create download element, add to document
   var element = document.createElement('a');
@@ -360,11 +365,11 @@ async function downloadFileBlob(filename, blob) {
 /** @type {Extra[]} */
 let allExtras;
 
+let cardTypeSet, cardTypes;
 /**
  * Submit an API request to get all the available extras and populate the
  * allExtras, cardTypeSet, and cardTypes variables.
  */
-let cardTypeSet, cardTypes;
 async function queryAvailableExtras() {
   if (allExtras === undefined) {
     allExtras = await fetch('/api/available/extras').then(resp => resp.json());
@@ -375,10 +380,10 @@ async function queryAvailableExtras() {
   }
 }
 
+let popups = {};
 /**
  * Initialize the extra key dropdowns with all available options.
  */
-let popups = {};
 async function initializeExtraDropdowns(
     value,
     dropdownElements,
@@ -609,7 +614,6 @@ function timeDiffString(previousRun) {
 
 /**
  * Convert a string to title case.
- * 
  * @param {string} str - The input string to convert to title case.
  * @returns {string} The input string converted to title case.
  * 
