@@ -528,6 +528,10 @@ def delete_connection(
             log=log,
         )
         log.info(f'Deleted {len(deleted)} Title Cards')
+    else:
+        loaded = db.query(Loaded).filter_by(interface_id=interface_id)
+        log.info(f'Deleted {loaded.count()} Loaded records')
+        loaded.delete()
 
     # Delete Connection
     db.delete(connection)
