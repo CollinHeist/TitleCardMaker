@@ -54,6 +54,8 @@ theme:
     # Add "edit" and "view" docs actions
     # - content.action.edit
     # - content.action.view
+    # Only render visible nav items
+    - navigation.prune # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#navigation-pruning
   font:
     text: Roboto
     code: Roboto Mono
