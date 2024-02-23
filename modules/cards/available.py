@@ -13,6 +13,7 @@ from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
 from modules.cards.MarvelTitleCard import MarvelTitleCard
 from modules.cards.MusicTitleCard import MusicTitleCard
+from modules.cards.NotificationTitleCard import NotificationTitleCard
 from modules.cards.OlivierTitleCard import OlivierTitleCard
 from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
@@ -41,6 +42,7 @@ LocalCards = [
     LogoTitleCard.API_DETAILS,
     MarvelTitleCard.API_DETAILS,
     MusicTitleCard.API_DETAILS,
+    NotificationTitleCard.API_DETAILS,
     OlivierTitleCard.API_DETAILS,
     OverlineTitleCard.API_DETAILS,
     PosterTitleCard.API_DETAILS,

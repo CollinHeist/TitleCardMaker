@@ -33,6 +33,7 @@ from modules.cards.MarvelTitleCard import MarvelTitleCard
 from modules.cards.MusicTitleCard import (
     MusicTitleCard, PlayerAction, PlayerPosition, PlayerStyle,
 )
+from modules.cards.NotificationTitleCard import NotificationTitleCard
 from modules.cards.OlivierTitleCard import OlivierTitleCard
 from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
@@ -49,10 +50,10 @@ from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 LocalCardIdentifiers = Literal[
     'anime', 'banner', 'calligraphy', 'comic book', 'cutout', 'divider', 'fade',
     'formula 1', 'frame', 'generic', 'graph', 'gundam', 'inset', 'ishalioh',
-    'landscape', 'logo', 'marvel', 'music', 'musikmann', 'olivier', 'phendrena',
-    'photo', 'polymath', 'poster', 'reality tv', 'roman', 'roman numeral',
-    'shape', 'sherlock', 'standard', 'star wars', 'textless', 'tinted glass',
-    '4x3', 'white border',
+    'landscape', 'logo', 'marvel', 'music', 'musikmann', 'notification',
+    'olivier', 'phendrena', 'photo', 'polymath', 'poster', 'reality tv',
+    'roman', 'roman numeral', 'shape', 'sherlock', 'standard', 'star wars',
+    'textless', 'tinted glass', '4x3', 'white border',
 ]
 
 """
@@ -519,6 +520,29 @@ class MusicCardType(BaseCardTypeCustomFontAllText):
 
         return values
 
+class NotificationCardType(BaseCardTypeCustomFontAllText):
+    season_text: str
+    episode_text: str
+    font_color: str = NotificationTitleCard.TITLE_COLOR
+    font_file: FilePath = NotificationTitleCard.TITLE_FONT
+    edge_color: Optional[str] = None
+    edge_width: conint(ge=0) = NotificationTitleCard.EDGE_WIDTH
+    episode_text_color: Optional[str] = None
+    episode_text_font_size: PositiveFloat = 1.0
+    episode_text_vertical_shift: int = 0
+    glass_color: str = NotificationTitleCard.GLASS_COLOR
+    position: Literal['left', 'right'] = 'right'
+    separator: str = '-'
+
+    @root_validator(skip_on_failure=True)
+    def assign_unassigned_color(cls, values: dict) -> dict:
+        if values['edge_color'] is None:
+            values['edge_color'] = values['font_color']
+        if values['episode_text_color'] is None:
+            values['episode_text_color'] = values['font_color']
+
+        return values
+
 class OlivierCardType(BaseCardTypeCustomFontNoText):
     title_text: str
     episode_text: constr(to_upper=True)
@@ -779,6 +803,7 @@ LocalCardTypeModels: dict[str, Base] = {
     'marvel': MarvelCardType,
     'music': MusicCardType,
     'musikmann': WhiteBorderCardType,
+    'notification': NotificationCardType,
     'olivier': OlivierCardType,
     'overline': OverlineCardType,
     'phendrena': CutoutCardType,

@@ -26,6 +26,7 @@ from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
 from modules.cards.MarvelTitleCard import MarvelTitleCard
 from modules.cards.MusicTitleCard import MusicTitleCard
+from modules.cards.NotificationTitleCard import NotificationTitleCard
 from modules.cards.OlivierTitleCard import OlivierTitleCard
 from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
@@ -96,6 +97,7 @@ class TitleCard:
         'marvel': MarvelTitleCard,
         'music': MusicTitleCard,
         'musikmann': WhiteBorderTitleCard,
+        'notification': NotificationTitleCard,
         'olivier': OlivierTitleCard,
         'overline': OverlineTitleCard,
         'phendrena': CutoutTitleCard,
