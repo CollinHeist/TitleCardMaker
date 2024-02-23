@@ -145,7 +145,7 @@ def clean_database(*, log: Logger = log) -> None:
             # Delete Episodes with no Series ID, or Series
             for episode in db.query(Episode).all():
                 if episode.series_id is None or episode.series is None:
-                    log.debug(f'Deleting unlinked Episode{episode.id}')
+                    log.debug(f'Deleting unlinked Episode {episode.id}')
                     db.delete(episode)
             db.commit()
 

@@ -86,6 +86,7 @@ def wrap_scheduled_function(job_id: str) -> Callable[[Optional[Logger]], None]:
             log.info(f'Task[{job_id}] Finished execution')
             BaseJobs[job_id].previous_end_time = datetime.now()
             BaseJobs[job_id].running = False
+            return None
         return wrapper
     return decorator
 
@@ -241,6 +242,7 @@ def initialize_scheduler(override: bool = False) -> None:
     """
 
     scheduler, preferences = get_scheduler(), get_preferences()
+    log.debug(f'Initializing Scheduler..')
 
     # Schedule all defined Jobs
     changed = False
