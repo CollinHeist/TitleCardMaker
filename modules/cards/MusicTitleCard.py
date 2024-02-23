@@ -457,7 +457,7 @@ class MusicTitleCard(BaseCardType):
             f'-interword-spacing {self.font_interword_spacing}',
             f'-kerning {1 * self.font_kerning}',
             f'-gravity southwest',
-            f'-annotate +{x}+{y} "{self.title_text}"',
+            f'-annotate {x:+}{y:+} "{self.title_text}"',
         ]
 
 
@@ -509,7 +509,7 @@ class MusicTitleCard(BaseCardType):
             f'-interline-spacing 0',
             f'-interword-spacing 0',
             f'-gravity southwest',
-            f'-annotate +{x}+{y} "{self.subtitle}"',
+            f'-annotate {x:+}{y:+} "{self.subtitle}"',
         ]
 
 

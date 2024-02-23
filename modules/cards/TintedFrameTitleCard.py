@@ -58,7 +58,7 @@ class TintedFrameTitleCard(BaseCardType):
                 identifier='episode_text_vertical_shift',
                 description=(
                     'Additional vertical shift to apply to the season and '
-                    'episode text'
+                    'episode text. Default is <v>0</v>.'
                 ),
             ),
             Extra(
@@ -156,9 +156,9 @@ class TintedFrameTitleCard(BaseCardType):
         description=[
             'Title card featuring a rectangular frame with blurred content on '
             'the outside of the frame, and unblurred content within.', 'The '
-            'frame and all text can be recolored via extras.', 'The top, '
-            'bottom, and middle of the frame can also be optionally '
-            'intersected by title text, index text, and/or a logo.',
+            'frame and all text can be recolored via extras.', 'Which type of '
+            'content is displayed in the top, middle, and bottom of the frame '
+            'can also be adjusted independently.',
         ]
     )
 

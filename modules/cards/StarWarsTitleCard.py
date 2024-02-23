@@ -18,11 +18,10 @@ class StarWarsTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    # pylint: disable=line-too-long
     API_DETAILS = CardDescription(
         name='Star Wars',
         identifier='star wars',
-        example='/internal_assets/cards/star wars.jpg',
+        example='/internal_assets/cards/star wars.webp',
         creators=['/u/Olivier_286', 'CollinHeist'],
         source='builtin',
         supports_custom_fonts=True,
@@ -35,13 +34,12 @@ class StarWarsTitleCard(BaseCardType):
                 tooltip='Default is <c>#AB8630</c>.'
             ),
         ], description=[
-            'Title cards intended for Star Wars (or more generically Space-'
-            'themed) shows.', 'Similar to the Olivier title card, these cards '
-            'feature left-aligned title and episode text', 'A star-filled '
-            'gradient overlay is applied to the Source Image.',
+            'Title cards intended for Star Wars (or really any space-themed) '
+            'shows.', 'Similar to the Olivier title card, these cards feature '
+            'left-aligned title and episode text', 'A star-filled gradient '
+            'overlay is applied to the Source Image.',
         ]
     )
-    # pylint: enable=line-too-long
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'star_wars'
