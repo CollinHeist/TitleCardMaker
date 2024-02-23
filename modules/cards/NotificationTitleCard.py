@@ -83,12 +83,12 @@ class NotificationTitleCard(BaseCardType):
                 description=(
                     'Character that separates the season and episode text'
                 ),
-                tooltip='Default is <v>/</v>.'
+                tooltip='Default is <v>-</v>.'
             ),
         ],
         description=[
-            'Card type featuring a compact rectangular frame, styled to '
-            'resemble a notification prompt.', 'The frame can be resized, '
+            'Card type featuring two compact rectangular frames, styled to '
+            'resemble a notification prompt.', 'These frames can be resized, '
             'positioned, and colored with extras.'
         ],
     )
@@ -246,12 +246,14 @@ class NotificationTitleCard(BaseCardType):
             text = f'{self.season_text} {self.separator} {self.episode_text}'
 
         gravity = 'southwest' if self.position == 'left' else 'southeast'
+        y = self._INDEX_TEXT_Y_OFFSET + self.episode_text_vertical_shift
+
         return [
             f'-gravity {gravity}',
             f'-pointsize {40 * self.episode_text_font_size}',
             f'-fill "{self.episode_text_color}"',
             f'-font "{self.TITLE_FONT}"',
-            f'-annotate {self._TEXT_X_OFFSET:+}{self._INDEX_TEXT_Y_OFFSET:+}',
+            f'-annotate {self._TEXT_X_OFFSET:+}{y:+}',
             f'"{text}"',
         ]
 
