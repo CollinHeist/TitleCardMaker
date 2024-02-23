@@ -75,6 +75,19 @@ span.color.circle {
   /* Add space between color bubble and name */
   margin-left: 4px;
 }
+/* Palette colors are styled separately */
+.color.palette > span.color {
+  /* --color: transparent; */
+  width: 45px; /* 35px; */
+  height: 85px; /* 75px; */
+  display: inline-block;
+  background-color: var(--color, transparent);
+  /* border: 0.5px dashed var(--alt-color, white); */
+  /* Add spacing */
+  margin-left: 4px;
+  /* Round edges of palette swatches */
+  border-radius: 0.4rem;
+}
 
 /* Header element alignment */
 #page-header {

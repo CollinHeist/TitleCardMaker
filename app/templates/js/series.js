@@ -1460,7 +1460,9 @@ function downloadSeriesLogo(url) {
     success: () => {
       showInfoToast('Downloaded Logo');
       // Update logo source to force refresh
-      document.querySelector('#logo').src = `/source/{{series.path_safe_name}}/logo.png?${new Date().getTime()}`;
+      logo = document.getElementById('logo');
+      logo.src = `/source/{{series.path_safe_name}}/logo.png?${new Date().getTime()}`;
+      logo.style.display = 'unset';
     },
     error: response => showErrorToast({title: 'Error Downloading Logo', response}),
   });
@@ -1486,7 +1488,9 @@ function downloadSeriesBackdrop(url) {
     processData: false,
     success: () => {
       showInfoToast('Downloaded Backdrop');
-      document.querySelector('#backdrop').src = `/source/{{series.path_safe_name}}/backdrop.jpg?${new Date().getTime()}`;
+      const backdrop = document.getElementById('backdrop');
+      backdrop.src = `/source/{{series.path_safe_name}}/backdrop.jpg?${new Date().getTime()}`;
+      backdrop.style.display = 'unset';
     },
     error: response => showErrorToast({title: 'Error Downloading Backdrop', response}),
   });
@@ -1650,7 +1654,9 @@ function uploadLogo() {
     processData: false,
     success: () => {
       showInfoToast('Updated Logo');
-      document.querySelector('#logo').src = `/source/{{series.path_safe_name}}/logo.png?${new Date().getTime()}`;
+      const logo = document.querySelector('#logo');
+      logo.src = `/source/{{series.path_safe_name}}/logo.png?${new Date().getTime()}`;
+      logo.style.display = 'unset';
     },
     error: response => showErrorToast({title: 'Error Updating Logo', response}),
   });
@@ -1686,7 +1692,9 @@ function uploadBackdrop() {
     processData: false,
     success: () => {
       showInfoToast('Updated Backdrop');
-      document.querySelector('#backdrop').src = `/source/{{series.path_safe_name}}/backdrop.jpg?${new Date().getTime()}`;
+      const backdrop = document.getElementById('backdrop');
+      backdrop.src = `/source/{{series.path_safe_name}}/backdrop.jpg?${new Date().getTime()}`;
+      backdrop.style.display = 'unset';
     },
     error: response => showErrorToast({title: 'Error Updating Backdrop', response}),
   });

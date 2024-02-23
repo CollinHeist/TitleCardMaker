@@ -5,6 +5,7 @@
   <title>{{series.name}} - TitleCardMaker</title>
 
   {% include "./html_boilerplate.html" %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
 
   <script type="text/javascript">
     {% include "./js/series.js" %}
@@ -1069,7 +1070,12 @@
             <label for="logo-upload" class="ui green tertiary button">
               Upload
             </label>
-            <img id="logo" class="ui rounded image" src="/source/{{series.path_safe_name}}/logo.png" loading="lazy" onerror="this.remove();">
+            <img id="logo" class="ui rounded image" src="/source/{{series.path_safe_name}}/logo.png" loading="lazy" onerror="this.style.display='none';">
+            
+            <div class="ui yellow tertiary button" onclick="analyzePalette('#logo', '#logo-palette');">
+              Analyze Palette
+            </div>
+            <div class="color palette" id="logo-palette"></div>
 
             <!-- Backdrop -->
             <h2 class="ui dividing header">Backdrop</h2>
@@ -1082,7 +1088,13 @@
             <label for="backdrop-upload" class="ui green tertiary button">
               Upload
             </label>
-            <img id="backdrop" class="ui rounded image" src="/source/{{series.path_safe_name}}/backdrop.jpg" loading="lazy" onerror="this.remove()">
+            <img id="backdrop" class="ui rounded image" src="/source/{{series.path_safe_name}}/backdrop.jpg" loading="lazy" onerror="this.style.display='none';">
+            
+            <div class="ui yellow tertiary button" onclick="analyzePalette('#backdrop', '#backdrop-palette');">
+              Analyze Palette
+            </div>
+            <div class="color palette" id="backdrop-palette"></div>
+
             <div class="ui visible floating info message">
               <i class="info circle icon"></i>
               The Backdrop is automatically used as the source image for any <b>Art</b> styles.

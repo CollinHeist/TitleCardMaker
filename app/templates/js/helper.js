@@ -148,7 +148,7 @@ function showErrorToast({title, message, response, displayTime=7500}) {
 
 /**
  * Show an error toast. Equivalent to `$.toast({class: 'blue info', ...args})`
- * @param {string|Object} args - Toast title or arguments
+ * @param {string | Object} args - Toast title or arguments
  * @param {string} [args.title] - Title of the toast.
  * @param {string} [args.message] - Message of the toast - only displayed if
  * args.response is undefined.
@@ -715,4 +715,71 @@ async function initializeExtras(
   // Initialize tabs
   $(`${sectionQuerySelector} .item`).tab();
   // $(`${sectionQuerySelector} .item`).tab('change tab', activeTab);
+}
+
+/**
+ * Determine whether the given color definition is "light".
+ * @param {number} r - Red value of the color.
+ * @param {number} g - Green value of the color.
+ * @param {number} b - Blue value of the color.
+ * @returns {boolean} `true` if the color is light, `false` otherwise.
+ */
+const isLightColor = (r, g, b) => (r * 0.299) + (g * 0.587) + (b * 0.114) < 186;
+
+/** @type {set[string]} */
+const _analyzedImages = new Set();
+
+/**
+ * Analyze the palette of the given image, populating the palette object with
+ * color swatches from the analysis.
+ * @param {string} imageElementSelector - Selector of the image element to
+ * analyze.
+ * @param {string} paletteSelector - Selector of the palette in the DOM to
+ * populate with colors.
+ */
+function analyzePalette(imageElementSelector, paletteSelector) {
+  const image = document.querySelector(imageElementSelector);
+  const palette = document.querySelector(paletteSelector);
+  // Early exit if there is no image or image
+  if (!image || !image.src || !palette || _analyzedImages.has(image.src)) { return; }
+
+  function hasDuplicatesWithinRange(subArray, seenArrays) {
+    for (const seenArray of seenArrays) {
+      if (seenArray.some(seenVal => subArray.some(subVal => Math.abs(subVal - seenVal) <= 5))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** @type {set[number, number, number]} */
+  const seen = new Set();
+
+  // Analyze image, filter out colors that are too similiar to another
+  new ColorThief().getPalette(image, 8, 12)?.filter(subArray => {
+    // return true;
+    if (hasDuplicatesWithinRange(subArray, seen)) {
+      return false;
+    } else {
+      seen.add(subArray);
+      return true;
+    }
+  }).forEach(([r, g, b]) => { // Create swatches for each indicated color
+    const bubble = document.createElement('span');
+    bubble.className = 'color';
+    bubble.style.setProperty('--color', `rgb(${r}, ${g}, ${b})`);
+    // bubble.style.setProperty('--alt-color', isLightColor(r, g, b) ? 'white' : 'black');
+    bubble.onclick = () => {
+      if (window.navigator.clipboard) {
+        window.navigator.clipboard.writeText(`rgb(${r},${g},${b})`);
+        showInfoToast('Copied to clipboard');
+      } else {
+        showInfoToast({title: `Color is "rgb(${r},${g},${b})"`, displayTime: 8000});
+      }
+    }
+    palette.appendChild(bubble);
+  });
+
+  // Add to list of analyzed images
+  _analyzedImages.add(image.src);
 }
