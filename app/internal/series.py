@@ -628,7 +628,6 @@ def load_episode_title_card(
         filesize=card.filesize,
         library_name=library_name,
     ))
-    log.debug(f'{episode} Loaded {card} into "{library_name}"')
     db.commit()
     return True
 
