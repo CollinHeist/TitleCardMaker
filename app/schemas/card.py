@@ -66,9 +66,10 @@ Creation classes
 class PreviewTitleCard(UpdateBase):
     card_type: str
     title_text: str = 'Example Title'
-    season_text: str = 'Season 1'
+    season_text: Optional[str] = None
     hide_season_text: bool = False
-    episode_text: str = 'Episode 1'
+    episode_text: Optional[str] = None
+    episode_text_format: Optional[str] = None
     hide_episode_text: bool = False
     blur: bool = False
     grayscale: bool = False
@@ -94,11 +95,11 @@ class PreviewTitleCard(UpdateBase):
         return None if v == '' else v
 
     @validator('extra_keys', 'extra_values', pre=True)
-    def validate_list(cls, v):
+    def validate_list(cls, v: Union[str, list[str]]) -> list[str]:
         return [v] if isinstance(v, str) else v
 
     @root_validator
-    def validate_paired_lists(cls, values):
+    def validate_paired_lists(cls, values: dict) -> dict:
         return validate_argument_lists_to_dict(
             values, 'extras',
             'extra_keys', 'extra_values',

@@ -69,6 +69,35 @@
  */
 
 /**
+ * @typedef {Object} PreviewTitleCard
+ * @property {string} card_type - The type of the card.
+ * @property {string} title_text - The text for the title. Default is 'Example Title'.
+ * @property {?string} season_text - The text for the season.
+ * @property {boolean} hide_season_text - Whether to hide the season text or not.
+ * @property {?string} episode_text - The text for the episode.
+ * @property {boolean} hide_episode_text - Whether to hide the episode text or not.
+ * @property {?string} episode_text_format - How to format the episode text.
+ * @property {boolean} blur - Whether to apply blur effect or not.
+ * @property {boolean} grayscale - Whether to apply grayscale effect or not.
+ * @property {boolean} watched - Whether the episode has been watched or not.
+ * @property {number} season_number - The number of the season. Default is 1.
+ * @property {number} episode_number - The number of the episode. Default is 1.
+ * @property {number} absolute_number - The absolute number of the episode. Default is 1.
+ * @property {Style} style - The style of the card.
+ * @property {?number} font_id - The ID of the Font to be used.
+ * @property {?string} font_color - The color of the font to be used.
+ * @property {?number} font_interline_spacing - The interline spacing of the font.
+ * @property {?number} font_interword_spacing - The interword spacing of the font.
+ * @property {?number} font_kerning - The kerning of the font.
+ * @property {?number} font_size - The size of the font.
+ * @property {?number} font_stroke_width - The stroke width of the font.
+ * @property {?TitleCase} font_title_case - The title case of the font.
+ * @property {?number} font_vertical_shift - The vertical shift of the font.
+ * @property {?string[]} extra_keys - The extra keys for the card.
+ * @property {?string[]} extra_values - The extra values for the card.
+ */
+
+/**
  * @typedef {Object} SourceImage
  * @property {number} episode_id
  * @property {number} season_number

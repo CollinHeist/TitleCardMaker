@@ -1,9 +1,17 @@
 {% if False %}
 import {
-  NamedFont, SeriesPage, StyleOption, Template, TemplateFilter, TemplatePage,
-  Translation
+  NamedFont, PreviewTitleCard, SeriesPage, Style, StyleOption, Template,
+  TemplateFilter, TemplatePage, Translation
 } from './.types.js';
 {% endif %}
+
+/**
+ * Parse some list value, converting empty lists to the fallback
+ * @param {Array} value - List being parsed.
+ * @param {*} fallback - Fallback object to return in case `value` is empty.
+ * @returns 
+ */
+const parseList = (value, fallback=[]) => value.length ? value : fallback;
 
 /**
  * Submit an API request to create a new Template. If successful, then all 
@@ -27,39 +35,55 @@ function addTemplate() {
   });
 }
 
-function reloadPreview(watchStatus, formElement, cardElement, imgElement) {
-  let form = new FormData(formElement);
-  let listData = {extra_keys: [], extra_values: []};
+/**
+ * 
+ * @param {"watched" | "unwatched"} watchStatus - The type of preview being
+ * generated.
+ * @param {string} templateElementId - Element ID of the template whose preview
+ * is being generated.
+ * @param {*} cardElement 
+ * @param {*} imgElement 
+ */
+function reloadPreview(watchStatus, templateElementId, cardElement, imgElement) {
+  // Determine effective style
+  /** @type {Style} */
+  const style = watchStatus === 'watched'
+    ? $(`#${templateElementId} input[name="watched_style"]`).val() || '{{preferences.default_watched_style}}'
+    : $(`#${templateElementId} input[name="unwatched_style"]`).val() || '{{preferences.default_unwatched_style}}'
+  ;
 
-  // Set style based on this preview's watched status
-  if (watchStatus === 'watched' && form.get('watched_style') === '') {
-    form.set('style', '{{preferences.default_watched_style}}');
-  } else if (watchStatus === 'unwatched' && form.get('unwatched_style') === '') {
-    form.set('style', '{{preferences.default_unwatched_style}}');
-  }
-
-  // Set blur/grayscale attribute
-  if (form.get(`${watchStatus}_style`).includes('blur') || (form.has('style') && form.get('style').includes('blur'))) {
-    form.set('blur', true);
-  }
-  if (form.get(`${watchStatus}_style`).includes('grayscale') || (form.has('style') && form.get('style').includes('grayscale'))) {
-    form.set('grayscale', true);
-  }
-  
-  for (let [key, value] of [...form.entries()]) {
-    if (key === 'extra_keys') { listData.extra_keys.push(value); }
-    if (key === 'extra_values') { listData.extra_values.push(value); }
-    if (value === '') { form.delete(key); }
-  }
-
+  // Generate preview card data
+  /** @type {PreviewTitleCard} */
   const previewCard = {
-    card_type: "{{preferences.default_card_type.lower()}}",
-    style: form.get(`${watchStatus}_style`),
-    ...Object.fromEntries(form.entries()),
-    extra_keys: listData.extra_keys,
-    extra_values: listData.extra_values,
-    watched: watchStatus === 'watched',
+    card_type: $(`#${templateElementId} input[name="card_type"]`).val() || "{{preferences.default_card_type.lower()}}",
+    // title_text:
+    // season_text: 
+    hide_season_text: $(`#${templateElementId} input[name="hide_season_text"]`).val() || false,
+    // episode_text: 
+    hide_episode_text: $(`#${templateElementId} input[name="hide_episode_text"]`).val() || false,
+    episode_text_format: $(`#${templateElementId} input[name="episode_text_format"]`).val() || null,
+    blur: style.includes('blur'),
+    grayscale: style.includes('grayscale'),
+    watched: watchStatus === 'wached',
+    style: style,
+    font_id: $(`#${templateElementId} input[name="font_id"]`).val() || null,
+    extra_keys: parseList(
+        $(`#${templateElementId} section[aria-label="extras"] input`).map(function() {
+          if ($(this).val() !== '') { 
+            return $(this).attr('name'); 
+          }
+        }).get()
+      ),
+    extra_values: parseList(
+      $(`#${templateElementId} section[aria-label="extras"] input`).map(function() {
+          if ($(this).val() !== '') {
+            return $(this).val(); 
+          }
+        }).get(),
+      ),
   };
+
+  // Submit API request
   cardElement.classList.add('loading');
   $.ajax({
     type: 'POST',
@@ -125,9 +149,6 @@ function showDeleteModal(templateId) {
  * Parse the given Form and submit an API request to patch this Template.
  */
 function updateTemplate(form, templateId) {
-  /** Parse some list value, converting empty lists to the fallback */
-  const parseList = (value, fallback=[]) => value.length ? value : fallback;
-
   const data = {
     name: $(`#template-id${templateId} input[name="name"]`).val(),
     filters: parseList(
@@ -219,7 +240,8 @@ async function getAllTemplates() {
 
     // Clone template
     const base = document.querySelector('#template').content.cloneNode(true);
-    base.querySelector('.accordion').id = `template-id${templateObj.id}`;
+    const templateElementId = `template-id${templateObj.id}`
+    base.querySelector('.accordion').id = templateElementId;
     // Set accordion title and title input
     base.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${templateObj.name}`;
     const nameElem = base.querySelector('input[name="name"]');
@@ -263,8 +285,8 @@ async function getAllTemplates() {
     const watchedImg = base.querySelector('img[content-type="watched"]'),
         unwatchedImg = base.querySelector('img[content-type="unwatched"]');
     base.querySelector('.button[data-action="refresh"]').onclick = () => {
-      reloadPreview('watched', form, watchedCard, watchedImg);
-      reloadPreview('unwatched', form, unwatchedCard, unwatchedImg);
+      reloadPreview('watched', templateElementId, watchedCard, watchedImg);
+      reloadPreview('unwatched', templateElementId, unwatchedCard, unwatchedImg);
     }
     elements.push(base);
   });

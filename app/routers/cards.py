@@ -35,6 +35,7 @@ from app.schemas.font import DefaultFont
 from modules.Debug import InvalidCardSettings, MissingSourceImage
 
 from modules.EpisodeInfo2 import EpisodeInfo
+from modules.FormatString import FormatString
 from modules.SeriesInfo2 import SeriesInfo
 from modules.TieredSettings import TieredSettings
 
@@ -73,6 +74,39 @@ def create_preview_card(
             detail=f'Cannot create preview for card type "{card.card_type}"',
         )
 
+    # Get preview season and episode text
+    if card.season_text is None:
+        # Apply season text formatting if indicated
+        try:
+            if getattr(CardClass, 'SEASON_TEXT_FORMATTER', None) is None:
+                card.season_text = FormatString(
+                    'Season {season_number}',
+                    data=card.dict(),
+                ).result
+            else:
+                fake_ei = EpisodeInfo(
+                    title=card.title_text, season_number=card.season_number,
+                    episode_number=card.episode_number,
+                    absolute_number=card.absolute_number
+                )
+                card.season_text = getattr(CardClass, 'SEASON_TEXT_FORMATTER')(fake_ei)
+        except InvalidCardSettings as exc:
+            raise HTTPException(
+                status_code=400,
+                detail='Invalid season text format',
+            ) from exc
+    if card.episode_text is None:
+        try:
+            card.episode_text = FormatString(
+                (card.episode_text_format or CardClass.EPISODE_TEXT_FORMAT),
+                data=card.dict(),
+            ).result
+        except InvalidCardSettings as exc:
+            raise HTTPException(
+                status_code=400,
+                detail='Invalid episode text format',
+            ) from exc
+
     # Get Font if indicated
     font_template_dict = {}
     if getattr(card, 'font_id', None) is not None:
@@ -87,8 +121,6 @@ def create_preview_card(
     # Resolve all settings
     card_settings = TieredSettings.new_settings(
         {'series_full_name': 'Test Series (2020)', 'series_name': 'Test Series',
-         'season_number': 1, 'episode_number': 1, 'hide_season_text': False,
-         'hide_episode_text': False,
          'logo_file': preferences.INTERNAL_ASSET_DIRECTORY / 'logo.png',
          'poster_file': preferences.INTERNAL_ASSET_DIRECTORY / 'preview' / 'poster.webp',
          'backdrop_file': preferences.INTERNAL_ASSET_DIRECTORY / 'preview' / 'art.jpg',
