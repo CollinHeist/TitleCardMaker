@@ -87,6 +87,8 @@ span.color.circle {
   margin-left: 4px;
   /* Round edges of palette swatches */
   border-radius: 0.4rem;
+  /* Show pointer on hover to indicate selectability */
+  cursor: pointer;
 }
 
 /* Header element alignment */
