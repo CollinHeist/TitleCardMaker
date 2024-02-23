@@ -579,7 +579,8 @@ async def set_series_logo(
     if url is not None:
         # If logo is SVG, handle separately
         if url.endswith('.svg'):
-            return process_svg_logo(url, series, file, log=log)
+            process_svg_logo(url, series, file, log=log)
+            return None
 
         try:
             content = get(url, timeout=30).content
@@ -596,6 +597,7 @@ async def set_series_logo(
 
     # Write new file to the disk
     file.write_bytes(content)
+    return None
 
 
 @source_router.put('/series/{series_id}/backdrop/upload', status_code=201)
