@@ -147,6 +147,12 @@ class FormatString:
             fstring: String to interpret as an fstring.
             data: Data to make available in the fstring evalaution.
             catch: Whether to catch any Exceptions.
+
+        Raises:
+            InvalidFormatString: The fstring is invalid and `catch` is
+                true.
+            NameError, NotImplementedError, SyntaxError: There is some
+                invalid syntax in the fstring and `catch` is false.
         """
 
         # pylint: disable=eval-used
@@ -157,10 +163,10 @@ class FormatString:
                 data,
             )
         except NameError as exc:
-            log.debug(f'Evaluating ({fstring})')
+            log.debug(f'Error evaluating ({fstring})')
             raise (InvalidFormatString if catch else exc) from exc
         except (SyntaxError, NotImplementedError) as exc:
-            log.debug(f'Evaluating ({fstring})')
+            log.debug(f'Error evaluating ({fstring})')
             raise (InvalidFormatString if catch else exc) from exc
 
 
