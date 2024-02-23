@@ -294,6 +294,9 @@ reference value.
 
     === "Episode Title Length"
 
+        All title length evaluations are done on the original title, before any
+        title text formatting or splitting.
+
         | Operation | Description | Reference Value |
         | --------: | :---------- | :-------------: |
         | equals | Only apply to Episodes whose title length is exactly the given number | :fontawesome-regular-circle-check:{.green} |
