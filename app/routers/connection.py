@@ -508,8 +508,14 @@ def delete_connection(
 
     # Reset EDS if set
     if preferences.episode_data_source == interface_id:
-        preferences.episode_data_source = db.query(Connection).first()
-        log.warning(f'Reset global Episode data source')
+        new_eds = db.query(Connection)\
+            .filter(Connection.id != interface_id)\
+            .first()
+        if new_eds:
+            preferences.episode_data_source = new_eds.id
+            log.warning(f'Reset global Episode Data Source')
+        else:
+            log.critical(f'Cannot reassign global Episode Data Source')
 
     # Remove from Series and Episode database IDs
     for series in db.query(Series).all():
