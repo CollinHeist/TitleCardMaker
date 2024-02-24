@@ -89,7 +89,10 @@ def create_preview_card(
                     episode_number=card.episode_number,
                     absolute_number=card.absolute_number
                 )
-                card.season_text = getattr(CardClass, 'SEASON_TEXT_FORMATTER')(fake_ei)
+                card.season_text = FormatString(
+                    getattr(CardClass, 'SEASON_TEXT_FORMATTER')(fake_ei),
+                    data=card.dict(),
+                ).result
         except InvalidCardSettings as exc:
             raise HTTPException(
                 status_code=400,
