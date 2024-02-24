@@ -343,3 +343,19 @@ this to `False` will stop truncation altogether.
         <img src="../assets/music-truncate-2.webp"/>
         <img src="../assets/music-truncate-3.webp"/>
     </div>
+
+## Mask Images
+
+This card also natively supports [mask images](...). Like all mask images, TCM
+will automatically search for a `-mask.png` (e.g. `s3e2-mask.png`) image
+alongside the input Source Image in the Series' source directory, and apply this
+atop all other Card effects.
+
+!!! example "Example"
+
+    <div class="image-compare example-card"
+        data-starting-point="30"
+        data-left-label="Mask Image" data-right-label="Resulting Title Card">
+        <img src="../assets/music-mask-raw.webp"/>
+        <img src="../assets/music-mask.webp"/>
+    </div>
