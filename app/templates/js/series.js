@@ -340,7 +340,7 @@ async function initalizeSeriesConfig() {
   }
   {% endif %}
   // Extras
-  initializeExtras(
+  await initializeExtras(
     {% if series.extras %}
       {{series.extras|safe}},
     {% else %}
