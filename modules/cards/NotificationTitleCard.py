@@ -454,10 +454,9 @@ class NotificationTitleCard(BaseCardType):
                     self._INDEX_TEXT_Y_OFFSET + self.episode_text_vertical_shift
                 ),
             ),
-
+            # Add text
             *self.title_text_commands,
             *self.index_text_commands,
-
             # Attempt to overlay mask
             *self.add_overlay_mask(self.source_file),
             # Create card
