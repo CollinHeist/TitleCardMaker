@@ -2,7 +2,7 @@ from logging import Logger
 from os import environ
 from pathlib import Path
 from pickle import dump, load
-from typing import Optional
+from typing import Any, Optional
 
 from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import CardExtension
@@ -56,16 +56,17 @@ class Preferences:
         'episode_data_source', 'valid_image_extensions', 'card_quality',
         'specials_folder_format', 'season_folder_format', 'sync_specials',
         'delete_missing_episodes', 'remote_card_types', 'default_card_type',
-        'excluded_card_types', 'default_templates', 'default_watched_style',
-        'default_unwatched_style', 'use_emby', 'use_jellyfin', 'use_plex',
-        'use_sonarr', 'use_tmdb', 'use_magick_prefix', 'current_version',
-        'available_version', 'blacklisted_blueprints', 'advanced_scheduling',
-        'require_auth', 'task_crontabs', 'simplified_data_table',
-        'home_page_size', 'episode_data_page_size',
-        'stylize_unmonitored_posters', 'sources_as_table',
-        'card_type_directory', 'local_card_types', 'imported_blueprints',
-        'colorblind_mode', 'library_unique_cards', 'invalid_connections',
-        'home_page_table_view', 'reduced_animations', 'currently_running_sync',
+        'excluded_card_types', 'default_templates', 'global_extras',
+        'default_watched_style', 'default_unwatched_style', 'use_emby',
+        'use_jellyfin', 'use_plex', 'use_sonarr', 'use_tmdb',
+        'use_magick_prefix', 'current_version', 'available_version',
+        'blacklisted_blueprints', 'advanced_scheduling', 'require_auth',
+        'task_crontabs', 'simplified_data_table', 'home_page_size',
+        'episode_data_page_size', 'stylize_unmonitored_posters',
+        'sources_as_table', 'card_type_directory', 'local_card_types',
+        'imported_blueprints', 'colorblind_mode', 'library_unique_cards',
+        'invalid_connections', 'home_page_table_view', 'reduced_animations',
+        'currently_running_sync',
         # Arguments required only for the Connection data migrations
         'emby_url', 'emby_api_key', 'emby_username', 'emby_use_ssl', 'emby_filesize_limit_number', 'emby_filesize_limit_unit',
         'jellyfin_url', 'jellyfin_api_key', 'jellyfin_username', 'jellyfin_use_ssl', 'jellyfin_filesize_limit_number', 'jellyfin_filesize_limit_unit',
@@ -190,6 +191,7 @@ class Preferences:
         self.default_watched_style = 'unique'
         self.default_unwatched_style = 'unique'
         self.default_templates: list[int] = []
+        self.global_extras: dict[str, dict[str, str]] = {}
 
         self.currently_running_sync = None
         self.invalid_connections: list[int] = []
@@ -300,7 +302,7 @@ class Preferences:
     def update_values(self,
             *,
             log: Logger = log,
-            **update_kwargs: dict
+            **update_kwargs: Any,
         ) -> None:
         """
         Update multiple values at once, and commit the changes

@@ -1,5 +1,8 @@
 {% if False %}
-import {AvailableTemplate, EpisodeDataSourceToggle, ImageSourceToggle} from './.types.js';
+import {
+  AvailableTemplate, EpisodeDataSourceToggle, ImageSourceToggle,
+  UpdatePreferences,
+} from './.types.js';
 {% endif %}
 
 // Get all Connection data
@@ -133,6 +136,78 @@ function updatePreviewTitleCard(allCards, previewCardType) {
   }
 }
 
+function updateGlobalSettings() {
+  // Mark button as loading
+  $('#save-changes').toggleClass('loading', true);
+
+  // Parse extras
+  const extras = {};
+  $('section[aria-label="extras"] .tab').each(function() {
+    const cardType = $(this).attr('data-tab'); // Current card type
+    const currentExtras = {}; // Currently non-black extras
+
+    // Parse all non-blank extras for this type
+    $(this).find('input').each(function() {
+      if ($(this).val() !== '') {
+        currentExtras[$(this).attr('name')] = $(this).val();
+      }
+    });
+
+    // If current card type has extras, add to object
+    if (Object.keys(currentExtras).length > 0) { extras[cardType] = currentExtras; }
+  });
+
+  // Parse all settings data into one update object
+  /** @type {UpdatePreferences} */
+  const data = {
+    // Root Folders
+    card_directory: $('input[name="card_directory"]').val(),
+    source_directory: $('input[name="source_directory"]').val(),
+    completely_delete_series: $('input[name="completely_delete_series"]').is(':checked'),
+    // Episode Data
+    episode_data_source: $('input[name="episode_data_source"]').val(),
+    image_source_priority: $('input[name="image_source_priority"]').val().split(','),
+    sync_specials: $('input[name="sync_specials"]').is(':checked'),
+    delete_missing_episodes: $('input[name="delete_missing_episodes"]').is(':checked'),
+    // Title Cards
+    default_card_type: $('input[name="default_card_type"]').val(),
+    excluded_card_types: $('input[name="excluded_card_types"]').val().split(','),
+    default_watched_style: $('input[name="default_watched_style"]').val() || '{{preferences.default_watched_style}}',
+    default_unwatched_style: $('input[name="default_unwatched_style"]').val() || '{{preferences.default_unwatched_style}}',
+    default_templates: $('input[name="default_templates"]').val().split(','),
+    card_width: $('input[name="card_width"]').val(),
+    card_height: $('input[name="card_height"]').val(),
+    card_quality: $('input[name="card_quality"]').val(),
+    global_extras: extras,
+    // File naming
+    card_extension: $('input[name="card_extension"]').val(),
+    card_filename_format: $('input[name="card_filename_format"]').val(),
+    specials_folder_format: $('input[name="specials_folder_format"]').val(),
+    season_folder_format: $('input[name="season_folder_format"]').val(),
+    library_unique_cards: $('input[name="library_unique_cards"]').is(':checked'),
+    // Web interface
+    home_page_size: $('input[name="home_page_size"]').val(),
+    episode_data_page_size: $('input[name="episode_data_page_size"]').val(),
+    home_page_table_view: $('input[name="home_page_table_view"]').is(':checked'),
+    sources_as_table: $('input[name="sources_as_table"]').is(':checked'),
+    simplified_data_table: $('input[name="simplified_data_table"]').is(':checked'),
+    stylize_unmonitored_posters: $('input[name="stylize_unmonitored_posters"]').is(':checked'),
+    colorblind_mode: $('input[name="colorblind_mode"]').is(':checked'),
+    reduced_animations: $('input[name="reduced_animations"]').is(':checked'),
+  };
+
+  // Submit API request
+  $.ajax({
+    type: 'PATCH',
+    url: '/api/settings/update',
+    data: JSON.stringify(data),
+    contentType: 'application/json',
+    success: () => showInfoToast('Updated Settings'),
+    error: response => showErrorToast({title: 'Unable to Update Settngs', response}),
+    complete: () => $('#save-changes').toggleClass('loading', false),
+  });
+}
+
 async function initAll() {
   // Enable dropdowns, checkboxes, etc.
   $('.ui.dropdown').dropdown();
@@ -151,8 +226,20 @@ async function initAll() {
   getTemplates();
   getImageSourcePriority();
 
-  // Filled in later
-  let allCards = [];
+  // Global extras
+  await initializeExtras(
+    {% if preferences.global_extras %}
+      {{preferences.global_extras|safe}},
+    {% else %}
+      [],
+    {% endif %}
+    '{{preferences.default_card_type}}',
+    'section[aria-label="extras"]',
+    document.getElementById('extra-input-template'),
+    true,
+  );
+  refreshTheme();
+  $('.ui.accordion').accordion();
 
   // Show extension warning based on starting extension
   let currentExtension = $('#card-extension-input').val();
@@ -182,7 +269,7 @@ async function initAll() {
     // Add form validation
     .form({
       on: 'blur',
-      inline : true,
+      // inline : true,
       fields: {
         card_directory: {
           rules: [{type: 'empty', prompt: 'Card directory is required'}]
@@ -217,48 +304,10 @@ async function initAll() {
     .on('submit', (event) => {
       event.preventDefault();
       if (!$('#settings-form').form('is valid')) { return; }
-      $('#save-changes').toggleClass('loading', true);
-      // Prep form
-      let form = new FormData(event.target);
-
-      // Parse comma-separated fields
-      const imageSourcePriority = form.get('image_source_priority').split(',');
-      form.delete('image_source_priority');
-      const excludedCardTypes = form.get('excluded_card_types') === ''
-        ? []
-        : form.get('excluded_card_types').split(',');
-      form.delete('excluded_card_types');
-      const defaultTemplates = form.get('default_templates') === ''
-        ? []
-        : form.get('default_templates').split(',');
-      form.delete('default_templates');
-
-      // Delete blank values
-      for (const [key, value] of [...form.entries()]) {
-        if (value === '') { form.delete(key); }
-      }
-      // Add checkbox status as true/false
-      $.each($("#settings-form").find('input[type=checkbox]'), (key, val) => {
-        form.append($(val).attr('name'), $(val).is(':checked'))
-      });
-
-      $.ajax({
-        type: 'PATCH',
-        url: '/api/settings/update',
-        data: JSON.stringify({
-          ...Object.fromEntries(form),
-          image_source_priority: imageSourcePriority,
-          excluded_card_types: excludedCardTypes,
-          default_templates: defaultTemplates,
-          card_quality: $('.slider[data-value="card_quality"]').slider('get value'),
-        }),
-        contentType: 'application/json',
-        success: () => showInfoToast('Updated Settings'),
-        error: response => showErrorToast({title: 'Unable to Update Settngs', response}),
-        complete: () => $('#save-changes').toggleClass('loading', false),
-      });
+      updateGlobalSettings();
     });
 
+  let allCards = [];
   (async () => {
     allCards = await initCardTypeDropdowns();
     updatePreviewTitleCard(allCards, '{{preferences.default_card_type}}');

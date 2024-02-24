@@ -315,6 +315,39 @@
  * @property {boolean} selected
  */
 
+/**
+ * @typedef {Object} UpdatePreferences
+ * @property {string} card_directory - The directory for the card.
+ * @property {string} source_directory - The source directory for the card.
+ * @property {boolean} completely_delete_series - Whether to completely delete the series or not.
+ * @property {number} card_width - The width of the card.
+ * @property {number} card_height - The height of the card.
+ * @property {string} card_filename_format - The filename format of the card.
+ * @property {string} card_extension - The extension of the card.
+ * @property {number} card_quality - The quality of the card.
+ * @property {boolean} library_unique_cards - Whether the library has unique cards or not.
+ * @property {number[]} image_source_priority - The priority of the image source.
+ * @property {number} episode_data_source - The source of the episode data.
+ * @property {string} specials_folder_format - The folder format of the specials.
+ * @property {string} season_folder_format - The folder format of the season.
+ * @property {boolean} sync_specials - Whether to sync the specials or not.
+ * @property {boolean} delete_missing_episodes - Whether to delete missing episodes or not.
+ * @property {boolean} simplified_data_table - Whether the data table is simplified or not.
+ * @property {string} default_card_type - The default card type.
+ * @property {string[]} excluded_card_types - The excluded card types.
+ * @property {Style} default_watched_style - The default watched style.
+ * @property {Style} default_unwatched_style - The default unwatched style.
+ * @property {number[]} default_templates - The default templates.
+ * @property {Object.<string, string>} global_extras - The global extras.
+ * @property {number} home_page_size - The size of the home page.
+ * @property {number} episode_data_page_size - The size of the episode data page.
+ * @property {boolean} stylize_unmonitored_posters - Whether to stylize unmonitored posters or not.
+ * @property {boolean} sources_as_table - Whether sources are in a table or not.
+ * @property {boolean} home_page_table_view - Whether the home page is in table view or not.
+ * @property {boolean} colorblind_mode - Whether colorblind mode is enabled or not.
+ * @property {boolean} reduced_animations - Whether reduced animations are enabled or not.
+ */
+
 // Series ----------------------------------------------------------------------
 
 /**

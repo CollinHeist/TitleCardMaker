@@ -640,12 +640,17 @@ function toTitleCase(str) {
  * being populated.
  * @param {HTMLTemplateElement} inputTemplateElement - ID of the extra input
  * element to clone and populate.
+ * @param {isGlobal} - Whether the extras being initialized are for global
+ * extras, or not. Global extras are formatted under {card_type: {}}, while
+ * normal extras are not. If global, variable overrides are excluded, and inputs
+ * of the same name are not linked.
  */
 async function initializeExtras(
   activeExtras,
   activeTab,
   sectionQuerySelector,
   inputTemplateElement,
+  isGlobal = false,
 ) {
   if (allExtras === undefined) {
     await queryAvailableExtras();
@@ -656,6 +661,9 @@ async function initializeExtras(
 
   // Create object of card type identifiers to array of extras
   allExtras.forEach(extra => {
+    // If skipping overrides, skip if no assigned card type
+    if (isGlobal && !extra.card_type) { return; }
+
     extra.card_type = extra.card_type || 'Variable Overrides';
     if (types[extra.card_type] === undefined) {
       types[extra.card_type] = [];
@@ -697,7 +705,9 @@ async function initializeExtras(
           );
 
       // Fill out input if part of active extras
-      if (activeExtras[extra.identifier]) {
+      if ((isGlobal && activeExtras.hasOwnProperty(card_type)
+            && activeExtras[card_type][extra.identifier]) ||
+          (!isGlobal && activeExtras[extra.identifier])) {
         newInput.querySelector('input').value = activeExtras[extra.identifier];
       }
 
@@ -712,9 +722,11 @@ async function initializeExtras(
   }
 
   // Change all inputs with the same name when any input is changed
-  $(`${sectionQuerySelector}`).on('change', 'input', function() {
-    $(`${sectionQuerySelector} input[name="${$(this).attr('name')}"]`).val($(this).val());
-  });
+  if (!isGlobal) {
+    $(`${sectionQuerySelector}`).on('change', 'input', function() {
+      $(`${sectionQuerySelector} input[name="${$(this).attr('name')}"]`).val($(this).val());
+    });
+  }
 
   // Initialize tabs
   $(`${sectionQuerySelector} .item`).tab();

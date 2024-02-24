@@ -7,8 +7,8 @@ from pydantic import DirectoryPath, PositiveInt, conint, constr, validator # pyl
 from app.schemas.base import (
     Base, InterfaceType, ImageSource, UpdateBase, UNSPECIFIED
 )
-from modules.FormatString import FormatString
 
+from modules.FormatString import FormatString
 from modules.TMDbInterface2 import TMDbInterface
 
 
@@ -84,6 +84,7 @@ class UpdatePreferences(UpdateBase):
     default_watched_style: Style = UNSPECIFIED
     default_unwatched_style: Style = UNSPECIFIED
     default_templates: list[int] = UNSPECIFIED
+    global_extras: dict[str, dict[str, str]] = UNSPECIFIED
     home_page_size: PositiveInt = UNSPECIFIED
     episode_data_page_size: PositiveInt = UNSPECIFIED
     stylize_unmonitored_posters: bool = UNSPECIFIED
@@ -161,6 +162,7 @@ class Preferences(Base):
     default_watched_style: Style
     default_unwatched_style: Style
     default_templates: list[int]
+    global_extras: dict[str, dict[str, str]]
     home_page_size: PositiveInt
     episode_data_page_size: PositiveInt
     stylize_unmonitored_posters: bool

@@ -454,6 +454,7 @@ def resolve_card_settings(
 
     # Resolve all extras
     card_extras = TieredSettings.new_settings(
+        preferences.global_extras.get(card_settings['card_type'], {}),
         global_template_dict.get('extras', {}),
         series_template_dict.get('extras', {}),
         series.extras,

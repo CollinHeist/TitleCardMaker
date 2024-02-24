@@ -123,6 +123,7 @@ def create_preview_card(
 
     # Resolve all settings
     card_settings = TieredSettings.new_settings(
+        preferences.global_extras.get(card.card_type, {}),
         {'series_full_name': 'Test Series (2020)', 'series_name': 'Test Series',
          'logo_file': preferences.INTERNAL_ASSET_DIRECTORY / 'logo.png',
          'poster_file': preferences.INTERNAL_ASSET_DIRECTORY / 'preview' / 'poster.webp',

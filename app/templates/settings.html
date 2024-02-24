@@ -11,6 +11,14 @@
   </script>
   
   <link rel="stylesheet" type="text/css" href="/templates/css/settings.css"/>
+
+  <template id="extra-input-template">
+    <div class="field">
+      <label>{label}</label>
+      <input type="text">
+      <p class="help">{tooltip}</p>
+    </div>
+  </template>
 </head>
 
 <body onload="initAll();">
@@ -298,6 +306,23 @@
                   </div>
                 </div>
               </div>
+
+              <!-- Global extras -->
+              <div class="ui visible info message">
+                The following Card extras will be automatically applied to all Cards of that type.
+              </div>
+              <div class="ui styled fluid accordion">
+                <div class="title">
+                  <i class="dropdown icon"></i>
+                  Global Extras
+                </div>
+                <div class="content">
+                  <section aria-label="extras">
+                    <div class="ui top attached tabular wrapping menu"></div>
+                  </section>
+                </div>
+              </div>
+
             </section>
 
             <!-- Filename Settings -->
