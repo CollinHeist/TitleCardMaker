@@ -339,9 +339,10 @@ def validate_card_type_model(
     try:
         return CardClass, CardTypeModel(**card_settings)
     except Exception as exc:
+        log.exception('Card validation failed')
         raise HTTPException(
             status_code=400,
-            detail=f'Cannot create Card - invalid card settings - {exc}',
+            detail=f'Cannot create Card - invalid card settings',
         ) from exc
 
 
