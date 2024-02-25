@@ -60,8 +60,6 @@ function reloadPreview(fontId, fontForm, previewForm, cardElement, imageElement)
   const previewCardObj = {
     card_type: previewFormObj.get('card_type') || '{{preferences.default_card_type}}',
     title_text: previewFormObj.get('title_text'),
-    season_text: 'Season 1',
-    episode_text: 'Episode 1',
     font_id: fontId,
     font_title_case: fontFormObj.get('title_case'),
     font_color: fontFormObj.get('color'),
