@@ -223,7 +223,7 @@ function populateFontElement(template, font, activeFontId) {
   template.querySelector('input[name="name"]').value = font.name;
 
   template.querySelector('label[data-value="file"]').innerHTML =
-    font.file_name === null ? 'File' : `File (<span class="prefix">config/fonts/${font.id}/</span>${font.file_name})`;
+    font.file_name === null ? 'File' : `File (<span class="prefix">config/assets/fonts/${font.id}/</span>${font.file_name})`;
   
   if (font.color !== null) {
     template.querySelector('input[name="color"]').value = font.color;
