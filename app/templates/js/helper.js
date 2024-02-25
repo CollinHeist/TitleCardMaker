@@ -708,7 +708,9 @@ async function initializeExtras(
       if ((isGlobal && activeExtras.hasOwnProperty(card_type)
             && activeExtras[card_type][extra.identifier]) ||
           (!isGlobal && activeExtras[extra.identifier])) {
-        newInput.querySelector('input').value = activeExtras[extra.identifier];
+            newInput.querySelector('input').value = isGlobal
+              ? activeExtras[card_type][extra.identifier]
+              : activeExtras[extra.identifier];
       }
 
       // Group every two fields into a field group
