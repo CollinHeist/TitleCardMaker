@@ -644,6 +644,8 @@ function toTitleCase(str) {
  * extras, or not. Global extras are formatted under {card_type: {}}, while
  * normal extras are not. If global, variable overrides are excluded, and inputs
  * of the same name are not linked.
+ * @param {number} groupAmount - How many extras to combine in a single group
+ * field. Default 2.
  */
 async function initializeExtras(
   activeExtras,
@@ -651,6 +653,7 @@ async function initializeExtras(
   sectionQuerySelector,
   inputTemplateElement,
   isGlobal = false,
+  groupAmount = 2,
 ) {
   if (allExtras === undefined) {
     await queryAvailableExtras();
@@ -714,9 +717,9 @@ async function initializeExtras(
       }
 
       // Group every two fields into a field group
-      if (index % 2 === 0) {
+      if (index % groupAmount === 0) {
         const newFields = document.createElement('div');
-        newFields.className = 'two fields';
+        newFields.className = 'ui equal width fields';
         newTab.appendChild(newFields);
       }
       newTab.lastChild.appendChild(newInput);

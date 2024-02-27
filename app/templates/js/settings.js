@@ -136,6 +136,11 @@ function updatePreviewTitleCard(allCards, previewCardType) {
   }
 }
 
+/**
+ * Submit an API request to set/update all global settings. This parses the
+ * settings form into an object, and then submits a PATCH request. A toast is
+ * shown with the results of the request.
+ */
 function updateGlobalSettings() {
   // Mark button as loading
   $('#save-changes').toggleClass('loading', true);
@@ -144,7 +149,7 @@ function updateGlobalSettings() {
   const extras = {};
   $('section[aria-label="extras"] .tab').each(function() {
     const cardType = $(this).attr('data-tab'); // Current card type
-    const currentExtras = {}; // Currently non-black extras
+    const currentExtras = {}; // Currently non-blank extras
 
     // Parse all non-blank extras for this type
     $(this).find('input').each(function() {
@@ -237,6 +242,7 @@ async function initAll() {
     'section[aria-label="extras"]',
     document.getElementById('extra-input-template'),
     true,
+    3,
   );
   refreshTheme();
   $('.ui.accordion').accordion();
