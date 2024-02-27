@@ -20,6 +20,7 @@ class TemporaryPreferenceParser:
         """Fake initialize this object"""
 
         self.card_dimensions = '3200x1800'
+        self.card_quality = 95
         self.database_directory = Path(database_directory)
         self.imagemagick_container = None
 
