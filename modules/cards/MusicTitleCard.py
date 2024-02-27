@@ -210,8 +210,9 @@ class MusicTitleCard(BaseCardType):
                 identifier='round_corners',
                 description='Whether to round the corners of the album image',
                 tooltip=(
-                    'Either <v>True</v> or <v>False</v>. Default is '
-                    '<v>True</v>.'
+                    'Either <v>True</v> or <v>False</v>. Rounding corners is a '
+                    'fairly CPU intensive task and does slow down Card '
+                    'creation. Default is <v>True</v>.'
                 ),
             ),
         ],
@@ -393,11 +394,11 @@ class MusicTitleCard(BaseCardType):
         # Font/card customizations
         self.font_color = font_color
         self.font_file = font_file
-        self.font_interline_spacing = font_interline_spacing
+        self.font_interline_spacing = -10 + font_interline_spacing
         self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_size = font_size
-        self.font_vertical_shift = font_vertical_shift
+        self.font_vertical_shift = 10 + font_vertical_shift
 
         # Extras
         self.add_controls = add_controls
@@ -445,17 +446,19 @@ class MusicTitleCard(BaseCardType):
             x = self.WIDTH - self.player_width - self.player_inset + MARGIN
 
         # Determine y position based on whether a subtitle is present
-        y = self.player_inset + 145 + self.font_vertical_shift \
-            + (45 if self.subtitle else 0) \
-            + (100 if self.add_controls else 0)
+        y = self.player_inset \
+            + (108 if self.add_controls else 25) \
+            + 115 \
+            + (65 if self.subtitle else 0) \
+            + self.font_vertical_shift
 
         return [
             f'-font "{self.font_file}"',
             f'-fill "{self.font_color}"',
             f'-pointsize {60 * self.font_size}',
-            f'-interline-spacing {-10 + self.font_interline_spacing:+}',
-            f'-interword-spacing {self.font_interword_spacing}',
-            f'-kerning {1 * self.font_kerning}',
+            f'-interline-spacing {self.font_interline_spacing:+}',
+            f'-interword-spacing {self.font_interword_spacing:+}',
+            f'-kerning {self.font_kerning}',
             f'-gravity southwest',
             f'-annotate {x:+}{y:+} "{self.title_text}"',
         ]
@@ -477,7 +480,10 @@ class MusicTitleCard(BaseCardType):
             return Dimensions(0, 0)
 
         self.__title_dimensions = self.image_magick.get_text_dimensions(
-            self.title_text_commands
+            self.title_text_commands,
+            density=100,
+            interline_spacing=self.font_interline_spacing,
+            line_count=len(self.title_text.splitlines()),
         )
 
         return self.__title_dimensions
@@ -500,7 +506,7 @@ class MusicTitleCard(BaseCardType):
         elif self.player_position == 'right':
             x = self.WIDTH - self.player_width - self.player_inset + MARGIN
 
-        y = self.player_inset + 135 + (100 if self.add_controls else 0)
+        y = self.player_inset + 135 + (108 if self.add_controls else 0)
 
         return [
             f'-font "{self.SUBTITLE_FONT.resolve()}"',
@@ -570,7 +576,7 @@ class MusicTitleCard(BaseCardType):
 
         # y-coordinate for all text
         y = (self.HEIGHT / 2) - self.player_inset - self._LINE_Y_INSET \
-            + (-100 if self.add_controls else 0)
+            + (-108 if self.add_controls else 0)
 
         # Determine position of season text
         season_commands = []
@@ -663,19 +669,20 @@ class MusicTitleCard(BaseCardType):
         the specified player style.
         """
 
-        if (self.player_style == 'basic' 
-            or not self.album_cover or not self.album_cover.exists()):
+        if (self.player_style == 'basic' or not self.album_cover
+            or not self.album_cover.exists()):
             return []
 
         # Dimensions of the album cover
         dimensions = self._album_dimensions
 
-        # y-coorindate is adjusted by whether a subtitle is present and text height
-        # + 235
-        y = self._title_dimensions.height + self.font_vertical_shift \
-            + self.player_inset + 185 \
-            + (35 if self.subtitle else 0) \
-            + (100 if self.add_controls else 0)
+        y = self.player_inset \
+            + (108 if self.add_controls else 25) \
+            + 115 \
+            + (65 if self.subtitle else 0) \
+            + self.font_vertical_shift \
+            + self._title_dimensions.height
+        # Dist / controls / timeline / subtitle / text diff / title / margin
 
         # Coordinates for composing the cover
         if self.player_position == 'left':
@@ -737,11 +744,15 @@ class MusicTitleCard(BaseCardType):
             start_x = self.WIDTH - self.player_inset - self.player_width
 
         # Determine height
-        MARGIN = 35 if self.player_style == 'basic' else 50
-        height = self._album_dimensions.height + self._title_dimensions.height \
-            + (35 if self.subtitle else 0) \
-            + (100 if self.add_controls else 0) \
-            + 150 + (2 * MARGIN)
+        height = (108 if self.add_controls else 25) \
+            + 115 \
+            + (65 if self.subtitle else 0) \
+            + self.font_vertical_shift \
+            + self._title_dimensions.height \
+            + self._album_dimensions.height \
+            + (25 if self.player_style == 'basic' else 60)
+        # Controls / timeline / subtitle / text diff / title / album / margin
+
         start = Coordinate(
             start_x,
             self.HEIGHT - self.player_inset - height
@@ -783,9 +794,9 @@ class MusicTitleCard(BaseCardType):
         background_start_x, background_end_x = self.__season_x, self.__episode_x
 
         # Center y coordinate for all lines
-        y = self.HEIGHT - self.player_inset - self._LINE_Y_INSET - 3 # 3px offset
+        y = self.HEIGHT - self.player_inset - self._LINE_Y_INSET - 3 # offset
         if self.add_controls:
-            y -= 100
+            y -= 108
 
         # No season text, draw from standard offset
         if background_start_x is None:
@@ -927,11 +938,15 @@ class MusicTitleCard(BaseCardType):
         }[self.player_position] - 30
 
         y = self.HEIGHT - self.player_inset \
-            - (150 if self.player_style != 'basic' else 125) \
-            - (100 if self.add_controls else 0) \
-            - (35 if self.subtitle else 0) \
-            - (self._title_dimensions.height + 35) \
-            - (self._album_dimensions.height + 35)
+            - (108 if self.add_controls else 25) \
+            - 115 \
+            - (65 if self.subtitle else 0) \
+            - self.font_vertical_shift \
+            - self._title_dimensions.height \
+            - self._album_dimensions.height \
+            - (25 if self.player_style == 'basic' else 60) \
+            + 28
+        # Inset / controls / timeline / subtitle / text diff / title / album / margin / inner inset
 
         return [
             f'-fill "{self.heart_color}"',
@@ -977,7 +992,12 @@ class MusicTitleCard(BaseCardType):
         """
 
         custom_extras = (
-            ...
+            ('control_colors' in extras
+                and extras['control_colors'] != MusicTitleCard.DEFAULT_CONTROL_COLORS)
+            or ('episode_text_color' in extras
+                and extras['episode_text_color'] != MusicTitleCard.EPISODE_TEXT_COLOR)
+            or ('timeline_color' in extras
+                and extras['timeline_color'] != MusicTitleCard.DEFAULT_TIMELINE_COLOR)
         )
 
         return (custom_extras
