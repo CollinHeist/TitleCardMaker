@@ -772,9 +772,15 @@ class Show(YamlReader):
                     return None
 
                 # Convert temporary SVG to PNG at logo filepath
-                logo = self.card_class.convert_svg_to_png(
-                    ImageMagickInterface.TEMPORARY_SVG_FILE, self.logo,
+                logo = ImageMagickInterface(
+                    getattr(global_objects.pp, 'imagemagick_container', 'ImageMagick'),
+                    getattr(global_objects.pp, 'use_magick_prefix', True),
+                    getattr(global_objects.pp, 'imagemagick_timeout', 30),
+                ).convert_svg_to_png(
+                    ImageMagickInterface.TEMPORARY_SVG_FILE,
+                    self.logo,
                 )
+
                 if logo is None:
                     log.warning(f'SVG to PNG conversion failed for {self}')
                 else:
