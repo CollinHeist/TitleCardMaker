@@ -82,7 +82,7 @@ class ImageMagickInterface:
         self.timeout = timeout
 
         # Command history for debug purposes
-        self.__history = []
+        self.__history: list[tuple[str, bytes, bytes]] = []
 
 
     def validate_interface(self) -> bool:
@@ -215,10 +215,9 @@ class ImageMagickInterface:
         """Print the command history of this Interface."""
 
         for command, stdout, stderr in self.__history:
-            log.debug(f'Command: {command}\n\n'
-                      f'stdout: {stdout}\n\n'
-                      f'stderr: {stderr}\n'
-                      f'{"-" * 60}')
+            log.debug(f'Command:\n{command}\n\n'
+                      f'stdout:\n{stdout.decode()}\n\n'
+                      f'stderr:\n{stderr.decode()}')
 
 
     def get_image_dimensions(self, image: Path) -> Dimensions:
@@ -302,7 +301,7 @@ class ImageMagickInterface:
             )
         except ValueError as e:
             log.debug(f'Cannot identify text dimensions - {e}')
-            log.debug(f'{widths=} {heights=}')
+            log.trace(f'{widths=} {heights=}')
             return Dimensions(0, 0)
 
 
@@ -367,7 +366,7 @@ class ImageMagickInterface:
         Args:
             image: Path to the SVG image being converted.
             destination: Path to the output image.
-            min_dimension: Minimum dimension of converted image.
+            min_dimension: Minimum dimension of the converted image.
 
         Returns:
             Path to the converted file. None if the conversion failed.
@@ -386,7 +385,6 @@ class ImageMagickInterface:
             f'"{image.resolve()}"',
             f'"{destination.resolve()}"',
         ])
-
         self.run(command)
 
         # Print command history if conversion failed
