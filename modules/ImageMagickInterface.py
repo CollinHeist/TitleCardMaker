@@ -242,6 +242,8 @@ class ImageMagickInterface:
             text_command: list[str],
             *,
             density: Optional[int] = None,
+            interline_spacing: int = 0,
+            line_count: int = 1,
             width: Literal['sum', 'max'] = 'max',
             height: Literal['sum', 'max'] = 'sum',
         ) -> Dimensions:
@@ -286,8 +288,10 @@ class ImageMagickInterface:
 
         # Execute dimension command, parse output
         metrics = self.run_get_output(text_command)
-        widths = map(int, findall(r'Metrics:.*width:\s+(\d+)', metrics))
-        heights = map(int, findall(r'Metrics:.*height:\s+(\d+)', metrics))
+        widths = list(map(int, findall(r'Metrics:.*width:\s+(\d+)', metrics)))
+        heights = list(map(int, findall(r'Metrics:.*height:\s+(\d+)', metrics)))
+        ascents = list(map(int, findall(r'Metrics:.*ascent:\s+(\d+)', metrics)))
+        descents = list(map(int, findall(r'Metrics:.*descent:\s+-(\d+)', metrics)))
 
         try:
             # Label text produces duplicate Metrics
@@ -295,9 +299,12 @@ class ImageMagickInterface:
                 return sum(dims) / (2 if ' label:"' in text_command else 1)
 
             # Process according to given methods
+            height_adjustment = interline_spacing * (line_count - 1)
             return Dimensions(
                 sum_(widths)  if width  == 'sum' else max(widths),
-                sum_(heights) if height == 'sum' else max(heights),
+                (sum_(ascents) + sum_(descents)) + height_adjustment,
+                # (sum_(ascents) + sum_(descents)) * (density or 72) / 72 + height_adjustment,
+                # sum_(heights) if height == 'sum' else max(heights),
             )
         except ValueError as e:
             log.debug(f'Cannot identify text dimensions - {e}')
