@@ -397,6 +397,8 @@ class LogoCardType(BaseCardTypeCustomFontAllText):
     font_file: Path = LogoTitleCard.TITLE_FONT
     background: BetterColor = 'black'
     blur_only_image: bool = False
+    episode_text_color: str = LogoTitleCard.SERIES_COUNT_TEXT_COLOR
+    episode_text_vertical_shift: int = 0
     logo_size: PositiveFloat = 1.0
     logo_vertical_shift: int = 0
     omit_gradient: bool = True

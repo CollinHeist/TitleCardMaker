@@ -43,6 +43,20 @@ class LogoTitleCard(BaseCardType):
                 ),
             ),
             Extra(
+                name='Episode Text Color',
+                identifier='episode_text_color',
+                description='Color to utilize for the episode text',
+                tooltip='Default is <c>#CFCFCF</c>.'
+            ),
+            Extra(
+                name='Episode Text Vertical Shift',
+                identifier='episode_text_vertical_shift',
+                description=(
+                    'Additional vertical shift to apply to the season and '
+                    'episode text. Default is <v>0</v>.'
+                ),
+            ),
+            Extra(
                 name='Background Color',
                 identifier='background',
                 description='Background color to use behind the logo',
@@ -146,7 +160,8 @@ class LogoTitleCard(BaseCardType):
         'font_interword_spacing', 'font_size', 'font_stroke_width',
         'font_vertical_shift', 'separator', 'logo', 'logo_size',
         'logo_vertical_shift', 'omit_gradient', 'background', 'stroke_color',
-        'use_background_image', 'blur_only_image',
+        'use_background_image', 'blur_only_image', 'episode_text_color',
+        'episode_text_vertical_shift'
     )
 
     def __init__(self,
@@ -169,6 +184,8 @@ class LogoTitleCard(BaseCardType):
             grayscale: bool = False,
             background: str = 'black',
             blur_only_image: bool = False,
+            episode_text_color: str = SERIES_COUNT_TEXT_COLOR,
+            episode_text_vertical_shift: int = 0,
             logo_file: Optional[Path] = None,
             logo_size: float = 1.0,
             logo_vertical_shift: int = 0,
@@ -211,36 +228,46 @@ class LogoTitleCard(BaseCardType):
         self.font_vertical_shift = font_vertical_shift
 
         # Optional extras
-        self.omit_gradient = omit_gradient
         self.background = background
+        self.episode_text_color = episode_text_color
+        self.episode_text_vertical_shift = episode_text_vertical_shift
+        self.omit_gradient = omit_gradient
         self.logo_size = logo_size
         self.logo_vertical_shift = logo_vertical_shift
         self.separator = separator
         self.stroke_color = stroke_color
 
 
-    def resize_logo(self) -> Path:
-        """
-        Resize the logo into at most a 1875x1030 bounding box (resized 
-        by the indicated logo size).
+    @property
+    def logo_commands(self) -> ImageMagickCommands:
+        """Subcommands to add the logo to the Card."""
 
-        Returns:
-            Path to the created image.
-        """
+        # Post-resize max dimensions of the logo
+        max_width = 1875 * self.logo_size
+        max_height = 1030 * self.logo_size
 
-        width, height = 1030 * self.logo_size, 1875 * self.logo_size
+        # Determine current dimensions of the logo
+        current_width, current_height = self.image_magick.get_image_dimensions(
+            self.logo
+        )
 
-        command = ' '.join([
-            f'convert',
-            f'"{self.logo.resolve()}"',
-            f'-resize x{width}',
-            f'-resize {height}x{width}\>',
-            f'"{self.__RESIZED_LOGO.resolve()}"',
-        ])
+        # Determine dimensions post-resizing
+        scale = max_height / current_height  # -resize x{max_height}
+        if current_width * scale > max_width:# -resize {max_width}x{max_height}>
+            scale = max_width / current_width
 
-        self.image_magick.run(command)
+        # Resize logo, get resized height to determine offset
+        offset = 60 + ((1030 - (current_height * scale)) // 2) \
+            + self.logo_vertical_shift
 
-        return self.__RESIZED_LOGO
+        return [
+            f'-gravity north',
+            f'\( "{self.logo.resolve()}"',
+            f'-resize x{max_height}',
+            f'-resize {max_width}x{max_height}\>',
+            f'\) -geometry +0{offset:+}',
+            f'-composite',
+        ]
 
 
     @property
@@ -252,6 +279,7 @@ class LogoTitleCard(BaseCardType):
             return []
 
         # Only add season text
+        y = 697.2 + self.episode_text_vertical_shift
         if self.hide_episode_text:
             return [
                 f'-kerning 5.42',
@@ -262,11 +290,11 @@ class LogoTitleCard(BaseCardType):
                 f'-fill black',
                 f'-stroke black',
                 f'-strokewidth 6',
-                f'-annotate +0+697.2 "{self.season_text}"',
-                f'-fill "{self.SERIES_COUNT_TEXT_COLOR}"',
-                f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
+                f'-annotate +0{y:+} "{self.season_text}"',
+                f'-fill "{self.episode_text_color}"',
+                f'-stroke "{self.episode_text_color}"',
                 f'-strokewidth 0.75',
-                f'-annotate +0+697.2 "{self.episode_text}"',
+                f'-annotate +0{y:+} "{self.episode_text}"',
             ]
 
         # Only add episode text
@@ -280,11 +308,11 @@ class LogoTitleCard(BaseCardType):
                 f'-fill black',
                 f'-stroke black',
                 f'-strokewidth 6',
-                f'-annotate +0+697.2 "{self.episode_text}"',
-                f'-fill "{self.SERIES_COUNT_TEXT_COLOR}"',
-                f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
+                f'-annotate +0{y:+} "{self.episode_text}"',
+                f'-fill "{self.episode_text_color}"',
+                f'-stroke "{self.episode_text_color}"',
                 f'-strokewidth 0.75',
-                f'-annotate +0+697.2 "{self.episode_text}"',
+                f'-annotate +0{y:+} "{self.episode_text}"',
             ]
 
         return [
@@ -307,11 +335,11 @@ class LogoTitleCard(BaseCardType):
             # Combine season+episode text into one "image"
             f'+smush 25 \)',
             # Add season+episode text "image" to source image
-            f'-geometry +0+697.2',
+            f'-geometry +0{y:+}',
             f'-composite',
             # Primary text
-            f'\( -fill "{self.SERIES_COUNT_TEXT_COLOR}"',
-            f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
+            f'\( -fill "{self.episode_text_color}"',
+            f'-stroke "{self.episode_text_color}"',
             f'-strokewidth 0.75',
             # Add season text
             f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
@@ -321,8 +349,43 @@ class LogoTitleCard(BaseCardType):
             f'label:"{self.episode_text}"',
             f'+smush 30 \)',
             # Add text to source image
-            f'-geometry +0+697.2',
+            f'-geometry +0{y:+}',
             f'-composite',
+        ]
+
+
+    @property
+    def title_text_commands(self) -> ImageMagickCommands:
+        """Subcommands to add the title text to the image."""
+
+        # No title text, return empty commands
+        if not self.title_text:
+            return []
+
+        # Font customizations
+        vertical_shift = 245 + self.font_vertical_shift
+        font_size = 157.41 * self.font_size
+        interline_spacing = -22 + self.font_interline_spacing
+        interword_spacing = 50 + self.font_interword_spacing
+        kerning = -1.25 * self.font_kerning
+        stroke_width = 3.0 * self.font_stroke_width
+
+        return [
+            # Global title text options
+            f'-gravity south',
+            f'-font "{self.font_file}"',
+            f'-kerning {kerning}',
+            f'-interword-spacing {interword_spacing}',
+            f'-interline-spacing {interline_spacing}',
+            f'-pointsize {font_size}',
+            # Stroke behind title text
+            f'-fill "{self.stroke_color}"',
+            f'-stroke "{self.stroke_color}"',
+            f'-strokewidth {stroke_width}',
+            f'-annotate +0+{vertical_shift} "{self.title_text}"',
+            # Title text
+            f'-fill "{self.font_color}"',
+            f'-annotate +0+{vertical_shift} "{self.title_text}"',
         ]
 
 
@@ -343,6 +406,11 @@ class LogoTitleCard(BaseCardType):
         """
 
         if not custom_font:
+            if 'episode_text_color' in extras:
+                extras['episode_text_color'] =\
+                    LogoTitleCard.SERIES_COUNT_TEXT_COLOR
+            if 'episode_text_vertical_shift' in extras:
+                extras['episode_text_vertical_shift'] = 0
             if 'stroke_color' in extras:
                 extras['stroke_color'] = 'black'
 
@@ -362,7 +430,11 @@ class LogoTitleCard(BaseCardType):
         """
 
         custom_extras = (
-            ('stroke_color' in extras
+            ('episode_text_color' in extras
+                and extras['episode_text_color'] != 0)
+            or ('episode_text_vertical_shift' in extras
+                and extras['episode_text_vertical_shift'] != 0)
+            or ('stroke_color' in extras
                 and extras['stroke_color'] != 'black')
         )
 
@@ -407,19 +479,6 @@ class LogoTitleCard(BaseCardType):
         object's defined title card.
         """
 
-        # Resize logo, get resized height to determine offset
-        resized_logo = self.resize_logo()
-        _, height = self.image_magick.get_image_dimensions(resized_logo)
-        offset = 60 + ((1030 - height) // 2) + self.logo_vertical_shift
-
-        # Font customizations
-        vertical_shift = 245 + self.font_vertical_shift
-        font_size = 157.41 * self.font_size
-        interline_spacing = -22 + self.font_interline_spacing
-        interword_spacing = 50 + self.font_interword_spacing
-        kerning = -1.25 * self.font_kerning
-        stroke_width = 3.0 * self.font_stroke_width
-
         # Sub-command to add source file or create colored background
         if self.use_background_image:
             blur_command = ''
@@ -459,30 +518,14 @@ class LogoTitleCard(BaseCardType):
             f'convert',
             # Add background image or color
             *background_command,
-            # Overlay resized logo
-            f'"{resized_logo.resolve()}"',
-            f'-gravity north',
-            f'-geometry "+0+{offset}"',
-            f'-composite',
+            # Overlay logo
+            *self.logo_commands,
             # Optionally overlay gradient
             *gradient_command,
             # Apply style that is applicable to entire image
             *style_command,
-            # Global title text options
-            f'-gravity south',
-            f'-font "{self.font_file}"',
-            f'-kerning {kerning}',
-            f'-interword-spacing {interword_spacing}',
-            f'-interline-spacing {interline_spacing}',
-            f'-pointsize {font_size}',
-            # Stroke behind title text
-            f'-fill "{self.stroke_color}"',
-            f'-stroke "{self.stroke_color}"',
-            f'-strokewidth {stroke_width}',
-            f'-annotate +0+{vertical_shift} "{self.title_text}"',
             # Title text
-            f'-fill "{self.font_color}"',
-            f'-annotate +0+{vertical_shift} "{self.title_text}"',
+            *self.title_text_commands,
             # Add episode or season+episode "image"
             *self.index_commands,
             # Attempt to overlay mask
@@ -493,6 +536,3 @@ class LogoTitleCard(BaseCardType):
         ])
 
         self.image_magick.run(command)
-
-        # Delete resized logo
-        self.image_magick.delete_intermediate_images(resized_logo)
