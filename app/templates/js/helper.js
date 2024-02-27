@@ -765,8 +765,11 @@ function analyzePalette(imageElementSelector, paletteSelector) {
   if (!image || !image.src || !palette || _analyzedImages.has(image.src)) { return; }
 
   function hasDuplicatesWithinRange(subArray, seenArrays) {
+    const tooClose = (v0, v1) => Math.abs(v0 - v1) <= 10;
     for (const seenArray of seenArrays) {
-      if (seenArray.some(seenVal => subArray.some(subVal => Math.abs(subVal - seenVal) <= 5))) {
+      if (tooClose(seenArray[0], subArray[0])
+          && tooClose(seenArray[1], subArray[1])
+          && tooClose(seenArray[2], subArray[2])) {
         return true;
       }
     }
