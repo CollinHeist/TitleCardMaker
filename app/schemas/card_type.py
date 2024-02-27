@@ -552,6 +552,7 @@ class OlivierCardType(BaseCardTypeCustomFontNoText):
     episode_text_color: BetterColor = OlivierTitleCard.EPISODE_TEXT_COLOR
     episode_text_font_size: PositiveFloat = 1.0
     episode_text_vertical_shift: int = 0
+    omit_gradient: bool = True
     stroke_color: BetterColor = OlivierTitleCard.STROKE_COLOR
 
     @root_validator(skip_on_failure=True)
