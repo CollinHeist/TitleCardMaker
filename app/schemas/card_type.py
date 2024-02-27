@@ -667,6 +667,7 @@ class StandardCardType(BaseCardTypeCustomFontAllText):
     stroke_color: BetterColor = 'black'
     episode_text_color: BetterColor = StandardTitleCard.SERIES_COUNT_TEXT_COLOR
     episode_text_font_size: PositiveFloat = 1.0
+    episode_text_vertical_shift: int = 0
 
 class StarWarsCardType(BaseCardModel):
     title_text: str

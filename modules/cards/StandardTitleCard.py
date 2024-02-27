@@ -42,6 +42,14 @@ class StandardTitleCard(BaseCardType):
                 tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
             ),
             Extra(
+                name='Episode Text Vertical Shift',
+                identifier='episode_text_vertical_shift',
+                description=(
+                    'Additional vertical shift to apply to the season and '
+                    'episode text. Default is <v>0</v>.'
+                ),
+            ),
+            Extra(
                 name='Stroke Text Color',
                 identifier='stroke_color',
                 description='Color to use for the title text stroke',
@@ -105,7 +113,7 @@ class StandardTitleCard(BaseCardType):
         'font_file', 'font_interline_spacing', 'font_interword_spacing',
         'font_kerning', 'font_size', 'font_stroke_width', 'font_vertical_shift',
         'episode_text_color', 'omit_gradient', 'stroke_color', 'separator',
-        'episode_text_font_size',
+        'episode_text_font_size', 'episode_text_vertical_shift',
     )
 
     def __init__(self,
@@ -130,6 +138,7 @@ class StandardTitleCard(BaseCardType):
             stroke_color: str = 'black',
             episode_text_color: str = SERIES_COUNT_TEXT_COLOR,
             episode_text_font_size: float = 1.0,
+            episode_text_vertical_shift: int = 0,
             omit_gradient: bool = False,
             preferences: Optional['Preferences'] = None,
             **unused,
@@ -165,6 +174,7 @@ class StandardTitleCard(BaseCardType):
         self.stroke_color = stroke_color
         self.episode_text_color = episode_text_color
         self.episode_text_font_size = episode_text_font_size
+        self.episode_text_vertical_shift = episode_text_vertical_shift
 
 
     @property
@@ -186,6 +196,7 @@ class StandardTitleCard(BaseCardType):
         ]
 
         # Sub-command for adding season/episode text
+        y = 1555 + self.episode_text_vertical_shift
         if self.hide_season_text:
             return [
                 *base_commands,
@@ -193,11 +204,11 @@ class StandardTitleCard(BaseCardType):
                 f'-fill black',
                 f'-stroke black',
                 f'-strokewidth 6',
-                f'-annotate +0+1555 "{self.episode_text}"',
+                f'-annotate +0{y:+} "{self.episode_text}"',
                 f'-fill "{self.episode_text_color}"',
                 f'-stroke "{self.episode_text_color}"',
                 f'-strokewidth 0.75',
-                f'-annotate +0+1555 "{self.episode_text}"',
+                f'-annotate +0{y:+} "{self.episode_text}"',
             ]
 
         if self.hide_episode_text:
@@ -209,13 +220,13 @@ class StandardTitleCard(BaseCardType):
                 f'-strokewidth 6',
                 # Add season text
                 f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
-                f'-annotate +0+1555 "{self.season_text}"',
+                f'-annotate +0{y:+} "{self.season_text}"',
                 # Primary text
                 f'-fill "{self.episode_text_color}"',
                 f'-stroke "{self.episode_text_color}"',
                 f'-strokewidth 0.75',
                 # Add season text
-                f'-annotate +0+1555 "{self.season_text}"',
+                f'-annotate +0{y:+} "{self.season_text}"',
             ]
 
         return [
@@ -235,7 +246,7 @@ class StandardTitleCard(BaseCardType):
             f'+smush 25 \)',
             # Add season+episode text "image" to source image
             f'-gravity north',
-            f'-geometry +0+1555',
+            f'-geometry +0{y:+}',
             f'-composite',
             # Primary text
             f'-gravity center',
@@ -251,7 +262,7 @@ class StandardTitleCard(BaseCardType):
             f'+smush 30 \)',
             # Add text to source image
             f'-gravity north',
-            f'-geometry +0+1557',
+            f'-geometry +0{y+2:+}',
             f'-composite',
         ]
 
@@ -298,6 +309,8 @@ class StandardTitleCard(BaseCardType):
                     StandardTitleCard.SERIES_COUNT_TEXT_COLOR
             if 'episode_text_font_size' in extras:
                 extras['episode_text_font_size'] = 1.0
+            if 'episode_text_vertical_shift' in extras:
+                extras['episode_text_vertical_shift'] = 0
             if 'stroke_color' in extras:
                 extras['stroke_color'] = 'black'
 
@@ -321,6 +334,8 @@ class StandardTitleCard(BaseCardType):
                 and extras['episode_text_color'] != StandardTitleCard.SERIES_COUNT_TEXT_COLOR)
             or ('episode_text_font_size' in extras
                 and extras['episode_text_font_size'] != 1.0)
+            or ('episode_text_vertical_shift' in extras
+                and extras['episode_text_vertical_shift'] != 0)
             or ('stroke_color' in extras
                 and extras['stroke_color'] != 'black')
         )
