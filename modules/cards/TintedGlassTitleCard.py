@@ -325,7 +325,7 @@ class TintedGlassTitleCard(BaseCardType):
         ]
 
         width, height = self.image_magick.get_text_dimensions(
-            command, width='max', height='max'
+            command, width='max', height='sum'
         )
 
         # Center positioning requires padding adjustment

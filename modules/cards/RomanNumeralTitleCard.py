@@ -541,7 +541,7 @@ class RomanNumeralTitleCard(BaseCardType):
 
         # Get width of whole line
         total_width, _ = self.image_magick.get_text_dimensions(
-            numeral_command, width='sum', height='max'
+            numeral_command, width='sum',
         )
 
         # Get width of line to the left of the selected numeral
@@ -549,7 +549,7 @@ class RomanNumeralTitleCard(BaseCardType):
         if len(left_text) > 0:
             left_width, _ = self.image_magick.get_text_dimensions(
                 self.create_roman_numeral_command(left_text),
-                width='sum', height='max'
+                width='sum',
             )
 
         # Get width of line to the right of the selected numeral
@@ -557,7 +557,7 @@ class RomanNumeralTitleCard(BaseCardType):
         if len(right_text) > 0:
             right_width, _ = self.image_magick.get_text_dimensions(
                 self.create_roman_numeral_command(right_text),
-                width='sum', height='max'
+                width='sum',
             )
 
         # Determine necesary offset by position within the line

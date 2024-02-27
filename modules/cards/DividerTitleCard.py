@@ -165,8 +165,8 @@ class DividerTitleCard(BaseCardType):
         self.title_text = self.image_magick.escape_chars(title_text)
         self.season_text = self.image_magick.escape_chars(season_text)
         self.episode_text = self.image_magick.escape_chars(episode_text)
-        self.hide_season_text = hide_season_text or len(season_text) == 0
-        self.hide_episode_text = hide_episode_text or len(episode_text) == 0
+        self.hide_season_text = hide_season_text
+        self.hide_episode_text = hide_episode_text
 
         # Font/card customizations
         self.font_color = font_color
@@ -225,6 +225,7 @@ class DividerTitleCard(BaseCardType):
             return []
 
         gravity = 'east' if self.title_text_position == 'left' else 'west'
+
         return [
             f'-gravity {gravity}',
             f'-pointsize {100 * self.font_size}',
@@ -235,10 +236,7 @@ class DividerTitleCard(BaseCardType):
     @property
     def divider_height(self) -> int:
         """
-        Get the height of the divider between the index and title text.
-
-        Returns:
-            Height of the divider to create.
+        The height of the divider between the index and title text.
         """
 
         # No need for divider, use blank command
