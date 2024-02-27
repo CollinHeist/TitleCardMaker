@@ -203,9 +203,9 @@ class AnimeTitleCard(BaseCardType):
         # Font customizations
         self.font_color = font_color
         self.font_file = font_file
-        self.font_interline_spacing = font_interline_spacing
+        self.font_interline_spacing = -30 + font_interline_spacing
         self.font_interword_spacing = font_interword_spacing
-        self.font_kerning = font_kerning
+        self.font_kerning = 2.0 * font_kerning
         self.font_size = font_size
         self.font_stroke_width = font_stroke_width
         self.font_vertical_shift = font_vertical_shift
@@ -227,14 +227,12 @@ class AnimeTitleCard(BaseCardType):
         southwest gravity.
         """
 
-        kerning = 2.0 * self.font_kerning
-        interline_spacing = -30 + self.font_interline_spacing
         font_size = 150 * self.font_size
 
         return [
             f'-font "{self.font_file}"',
-            f'-kerning {kerning}',
-            f'-interline-spacing {interline_spacing}',
+            f'-kerning {self.font_kerning}',
+            f'-interline-spacing {self.font_interline_spacing}',
             f'-interword-spacing {self.font_interword_spacing}',
             f'-pointsize {font_size}',
             f'-gravity southwest',
@@ -309,11 +307,16 @@ class AnimeTitleCard(BaseCardType):
 
         # Determine kanji positioning based on height of title text
         _, title_height = self.image_magick.get_text_dimensions(
-            title_commands, width='max', height='sum'
+            [
+                *self.__title_text_global_effects,
+                *self.__title_text_effects,
+                f'-annotate +75+{base_offset} "{self.title_text}"',
+            ],
+            interline_spacing=self.font_interline_spacing,
+            line_count=len(self.title_text.splitlines()),
+            width='max', height='sum'
         )
-        line_count = len(self.title_text.split('\n'))
-        kanji_offset = base_offset + (title_height / 2) \
-            - (43 * (line_count - 1)) + self.kanji_vertical_shift
+        kanji_offset = base_offset + title_height + self.kanji_vertical_shift
 
         return [
             *title_commands,

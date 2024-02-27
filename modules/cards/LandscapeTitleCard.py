@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Literal, Optional, Union
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription, Shadow
 )
+from modules.Debug import log
 
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
@@ -267,13 +268,16 @@ class LandscapeTitleCard(BaseCardType):
 
         # Get dimensions of text - since text is stacked, do max/sum operations
         width, height = self.image_magick.get_text_dimensions(
-            text_command, width='max', height='sum'
+            text_command,
+            interline_spacing=interline_spacing,
+            line_count=len(self.title_text.splitlines()),
+            width='max', height='sum'
         )
 
         # Get start coordinates of the bounding box
-        x_start, x_end = 3200/2 - width/2, 3200/2 + width/2
-        y_start, y_end = 1800/2 - height/2, 1800/2 + height/2
-        y_end -= 35 # Additional offset necessary for things to work out
+        x_start, x_end = (self.WIDTH - width) / 2, (self.WIDTH + width) / 2
+        y_start, y_end = (self.HEIGHT - height) / 2, (self.HEIGHT + height) / 2
+        y_end -= 35 # Additional offset necessary for asymmetrical text bounds
 
         # Shift y coordinates by vertical shift
         y_start += self.font_vertical_shift
@@ -281,9 +285,9 @@ class LandscapeTitleCard(BaseCardType):
 
         # Adjust corodinates by spacing and manual adjustments
         x_start -= self.BOUNDING_BOX_SPACING + self.box_adjustments[3]
-        x_end += self.BOUNDING_BOX_SPACING + self.box_adjustments[1]
-        y_start -= self.BOUNDING_BOX_SPACING  + self.box_adjustments[0]
-        y_end += self.BOUNDING_BOX_SPACING + self.box_adjustments[2]
+        x_end   += self.BOUNDING_BOX_SPACING + self.box_adjustments[1]
+        y_start -= self.BOUNDING_BOX_SPACING + self.box_adjustments[0]
+        y_end   += self.BOUNDING_BOX_SPACING + self.box_adjustments[2]
 
         return BoxCoordinates(x_start, y_start, x_end, y_end)
 

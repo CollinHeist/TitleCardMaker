@@ -236,28 +236,42 @@ class DividerTitleCard(BaseCardType):
     @property
     def divider_height(self) -> int:
         """
-        The height of the divider between the index and title text.
+        The height of the divider between the index and title text. This
+        is calculated based on the maximum of the height of the index
+        and title text. 0 is returned if a divider is not needed.
         """
 
-        # No need for divider, use blank command
+        # No need for divider if either text is hidden, return 0
         if (len(self.title_text) == 0
             or (self.hide_season_text and self.hide_episode_text)):
             return 0
 
+        index_text_line_count = (
+            1 if self.hide_episode_text or self.hide_season_text else 2
+        )
+
         return max(
             # Height of the index text
-            self.image_magick.get_text_dimensions([
+            self.image_magick.get_text_dimensions(
+                [
                     f'-font "{self.font_file}"',
                     f'-interline-spacing {self.font_interline_spacing}',
                     *self.index_text_command,
-                ], width='max', height='sum'
+                ],
+                interline_spacing=self.font_interline_spacing,
+                line_count=index_text_line_count,
+                width='max', height='sum',
             )[1],
             # Height of the title text
-            self.image_magick.get_text_dimensions([
+            self.image_magick.get_text_dimensions(
+                [
                     f'-font "{self.font_file}"',
                     f'-interline-spacing {self.font_interline_spacing}',
                     *self.title_text_command,
-                ], width='max', height='sum'
+                ],
+                interline_spacing=self.font_interline_spacing,
+                line_count=len(self.title_text.splitlines()),
+                width='max', height='sum'
             )[1]
         )
 
