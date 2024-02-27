@@ -235,7 +235,8 @@ BaseJobs = {
 def initialize_scheduler(override: bool = False) -> None:
     """
     Initialize the Scheduler by creating any Jobs in BaseJobs that do
-    not already exist.
+    not already exist. This can also be called to reinitialize all "bad"
+    jobs which are scheduled in the past.
 
     Args:
         override: Whether to override any existing scheduled jobs.
@@ -247,11 +248,18 @@ def initialize_scheduler(override: bool = False) -> None:
     # Schedule all defined Jobs
     changed = False
     for job in BaseJobs.values():
+        # Determine if the job schedule is bad
+        bad_job = (
+            scheduler.get_job(job.id) is not None
+            and scheduler.get_job(job.id).next_run_time < datetime.now(tz=tz)
+        )
+
         # If overriding, job is not already scheduled, or job schedule
         # is in the past, add to scheduler
-        if (override
-            or scheduler.get_job(job.id) is None
-            or scheduler.get_job(job.id).next_run_time < datetime.now(tz=tz)):
+        if override or scheduler.get_job(job.id) is None or bad_job:
+            if bad_job:
+                log.warning(f'Fixing schedule for Task[{job.id}]')
+
             if preferences.advanced_scheduling:
                 changed = True
                 # Store crontab in Preferences
