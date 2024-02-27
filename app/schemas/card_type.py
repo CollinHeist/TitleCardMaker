@@ -817,6 +817,7 @@ LocalCardTypeModels: dict[str, Base] = {
     'roman numeral': RomanNumeralCardType,
     'shape': ShapeCardType,
     'sherlock': TintedGlassCardType,
+    'spotify': MusicCardType,
     'standard': StandardCardType,
     'star wars': StarWarsCardType,
     'textless': TextlessCardType,
