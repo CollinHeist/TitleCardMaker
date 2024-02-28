@@ -680,13 +680,15 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             entry cannot be found.
         """
 
+        exception_group = (AttributeError, NotFound, IndexError, TMDbException)
+
         # Query with TVDb ID first
         if episode_info.has_id('tvdb_id'):
             try:
                 results = self.api.find_by_id(tvdb_id=episode_info.tvdb_id)
                 (episode := results.tv_episode_results[0]).reload()
                 return episode
-            except (NotFound, IndexError, TMDbException):
+            except exception_group:
                 pass
 
         # Query with IMDb ID
@@ -701,7 +703,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 else:
                     raise NotFound
                 return episode
-            except (NotFound, IndexError, TMDbException):
+            except exception_group:
                 pass
 
         # Query with TVRage ID
@@ -716,7 +718,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 else:
                     raise NotFound
                 return episode
-            except (NotFound, IndexError, TMDbException):
+            except exception_group:
                 pass
 
         # Search for movie with this episode title
@@ -750,7 +752,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 log.debug(f'Matched {episode_info} of "{series_info}" to TMDb '
                          f'Movie {movie}')
                 return movie
-            except (NotFound, IndexError, AssertionError, TMDbException):
+            except exception_group:
                 return None
 
         # If series TMDb ID is not present, try as movie, no other attempts
@@ -766,9 +768,9 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         def _match_by_index(episode_info, season_number, episode_number):
             # Find episode with series TMDb ID and given index
             try:
-                episode = self.api.tv_episode(series_info.tmdb_id,
-                                              season_number, episode_number)
-                episode.reload()
+                (episode := self.api.tv_episode(
+                    series_info.tmdb_id, season_number, episode_number
+                )).reload()
             except (NotFound, TMDbException):
                 return None
 
