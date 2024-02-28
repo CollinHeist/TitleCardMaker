@@ -241,6 +241,7 @@ class ComicBookTitleCard(BaseCardType):
     ARCHIVE_NAME = 'Comic Book Style'
 
     """Implementation details"""
+    BANNER_FILL_COLOR = 'rgba(235,73,69,0.6)'
     TEXT_BOX_WIDTH_MARGIN = 50
     TEXT_BOX_HEIGHT_MARGIN = 50
     TITLE_TEXT_VERTICAL_OFFSET = 125
@@ -279,7 +280,7 @@ class ComicBookTitleCard(BaseCardType):
             text_box_edge_color: Optional[str] = None,
             title_text_rotation_angle: float = -4.0,
             index_text_rotation_angle: float = -4.0,
-            banner_fill_color: str = 'rgba(235,73,69,0.6)',
+            banner_fill_color: str = BANNER_FILL_COLOR,
             title_banner_shift: int = 0,
             index_banner_shift: int = 0,
             hide_title_banner: bool = False,
@@ -369,10 +370,10 @@ class ComicBookTitleCard(BaseCardType):
         # Get dimensions of the title text
         title_width, title_height = self.image_magick.get_text_dimensions(
             self.title_text_commands,
+            interline_spacing=self.font_interline_spacing,
+            line_count=len(self.title_text.splitlines()),
             width='max',
-            height='sum',
         )
-        title_height += self.font_interline_spacing
 
         # Create the rectangle that will border the title text
         title_text_rectangle = SvgRectangle(
@@ -498,7 +499,6 @@ class ComicBookTitleCard(BaseCardType):
         index_width, index_height = self.image_magick.get_text_dimensions(
             self.index_text_commands,
             width='max',
-            height='sum',
         )
 
         # Create the rectangle that will border the index text
@@ -511,7 +511,7 @@ class ComicBookTitleCard(BaseCardType):
         index_text_rectangle.rotate(self.index_text_rotation_angle)
 
         # Determine new origin of the index text based on placement location
-        y_coordinate = 75 + (index_width / 2)
+        y_coordinate = 75 + (index_height / 2)
         if self.index_text_position == 'left':
             # The index text origin is 35px from the left of the image
             index_text_origin = Coordinate(35, y_coordinate)
@@ -612,7 +612,8 @@ class ComicBookTitleCard(BaseCardType):
             if 'text_box_edge_color' in extras:
                 extras['text_box_edge_color'] = 'white'
             if 'border_fill_color' in extras:
-                extras['border_fill_color'] = 'rgba(235,73,69,0.6)'
+                extras['border_fill_color'] = \
+                    ComicBookTitleCard.BANNER_FILL_COLOR
 
 
     @staticmethod
@@ -635,7 +636,7 @@ class ComicBookTitleCard(BaseCardType):
             or ('text_box_fill_color' in extras
                 and extras['text_box_fill_color'] != 'white')
             or ('banner_fill_color' in extras
-                and extras['banner_fill_color'] != 'rgba(235,73,69,0.6)')
+                and extras['banner_fill_color'] != ComicBookTitleCard.BANNER_FILL_COLOR)
         )
 
         return (custom_extras
