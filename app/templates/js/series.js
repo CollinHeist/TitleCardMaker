@@ -432,8 +432,10 @@ function deleteObject(args) {
 /**
  * Launch a modal to edit the extras (and translations) for the given Episode.
  * @param {Episode} episode - Episode whose extras are being edited.
+ * @param {Episode[]} allEpisodes - Sorted array of Episodes for sequencing
+ * through modals.
  */
-function editEpisodeExtras(episode) {
+async function editEpisodeExtras(episode, allEpisodes) {
   // Clear existing values
   $('#episode-extras-modal .field > .field, ' +
     '#episode-extras-modal .fields > .field > input').remove();
@@ -449,77 +451,114 @@ function editEpisodeExtras(episode) {
   }
 
   // Assign functions to add/delete translation buttons
-  $('#episode-extras-modal .button[data-delete-field="translations"]').off('click').on('click', () => {
-    deleteObject({
-      url: `/api/episodes/episode/${episode.id}`,
-      dataObject: {translations: {}},
-      label: 'Translations',
-      deleteElements: '#episode-extras-modal .field[data-value="translations"] input',
+  $('#episode-extras-modal .button[data-delete-field="translations"]')
+    .off('click')
+    .on('click', () => {
+      deleteObject({
+        url: `/api/episodes/episode/${episode.id}`,
+        dataObject: {translations: {}},
+        label: 'Translations',
+        deleteElements: '#episode-extras-modal .field[data-value="translations"] input',
+      });
     });
-  });
-  // Add existing extras
-  if (episode.extras !== null) {
-    // Remove any existing fields
-    $('#episode-extras-modal .field[data-value="extras"] .field').remove();
-    // Add new fields
-    const extraField = $('#episode-extras-modal .field[data-value="extras"]');
-    for (const [key, value] of Object.entries(episode.extras)) {
-      const extra = document.getElementById('extra-template').content.cloneNode(true);
-      extra.querySelector('input[name="extra_values"]').value = value;
-      extraField.append(extra);
-      initializeExtraDropdowns(
-        key,
-        $(`#episode-extras-modal .dropdown[data-value="extra_keys"]`).last(),
-        $(`#episode-extras-modal  .field[data-value="extras"] .popup .header`).last(),
-        $(`#episode-extras-modal  .field[data-value="extras"] .popup .description`).last(),
-      );
-    }
-    $('#episode-extras-modal .field[data-value="extras"] .link.icon').popup({inline: true});
-  }
-  // Assign functions to delete extra buttons
-  $('#episode-extras-modal .button[data-delete-field="extras"]').off('click').on('click', () => {
-    deleteObject({
-      url: `/api/episodes/episode/${episode.id}`,
-      dataObject: {extra_keys: null, extra_values: null},
-      label: 'Extras',
-      deleteElements: '#episode-extras-modal .field[data-value="extras"] .field',
+
+  // Remove any existing extras
+  $('#episode-extras-modal section[aria-label="extras"] > .tab, ' +
+    '#episode-extras-modal section[aria-label="extras"] > .menu .item').remove();
+
+  // Initialze extras
+  await initializeExtras(
+    episode.extras || [],
+    episode.card_type || ('{{series.card_type}}' !== 'None' ? '{{series.card_type}}' : '{{preferences.default_card_type}}'),
+    '#episode-extras-modal section[aria-label="extras"]',
+    document.getElementById('extra-input-template'),
+  );
+  refreshTheme();
+
+  // Assign functions to previous/next buttons
+  $('#episode-extras-modal [data-action="previous-episode"]')
+    .off('click')
+    .on('click', () => {
+      const previousEpisode = allEpisodes[allEpisodes.indexOf(episode) - 1];
+      if (previousEpisode) {
+        editEpisodeExtras(previousEpisode, allEpisodes);
+      } else {
+        showInfoToast('No previous Episode on current page');
+      }
     });
-  });
+  $('#episode-extras-modal [data-action="next-episode"]')
+    .off('click')
+    .on('click', () => {
+      const nextEpisode = allEpisodes[allEpisodes.indexOf(episode) + 1];
+      if (nextEpisode) {
+        editEpisodeExtras(nextEpisode, allEpisodes);
+      } else {
+        showInfoToast('No next Episode on current page');
+      }
+    });
+
   // Show modal
   $('#episode-extras-modal').modal('show');
 
   // Submit episode extras form
-  $('#episode-extras-form').off('submit').on('submit', event => {
-    event.preventDefault();
-    if (!$('#episode-extras-form').form('is valid')) { return; }
-    const translationKeys = $('#episode-extras-modal input[name="translation_key"]');
-    const translationValues = $('#episode-extras-modal input[name="translation_value"]');
-    const data = {
-      extra_keys: $('#episode-extras-modal input[name="extra_keys"]').map((ind, element) => element.value).toArray(),
-      extra_values: $('#episode-extras-modal input[name="extra_values"]').map((ind, element) => element.value).toArray(),
-    };
-    if (translationKeys.length) { 
-      data.translations = Object.assign(...translationKeys.map((k, i) => ({ [i.value]: translationValues[k].value })));
-    }
-    $.ajax({
-      type: 'PATCH',
-      url: `/api/episodes/episode/${episode.id}`,
-      data: JSON.stringify(data),
-      contentType: 'application/json',
-      /**
-       * Edit successful, show toast and update the extras for this Episode.
-       * @param {Episode} updatedEpisode - Newly edited Episode.
-       */
-      success: updatedEpisode => {
-        showInfoToast('Updated Episode');
-        // Update the extras/translation modal for this Episode
-        $(`#episode-id${episode.id} td[data-column="extras"] a`)
-          .off('click')
-          .on('click', () => editEpisodeExtras(updatedEpisode));
-      },
-      error: response => showErrorToast({title: 'Error Updating Episode', response}),
+  $('#episode-extras-form')
+    .off('submit')
+    .on('submit', /** @param {SubmitEvent} event */ event => {
+      // Prevent page reload
+      event.preventDefault();
+
+      /** Parse some list value, converting empty lists to null */
+      const parseList = (value, _default) => value.length ? value : _default;
+
+      // Convert form to data
+      /** @type {UpdateEpisode} */
+      const data = {
+        translations: parseList(
+            Array.from(document.querySelectorAll('#episode-extras-modal input[name="language_code"]')).map((input, index) => {
+              return {
+                language_code: input.value,
+                data_key: document.querySelectorAll('#episode-extras-modal input[name="data_key"]')[index].value,
+              };
+            }),
+            {},
+          ),
+        extra_keys: parseList(
+            $('#episode-extras-modal section[aria-label="extras"] input').map(function() {
+              if ($(this).val() !== '') { 
+                return $(this).attr('name'); 
+              }
+            }).get()
+          ),
+        extra_values: parseList(
+            $('#episode-extras-modal section[aria-label="extras"] input').map(function() {
+              if ($(this).val() !== '') {
+                return $(this).val(); 
+              }
+            }).get(),
+          ),
+      };
+
+      // Submit API request
+      $.ajax({
+        type: 'PATCH',
+        url: `/api/episodes/episode/${episode.id}`,
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        /**
+         * Edit successful, show toast and update the extras for this Episode.
+         * @param {Episode} updatedEpisode - Newly edited Episode.
+         */
+        success: updatedEpisode => {
+          showInfoToast('Updated Episode');
+          // Update the extras/translation modal for this Episode
+          allEpisodes[allEpisodes.indexOf(episode)] = updatedEpisode;
+          $(`#episode-id${episode.id} td[data-column="extras"] a`)
+            .off('click')
+            .on('click', () => editEpisodeExtras(updatedEpisode, allEpisodes));
+        },
+        error: response => showErrorToast({title: 'Error Updating Episode', response}),
+      });
     });
-  });
 }
 
 /**
@@ -806,7 +845,7 @@ async function getEpisodeData(page=1) {
       row.querySelector('input[name="source_file"]').value = episode.source_file;
       row.querySelector('input[name="card_file"]').value = episode.card_file;
     {% endif %}
-    row.querySelector('td[data-column="extras"] a').onclick = () => editEpisodeExtras(episode);
+    row.querySelector('td[data-column="extras"] a').onclick = () => editEpisodeExtras(episode, episodeData.items);
     {% if not preferences.simplified_data_table %}
       const embyIdInput = row.querySelector('input[name="emby_id"]');
       if (embyIdInput !== null) { embyIdInput.value = episode.emby_id; }
