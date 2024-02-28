@@ -262,6 +262,19 @@
  * @property {Card[]} cards
  */
 
+/**
+ * @typedef {Episode} UpdateEpisode
+ */
+
+/**
+ * @typedef {Object} EpisodePage
+ * @property {Episode[]} items
+ * @property {number} total
+ * @property {number} size
+ * @property {number} page
+ * @property {number} pages
+ */
+
 // Fonts -----------------------------------------------------------------------
 
 /**

@@ -1,7 +1,7 @@
 {% if False %}
 import {
-  Blueprint, Episode, ExternalSourceImage, Extra, LogEntryPage, RemoteBlueprint,
-  Series, Statistic, SourceImagePage, TitleCardPage
+  Blueprint, Episode, EpisodePage, ExternalSourceImage, LogEntryPage,
+  RemoteBlueprint, Series, Statistic, SourceImagePage, TitleCardPage, UpdateEpisode
 } from './.types.js';
 {% endif %}
 
@@ -430,12 +430,14 @@ function deleteObject(args) {
 }
 
 /**
- * 
+ * Launch a modal to edit the extras (and translations) for the given Episode.
  * @param {Episode} episode - Episode whose extras are being edited.
  */
 function editEpisodeExtras(episode) {
   // Clear existing values
-  $('#episode-extras-modal .field > .field, #episode-extras-modal .fields > .field > input').remove();
+  $('#episode-extras-modal .field > .field, ' +
+    '#episode-extras-modal .fields > .field > input').remove();
+
   // Add existing translations
   for (let [data_key, value] of Object.entries(episode.translations)) {
     const newKey = document.createElement('input');
@@ -445,6 +447,7 @@ function editEpisodeExtras(episode) {
     $('#episode-extras-modal .field[data-value="translation-key"]').append(newKey);
     $('#episode-extras-modal .field[data-value="translation-value"]').append(newValue);
   }
+
   // Assign functions to add/delete translation buttons
   $('#episode-extras-modal .button[data-delete-field="translations"]').off('click').on('click', () => {
     deleteObject({
@@ -743,9 +746,9 @@ async function getEpisodeData(page=1) {
   if (rowTemplate === null) { return; }
 
   // Get page of episodes via API
+  /** @type {EpisodePage} */
   const episodeData = await fetch(`/api/episodes/series/{{series.id}}?size={{preferences.episode_data_page_size}}&page=${page}`).then(resp => resp.json());
   if (episodeData === null || episodeData.items.length === 0) { return; }
-  const episodes = episodeData.items;
 
   // Different HTML for each togglable boolean icon
   function getIcon(value, triState=true) {
@@ -759,10 +762,11 @@ async function getEpisodeData(page=1) {
     }
   }
 
-  // Create 
-  const rows = episodes.map(episode => {
+  // Create row for each Episode
+  const rows = episodeData.items.map(episode => {
     // Create new row for this episode
     const row = rowTemplate.content.cloneNode(true);
+
     // Set row ID
     row.querySelector('tr').id = `episode-id${episode.id}`;
     row.querySelector('tr').dataset.episodeId = episode.id;
@@ -822,7 +826,7 @@ async function getEpisodeData(page=1) {
 
   // Initialize dropdowns, assign form submit API request
   await getAllCardTypes();
-  episodes.forEach(episode => {
+  episodeData.items.forEach(episode => {
     // Templates
     $(`#episode-id${episode.id} .dropdown[data-value="template_ids"]`).dropdown({
       values: getActiveTemplates(episode.template_ids, availableTemplates),
