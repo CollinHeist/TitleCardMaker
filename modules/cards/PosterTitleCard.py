@@ -35,8 +35,8 @@ class PosterTitleCard(BaseCardType):
         description=[
             'Title card featuring a vertical poster with a starry background, '
             'originally designed for the Gundam series.', 'This card is '
-            'designed for vertical source images, and you will likely need to '
-            'manually download and specify posters as source images',
+            'designed for vertical Source Images, and you will likely need to '
+            'manually download and specify a poster as a Source Image.',
         ]
     )
 
@@ -62,9 +62,6 @@ class PosterTitleCard(BaseCardType):
 
     """Whether this class uses season titles for the purpose of archives"""
     USES_SEASON_TITLE = False
-
-    """This card doesn't use unique sources (uses posters)"""
-    USES_UNIQUE_SOURCES = False
 
     """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Poster Style'

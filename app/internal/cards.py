@@ -604,7 +604,7 @@ def resolve_card_settings(
             )).sanitize()
 
     # Exit if the source file does not exist
-    if (CardClass.USES_UNIQUE_SOURCES
+    if (CardClass.USES_SOURCE_IMAGES
         and not card_settings['source_file'].exists()):
         log.debug(f'{episode} Card source image '
                   f'({card_settings["source_file"]}) is missing')

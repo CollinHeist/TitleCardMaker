@@ -267,6 +267,9 @@ class BaseCardType(ImageMaker):
     """Whether this class uses unique source images for card creation"""
     USES_UNIQUE_SOURCES = True
 
+    """Whether this class uses Source Images at all"""
+    USES_SOURCE_IMAGES = True
+
     """Standard size for all title cards"""
     WIDTH = 3200
     HEIGHT = 1800
