@@ -133,7 +133,7 @@ class SeriesInfo(DatabaseInfoContainer):
     @staticmethod
     def from_series_infos(
             primary: 'SeriesInfo',
-            *series_infos: tuple['SeriesInfo'],
+            *series_infos: 'SeriesInfo',
         ) -> 'SeriesInfo':
         """
         Construct a SeriesInfo object from all the given objects. This
@@ -224,7 +224,7 @@ class SeriesInfo(DatabaseInfoContainer):
         return SeriesInfo(
             info['Name'],
             datetime.strptime(info['PremiereDate'], AIRDATE_FORMAT).year,
-            emby_id=f'{interface_id}:{library_name}:{info["Id"]}',
+            jellyfin_id=f'{interface_id}:{library_name}:{info["Id"]}',
             imdb_id=info.get('ProviderIds', {}).get('Imdb'),
             tmdb_id=info.get('ProviderIds', {}).get('Tmdb'),
             tvdb_id=info.get('ProviderIds', {}).get('Tvdb'),
