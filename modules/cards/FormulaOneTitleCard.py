@@ -255,30 +255,43 @@ class FormulaOneTitleCard(BaseCardType):
 
     @property
     def race_commands(self) -> ImageMagickCommands:
-        """Subcommmands to add the race name to the title text."""
+        """Subcommmands to add the race name to the image."""
 
+        # No race, return empty commands
         if not self.race:
             return []
 
-        return [
-            f'-gravity north',
+        # Base commands before text size modification
+        font_size = 205 * self.font_size
+        commands = [
+            f'-gravity center',
             f'-font "{self.font_file}"',
             f'-fill "{self.font_color}"',
-            f'-pointsize {205 * self.font_size}',
-            f'-annotate +0+575 "{self.race}"',
+            f'-pointsize {font_size}',
+            f'-annotate +0-222 "{self.race}"',
         ]
+
+        # Scale font size
+        width, _ = self.image_magick.get_text_dimensions(commands)
+        INNER_WIDTH = 1725 - (50 * 2) # 50px margin on either side
+        if width > INNER_WIDTH:
+            font_size *= INNER_WIDTH / width
+            commands[-2] = f'-pointsize {font_size}'
+
+        return commands
 
 
     @property
     def title_text_commands(self) -> ImageMagickCommands:
         """Subcommands required to add the title text."""
 
-        # If no title text, return empty commands
+        # No title text, return empty commands
         if len(self.title_text) == 0:
             return []
 
+        # Base commands before text size modification
         font_size = 155 * self.font_size
-        text_commands = [
+        commands = [
             f'-gravity north',
             f'-font "{self.font_file}"',
             f'-fill "{self.font_color}"',
@@ -287,13 +300,13 @@ class FormulaOneTitleCard(BaseCardType):
         ]
 
         # Scale font size dynamically if text is too wide
-        width, _ = self.image_magick.get_text_dimensions(text_commands)
+        width, _ = self.image_magick.get_text_dimensions(commands)
         INNER_WIDTH = 1725 - (50 * 2) # 50px margin on either side
         if width > INNER_WIDTH:
             font_size *= INNER_WIDTH / width
-            text_commands[-2] = f'-pointsize {font_size}'
+            commands[-2] = f'-pointsize {font_size}'
 
-        return text_commands
+        return commands
 
 
     @property
