@@ -379,11 +379,11 @@ class LandscapeCardType(BaseCardModel):
     darken: Union[Literal['all', 'box'], bool] = 'box'
 
     @validator('box_adjustments')
-    def parse_box_adjustments(cls, val):
+    def parse_box_adjustments(cls, val: str) -> tuple[int, int, int, int]:
         return tuple(map(int, re_match(BoxAdjustmentRegex, val).groups()))
 
     @root_validator(skip_on_failure=True)
-    def assign_unassigned_color(cls, values):
+    def assign_unassigned_color(cls, values: dict) -> dict:
         # None means match font color
         if values['box_color'] is None:
             values['box_color'] = values['font_color']
@@ -407,7 +407,7 @@ class LogoCardType(BaseCardTypeCustomFontAllText):
     use_background_image: bool = False
 
     @root_validator(skip_on_failure=True)
-    def validate_source_file(cls, values):
+    def validate_source_file(cls, values: dict) -> dict:
         if (values['use_background_image'] and
             (not values['source_file'] or not values['source_file'].exists())):
             raise ValueError(f'Source file indicated and does not exist')
@@ -768,7 +768,7 @@ class TintedGlassCardType(BaseCardTypeCustomFontNoText):
     vertical_adjustment: int = 0
 
     @validator('box_adjustments')
-    def parse_box_adjustments(cls, val):
+    def parse_box_adjustments(cls, val: str) -> tuple[int, int, int, int]:
         return tuple(map(int, re_match(BoxAdjustmentRegex, val).groups()))
 
     @root_validator(skip_on_failure=True)

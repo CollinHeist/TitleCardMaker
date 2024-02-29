@@ -5,6 +5,8 @@
   <title>{{series.name}} - TitleCardMaker</title>
 
   {% include "./html_boilerplate.html" %}
+  <!-- Include 2.9.3 so event timelines load -->
+  <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.3/dist/semantic.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
 
   <script type="text/javascript">
@@ -1346,9 +1348,14 @@
     </div>
 
     <!-- Episode extras/translations modal -->
-    <div id="episode-extras-modal" class="ui small modal">
+    <div id="episode-extras-modal" class="ui modal">
       <i class="close icon"></i>
-      <div class="header">Episode Translations and Extras</div>
+      <div class="center aligned header">
+        <i data-action="previous-episode" class="ui arrow alternate circle left outline link icon"></i>
+        <span>Episode Translations and Extras</span>
+        <i data-action="next-episode" class="ui arrow alternate circle right outline link icon"></i>
+      </div>
+
       <div class="content">
         <form id="episode-extras-form" class="ui form">
           <div data-value="translations" class="ui field">
@@ -1356,11 +1363,9 @@
             <div class="two fields">
               <div data-value="translation-key" class="right aligned field">
                 <label>Key</label>
-                <!-- <input name="extra_keys" type="text"> -->
               </div>
               <div data-value="translation-value" class="fluid field">
                 <label>Value</label>
-                <!-- <input name="extra_values" type="text"> -->
               </div>
             </div>
           </div>
@@ -1368,21 +1373,16 @@
             <i class="trash alternate outline icon"></i>
             Delete Translations
           </div>
+
           <div class="ui divider"></div>
-          <div data-value="extras" class="ui field">
-            <label>Extras</label>
-            <!-- Added later -->
-          </div>
-          <div onclick="addBlankEpisodeExtra();" class="ui circular mini icon add-field grey button">
-            <i class="plus square outline icon"></i>
-            Add Extra
-          </div>
-          <div data-delete-field="extras" class="ui circular mini icon add-field red button">
-            <i class="trash alternate outline icon"></i>
-            Delete Extras
-          </div>
+
+          <section aria-label="extras">
+            <div class="ui top attached tabular wrapping menu"></div>
+          </section>
+
         </form>
       </div>
+
       <div class="actions">
         <button class="ui cancel button">Cancel</button>
         <button form="episode-extras-form" class="ui animated primary button" type="submit">
