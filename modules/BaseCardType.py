@@ -576,25 +576,24 @@ class BaseCardType(ImageMaker):
             return []
 
         # Look for mask file corresponding to this source image
-        mask = file.parent / f'{file.stem}-mask.png'
+        # Prioritize episode-specific mask, then general mask
+        if (mask := list(file.parent.glob(f'{file.stem}*mask.*'))):
+            mask = mask[0]
+        elif (mask := list(file.parent.glob(f'mask.*'))):
+            mask = mask[0]
+        else:
+            return []
 
-        # If source mask does not exist, query for global mask
-        mask = mask if mask.exists() else file.parent / 'mask.png'
+        log.debug(f'Identified mask image "{mask.resolve()}"')
+        if pre_processing is None:
+            pre_processing = self.resize_and_style
 
-        # Mask exists, return commands to compose atop image
-        if mask.exists():
-            log.debug(f'Identified mask image "{mask.resolve()}"')
-            if pre_processing is None:
-                pre_processing = self.resize_and_style
-
-            return [
-                f'\( "{mask.resolve()}"',
-                *pre_processing,
-                f'\) -geometry {x:+}{y:+}',
-                f'-composite',
-            ]
-
-        return []
+        return [
+            f'\( "{mask.resolve()}"',
+            *pre_processing,
+            f'\) -geometry {x:+}{y:+}',
+            f'-composite',
+        ]
 
 
     @property

@@ -480,11 +480,8 @@ async function editEpisodeExtras(episode, allEpisodes) {
     .off('click')
     .on('click', () => {
       const previousEpisode = allEpisodes[allEpisodes.indexOf(episode) - 1];
-      if (previousEpisode) {
-        editEpisodeExtras(previousEpisode, allEpisodes);
-      } else {
-        showInfoToast('No previous Episode on current page');
-      }
+      if (previousEpisode) { editEpisodeExtras(previousEpisode, allEpisodes);      }
+      else {                 showInfoToast('No previous Episode on current page'); }
     });
   $('#episode-extras-modal [data-action="next-episode"]')
     .off('click')
