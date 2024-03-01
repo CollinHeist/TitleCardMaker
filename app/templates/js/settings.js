@@ -162,6 +162,8 @@ function updateGlobalSettings() {
     if (Object.keys(currentExtras).length > 0) { extras[cardType] = currentExtras; }
   });
 
+  const parseListString = (val) => val === '' ? [] : val.split(',');
+
   // Parse all settings data into one update object
   /** @type {UpdatePreferences} */
   const data = {
@@ -176,10 +178,10 @@ function updateGlobalSettings() {
     delete_missing_episodes: $('input[name="delete_missing_episodes"]').is(':checked'),
     // Title Cards
     default_card_type: $('input[name="default_card_type"]').val(),
-    excluded_card_types: $('input[name="excluded_card_types"]').val().split(','),
+    excluded_card_types: parseListString($('input[name="excluded_card_types"]').val()),
     default_watched_style: $('input[name="default_watched_style"]').val() || '{{preferences.default_watched_style}}',
     default_unwatched_style: $('input[name="default_unwatched_style"]').val() || '{{preferences.default_unwatched_style}}',
-    default_templates: $('input[name="default_templates"]').val().split(','),
+    default_templates: parseListString($('input[name="default_templates"]').val()),
     card_width: $('input[name="card_width"]').val(),
     card_height: $('input[name="card_height"]').val(),
     card_quality: $('input[name="card_quality"]').val(),
