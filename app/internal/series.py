@@ -4,13 +4,14 @@ from time import sleep
 from typing import Optional, Union
 
 from fastapi import BackgroundTasks, HTTPException
+from PIL import Image
 from requests import get
 from sqlalchemy.exc import InvalidRequestError, OperationalError
 from sqlalchemy.orm import Session
+
 from app.database.query import (
     get_all_templates, get_font, get_interface, get_sync
 )
-
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.cards import create_episode_cards, get_watched_statuses, refresh_remote_card_types
 from app.internal.episodes import refresh_episode_data
@@ -223,10 +224,11 @@ def download_series_poster(
     db.commit()
 
     # Create resized small poster
-    resized_path = path.parent / 'poster-750.jpg'
-    get_imagemagick_interface().resize_image(
-        path, resized_path, by='width', width=750,
-    )
+    img = Image.open(path)
+    img.resize((
+        750, int(750 / img.width * img.height)),
+        Image.Resampling.LANCZOS
+    ).save(path.parent / 'poster-750.jpg')
 
     log.debug(f'Series[{series.id}] Downloaded poster {path.resolve()}')
     return None
