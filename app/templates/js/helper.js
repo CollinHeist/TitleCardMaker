@@ -792,18 +792,16 @@ function analyzePalette(imageElementSelector, paletteSelector) {
     const bubble = document.createElement('span');
     bubble.className = 'color';
     bubble.style.setProperty('--color', `rgb(${r}, ${g}, ${b})`);
-    // bubble.style.setProperty('--alt-color', isLightColor(r, g, b) ? 'white' : 'black');
-    bubble.onclick = () => {
-      if (window.navigator.clipboard) {
-        window.navigator.clipboard.writeText(`rgb(${r},${g},${b})`);
-        showInfoToast('Copied to clipboard');
-      } else {
-        showInfoToast({title: `Color is "rgb(${r},${g},${b})"`, displayTime: 8000});
-      }
-    }
+    bubble.dataset.clipboardText = `rgb(${r}, ${g}, ${b})`;
     palette.appendChild(bubble);
   });
 
   // Add to list of analyzed images
   _analyzedImages.add(image.src);
+
+  // Copy to clipboard when clicked
+  new ClipboardJS(`${paletteSelector} span.color`)
+    .on('success', function (event) {
+      showInfoToast(`Copied ${event.text} to clipboard`);
+    });
 }
