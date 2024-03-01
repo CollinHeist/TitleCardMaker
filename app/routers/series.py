@@ -1,4 +1,3 @@
-from shutil import copy as file_copy
 from typing import Literal, Optional
 
 from fastapi import (
@@ -7,6 +6,7 @@ from fastapi import (
 )
 from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_pagination import paginate as paginate_sequence
+from PIL import Image
 from requests import get
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
@@ -487,7 +487,6 @@ async def set_series_poster(
         poster_file: Optional[UploadFile] = None,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        image_magick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface)
     ) -> str:
     """
     Set the poster for the given series.
@@ -540,16 +539,11 @@ async def set_series_poster(
     poster_path.write_bytes(poster_content)
 
     # Create resized poster for preview
-    resized_path = poster_path.parent / 'poster-750.jpg'
-    if image_magick_interface is None:
-        file_copy(
-            preferences.INTERNAL_ASSET_DIRECTORY / 'placeholder.jpg',
-            resized_path,
-        )
-    else:
-        image_magick_interface.resize_image(
-            poster_path, resized_path, by='width', width=500,
-        )
+    img = Image.open(poster_path)
+    img.resize(
+        (750, int(750 / img.width * img.height)),
+        Image.Resampling.LANCZOS
+    ).save(poster_path.parent / 'poster-750.jpg')
 
     # Update poster, commit to database
     series.poster_url = f'/assets/{series.id}/poster.jpg'
