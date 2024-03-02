@@ -756,13 +756,14 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         plex_object.addLabel(['TCM'])
 
 
-    def __add_exif_tag(self, card: Path) -> None:
+    def __add_exif_tag(self, card: Path, *, log: Logger = log) -> None:
         """
         Add an EXIF tag to the given Card file. This adds "titlecard" at
         0x4242, and overwrites the existing file.
 
         Args:
             card: Path to the Card file to modify.
+            log: Logger for all log messages.
         """
 
         # Create Image object, read EXIF data
@@ -772,6 +773,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         # Add EXIF data, write modified file
         exif[self.EXIF_TAG['key']] = self.EXIF_TAG['data']
         card_image.save(card.resolve(), exif=exif)
+        log.trace(f'Added EXIF data {self.EXIF_TAG} to {card}')
 
 
     @catch_and_log('Error uploading title cards')
@@ -828,7 +830,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             try:
                 # If integrating with PMM, add EXIF data
                 if self.integrate_with_pmm:
-                    self.__add_exif_tag(image)
+                    self.__add_exif_tag(image, log=log)
 
                 # Upload card
                 self.__retry_upload(plex_episode, image.resolve())
@@ -836,6 +838,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 # If integrating with PMM, remove label
                 if self.integrate_with_pmm:
                     plex_episode.removeLabel(['Overlay'])
+                    log.trace(f'Removed "Overlay" label from {plex_episode}')
                 log.debug(f'{series_info} S{plex_episode.seasonNumber:02}E'
                           f'{plex_episode.episodeNumber:02} Loaded Card into '
                           f'"{library_name}"')
