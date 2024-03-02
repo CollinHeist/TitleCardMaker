@@ -90,7 +90,7 @@ def set_primary_logger(level: str = 'INFO') -> int:
         diagnose=True,
         enqueue=True,
     )
-    logger.level('TRACE', color='<dim><black>')
+    logger.level('TRACE', color='<dim><fg #6d6d6d>')
     logger.level('DEBUG', color='<dim><white>')
     logger.level('INFO', color='<light-cyan>')
     logger.level('WARNING', color='<yellow>')
