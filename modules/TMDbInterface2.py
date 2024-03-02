@@ -722,7 +722,11 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 pass
 
         # Search for movie with this episode title
-        def _find_episode_as_movie(episode_info) -> Optional[TMDbMovie]:
+        def _find_episode_as_movie(
+                episode_info: EpisodeInfo
+            ) -> Optional[TMDbMovie]:
+            """Attempt to find the given Episode as a Movie"""
+
             try:
                 # Search for movies with this title
                 results = self.api.movie_search(episode_info.title.full_title)
@@ -742,15 +746,16 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 release_date_match = (
                     episode_info.airdate is not None
                     and release_date is not None
-                    and episode_info.airdate - timedelta(days=1) <= release_date
-                    and episode_info.airdate + timedelta(days=1) >= release_date
+                    and (episode_info.airdate - timedelta(days=1)
+                         <= release_date
+                         <= episode_info.airdate + timedelta(days=1))
                 )
-
-                assert id_match or (title_match and release_date_match)
+                if not id_match and not (title_match and release_date_match):
+                    raise NotFound
 
                 # Actual match, return "movie"
-                log.debug(f'Matched {episode_info} of "{series_info}" to TMDb '
-                         f'Movie {movie}')
+                log.trace(f'Matched {episode_info} of "{series_info}" to TMDb '
+                          f'Movie {movie}')
                 return movie
             except exception_group:
                 return None

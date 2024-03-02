@@ -320,11 +320,14 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             for image in images:
                 if image['coverType'] == 'poster':
                     url = image['url'].rsplit('?', maxsplit=1)[0]
-                    return f'/api/proxy/sonarr?url={url}&interface_id={self.interface_id}'
+                    return (
+                        f'/api/proxy/sonarr?url={url}'
+                        f'&interface_id={self.interface_id}'
+                    )
 
             return None
 
-        def get_sonarr_id(id_: Optional[int]) -> Optional[str]:
+        def get_sonarr_id(id_: Optional[int], /) -> Optional[str]:
             return None if id_ is None else f'{self.interface_id}:{id_}'
 
         return [
@@ -378,7 +381,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
 
         # Query Sonarr to get JSON of all episodes for this series
         all_episodes: list[dict] = self.get(url, params)
-        all_episode_info = []
+        all_episode_info: list[tuple[EpisodeInfo, WatchedStatus]] = []
 
         # Go through each episode and get its season/episode number, and title
         has_bad_ids = False
@@ -468,6 +471,8 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
                             and id_ is not None):
                             setattr(old_episode_info, id_type, id_)
                     break
+
+        return None
 
 
     def get_all_tags(self) -> list[dict[Literal['id', 'label'], Any]]:
