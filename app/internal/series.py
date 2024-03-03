@@ -228,7 +228,7 @@ def download_series_poster(
     img.resize((
         750, int(750 / img.width * img.height)),
         Image.Resampling.LANCZOS
-    ).save(path.parent / 'poster-750.jpg')
+    ).convert('RGB').save(path.parent / 'poster-750.jpg', )
 
     log.debug(f'Series[{series.id}] Downloaded poster {path.resolve()}')
     return None
