@@ -577,7 +577,9 @@ class BaseCardType(ImageMaker):
 
         # Look for mask file corresponding to this source image
         # Prioritize episode-specific mask, then general mask
-        if (mask := list(file.parent.glob(f'{file.stem}*mask.*'))):
+        if (mask := list(file.parent.glob(f'{file.stem}-mask.*'))):
+            mask = mask[0]
+        elif (mask := list(file.parent.glob(f'{file.stem}_mask.*'))):
             mask = mask[0]
         elif (mask := list(file.parent.glob(f'mask.*'))):
             mask = mask[0]
