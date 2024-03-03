@@ -681,7 +681,8 @@ class MusicTitleCard(BaseCardType):
             + 115 \
             + (65 if self.subtitle else 0) \
             + self.font_vertical_shift \
-            + self._title_dimensions.height
+            + self._title_dimensions.height \
+            + 25
         # Dist / controls / timeline / subtitle / text diff / title / margin
 
         # Coordinates for composing the cover
@@ -749,9 +750,10 @@ class MusicTitleCard(BaseCardType):
             + (65 if self.subtitle else 0) \
             + self.font_vertical_shift \
             + self._title_dimensions.height \
+            + 25 \
             + self._album_dimensions.height \
             + (25 if self.player_style == 'basic' else 60)
-        # Controls / timeline / subtitle / text diff / title / album / margin
+        # Controls / timeline / subtitle / text diff / title / margin / album / margin
 
         start = Coordinate(
             start_x,
@@ -943,10 +945,11 @@ class MusicTitleCard(BaseCardType):
             - (65 if self.subtitle else 0) \
             - self.font_vertical_shift \
             - self._title_dimensions.height \
+            - 25 \
             - self._album_dimensions.height \
             - (25 if self.player_style == 'basic' else 60) \
             + 28
-        # Inset / controls / timeline / subtitle / text diff / title / album / margin / inner inset
+        # Inset / controls / timeline / subtitle / text diff / title / margin / album / margin / inner inset
 
         return [
             f'-fill "{self.heart_color}"',
