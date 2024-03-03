@@ -74,6 +74,15 @@ def create_preview_card(
             detail=f'Cannot create preview for card type "{card.card_type}"',
         )
 
+    # Fake data
+    format_data = {
+        'series_full_name': 'Test Series (2020)', 'series_name': 'Test Series',
+        'season_episode_max': 10, 'series_episode_max': 20,
+        'logo_file': preferences.INTERNAL_ASSET_DIRECTORY / 'logo.png',
+        'poster_file': preferences.INTERNAL_ASSET_DIRECTORY / 'preview' / 'poster.webp',
+        'backdrop_file': preferences.INTERNAL_ASSET_DIRECTORY / 'preview' / 'art.jpg',
+    }
+
     # Get preview season and episode text
     if card.season_text is None:
         # Apply season text formatting if indicated
@@ -81,7 +90,7 @@ def create_preview_card(
             if getattr(CardClass, 'SEASON_TEXT_FORMATTER', None) is None:
                 card.season_text = FormatString(
                     'Season {season_number}',
-                    data=card.dict(),
+                    data=format_data | card.dict(),
                 ).result
             else:
                 fake_ei = EpisodeInfo(
@@ -91,7 +100,7 @@ def create_preview_card(
                 )
                 card.season_text = FormatString(
                     getattr(CardClass, 'SEASON_TEXT_FORMATTER')(fake_ei),
-                    data=card.dict(),
+                    data=format_data | card.dict(),
                 ).result
         except InvalidCardSettings as exc:
             raise HTTPException(
@@ -102,7 +111,7 @@ def create_preview_card(
         try:
             card.episode_text = FormatString(
                 (card.episode_text_format or CardClass.EPISODE_TEXT_FORMAT),
-                data=card.dict(),
+                data=format_data | card.dict(),
             ).result
         except InvalidCardSettings as exc:
             raise HTTPException(
@@ -124,12 +133,7 @@ def create_preview_card(
     # Resolve all settings
     card_settings = TieredSettings.new_settings(
         preferences.global_extras.get(card.card_type, {}),
-        {'series_full_name': 'Test Series (2020)', 'series_name': 'Test Series',
-         'season_episode_max': 10, 'series_episode_max': 20,
-         'logo_file': preferences.INTERNAL_ASSET_DIRECTORY / 'logo.png',
-         'poster_file': preferences.INTERNAL_ASSET_DIRECTORY / 'preview' / 'poster.webp',
-         'backdrop_file': preferences.INTERNAL_ASSET_DIRECTORY / 'preview' / 'art.jpg',
-        },
+        format_data,
         DefaultFont,
         preferences.card_properties,
         font_template_dict,
