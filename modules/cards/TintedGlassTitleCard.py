@@ -158,14 +158,14 @@ class TintedGlassTitleCard(BaseCardType):
         self.output_file = card_file
 
         self.title_text = self.image_magick.escape_chars(title_text)
-        self.__line_count = len(title_text.split('\n'))
+        self.__line_count = len(title_text.splitlines())
         self.episode_text = self.image_magick.escape_chars(episode_text)
         self.hide_episode_text = hide_episode_text
 
         self.font_file = font_file
         self.font_size = font_size
         self.font_color = font_color
-        self.font_interline_spacing = font_interline_spacing
+        self.font_interline_spacing = -50 + font_interline_spacing
         self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_vertical_shift = font_vertical_shift
@@ -228,7 +228,6 @@ class TintedGlassTitleCard(BaseCardType):
 
         font_size = 200 * self.font_size
         kerning = -5 * self.font_kerning
-        interline_spacing = -50 + self.font_interline_spacing
         interword_spacing = 40 + self.font_interword_spacing
         vertical_shift = 300 + self.font_vertical_shift \
             + self.vertical_adjustment
@@ -237,7 +236,7 @@ class TintedGlassTitleCard(BaseCardType):
             f'-gravity south',
             f'-font "{self.font_file}"',
             f'-pointsize {font_size}',
-            f'-interline-spacing {interline_spacing}',
+            f'-interline-spacing {self.font_interline_spacing}',
             f'-interword-spacing {interword_spacing}',
             f'-kerning {kerning}',
             f'-fill "{self.font_color}"',
@@ -253,26 +252,25 @@ class TintedGlassTitleCard(BaseCardType):
             BoxCoordinates of the bounding box.
         """
 
-        # Get dimensions of text - since text is stacked, do max/sum operations
+        # Get dimensions of title text
         width, height = self.image_magick.get_text_dimensions(
-            self.title_text_commands, width='max', height='sum'
+            self.title_text_commands,
+            interline_spacing=self.font_interline_spacing,
+            line_count=self.__line_count,
         )
 
         # Get start coordinates of the bounding box
-        x_start, x_end = self.WIDTH/2 - width/2, self.WIDTH/2 + width/2
+        x_start, x_end = (self.WIDTH - width) / 2, (self.WIDTH + width) / 2
         y_start, y_end = self.HEIGHT - 300 - height, self.HEIGHT - 300
 
         # Additional offsets necessary for equal padding
-        x_start -= 50
-        x_end += 50
+        x_start -= 40
+        x_end += 28
         y_start += 12
 
         # Shift y coordinates by vertical shift
         y_start -= self.font_vertical_shift + self.vertical_adjustment
         y_end -= self.font_vertical_shift + self.vertical_adjustment
-
-        # Adjust upper bounds of box if title is multi-line
-        y_start += (65 * (self.__line_count-1)) if self.__line_count > 1 else 0
 
         # Adjust bounds by any manual box adjustments
         x_start -= self.box_adjustments[3]
