@@ -592,6 +592,7 @@ class BaseCardType(ImageMaker):
 
         return [
             f'\( "{mask.resolve()}"',
+            *self.resize,
             *pre_processing,
             f'\) -geometry {x:+}{y:+}',
             f'-composite',
