@@ -1,5 +1,213 @@
 const changeLog = [
   {
+    version: 'v2.0-alpha.9.0',
+    changelog: `
+<h2>Major Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Create new Music card type
+    <div class="list">
+      <img width="50%" src="https://titlecardmaker.com/card_types/assets/music.webp">
+    </div>
+  </div>
+  <div class="item">Create new Notification card type
+    <div class="list">
+      <img width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/8959d3ad-7ae5-4d5f-80fb-194dfbcd09a2">
+    </div>
+  </div>
+  <div class="item">Create new Formula 1 card type
+    <div class="list">
+      <img width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/27b833c8-bd7d-4235-8c54-aa5b1aa30bd5">
+    </div>
+  </div>
+  <div class="item">Display Source Images from Emby and Jellyfin within the UI when browsing images per-Episode</div>
+  <div class="item">Add option to specify any number of global default Templates
+    <div class="list">
+      <div class="item">These Templates are a below all other overrides, but just above global settings</div>
+      <div class="item">This should allow very fine-tuned control of all Series in TCM (especially when used with filters)</div>
+    </div>
+  </div>
+  <div class="item">Completely redo how extras are displayed in Templates, Series, and Episodes
+    <div class="list">
+      <div class="item">All available extras are shown in a tab-separated section</div>
+      <div class="item">Extra descriptions and tooltips are now always visible</div>
+    </div>
+  </div>
+  <div class="item">Display all log available log files within the UI (on the <b>/logs</b> page)</div>
+  <div class="item">Add color "bubbles" to Extras and alongside Font color inputs to give a small display of the indicated color</div>
+  <div class="item">Add buttons to analyze the palettes of logo and backdrop files within the UI</div>
+  <div class="item">Allow specification of global per-card type extras</div>
+  <div class="item">Significantly improve the text height measurement algorithm
+    <div class="list">
+      <div class="item">Measure text metric ascent and descent instead of directly reported height (these are unreliable, for some reason)</div>
+      <div class="item">Account for non-0 font interline spacing in height measurement for multi-line text</div>
+      <div class="item">In my tests, this meant that manual height-adjusted components - like the bounding box in the Landscape, Comic Book, Tinted Glass, and Music cards; or the kanji placement in the Anime card - are<i>much</i>more accurate</div>
+    </div>
+  </div>
+  <div class="item">Add previous and next arrows to Episode translation/extra modals to allow quickly navigating between sequential Episodes</div>
+</div>
+<h2>Major Fixes </h2>
+<div class="ui ordered list">
+  <div class="item">Fix the localized image setting for TMDb Connections</div>
+  <div class="item">Add <b>colorama</b> and <b>win32-setctime</b> to Pipfile to fix dependency installs in non-Docker on Windows</div>
+  <div class="item">Do not require a Source Image when creating Cards with the Logo card</div>
+  <div class="item">Fix Emby Series ID assigment</div>
+  <div class="item">Allow clearing Series IDs within the UI</div>
+  <div class="item">Apply more strict Episode database ID matching to prevent a single "bad" database ID from resulting in false matches - especially for multi-episodes within Plex which are tied to one episode within TVDb / TMDb / IMDb
+    <div class="list">
+      <div class="item">If more than one database ID is present, then any two ID matches are required in the database query</div>
+    </div>
+  </div>
+  <div class="item">Fix for non-Docker Window Title Card previews</div>
+  <div class="item">Handle Series names with apostrophes </div>
+  <div class="item">Still query non-TMDb Connections for Source Images if the Episode does not exist on TMDb</div>
+  <div class="item">Add missing Episode Font kerning column to Episode data tables</div>
+  <div class="item">Fix the specification of per-Episode size, and stroke width within Episode data tables</div>
+  <div class="item">Fix deletion of associated Loaded assets when removing a Connection</div>
+  <div class="item">Correctly reset the global Episode Data Source when a Connection is deleted</div>
+  <div class="item">(Potentially) fix some instances where a very long running Task (or busy DB) could cause all Tasks to be skipped and not rescheduled; resulting in no subsequent Task runs (until TCM is restarted)</div>
+  <div class="item">Fix Jellyfin Series ID assignment incorrectly setting the Emby ID</div>
+</div>
+<h2>Minor Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Allow multi-line season titles on season posters made with v1 / the mini maker</div>
+  <div class="item">Group all Fonts that start with a number under the same <b>#</b> header</div>
+  <div class="item">Add the internal Font asset file path to the file name label text</div>
+  <div class="item">Change backup filename format - old backups from before this change will need to be manually delete</div>
+  <div class="item">Reduce main page left padding by 20px</div>
+  <div class="item">Adjust the Font and Template column widths</div>
+  <div class="item">Add a small color live indicator for above the Font color customization input</div>
+  <div class="item">Simplify Form parsing for Series and Templates</div>
+  <div class="item">Skip parsing log files if the file modification time is before the specified <b>after</b> parameter</div>
+  <div class="item">Change API query start/end messages to <b>TRACE</b> level</div>
+  <div class="item">Add any custom season title under the <b>season_title</b> Card variable (can be used in format strings)</div>
+  <div class="item">Improve background task execution:
+    <div class="list">
+      <div class="item">Do not stop pending Tasks after exception is raised</div>
+      <div class="item">Improve traceback printing for any raised exceptions</div>
+    </div>
+  </div>
+  <div class="item">Improve Template previews:
+    <div class="list">
+      <div class="item">Reflect custom episode text formats</div>
+      <div class="item">Reflect card-type default season and episode text (was always "Season 1" and "Episode 1")</div>
+    </div>
+  </div>
+  <div class="item">Improve exception logging when CardType validation fails</div>
+  <div class="item">Log when a Task is "bad" (e.g. scheduled in the past) and is fixed</div>
+  <div class="item">Print ImageMagick command history as string, not bytes</div>
+  <div class="item">Resize posters with Pillow, not ImageMagick, so poster generation does not fail when ImageMagick is not installed</div>
+  <div class="item">Use fuzzy searching when finding mask images in Card creation
+    <div class="list">
+      <div class="item">Look for masks like <b>(name)-mask.*</b> or <b>(name)_mask.*</b> to support any image type, and more generalized file naming</div>
+      <div class="item">Search for series-wide mask <b>mask.*</b> file if Episode-specific mask is not found</div>
+    </div>
+  </div>
+  <div class="item">Removed animation from graph page as it made toggling individual elements slow</div>
+</div>
+<h2>Minor Fixes</h2>
+<div class="ui ordered list">
+  <div class="item">Fix the Series sort order when searching by name</div>
+  <div class="item">Remove redundant Series name / info in some log messages</div>
+  <div class="item">Fix annotated text for when episode text is hidden in the Standard card</div>
+  <div class="item">(v1) Properly detect custom Fonts archives from extras for the Comic Book card</div>
+  <div class="item">Correct the description text for the home page size setting</div>
+  <div class="item">Do not set the internal use_(Connection) variables if all Connections of that type are disabled</div>
+  <div class="item">Correctly resize the Source Image when the border is hidden in the Marvel card</div>
+  <div class="item">_Actually_ expire login tokens after 7 days, not 2</div>
+  <div class="item">Correctly detect local episode text font files in the Tinted Frame card</div>
+  <div class="item">Handle exceptions raised during poster downloads</div>
+  <div class="item">Handle invalid API response from Jellyfin when querying Episode watched statuses</div>
+  <div class="item">Add generic metric data to Card preview generation</div>
+  <div class="item">Correct displayed Font asset filepath (was <b>/config/fonts/...</b>, not <b>/config/assets/fonts/...</b>) - visual bug only</div>
+  <div class="item">(v1) Fix SVG to PNG logo conversion</div>
+  <div class="item">Handle AttributeError caused by bad TMDb API returns in the TMDb find Episode logic</div>
+  <div class="item">Properly evaluate missing Source Images for card types which do not use unique Source Images (namely the Poster card)</div>
+  <div class="item">Resize poster thumbnails uploaded directly via API to 750px, not 500px</div>
+  <div class="item">Resize mask images (to 3200x1800) before applying to Title Card</div>
+</div>
+<h2>Title Card Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Anime
+    <div class="list">
+      <div class="item">Color kanji stroke using the _kanji color_, not title color</div>
+    </div>
+  </div>
+  <div class="item">Banner
+    <div class="list">
+      <div class="item">Increase right margin between text on bottom line of title text</div>
+    </div>
+  </div>
+  <div class="item">Comic Book
+    <div class="list">
+      <div class="item">Fix index text box placement (was being offset by index text width, not height)</div>
+    </div>
+  </div>
+  <div class="item">Graph
+    <div class="list">
+      <div class="item">Limit graph inset between 0 - 1800 pixels</div>
+      <div class="item">Limit graph radius between 50 and 900 pixels</div>
+      <div class="item">Force the graph width to always be less than or equal to the graph radius</div>
+    </div>
+  </div>
+  <div class="item">Landscape
+    <div class="list">
+      <div class="item">Add box width extra</div>
+    </div>
+  </div>
+  <div class="item">Logo
+    <div class="list">
+      <div class="item">Add logo size and logo vertical shift extras</div>
+      <div class="item">Do not create intermediate resized logo image, instead using an inline image queue (will speed up Card creation a lot)</div>
+      <div class="item">Add episode text color extra</div>
+      <div class="item">Add episode text vertical shift extra</div>
+    </div>
+  </div>
+  <div class="item">Olivier
+    <div class="list">
+      <div class="item">Add omit gradient extra</div>
+    </div>
+  </div>
+  <div class="item">Roman Numeral
+    <div class="list">
+      <div class="item">Fix season text height calculation for multi-line season text</div>
+    </div>
+  </div>
+  <div class="item">Shape
+    <div class="list">
+      <div class="item">Limit the shape inset extra to at most 1800 </div>
+      <div class="item">Add extra for shape stroke color and width</div>
+    </div>
+  </div>
+  <div class="item">Standard
+    <div class="list">
+      <div class="item">Add episode text vertical shift extra</div>
+    </div>
+  </div>
+  <div class="item">Tinted Frame
+    <div class="list">
+      <div class="item">Change the default frame width to 5px (from 3px)</div>
+    </div>
+  </div>
+  <div class="item">Tinted Glass
+    <div class="list">
+      <div class="item">Move all text down 50px by default</div>
+      <div class="item">Add vertical adjustment extra to control vertical positioning of text</div>
+    </div>
+  </div>
+</div>
+<h2>Documentation Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Add documentation to home page on how to update and switch branches</div>
+  <div class="item">Add card preview URLs for missing card types to the home page carousel </div>
+  <div class="item">Create new page for the <a href="https://titlecardmaker.com/card_types/music/" target="_blank">Music</a> card which lists and gives visual examples of most customizations</div>
+  <div class="item">Remove unrendered nav items in site building</div>
+</div>
+<h2>API Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Add new <b>TRACE</b> LogLevel</div>
+</div>`
+  },
+  {
     version: 'v2.0-alpha.8.1',
     changelog: `
 <h2>Major Changes</h2>
