@@ -260,6 +260,7 @@ class NotificationTitleCard(BaseCardType):
 
     def get_glass_commands(self,
             text_commands: ImageMagickCommands,
+            line_count: int,
             margin: int,
             y_offset: int,
         ) -> ImageMagickCommands:
@@ -268,6 +269,7 @@ class NotificationTitleCard(BaseCardType):
 
         Args:
             text_commands: Text commands to measure the dimensions of.
+            line_count: Line count of the text.
             margin: Margin between the text and side of the glass.
             y_offset: How far from the bottom of the image the glass
                 should be drawn.
@@ -283,6 +285,8 @@ class NotificationTitleCard(BaseCardType):
         # Determine dimensions of the given text
         width, height = self.image_magick.get_text_dimensions(
             text_commands,
+            interline_spacing=self.font_interline_spacing,
+            line_count=line_count,
             density=100,
         )
 
@@ -370,7 +374,15 @@ class NotificationTitleCard(BaseCardType):
         """
 
         if not custom_font:
-            ...
+            if 'edge_color' in extras:
+                extras['edge_color'] = NotificationTitleCard.EDGE_COLOR
+            if 'episode_text_color' in extras:
+                extras['episode_text_color'] = \
+                NotificationTitleCard.EPISODE_TEXT_COLOR
+            if 'episode_text_font_size' in extras:
+                extras['episode_text_font_size'] = 1.0
+            if 'episode_text_vertical_shift' in extras:
+                extras['episode_text_vertical_shift'] = 0
 
 
     @staticmethod
@@ -444,11 +456,13 @@ class NotificationTitleCard(BaseCardType):
             # Add background player glass
             *self.get_glass_commands(
                 self.title_text_commands,
+                len(self.title_text.splitlines()),
                 self._TITLE_TEXT_MARGIN,
                 y_offset=self._TITLE_TEXT_Y_OFFSET + self.font_vertical_shift,
             ),
             *self.get_glass_commands(
                 self.index_text_commands,
+                1,
                 self._INDEX_TEXT_MARGIN,
                 y_offset=(
                     self._INDEX_TEXT_Y_OFFSET + self.episode_text_vertical_shift
