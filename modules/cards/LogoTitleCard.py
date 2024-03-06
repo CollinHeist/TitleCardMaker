@@ -139,6 +139,9 @@ class LogoTitleCard(BaseCardType):
     """Whether this CardType uses unique source images"""
     USES_UNIQUE_SOURCES = False
 
+    """Whether this class uses Source Images at all"""
+    USES_SOURCE_IMAGES = False # Set as False; if required then caught by model
+
     """Standard class has standard archive name"""
     ARCHIVE_NAME = 'Logo Style'
 
