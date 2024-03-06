@@ -1,4 +1,7 @@
+from datetime import datetime
+from json import dumps, JSONEncoder
 from logging import Logger
+from pathlib import Path
 from typing import Any
 
 from num2words import num2words
@@ -6,6 +9,18 @@ from titlecase import titlecase
 
 from modules.CleanPath import CleanPath
 from modules.Debug import InvalidFormatString, log
+
+
+# Patch JSON dumps to work with CleanPath objects
+def wrapped_default(self, obj):
+    if isinstance(obj, (CleanPath, Path)):
+        return str(obj.resolve())
+    if isinstance(obj, datetime):
+        return obj.strftime('%Y-%m-%dT%H:%M:%S%z') # ISO-8601
+    return getattr(obj.__class__, '__json__', wrapped_default.default)(obj)
+wrapped_default.default = JSONEncoder().default
+JSONEncoder.original_default = JSONEncoder.default
+JSONEncoder.default = wrapped_default
 
 
 _MAX_ROMAN_NUMERAL = 3999
@@ -162,11 +177,8 @@ class FormatString:
                 {'__builtins__': _BUILTINS},
                 data,
             )
-        except NameError as exc:
-            log.debug(f'Error evaluating ({fstring}) with ({data})')
-            raise (InvalidFormatString if catch else exc) from exc
-        except (SyntaxError, NotImplementedError) as exc:
-            log.debug(f'Error evaluating ({fstring}) with ({data})')
+        except (NameError, SyntaxError, NotImplementedError, KeyError) as exc:
+            log.debug(f'Error evaluating ({fstring}) with ({dumps(data, indent=2)})')
             raise (InvalidFormatString if catch else exc) from exc
 
 
