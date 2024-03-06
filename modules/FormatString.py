@@ -118,6 +118,23 @@ def to_short_ordinal(number: int, /, lang: str = 'en') -> str:
     return num2words(number, lang=lang, to='ordinal_num')
 
 
+def format_date(date: datetime, fmt: str, /) -> str:
+    """
+    Format the given date with the given format string. This is just a
+    wrapper for `date.strftime(fmt)`.
+
+    Args:
+        date: Datetime being formatted.
+        fmt: Format string to format the date with. See strftime.org for
+            more.
+
+    Returns:
+        Formatted string of the given date.
+    """
+
+    return date.strftime(fmt)
+
+
 _BUILTINS = {
     'NEWLINE': '\n',
     'titlecase': titlecase,
@@ -125,6 +142,7 @@ _BUILTINS = {
     'to_cardinal': to_cardinal,
     'to_ordinal': to_ordinal,
     'to_short_ordinal': to_short_ordinal,
+    'format_date': format_date,
 }
 
 

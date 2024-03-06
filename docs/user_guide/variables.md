@@ -33,7 +33,7 @@ hypothetical TCM customizations.
     | `episode_number`          | Episode number          | `6`                    |
     | `absolute_number`         | Absolute episode number | `13`                   |
     | `absolute_episode_number` | The absolute number (if available), otherwise the episode number | `13` |
-    | `airdate`                 | Episode airdate         | `2009-04-12`           |
+    | `airdate`                 | Episode airdate[^3]     | `2009-04-12`           |
     | `watched`                 | Whether the Episode is watched or not | `true`   |
 
 === "Text Variables"
@@ -141,16 +141,17 @@ hypothetical TCM customizations.
 In addition to defining many variables which can be used, TCM also implements
 many functions which allow for more customization. Each is described below.
 
-| Function Name        | Description                                       | Example Format String                     | Example Output |
-| -------------------- | ------------------------------------------------- | ----------------------------------------- | -------------- |
-| `titlecase()`        | Write the number in "titlecase" - e.g. "Season"   | `{titlecase(to_cardinal(season_number))}` | `Two`          |
-| `to_cardinal()`      | Convert the given number to its cardinal spelling | `{to_cardinal(episode_number)}`           | `two`          |
-| `to_cardinal()`      | _See above_, but in another language[^2]          | `{to_cardinal(episode_number, 'fr')}`     | `deux`         |
-| `to_ordinal()`       | Convert the given number to its ordinal spelling  | `{to_ordinal(episode_number)}`            | `sixth`        |
-| `to_ordinal()`       | _See above_, but in another language[^2]          | `{to_cardinal(episode_number, 'es')}`     | `sexto`        |
-| `to_short_ordinal()` | Convert the given number to a shorthand ordinal spelling | `{to_short_ordinal(season_number)}`| `2nd`          |
-| `to_short_ordinal()` | _See above_, but in another language[^2]          | `{to_short_ordinal(season_number, 'ja')}` | `13番目`        |
-| `to_roman_numeral()` | Convert the given number to a roman numeral       | `{to_roman_numeral(episode_number)}`      | `VI`           |
+| Function Name        | Description                                       | Example Format String                      | Example Output  |
+| -------------------- | ------------------------------------------------- | ------------------------------------------ | --------------- |
+| `titlecase()`        | Write the number in "titlecase" - e.g. "Season"   | `{titlecase(to_cardinal(season_number))}`  | `Two`           |
+| `to_cardinal()`      | Convert the given number to its cardinal spelling | `{to_cardinal(episode_number)}`            | `two`           |
+| `to_cardinal()`      | _See above_, but in another language[^2]          | `{to_cardinal(episode_number, 'fr')}`      | `deux`          |
+| `to_ordinal()`       | Convert the given number to its ordinal spelling  | `{to_ordinal(episode_number)}`             | `sixth`         |
+| `to_ordinal()`       | _See above_, but in another language[^2]          | `{to_cardinal(episode_number, 'es')}`      | `sexto`         |
+| `to_short_ordinal()` | Convert the given number to a shorthand ordinal spelling | `{to_short_ordinal(season_number)}` | `2nd`           |
+| `to_short_ordinal()` | _See above_, but in another language[^2]          | `{to_short_ordinal(season_number, 'ja')}`  | `13番目`         |
+| `to_roman_numeral()` | Convert the given number to a roman numeral       | `{to_roman_numeral(episode_number)}`       | `VI`            |
+| `format_date()`      | Write the given date in some specific format[^3]  | `{format_date(airdate, 'Week %-U of 52')}` | `Week 02 of 52` |
 
 ??? note "Support Language Codes"
 
@@ -209,3 +210,7 @@ splitting.
 [^2]: The second argument to the function is the _language code_. Not all
 languages support cardinal and ordinal numbering. These will raise an error
 during Card creation.
+
+[^3]: To write the airdate in any format _other_ than the default, the
+`format_date` function must be used. A reference of all date variables is
+available [here](https://strftime.org/).
