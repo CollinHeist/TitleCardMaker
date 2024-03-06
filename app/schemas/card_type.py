@@ -691,7 +691,7 @@ class StarWarsCardType(BaseCardModel):
         return values
 
 class TextlessCardType(BaseCardModel):
-    pass
+    source_file: Path # Optiona source file for importing w/o sources
 
 OuterElement = Literal['index', 'logo', 'omit', 'title']
 MiddleElement = Literal['logo', 'omit']
