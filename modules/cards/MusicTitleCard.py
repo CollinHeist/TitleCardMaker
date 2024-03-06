@@ -398,7 +398,8 @@ class MusicTitleCard(BaseCardType):
         self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_size = font_size
-        self.font_vertical_shift = 10 + font_vertical_shift
+        # Default font is +15px from bottom; add 10px margin
+        self.font_vertical_shift = -15 + 10 + font_vertical_shift
 
         # Extras
         self.add_controls = add_controls
@@ -447,10 +448,11 @@ class MusicTitleCard(BaseCardType):
 
         # Determine y position based on whether a subtitle is present
         y = self.player_inset \
-            + (108 if self.add_controls else 25) \
-            + 115 \
-            + (65 if self.subtitle else 0) \
+            + (108 if self.add_controls else 45) \
+            + 97 \
+            + (60 if self.subtitle else 9) \
             + self.font_vertical_shift
+        # Dist / controls / timeline / subtitle / text diff
 
         return [
             f'-font "{self.font_file}"',
@@ -506,7 +508,8 @@ class MusicTitleCard(BaseCardType):
         elif self.player_position == 'right':
             x = self.WIDTH - self.player_width - self.player_inset + MARGIN
 
-        y = self.player_inset + 135 + (108 if self.add_controls else 0)
+        y = self.player_inset + (108 if self.add_controls else 45) + 97
+        # Dist / controls / timeline
 
         return [
             f'-font "{self.SUBTITLE_FONT.resolve()}"',
@@ -640,7 +643,7 @@ class MusicTitleCard(BaseCardType):
         max_height = {
             'artwork': 300, 'logo': 250, 'poster': 400,
         }[self.player_style] * self.album_size
-        max_width = self.player_width - (35 * 2) # 35px margin on both sides
+        max_width = self.player_width - (50 * 2) # 50px margin on both sides
 
         # Get starting dimensions
         album_w, album_h = self.image_magick.get_image_dimensions(
@@ -676,15 +679,6 @@ class MusicTitleCard(BaseCardType):
         # Dimensions of the album cover
         dimensions = self._album_dimensions
 
-        y = self.player_inset \
-            + (108 if self.add_controls else 25) \
-            + 115 \
-            + (65 if self.subtitle else 0) \
-            + self.font_vertical_shift \
-            + self._title_dimensions.height \
-            + 25
-        # Dist / controls / timeline / subtitle / text diff / title / margin
-
         # Coordinates for composing the cover
         if self.player_position == 'left':
             x = -(self.WIDTH / 2) + self.player_inset + (self.player_width / 2)
@@ -692,6 +686,15 @@ class MusicTitleCard(BaseCardType):
             x = 0
         else: # right
             x = (self.WIDTH - self.player_width) / 2 - self.player_inset
+
+        y = self.player_inset \
+            + (108 if self.add_controls else 45) \
+            + 97 \
+            + (60 if self.subtitle else 9) \
+            + self.font_vertical_shift \
+            + self._title_dimensions.height \
+            + 15
+        # Dist / controls / timeline / subtitle / text diff / title / margin
 
         # Base commands to add and resize the image
         base_commands = [
@@ -745,20 +748,17 @@ class MusicTitleCard(BaseCardType):
             start_x = self.WIDTH - self.player_inset - self.player_width
 
         # Determine height
-        height = (108 if self.add_controls else 25) \
-            + 115 \
-            + (65 if self.subtitle else 0) \
+        height = (108 if self.add_controls else 45) \
+            + 97 \
+            + (60 if self.subtitle else 9) \
             + self.font_vertical_shift \
             + self._title_dimensions.height \
-            + 25 \
+            + 15 \
             + self._album_dimensions.height \
             + (25 if self.player_style == 'basic' else 60)
         # Controls / timeline / subtitle / text diff / title / margin / album / margin
 
-        start = Coordinate(
-            start_x,
-            self.HEIGHT - self.player_inset - height
-        )
+        start = Coordinate(start_x, self.HEIGHT - self.player_inset - height)
         end = start + (self.player_width, height)
 
         return [
@@ -940,12 +940,12 @@ class MusicTitleCard(BaseCardType):
         }[self.player_position] - 30
 
         y = self.HEIGHT - self.player_inset \
-            - (108 if self.add_controls else 25) \
+            - (108 if self.add_controls else 45) \
             - 115 \
-            - (65 if self.subtitle else 0) \
+            - (60 if self.subtitle else 0) \
             - self.font_vertical_shift \
             - self._title_dimensions.height \
-            - 25 \
+            - 15 \
             - self._album_dimensions.height \
             - (25 if self.player_style == 'basic' else 60) \
             + 28
@@ -977,7 +977,12 @@ class MusicTitleCard(BaseCardType):
         """
 
         if not custom_font:
-            ...
+            if 'control_colors' in extras:
+                extras['control_colors'] = MusicTitleCard.DEFAULT_CONTROL_COLORS
+            if 'episode_text_color' in extras:
+                extras['episode_text_color'] = MusicTitleCard.EPISODE_TEXT_COLOR
+            if 'timeline_color' in extras:
+                extras['timeline_color'] = MusicTitleCard.DEFAULT_TIMELINE_COLOR
 
 
     @staticmethod
