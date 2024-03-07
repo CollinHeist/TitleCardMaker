@@ -52,6 +52,7 @@ def create_all_title_cards(*, log: Logger = log) -> None:
             # Get all Series
             failures = 0 
             for series in db.query(Series).all():
+                log.trace(f'Starting to process {series}')
                 try:
                     # Refresh Episode data if Series is monitored
                     if series.monitored:
