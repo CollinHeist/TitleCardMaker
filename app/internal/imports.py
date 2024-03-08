@@ -1374,14 +1374,10 @@ def import_cards(
     """
 
     # If explicit directory was not provided, use Series default
-    if directory is None:
-        directory = series.card_directory
+    directory = directory or series.directory
 
-    # Glob directory for images to import
-    all_images = list(directory.glob(f'**/*{image_extension}'))
-
-    # No images to import, return
-    if len(all_images) == 0:
+    # Glob directory for images to import - return if no images to import
+    if not (all_images := list(directory.glob(f'**/*{image_extension}'))):
         log.debug(f'No Cards identified within "{directory}" to import')
         return None
 
@@ -1395,9 +1391,9 @@ def import_cards(
 
         # Find associated Episode
         episode = db.query(Episode)\
-            .filter(Episode.series_id==series.id,
-                    Episode.season_number==season_number,
-                    Episode.episode_number==episode_number)\
+            .filter_by(series_id=series.id,
+                       season_number=season_number,
+                       episode_number=episode_number)\
             .first()
 
         # No associated Episode, skip
