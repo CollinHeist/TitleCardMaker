@@ -269,7 +269,7 @@ class MusicTitleCard(BaseCardType):
     DEFAULT_PLAYER_STYLE: PlayerStyle = 'logo'
 
     """How far from the bottom of the glass the line is drawn"""
-    _LINE_Y_INSET = 85
+    _LINE_Y_INSET = 71 # 85px originally
 
     """
     SVG commands for each control element. SVGs made relative with this fiddle
@@ -430,6 +430,22 @@ class MusicTitleCard(BaseCardType):
 
 
     @property
+    def _control_height(self) -> int:
+        return 108 if self.add_controls else 0
+
+    @property
+    def _subtitle_height(self) -> int:
+        return 60 if self.subtitle else 9
+
+    @property
+    def _timeline_height(self) -> int:
+        return 106
+
+    @property
+    def _title_margin_height(self) -> int:
+        return 15
+
+    @property
     def title_text_commands(self) -> ImageMagickCommands:
         """Subcommands required to add the title text."""
 
@@ -448,9 +464,9 @@ class MusicTitleCard(BaseCardType):
 
         # Determine y position based on whether a subtitle is present
         y = self.player_inset \
-            + (108 if self.add_controls else 45) \
-            + 97 \
-            + (60 if self.subtitle else 9) \
+            + self._control_height \
+            + self._timeline_height \
+            + self._subtitle_height \
             + self.font_vertical_shift
         # Dist / controls / timeline / subtitle / text diff
 
@@ -508,8 +524,7 @@ class MusicTitleCard(BaseCardType):
         elif self.player_position == 'right':
             x = self.WIDTH - self.player_width - self.player_inset + MARGIN
 
-        y = self.player_inset + (108 if self.add_controls else 45) + 97
-        # Dist / controls / timeline
+        y = self.player_inset + self._control_height + self._timeline_height
 
         return [
             f'-font "{self.SUBTITLE_FONT.resolve()}"',
@@ -688,12 +703,12 @@ class MusicTitleCard(BaseCardType):
             x = (self.WIDTH - self.player_width) / 2 - self.player_inset
 
         y = self.player_inset \
-            + (108 if self.add_controls else 45) \
-            + 97 \
-            + (60 if self.subtitle else 9) \
+            + self._control_height \
+            + self._timeline_height \
+            + self._subtitle_height \
             + self.font_vertical_shift \
             + self._title_dimensions.height \
-            + 15
+            + self._title_margin_height
         # Dist / controls / timeline / subtitle / text diff / title / margin
 
         # Base commands to add and resize the image
@@ -748,12 +763,12 @@ class MusicTitleCard(BaseCardType):
             start_x = self.WIDTH - self.player_inset - self.player_width
 
         # Determine height
-        height = (108 if self.add_controls else 45) \
-            + 97 \
-            + (60 if self.subtitle else 9) \
+        height = self._control_height \
+            + self._timeline_height \
+            + self._subtitle_height \
             + self.font_vertical_shift \
             + self._title_dimensions.height \
-            + 15 \
+            + self._title_margin_height \
             + self._album_dimensions.height \
             + (25 if self.player_style == 'basic' else 60)
         # Controls / timeline / subtitle / text diff / title / margin / album / margin
@@ -798,7 +813,7 @@ class MusicTitleCard(BaseCardType):
         # Center y coordinate for all lines
         y = self.HEIGHT - self.player_inset - self._LINE_Y_INSET - 3 # offset
         if self.add_controls:
-            y -= 108
+            y -= self._control_height
 
         # No season text, draw from standard offset
         if background_start_x is None:
@@ -869,7 +884,7 @@ class MusicTitleCard(BaseCardType):
         }[self.player_position]
 
         # Center y-coordinate for all lines
-        y_mid = self.HEIGHT - self.player_inset - self._LINE_Y_INSET - 3
+        y_mid = self.HEIGHT - self.player_inset - self._LINE_Y_INSET - 14 - 3
 
         # Start with the left-most controls, work right
         control_commands = [
@@ -899,7 +914,7 @@ class MusicTitleCard(BaseCardType):
                     f'path \'{self._PAUSE_SVG}\'"',
                 ]
             else:
-                x, y = x_mid, y_mid - 52
+                x, y = x_mid, y_mid - 51
                 control_commands += [
                     f'-fill "{self.control_colors.action}"',
                     f'-draw "translate {x:+.0f},{y:+.0f} scale {scale},{scale}',
@@ -940,16 +955,15 @@ class MusicTitleCard(BaseCardType):
         }[self.player_position] - 30
 
         y = self.HEIGHT - self.player_inset \
-            - (108 if self.add_controls else 45) \
-            - 115 \
-            - (60 if self.subtitle else 0) \
+            - self._control_height \
+            - self._timeline_height \
+            - self._subtitle_height \
             - self.font_vertical_shift \
             - self._title_dimensions.height \
-            - 15 \
+            - self._title_margin_height \
             - self._album_dimensions.height \
             - (25 if self.player_style == 'basic' else 60) \
             + 28
-        # Inset / controls / timeline / subtitle / text diff / title / margin / album / margin / inner inset
 
         return [
             f'-fill "{self.heart_color}"',

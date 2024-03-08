@@ -28,7 +28,6 @@ class DividerTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    # pylint: disable=line-too-long
     API_DETAILS = CardDescription(
         name='Divider',
         identifier='divider',
@@ -91,7 +90,6 @@ class DividerTitleCard(BaseCardType):
             'image is unobtrusive, and is intended for shorter titles.',
         ]
     )
-    # pylint: enable=line-too-long
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'anime'
