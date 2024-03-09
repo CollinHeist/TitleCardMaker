@@ -770,7 +770,11 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         except (NotFound, TMDbException):
             return None
 
-        def _match_by_index(episode_info, season_number, episode_number):
+        def _match_by_index(
+                episode_info: EpisodeInfo,
+                season_number: int,
+                episode_number: int
+            ) -> Optional[TMDbEpisode]:
             # Find episode with series TMDb ID and given index
             try:
                 (episode := self.api.tv_episode(
