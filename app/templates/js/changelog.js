@@ -1439,7 +1439,7 @@ function notifyChanges(currentVersion, forceDisplay=false) {
   if (changes && changes !== '<div class="ui styled fluid uninvertible accordion"></div>') {
     $.modal({
       title: 'Changelog',
-      class: 'uninvertible large',
+      class: 'uninvertible fullscreen',
       closeIcon: true,
       content: changes,
       classContent: 'internal scrolling',
