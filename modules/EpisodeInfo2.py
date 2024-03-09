@@ -99,7 +99,6 @@ class EpisodeInfo(DatabaseInfoContainer):
         self.absolute_number = None if absolute_number is None else int(absolute_number)
         self.airdate = airdate
 
-        # Store default database ID's
         self.emby_id = InterfaceID(emby_id, type_=int, libraries=True)
         self.imdb_id: Optional[str] = None
         self.jellyfin_id = InterfaceID(jellyfin_id, type_=str, libraries=True)
@@ -107,7 +106,6 @@ class EpisodeInfo(DatabaseInfoContainer):
         self.tvdb_id: Optional[int] = None
         self.tvrage_id: Optional[int] = None
 
-        # Update each ID
         self.set_imdb_id(imdb_id)
         self.set_tmdb_id(tmdb_id)
         self.set_tvdb_id(tvdb_id)

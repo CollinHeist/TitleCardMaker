@@ -130,8 +130,9 @@ class SeriesInfo(DatabaseInfoContainer):
         return self.full_name
 
 
-    @staticmethod
+    @classmethod
     def from_series_infos(
+            cls,
             primary: 'SeriesInfo',
             *series_infos: 'SeriesInfo',
         ) -> 'SeriesInfo':
@@ -151,7 +152,7 @@ class SeriesInfo(DatabaseInfoContainer):
             combined IDs of all infos. 
         """
 
-        series_info = SeriesInfo(
+        series_info = cls(
             primary.name, primary.year, emby_id=primary.emby_id,
             imdb_id=primary.imdb_id, jellyfin_id=primary.jellyfin_id,
             sonarr_id=primary.sonarr_id, tmdb_id=primary.tmdb_id,
@@ -162,11 +163,12 @@ class SeriesInfo(DatabaseInfoContainer):
         for info in series_infos:
             series_info.copy_ids(info)
 
-        return SeriesInfo
+        return series_info
 
 
-    @staticmethod
+    @classmethod
     def from_emby_info(
+            cls,
             info: dict,
             year: int,
             interface_id: int,
@@ -188,7 +190,7 @@ class SeriesInfo(DatabaseInfoContainer):
             SeriesInfo object defining the given data.
         """
 
-        return SeriesInfo(
+        return cls(
             name=info['Name'],
             year=year,
             emby_id=f'{interface_id}:{library_name}:{info["Id"]}',
@@ -199,8 +201,9 @@ class SeriesInfo(DatabaseInfoContainer):
         )
 
 
-    @staticmethod
+    @classmethod
     def from_jellyfin_info(
+            cls,
             info: dict,
             interface_id: int,
             library_name: str,
@@ -219,9 +222,10 @@ class SeriesInfo(DatabaseInfoContainer):
         Returns:
             SeriesInfo object defining the given data.
         """
+
         AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f000000Z'
 
-        return SeriesInfo(
+        return cls(
             info['Name'],
             datetime.strptime(info['PremiereDate'], AIRDATE_FORMAT).year,
             jellyfin_id=f'{interface_id}:{library_name}:{info["Id"]}',
@@ -232,8 +236,8 @@ class SeriesInfo(DatabaseInfoContainer):
         )
 
 
-    @staticmethod
-    def from_plex_show(plex_show: PlexShow) -> 'SeriesInfo':
+    @classmethod
+    def from_plex_show(cls, plex_show: PlexShow) -> 'SeriesInfo':
         """
         Create a SeriesInfo object from a `plexapi.video.Show` object.
 
@@ -246,7 +250,7 @@ class SeriesInfo(DatabaseInfoContainer):
         """
 
         # Create SeriesInfo for this show
-        series_info = SeriesInfo(plex_show.title, plex_show.year)
+        series_info = cls(plex_show.title, plex_show.year)
 
         # Add any GUIDs as database ID's
         for guid in plex_show.guids:
