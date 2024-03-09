@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 from typing import TYPE_CHECKING
 
+import better_exceptions
 from better_exceptions import format_exception
 from loguru import logger
 
@@ -19,6 +20,8 @@ LOG_FILE = Path(__file__).parent.parent / 'config' / 'logs' / 'log.jsonl'
 if environ.get('TCM_IS_DOCKER', 'false').lower() == 'true':
     LOG_FILE = Path('/config/logs/log.jsonl')
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+better_exceptions.MAX_LENGTH = None
 
 """
 Logging filters and formatters
