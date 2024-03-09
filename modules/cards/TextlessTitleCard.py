@@ -56,7 +56,7 @@ class TextlessTitleCard(BaseCardType):
     USES_SEASON_TITLE = False
 
     """Don't require source images to work w/ importing"""
-    USES_SOURCE_IMAGES = True
+    USES_SOURCE_IMAGES = False # Set as False; if required then caught by model
 
     """Label to archive cards under"""
     ARCHIVE_NAME = 'Textless Version'
