@@ -410,7 +410,8 @@ class LogoCardType(BaseCardTypeCustomFontAllText):
     def validate_source_file(cls, values: dict) -> dict:
         if (values['use_background_image'] and
             (not values['source_file'] or not values['source_file'].exists())):
-            raise ValueError(f'Source file indicated and does not exist')
+            raise ValueError(f'Source file ({values["source_file"]}) indicated '
+                             f'and does not exist')
 
         return values
 
