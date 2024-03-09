@@ -31,20 +31,9 @@ def redact_secrets(message: str) -> str:
     """Redact all secrets from the given message"""
 
     for secret in SECRETS:
-        message = message.replace(secret, '********')
+        message = message.replace(secret, '[REDACTED]')
 
     return message
-
-
-def secret_formatter(record: 'Record') -> str:
-    """Formatter which also redacts secrets"""
-
-    record['extra']['redacted_message'] = redact_secrets(record['message'])
-
-    return (
-        '[{time:YYYY-MM-DD at HH:mm:ss Z}] [{level}] [{extra[context_id]}] '
-        '{extra[redacted_message]}'
-    )
 
 
 def reduced_serializer(record: 'Record') -> str:
@@ -59,7 +48,7 @@ def reduced_serializer(record: 'Record') -> str:
         }
 
     record['extra']['serialized'] = dumps({
-        'message': redact_secrets(record['message']),
+        'message': record['message'],
         'context_id': record['extra'].get('context_id', None),
         'level': getattr(record.get('level', {}), 'name', 'UNSET'),
         # 'YYYY-MM-DD HH:mm:ss Z'),
@@ -74,52 +63,102 @@ def reduced_serializer(record: 'Record') -> str:
 
 
 # Remove builtin logger to stderr
-logger.remove()
+# logger.remove()
 
 logger_id = None
 def set_primary_logger(level: str = 'INFO') -> int:
     """
     """
+    ...
+#     if logger_id is not None:
+#         logger.remove(logger_id)
+#     handler_id = logger.add(
+#         sys.stdout,
+#         level=environ.get('TCM_LOG', level),
+#         # See https://github.com/Delgan/loguru/issues/150
+#         format='<level>[<bold>{level}</bold>] {message}</level>',
+#         colorize=True,
+#         backtrace=True,
+#         diagnose=True,
+#         enqueue=True,
+#     )
+#     logger.level('TRACE', color='<dim><fg #6d6d6d>')
+#     logger.level('DEBUG', color='<dim><white>')
+#     logger.level('INFO', color='<light-cyan>')
+#     logger.level('WARNING', color='<yellow>')
+#     logger.level('ERROR', color='<fg 237,112,46>')
+#     logger.level('CRITICAL', color='<red><bold>')
+#     return handler_id
+# logger_id = set_primary_logger()
 
-    if logger_id is not None:
-        logger.remove(logger_id)
-    handler_id = logger.add(
-        sys.stdout,
-        level=environ.get('TCM_LOG', level),
-        # See https://github.com/Delgan/loguru/issues/150
-        format='<level>[<bold>{level}</bold>] {message}</level>',
-        colorize=True,
-        backtrace=True,
-        diagnose=True,
-        enqueue=True,
-    )
-    logger.level('TRACE', color='<dim><fg #6d6d6d>')
-    logger.level('DEBUG', color='<dim><white>')
-    logger.level('INFO', color='<light-cyan>')
-    logger.level('WARNING', color='<yellow>')
-    logger.level('ERROR', color='<fg 237,112,46>')
-    logger.level('CRITICAL', color='<red><bold>')
-    return handler_id
-logger_id = set_primary_logger()
+# logger.add(
+#     LOG_FILE,
+#     # Debug level for log file
+#     level='TRACE',
+#     # Format messages
+#     format=reduced_serializer,
+#     # Rotate every 12 hours
+#     rotation='12h',
+#     # Keep logs for two weeks
+#     retention='2 weeks',
+#     # Zip log files
+#     # compression='zip',
+#     # Better exception printing
+#     backtrace=True,
+#     diagnose=True,
+#     # Serialize each log entry as JSON; !this is handled by the formatter!
+#     # See https://loguru.readthedocs.io/en/latest/resources/recipes.html
+#     # serialize=True,
+#     # Make log calls non-blocking
+#     enqueue=True,
+# )
 
-logger.add(
-    LOG_FILE,
-    # Debug level for log file
-    level='TRACE',
-    # Format messages
-    format=reduced_serializer,
-    # Rotate every 12 hours
-    rotation='12h',
-    # Keep logs for two weeks
-    retention='2 weeks',
-    # Zip log files
-    # compression='zip',
-    # Better exception printing
-    backtrace=True,
-    diagnose=True,
-    # Serialize each log entry as JSON; !this is handled by the formatter!
-    # See https://loguru.readthedocs.io/en/latest/resources/recipes.html
-    # serialize=True,
-    # Make log calls non-blocking
-    enqueue=True,
+logger.configure(
+    handlers=[
+        dict(
+            sink=sys.stdout,
+            level=environ.get('TCM_LOG', 'INFO'),
+            format='<level>[<bold>{level}</bold>] {message}</level>',
+            colorize=True,
+            backtrace=True,
+            diagnose=True,
+            enqueue=True,
+        ),
+        dict(
+            sink=LOG_FILE,
+            level='TRACE',
+            format=reduced_serializer,
+            # Rotate every 12 hours
+            rotation='12h',
+            # Keep logs for two weeks
+            retention='2 weeks',
+            # Zip log files
+            # compression='zip',
+            # Better exception printing
+            backtrace=True,
+            diagnose=True,
+            # Serialize each log entry as JSON; !this is handled by the formatter!
+            # See https://loguru.readthedocs.io/en/latest/resources/recipes.html
+            # serialize=True,
+            # Make log calls non-blocking
+            enqueue=True,
+        ),
+        # dict(
+        #     sink='sqlalchemy.engine',
+        #     level='DEBUG',
+        # ),
+    ],
+    levels=[
+        dict(name='TRACE', color='<dim><fg #6d6d6d>'),
+        dict(name='DEBUG', color='<dim><white>'),
+        dict(name='INFO', color='<light-cyan>'),
+        dict(name='WARNING', color='<yellow>'),
+        dict(name='ERROR', color='<fg 237,112,46>'),
+        dict(name='CRITICAL', color='<red><bold>'),
+    ],
+)
+
+# Automatically redact all messages
+logger = logger.patch(
+    lambda record: record.update(message=redact_secrets(record['message']))
 )
