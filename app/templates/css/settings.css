@@ -25,3 +25,11 @@
 .system.info .inverted.label {
   background-color: color-mix(in srgb, #54c8ff, transparent) !important;
 }
+
+/* Increase margin of sublist items in changelog */
+.modal .content .list .item::before {
+  margin-left: -1.45rem;
+}
+.modal .content .list .item .list .item::before {
+  margin-left: -2.25em;
+}
