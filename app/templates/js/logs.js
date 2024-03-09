@@ -2,23 +2,6 @@
 import {LogEntryPage, LogLevel} from './.types.js';
 {% endif %}
 
-/** @type {string[]} */
-let currentPage = [];
-
-/**
- * Download the current page of logs. This reads the value of `currentPage`.
- */
-function downloadPage() {
-  // Skip if no logs to download
-  if (!currentPage || currentPage.length === 0) { return; }
-
-  // Create combined string of all messages
-  const logStr = currentPage.join('\n');
-
-  // Download text 
-  downloadTextFile('tcm_log.txt', logStr);
-}
-
 /**
  * 
  * @param {string} name - Name to extract the Date from.
@@ -115,7 +98,6 @@ function queryForLogs(page=1) {
      * @param {LogEntryPage} messages - Log messages to update the table with.
      */
     success: messages => {
-      currentPage = [];
       const rows = messages.items.map(message => {
         // Clone template
         const row = document.querySelector(`#${message.level.toLowerCase()}-message-template`).content.cloneNode(true);
@@ -127,7 +109,11 @@ function queryForLogs(page=1) {
           row.querySelector('[data-value="time"]').innerText = message.time;
         }
         row.querySelector('[data-value="context_id"]').innerText = message.context_id;
-        row.querySelector('[data-value="message"]').innerText = message.message;
+
+        row.querySelector('[data-value="message"]').innerText = message.exception?.traceback
+          ? message.message + '\n\n' + message.exception.traceback
+          : message.message
+        ;
 
         // On click of log level, update filter level
         row.querySelector('[data-value="level"]').onclick = () => updateMessageLevel(message.level);
@@ -137,9 +123,6 @@ function queryForLogs(page=1) {
         
         // On click of context ID, append current ID to input
         row.querySelector('[data-value="context_id"]').onclick = () => appendContextID(message.context_id);
-
-        // Add message to current page array
-        currentPage.push(`[${message.level.toUpperCase()}] [${message.time}] [${message.context_id}] ${message.message}`);
 
         return row;
       });

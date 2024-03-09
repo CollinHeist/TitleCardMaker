@@ -14,8 +14,14 @@ LogLevel = Literal['TRACE', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
 """
 Return classes
 """
+class LogException(Base):
+    type: str
+    value: str
+    traceback: str
+
 class LogEntry(Base):
     level: LogLevel
     context_id: Optional[str]
     time: datetime
     message: str
+    exception: Optional[LogException]

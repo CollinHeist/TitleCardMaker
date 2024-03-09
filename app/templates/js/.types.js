@@ -566,11 +566,19 @@
  */
 
 /**
+ * @typedef {Object} LogException
+ * @property {string} type
+ * @property {string} value
+ * @property {string} traceback
+ */
+
+/**
  * @typedef {Object} LogEntry
  * @property {LogLevel} level
  * @property {string} context_id
  * @property {string} time
  * @property {string} message
+ * @property {LogException} exception
  */
 
 /**

@@ -103,6 +103,8 @@ const changeLog = [
     </div>
   </div>
   <div class="item">Removed animation from graph page as it made toggling individual elements slow</div>
+  <div class="item">Add <b>format_date()</b> format function to customize the format of an airdate in episode text (or anything else)</div>
+  <div class="item">Refer to Plex labels as "labels" and not "tags" within the help text in Plex Sync modals</div>
 </div>
 <h2>Minor Fixes</h2>
 <div class="ui ordered list">
@@ -124,6 +126,7 @@ const changeLog = [
   <div class="item">Properly evaluate missing Source Images for card types which do not use unique Source Images (namely the Poster card)</div>
   <div class="item">Resize poster thumbnails uploaded directly via API to 750px, not 500px</div>
   <div class="item">Resize mask images (to 3200x1800) before applying to Title Card</div>
+  <div class="item">Fix Card importing when a directory is not specified</div>
 </div>
 <h2>Title Card Changes</h2>
 <div class="ui ordered list">
@@ -134,7 +137,7 @@ const changeLog = [
   </div>
   <div class="item">Banner
     <div class="list">
-      <div class="item">Increase right margin between text on bottom line of title text</div>
+      <div class="item">Increase right margin between text on bottom line of title text to 55 pixels (from 30)</div>
     </div>
   </div>
   <div class="item">Comic Book
@@ -174,7 +177,7 @@ const changeLog = [
   </div>
   <div class="item">Shape
     <div class="list">
-      <div class="item">Limit the shape inset extra to at most 1800 </div>
+      <div class="item">Limit the shape inset extra to between 0 - 1800 pixels</div>
       <div class="item">Add extra for shape stroke color and width</div>
     </div>
   </div>
@@ -183,14 +186,19 @@ const changeLog = [
       <div class="item">Add episode text vertical shift extra</div>
     </div>
   </div>
+  <div class="item">Textless
+    <div class="list">
+      <div class="item">Make source images optional to make the card work easier with Card imports</div>
+    </div>
+  </div>
   <div class="item">Tinted Frame
     <div class="list">
-      <div class="item">Change the default frame width to 5px (from 3px)</div>
+      <div class="item">Change the default frame width to 5 pixels (from 3px)</div>
     </div>
   </div>
   <div class="item">Tinted Glass
     <div class="list">
-      <div class="item">Move all text down 50px by default</div>
+      <div class="item">Move all text down 50 pixels by default</div>
       <div class="item">Add vertical adjustment extra to control vertical positioning of text</div>
     </div>
   </div>
@@ -199,7 +207,7 @@ const changeLog = [
 <div class="ui ordered list">
   <div class="item">Add documentation to home page on how to update and switch branches</div>
   <div class="item">Add card preview URLs for missing card types to the home page carousel </div>
-  <div class="item">Create new page for the <a href="https://titlecardmaker.com/card_types/music/" target="_blank">Music</a> card which lists and gives visual examples of most customizations</div>
+  <div class="item">Create new pages for the new <a href="https://titlecardmaker.com/card_types/music/" target="_blank">Music</a> and <a href="https://titlecardmaker.com/card_types/notification">Notification</a> cards which list and give visual examples of supported customizations</div>
   <div class="item">Remove unrendered nav items in site building</div>
 </div>
 <h2>API Changes</h2>
