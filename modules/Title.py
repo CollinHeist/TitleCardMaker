@@ -55,8 +55,6 @@ class Title:
 
         Args:
             title: Title for this object.
-            title: str if the full title (from any source), or a list if
-                parsed from YAML.
             original_title: Original title for matching.
         """
 
@@ -98,6 +96,12 @@ class Title:
         """Returns an unambiguous string representation of the object."""
 
         return f'<Title title="{self.full_title}", lines={self.__title_lines}>'
+
+
+    def __len__(self) -> int:
+        """Length of this title (without splitting)."""
+
+        return len(self.full_title)
 
 
     def get_partless_title(self) -> str:

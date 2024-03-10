@@ -509,6 +509,7 @@ def load_all_series_title_cards(
         db: Session,
         force_reload: bool = False,
         *,
+        raise_exc: bool = True,
         log: Logger = log,
     ) -> None:
     """
@@ -521,6 +522,8 @@ def load_all_series_title_cards(
         db: Database to look for and add Loaded records from/to.
         force_reload: Whether to reload Cards even if no changes are
             detected.
+        raise_exc: Whether to raise an HTTPException if a Connection
+            associated with a library is invalid.
         log: Logger for all log messages.
     """
 
@@ -532,11 +535,13 @@ def load_all_series_title_cards(
                 series, library['name'], interface_id, db, interface,
                 force_reload=force_reload, log=log,
             )
-        else:
+        elif raise_exc:
             raise HTTPException(
                 status_code=409,
                 detail=f'Unable to communicate with Connection {interface_id}',
             )
+        else:
+            continue
 
 
 def load_episode_title_card(

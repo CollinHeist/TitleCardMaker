@@ -135,7 +135,8 @@ POSITIONS: dict[str, list[Position]] = {
         Position('Upper', Offset('+0-250'), '0x0'),
         Position('Left', Offset('-75+0'), '-90x-90'),
         Position('Right', Offset('+75+0'), '90x90'),
-    ], 'V': [
+    ],
+    'V': [
         Position('Inside', Offset('+0-275'), '0x0'),
         Position('Above', Offset('+0-365'), '0x0'),
         Position('Lower', Offset('+0+315'), '0x0'),
@@ -145,24 +146,28 @@ POSITIONS: dict[str, list[Position]] = {
         Position('Lower Left Rotated', Offset('-120+260'), '67x67'),
         Position('Upper Left', Offset('-270-370'), '0x0'),
         Position('Upper Right', Offset('+280-370'), '0x0'),
-    ], 'X': [
+    ],
+    'X': [
         Position('Upper Right', Offset('+230-360'), '0x0'),
         Position('Upper Left', Offset('-230-360'), '0x0'),
         Position('Lower Right', Offset('+240+425'), '0x0'),
         Position('Lower Left', Offset('-240+425'), '0x0'),
         Position('Lower Middle', Offset('+0+325'), '0x0'),
         Position('Right Rotated', Offset('+175+150'), '55x55'),
-    ], 'L': [
+    ],
+    'L': [
         Position('Below', Offset('+0+425'), '0x0'),
         Position('Top Left', Offset('-110-365'), '0x0'),
         Position('Left', Offset('-190+0'), '-90x-90'),
         Position('Right', Offset('-45+0'), '90x90'),
-    ], 'C': [
+    ],
+    'C': [
         Position('Above', Offset('+0-375'), '0x0'),
         Position('Below', Offset('+0+425'), '0x0'),
         Position('Left', Offset('-365+0'), '-90x-90'),
         Position('Center', Offset('+0+0'), '0x0'),
-    ], 'D': [
+    ],
+    'D': [
         Position('Above', Offset('+0-375'), '0x0'),
         Position('Below', Offset('+0+425'), '0x0'),
         Position('Left', Offset('-325+0'), '-90x-90'),
@@ -170,7 +175,8 @@ POSITIONS: dict[str, list[Position]] = {
         Position('Center', Offset('+0+0'), '0x0'),
         Position('Above Left', Offset('-240-355'), '0x0'),
         Position('Below Left', Offset('-240+425'), '0x0'),
-    ], 'M': [
+    ],
+    'M': [
         Position('Above', Offset('+0-300'), '0x0'),
         Position('Below', Offset('+0+300'), '0x0'),
         Position('Below Left', Offset('-350+425'), '0x0'),

@@ -61,7 +61,7 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                         except HTTPException:
                             log.exception(f'Cannot refresh Episode data of {series}')
                     else:
-                        log.debug(f'{series} is unmonitored, not refreshing '
+                        log.trace(f'{series} is unmonitored, not refreshing '
                                   f'Episode data')
 
                     # Set watch statuses of all Episodes
@@ -78,7 +78,7 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                             translate_episode(db, episode, commit=False, log=log)
                         db.commit()
                     else:
-                        log.debug(f'{series} is unmonitored, skipping translations')
+                        log.trace(f'{series} is unmonitored, skipping translations')
 
                     # Download Source Images
                     if series.monitored:
@@ -89,7 +89,7 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                             )
                         db.commit()
                     else:
-                        log.debug(f'{series} is unmonitored, skipping Source '
+                        log.trace(f'{series} is unmonitored, skipping Source '
                                   f'Image selection')
 
                     # Create Cards for all Episodes
@@ -99,14 +99,14 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                                 db, None, episode, raise_exc=False, log=log
                             )
                         except InvalidCardSettings:
-                            log.debug(f'{episode} - skipping Card creation')
+                            log.trace(f'{episode} - skipping Card creation')
                             continue
                         except HTTPException as e:
                             if e.status_code != 404:
                                 log.exception(f'{episode} - skipping Card', e)
                 except (PendingRollbackError, OperationalError):
                     if failures > 10:
-                        log.debug(f'Database is extremely busy, stopping Task')
+                        log.error(f'Database is extremely busy, stopping Task')
                         break
                     failures += 1
                     log.debug(f'Database is busy, sleeping..')
