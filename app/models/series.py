@@ -111,6 +111,7 @@ class Series(Base):
         default=None
     )
     match_titles: Mapped[bool] = mapped_column(default=True)
+    auto_split_title: Mapped[bool] = mapped_column(default=True)
 
     # Database arguments
     emby_id: Mapped[Optional[str]]
@@ -160,9 +161,6 @@ class Series(Base):
         """
         ID's of any Episodes associated with this Series (rather than
         the ORM objects themselves).
-
-        Returns:
-            List of ID's for associated Episodes.
         """
 
         return [episode.id for episode in self.episodes]
@@ -210,9 +208,6 @@ class Series(Base):
         """
         ID's of any Templates associated with this Series (rather than
         the ORM objects themselves).
-
-        Returns:
-            List of ID's for associated Templates.
         """
 
         return [template.id for template in self.templates]
@@ -235,11 +230,8 @@ class Series(Base):
     @hybrid_property
     def sort_name(self) -> str:
         """
-        The sort-friendly name of this Series.
-
-        Returns:
-            Sortable name. This is lowercase with any prefix a/an/the
-            removed.
+        The sort-friendly name of this Series. This is lowercase with
+        any prefix a/an/the removed.
         """
 
         return regex_replace(
@@ -410,12 +402,7 @@ class Series(Base):
 
     @property
     def card_properties(self) -> dict[str, Any]:
-        """
-        Properties to utilize and merge in Title Card creation.
-
-        Returns:
-            Dictionary of properties.
-        """
+        """Properties to utilize and merge in Title Card creation."""
 
         return {
             'series_name': self.name,
@@ -453,11 +440,8 @@ class Series(Base):
     @property
     def export_properties(self) -> dict[str, Any]:
         """
-        Properties to export in Blueprints.
-
-        Returns:
-            Dictionary of the properties that can be used in an
-            UpdateSeries model to modify this object.
+        Properties to export in Blueprints. These fields can be used in
+        an `UpdateSeries` object to modify a Series.
         """
 
         if self.season_titles is None:
@@ -499,12 +483,7 @@ class Series(Base):
 
     @property
     def image_source_properties(self) -> dict[str, Any]:
-        """
-        Properties to use in image source setting evaluations.
-
-        Returns:
-            Dictionary of properties.
-        """
+        """Properties to use in image source setting evaluations."""
 
         return {
             'skip_localized_images': self.skip_localized_images,
@@ -515,7 +494,7 @@ class Series(Base):
     def as_series_info(self) -> SeriesInfo:
         """
         Represent this Series as a SeriesInfo object, including any
-        database ID's.
+        database IDs.
         """
 
         return SeriesInfo(
@@ -594,7 +573,7 @@ class Series(Base):
         return changed
 
 
-    def get_logo_file(self, source_base: str) -> Path:
+    def get_logo_file(self, source_base: Union[str, Path]) -> Path:
         """
         Get the logo file for this series.
 
@@ -609,7 +588,7 @@ class Series(Base):
         return Path(source_base) / self.path_safe_name / 'logo.png'
 
 
-    def get_series_backdrop(self, source_base: str) -> Path:
+    def get_series_backdrop(self, source_base: Union[str, Path]) -> Path:
         """
         Get the backdrop file for this series.
 
@@ -624,7 +603,7 @@ class Series(Base):
         return Path(source_base) / self.path_safe_name / 'backdrop.jpg'
 
 
-    def get_series_poster(self, source_base: str) -> Path:
+    def get_series_poster(self, source_base: Union[str, Path]) -> Path:
         """
         Get the backdrop file for this series.
 

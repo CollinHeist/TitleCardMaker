@@ -32,7 +32,7 @@ class NewEpisode(Base):
 
     title: str
     match_title: Optional[bool] = None
-    auto_split_title: bool = True
+    auto_split_title: Optional[bool] = None
 
     card_type: Optional[str]
     hide_season_text: Optional[bool]
@@ -83,7 +83,7 @@ class UpdateEpisode(UpdateBase):
 
     title: str = UNSPECIFIED
     match_title: Optional[bool] = UNSPECIFIED
-    auto_split_title: bool = UNSPECIFIED
+    auto_split_title: Optional[bool] = UNSPECIFIED
 
     card_type: Optional[str] = UNSPECIFIED
     hide_season_text: Optional[bool] = UNSPECIFIED
@@ -166,7 +166,7 @@ class Episode(Base):
 
     title: str
     match_title: Optional[bool]
-    auto_split_title: bool
+    auto_split_title: Optional[bool]
 
     card_type: Optional[str]
     hide_season_text: Optional[bool]

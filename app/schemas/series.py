@@ -62,6 +62,7 @@ class BaseSeries(BaseConfig):
     monitored: bool = True
     template_ids: Optional[list[int]] = None
     match_titles: bool = True
+    auto_split_title: bool = True
     translations: Optional[list[Translation]] = None
     libraries: list[MediaServerLibrary] = []
 
@@ -215,6 +216,7 @@ class UpdateSeries(BaseUpdate):
     skip_localized_images: Optional[bool] = UNSPECIFIED
     card_filename_format: Optional[str] = UNSPECIFIED
     match_titles: bool = UNSPECIFIED
+    auto_split_title: bool = UNSPECIFIED
     translations: Optional[list[Translation]] = UNSPECIFIED
     libraries: list[MediaServerLibrary] = UNSPECIFIED
 
@@ -263,11 +265,6 @@ class BatchUpdateSeries(Base):
 """
 Return classes
 """
-# class SeriesFilter(Base):
-#     argument: SeriesFilterArgument
-#     operation: SeriesFilterOperation
-#     reference: Optional[str] = None
-
 class SearchResult(Base):
     name: str
     year: int

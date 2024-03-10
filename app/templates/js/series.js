@@ -821,7 +821,7 @@ async function getEpisodeData(page=1) {
     row.querySelector('input[name="title"]').value = episode.title;
     row.querySelector('td[data-column="title"]').dataset.sortValue = episode.title;
     row.querySelector('td[data-column="match_title"]').innerHTML = getIcon(episode.match_title, true);
-    row.querySelector('td[data-column="auto_split_title"]').innerHTML = getIcon(episode.auto_split_title, false);
+    row.querySelector('td[data-column="auto_split_title"]').innerHTML = getIcon(episode.auto_split_title, true);
     // Template ID
     // Font ID
     // Card type

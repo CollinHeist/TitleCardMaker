@@ -80,7 +80,7 @@ class Episode(Base):
 
     title: Mapped[str]
     match_title: Mapped[Optional[bool]]
-    auto_split_title: Mapped[bool] = mapped_column(default=True)
+    auto_split_title: Mapped[Optional[bool]] = mapped_column(default=None)
 
     card_type: Mapped[Optional[str]]
     hide_season_text: Mapped[Optional[bool]]

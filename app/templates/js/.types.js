@@ -235,7 +235,7 @@
  * @property {?number} absolute_number
  * @property {string} title
  * @property {?boolean} match_title
- * @property {boolean} auto_split_title
+ * @property {?boolean} auto_split_title
  * @property {?string} card_type
  * @property {?boolean} hide_season_text
  * @property {?string} season_text
@@ -288,8 +288,8 @@
  * @property {number} id
  * @property {string} name
  * @property {string} sort_name
- * @property {?string} color
  * @property {?TitleCase} title_case
+ * @property {?string} color
  * @property {number} size
  * @property {number} kerning
  * @property {number} stroke_width
@@ -414,6 +414,7 @@
  * @property {number[]} template_ids
  * @property {boolean} monitored
  * @property {boolean} match_titles
+ * @property {boolean} auto_split_title
  * @property {?boolean} sync_specials
  * @property {?boolean} skip_localized_images
  * @property {?boolean} card_filename_format

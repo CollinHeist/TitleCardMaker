@@ -517,8 +517,18 @@
                 {% endif %}
                 <p class="help">Whether to rename Episode titles if they differ from the Episode data source.</p>
               </div>
+              <br>
 
-              <!-- Special Syncing -->
+              <div class="ui left aligned checkbox field">
+                <label>Auto-Split Titles</label>
+                {% if series.match_titles %}
+                <input name="auto_split_title" type="checkbox" checked="">
+                {% else %}
+                <input name="auto_split_title" type="checkbox">
+                {% endif %}
+                <p class="help">Whether to automatically split the title text into separate lines.</p>
+              </div>
+
               <div class="ui field">
                 <label>Sync Specials</label>
                 <div data-value="sync_specials" class="ui compact selection clearable dropdown">
@@ -530,8 +540,7 @@
                 <p class="help">Whether to include Episodes from Season 0.</p>
               </div>
 
-              <!-- Localized Image Skipping -->
-              <div class="field">
+              <div class="ui field">
                 <label>Ignore Localized Images</label>
                 <div data-value="skip_localized_images" class="ui compact selection clearable dropdown">
                   <input name="skip_localized_images" type="hidden">
@@ -542,7 +551,6 @@
                 <p class="help">Whether to ignore images with assigned Languages (i.e. images with text).</p>
               </div>
 
-              <!-- Card Directory -->
               <div class="ui field">
                 <label>Card Directory</label>
                 <div class="ui left icon fluid input">
@@ -560,7 +568,6 @@
                 <p class="help">Directory to store this Series' Title Cards.</p>
               </div>
 
-              <!-- Filename Format -->
               <div class="ui field">
                 <label>Filename Format</label>
                 {% if series.card_filename_format is none %}

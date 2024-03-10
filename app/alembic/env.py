@@ -27,6 +27,8 @@ Schema Version History (oldest to newest):
 - 48872195483e | Add Snapshot table
 - 32ef3d4633ce | Add Card.source_file column
 - b99ce3bfdfbd | Add Sync.required_root_folder column
+- 3122c0553b1e | Separate Font replacements, migrate cardinal and ordinal formatting
+- f1692007cf8a | Add Series level title split toggle
 """
 
 # this is the Alembic Config object, which provides
