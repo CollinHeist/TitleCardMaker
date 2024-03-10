@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Depends
+from datetime import datetime, timedelta
+
+from fastapi import APIRouter, Depends, Query
+from pydantic import PositiveInt
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from app.database.query import get_series
 
+from app.database.query import get_series
 from app.dependencies import get_database, get_preferences
 from app.internal.auth import get_current_user
 from app.models.card import Card
@@ -136,9 +139,17 @@ def get_series_statistics(
 
 
 @statistics_router.get('/snapshots')
-def get_snapshots(db: Session = Depends(get_database)) -> list[Snapshot]:
+def get_snapshots(
+        previous_days: PositiveInt = Query(default=14),
+        slice_: PositiveInt = Query(alias='slice', default=1),
+        db: Session = Depends(get_database),
+    ) -> list[Snapshot]:
     """
     
     """
 
-    return db.query(SnapshotModel).all()[::4]
+    previous = datetime.now() - timedelta(days=previous_days)
+
+    return db.query(SnapshotModel)\
+        .filter(SnapshotModel.timestamp > previous)\
+        .all()[::slice_]
