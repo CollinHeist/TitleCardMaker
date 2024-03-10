@@ -119,7 +119,7 @@ def generate_series_blueprint(
 
     # Get Episode titles for comparison
     episode_titles: dict[str, str] = {
-        episode_info.key: episode_info.title.full_title
+        episode_info.key: episode_info.title
         for episode_info in raw_episode_data
     }
 

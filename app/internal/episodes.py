@@ -190,10 +190,10 @@ def refresh_episode_data(
 
         # Episode does not exist, add
         if existing is None:
-            new_episodes.append(episode_info.title.full_title)
+            new_episodes.append(episode_info.title)
             episode = Episode(
                 series=series,
-                title=episode_info.title.full_title,
+                title=episode_info.title,
                 **episode_info.indices,
                 **episode_info.ids,
                 watched_statuses=watched.as_db_entry,
@@ -210,8 +210,8 @@ def refresh_episode_data(
                 or (existing.match_title is None and series.match_titles)
             )
             if (do_title_match
-                and existing.title != episode_info.title.full_title):
-                existing.title = episode_info.title.full_title
+                and existing.title != episode_info.title):
+                existing.title = episode_info.title
                 log.debug(f'{existing} Updating title')
                 changed = True
                 episodes.append(existing)

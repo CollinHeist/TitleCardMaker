@@ -87,13 +87,7 @@ class EpisodeInfo(DatabaseInfoContainer):
         ID's, airdate.
         """
 
-        # Ensure title is Title object
-        if isinstance(title, Title):
-            self.title = title
-        else:
-            self.title = Title(title)
-
-        # Store arguments as attributes
+        self.title = title.full_title if isinstance(title, Title) else title
         self.season_number = int(season_number)
         self.episode_number = int(episode_number)
         self.absolute_number = None if absolute_number is None else int(absolute_number)
@@ -159,8 +153,15 @@ class EpisodeInfo(DatabaseInfoContainer):
         return (
             self.season_number == other.season_number
             and self.episode_number == other.episode_number
-            and self.title.matches(other.title)
+            and self.full_title.matches(other.full_title)
         )
+
+
+    @property
+    def full_title(self) -> Title:
+        """This Episode's title (as a Title object)."""
+
+        return Title(self.title)
 
 
     @staticmethod
@@ -461,6 +462,6 @@ class EpisodeInfo(DatabaseInfoContainer):
             and_(
                 EpisodeModel.season_number==self.season_number,
                 EpisodeModel.episode_number==self.episode_number,
-                EpisodeModel.title==self.title.full_title,
+                EpisodeModel.title==self.title,
             ),
         )

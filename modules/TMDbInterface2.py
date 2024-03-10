@@ -729,7 +729,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
             try:
                 # Search for movies with this title
-                results = self.api.movie_search(episode_info.title.full_title)
+                results = self.api.movie_search(episode_info.title)
                 (movie := results[0]).reload()
 
                 # Check for TMDb ID match
@@ -737,7 +737,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                             and episode_info.tmdb_id == movie.id)
 
                 # Check for title match
-                title_match = episode_info.title.matches(
+                title_match = episode_info.full_title.matches(
                     movie.title,*(alt.title for alt in movie.alternative_titles)
                 )
 
@@ -787,7 +787,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             id_match = (episode_info.has_id('tmdb_id')
                         and episode_info.tmdb_id == episode.id)
             does_match = (not title_match or (title_match and
-                          episode_info.title.matches(episode.name)))
+                          episode_info.full_title.matches(episode.name)))
             return episode if id_match or does_match else None
 
         # Try and match by index
@@ -821,7 +821,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             for episode in season.episodes:
                 if ((episode_info.has_id('tmdb_id') and
                     episode_info.tmdb_id == episode.id)
-                    or episode_info.title.matches(episode.name)):
+                    or episode_info.full_title.matches(episode.name)):
                     episode.reload()
                     return episode
 
