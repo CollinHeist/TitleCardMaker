@@ -202,7 +202,7 @@ class MusicTitleCard(BaseCardType):
                     'Either a number ><v>0</v>, or <v>False</v>. If a number, '
                     'then titles are cut off after that many lines; if '
                     '<v>False</v>, then titles are not cut off. Default is '
-                    '<v>2</v>.'
+                    '<v>3</v>.'
                 ),
             ),
             Extra(

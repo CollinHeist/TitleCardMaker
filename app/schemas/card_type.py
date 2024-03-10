@@ -450,7 +450,7 @@ class MusicCardType(BaseCardTypeCustomFontAllText):
     round_corners: bool = True
     subtitle: str = '{series_name}'
     timeline_color: str = MusicTitleCard.DEFAULT_TIMELINE_COLOR
-    truncate_long_titles: Union[PositiveInt, Literal['False']] = 2
+    truncate_long_titles: Union[PositiveInt, Literal['False']] = 3
     watched: Optional[bool] = None
 
     @validator('control_colors')
