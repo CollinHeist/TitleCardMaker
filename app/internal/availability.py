@@ -26,11 +26,12 @@ def get_latest_version(
         `raise_exc` is False, None is returned.
 
     Raises:
-        HTTPException (500) if raise_exc is True and the version number
+        HTTPException (500): `raise_exc` is True and the version number
             cannot be determined.
     """
-    # TODO remove placeholder when repo is public [pylint: disable=unreachable]
-    return Version(f'v2.0-alpha.8.1')
+
+    return Version(f'v2.0-alpha.9.0') # TODO remove placeholder when repo is public [pylint: disable=unreachable]
+
     try:
         response = req_get(
             'https://api.github.com/repos/CollinHeist/'
@@ -39,7 +40,7 @@ def get_latest_version(
         )
         assert response.ok
     except Exception as e:
-        log.exception(f'Error checking for new release', e)
+        log.exception(f'Error checking for new release')
         if raise_exc:
             raise HTTPException(
                 status_code=500,
