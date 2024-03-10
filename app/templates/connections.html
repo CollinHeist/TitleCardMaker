@@ -480,30 +480,50 @@
           </ul>
         </div>
         <form id="tautulli-agent-form" class="ui form">
-          <div class="ui field">
-            <label>Tautulli URL</label>
-            <input name="url" placeholder="http://localhost:8181/">
-          </div>
-          
-          <div class="ui field">
-            <label>Tautulli API Key</label>
-            <input name="api_key" type="password" placeholder="abcdef">
+          <div class="ui two fields">
+            <div class="ui required field">
+              <label>Tautulli URL</label>
+              <input name="url" placeholder="http://localhost:8181/">
+            </div>
+            
+            <div class="ui required field">
+              <label>Tautulli API Key</label>
+              <input name="api_key" type="password" placeholder="abcdef">
+            </div>
           </div>
 
           <div class="ui left aligned checkbox field">
             <label>Use SSL</label>
             <input name="use_ssl" type="checkbox" checked="">
           </div>
-          
-          <div class="ui field">
-            <label>Notification Agent Name</label>
-            <input name="agent_name" value="Update TitleCardMaker (v3)" placeholder="Update TitleCardMaker (v3)">
+
+          <div class="ui divider"></div>
+
+          <div class="ui two fields">
+            <div class="ui field">
+              <label>Notification Agent Name</label>
+              <input name="agent_name" value="TitleCardMaker" placeholder="TitleCardMaker">
+            </div>
+  
+            <div class="ui field">
+              <label>TitleCardMaker URL</label>
+              <input name="tcm_url" placeholder="Default">
+              <p class="help">Root TitleCardMaker URL - typically only required when using a reverse proxy.</p>
+            </div>
+          </div>
+
+          <!-- <div class="ui divider"></div> -->
+
+          <div class="ui left aligned checkbox field">
+            <label>Trigger on Recently Watched</label>
+            <input name="trigger_watched" type="checkbox" checked="">
+            <p class="help">If enabled, a separate Agent will be created to update TitleCardMaker when an Episode has been watched.</p>
           </div>
 
           <div class="ui field">
-            <label>TitleCardMaker URL</label>
-            <input name="tcm_url" placeholder="Default">
-            <p class="help">Root TitleCardMaker URL - typically only required when using a reverse proxy.</p>
+            <label>Plex Username</label>
+            <input name="username" placeholder="All Users">
+            <p class="help">If left blank, all users will trigger TitleCardMaker.</p>
           </div>
 
           <div class="ui info message"></div>

@@ -61,9 +61,7 @@ def contextualize(
             one is generated.
     """
 
-    context_id = generate_context_id() if context_id is None else context_id
-
-    return logger.bind(context_id=context_id)
+    return logger.bind(context_id=context_id or generate_context_id())
 
 
 """Whether this is being executed inside a Docker container"""

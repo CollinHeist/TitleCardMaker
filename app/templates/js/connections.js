@@ -245,7 +245,8 @@ function initializeTautulliForm(plexInterfaceId) {
         });
         $('#tautulli-agent-modal button').toggleClass('disabled', true);
         $(`#connection${plexInterfaceId} .button[data-action="tautulli"]`).toggleClass('disabled', true);
-      }, error: response => showErrorToast({title: 'Error Creating Notification Agent', response}),
+      },
+      error: response => showErrorToast({title: 'Error Creating Notification Agent', response}),
       complete: () => $('#tautulli-agent-modal button').toggleClass('loading', false),
     });
   });

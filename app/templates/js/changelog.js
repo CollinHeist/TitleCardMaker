@@ -22,7 +22,7 @@ const changeLog = [
   <div class="item">Display Source Images from Emby and Jellyfin within the UI when browsing images per-Episode</div>
   <div class="item">Add option to specify any number of global default Templates
     <div class="list">
-      <div class="item">These Templates are a below all other overrides, but just above global settings</div>
+      <div class="item">These Templates are a priority below all other overrides, but just above global settings</div>
       <div class="item">This should allow very fine-tuned control of all Series in TCM (especially when used with filters)</div>
     </div>
   </div>
@@ -69,10 +69,9 @@ const changeLog = [
 </div>
 <h2>Minor Changes</h2>
 <div class="ui ordered list">
-  <div class="item">Allow multi-line season titles on season posters made with v1 / the mini maker</div>
   <div class="item">Group all Fonts that start with a number under the same <b>#</b> header</div>
   <div class="item">Add the internal Font asset file path to the file name label text</div>
-  <div class="item">Change backup filename format - old backups from before this change will need to be manually delete</div>
+  <div class="item">Change backup filename format - old backups from before this change will need to be manually deleted</div>
   <div class="item">Reduce main page left padding by 20px</div>
   <div class="item">Adjust the Font and Template column widths</div>
   <div class="item">Add a small color live indicator for above the Font color customization input</div>
@@ -107,8 +106,9 @@ const changeLog = [
   <div class="item">Refer to Plex labels as "labels" and not "tags" within the help text in Plex Sync modals</div>
   <div class="item">Add Exception traceback to log entries on the log page</div>
   <div class="item">Remove <b>Download Page</b> button from the logs page</div>
-  <div class="item">Increase the bullet point margin in the change log</div>
+  <div class="item">Increase the bullet point margin in the changelog</div>
   <div class="item">Make the changelog full screen</div>
+  <div class="item">(v1) Allow multi-line season titles on season posters made with the mini maker</div>
 </div>
 <h2>Minor Fixes</h2>
 <div class="ui ordered list">
@@ -124,11 +124,10 @@ const changeLog = [
   <div class="item">Handle exceptions raised during poster downloads</div>
   <div class="item">Handle invalid API response from Jellyfin when querying Episode watched statuses</div>
   <div class="item">Add generic metric data to Card preview generation</div>
-  <div class="item">Correct displayed Font asset filepath (was <b>/config/fonts/...</b>, not <b>/config/assets/fonts/...</b>) - visual bug only</div>
   <div class="item">(v1) Fix SVG to PNG logo conversion</div>
   <div class="item">Handle AttributeError caused by bad TMDb API returns in the TMDb find Episode logic</div>
   <div class="item">Properly evaluate missing Source Images for card types which do not use unique Source Images (namely the Poster card)</div>
-  <div class="item">Resize poster thumbnails uploaded directly via API to 750px, not 500px</div>
+  <div class="item">Resize poster thumbnails uploaded directly via API to 750 pixels, not 500</div>
   <div class="item">Resize mask images (to 3200x1800) before applying to Title Card</div>
   <div class="item">Fix Card importing when a directory is not specified</div>
 </div>
@@ -197,7 +196,7 @@ const changeLog = [
   </div>
   <div class="item">Tinted Frame
     <div class="list">
-      <div class="item">Change the default frame width to 5 pixels (from 3px)</div>
+      <div class="item">Change the default frame width to 5 pixels (from 3)</div>
     </div>
   </div>
   <div class="item">Tinted Glass

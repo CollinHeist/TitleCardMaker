@@ -613,14 +613,14 @@ def add_tautulli_integration(
     Notification Agent to search for/create.
     """
 
-    interface = TautulliInterface(
+    TautulliInterface(
         tcm_url=tautulli_connection.tcm_url,
         tautulli_url=tautulli_connection.url,
         api_key=tautulli_connection.api_key,
         plex_interface_id=plex_interface_id,
         use_ssl=tautulli_connection.use_ssl,
         agent_name=tautulli_connection.agent_name,
+        trigger_watched=tautulli_connection.trigger_watched,
+        username=tautulli_connection.username,
         log=request.state.log,
-    )
-
-    interface.integrate(log=request.state.log)
+    ).integrate(log=request.state.log)

@@ -99,7 +99,9 @@ class NewSonarrConnection(BaseNewServer):
 class NewTautulliConnection(BaseNewServer):
     api_key: str
     tcm_url: Optional[str] = None
-    agent_name: str = 'Update TitleCardMaker (v3)'
+    agent_name: str = 'TitleCardMaker'
+    trigger_watched: bool = True
+    username: Optional[str] = None
 
 class NewTMDbConnection(Base):
     name: str = 'TMDb'
