@@ -126,7 +126,7 @@ def clean_database(*, log: Logger = log) -> None:
             # Delete Loaded assets with no associated Card
             bad_loaded = db.query(Loaded).filter(Loaded.card_id.is_(None))
             if (bad_count := bad_loaded.count()) > 0:
-                log.debug(f'Deleting {bad_count} outdated Loaded record')
+                log.debug(f'Deleting {bad_count} outdated Loaded records')
                 bad_loaded.delete()
             db.commit()
 

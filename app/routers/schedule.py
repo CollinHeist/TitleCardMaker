@@ -421,7 +421,7 @@ def reschedule_task(
     # Advanced scheduling
     if preferences.advanced_scheduling:
         # Interval unchanged skip
-        if update_schedule.crontab == BaseJobs.get(task_id).crontab:
+        if update_schedule.crontab == preferences.task_crontabs[task_id]:
             log.debug(f'Task[{job.id}] Not rescheduling, interval unchanged')
             return _scheduled_task_from_job(job)
 
