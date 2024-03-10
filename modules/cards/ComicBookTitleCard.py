@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Literal, Optional
 from modules.BaseCardType import (
     BaseCardType, Coordinate, ImageMagickCommands, Extra, CardDescription
 )
+from modules.Title import SplitCharacteristics
 
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
@@ -218,10 +219,10 @@ class ComicBookTitleCard(BaseCardType):
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'comic_book'
 
     """Characteristics for title splitting by this class"""
-    TITLE_CHARACTERISTICS = {
-        'max_line_width': 32,   # Character count to begin splitting titles
-        'max_line_count': 2,    # Maximum number of lines a title can take up
-        'top_heavy': True,      # This class uses top heavy titling
+    TITLE_CHARACTERISTICS: SplitCharacteristics = {
+        'max_line_width': 32,
+        'max_line_count': 2,
+        'style': 'top',
     }
 
     """Characteristics of the default title font"""

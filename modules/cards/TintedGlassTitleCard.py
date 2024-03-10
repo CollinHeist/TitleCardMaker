@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Literal, Optional
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
+from modules.Title import SplitCharacteristics
 
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
@@ -87,10 +88,10 @@ class TintedGlassTitleCard(BaseCardType):
     SW_REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'star_wars'
 
     """Characteristics for title splitting by this class"""
-    TITLE_CHARACTERISTICS = {
-        'max_line_width': 24,   # Character count to begin splitting titles
-        'max_line_count': 3,    # Maximum number of lines a title can take up
-        'top_heavy': False,     # This class uses bottom heavy titling
+    TITLE_CHARACTERISTICS: SplitCharacteristics = {
+        'max_line_width': 24,
+        'max_line_count': 3,
+        'style': 'bottom',
     }
 
     """Characteristics of the default title font"""

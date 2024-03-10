@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Optional
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
+from modules.Title import SplitCharacteristics
 
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
@@ -45,10 +46,10 @@ class StarWarsTitleCard(BaseCardType):
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'star_wars'
 
     """Characteristics for title splitting by this class"""
-    TITLE_CHARACTERISTICS = {
-        'max_line_width': 16,   # Character count to begin splitting titles
-        'max_line_count': 5,    # Maximum number of lines a title can take up
-        'top_heavy': True,      # This class uses top heavy titling
+    TITLE_CHARACTERISTICS: SplitCharacteristics = {
+        'max_line_width': 16,
+        'max_line_count': 5,
+        'style': 'top',
     }
 
     """Characteristics of the default title font"""

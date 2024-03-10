@@ -5,6 +5,7 @@ from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
 from modules.Debug import log
+from modules.Title import SplitCharacteristics
 
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
@@ -83,10 +84,10 @@ class BannerTitleCard(BaseCardType):
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'banner'
 
     """Characteristics for title splitting by this class"""
-    TITLE_CHARACTERISTICS = {
+    TITLE_CHARACTERISTICS: SplitCharacteristics = {
         'max_line_width': 19,
         'max_line_count': 3,
-        'top_heavy': 'forced even',
+        'style': 'forced even',
     }
 
     """Characteristics of the default title font"""

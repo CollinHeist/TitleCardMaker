@@ -5,6 +5,7 @@ from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
 from modules.Debug import log
+from modules.Title import SplitCharacteristics
 
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
@@ -110,10 +111,10 @@ class AnimeTitleCard(BaseCardType):
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'anime'
 
     """Characteristics for title splitting by this class"""
-    TITLE_CHARACTERISTICS = {
+    TITLE_CHARACTERISTICS: SplitCharacteristics = {
         'max_line_width': 25,   # Character count to begin splitting titles
         'max_line_count': 4,    # Maximum number of lines a title can take up
-        'top_heavy': False,     # This class uses bottom heavy titling
+        'style': 'bottom',     # This class uses bottom heavy titling
     }
 
     """How to name archive directories for this type of card"""

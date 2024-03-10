@@ -6,6 +6,7 @@ from modules.BaseCardType import (
     Rectangle,
 )
 from modules.ImageMagickInterface import Dimensions
+from modules.Title import SplitCharacteristics
 
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
@@ -96,10 +97,10 @@ class OverlineTitleCard(BaseCardType):
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'overline'
 
     """Characteristics for title splitting by this class"""
-    TITLE_CHARACTERISTICS = {
-        'max_line_width': 30,   # Character count to begin splitting titles
-        'max_line_count': 2,    # Maximum number of lines a title can take up
-        'top_heavy': False,      # This class uses top heavy titling
+    TITLE_CHARACTERISTICS: SplitCharacteristics = {
+        'max_line_width': 30,
+        'max_line_count': 2,
+        'style': 'bottom',
     }
 
     """Characteristics of the default title font"""

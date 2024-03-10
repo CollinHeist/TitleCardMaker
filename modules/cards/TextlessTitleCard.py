@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import BaseCardType, CardDescription
 from modules.Debug import log
+from modules.Title import SplitCharacteristics
 
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
@@ -35,10 +36,10 @@ class TextlessTitleCard(BaseCardType):
     )
 
     """Characteristics for title splitting by this class"""
-    TITLE_CHARACTERISTICS = {
-        'max_line_width': 999,  # Character count to begin splitting titles
-        'max_line_count': 1,    # Maximum number of lines a title can take up
-        'top_heavy': False,     # This class uses bottom heavy titling
+    TITLE_CHARACTERISTICS: SplitCharacteristics = {
+        'max_line_width': 999,
+        'max_line_count': 1,
+        'style': 'bottom',
     }
 
     """Font case for this card is entirely blank"""

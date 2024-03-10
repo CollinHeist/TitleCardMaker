@@ -6,6 +6,7 @@ from modules.BaseCardType import (
     BaseCardType, CardDescription, Dimensions, Extra, ImageMagickCommands, Shadow,
 )
 from modules.EpisodeInfo2 import EpisodeInfo
+from modules.Title import SplitCharacteristics
 
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
@@ -110,10 +111,10 @@ class CalligraphyTitleCard(BaseCardType):
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'calligraphy'
 
     """Characteristics for title splitting by this class"""
-    TITLE_CHARACTERISTICS = {
+    TITLE_CHARACTERISTICS: SplitCharacteristics = {
         'max_line_width': 20,
         'max_line_count': 2,
-        'top_heavy': 'forced even',
+        'style': 'forced even',
     }
 
     """Characteristics of the default title font"""

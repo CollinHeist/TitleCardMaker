@@ -509,10 +509,14 @@ def resolve_card_settings(
 
     # Determine effective title text
     if card_settings.get('auto_split_title', True):
-        title = Title(card_settings['title'])
-        card_settings['title_text'] = '\n'.join(title.split(
-            **CardClass.TITLE_CHARACTERISTICS
-        ))
+        card_settings['title_text'] = Title(card_settings['title']).split(
+            CardClass.get_title_split_characteristics(
+                # Make a copy of the characteristics to avoid modifying in-place
+                {**CardClass.TITLE_CHARACTERISTICS},
+                CardClass.TITLE_FONT,
+                card_settings
+            )
+        )
     else:
         card_settings['title_text'] = card_settings['title'].replace('\\n','\n')
 

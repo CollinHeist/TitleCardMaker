@@ -1,10 +1,18 @@
+from functools import lru_cache
 from re import compile as re_compile, IGNORECASE
-from typing import TYPE_CHECKING, Literal, Optional, Union
+from typing import TYPE_CHECKING, Literal, Optional, TypedDict, Union
 
 from modules.Debug import log
 
 if TYPE_CHECKING:
     from modules.Profile import Profile
+
+
+SplitStyle = Literal['top', 'bottom', 'even', 'forced even']
+class SplitCharacteristics(TypedDict):
+    max_line_width: int
+    max_line_count: int
+    style: SplitStyle
 
 
 class Title:
@@ -123,15 +131,15 @@ class Title:
         return self.full_title
 
 
-    def __evenly_split(self) -> list[str]:
+    def __evenly_split(self) -> str:
         """
         Attempt to evenly split this Title between two lines of text.
 
         Returns:
-            List of strings that is this split title.
+            This title split evenly.
         """
 
-        lines = [[], []]
+        lines: list[list[str], list[str]] = [[], []]
         def len_l1() -> int:
             return sum(map(len, lines[0]))
         def len_l2() -> int:
@@ -155,15 +163,12 @@ class Title:
                 lines[0].append(lines[1].pop(0))
 
         if not lines[0]:
-            return list(map(' '.join, lines[1:]))
+            return '\n'.join(map(' '.join, lines[1:]))
 
-        return list(map(' '.join,  lines))
+        return '\n'.join(map(' '.join,  lines))
 
 
-    def __top_split(self,
-            max_line_width: int,
-            max_line_count: int,
-        ) -> list[str]:
+    def __top_split(self, max_line_width: int, max_line_count: int) -> str:
         """
         Args:
             max_line_width: Maximum line width to base splitting on.
@@ -171,7 +176,7 @@ class Title:
                 into.
 
         Returns:
-            List of strings that is this split title.
+            This title split top-style.
         """
 
         all_lines = [self.full_title]
@@ -210,65 +215,27 @@ class Title:
             all_lines[-2] = f'{all_lines[-2]} {all_lines[-1]}'
             del all_lines[-1]
 
-        return all_lines
+        return '\n'.join(all_lines)
 
 
-    def split(self,
-            max_line_width: int,
-            max_line_count: int,
-            top_heavy: Union[bool, Literal['even', 'forced even']],
-        ) -> list[str]:
+    def __bottom_split(self, max_line_width: int, max_line_count: int) -> str:
         """
-        Split this title's text into multiple lines. If the title cannot
-        fit into the given parameters, line width might not be
-        respected, but the maximum number of lines will be.
-
         Args:
             max_line_width: Maximum line width to base splitting on.
             max_line_count: The maximum line count to split the title
                 into.
-            top_heavy: Whether to split the title in a top-heavy style.
-                This means the top lines will likely be longer than the
-                bottom ones. False for bottom-heavy splitting.
 
         Returns:
-            List of split title text to be read top to bottom.
+            This title split bottom style.
         """
 
-        # If the object was initialized with lines, return those
-        if self.__manually_specified:
-            return self.__title_lines
-
-        # Is one word, return
-        if ' ' not in self.full_title:
-            return [self.full_title]
-
-        # Split title into two "even" width lines
-        if top_heavy == 'forced even':
-            return self.__evenly_split()
-
-        # If the title can fit on one line, is one line or one word, return
-        if len(self.full_title) <= max_line_width or max_line_count <= 1:
-            return [self.full_title]
-
-        # Misformat ahead..
-        if len(self.full_title) > max_line_count * max_line_width:
-            log.debug(f'Title {self} too long, potential misformat')
-
-        # Evenly split title
-        if top_heavy == 'even':
-            return self.__evenly_split()
-
-        if top_heavy:
-            return self.__top_split(max_line_width, max_line_count)
-
-        all_lines = [self.full_title]
         # For bottom heavy splitting, start on bottom and move text UP
+        all_lines = [self.full_title]
         for _ in range(max_line_count+2-1):
             top, bottom = '', all_lines.pop()
-            while ((len(bottom) > max_line_width
-                    or len(top) in range(1, 6))
-                    and ' ' in bottom):
+            while (' ' in bottom and
+                   (len(bottom) > max_line_width
+                    or len(top) in range(1, 6))):
                 # Look to split on special characters
                 special_split = False
                 for char in self.SPLIT_CHARACTERS:
@@ -293,12 +260,60 @@ class Title:
             all_lines[-2] = f'{all_lines[-2]} {all_lines[-1]}'
             del all_lines[-1]
 
-        return all_lines
+        return '\n'.join(all_lines)
+
+
+    def split(self, split: SplitCharacteristics) -> str:
+        """
+        Split this title's text into multiple lines. If the title cannot
+        fit into the given parameters, line width might not be
+        respected, but the maximum number of lines will be.
+
+        Args:
+            split: Defintion for how to split this title.
+
+        Returns:
+            Split title text.
+        """
+
+        # If the object was initialized with lines, return those
+        if self.__manually_specified:
+            return '\n'.join(self.__title_lines)
+
+        # Is one word, return
+        if ' ' not in self.full_title:
+            return self.full_title
+
+        # Split title into two "even" width lines
+        if split['style'] == 'forced even':
+            return self.__evenly_split()
+
+        # If the title can fit on one line, is one line or one word, return
+        if split['max_line_count'] <= 1 or len(self) <= split['max_line_width']:
+            return self.full_title
+
+        # Misformat ahead..
+        if len(self) > split['max_line_count'] * split['max_line_width']:
+            log.trace(f'Title {self} too long, potential misformat')
+
+        # Split based on indicated style
+        if split['style'] == 'even':
+            return self.__evenly_split()
+        if split['style'] == 'top':
+            return self.__top_split(
+                split['max_line_width'], split['max_line_count']
+            )
+        if split['style'] == 'bottom':
+            return self.__bottom_split(
+                split['max_line_width'], split['max_line_count']
+            )
+
+        return self.full_title
 
 
     def apply_profile(self,
             profile: 'Profile',
-            **title_characteristics,
+            split: SplitCharacteristics,
         ) -> str:
         """
         Apply the given profile to this title. If this object was
@@ -308,6 +323,7 @@ class Title:
 
         Args:
             profile: Profile object to convert title with.
+            split: Split characteristics to apply to this object.
 
         Returns:
             This title with the given profile and splitting details
@@ -322,13 +338,11 @@ class Title:
             )))
 
         # Title lines weren't manually specified - apply profile, make new Title
-        new_title = Title(profile.convert_title(self.full_title, False))
-
-        # Call split on the new title, join those lines
-        return '\n'.join(new_title.split(**title_characteristics))
+        return Title(profile.convert_title(self.full_title, False)).split(split)
 
 
     @staticmethod
+    @lru_cache(maxsize=256)
     def get_matching_title(text: str) -> str:
         """
         Remove all non A-Z characters from the given title.

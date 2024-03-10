@@ -8,6 +8,7 @@ from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
 from modules.Debug import log
+from modules.Title import SplitCharacteristics
 
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
@@ -238,10 +239,10 @@ class RomanNumeralTitleCard(BaseCardType):
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'roman'
 
     """Characteristics for title splitting by this class"""
-    TITLE_CHARACTERISTICS = {
-        'max_line_width': 26,   # Character count to begin splitting titles
-        'max_line_count': 5,    # Maximum number of lines a title can take up
-        'top_heavy': True,      # This class uses bottom heavy titling
+    TITLE_CHARACTERISTICS: SplitCharacteristics = {
+        'max_line_width': 26,
+        'max_line_count': 5,
+        'style': 'top',
     }
 
     """Default font and text color for episode title text"""

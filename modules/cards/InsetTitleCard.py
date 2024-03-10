@@ -5,6 +5,7 @@ from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription, Shadow
 )
 from modules.Debug import log
+from modules.Title import SplitCharacteristics
 
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
@@ -83,10 +84,10 @@ class InsetTitleCard(BaseCardType):
     GRADIENT = REF_DIRECTORY.parent / 'overline' / 'small_gradient.png'
 
     """Characteristics for title splitting by this class"""
-    TITLE_CHARACTERISTICS = {
-        'max_line_width': 20,   # Character count to begin splitting titles
-        'max_line_count': 3,    # Maximum number of lines a title can take up
-        'top_heavy': False,      # This class uses top heavy titling
+    TITLE_CHARACTERISTICS: SplitCharacteristics = {
+        'max_line_width': 20,
+        'max_line_count': 3,
+        'style': 'bottom',
     }
 
     """Characteristics of the default title font"""

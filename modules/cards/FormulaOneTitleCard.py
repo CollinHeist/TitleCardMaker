@@ -5,6 +5,7 @@ from modules.BaseCardType import (
     BaseCardType, CardDescription, Extra, ImageMagickCommands,
 )
 from modules.Debug import log
+from modules.Title import SplitCharacteristics
 
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
@@ -103,10 +104,10 @@ class FormulaOneTitleCard(BaseCardType):
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'formula'
 
     """Characteristics for title splitting by this class"""
-    TITLE_CHARACTERISTICS = {
-        'max_line_width': 40,   # Character count to begin splitting titles
-        'max_line_count': 1,    # Maximum number of lines a title can take up
-        'top_heavy': False,     # This class uses top heavy titling
+    TITLE_CHARACTERISTICS: SplitCharacteristics = {
+        'max_line_width': 40,
+        'max_line_count': 1,
+        'style': 'bottom',
     }
 
     """Characteristics of the default title font"""

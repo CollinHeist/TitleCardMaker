@@ -7,6 +7,7 @@ from titlecase import titlecase
 from app.schemas.card import CardTypeDescription, Extra, TitleCharacteristics
 from modules.Debug import log
 from modules.ImageMaker import Dimensions, ImageMagickCommands, ImageMaker
+from modules.Title import SplitCharacteristics
 
 if TYPE_CHECKING:
     from modules.Font import Font
@@ -286,12 +287,8 @@ class BaseCardType(ImageMaker):
 
     @property
     @abstractmethod
-    def TITLE_CHARACTERISTICS(self) -> dict[str, Union[int, bool]]:
-        """
-        Characteristics of title splitting for this card type. Must have
-        keys for max_line_width, max_line_count, and top_heavy. See
-        `Title` class for details.
-        """
+    def TITLE_CHARACTERISTICS(self) -> SplitCharacteristics:
+        """Characteristics of title splitting for this card type."""
         raise NotImplementedError
 
 
@@ -374,7 +371,7 @@ class BaseCardType(ImageMaker):
             raise TypeError(f'{cls.__name__}.API_DETAILS must be a '
                             f'CardTypeDescription object')
 
-        TitleCharacteristics(**cls.TITLE_CHARACTERISTICS)
+        SplitCharacteristics(**cls.TITLE_CHARACTERISTICS)
 
         if not isinstance(cls.ARCHIVE_NAME, str):
             raise TypeError(f'{cls.__name__}.ARCHIVE_NAME must be a string')
@@ -472,6 +469,44 @@ class BaseCardType(ImageMaker):
         """
 
         return data
+
+
+    @staticmethod
+    def get_title_split_characteristics(
+            characteristics: SplitCharacteristics,
+            default_font_file: str,
+            data: dict,
+        ) -> SplitCharacteristics:
+        """
+        Get the title split characteristics for the card defined by the
+        given card data. By default this modifies the max line width
+        by the `font_size` (if the default Font is used), and adds the
+        `line_split_modifier` (if specified).
+
+        Args:
+            characteristics: Base split characteristics being modified
+                for this card.
+            default_font_file: Default font file for font size
+                evaluation.
+            data: Dictionary of card data to evaluate for any changes
+                to the split characteristics.
+
+        Returns:
+            SplitCharacteristics object which defines how to split
+            titles.
+        """
+
+        if ('font_size' in data and 'font_file' in data
+            and data['font_file'] == default_font_file):
+            characteristics['max_line_width'] = int(
+                characteristics['max_line_width'] / float(data['font_size'])
+            )
+        if 'font_line_split_modifier' in data:
+            characteristics['max_line_width'] += int(
+                data['font_line_split_modifier']
+            )
+
+        return characteristics
 
 
     @property

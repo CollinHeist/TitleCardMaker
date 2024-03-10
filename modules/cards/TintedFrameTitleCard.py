@@ -7,6 +7,7 @@ from modules.BaseCardType import (
     BaseCardType, CardDescription, Coordinate, Extra, ImageMagickCommands,
     Rectangle, Shadow,
 )
+from modules.Title import SplitCharacteristics
 
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
@@ -166,10 +167,10 @@ class TintedFrameTitleCard(BaseCardType):
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'tinted_frame'
 
     """Characteristics for title splitting by this class"""
-    TITLE_CHARACTERISTICS = {
+    TITLE_CHARACTERISTICS: SplitCharacteristics = {
         'max_line_width': 42,
         'max_line_count': 2,
-        'top_heavy': 'even',
+        'style': 'even',
     }
 
     """Characteristics of the default title font"""

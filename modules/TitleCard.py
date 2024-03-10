@@ -9,6 +9,7 @@ from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
 from modules.FormatString import FormatString
 from modules.SeriesInfo import SeriesInfo
+from modules.Title import SplitCharacteristics
 
 # Built-in BaseCardType classes
 from modules.cards.AnimeTitleCard import AnimeTitleCard
@@ -124,7 +125,7 @@ class TitleCard:
     def __init__(self,
             episode: 'Episode',
             profile: 'Profile',
-            title_characteristics: dict,
+            title_characteristics: SplitCharacteristics,
             **extra_characteristics,
         ) -> None:
         """
@@ -134,9 +135,9 @@ class TitleCard:
             episode: The episode whose TitleCard this corresponds to.
             profile: The profile to apply to the creation of this title
                 card.
-            title_characteristics: Dictionary of characteristics from
+            title_characteristics: TitleSplit characteristics from
                 the CardType class for this Episode to pass to
-                Title.apply_profile()
+                Title.apply_profile().
             extra_characteristics: Any extra keyword arguments to pass
                 directly to the creation of the CardType object.
         """
@@ -147,7 +148,7 @@ class TitleCard:
 
         # Apply the given profile to the Title
         self.converted_title = episode.episode_info.title.apply_profile(
-            profile, **title_characteristics
+            profile, title_characteristics
         )
 
         # Apply any custom title text formatting if supplied
@@ -200,7 +201,6 @@ class TitleCard:
 
         try:
             self.maker = self.episode.card_class(**CardModel.dict())
-            # self.maker = self.episode.card_class(**kwargs)
         except Exception as e:
             log.exception(f'Cannot initialize Card for {self.episode} - {e}', e)
             self.maker = None

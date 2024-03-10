@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Literal, Optional
 from modules.BaseCardType import (
     BaseCardType, CardDescription, Extra, ImageMagickCommands
 )
+from modules.Title import SplitCharacteristics
 
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
@@ -59,10 +60,10 @@ class FrameTitleCard(BaseCardType):
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'frame'
 
     """Characteristics for title splitting by this class"""
-    TITLE_CHARACTERISTICS = {
-        'max_line_width': 31,   # Character count to begin splitting titles
-        'max_line_count': 2,    # Maximum number of lines a title can take up
-        'top_heavy': False,     # This class uses bottom heavy titling
+    TITLE_CHARACTERISTICS: SplitCharacteristics = {
+        'max_line_width': 31,
+        'max_line_count': 2,
+        'style': 'bottom',
     }
 
     """How to name archive directories for this type of card"""
