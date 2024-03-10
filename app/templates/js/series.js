@@ -1638,6 +1638,7 @@ function browseLogos() {
           return `<a class="ui image" onclick="downloadSeriesLogo('${url}')"><img src="${url}"/></a>`;
         });
         $('#browse-tmdb-logo-modal .content .images')[0].innerHTML = imageElements.join('');
+        $('#browse-tmdb-modal .header span').text('Logos');
         $('#browse-tmdb-logo-modal').modal('show');
       }
     },
@@ -1668,6 +1669,7 @@ function browseBackdrops() {
           return `<a class="ui image" onclick="downloadSeriesBackdrop('${url}')"><div class="ui blue ${location} ribbon label">${width}x${height}</div><img src="${url}"/></a>`;
         });
         $('#browse-tmdb-modal .content .images')[0].innerHTML = imageElements.join('');
+        $('#browse-tmdb-modal .header span').text('Backdrops');
         $('#browse-tmdb-modal').modal('show');
       }
     },
