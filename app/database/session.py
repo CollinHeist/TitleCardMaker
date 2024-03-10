@@ -41,6 +41,7 @@ engine = create_engine(
     pool_pre_ping=True,
     # https://docs.sqlalchemy.org/en/20/core/pooling.html#pool-disconnects
     connect_args={'check_same_thread': False, 'timeout': 30},
+    # echo=True,
 )
 
 # URL to the Blueprints SQL database

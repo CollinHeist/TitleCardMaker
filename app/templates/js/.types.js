@@ -292,6 +292,7 @@
  * @property {?string} color
  * @property {number} size
  * @property {number} kerning
+ * @property {number} line_split_modifier
  * @property {number} stroke_width
  * @property {number} interline_spacing
  * @property {number} interword_spacing
@@ -506,6 +507,7 @@
  * @property {?string} color - The color of the font. Optional.
  * @property {boolean} delete_missing - Boolean flag for deleting missing elements.
  * @property {?string} file - The file associated with the font. Optional.
+ * @property {?number} line_split_modifier
  * @property {?number} kerning - The kerning value for the font. Optional.
  * @property {?number} interline_spacing - The interline spacing for the font. Optional.
  * @property {?number} interword_spacing - The interword spacing for the font. Optional.

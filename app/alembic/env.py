@@ -29,6 +29,7 @@ Schema Version History (oldest to newest):
 - b99ce3bfdfbd | Add Sync.required_root_folder column
 - 3122c0553b1e | Separate Font replacements, migrate cardinal and ordinal formatting
 - f1692007cf8a | Add Series level title split toggle
+- 1be1951acc40 | Add Font.line_split_modifier column
 """
 
 # this is the Alembic Config object, which provides
@@ -40,8 +41,6 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
 from app.models.card import Card
 from app.models.connection import Connection
 from app.models.episode import Episode

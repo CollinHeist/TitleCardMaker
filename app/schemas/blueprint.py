@@ -70,6 +70,7 @@ class BlueprintFont(BlueprintBase):
     kerning: float = None
     interline_spacing: int = None
     interword_spacing: int = None
+    line_split_modifier: int = None
     replacements_in: list[str] = None
     replacements_out: list[str] = None
     size: float = None

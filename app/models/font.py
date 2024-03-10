@@ -1,6 +1,6 @@
 from pathlib import Path
 from re import sub as re_sub, IGNORECASE
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Any, Iterable, Optional, TYPE_CHECKING
 
 from sqlalchemy import JSON, func
 
@@ -57,6 +57,7 @@ class Font(Base):
     stroke_width: Mapped[float] = mapped_column(default=1.0)
     title_case: Mapped[Optional[str]]
     vertical_shift: Mapped[int] = mapped_column(default=0)
+    line_split_modifier: Mapped[int] = mapped_column(default=0)
 
 
     @property
@@ -82,11 +83,8 @@ class Font(Base):
     @hybrid_property
     def sort_name(self) -> str:
         """
-        The sort-friendly name of this Font.
-
-        Returns:
-            Sortable name. This is lowercase with any prefix a/an/the
-            removed.
+        The sort-friendly name of this Font. This is lowercase with any
+        prefix a/an/the removed.
         """
 
         return regex_replace(r'^(a|an|the)(\s)', '', self.name.lower())
@@ -105,8 +103,8 @@ class Font(Base):
     @staticmethod
     def apply_replacements(
             text: str,
-            in_: list[str],
-            out_: list[str],
+            in_: Iterable[str],
+            out_: Iterable[str],
             *,
             pre: bool,
         ) -> str:
@@ -169,11 +167,8 @@ class Font(Base):
     @property
     def export_properties(self) -> dict[str, Any]:
         """
-        Properties to export in Blueprints.
-
-        Returns:
-            Dictionary of the properties that can be used in a
-            NewNamedFont model to recreate this object.
+        Properties to export in Blueprints. These properties can be used
+        in a NewNamedFont model to recreate this object.
         """
 
         return {
@@ -184,6 +179,7 @@ class Font(Base):
             'interline_spacing': self.interline_spacing or None,
             'interword_spacing': self.interword_spacing or None,
             'kerning': None if self.kerning == 1.0 else self.kerning,
+            'line_split_modifier': None if self.line_split_modifier == 0 else self.line_split_modifier,
             'replacements_in': self.replacements_in,
             'replacements_out': self.replacements_out,
             'size': None if self.size == 1.0 else self.size,

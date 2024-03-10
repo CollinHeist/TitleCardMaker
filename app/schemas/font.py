@@ -6,9 +6,7 @@ from pydantic import ( # pylint: disable=no-name-in-module
     NonNegativeFloat, PositiveFloat, constr, validator, root_validator
 )
 
-from app.schemas.base import (
-    Base, BetterColor, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
-)
+from app.schemas.base import Base, BetterColor, UpdateBase, UNSPECIFIED
 
 
 TitleCase = Literal['blank', 'lower', 'source', 'title', 'upper']
@@ -17,6 +15,7 @@ DefaultFont = {
     'font_interline_spacing': 0,
     'font_interword_spacing': 0,
     'font_kerning': 1.0,
+    'font_line_split_modifier': 0,
     'font_size': 1.0,
     'font_stroke_width': 1.0,
     'font_vertical_shift': 0,
@@ -27,12 +26,13 @@ Base classes
 """
 class BaseFont(Base):
     color: Optional[BetterColor] = None
-    title_case: Optional[TitleCase] = None
-    size: NonNegativeFloat = 1.0
-    kerning: float = 1.0
-    stroke_width: float = 1.0
     interline_spacing: int = 0
     interword_spacing: int = 0
+    kerning: float = 1.0
+    line_split_modifier: int = 0
+    size: NonNegativeFloat = 1.0
+    stroke_width: float = 1.0
+    title_case: Optional[TitleCase] = None
     vertical_shift: int = 0
 
 class BaseNamedFont(BaseFont):
@@ -62,11 +62,11 @@ class NewNamedFont(BaseNamedFont):
 
 class PreviewFont(Base):
     color: Optional[BetterColor] = None
-    size: Optional[PositiveFloat] = None
     kerning: Optional[float] = None
-    stroke_width: Optional[float] = None
     interline_spacing: Optional[int] = None
     interword_spacing: Optional[int] = None
+    size: Optional[PositiveFloat] = None
+    stroke_width: Optional[float] = None
     vertical_shift: Optional[int] = None
 
 """
@@ -75,16 +75,17 @@ Update classes
 class UpdateNamedFont(UpdateBase):
     name: constr(min_length=1) = UNSPECIFIED
     color: Optional[BetterColor] = UNSPECIFIED
-    title_case: Optional[TitleCase] = UNSPECIFIED
-    size: PositiveFloat = UNSPECIFIED
-    kerning: float = UNSPECIFIED
-    stroke_width: float = UNSPECIFIED
+    delete_missing: bool = UNSPECIFIED
     interline_spacing: int = UNSPECIFIED
     interword_spacing: int = UNSPECIFIED
-    vertical_shift: int = UNSPECIFIED
-    delete_missing: bool = UNSPECIFIED
+    kerning: float = UNSPECIFIED
+    line_split_modifier: int = UNSPECIFIED
     replacements_in: list[str] = UNSPECIFIED
     replacements_out: list[str] = UNSPECIFIED
+    size: PositiveFloat = UNSPECIFIED
+    stroke_width: float = UNSPECIFIED
+    title_case: Optional[TitleCase] = UNSPECIFIED
+    vertical_shift: int = UNSPECIFIED
 
     @validator('*', pre=True)
     def validate_arguments(cls, v):
