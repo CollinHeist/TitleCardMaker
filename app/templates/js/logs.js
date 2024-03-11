@@ -196,6 +196,7 @@ function queryLogFiles() {
  * initializes the after/before calendar inputs.
  */
 function initAll() {
+  $('.ui.dropdown').dropdown();
   queryForLogs();
   queryLogFiles();
 
