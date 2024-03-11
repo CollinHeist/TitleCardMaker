@@ -150,10 +150,14 @@ class BatchUpdateEpisode(Base):
 """
 Return classes
 """
+class SeriesData(Base):
+    name: str
+    small_poster_url: str
 
 class Episode(Base):
     id: int
     series_id: int
+    series: SeriesData
     template_ids: list[int]
     font_id: Optional[int]
 
