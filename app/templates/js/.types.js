@@ -223,9 +223,16 @@
 // Episodes --------------------------------------------------------------------
 
 /**
+ * @typedef {Object} SeriesData
+ * @property {string} name
+ * @property {string} small_poster_url
+ */
+
+/**
  * @typedef {Object} Episode
  * @property {number} id
  * @property {number} series_id
+ * @property {SeriesData} series
  * @property {number[]} template_ids
  * @property {?number} font_id
  * @property {?string} source_file

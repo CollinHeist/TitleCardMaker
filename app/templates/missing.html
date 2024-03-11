@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Missing Cards - TitleCardMaker</title>
+  {% include "./html_boilerplate.html" %}
+
+  <script type="text/javascript">
+    {% include "./js/missing.js" %}
+  </script>
+
+  <link rel="stylesheet" type="text/css" href="/templates/css/addSeries.css"/>
+
+  <template id="missing-card-template">
+    <tr>
+      <td data-row="series" class="collapsing selectable">
+        <a>
+          <h4 class="ui image header">
+            <img class="ui tiny rounded image">
+            <div class="content" data-value="name">{SERIES}</div>
+          </h4>
+        </a>
+      </td>
+      <td class="center aligned" data-row="season"></td>
+      <td class="center aligned" data-row="episode"></td>
+      <td data-row="title"></td>
+    </tr>
+  </template>
+
+  <template id="row-template">
+    <tr>
+      <td class="center aligned" data-row="season"></td>
+      <td class="center aligned" data-row="episode"></td>
+      <td data-row="title"></td>
+    </tr>
+  </template>
+</head>
+
+<body onload="initAll();">
+  <div class="pusher">
+    <!-- Static header and sidebar -->
+    <div id="page-header">
+      {% include "./header.html" %}
+    </div>
+    <div id="nav-menu">
+      {% include "./home_sidebar.html" %}
+    </div>
+
+    <!-- Actual page content -->
+    <div id="main-content" class="article">
+      <h1 class="ui header">Missing Title Cards</h1>
+
+      <table class="ui celled compact unstackable structured striped table" id="missing-cards">
+        <thead>
+          <tr>
+            <th class="">Series</th>
+            <th colspan="2" class="center aligned">Episode</th>
+            <th>Episode Title</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>
