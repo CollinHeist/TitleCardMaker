@@ -135,7 +135,7 @@ const changeLog = [
 <div class="ui ordered list">
   <div class="item">Anime
     <div class="list">
-      <div class="item">Color kanji stroke using the _kanji color_, not title color</div>
+      <div class="item">Color kanji stroke using the <i>kanji color</i>, not title color</div>
     </div>
   </div>
   <div class="item">Banner
@@ -394,7 +394,7 @@ const changeLog = [
   <div class="item">Do not add Source Image HTML elements for images which do not exist</div>
   <div class="item">Correct the Blueprints repository link on the "no Blueprints" popup</div>
   <div class="item">Add <b>charset-normalizer</b> requirement to Pipfile (fixes some Windows installs)</div>
-  <div class="item">Add pre-pool pinging to DB connection creation, and change connection timeout to 30 seconds -<i>should</i>help with multi-threaded DB reliability</div>
+  <div class="item">Add pre-pool pinging to DB connection creation, and change connection timeout to 30 seconds - <i>should</i> help with multi-threaded DB reliability</div>
   <div class="item">Add poster filesize to the Series poster URL to prevent bad browser caches</div>
   <div class="item">Fix IMDb ID parsing from Emby</div>
   <div class="item">Do not buffer Python logging (fixes batched logging on some machines)</div>
@@ -905,10 +905,10 @@ const changeLog = [
   <div class="item">Browse all available Blueprints within the UI
     <div class="list">
       <div class="item">Below the aforementioned new series adding, any defined Blueprints can be browsed - for example:
-    <div class="list">
-      <img width="50%" src="https://cdn.discordapp.com/attachments/1112497724080795649/1134612605525295144/image.png">
-    </div>
-  </div>
+        <div class="list">
+          <img width="50%" src="https://titlecardmaker.com/assets/blueprint_series_light.jpg">
+        </div>
+      </div>
       <div class="item">These Blueprints can then be imported _directly_, without explicitly searching for the Series - this will import the Series if it does not exist, as well as the Blueprint</div>
       <div class="item">Any Blueprints you aren't interested in (or have already imported) can be permanently hidden from this part of the UI, but will still appear when searching for that Series explicitly.</div>
     </div>
@@ -944,8 +944,8 @@ const changeLog = [
   <div class="item">Add various keyboard navigations:
     <div class="list">
       <div class="item">Allow tabbing between Series on the home page, and hitting Enter to open page</div>
-      <div class="item">Hitting <b>f</b> or <b>s</b> anywhere to start typing in the Series search box</div>
-      <div class="item">Hit Shift + <b>H</b> anywhere to return to the home page</div>
+      <div class="item">Hitting <kbd class="ui tiny basic label">F</kbd> or <kbd class="ui tiny basic label">S</kbd> anywhere to start typing in the Series search box</div>
+      <div class="item">Hit <kbd class="ui tiny basic label">SHIFT</kbd> and <kbd class="ui tiny basic label">H</kbd> anywhere to return to the home page</div>
     </div>
   </div>
 </div>
@@ -991,7 +991,7 @@ const changeLog = [
   <div class="item">Remove default <b>--workers 4</b> server argument from the Dockerfile</div>
   <div class="item">Require <b>plexapi</b> 4.14.0 to fix PMM integration failing on some servers
     <div class="list">
-      <div class="item">To fix the PMM integration if you are<i>not</i>using Docker, you might need to run <b>pipenv clean</b> then a clean<b>pipenv install</b></div>
+      <div class="item">To fix the PMM integration if you are <i>not</i> using Docker, you might need to run <b>pipenv clean</b> then a clean<b>pipenv install</b></div>
     </div>
   </div>
   <div class="item">Prevent TCM from grabbing source images of previously loaded Title Cards</div>
@@ -1043,11 +1043,11 @@ const changeLog = [
       <div class="item">Blueprints are hosted on the new <a href="https://github.com/CollinHeist/TitleCardMaker-Blueprints/" target="_blank">Blueprints</a> repository, which I've started adding some of my own Blueprints to, both as examples and for use</div>
       <div class="item">Blueprints can be imported into a Series via the new <b>Blueprints</b> tab on the Series page</div>
       <div class="item">If there are Blueprints available, an example of each will be displayed in the UI, along with the creator, a brief description, and a list of what is included in the Blueprint
-    <div class="list">
-      <img width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/1a42589e-bf54-48d2-bddf-823cf55097bd">
-    </div>
-  </div>
-      <div class="item">A Blueprint can be easily exported by clicking the<i>Export Blueprint</i>Button, which will download a .zip file of the Blueprint (as JSON) that you can edit, any associated Font files, and a preview image for the Series.</div>
+        <div class="list">
+          <img width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/1a42589e-bf54-48d2-bddf-823cf55097bd">
+        </div>
+      </div>
+      <div class="item">A Blueprint can be easily exported by clicking the <i>Export Blueprint</i> Button, which will download a .zip file of the Blueprint (as JSON) that you can edit, any associated Font files, and a preview image for the Series.</div>
     </div>
   </div>
   <div class="item">Refresh Episode data for each Series immediately after being Synced</div>
@@ -1192,7 +1192,7 @@ const changeLog = [
   <div class="item">Correctly initialize default card extension for Card importer based on global card extension</div>
   <div class="item">Fix IMDb Series ID for Series with unassigned IMDb ID's (label was showing TVDb)</div>
   <div class="item">Utilize <b>magick</b> IM 7.0 Command Prefix in Tinted Frame card (this is kind of a test)</div>
-  <div class="item">Add 10 minute misfire grace period to Scheduler -<i>should</i>allow tasks to finish if delayed</div>
+  <div class="item">Add 10 minute misfire grace period to Scheduler - <i>should</i>allow tasks to finish if delayed</div>
   <div class="item">Fix default <b>box_adjustments</b> in Landscape and Tinted Glass cards</div>
 </div>`
   }, {

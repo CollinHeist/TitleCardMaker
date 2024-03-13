@@ -1,7 +1,8 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
+# pyright: reportInvalidTypeForm=false
 from typing import Literal, Optional
 
-from pydantic import constr, validator # pylint: disable=no-name-in-module
+from pydantic import constr, validator
 
 from app.schemas.base import Base, UpdateBase, UNSPECIFIED
 

@@ -62,6 +62,16 @@ class TintedGlassTitleCard(BaseCardType):
                 ),
             ),
             Extra(
+                name='Glass Corner Radius',
+                identifier='rounding_radius',
+                description='How round to make the title text glass rectangle',
+                tooltip=(
+                    'Number between <v>1</v> and <v>150</v>. Larger values '
+                    'will result in more round edges. Default is <v>40</v>. '
+                    'Unit is pixels.'
+                ),
+            ),
+            Extra(
                 name='Glass Color',
                 identifier='glass_color',
                 description='Color of the "glass" beneath the text',
@@ -118,13 +128,15 @@ class TintedGlassTitleCard(BaseCardType):
 
     """Blur profile for darkened area behind title/episode text"""
     TEXT_BLUR_PROFILE = '0x6'
+    DEFAULT_ROUNDING_RADIUS = 40
 
     __slots__ = (
         'source', 'output_file', 'title_text', '__line_count', 'episode_text',
         'hide_episode_text', 'font_file', 'font_size', 'font_color',
         'font_interline_spacing', 'font_interword_spacing', 'font_kerning',
         'font_vertical_shift', 'episode_text_color', 'episode_text_position',
-        'box_adjustments', 'glass_color', 'vertical_adjustment',
+        'box_adjustments', 'glass_color', 'rounding_radius',
+        'vertical_adjustment',
     )
 
     def __init__(self,
@@ -146,6 +158,7 @@ class TintedGlassTitleCard(BaseCardType):
             episode_text_color: str = EPISODE_TEXT_COLOR,
             episode_text_position: Position = 'center',
             glass_color: str = DARKEN_COLOR,
+            rounding_radius: int = DEFAULT_ROUNDING_RADIUS,
             vertical_adjustment: int = 0,
             preferences: Optional['Preferences'] = None,
             **unused,
@@ -176,6 +189,7 @@ class TintedGlassTitleCard(BaseCardType):
         self.episode_text_color = episode_text_color
         self.episode_text_position = episode_text_position
         self.glass_color = glass_color
+        self.rounding_radius = rounding_radius
         self.vertical_adjustment = vertical_adjustment - 50
 
 
@@ -282,7 +296,7 @@ class TintedGlassTitleCard(BaseCardType):
         return BoxCoordinates(x_start, y_start, x_end, y_end)
 
 
-    def add_episode_text_command(self,
+    def episode_text_commands(self,
             title_coordinates: BoxCoordinates,
         ) -> ImageMagickCommands:
         """
@@ -456,11 +470,14 @@ class TintedGlassTitleCard(BaseCardType):
             # Resize and apply any style modifiers
             *self.resize_and_style,
             # Blur area behind title text
-            *self.blur_rectangle_command(title_box_coordinates, 40),
+            *self.blur_rectangle_command(
+                title_box_coordinates,
+                self.rounding_radius
+            ),
             # Add title text
             *self.title_text_commands,
             # Add episode text
-            *self.add_episode_text_command(title_box_coordinates),
+            *self.episode_text_commands(title_box_coordinates),
             # Attempt to overlay mask
             *self.add_overlay_mask(self.source),
             # Create card

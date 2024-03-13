@@ -1,4 +1,5 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring
+# pyright: reportInvalidTypeForm=false
 from datetime import datetime, timedelta
 from typing import Callable, Optional
 

@@ -767,6 +767,7 @@ class TintedGlassCardType(BaseCardTypeCustomFontNoText):
     episode_text_color: BetterColor = TintedGlassTitleCard.EPISODE_TEXT_COLOR
     episode_text_position: EpisodeTextPosition = 'center'
     glass_color: BetterColor = TintedGlassTitleCard.DARKEN_COLOR
+    rounding_radius: conint(ge=1, le=150) = TintedGlassTitleCard.DEFAULT_ROUNDING_RADIUS
     vertical_adjustment: int = 0
 
     @validator('box_adjustments')
