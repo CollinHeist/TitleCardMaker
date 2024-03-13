@@ -1,4 +1,5 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
+# pyright: reportInvalidTypeForm=false
 from datetime import datetime
 from pathlib import Path
 from random import uniform
@@ -443,7 +444,7 @@ class MusicCardType(BaseCardTypeCustomFontAllText):
     heart_stroke_color: str = 'white'
     pause_or_play: PlayerAction = MusicTitleCard.DEFAULT_PLAYER_ACTION
     player_color: str = MusicTitleCard.DEFAULT_PLAYER_COLOR
-    player_inset: conint(ge=0, le=1800) = MusicTitleCard.DEFAULT_INSET
+    player_inset: conint(ge=0, le=1200) = MusicTitleCard.DEFAULT_INSET
     player_position: PlayerPosition = MusicTitleCard.DEFAULT_PLAYER_POSITION
     player_style: PlayerStyle = MusicTitleCard.DEFAULT_PLAYER_STYLE
     player_width: conint(ge=400, le=3200) = MusicTitleCard.DEFAULT_PLAYER_WIDTH

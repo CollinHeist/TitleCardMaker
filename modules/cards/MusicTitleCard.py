@@ -84,7 +84,7 @@ class MusicTitleCard(BaseCardType):
                 identifier='player_inset',
                 description='How far to inset the player from the edges',
                 tooltip=(
-                    'Number between <v>0</v> and <v>1800</v>. Default is '
+                    'Number between <v>0</v> and <v>1200</v>. Default is '
                     '<v>75</v>. Unit is pixels.'
                 ),
             ),
@@ -121,7 +121,7 @@ class MusicTitleCard(BaseCardType):
                     'Set of five space-separated colors for the controls, '
                     'applied to elements from the left-to-right. An individual '
                     'element can be removed if the color is <c>transparent</c>.'
-                    'Default is <c>white</c> <c>white</c> <c>white</c> '
+                    ' Default is <c>white</c> <c>white</c> <c>white</c> '
                     '<c>white</c> <c>white</c>.'
                 ),
             ),
@@ -211,9 +211,9 @@ class MusicTitleCard(BaseCardType):
                 identifier='round_corners',
                 description='Whether to round the corners of the album image',
                 tooltip=(
-                    'Either <v>True</v> or <v>False</v>. Rounding corners is a '
-                    'fairly CPU intensive task and does slow down Card '
-                    'creation. Default is <v>True</v>.'
+                    'Either <v>True</v> or <v>False</v>. Rounding corners is '
+                    'fairly CPU intensive and will slow down Card creation. '
+                    'Default is <v>True</v>.'
                 ),
             ),
         ],

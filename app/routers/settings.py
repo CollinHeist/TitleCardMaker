@@ -1,15 +1,14 @@
 from fastapi import APIRouter, Body, Depends, Request
 from sqlalchemy.orm import Session
-from app.database.query import get_all_templates, get_template
 
+from app.database.query import get_template
 from app.dependencies import get_database, get_preferences
 from app.internal.auth import get_current_user
 from app.models.connection import Connection
 from app.models.preferences import Preferences as PreferencesModel
 from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import (
-    EpisodeDataSourceToggle, ImageSourceToggle, Preferences, ToggleOption,
-    UpdatePreferences
+    EpisodeDataSourceToggle, ImageSourceToggle, Preferences, UpdatePreferences
 )
 
 
@@ -25,6 +24,7 @@ settings_router = APIRouter(
 def get_global_settings(
         preferences: PreferencesModel = Depends(get_preferences),
     ) -> Preferences:
+    """Get the global settings"""
 
     return preferences
 
@@ -84,9 +84,7 @@ def get_image_source_priority(
         db: Session = Depends(get_database),
         preferences: PreferencesModel = Depends(get_preferences),
     ) -> list[ImageSourceToggle]:
-    """
-    Get the global image source priority.
-    """
+    """Get the global image source priority."""
 
     # Add all selected Connections
     sources, source_ids = [], []

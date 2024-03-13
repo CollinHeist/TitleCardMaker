@@ -435,7 +435,7 @@ def reschedule_task(
             ) from exc
 
         # Reschedule with modified interval
-        log.debug(f'Task[{job.id}] rescheduling to "{update_schedule.crontab}"')
+        log.info(f'Task[{job.id}] rescheduling to "{update_schedule.crontab}"')
         BaseJobs[task_id].crontab = update_schedule.crontab
         job = scheduler.reschedule_job(task_id, trigger=new_trigger)
 
