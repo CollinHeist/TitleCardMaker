@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from logging import Logger
-from re import IGNORECASE, compile as re_compile
 from typing import Any, Callable, Optional, Union
 
 from modules.Debug import log
@@ -375,7 +374,8 @@ class DatabaseInfoContainer(ABC):
 
         # Verify class comparison
         if not isinstance(other, self.__class__):
-            raise TypeError(f'Can only compare like {self.__class__.__name__} objects')
+            raise TypeError(f'Can only compare like '
+                            f'{self.__class__.__name__} objects')
 
         return any(
             getattr(self, attr, None) is not None
@@ -397,10 +397,10 @@ class DatabaseInfoContainer(ABC):
         Set the given attribute to the given value with the given type.
 
         Args:
-            attribute: Attribute (string) being set.
+            attribute: Attribute being set.
             value: Value to set the attribute to.
-            type_: Optional callable to call on value before assignment.
-                Resulting value is thus `type_(value)`.
+            type_: Optional callable to call on `value` before
+                assignment. Resulting value is thus `type_(value)`.
             interface_id: ID of the interface for this ID. Required if
                 the specified attribute corresponds to an `InterfaceID`
                 object.
@@ -409,15 +409,20 @@ class DatabaseInfoContainer(ABC):
                 corresonsd to a media-server `InterfaceID` object.
         """
 
+        # Value not provided, don't update
         if not value:
             return None
 
+        # Updating an InterfaceID
         if isinstance(getattr(self, attribute), InterfaceID):
+            # Update via library name if not already defined
             if library_name:
                 if getattr(self, attribute)[interface_id, library_name] is None:
                     getattr(self, attribute)[interface_id, library_name] = value
+            # Update directly if not already defined
             elif getattr(self, attribute)[interface_id] is None:
                 getattr(self, attribute)[interface_id] = value
+        # Non-interface ID that is not defined, update
         elif getattr(self, attribute) is None:
             if type_ is None:
                 setattr(self, attribute, value)
@@ -439,6 +444,8 @@ class DatabaseInfoContainer(ABC):
         Args:
             id_: ID being checked.
             interface_id: ID of the interface whose ID is being checked.
+            library_name: Name of the library containing the ID being
+                checked.
 
         Returns:
             True if the given ID is defined (i.e. not None) for this
@@ -459,7 +466,7 @@ class DatabaseInfoContainer(ABC):
 
 
     def has_ids(self,
-            *ids: tuple[str],
+            *ids: str,
             interface_id: Optional[int] = None,
             library_name: Optional[str] = None,
         ) -> bool:
@@ -468,6 +475,10 @@ class DatabaseInfoContainer(ABC):
 
         Args:
             ids: Any ID's being checked for.
+            interface_id: ID of the interface whose IDs are being
+                checked.
+            library_name: Name of the library containing the ID being
+                checked.
 
         Returns:
             True if all the given ID's are defined (i.e. not None) for
@@ -475,12 +486,20 @@ class DatabaseInfoContainer(ABC):
         """
 
         return all(
-            self.has_id(id_,interface_id=interface_id,library_name=library_name)
+            self.has_id(
+                id_,
+                interface_id=interface_id,
+                library_name=library_name
+            )
             for id_ in ids
         )
 
 
-    def copy_ids(self, other: 'DatabaseInfoContainer', log: Logger = log) -> None:
+    def copy_ids(self,
+            other: 'DatabaseInfoContainer',
+            *,
+            log: Logger = log,
+        ) -> None:
         """
         Copy the database ID's from another DatabaseInfoContainer into
         this object. Only updating the more precise ID's (e.g. this
@@ -488,6 +507,7 @@ class DatabaseInfoContainer(ABC):
 
         Args:
             other: Container whose ID's are being copied over.
+            log: Logger for all log messages.
         """
 
         # Go through all attributes of this object
@@ -499,8 +519,13 @@ class DatabaseInfoContainer(ABC):
             # If this is an InterfaceID, combine
             if isinstance(getattr(self, attr), InterfaceID):
                 if getattr(other, attr) > getattr(self, attr):
-                    log.debug(f'Merging {attr} <-- {getattr(self, attr)!r} + {getattr(other, attr)!r}')
-                    setattr(self, attr, getattr(self, attr) + getattr(other, attr))
+                    log.debug(f'Merging {attr} <-- {getattr(self, attr)!r}'
+                              f' + {getattr(other, attr)!r}')
+                    setattr(
+                        self,
+                        attr,
+                        getattr(self, attr) + getattr(other, attr)
+                    )
             # Regular ID, copy if this info is missing
             elif not getattr(self, attr) and getattr(other, attr):
                 setattr(self, attr, getattr(other, attr))

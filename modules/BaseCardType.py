@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, Union
 
 from titlecase import titlecase
 
-from app.schemas.card import CardTypeDescription, Extra, TitleCharacteristics
+from app.schemas.card import CardTypeDescription, Extra
 from modules.Debug import log
 from modules.ImageMaker import Dimensions, ImageMagickCommands, ImageMaker
 from modules.Title import SplitCharacteristics

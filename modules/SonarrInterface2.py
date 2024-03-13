@@ -69,9 +69,9 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             log: Logger for all log messages.
 
         Raises:
-            HTTPException (401) if the Sonarr system status cannot be
+            HTTPException (401): The Sonarr system status cannot be
                 pinged.
-            HTTPException (422) if an invalid URL is provided.
+            HTTPException (422): An invalid URL is provided.
         """
 
         # Initialize parent WebInterface
@@ -272,7 +272,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             if series_info == reference_series_info:
                 if not reference_series_info.has_id('sonarr', self.interface_id):
                     log.debug(f'Found {series_info} via Sonarr, but not in server')
-                series_info.copy_ids(reference_series_info)
+                series_info.copy_ids(reference_series_info, log=log)
                 break
 
         return None
