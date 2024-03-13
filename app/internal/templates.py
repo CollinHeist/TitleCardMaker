@@ -132,30 +132,3 @@ def get_effective_templates(
         None,
         None,
     )
-
-
-def get_all_effective_templates(
-        series: Series,
-        episode: Episode,
-    ) -> list[tuple[Optional[Template], Optional[Template],Optional[Template]]]:
-    """
-    _summary_
-
-    Args:
-        series: _description_
-        episode: _description_. Defaults to None.
-
-    Returns:
-        _description_
-    """
-
-    if not episode.templates:
-        return [
-            (get_effective_series_template(series, episode, library), None)
-            for library in series.libraries
-        ]
-
-    return [
-        (None, get_effective_episode_template(series, episode, library))
-        for library in series.libraries
-    ]
