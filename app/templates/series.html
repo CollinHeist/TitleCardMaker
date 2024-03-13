@@ -405,7 +405,7 @@
             <div class="ui vertical labeled icon fluid buttons">
               {% for library in series.libraries %}
               <div class="ui mini horizontal divider" data-interface="{{library.interface}}">
-                {{library.name}} | <span data-value="interface-type">{{library.interface}}</span>
+                {{library.name}} ｜ <span data-value="interface-type">{{library.interface}}</span>
               </div>
               <button class="ui labeled icon button" onclick="loadCards({{library.interface_id}}, `{{library.name}}`, false);">
                 <i class="hdd outline icon"></i>
