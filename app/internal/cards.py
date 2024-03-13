@@ -701,16 +701,6 @@ def create_episode_card(
     # Create Card parent directories if needed
     card_settings['card_file'].parent.mkdir(parents=True, exist_ok=True)
 
-    # Inner function to begin card creation as a background task or immediately
-    def _start_card_creation():
-        if background_tasks is None:
-            create_card(db, card, CardClass, CardTypeModel, library, log=log)
-        else:
-            background_tasks.add_task(
-                create_card,
-                db, card, CardClass, CardTypeModel, library, log=log,
-            )
-
     # Find existing Card
     # Library unique mode is disabled, look for any Card for this Episode
     if not get_preferences().library_unique_cards or not library:
@@ -728,7 +718,7 @@ def create_episode_card(
 
     # No existing Card, begin creation
     if not existing_card:
-        _start_card_creation()
+        create_card(db, card, CardClass, CardTypeModel, library, log=log)
         return None
 
     # Function to get the existing val
@@ -743,7 +733,7 @@ def create_episode_card(
         log.debug(f'{episode} Card not found - creating')
         db.delete(existing_card)
         db.commit()
-        _start_card_creation()
+        create_card(db, card, CardClass, CardTypeModel, library, log=log)
         return None
 
     # Determine if this Card is different than existing Card
@@ -769,7 +759,7 @@ def create_episode_card(
         Path(existing_card.card_file).unlink(missing_ok=True)
         db.delete(existing_card)
         db.commit()
-        _start_card_creation()
+        create_card(db, card, CardClass, CardTypeModel, library, log=log)
 
     return None
 
