@@ -283,7 +283,7 @@ class Episode(Base):
         return {
             'card_type': self.card_type,
             'match_title': self.match_title,
-            'auto_split_title': False if not self.auto_split_title else None,
+            'auto_split_title': self.auto_split_title,
             'hide_season_text': self.hide_season_text,
             'season_text': self.season_text,
             'hide_episode_text': self.hide_episode_text,
@@ -346,7 +346,7 @@ class Episode(Base):
         """
 
         info = self.as_episode_info
-        info.copy_ids(other)
+        info.copy_ids(other, log=log)
 
         changed = False
         for id_type, id_ in info.ids.items():
