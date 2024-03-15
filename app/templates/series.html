@@ -203,6 +203,11 @@
         </div>
       </td>
       {% endif %}
+      <td data-column="airdate" class="center aligned collapsing">
+        <div class="ui transparent id input">
+          <input name="airdate" type="text" placeholder="YYYY-MM-DDTHH:MM:SS">
+        </div>
+      </td>
       {% endif %}
       <td data-column="delete" class="selectable">
         <a><i class="ui red trash alternate outline icon"></i></a>
@@ -978,6 +983,7 @@
                     {% if series.year < 2017 %}
                     <th class="collapsing">TVRage<br>ID</th>
                     {% endif %}
+                    <th class="collapsing">Airdate</th>
                     {% endif %}
                     <th class="collapsing">Delete</th>
                   </tr>

@@ -1,3 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+
 {% if False %}
 import {
   Blueprint, Episode, EpisodePage, ExternalSourceImage, LogEntryPage,
@@ -854,6 +857,7 @@ async function getEpisodeData(page=1) {
       row.querySelector('input[name="tvdb_id"]').value = episode.tvdb_id;
       const tvrageIdInput = row.querySelector('input[name="tvrage_id"]')
       if (tvrageIdInput !== null) { tvrageIdInput.value = episode.tvrage_id; }
+      row.querySelector('input[name="airdate"]').value = episode.airdate;
     {% endif %}
     row.querySelector('td[data-column="delete"] a').onclick = () => deleteEpisode(episode.id);
     return row;
