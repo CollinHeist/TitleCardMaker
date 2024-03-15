@@ -164,8 +164,9 @@ class EpisodeInfo(DatabaseInfoContainer):
         return Title(self.title)
 
 
-    @staticmethod
+    @classmethod
     def from_emby_info(
+            cls,
             info: EmbyEpisodeDict,
             interface_id: int,
             library_name: str,
@@ -194,7 +195,7 @@ class EpisodeInfo(DatabaseInfoContainer):
             log.exception(f'Cannot parse airdate', e)
             log.debug(f'Episode data: {info}')
 
-        return EpisodeInfo(
+        return cls(
             info['Name'],
             info['ParentIndexNumber'],
             info['IndexNumber'],
@@ -207,8 +208,9 @@ class EpisodeInfo(DatabaseInfoContainer):
         )
 
 
-    @staticmethod
+    @classmethod
     def from_jellyfin_info(
+            cls,
             info: EmbyEpisodeDict,
             interface_id: int,
             library_name: str,
@@ -241,7 +243,7 @@ class EpisodeInfo(DatabaseInfoContainer):
             except Exception as e:
                 log.debug(f'Cannot parse airdate {e} - {info=}')
 
-        return EpisodeInfo(
+        return cls(
             info['Name'],
             info['ParentIndexNumber'],
             info['IndexNumber'],
@@ -254,8 +256,8 @@ class EpisodeInfo(DatabaseInfoContainer):
         )
 
 
-    @staticmethod
-    def from_plex_episode(plex_episode: PlexEpisode) -> 'EpisodeInfo':
+    @classmethod
+    def from_plex_episode(cls, plex_episode: PlexEpisode) -> 'EpisodeInfo':
         """
         Create an EpisodeInfo object from a `plexapi.video.Episode`
         object.
@@ -268,8 +270,7 @@ class EpisodeInfo(DatabaseInfoContainer):
             EpisodeInfo object encapsulating the given Episode.
         """
 
-        # Create EpisodeInfo for this Episode
-        episode_info = EpisodeInfo(
+        episode_info = cls(
             plex_episode.title, plex_episode.parentIndex, plex_episode.index,
             airdate=plex_episode.originallyAvailableAt
         )
