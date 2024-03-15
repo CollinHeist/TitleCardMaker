@@ -131,7 +131,7 @@ logger.configure(
             # Rotate every 12 hours
             rotation='12h',
             # Keep logs for two weeks
-            retention='2 weeks',
+            retention='7 days',
             # Zip log files
             # compression='zip',
             # Better exception printing
