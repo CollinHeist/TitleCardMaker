@@ -174,7 +174,7 @@ class Font(Base):
         return {
             'name': self.name,
             'color': self.color,
-            'delete_missing': self.delete_missing,
+            'delete_missing': None if self.delete_missing else False,
             'file': self.file_name,
             'interline_spacing': self.interline_spacing or None,
             'interword_spacing': self.interword_spacing or None,
