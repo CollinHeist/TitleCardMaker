@@ -454,7 +454,7 @@ def import_series_blueprint_(
         db: Session = Depends(get_database),
     ) -> None:
     """
-    Import the given Blueprint into the given Series.
+    Import the given Blueprint object into the given Series.
 
     - series_id: ID of the Series to import the given Blueprint into.
     - blueprint: Blueprint object to import.

@@ -9,7 +9,7 @@ from app.dependencies import (
     PlexInterface, PlexInterfaces, SonarrInterface, SonarrInterfaces,
     TMDbInterface, TMDbInterfaces,
 )
-from app.models.blueprint import Blueprint
+from app.models.blueprint import Blueprint, BlueprintSet
 from app.models.card import Card
 from app.models.connection import Connection
 from app.models.episode import Episode
@@ -90,6 +90,27 @@ def get_blueprint(
     """
 
     return _get_obj(db, Blueprint, 'Blueprint', blueprint_id, raise_exc)
+
+
+@overload
+def get_blueprint_set(
+        db: Session, set_id: int, *, raise_exc: Literal[True] = True
+    ) -> BlueprintSet:
+    ...
+
+def get_blueprint_set(
+        db: Session,
+        set_id: int,
+        *,
+        raise_exc: bool = True
+    ) -> BlueprintSet:
+    """
+    Get the BlueprintSet with the given ID from the given Database.
+
+    See `_get_obj` for all details.
+    """
+
+    return _get_obj(db, BlueprintSet, 'Blueprint Set', set_id, raise_exc)
 
 
 @overload
