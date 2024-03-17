@@ -1,5 +1,7 @@
 {% if False %}
-import {SearchResult, Series} from './.types.js';
+import {
+  RemoteBlueprintPage, RemoteBlueprintSet, SearchResult, Series
+} from './.types.js';
 {% endif %}
 
 /** @type {number} Minimum interval between calls to add a new series */
@@ -164,7 +166,7 @@ function queryBlueprints(result, resultElementId) {
         const card = populateBlueprintCard(blueprintTemplate.content.cloneNode(true), blueprint, `series-blueprint-id${blueprintId}`);
 
         // Assign function to import button
-        card.querySelector('a[data-action="import-blueprint"]').onclick = () => importBlueprint(blueprint.id, resultElementId);
+        card.querySelector('a[data-action="import"]').onclick = () => importBlueprint(blueprint.id, resultElementId);
         return card;
       });
 
@@ -173,6 +175,54 @@ function queryBlueprints(result, resultElementId) {
       refreshTheme();
     },
     error: response => showErrorToast({title: 'Error Querying Blueprints', response}),
+  });
+}
+
+/**
+ * Display the Blueprint Sets associated with the given Blueprint. This submits
+ * an API request to query these, and then populates the appropiate element on
+ * the page.
+ * @param {number} blueprintId - ID of the Blueprint whose Sets to query and
+ * display.
+ */
+function viewBlueprintSets(blueprintId) {
+  $.ajax({
+    type: 'GET',
+    url: `/api/blueprints/sets/blueprint/${blueprintId}`,
+    /** @param {RemoteBlueprintSet[]} blueprintSets */
+    success: blueprintSets => {
+      const blueprintTemplate = document.getElementById('all-blueprint-template');
+      const setSection = document.getElementById('blueprint-sets');
+      setSection.replaceChildren();
+
+      for (let set of blueprintSets) {
+        const header = document.createElement('h4');
+        header.innerText = set.name; header.className = 'ui header';
+        setSection.appendChild(header);
+
+        const bpCards = document.createElement('div');
+        bpCards.className = 'ui three stackable raised cards';
+        setSection.appendChild(bpCards);
+
+        for (let blueprint of set.blueprints) {
+          const elementId = `blueprint-set-id${blueprint.id}`;
+          blueprint.set_ids = [];
+          const card = populateBlueprintCard(
+            blueprintTemplate.content.cloneNode(true), blueprint, elementId
+          );
+
+          // Assign function to import button
+          card.querySelector('[data-action="import"]').onclick = () => importBlueprint(blueprint.id, elementId);
+
+          bpCards.appendChild(card);
+        }
+      }
+
+      $('#blueprint-sets .card').transition({animation: 'scale', interval: 40});
+      refreshTheme();
+      setSection.scrollIntoView({behavior: 'smooth', block: 'start'});
+    },
+    error: response => showErrorToast({title: 'Error Querying Blueprint Sets', response}),
   });
 }
 
@@ -201,25 +251,26 @@ function queryAllBlueprints(page=1, refresh=false) {
   }
   
   // Submit API request
-  const blueprintTemplate = document.getElementById('all-blueprint-template');
   $.ajax({
     type: 'GET',
     url: `/api/blueprints/query/all?${query}`,
     /**
      * Query successful, populate page with Blueprint cards.
-     * @param {import('./.types.js').RemoteBlueprintPage} allBlueprints - Page of Blueprints to display.
+     * @param {RemoteBlueprintPage} allBlueprints - Page of Blueprints to display.
      */
     success: allBlueprints => {
-      const blueprintCards = allBlueprints.items.map((blueprint, blueprintId) => {
+      const blueprintTemplate = document.getElementById('all-blueprint-template');
+      const blueprintCards = allBlueprints.items.map(blueprint => {
         // Clone template, fill out basic info
-        const card = populateBlueprintCard(blueprintTemplate.content.cloneNode(true), blueprint, `blueprint-id${blueprintId}`);
+        const elementId = `blueprint-id${blueprint.id}`;
+        const card = populateBlueprintCard(blueprintTemplate.content.cloneNode(true), blueprint, elementId);
 
         // Assign function to import button
-        card.querySelector('[data-action="import-blueprint"]').onclick = () => importBlueprint(blueprint.id, `blueprint-id${blueprintId}`);
+        card.querySelector('[data-action="import"]').onclick = () => importBlueprint(blueprint.id, elementId);
         
         // Assign blacklist function to hide button
-        card.querySelector('[data-action="blacklist-blueprint"]').onclick = () => {
-          $(`#blueprint-id${blueprintId}`).transition({animation: 'fade', duration: 1000});
+        card.querySelector('[data-action="blacklist"]').onclick = () => {
+          $(`#${elementId}`).transition({animation: 'fade', duration: 1000});
           $.ajax({
             type: 'PUT',
             url: `/api/blueprints/blacklist/${blueprint.id}`,
@@ -227,13 +278,19 @@ function queryAllBlueprints(page=1, refresh=false) {
               // Remove Blueprint card from display
               $(`#blueprint-id${blueprintId}`).transition({animation: 'fade', duration: 800});
               setTimeout(() => {
-                document.getElementById(`blueprint-id${blueprintId}`).remove();
+                document.getElementById(elementId).remove();
                 showInfoToast('Blueprint Hidden');
               }, 800);
             },
             error: response => showErrorToast({title: 'Error Hiding Blueprint', response}),
           });
+        };
+
+        // Toggle Set viewer on button 
+        if (card.querySelector('[data-action="view-set"]')) {
+          card.querySelector('[data-action="view-set"]').onclick = () => viewBlueprintSets(blueprint.id);
         }
+
         return card;
       });
 
@@ -249,6 +306,7 @@ function queryAllBlueprints(page=1, refresh=false) {
       });
 
       // Transition elements in
+      document.getElementById('all-blueprint-results').scrollIntoView({behavior: 'smooth', block: 'start'});
       $('#all-blueprint-results .card').transition({animation: 'scale', interval: 40});
       $('[data-value="file-count"]').popup({inline: true});
       refreshTheme();

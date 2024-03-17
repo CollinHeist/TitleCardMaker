@@ -35,7 +35,9 @@ body.accessible .ui .orange.bar {
 }
 
 .inverted.form input {
-  background: #e4e4e4 !important;
+  /* background: #e4e4e4 !important; */
+  background: #1b1c1d !important;
+  color: white !important;
 }
 
 /* Fix header in place, lock window positioning */
@@ -332,4 +334,11 @@ body:not(.dark) .checkbox.field:hover p.help,
 body:not(.dark) .fields:hover ~ p.help {
   /* Light theme */
   color: #171515;
+}
+
+.blueprint.card [data-action="blacklist"]:hover {
+  color: #db2828 !important;
+}
+.blueprint.card [data-action="import"]:hover {
+  color: #2ecc40;
 }

@@ -230,6 +230,20 @@ function createPageElement(pageNumber, pageText, active = false, navigateFunctio
   return element;
 }
 
+/**
+ * 
+ * @param {string} [args.paginationElementId] - DOM Element ID of the pagination
+ * menu to update.
+ * @param {function} [args.navigateFunction] - Function to call when a
+ * page button is clicked.
+ * @param {number} [args.page=1] - Current page number. Defaults to 1.
+ * @param {number} [args.pages=1] - Total number of pages. Defaults to 1.
+ * @param {?number} [args.amountVisible] - Total number of page buttons to make
+ * visible. If undefined, then the amount is determined by the element width.
+ * @param {boolean} [args.hideIfSinglePage=false] - Whether to hide the
+ * pagination menu if there is only a single page.
+ * @returns 
+ */
 function updatePagination(args) {
   let {
     paginationElementId = () => {},
@@ -528,6 +542,10 @@ async function initializeLibraryDropdowns({
 /**
  * Fill out the given Blueprint card element with the details - i.e. the
  * creator, title, image, description, etc.
+ * @param {HTMLTemplateElement} card - Template element being populated.
+ * @param {import("./.types").RemoteBlueprint} blueprint - Blueprint used to
+ * populate the given card.
+ * @param {string} blueprintId - DOM Element ID of the card.
  */
 function populateBlueprintCard(card, blueprint, blueprintId) {
   // Fill out card
@@ -547,11 +565,14 @@ function populateBlueprintCard(card, blueprint, blueprintId) {
       $(`#${blueprintId} img`).data('imageIndex', newImageIndex);
     };
   }
+
   card.querySelector('[data-value="creator"]').innerText = blueprint.creator;
+
   // If there is a Series name element, fill out
   if (card.querySelector('[data-value="series_full_name"')) {
     card.querySelector('[data-value="series_full_name"').innerText = `${blueprint.series.name} (${blueprint.series.year})`;
   }
+
   // Font count
   if (blueprint.json.fonts.length === 0) {
     card.querySelector('[data-value="font-count"]').remove();
@@ -559,6 +580,7 @@ function populateBlueprintCard(card, blueprint, blueprintId) {
     let text = `<b>${blueprint.json.fonts.length}</b> Font` + (blueprint.json.fonts.length > 1 ? 's' : '');
     card.querySelector('[data-value="font-count"]').innerHTML = text;
   }
+
   // Templates count
   if (blueprint.json.templates.length === 0) {
     card.querySelector('[data-value="template-count"]').remove();
@@ -566,6 +588,7 @@ function populateBlueprintCard(card, blueprint, blueprintId) {
     let text = `<b>${blueprint.json.templates.length}</b> Template` + (blueprint.json.templates.length > 1 ? 's' : '');
     card.querySelector('[data-value="template-count"]').innerHTML = text;
   }
+
   // Episodes count
   const episodeOverrideCount = Object.keys(blueprint.json.episodes).length;
   if (episodeOverrideCount === 0) {
@@ -574,6 +597,7 @@ function populateBlueprintCard(card, blueprint, blueprintId) {
     let text = `<b>${episodeOverrideCount}</b> Episode Override` + (episodeOverrideCount > 1 ? 's' : '');
     card.querySelector('[data-value="episode-count"]').innerHTML = text;
   }
+
   // Source files count
   const sourceFileCount = blueprint.json.series.source_files.length;
   if (sourceFileCount === 0) {
@@ -584,7 +608,18 @@ function populateBlueprintCard(card, blueprint, blueprintId) {
     card.querySelector('[data-value="file-count"]').innerHTML = text;
     card.querySelector('.popup .content').innerHTML = blueprint.json.series.source_files.join(', ');
   }
+
   card.querySelector('[data-value="description"]').innerHTML = '<p>' + blueprint.json.description.join('</p><p>') + '</p>';
+
+  // Sets
+  if (blueprint.set_ids.length > 0) {
+    card.querySelector('[data-value="set-count"]').innerText = blueprint.set_ids.length > 1
+      ? `${blueprint.set_ids.length} Associated Sets`
+      : `1 Associated Set`;
+  } else {
+    card.querySelector('.extra.content').remove();
+  }
+
   return card;
 }
 

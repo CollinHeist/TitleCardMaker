@@ -15,10 +15,6 @@
   filter: grayscale(50%) blur(0.8px);
 }
 
-.card [data-action="blacklist-blueprint"]:hover {
-  color: #db2828 !important;
-}
-
 /* Scroll very long Blueprint descriptions */
 .card .content .description {
   max-height: 150px;

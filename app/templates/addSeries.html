@@ -49,7 +49,7 @@
   </template>
 
   <template id="blueprint-placeholder-template">
-    <div class="ui horizontal card">
+    <div class="ui horizontal blueprint card">
       <div class="image">
         <div class="ui placeholder">
           <div class="square image"></div>
@@ -70,7 +70,7 @@
   </template>
 
   <template id="blueprint-template">
-    <div class="ui raised card">
+    <div class="ui raised blueprint card">
       <div class="image">
         <img loading="lazy">
       </div>
@@ -103,6 +103,8 @@
         <img loading="lazy">
       </div>
       <div class="content">
+        <i data-action="blacklist" class="right floated eye slash outline icon"></i>
+        <i data-action="import" class="right floated cloud download alternate icon"></i>
         <div data-value="series_full_name" class="header">{series_name} ({series_year})</div>
         <div class="meta">
           <span><i>by</span><span data-value="creator">{author}</span></i>
@@ -118,13 +120,9 @@
         <div data-value="description" class="description"><!-- <p>Description</p> --></div>
       </div>
       <div class="extra content">
-        <a data-action="import-blueprint" class="left floated">
-          <i class="cloud download alternate icon"></i>
-          Import Series and Blueprint
-        </a>
-        <a data-action="blacklist-blueprint" class="right floated" data-tooltip="Do not show this Blueprint on this Page">
-          <i class="eye slash outline icon"></i>
-          Hide Blueprint
+        <a data-action="view-set" class="left floated">
+          <i class="object group outline icon"></i>
+          <span data-value="set-count">{count} Associated Sets</span>
         </a>
       </div>
     </div>
@@ -203,6 +201,8 @@
         <div id="all-blueprint-results" class="ui three stackable raised cards"><!-- Added asynchronously --></div>
       </div>
       <div id="blueprint-pagination" class="ui centered pagination menu"><!-- Pagination added later --></div>
+
+      <div class="ui raised segment" id="blueprint-sets"></div>
     </div>
 
     <!-- Modals -->
