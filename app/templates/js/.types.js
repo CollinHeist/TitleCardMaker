@@ -558,6 +558,7 @@
  * @property {Date} created
  * @property {RemoteBlueprintSeries} series
  * @property {Blueprint} json
+ * @property {number[]} set_ids
  */
 
 /**
@@ -567,6 +568,13 @@
  * @property {number} size
  * @property {number} page
  * @property {number} pages
+ */
+
+/**
+ * @typedef {Object} RemoteBlueprintSet
+ * @property {number} id
+ * @property {string} name
+ * @property {RemoteBlueprint[]} blueprints
  */
 
 // Logs ------------------------------------------------------------------------

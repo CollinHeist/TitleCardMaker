@@ -124,7 +124,8 @@ class RemoteBlueprint(Base):
     creator: str
     created: datetime
     series: RemoteBlueprintSeries
-    json_: Blueprint = Field(alias='json') # Any = Field(alias='json')#
+    json_: Blueprint = Field(alias='json')
+    set_ids: list[int] = []
 
     @validator('json_', pre=True)
     def parse_blueprint_json(cls, v):
@@ -150,3 +151,8 @@ class RemoteBlueprint(Base):
         ]
 
         return values
+
+class RemoteBlueprintSet(Base):
+    id: int
+    name: str
+    blueprints: list[RemoteBlueprint]

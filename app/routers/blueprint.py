@@ -11,9 +11,9 @@ from fastapi.responses import FileResponse
 from fastapi_pagination import paginate as paginate_sequence
 from sqlalchemy.orm import Session
 
-from app.database.query import get_blueprint, get_series
+from app.database.query import get_blueprint, get_blueprint_set, get_series
 from app.database.session import Page
-from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.dependencies import Preferences, get_blueprint_database, get_database, get_preferences
 from app.internal.auth import get_current_user
 from app.internal.blueprint import (
     delay_zip_deletion, generate_series_blueprint, get_blueprint_font_files,
@@ -22,10 +22,10 @@ from app.internal.blueprint import (
 from app.internal.episodes import get_all_episode_data
 from app.internal.series import add_series
 from app import models
-from app.models.blueprint import Blueprint, BlueprintSeries
+from app.models.blueprint import Blueprint, BlueprintSeries, BlueprintSet
 from app.models.card import Card
 from app.schemas.blueprint import (
-    DownloadableFile, ExportBlueprint, RemoteBlueprint,
+    DownloadableFile, ExportBlueprint, RemoteBlueprint, RemoteBlueprintSet,
 )
 from app.schemas.series import Series
 
@@ -41,7 +41,7 @@ blueprint_router = APIRouter(
 )
 
 
-@blueprint_router.get('/export/series/{series_id}', status_code=200)
+@blueprint_router.get('/export/series/{series_id}')
 def export_series_blueprint(
         request: Request,
         series_id: int,
@@ -77,7 +77,7 @@ def export_series_blueprint(
     )
 
 
-@blueprint_router.get('/export/series/{series_id}/font-files', status_code=200)
+@blueprint_router.get('/export/series/{series_id}/font-files')
 def get_series_blueprint_font_files(
         series_id: int,
         include_episode_overrides: bool = Query(default=True),
@@ -111,7 +111,7 @@ def get_series_blueprint_font_files(
     ]
 
 
-@blueprint_router.get('/export/series/{series_id}/zip', status_code=200)
+@blueprint_router.get('/export/series/{series_id}/zip')
 async def export_series_blueprint_as_zip(
         background_tasks: BackgroundTasks,
         request: Request,
@@ -262,7 +262,7 @@ def remove_blueprint_from_blacklist(
         ) from exc
 
 
-@blueprint_router.get('/query/all', status_code=200)
+@blueprint_router.get('/query/all')
 def query_all_blueprints_(
         db: Session = Depends(get_database),
         blueprint_db: Session = Depends(get_blueprint_database),
@@ -271,7 +271,7 @@ def query_all_blueprints_(
         include_imported: bool = Query(default=False),
         include_missing_series: bool = Query(default=True),
         preferences: Preferences = Depends(get_preferences),
-    ) -> Page[RemoteBlueprint]:
+    ) -> Page[RemoteBlueprint]: # pyright: ignore[reportInvalidTypeForm]
     """
     Query for all available Blueprints for all Series. Blacklisted
     Blueprints are excluded from the return.
@@ -335,7 +335,7 @@ def query_all_blueprints_(
     ])
 
 
-@blueprint_router.get('/query/series/{series_id}', status_code=200)
+@blueprint_router.get('/query/series/{series_id}')
 def query_series_blueprints_(
         series_id: int,
         db: Session = Depends(get_database),
@@ -353,7 +353,7 @@ def query_series_blueprints_(
     return query_series_blueprints(blueprint_db, series.as_series_info)
 
 
-@blueprint_router.get('/query/series', status_code=200)
+@blueprint_router.get('/query/series')
 def query_blueprints_by_info(
         name: str = Query(..., min_length=1),
         year: int = Query(..., min=1900),
@@ -421,7 +421,7 @@ def import_blueprint_and_series(
     return series
 
 
-@blueprint_router.put('/import/series/{series_id}/blueprint/{blueprint_id}', status_code=200)
+@blueprint_router.put('/import/series/{series_id}/blueprint/{blueprint_id}')
 def import_series_blueprint_by_id(
         request: Request,
         series_id: int,
@@ -446,7 +446,7 @@ def import_series_blueprint_by_id(
     import_blueprint(db, series, blueprint, log=request.state.log)
 
 
-@blueprint_router.put('/import/series/{series_id}', status_code=200)
+@blueprint_router.put('/import/series/{series_id}')
 def import_series_blueprint_(
         request: Request,
         series_id: int,
@@ -465,3 +465,55 @@ def import_series_blueprint_(
 
     # Import Blueprint
     import_blueprint(db, series, blueprint, log=request.state.log)
+
+
+@blueprint_router.get('/sets/set/{set_id}')
+def get_blueprint_set_by_id(
+        set_id: int,
+        blueprint_db: Session = Depends(get_blueprint_database),
+    ) -> RemoteBlueprintSet:
+    """
+    Get the BlueprintSet with the given ID.
+
+    - set_id: ID of the Set to get the details of.
+    """
+
+    return get_blueprint_set(blueprint_db, set_id, raise_exc=True)
+
+
+@blueprint_router.get('/sets/blueprint/{blueprint_id}')
+def get_blueprint_set_by_blueprint_id(
+        blueprint_id: int,
+        blueprint_db: Session = Depends(get_blueprint_database),
+    ) -> list[RemoteBlueprintSet]:
+    """
+    Get the BlueprintSet for the Blueprint with the given ID.
+
+    - blueprint_id: ID of the Blueprint to get the details of.
+    """
+
+    return get_blueprint(blueprint_db, blueprint_id, raise_exc=True).sets
+
+
+@blueprint_router.get('/sets/series/{series_id}')
+def get_blueprint_sets_for_series(
+        series_id: int,
+        db: Session = Depends(get_database),
+        blueprint_db: Session = Depends(get_blueprint_database),
+    ) -> list[RemoteBlueprintSet]:
+    """
+    Get all BlueprintSets which contain a Blueprint for the Series with
+    the given ID.
+
+    - series_id: ID of the Series whose Sets are being queried.
+    """
+
+    # Query for this Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    return list(set(
+        set
+        for blueprint in
+        query_series_blueprints(blueprint_db,series.as_series_info)
+        for set in blueprint.sets
+    ))

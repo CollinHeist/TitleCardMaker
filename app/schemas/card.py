@@ -1,8 +1,9 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
+# pyright: reportInvalidTypeForm=false
 from pathlib import Path
 from typing import Literal, Optional, Union
 
-from pydantic import PositiveInt, validator, root_validator # pylint: disable=no-name-in-module
+from pydantic import validator, root_validator
 
 from app.schemas.base import (
     Base, DictKey, ImageSource, UpdateBase, validate_argument_lists_to_dict

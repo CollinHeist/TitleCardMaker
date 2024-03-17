@@ -1,8 +1,10 @@
 # pylint: disable=no-self-argument
+from datetime import datetime
 from re import sub as re_sub, IGNORECASE
+from typing import Optional
 
-from sqlalchemy import Column, DateTime, Integer, String, ForeignKey, func
-from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy import Column, ForeignKey, Table, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from app.database.session import BlueprintBase
@@ -22,6 +24,13 @@ The following SQL tables should not be a part of the primary SQL Base
 Metadata. These tables should be part of a Blueprint SQL Metadata; as
 these are only defined in the Blueprints SQL table.
 """
+association_table = Table(
+    'association_table',
+    BlueprintBase.metadata,
+    Column('blueprint_id', ForeignKey('blueprints.id'), primary_key=True),
+    Column('set_id', ForeignKey('sets.id'), primary_key=True),
+)
+
 class BlueprintSeries(BlueprintBase):
     """
     SQL table for all Series directly tied to a Blueprint.
@@ -29,27 +38,21 @@ class BlueprintSeries(BlueprintBase):
 
     __tablename__ = 'series'
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False) # Same as clean_name
-    year = Column(Integer, nullable=False)
-    path_name = Column(String, nullable=False)
-
-    # Database arguments
-    imdb_id = Column(String, default=None)
-    tmdb_id = Column(Integer, default=None)
-    tvdb_id = Column(Integer, default=None)
-
-    blueprints = relationship('Blueprint', back_populates='series')
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    year: Mapped[int]
+    path_name: Mapped[str]
+    imdb_id: Mapped[Optional[str]]
+    tmdb_id: Mapped[Optional[int]]
+    tvdb_id: Mapped[Optional[int]]
+    blueprints: Mapped['Blueprint'] = relationship(back_populates='series')
 
 
     @hybrid_property
     def sort_name(self) -> str:
         """
-        The sort-friendly name of this Series.
-
-        Returns:
-            Sortable name. This is lowercase with any prefix a/an/the
-            removed.
+        The sort-friendly name of this Series. This is lowercase with
+        any prefix a/an/the removed.
         """
 
         return regex_replace(r'^(a|an|the)(\s)', '', self.name.lower())
@@ -106,23 +109,24 @@ class BlueprintSeries(BlueprintBase):
 
 
 class Blueprint(BlueprintBase):
-    """
-    SQL table for all Blueprints.    
-    """
+    """SQL table for all Blueprints."""
 
     __tablename__ = 'blueprints'
 
-    id = Column(Integer, primary_key=True)
-    series_id = Column(Integer, ForeignKey('series.id'))
-    blueprint_number = Column(Integer, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    series_id: Mapped[int] = mapped_column(ForeignKey('series.id'))
+    blueprint_number: Mapped[int]
 
-    creator = Column(String, nullable=False)
-    created = Column(DateTime, nullable=False, default=func.now)
-    json = Column(String, nullable=False)
+    creator: Mapped[str]
+    created: Mapped[datetime] = mapped_column(default=func.now)
+    json: Mapped[str]
 
     series: Mapped[BlueprintSeries] = relationship(
         'BlueprintSeries',
         back_populates='blueprints'
+    )
+    sets: Mapped[list['BlueprintSet']] = relationship(
+        secondary=association_table, back_populates='blueprints'
     )
 
 
@@ -131,13 +135,16 @@ class Blueprint(BlueprintBase):
         """
         Attribute of the actual Blueprint (i.e. configurable options)
         for this object.
-
-        Returns:
-            The Pydantic model creation of this object's raw blueprint
-            JSON.
         """
 
         return ImportBlueprint.parse_raw(self.json)
+
+
+    @property
+    def set_ids(self) -> list[int]:
+        """IDs of all Sets associated with this Blueprint"""
+
+        return [bp_set.id for bp_set in self.sets]
 
 
     def get_folder(self, blueprint_repo_url: str) -> str:
@@ -155,3 +162,16 @@ class Blueprint(BlueprintBase):
             f'{blueprint_repo_url}/{self.series.letter}/{self.series.path_name}'
             f'/{self.blueprint_number}'
         )
+
+
+class BlueprintSet(BlueprintBase):
+    """SQL table for all Sets of Blueprints."""
+
+    __tablename__ = 'sets'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+
+    blueprints: Mapped[list[Blueprint]] = relationship(
+        secondary=association_table, back_populates='sets',
+    )
