@@ -527,7 +527,21 @@
  */
 
 /**
- * @typedef {BlueprintFont} RemoteBlueprintFont
+ * @typedef {Object} RemoteBlueprintFont
+ * @property {string} name - The name of the font.
+ * @property {?string} color - The color of the font. Optional.
+ * @property {boolean} delete_missing - Boolean flag for deleting missing elements.
+ * @property {?string} file - The file associated with the font. Optional.
+ * @property {?number} line_split_modifier
+ * @property {?number} kerning - The kerning value for the font. Optional.
+ * @property {?number} interline_spacing - The interline spacing for the font. Optional.
+ * @property {?number} interword_spacing - The interword spacing for the font. Optional.
+ * @property {?string[]} replacements_in - List of strings for replacements. Optional.
+ * @property {?string[]} replacements_out - List of strings for replacements. Optional.
+ * @property {?number} size - The size of the font. Optional.
+ * @property {?number} stroke_width - The stroke width for the font. Optional.
+ * @property {?TitleCase} title_case - TitleCase information. Optional.
+ * @property {?number} vertical_shift - The vertical shift for the font. Optional.
  * @property {?string} file_download_url
  */
 

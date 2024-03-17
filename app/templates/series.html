@@ -236,12 +236,13 @@
   </template>
 
   <template id="blueprint-template">
-    <div class="ui card">
+    <div class="ui raised blueprint card">
       <div class="image">
         <img loading="lazy" src="">
       </div>
       <div class="content">
         <div data-value="creator" class="header">{author}</div>
+        <i data-action="import" class="right floated cloud download alternate icon"></i>
         <div class="meta">
           <span data-value="font-count"><b>{x}</b> Named Font</span>
           <span data-value="template-count"><b>{x}</b> Template</span>
@@ -255,9 +256,9 @@
         <div data-value="description" class="description"><!-- <p>Description</p> --></div>
       </div>
       <div class="extra content">
-        <a data-action="import-blueprint" class="left floated">
-          <i class="cloud download alternate icon"></i>
-          Import
+        <a data-action="view-set" class="left floated">
+          <i class="object group outline icon"></i>
+          <span data-value="set-count">{count} Associated Sets</span>
         </a>
       </div>
     </div>
@@ -898,6 +899,7 @@
             </div>
             <br>
             <div id="blueprint-cards" class="ui two stackable raised cards"><!-- Added asynchrously --></div>
+            <div class="ui raised segment" id="blueprint-sets" style="display: none;"></div>
             <br>
             <div class="ui visible floating info message">
               <div class="header">What are Blueprints?</div>

@@ -1307,41 +1307,63 @@ function processSeries() {
 }
 
 /**
- * Submit an API request to import the given Blueprint for this Series. While
- * processing, the card element with the given ID is marked as loading. If
- * successful, the page is reloaded.
+ * Submit an API request to import the given Blueprint. While processing, the
+ * card element with the given ID is marked as loading. If successful (and not
+ * a Set), the page is reloaded.
  * @param {str} cardId - ID of the HTMLElement to mark as loading.
  * @param {RemoteBlueprint} blueprint - Blueprint object to import.
+ * @param {boolean} [isSet] - Whether this Blueprint is associated with a Set;
+ * if so, then the Blueprint is imported via ID NOT to this Series directly.
  */
-function importBlueprint(cardId, blueprint) {
+function importBlueprint(cardId, blueprint, isSet=false) {
   // Indicate loading
   document.getElementById(cardId).classList.add('slow', 'double', 'blue', 'loading');
 
-  // Get any URL's for Fonts to download
-  let fontsToDownload = [];
-  blueprint.json.fonts.forEach(font => {
-    if (font.file_download_url) {
-      fontsToDownload.push(font.file_download_url);
-    }
-  });
+  // Get any URLs for Fonts to download
+  let fontsToDownload = blueprint.json.font
+    .filter(font => font.file_download_url)
+    .map(font => font.file_download_url)
+  ;
 
   // Submit API request to import blueprint
-  $.ajax({
-    type: 'PUT',
-    url: `/api/blueprints/import/series/{{series.id}}/blueprint/${blueprint.id}`,
-    success: () => {
-      if (fontsToDownload.length === 0) {
-        showInfoToast({title: 'Blueprint Imported', message: 'Reloading page...'});
-        setTimeout(() => location.reload(), 2000);
-      } else {
-        showInfoToast('Blueprint Imported');
-      }
-    },
-    error: response => showErrorToast({title: 'Error Importing Blueprint', response}),
-    complete: () => document.getElementById(cardId).classList.remove('slow', 'double', 'blue', 'loading'),
-  });
+  if (isSet) {
+    // Import Set
+    $.ajax({
+      type: 'POST',
+      url: `/api/blueprint/import/blueprint/${blueprint.id}`,
+      /**
+       * Blueprint (and potentially Series) were imported. Show toast.
+       * @param {Series} series - Series which the Blueprint was imported to.
+       */
+      success: series => {
+        showInfoToast(`Blueprint Imported to ${series.name}`);
+      },
+      error: response => showErrorToast({title: 'Error Importing Blueprint', response}),
+      complete: document.getElementById(cardId).classList.remove('slow', 'double', 'blue', 'loading'),
+    });
+  } else {
+    // Submit request to import directly to this Series
+    $.ajax({
+      type: 'PUT',
+      url: `/api/blueprints/import/series/{{series.id}}/blueprint/${blueprint.id}`,
+      /**
+       * Blueprint imported successfully. Reload the page if there are no Fonts
+       * to download. Show success toast.
+       */
+      success: () => {
+        if (fontsToDownload.length === 0) {
+          showInfoToast({title: 'Blueprint Imported', message: 'Reloading page...'});
+          setTimeout(() => location.reload(), 2000);
+        } else {
+          showInfoToast('Blueprint Imported');
+        }
+      },
+      error: response => showErrorToast({title: 'Error Importing Blueprint', response}),
+      complete: () => document.getElementById(cardId).classList.remove('slow', 'double', 'blue', 'loading'),
+    });
+  }
   
-  // If any Fonts need downloaded, show toast
+  // If any Fonts need to be downloaded, show toast
   if (fontsToDownload.length > 0) {
     $.toast({
       class: 'blue info',
@@ -1373,6 +1395,53 @@ function importBlueprint(cardId, blueprint) {
       ],
     });
   }
+}
+
+/**
+ * Display the Blueprint Sets associated with the given Blueprint. This submits
+ * an API request to query these, and then populates the appropiate element on
+ * the page.
+ * @param {number} blueprintId - ID of the Blueprint whose Sets to query and
+ * display.
+ */
+function viewBlueprintSets(blueprintId) {
+  $.ajax({
+    type: 'GET',
+    url: `/api/blueprints/sets/blueprint/${blueprintId}`,
+    /** @param {RemoteBlueprintSet[]} blueprintSets */
+    success: blueprintSets => {
+      const blueprintTemplate = document.getElementById('blueprint-template');
+      const setSection = document.getElementById('blueprint-sets');
+      setSection.replaceChildren(); setSection.style.display = 'unset';
+
+      for (let set of blueprintSets) {
+        const header = document.createElement('h3');
+        header.innerText = set.name; header.className = 'ui header';
+        setSection.appendChild(header);
+
+        const bpCards = document.createElement('div');
+        bpCards.className = 'ui two stackable raised cards';
+        setSection.appendChild(bpCards);
+
+        for (let blueprint of set.blueprints) {
+          const elementId = `blueprint-set-id${blueprint.id}`;
+          blueprint.set_ids = [];
+          const card = populateBlueprintCard(
+            blueprintTemplate.content.cloneNode(true), blueprint, elementId
+          );
+
+          // Assign function to import button
+          card.querySelector('[data-action="import"]').onclick = () => importBlueprint(elementId, blueprint, true);
+
+          bpCards.appendChild(card);
+        }
+      }
+
+      refreshTheme();
+      setSection.scrollIntoView({behavior: 'smooth', block: 'start'});
+    },
+    error: response => showErrorToast({title: 'Error Querying Blueprint Sets', response}),
+  });
 }
 
 /**
@@ -1415,8 +1484,15 @@ function queryBlueprints() {
         // Clone template, fill out card
         let card = blueprintTemplate.content.cloneNode(true);
         card = populateBlueprintCard(card, blueprint, `blueprint-id${blueprintId}`);
+
         // Assign import to button
-        card.querySelector('a[data-action="import-blueprint"]').onclick = () => importBlueprint(`blueprint-id${blueprintId}`, blueprint);
+        card.querySelector('[data-action="import"]').onclick = () => importBlueprint(`blueprint-id${blueprintId}`, blueprint);
+
+        // Toggle Set viewer on button 
+        if (card.querySelector('[data-action="view-set"]')) {
+          card.querySelector('[data-action="view-set"]').onclick = () => viewBlueprintSets(blueprint.id);
+        }
+
         return card;
       });
       blueprintCards.replaceChildren(...blueprints);
