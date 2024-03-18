@@ -63,7 +63,8 @@ class TintedGlassTitleCard(BaseCardType):
         'hide_episode_text', 'font_file', 'font_size', 'font_color',
         'font_interline_spacing', 'font_interword_spacing', 'font_kerning',
         'font_vertical_shift', 'episode_text_color', 'episode_text_position',
-        'box_adjustments', 'glass_color', 'vertical_adjustment',
+        'box_adjustments', 'glass_color', 'rounding_radius',
+        'vertical_adjustment',
     )
 
     def __init__(self,
@@ -86,6 +87,7 @@ class TintedGlassTitleCard(BaseCardType):
             box_adjustments: Optional[str] = None,
             glass_color: str = DARKEN_COLOR,
             preferences: Optional['Preferences'] = None, # type: ignore
+            rounding_radius: int = DEFAULT_ROUNDING_RADIUS,
             vertical_adjustment: int = 0,
             **unused,
         ) -> None:
@@ -138,6 +140,7 @@ class TintedGlassTitleCard(BaseCardType):
                 self.box_adjustments = (0, 0, 0, 0)
                 self.valid = False
         self.glass_color = glass_color
+        self.rounding_radius = rounding_radius
         self.vertical_adjustment = vertical_adjustment - 50
 
 
@@ -420,7 +423,10 @@ class TintedGlassTitleCard(BaseCardType):
             # Resize and apply any style modifiers
             *self.resize_and_style,
             # Blur area behind title text
-            *self.blur_rectangle_command(title_box_coordinates, 40),
+            *self.blur_rectangle_command(
+                title_box_coordinates,
+                self.rounding_radius
+            ),
             # Add title text
             *self.title_text_commands,
             # Add episode text
