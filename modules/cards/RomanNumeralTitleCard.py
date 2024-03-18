@@ -225,6 +225,7 @@ class RomanNumeralTitleCard(BaseCardType):
 
     """Whether this CardType uses unique source images"""
     USES_UNIQUE_SOURCES = False
+    USES_SOURCE_IMAGES = False
 
     """Standard class has standard archive name"""
     ARCHIVE_NAME = 'Roman Numeral Style'
