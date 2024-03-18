@@ -20,19 +20,32 @@ class DataFileInterface:
     GENERIC_DATA_FILE_NAME = 'data.yml'
 
 
-    def __init__(self, series_info: SeriesInfo, data_file: Path) -> None:
+    __slots__ = ('series_info', 'file', '_ignore_preferred_titles')
+
+
+    def __init__(self,
+            series_info: SeriesInfo,
+            data_file: Path,
+            *,
+            ignore_preferred_titles: bool = False,
+        ) -> None:
         """
         Constructs a new instance of the interface for the specified
         data file. This also creates the parent directories for the data
         file if they do not exist.
 
         Args:
+            series_info: Series associated with this interface. For
+                logging only.
             data_file: Path to the data file to interface with.
+            ignore_preferred_titles: Whether to ignore preferred titles
+                when reading this data file.
         """
 
         # Store the SeriesInfo and data file
         self.series_info = series_info
         self.file = data_file
+        self._ignore_preferred_titles = ignore_preferred_titles
 
         # Create parent directories if necessary
         if not self.file.exists():
@@ -145,15 +158,19 @@ class DataFileInterface:
 
                 # If translated title is available, prefer that
                 original_title = episode_data.pop('title', None)
-                title = episode_data.get('preferred_title', original_title)
+                if self._ignore_preferred_titles:
+                    title = original_title
+                else:
+                    title = episode_data.get('preferred_title', original_title)
 
                 # Ensure Title can be created
                 try:
                     title_obj = Title(title, original_title=original_title)
                 except TypeError as e:
-                    log.exception(f'Title for S{season_number:02}E'
-                                  f'{episode_number:02} of the '
-                                  f'{self.series_info} datafile is invalid', e)
+                    log.exception(
+                        f'Title for S{season_number:02}E{episode_number:02} of '
+                        'the {self.series_info} datafile is invalid'
+                    )
                     continue
 
                 # Construct EpisodeInfo object for this entry
