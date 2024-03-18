@@ -84,6 +84,7 @@ class AnimeTitleCard(BaseCardType):
             omit_gradient: bool = False,
             require_kanji: bool = False,
             kanji_vertical_shift: float = 0.0,
+            kanji_color: str = TITLE_COLOR,
             stroke_color: str = 'black',
             preferences: Optional['PreferenceParser'] = None,
             **unused,
@@ -112,9 +113,9 @@ class AnimeTitleCard(BaseCardType):
         # Font customizations
         self.font_color = font_color
         self.font_file = font_file
-        self.font_interline_spacing = font_interline_spacing
+        self.font_interline_spacing = -30 + font_interline_spacing
         self.font_interword_spacing = font_interword_spacing
-        self.font_kerning = font_kerning
+        self.font_kerning = 2.0 * font_kerning
         self.font_size = font_size
         self.font_stroke_width = font_stroke_width
         self.font_vertical_shift = font_vertical_shift
@@ -122,8 +123,9 @@ class AnimeTitleCard(BaseCardType):
         # Optional extras
         self.episode_stroke_color = episode_stroke_color
         self.episode_text_color = episode_text_color
-        self.separator = separator
         self.omit_gradient = omit_gradient
+        self.kanji_color = kanji_color
+        self.separator = separator
         self.stroke_color = stroke_color
 
 
@@ -135,14 +137,12 @@ class AnimeTitleCard(BaseCardType):
         southwest gravity.
         """
 
-        kerning = 2.0 * self.font_kerning
-        interline_spacing = -30 + self.font_interline_spacing
         font_size = 150 * self.font_size
 
         return [
             f'-font "{self.font_file}"',
-            f'-kerning {kerning}',
-            f'-interline-spacing {interline_spacing}',
+            f'-kerning {self.font_kerning}',
+            f'-interline-spacing {self.font_interline_spacing}',
             f'-interword-spacing {self.font_interword_spacing}',
             f'-pointsize {font_size}',
             f'-gravity southwest',
@@ -347,6 +347,8 @@ class AnimeTitleCard(BaseCardType):
                 and extras['episode_stroke_color'] != AnimeTitleCard.EPISODE_STROKE_COLOR)
             or ('episode_text_color' in extras
                 and extras['episode_text_color'] != AnimeTitleCard.SERIES_COUNT_TEXT_COLOR)
+            or ('kanji_color' in extras
+                and extras['kanji_color'] != AnimeTitleCard.TITLE_COLOR)
             or ('kanji_vertical_shift' in extras
                 and extras['kanji_vertical_shift'] != 0)
             or ('stroke_color' in extras
