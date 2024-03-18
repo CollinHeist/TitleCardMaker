@@ -1320,7 +1320,7 @@ function importBlueprint(cardId, blueprint, isSet=false) {
   document.getElementById(cardId).classList.add('slow', 'double', 'blue', 'loading');
 
   // Get any URLs for Fonts to download
-  let fontsToDownload = blueprint.json.font
+  let fontsToDownload = blueprint.json.fonts
     .filter(font => font.file_download_url)
     .map(font => font.file_download_url)
   ;
@@ -1330,7 +1330,7 @@ function importBlueprint(cardId, blueprint, isSet=false) {
     // Import Set
     $.ajax({
       type: 'POST',
-      url: `/api/blueprint/import/blueprint/${blueprint.id}`,
+      url: `/api/blueprints/import/blueprint/${blueprint.id}`,
       /**
        * Blueprint (and potentially Series) were imported. Show toast.
        * @param {Series} series - Series which the Blueprint was imported to.
