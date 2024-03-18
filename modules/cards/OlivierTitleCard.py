@@ -42,12 +42,15 @@ class OlivierTitleCard(BaseCardType):
     """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Olivier Style'
 
+    """Gradient image"""
+    GRADIENT = REF_DIRECTORY.parent / 'overline' / 'small_gradient.png'
+
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'hide_episode_text',
         'episode_prefix', 'episode_text', 'font_color', 'font_file',
         'font_interline_spacing', 'font_interword_spacing', 'font_kerning',
-        'font_size', 'font_stroke_width', 'font_vertical_shift', 'stroke_color',
-        'episode_text_color', 'episode_text_font_size',
+        'font_size', 'font_stroke_width', 'font_vertical_shift', 'omit_gradient',
+        'stroke_color', 'episode_text_color', 'episode_text_font_size',
         'episode_text_vertical_shift',
     )
 
@@ -70,6 +73,7 @@ class OlivierTitleCard(BaseCardType):
             episode_text_color: str = EPISODE_TEXT_COLOR,
             episode_text_font_size: float = 1.0,
             episode_text_vertical_shift: int = 0,
+            omit_gradient: bool = True,
             stroke_color: str = STROKE_COLOR,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
@@ -110,10 +114,29 @@ class OlivierTitleCard(BaseCardType):
         self.font_vertical_shift = font_vertical_shift
 
         # Optional extras
+        self.omit_gradient = omit_gradient
         self.episode_text_color = episode_text_color
         self.episode_text_font_size = episode_text_font_size
         self.episode_text_vertical_shift = episode_text_vertical_shift
         self.stroke_color = stroke_color
+
+
+    @property
+    def gradient_commands(self) -> ImageMagickCommands:
+        """
+        Subcommand to overlay the gradient to this image. This rotates
+        and repositions the gradient overlay based on the text position.
+        """
+
+        if self.omit_gradient:
+            return []
+
+        return [
+            f'\( "{self.GRADIENT.resolve()}"',
+            f'-rotate 90 \)',
+            f'-geometry -{(self.WIDTH - self.HEIGHT) / 2}+0',
+            f'-composite',
+        ]
 
 
     @property
@@ -220,7 +243,7 @@ class OlivierTitleCard(BaseCardType):
             f'-fill "{self.episode_text_color}"',
             f'-stroke "{self.episode_text_color}"',
             f'-strokewidth 1',
-            f'-annotate +{325+offset}{vertical_shift:+} "{self.episode_text}"',
+            f'-annotate {325+offset:+}{vertical_shift:+} "{self.episode_text}"',
         ]
 
 
@@ -319,6 +342,9 @@ class OlivierTitleCard(BaseCardType):
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
             *self.resize_and_style,
+            # Overlay gradient
+            *self.gradient_commands,
+            # Add text
             *self.title_text_command,
             *self.episode_prefix_command,
             *self.episode_number_text_command,
