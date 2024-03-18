@@ -4,7 +4,7 @@ from os import environ
 from pathlib import Path
 from re import IGNORECASE, sub as re_sub, match as _regex_match
 from shutil import copy as file_copy
-from typing import NamedTuple
+from typing import Any, Generator, NamedTuple
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -192,6 +192,20 @@ Base = declarative_base()
 
 BlueprintSessionMaker = sessionmaker(bind=blueprint_engine)
 BlueprintBase = declarative_base()
+
+# Create a default __rich_repr__ which all tables subclassing this base
+# class can utilize for rich output in Tracebacks
+# See https://rich.readthedocs.io/en/stable/pretty.html#rich-repr-protocol
+def default_rich_repr(self) -> Generator[tuple[str, Any], None, None]:
+    """
+    Print key/value pairs of all non-private, non-None items in this
+    class.
+    """
+
+    for k, v in sorted(self.__dict__.items()):
+        if not k.startswith('_'): # Skip private attributes
+            yield k, v, None # Assume all defaults are None
+Base.__rich_repr__ = default_rich_repr
 
 
 # Scheduler
