@@ -124,6 +124,7 @@ class ComicBookTitleCard(BaseCardType):
     ARCHIVE_NAME = 'Comic Book Style'
 
     """Implementation details"""
+    BANNER_FILL_COLOR = 'rgba(235,73,69,0.6)'
     TEXT_BOX_WIDTH_MARGIN = 50
     TEXT_BOX_HEIGHT_MARGIN = 50
     TITLE_TEXT_VERTICAL_OFFSET = 125
@@ -527,7 +528,8 @@ class ComicBookTitleCard(BaseCardType):
             if 'text_box_edge_color' in extras:
                 extras['text_box_edge_color'] = 'white'
             if 'border_fill_color' in extras:
-                extras['border_fill_color'] = 'rgba(235,73,69,0.6)'
+                extras['border_fill_color'] = \
+                    ComicBookTitleCard.BANNER_FILL_COLOR
 
 
     @staticmethod
@@ -550,7 +552,7 @@ class ComicBookTitleCard(BaseCardType):
             or ('text_box_fill_color' in extras
                 and extras['text_box_fill_color'] != 'white')
             or ('banner_fill_color' in extras
-                and extras['banner_fill_color'] != 'rgba(235,73,69,0.6)')
+                and extras['banner_fill_color'] != ComicBookTitleCard.BANNER_FILL_COLOR)
         )
 
         return (custom_extras
