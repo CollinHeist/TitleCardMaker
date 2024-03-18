@@ -57,6 +57,7 @@ class TintedGlassTitleCard(BaseCardType):
 
     """Blur profile for darkened area behind title/episode text"""
     TEXT_BLUR_PROFILE = '0x6'
+    DEFAULT_ROUNDING_RADIUS = 40
 
     __slots__ = (
         'source', 'output_file', 'title_text', '__line_count', 'episode_text',
@@ -107,7 +108,7 @@ class TintedGlassTitleCard(BaseCardType):
         self.font_file = font_file
         self.font_size = font_size
         self.font_color = font_color
-        self.font_interline_spacing = font_interline_spacing
+        self.font_interline_spacing = -50 + font_interline_spacing
         self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_vertical_shift = font_vertical_shift
@@ -194,7 +195,6 @@ class TintedGlassTitleCard(BaseCardType):
 
         font_size = 200 * self.font_size
         kerning = -5 * self.font_kerning
-        interline_spacing = -50 + self.font_interline_spacing
         interword_spacing = 40 + self.font_interword_spacing
         vertical_shift = 300 + self.font_vertical_shift \
             + self.vertical_adjustment
@@ -203,7 +203,7 @@ class TintedGlassTitleCard(BaseCardType):
             f'-gravity south',
             f'-font "{self.font_file}"',
             f'-pointsize {font_size}',
-            f'-interline-spacing {interline_spacing}',
+            f'-interline-spacing {self.font_interline_spacing}',
             f'-interword-spacing {interword_spacing}',
             f'-kerning {kerning}',
             f'-fill "{self.font_color}"',
@@ -431,6 +431,8 @@ class TintedGlassTitleCard(BaseCardType):
             *self.title_text_commands,
             # Add episode text
             *self.add_episode_text_command(title_box_coordinates),
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
