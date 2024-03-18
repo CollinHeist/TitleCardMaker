@@ -57,7 +57,7 @@ class Show(YamlReader):
         'logo', 'backdrop', 'file_interface', 'profile', 'season_poster_set',
         'episodes', 'emby_interface', 'jellyfin_interface', 'plex_interface',
         'sonarr_interface', 'tmdb_interface', '__is_archive', 'media_server',
-        'image_source_priority',
+        'image_source_priority', '_auto_hide_seasons',
     )
 
     def __init__(self,
@@ -191,6 +191,7 @@ class Show(YamlReader):
         self.plex_interface = None
         self.sonarr_interface = None
         self.tmdb_interface = None
+        self._auto_hide_seasons = False
         self.__is_archive = False
 
         return None
@@ -339,7 +340,7 @@ class Show(YamlReader):
             if isinstance(value, bool):
                 self.hide_seasons = value
             elif isinstance(value, str) and value.lower() == 'auto':
-                self.__auto_hide_seasons = True
+                self._auto_hide_seasons = True
             else:
                 log.error(f'Season hiding must be "true", "false" or "auto"')
                 self.valid = False
@@ -506,15 +507,62 @@ class Show(YamlReader):
         self.episodes = {}
 
         # Go through each entry in the file interface
+        seasons, episodes = set(), []
         for entry, given_keys in self.file_interface.read():
+            # Add season number to set
+            episode_info: EpisodeInfo = entry['episode_info']
+            seasons.add(episode_info.season_number)
+
+            # Update episode list(s) for maxima addition
+            episodes.append((
+                episode_info.season_number,
+                episode_info.episode_number,
+                episode_info.abs_number,
+            ))
+
             # Create Episode object for this entry, store under key
-            self.episodes[entry['episode_info'].key] = Episode(
+            self.episodes[episode_info.key] = Episode(
                 base_source=self.source_directory,
-                destination=self.__get_destination(entry['episode_info']),
+                destination=self.__get_destination(episode_info),
                 card_class=self.card_class,
                 given_keys=given_keys,
                 **entry,
             )
+
+        for episode in self.episodes.values():
+            episode.add_maxima(
+                # season_episode_count is the number of episodes in the season
+                season_episode_count=len([
+                    e for e in episodes
+                    if e[0] == episode.episode_info.season_number
+                ]),
+                # season_episode_max is the maximum episode number in the season
+                season_episode_max=max(
+                    e[1] for e in episodes
+                    if e[0] == episode.episode_info.season_number
+                ),
+                # season_absolute_max is the maximum absolute number in the season
+                season_absolute_max=max(
+                    (e[2] for e in episodes
+                    if (e[0] == episode.episode_info.season_number
+                        and e[2] is not None)),
+                    default=0,
+                ),
+                # series_episode_count is the total number of episodes in the series
+                series_episode_count=len(episodes),
+                # series_episode_max is the maximum episode number in the series
+                series_episode_max=max(e[1] for e in episodes),
+                # series_absolute_max is the maximum absolute number in the series
+                series_absolute_max=max(
+                    (e[2] for e in episodes if e[2] is not None),
+                    default=0,
+                )
+            )
+
+        if (self._auto_hide_seasons
+            and not self.__is_archive
+            and (seasons - set({0, 1}))):
+            self.hide_seasons = True
 
 
     def add_new_episodes(self) -> None:
