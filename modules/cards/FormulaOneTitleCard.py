@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
-from modules.Title import SplitCharacteristics
 
 if TYPE_CHECKING:
     from models.PreferenceParser import PreferenceParser
@@ -29,10 +28,10 @@ class FormulaOneTitleCard(BaseCardType):
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'formula'
 
     """Characteristics for title splitting by this class"""
-    TITLE_CHARACTERISTICS: SplitCharacteristics = {
+    TITLE_CHARACTERISTICS: {
         'max_line_width': 40,
         'max_line_count': 1,
-        'style': 'bottom',
+        'top_heavy': False,
     }
 
     """Characteristics of the default title font"""
