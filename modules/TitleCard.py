@@ -17,6 +17,7 @@ from modules.cards.ComicBookTitleCard import ComicBookTitleCard
 from modules.cards.CutoutTitleCard import CutoutTitleCard
 from modules.cards.DividerTitleCard import DividerTitleCard
 from modules.cards.FadeTitleCard import FadeTitleCard
+from modules.cards.FormulaOneTitleCard import FormulaOneTitleCard
 from modules.cards.FrameTitleCard import FrameTitleCard
 from modules.cards.InsetTitleCard import InsetTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
@@ -78,6 +79,7 @@ class TitleCard:
         'cutout': CutoutTitleCard,
         'divider': DividerTitleCard,
         'fade': FadeTitleCard,
+        'formula 1': FormulaOneTitleCard,
         'frame': FrameTitleCard,
         'generic': StandardTitleCard,
         'gundam': PosterTitleCard,
