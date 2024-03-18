@@ -19,6 +19,7 @@ from app import models
 from app.models.connection import Connection
 from app.models.episode import Episode
 from app.models.preferences import Preferences
+from app.models.series import Series
 from app.schemas.base import UNSPECIFIED
 from app.schemas.card import NewTitleCard
 from app.schemas.connection import (
@@ -30,7 +31,7 @@ from app.schemas.font import NewNamedFont
 from app.schemas.preferences import (
     CardExtension, EpisodeDataSource, UpdatePreferences
 )
-from app.schemas.series import NewSeries, NewTemplate, Series, Translation
+from app.schemas.series import NewSeries, NewTemplate, Translation
 from app.schemas.sync import (
     NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync
 )
@@ -1374,7 +1375,7 @@ def import_cards(
     """
 
     # If explicit directory was not provided, use Series default
-    directory = directory or series.directory
+    directory = directory or series.card_directory
 
     # Glob directory for images to import - return if no images to import
     if not (all_images := list(directory.glob(f'**/*{image_extension}'))):
