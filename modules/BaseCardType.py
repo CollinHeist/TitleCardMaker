@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, Union
 
 from titlecase import titlecase
 
+from modules.Debug import log
 from modules.ImageMaker import ImageMaker, Dimensions
 
 if TYPE_CHECKING:

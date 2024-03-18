@@ -471,6 +471,8 @@ class MarvelTitleCard(BaseCardType):
             *self.title_text_commands,
             *self.season_text_commands(title_text_dimensions),
             *self.episode_text_commands(title_text_dimensions),
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file, pre_processing=processing),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
