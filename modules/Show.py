@@ -286,7 +286,8 @@ class Show(YamlReader):
             self.info_set.set_tvrage_id(self.series_info, value)
 
         if (value := self.get('card_type', type_=str)) is not None:
-            self.card_class = self._parse_card_type(value)
+            self.card_class = self._parse_card_type(value) \
+                or self._parse_card_type('standard')
             self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
 
         if (value := self.get('episode_text_format', type_=str)) is not None:
@@ -773,6 +774,7 @@ class Show(YamlReader):
                 logo = self.card_class.convert_svg_to_png(
                     self.card_class.TEMPORARY_SVG_FILE, self.logo,
                 )
+
                 if logo is None:
                     log.warning(f'SVG to PNG conversion failed for {self}')
                 else:
