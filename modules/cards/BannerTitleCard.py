@@ -248,9 +248,9 @@ class BannerTitleCard(BaseCardType):
             left_boundary = self.x_offset + self.index_text_width
             bottom_width, _ = self.get_text_dimensions(bottom_text_commands)
 
-            # If within 20px of edge of index text, move right
-            if bottom_x < left_boundary + 20:
-                bottom_x = left_boundary + 40 # 20px spacing
+            # If within 35px of edge of index text, move right
+            if bottom_x < left_boundary + 35:
+                bottom_x = left_boundary + 55 # 20px spacing
             # If would overlap from right edge, move left
             if bottom_x + bottom_width > self.WIDTH - self.x_offset:
                 bottom_x = self.WIDTH - self.x_offset - bottom_width
