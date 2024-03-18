@@ -225,7 +225,7 @@ class TintedGlassTitleCard(BaseCardType):
         )
 
         # Get start coordinates of the bounding box
-        x_start, x_end = self.WIDTH/2 - width/2, self.WIDTH/2 + width/2
+        x_start, x_end = (self.WIDTH - width) / 2, (self.WIDTH + width) / 2
         y_start, y_end = self.HEIGHT - 300 - height, self.HEIGHT - 300
 
         # Additional offsets necessary for equal padding
@@ -249,7 +249,7 @@ class TintedGlassTitleCard(BaseCardType):
         return BoxCoordinates(x_start, y_start, x_end, y_end)
 
 
-    def add_episode_text_command(self,
+    def episode_text_commands(self,
             title_coordinates: BoxCoordinates,
         ) -> ImageMagickCommands:
         """
@@ -430,7 +430,7 @@ class TintedGlassTitleCard(BaseCardType):
             # Add title text
             *self.title_text_commands,
             # Add episode text
-            *self.add_episode_text_command(title_box_coordinates),
+            *self.episode_text_commands(title_box_coordinates),
             # Attempt to overlay mask
             *self.add_overlay_mask(self.source),
             # Create card
