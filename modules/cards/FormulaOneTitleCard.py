@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional
 
-from modules.BaseCardType import BaseCardType, ImageMagickCommands,
+from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 from modules.Title import SplitCharacteristics
 
