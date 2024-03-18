@@ -444,6 +444,15 @@ class MarvelTitleCard(BaseCardType):
         object's defined title card.
         """
 
+        border_size = 0 if self.hide_border else self.border_size
+        processing = [
+            # Resize and apply styles to source image
+            *self.resize_and_style,
+            # Resize to only fit in the bounds of the border
+            f'-resize {self.WIDTH - (border_size)}x',
+            f'-extent {self.TITLE_CARD_SIZE}',
+        ]
+
         # Get the dimensions of the title and index text
         title_text_dimensions = self.get_text_dimensions(
             self.title_text_commands, width='max', height='sum',
@@ -454,11 +463,7 @@ class MarvelTitleCard(BaseCardType):
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
-            # Resize and apply styles to source image
-            *self.resize_and_style,
-            # Resize to only fit in the bounds of the border
-            f'-resize {self.WIDTH - (2 * self.border_size)}x',
-            f'-extent {self.TITLE_CARD_SIZE}',
+            *processing,
             # Add borders
             *self.border_commands,
             *self.bottom_border_commands,
