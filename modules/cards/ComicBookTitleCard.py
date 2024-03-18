@@ -427,7 +427,7 @@ class ComicBookTitleCard(BaseCardType):
         index_text_rectangle.rotate(self.index_text_rotation_angle)
 
         # Determine new origin of the index text based on placement location
-        y_coordinate = 75 + (index_width / 2)
+        y_coordinate = 75 + (index_height / 2)
         if self.index_text_position == 'left':
             # The index text origin is 35px from the left of the image
             index_text_origin = Coordinate(35, y_coordinate)
