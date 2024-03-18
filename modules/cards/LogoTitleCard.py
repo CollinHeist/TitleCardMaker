@@ -39,9 +39,6 @@ class LogoTitleCard(BaseCardType):
     """Whether this CardType uses unique source images"""
     USES_UNIQUE_SOURCES = False
 
-    """Whether this class uses Source Images at all"""
-    USES_SOURCE_IMAGES = False # Set as False; if required then caught by model
-
     """Standard class has standard archive name"""
     ARCHIVE_NAME = 'Logo Style'
 
@@ -115,7 +112,7 @@ class LogoTitleCard(BaseCardType):
                 self.logo = Path(CleanPath(logo).sanitize())
             except Exception as e:
                 self.valid = False
-                log.exception(f'Invalid logo file "{logo}"', e)
+                log.exception(f'Invalid logo file "{logo}"')
 
         # Get source file if indicated
         self.use_background_image = use_background_image
@@ -396,6 +393,10 @@ class LogoTitleCard(BaseCardType):
         Make the necessary ImageMagick and system calls to create this
         object's defined title card.
         """
+
+        if not self.logo or not self.logo.exists():
+            log.error(f'Logo file not specified or does not exist')
+            return None
 
         # Sub-command to add source file or create colored background
         if self.use_background_image:

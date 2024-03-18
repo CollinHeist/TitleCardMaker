@@ -226,7 +226,7 @@ class ImageMagickInterface:
         """
 
         # Return dimenions of zero if image DNE
-        if not image.exists():
+        if not image or not image.exists():
             return Dimensions(0, 0)
 
         return im_get(image)

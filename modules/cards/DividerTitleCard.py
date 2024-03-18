@@ -194,14 +194,16 @@ class DividerTitleCard(BaseCardType):
                     f'-font "{self.font_file}"',
                     f'-interline-spacing {self.font_interline_spacing}',
                     *self.index_text_command,
-                ], width='max', height='sum'
+                ],
+                width='max', height='sum'
             )[1],
             # Height of the title text
             self.get_text_dimensions([
                     f'-font "{self.font_file}"',
                     f'-interline-spacing {self.font_interline_spacing}',
                     *self.title_text_command,
-                ], width='max', height='sum'
+                ],
+                width='max', height='sum'
             )[1]
         )
 
