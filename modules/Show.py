@@ -165,7 +165,10 @@ class Show(YamlReader):
         # Create DataFileInterface for this show
         self.file_interface = DataFileInterface(
             self.series_info,
-            self.source_directory / DataFileInterface.GENERIC_DATA_FILE_NAME
+            self.source_directory / DataFileInterface.GENERIC_DATA_FILE_NAME,
+            ignore_preferred_titles=self.get(
+                'ignore_preferred_titles', default=False
+            ),
         )
 
         # Create the profile
