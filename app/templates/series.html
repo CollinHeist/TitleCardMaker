@@ -338,6 +338,14 @@
       <p class="help">{tooltip}</p>
     </div>
   </template>
+
+  <template id="file-upload-template">
+    <tr>
+      <td class="selectable" data-row="file"><a></a></td>
+      <td data-row="season"></td>
+      <td data-row="episode"></td>
+    </tr>
+  </template>
 </head>
 
 <body onload="initAll()">
@@ -1407,6 +1415,37 @@
             <i class="right arrow icon"></i>
           </div>
         </button>
+      </div>
+    </div>
+
+    <div id="upload-cards-modal" class="ui small modal" ondragover="event.preventDefault();" ondrop="dropHandler(event);">
+      <div class="center aligned header">Upload Title Cards</div>
+      <div class="center aligned scrolling content" >
+        <input type="file" name="cards[]" multiple id="card-upload" class="ui invisible file input" data-multiple-caption="{count} files selected">
+        <label for="card-upload" class="ui placeholder segment">
+          <div class="ui icon header">
+            <i class="upload icon"></i>
+            Drag Files
+            <br>
+            or
+            <br>
+            Click here to upload
+          </div>
+        </label>
+        <table class="ui striped table">
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>Season</th>
+              <th>Episode</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="center aligned actions">
+        <div class="ui negative button">Cancel</div>
+        <div class="ui positive button" onclick="uploadCards();">OK</div>
       </div>
     </div>
 

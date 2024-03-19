@@ -1159,7 +1159,7 @@ async function initAll() {
         // Reload image
         $('#poster-image')[0].src = `${response}?${new Date().getTime()}`;
       },
-    error: response => showErrorToast({title: 'Error updating poster', response}),
+      error: response => showErrorToast({title: 'Error updating poster', response}),
       complete: () =>  setTimeout(() => $('#submit-poster-button').toggleClass('loading', false), 750),
     });
   });
@@ -2192,33 +2192,106 @@ function removePlexLabels(interfaceId, libraryName) {
 }
 
 /**
- * Add a blank Series Extra field to the card configuration form.
+ * @type {File[]}
  */
-function addBlankSeriesExtra() {
-  const newExtra = document.getElementById('extra-template').content.cloneNode(true);
-  $('#card-config-form .field[data-value="extras"]').append(newExtra);
-  initializeExtraDropdowns(
-    null,
-    $(`#card-config-form .dropdown[data-value="extra_keys"]`).last(),
-    $(`#card-config-form .popup .header`).last(),
-    $(`#card-config-form .popup .description`).last(),
-  );
-  refreshTheme();
-  $('#card-config-form .field[data-value="extras"] .link.icon').popup({inline: true});
+let pendingFiles = [];
+function showCardUpload() {
+  $('#upload-cards-modal table').css('display', 'none');
+  $('#upload-cards-modal table tbody tr').remove();
+  $('#upload-cards-modal').modal('show');
+  pendingFiles = [];
 }
 
 /**
- * Add a blank Episode Extra field to the Episode extra modal form.
+ * 
+ * @param {DragEvent} event 
  */
-function addBlankEpisodeExtra() {
-  const newExtra = document.getElementById('extra-template').content.cloneNode(true);
-  $('#episode-extras-modal .field[data-value="extras"]').append(newExtra);
-  initializeExtraDropdowns(
-    null,
-    $(`#episode-extras-modal .dropdown[data-value="extra_keys"]`).last(),
-    $(`#episode-extras-modal .field[data-value="extras"] .popup .header`).last(),
-    $(`#episode-extras-modal .field[data-value="extras"] .popup .description`).last(),
-  );
+function dropHandler(event) {
+  // Prevent default behavior (Prevent file from being opened)
+  ev.preventDefault();
+
+  /**
+   * Parse the season and episode number from the given string (filename).
+   * @param {string} name - Name of the file being parsed for indices.
+   * @returns {?[number, number]} Array of the season and episode number parsed
+   * from the given name.
+   */
+  const parseFilename = (name) => name.match(/.*s(\d+).*e(\d+)/i)?.slice(1).map(Number);
+
+  /**
+   * 
+   * @param {File} file - File to create an entry out of.
+   */
+  const newFile = (file) => {
+    // Fill out row
+    const table = document.querySelector('#upload-cards-modal table tbody');
+    const newRow = document.getElementById('file-upload-template').content.cloneNode(true);
+
+    // Populate file name; when clicked, remove from table and file list
+    newRow.querySelector('[data-row="file"] a').innerText = file.name;
+    newRow.querySelector('[data-row="file"] a').onclick = () => {
+      pendingFiles = pendingFiles.filter(thisFile => thisFile.name !== file.name);
+      $(`#upload-cards-modal tr[data-filename="${file.name}"]`).remove();
+    }
+    // Add file name to dataset so CSS query works
+    newRow.querySelector('tr').dataset.filename = file.name;
+
+    // Try and parse season and episode indices from filename
+    const indices = parseFilename(file.name);
+    if (indices) {
+      newRow.querySelector('[data-row="season"]').innerText = indices[0];
+      newRow.querySelector('[data-row="episode"]').innerText = indices[1];
+      pendingFiles.push(file);
+    } else {
+      // Cannot parse; mark row as error
+      newRow.querySelector('tr').className = 'error';
+      newRow.querySelector('[data-row="season"]').innerText = 'Cannot Determine';
+      newRow.querySelector('[data-row="episode"]').innerText = 'Cannot Determine';
+    }
+    table.appendChild(newRow);
+  }
+  $('#upload-cards-modal table').css('display', 'table');
+
+  // Iterate through all uploaded files, add a table row for each valid upload
+  [...event.dataTransfer.items || event.dataTransfer.files].forEach((item) => {
+    if (item.kind === 'file' && item.type !== '') {
+      newFile(item.getAsFile() || item);
+    }
+  });
   refreshTheme();
-  $('#episode-extras-modal .field[data-value="extras"] .link.icon').popup({inline: true});
+}
+
+/**
+ * Submit an API request to upload and import the cards which are currently
+ * loaded. After the request is finished, all series-data is re-queried.
+ */
+function uploadCards() {
+  // No files uploaded, exit
+  if (pendingFiles.length === 0) {
+    showInfoToast('No Cards to Upload');
+    return;
+  }
+
+  // Add files to FormData object
+  const f = new FormData();
+  pendingFiles.forEach(file => f.append('cards', file));
+
+  // Submit API request
+  $.ajax({
+    type: 'POST',
+    url: '/api/import/series/{{series.id}}/cards',
+    data: f,
+    cache: false,
+    contentType: false,
+    processData: false,
+    /** Cards uploaded and imported. Show success toast. */
+    success: () => showInfoToast('Title Cards Uploaded and Imported'),
+    error: response => showErrorToast({title: 'Error Uploading Cards', response}),
+    /** Re-query statistics, card data, and file data */
+    complete: () => {
+      getStatistics();
+      getCardData();
+      getFileData();
+    }
+  });
 }
