@@ -83,6 +83,12 @@ class AnimeTitleCard(BaseCardType):
                 tooltip='Default is <c>black</c>.'
             ),
             Extra(
+                name='Kanji Stroke Color',
+                identifier='kanji_stroke_color',
+                description='Color of the stroke used on the Kanji text',
+                tooltip='Defaults to match the title stroke color',
+            ),
+            Extra(
                 name='Gradient Omission',
                 identifier='omit_gradient',
                 description='Whether to omit the gradient overlay',
@@ -112,9 +118,9 @@ class AnimeTitleCard(BaseCardType):
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS: SplitCharacteristics = {
-        'max_line_width': 25,   # Character count to begin splitting titles
-        'max_line_count': 4,    # Maximum number of lines a title can take up
-        'style': 'bottom',     # This class uses bottom heavy titling
+        'max_line_width': 25,
+        'max_line_count': 4,
+        'style': 'bottom',
     }
 
     """How to name archive directories for this type of card"""
@@ -148,6 +154,7 @@ class AnimeTitleCard(BaseCardType):
         'font_vertical_shift', 'omit_gradient', 'stroke_color', 'separator',
         'kanji', 'use_kanji', 'require_kanji', 'kanji_vertical_shift',
         'episode_text_color', 'kanji_color', 'episode_stroke_color',
+        'kanji_stroke_color',
     )
 
     def __init__(self, *,
@@ -174,8 +181,9 @@ class AnimeTitleCard(BaseCardType):
             separator: str = '·',
             omit_gradient: bool = False,
             require_kanji: bool = False,
-            kanji_vertical_shift: float = 0.0,
             kanji_color: str = TITLE_COLOR,
+            kanji_stroke_color: str = 'black',
+            kanji_vertical_shift: float = 0.0,
             stroke_color: str = 'black',
             preferences: Optional['Preferences'] = None,
             **unused,
@@ -216,6 +224,7 @@ class AnimeTitleCard(BaseCardType):
         self.episode_text_color = episode_text_color
         self.omit_gradient = omit_gradient
         self.kanji_color = kanji_color
+        self.kanji_stroke_color = kanji_stroke_color
         self.separator = separator
         self.stroke_color = stroke_color
 
@@ -323,12 +332,12 @@ class AnimeTitleCard(BaseCardType):
             *title_commands,
             f'-font "{self.KANJI_FONT.resolve()}"',
             *self.__title_text_black_stroke,
-            f'-strokewidth 5',
+            f'-strokewidth {5 * self.font_stroke_width:.1f}',
             f'-pointsize {85 * self.font_size}',
             f'-annotate +75+{kanji_offset} "{self.kanji}"',
             f'-strokewidth 0.5',
             f'-fill "{self.kanji_color}"',
-            f'-stroke "{self.kanji_color}"',
+            f'-stroke "{self.kanji_stroke_color}"',
             f'-annotate +75+{kanji_offset} "{self.kanji}"',
         ]
 

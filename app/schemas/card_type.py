@@ -6,7 +6,7 @@ from random import uniform
 from re import compile as re_compile, match as re_match
 from typing import Any, Literal, Optional, Union
 
-from pydantic import ( # pylint: disable=no-name-in-module
+from pydantic import (
     FilePath, PositiveFloat, PositiveInt, confloat, conint, constr,
     root_validator, validator,
 )
@@ -81,7 +81,7 @@ class BaseCardTypeAllText(BaseCardModel):
     hide_episode_text: bool = False
 
     @root_validator(skip_on_failure=True)
-    def toggle_text_hiding(cls, values):
+    def toggle_text_hiding(cls, values: dict) -> dict:
         values['hide_season_text'] |= (len(values['season_text']) == 0)
         values['hide_episode_text'] |= (len(values['episode_text']) == 0)
 
@@ -116,10 +116,11 @@ class AnimeCardType(BaseCardTypeCustomFontAllText):
     kanji: Optional[str] = None
     require_kanji: bool = False
     kanji_color: Optional[str] = AnimeTitleCard.TITLE_COLOR
+    kanji_stroke_color: Optional[str] = None
     kanji_vertical_shift: int = 0
     separator: str = '·'
     omit_gradient: bool = False
-    stroke_color: BetterColor = 'black'
+    stroke_color: str = 'black'
     episode_stroke_color: str = AnimeTitleCard.EPISODE_STROKE_COLOR
     episode_text_color: BetterColor = AnimeTitleCard.SERIES_COUNT_TEXT_COLOR
 
@@ -127,6 +128,14 @@ class AnimeCardType(BaseCardTypeCustomFontAllText):
     def validate_kanji(cls, values: dict) -> dict:
         if values['require_kanji'] and not values['kanji']:
             raise ValueError(f'Kanji is required and not specified')
+
+        return values
+
+    @root_validator(skip_on_failure=True)
+    def assign_unassigned_colors(cls, values: dict) -> dict:
+        # None means match stroke color
+        if values['kanji_stroke_color'] is None:
+            values['kanji_stroke_color'] = values['stroke_color']
 
         return values
 
@@ -146,7 +155,7 @@ class BannerCardType(BaseCardTypeAllText):
     x_offset: PositiveInt = BannerTitleCard.X_OFFSET
 
     @root_validator(skip_on_failure=True)
-    def assign_unassigned_color(cls, values):
+    def assign_unassigned_color(cls, values: dict) -> dict:
         # None means match font color
         if values['banner_color'] is None:
             values['banner_color'] = values['font_color']
@@ -171,7 +180,7 @@ class CalligraphyCardType(BaseCardTypeCustomFontAllText):
     shadow_color: BetterColor = 'black'
 
     @root_validator(skip_on_failure=True)
-    def assign_unassigned_color(cls, values):
+    def assign_unassigned_color(cls, values: dict) -> dict:
         # None means match font color
         if values['episode_text_color'] is None:
             values['episode_text_color'] = values['font_color']
@@ -211,7 +220,7 @@ class ComicBookCardType(BaseCardTypeCustomFontAllText):
         return val
 
     @root_validator(skip_on_failure=True)
-    def assign_unassigned_color(cls, values):
+    def assign_unassigned_color(cls, values: dict) -> dict:
         # None means match font color
         if values['text_box_edge_color'] is None:
             values['text_box_edge_color'] = values['font_color']
@@ -246,7 +255,7 @@ class DividerCardType(BaseCardTypeCustomFontAllText):
     text_position: TextPosition = 'lower right'
 
     @root_validator(skip_on_failure=True)
-    def assign_unassigned_color(cls, values):
+    def assign_unassigned_color(cls, values: dict) -> dict:
         # None means match font color
         if values['divider_color'] is None:
             values['divider_color'] = values['font_color']
@@ -560,7 +569,7 @@ class OlivierCardType(BaseCardTypeCustomFontNoText):
     stroke_color: BetterColor = OlivierTitleCard.STROKE_COLOR
 
     @root_validator(skip_on_failure=True)
-    def toggle_text_hiding(cls, values):
+    def toggle_text_hiding(cls, values: dict) -> dict:
         values['hide_episode_text'] |= (len(values['episode_text']) == 0)
 
         return values
@@ -577,7 +586,7 @@ class OverlineCardType(BaseCardTypeCustomFontAllText):
     separator: str = '-'
 
     @root_validator(skip_on_failure=True)
-    def assign_unassigned_color(cls, values):
+    def assign_unassigned_color(cls, values: dict) -> dict:
         if values['episode_text_color'] is None:
             values['episode_text_color'] = values['font_color']
         if values['line_color'] is None:
@@ -600,7 +609,7 @@ class PosterCardType(BaseCardModel):
     episode_text_color: Optional[BetterColor] = None
 
     @root_validator(skip_on_failure=True)
-    def assign_episode_text_color(cls, values):
+    def assign_episode_text_color(cls, values: dict) -> dict:
         # None means match font color
         if values['episode_text_color'] is None:
             values['episode_text_color'] = values['font_color']
@@ -653,7 +662,7 @@ class ShapeCardType(BaseCardTypeAllText):
     text_position: ShapeTextPosition = 'lower left'
 
     @root_validator(skip_on_failure=True)
-    def validate_extras(cls, values):
+    def validate_extras(cls, values: dict) -> dict:
         # Add episode text before title text if not hiding
         if values.get('hide_episode_text', False) is not True:
             values['title_text'] = f'{values["episode_text"]} {values["title_text"]}'
@@ -687,7 +696,7 @@ class StarWarsCardType(BaseCardModel):
     episode_text_color: BetterColor = StarWarsTitleCard.EPISODE_TEXT_COLOR
 
     @root_validator(skip_on_failure=True)
-    def toggle_text_hiding(cls, values):
+    def toggle_text_hiding(cls, values: dict) -> dict:
         values['hide_episode_text'] |= (len(values['episode_text']) == 0)
 
         return values
@@ -734,7 +743,7 @@ class TintedFrameCardType(BaseCardTypeAllText):
         return values
 
     @root_validator(skip_on_failure=True)
-    def validate_extras(cls, values):
+    def validate_extras(cls, values: dict) -> dict:
         # Logo indicated, verify it exists
         top = values['top_element']
         middle = values['middle_element']
@@ -775,7 +784,7 @@ class TintedGlassCardType(BaseCardTypeCustomFontNoText):
         return tuple(map(int, re_match(BoxAdjustmentRegex, val).groups()))
 
     @root_validator(skip_on_failure=True)
-    def toggle_text_hiding(cls, values):
+    def toggle_text_hiding(cls, values: dict) -> dict:
         values['hide_episode_text'] |= (len(values['episode_text']) == 0)
 
         return values
