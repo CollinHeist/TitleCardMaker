@@ -92,6 +92,23 @@ function getUpdateEpisodeObject(episodeId) {
 }
 
 /**
+ * Submit an API request to delete the Title Card(s) for the Episode with the
+ * given ID.
+ * @param {number} episodeId - ID of the Episode whose Cards are being deleted.
+ * @param {Function} onComplete - Function to call after the Cards have been
+ * deleted.
+ */
+function deleteEpisodeCard(episodeId, onComplete) {
+  $.ajax({
+    type: 'DELETE',
+    url: `/api/cards/episode/${episodeId}`,
+    success: () => showInfoToast('Deleted Title Card(s)'),
+    error: response => showErrorToast({title: 'Error Creating Title Card(s)', response}),
+    success: onComplete,
+  });
+}
+
+/**
  * Submit an API request to create the Title Card for the Episode with the given
  * ID. If successful, the card data of the current page is reloaded and the
  * Episode's row marking is removed.
@@ -993,6 +1010,13 @@ function getCardData(page=currentCardPage, transition=false) {
 
         // Re-create Card when image is clicked
         preview.querySelector('img').onclick = () => createEpisodeCard(card.episode_id);
+        // Delete Card and then recreate when image is clicked
+        preview.querySelector('img').oncontextmenu = () => {
+          deleteEpisodeCard(
+            card.episode_id,
+            () => createEpisodeCard(card.episode_id),
+          );
+        }
         
         // If library unique mode is enabled, add the library name to the text (if present)
         {% if preferences.library_unique_cards %}
