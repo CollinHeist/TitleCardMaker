@@ -360,7 +360,7 @@ def delete_episode_title_cards(
         db: Session = Depends(get_database),
     ) -> CardActions:
     """
-    Delete all TitleCards for the given Episode. Return a list of the
+    Delete all Title Cards for the given Episode. Return a list of the
     deleted files.
 
     - episode_id: ID of the Episode whose TitleCards to delete.

@@ -1354,7 +1354,7 @@ def import_cards(
         series: Series,
         directory: Optional[Path],
         image_extension: CardExtension,
-        force_reload: bool, # TODO implement?
+        force_reload: bool,
         *,
         log: Logger = log,
     ) -> None:
@@ -1441,3 +1441,84 @@ def import_cards(
         log.debug(f'{episode} Imported {image.resolve()}')
 
     return None
+
+
+def import_card_files(
+        db: Session,
+        series: Series,
+        files: list[tuple[str, bytes]], # Filename, bytes
+        force_reload: bool = True,
+        *,
+        log: Logger = log,
+    ) -> None:
+    """
+    Import the Title Card files to the given Series.
+
+    Args:
+        db: Database to query for existing Cards.
+        series: Series whose Cards are being imported.
+        files: List of tuples of the filename and image (bytes) being
+            imported.
+        force_reload: Whether to replace any existing Card entries for
+            Episodes identified while importing.
+        log: Logger for all log messages.
+    """
+
+    # For each image, identify associated Episode
+    for filename, file in files:
+        if (groups := match(r'.*s(\d+).*e(\d+)', filename, IGNORECASE)):
+            season_number, episode_number = map(int, groups.groups())
+        else:
+            log.warning(f'Cannot identify index of {filename} - skipping')
+            continue
+
+        # Find associated Episode
+        episode = db.query(Episode)\
+            .filter_by(series_id=series.id,
+                       season_number=season_number,
+                       episode_number=episode_number)\
+            .first()
+
+        # No associated Episode, skip
+        if episode is None:
+            log.warning(f'{series} No associated Episode for {filename} '
+                        f'- skipping')
+            continue
+
+        # Episode has an existing Card, skip if not forced
+        if episode.cards and not force_reload:
+            log.debug(f'{episode} has an associated Card - skipping')
+            continue
+
+        # Episode has card, delete if reloading
+        if episode.cards and force_reload:
+            for card in episode.cards:
+                log.debug(f'{card} deleting record')
+                db.query(models.card.Card).filter_by(id=card.id).delete()
+                log.debug(f'{episode} has associated Card - reloading')
+
+        # Get finalized Card settings for this Episode, override card file
+        try:
+            card_settings = resolve_card_settings(episode, log=log)
+        except (HTTPException, InvalidCardSettings) as exc:
+            log.exception(f'{episode} Cannot import Card - settings are '
+                          f'invalid {exc}')
+            continue
+
+        # Get a validated card class, and card type Pydantic model
+        _, CardTypeModel = validate_card_type_model(card_settings, log=log)
+
+        # Write card file to file
+        card_settings['card_file'].write_bytes(file)
+
+        # Card is valid, create and add to Database
+        title_card = NewTitleCard(
+            **card_settings,
+            series_id=series.id,
+            episode_id=episode.id,
+        )
+
+        card = add_card_to_database(
+            db, title_card, CardTypeModel, card_settings['card_file'], None
+        )
+        log.debug(f'{episode} Imported {filename}')

@@ -1,17 +1,18 @@
 from shutil import copyfile
-from typing import Literal
+from typing import Literal, Optional
 
 from fastapi import (
-    APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request
+    APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, Request,
+    UploadFile
 )
 from pydantic.error_wrappers import ValidationError
 from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_series
-from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.dependencies import get_database, get_preferences
 from app.internal.auth import get_current_user
 from app.internal.imports import (
-    import_cards, parse_emby, parse_fonts, parse_jellyfin, parse_plex,
+    import_card_files, import_cards, parse_emby, parse_fonts, parse_jellyfin, parse_plex,
     parse_preferences, parse_raw_yaml, parse_series, parse_sonarr, parse_syncs,
     parse_templates, parse_tmdb
 )
@@ -32,7 +33,7 @@ import_router = APIRouter(
 )
 
 
-@import_router.post('/preferences/options', status_code=201)
+@import_router.post('/preferences/options')
 def import_global_options_yaml(
         request: Request,
         import_yaml: ImportYaml = Body(...),
@@ -64,7 +65,7 @@ def import_global_options_yaml(
         ) from e
 
 
-@import_router.post('/preferences/connection/{connection}', status_code=201)
+@import_router.post('/preferences/connection/{connection}')
 def import_connection_yaml(
         request: Request,
         connection: Literal['all', 'emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
@@ -106,7 +107,7 @@ def import_connection_yaml(
         ) from exc
 
 
-@import_router.post('/preferences/sync', status_code=201)
+@import_router.post('/preferences/sync')
 def import_sync_yaml(
         request: Request,
         import_yaml: ImportYaml = Body(...),
@@ -154,7 +155,7 @@ def import_sync_yaml(
     return all_syncs
 
 
-@import_router.post('/fonts', status_code=201)
+@import_router.post('/fonts')
 def import_fonts_yaml(
         request: Request,
         import_yaml: ImportYaml = Body(...),
@@ -212,7 +213,7 @@ def import_fonts_yaml(
     return all_fonts
 
 
-@import_router.post('/templates', status_code=201)
+@import_router.post('/templates')
 def import_template_yaml(
         request: Request,
         import_yaml: ImportYaml = Body(...),
@@ -255,7 +256,7 @@ def import_template_yaml(
     return all_templates
 
 
-@import_router.post('/series', status_code=201)
+@import_router.post('/series')
 def import_series_yaml(
         background_tasks: BackgroundTasks,
         request: Request,
@@ -328,12 +329,12 @@ def import_series_yaml(
     return all_series
 
 
-@import_router.post('/series/{series_id}/cards', status_code=200,
-                    tags=['Title Cards', 'Series'])
-def import_cards_for_series(
+@import_router.post('/series/{series_id}/cards', tags=['Title Cards', 'Series'])
+async def import_cards_for_series(
         request: Request,
         series_id: int,
-        card_directory: ImportCardDirectory = Body(...),
+        card_directory: Optional[ImportCardDirectory] = Form(default=None),
+        cards: list[UploadFile] = [],
         db: Session = Depends(get_database)
     ) -> None:
     """
@@ -348,15 +349,18 @@ def import_cards_for_series(
     # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    import_cards(
-        db, series, card_directory.directory,
-        card_directory.image_extension, card_directory.force_reload,
-        log=request.state.log,
-    )
+    # Cards
+    if (card_files := [(card.filename, await card.read()) for card in cards]):
+        import_card_files(db, series, card_files, True, log=request.state.log)
+    else:
+        import_cards(
+            db, series, card_directory.directory,
+            card_directory.image_extension, card_directory.force_reload,
+            log=request.state.log,
+        )
 
 
-@import_router.post('/series/cards', status_code=200,
-                    tags=['Title Cards', 'Series'])
+@import_router.post('/series/cards', tags=['Title Cards', 'Series'])
 def import_cards_for_multiple_series(
         request: Request,
         card_import: MultiCardImport = Body(...),
