@@ -1008,16 +1008,18 @@ function getCardData(page=currentCardPage, transition=false) {
           }
         {% endif %}
 
-        // Re-create Card when image is clicked
-        preview.querySelector('img').onclick = () => createEpisodeCard(card.episode_id);
-        // Delete Card and then recreate when image is clicked
-        preview.querySelector('img').oncontextmenu = () => {
-          deleteEpisodeCard(
-            card.episode_id,
-            () => createEpisodeCard(card.episode_id),
-          );
-        }
-        
+        // Re-create Card when image is clicked (if enabled)
+        {% if preferences.interactive_card_previews %}
+          preview.querySelector('img').onclick = () => createEpisodeCard(card.episode_id);
+          // Delete Card and then recreate when image is clicked
+          preview.querySelector('img').oncontextmenu = () => {
+            deleteEpisodeCard(
+              card.episode_id,
+              () => createEpisodeCard(card.episode_id),
+            );
+          }
+        {% endif %}
+
         // If library unique mode is enabled, add the library name to the text (if present)
         {% if preferences.library_unique_cards %}
           if (card.library_name) {
@@ -2208,7 +2210,7 @@ function showCardUpload() {
  */
 function dropHandler(event) {
   // Prevent default behavior (Prevent file from being opened)
-  ev.preventDefault();
+  event.preventDefault();
 
   /**
    * Parse the season and episode number from the given string (filename).

@@ -201,6 +201,7 @@ function updateGlobalSettings() {
     stylize_unmonitored_posters: $('input[name="stylize_unmonitored_posters"]').is(':checked'),
     colorblind_mode: $('input[name="colorblind_mode"]').is(':checked'),
     reduced_animations: $('input[name="reduced_animations"]').is(':checked'),
+    interactive_card_previews: $('input[name="interactive_card_previews"]').is(':checked'),
   };
 
   // Submit API request

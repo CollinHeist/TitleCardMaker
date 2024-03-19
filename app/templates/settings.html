@@ -479,6 +479,16 @@
                   <p class="help">Reduce website animations.</p>
                 </div>
               </div>
+
+              <div class="ui checkbox field">
+                <label>Interactive Title Cards</label>
+                {% if preferences.interactive_card_previews %}
+                <input name="interactive_card_previews" type="checkbox" checked="checked">
+                {% else %}
+                <input name="interactive_card_previews" type="checkbox">
+                {% endif %}
+                <p class="help">Whether to add click and right-click functionality to the Title Card previews on the Series pages.</p>
+              </div>
             </section>
 
             <!-- Validation message -->

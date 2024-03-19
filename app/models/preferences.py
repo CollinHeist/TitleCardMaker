@@ -66,7 +66,7 @@ class Preferences:
         'sources_as_table', 'card_type_directory', 'local_card_types',
         'imported_blueprints', 'colorblind_mode', 'library_unique_cards',
         'invalid_connections', 'home_page_table_view', 'reduced_animations',
-        'currently_running_sync',
+        'currently_running_sync', 'interactive_card_previews',
         # Arguments required only for the Connection data migrations
         'emby_url', 'emby_api_key', 'emby_username', 'emby_use_ssl', 'emby_filesize_limit_number', 'emby_filesize_limit_unit',
         'jellyfin_url', 'jellyfin_api_key', 'jellyfin_username', 'jellyfin_use_ssl', 'jellyfin_filesize_limit_number', 'jellyfin_filesize_limit_unit',
@@ -184,6 +184,7 @@ class Preferences:
         self.sync_specials = True
         self.delete_missing_episodes = True
         self.simplified_data_table = True
+        self.interactive_card_previews = True
         self.remote_card_types = {}
         self.local_card_types: dict[str, BaseCardType] = {}
         self.default_card_type = 'standard'

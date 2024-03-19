@@ -93,6 +93,7 @@ class UpdatePreferences(UpdateBase):
     home_page_table_view: bool = UNSPECIFIED
     colorblind_mode: bool = UNSPECIFIED
     reduced_animations: bool = UNSPECIFIED
+    interactive_card_previews: bool = UNSPECIFIED
 
     @validator('card_filename_format', pre=True)
     def validate_card_filename_format(cls, v: str) -> str:
@@ -171,3 +172,4 @@ class Preferences(Base):
     home_page_table_view: bool
     colorblind_mode: bool
     reduced_animations: bool
+    interactive_card_previews: bool

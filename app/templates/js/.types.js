@@ -367,6 +367,7 @@
  * @property {boolean} home_page_table_view - Whether the home page is in table view or not.
  * @property {boolean} colorblind_mode - Whether colorblind mode is enabled or not.
  * @property {boolean} reduced_animations - Whether reduced animations are enabled or not.
+ * @property {boolean} interactive_card_previews
  */
 
 // Series ----------------------------------------------------------------------
