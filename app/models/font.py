@@ -60,14 +60,15 @@ class Font(Base):
     line_split_modifier: Mapped[int] = mapped_column(default=0)
 
 
+    def __repr__(self) -> str:
+        return f'Font[{self.id}] "{self.name}"'
+
+
     @property
     def file(self) -> Optional[Path]:
         """
-        Get the name of this Font's file, if indicated.
-
-        Returns:
-            Full path to the Font file, None if this Font has no file,
-            or if the file does not exist.
+        Get the name of this Font's file, if indicated.  None if this
+        Font has no file, or if the file does not exist.
         """
 
         if self.file_name is None:
@@ -94,10 +95,6 @@ class Font(Base):
         """Class-expression of `sort_name` property."""
 
         return func.regex_replace(r'^(a|an|the)(\s)', '', func.lower(cls.name))
-
-
-    def __repr__(self) -> str:
-        return f'Font[{self.id}] "{self.name}"'
 
 
     @staticmethod
@@ -145,9 +142,6 @@ class Font(Base):
     def card_properties(self) -> dict[str, Any]:
         """
         Properties to utilize and merge in Title Card creation.
-
-        Returns:
-            Dictionary of properties.
         """
 
         if (file := self.file) is None:
@@ -171,6 +165,11 @@ class Font(Base):
         in a NewNamedFont model to recreate this object.
         """
 
+        if self.line_split_modifier == 0:
+            modifier = None
+        else:
+            modifier = self.line_split_modifier
+
         return {
             'name': self.name,
             'color': self.color,
@@ -179,7 +178,7 @@ class Font(Base):
             'interline_spacing': self.interline_spacing or None,
             'interword_spacing': self.interword_spacing or None,
             'kerning': None if self.kerning == 1.0 else self.kerning,
-            'line_split_modifier': None if self.line_split_modifier == 0 else self.line_split_modifier,
+            'line_split_modifier': modifier,
             'replacements_in': self.replacements_in,
             'replacements_out': self.replacements_out,
             'size': None if self.size == 1.0 else self.size,
