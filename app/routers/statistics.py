@@ -34,9 +34,7 @@ def get_all_statistics(
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
     ) -> list[Statistic]:
-    """
-    Get all statistics.
-    """
+    """Get all statistics."""
 
     # Count objects
     card_count = db.query(Card).count()
@@ -145,7 +143,11 @@ def get_snapshots(
         db: Session = Depends(get_database),
     ) -> list[Snapshot]:
     """
-    
+    Get the database Snapshots from the given number of days in the past.
+
+    - previous_days: How many days of past snapshots to return.
+    - slice: How to "slice" the return - e.g. `1` would be every
+    Snapshot, `2` would be every other, etc.
     """
 
     previous = datetime.now() - timedelta(days=previous_days)

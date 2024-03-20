@@ -1,6 +1,8 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring
 from datetime import datetime
 
+from pydantic import root_validator
+
 from app.schemas.base import Base
 
 
@@ -30,6 +32,11 @@ class Snapshot(Base):
     filesize: int
     cards_created: int
     timestamp: datetime
+
+    @root_validator(skip_on_failure=True)
+    def limit_loaded_count(cls, values: dict) -> dict:
+        values['loaded'] = min(values['loaded'], values['cards'])
+        return values
 
 class Statistic(Base):
     value: int
