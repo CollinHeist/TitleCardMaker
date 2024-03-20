@@ -1,6 +1,6 @@
 from base64 import b64encode
 from logging import Logger
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from fastapi import HTTPException
 
@@ -10,10 +10,14 @@ from modules.EpisodeDataSource2 import (
 )
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
-from modules.MediaServer2 import _Card, _Episode, MediaServer, SourceImage
+from modules.MediaServer2 import MediaServer, SourceImage
 from modules.SeriesInfo2 import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
+
+if TYPE_CHECKING:
+    from app.models.card import Card
+    from app.models.episode import Episode
 
 
 class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
@@ -79,7 +83,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
                 raise ConnectionError(f'Unable to authenticate with server')
         except Exception as exc:
             log.critical(f'Cannot connect to Jellyfin - returned error {exc}')
-            log.exception(f'Bad Jellyfin connection', exc)
+            log.exception(f'Bad Jellyfin connection')
             raise HTTPException(
                 status_code=400,
                 detail=f'Cannot connect to Jellyfin - {exc}',
@@ -569,7 +573,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
     def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
-            episodes: list[_Episode],
+            episodes: list['Episode'],
             *,
             log: Logger = log,
         ) -> bool:
@@ -644,10 +648,10 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
     def load_title_cards(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_and_cards: list[tuple[_Episode, _Card]],
+            episode_and_cards: list[tuple['Episode', 'Card']],
             *,
             log: Logger = log,
-        ) -> list[tuple[_Episode, _Card]]:
+        ) -> list[tuple['Episode', 'Card']]:
         """
         Load the title cards for the given Series and Episodes.
 
@@ -693,9 +697,9 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
                     data=card_base64,
                 )
                 loaded.append((episode, card))
-            except Exception as e:
+            except Exception:
                 log.exception(f'Unable to upload {card.resolve()} to '
-                              f'{series_info}', e)
+                              f'{series_info}')
                 continue
 
         # Log load operations to user

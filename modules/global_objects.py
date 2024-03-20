@@ -23,6 +23,7 @@ class TemporaryPreferenceParser:
         self.card_quality = 95
         self.database_directory = Path(database_directory)
         self.imagemagick_container = None
+        self.use_magick_prefix = False
 
 # pylint: disable=global-statement
 pp = TemporaryPreferenceParser(Path(__file__).parent / '.objects')

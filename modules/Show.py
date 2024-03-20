@@ -97,8 +97,8 @@ class Show(YamlReader):
                 self.get('name', type_=str, default=name),
                 self.get('year', type_=int)
             )
-        except ValueError as e:
-            log.exception(f'Series "{name}" is missing the required "year"', e)
+        except ValueError:
+            log.exception(f'Series "{name}" is missing the required "year"')
             self.valid = False
             return None
 
@@ -585,7 +585,7 @@ class Show(YamlReader):
             'sonarr': self.sonarr_interface,
             'tmdb': self.tmdb_interface,
         }.get(self.episode_data_source, None)
-        if not interface :
+        if not interface:
             log.warning(f'Cannot source episodes for {self} from '
                         f'{self.episode_data_source}')
             return None

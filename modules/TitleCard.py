@@ -202,7 +202,7 @@ class TitleCard:
         try:
             self.maker = self.episode.card_class(**CardModel.dict())
         except Exception as e:
-            log.exception(f'Cannot initialize Card for {self.episode} - {e}', e)
+            log.exception(f'Cannot initialize Card for {self.episode} - {e}')
             self.maker = None
 
         # File associated with this card is the episode's destination
@@ -390,7 +390,7 @@ class TitleCard:
             self.maker.create()
         except Exception as e:
             log.exception(f'Error encountered while creating card for '
-                          f'{self.episode} - {e}', e)
+                          f'{self.episode} - {e}')
 
         # Return whether card creation was successful or not
         if self.file.exists():

@@ -1,7 +1,7 @@
 from base64 import b64encode
 from datetime import datetime
 from logging import Logger
-from typing import Iterator, Optional, Union
+from typing import TYPE_CHECKING, Iterator, Optional, Union
 
 from fastapi import HTTPException
 
@@ -11,10 +11,14 @@ from modules.EpisodeDataSource2 import (
 )
 from modules.EpisodeInfo2 import EmbyEpisodeDict, EpisodeInfo
 from modules.Interface import Interface
-from modules.MediaServer2 import _Card, _Episode, MediaServer, SourceImage
+from modules.MediaServer2 import MediaServer, SourceImage
 from modules.SeriesInfo2 import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
+
+if TYPE_CHECKING:
+    from app.models.card import Card
+    from app.models.episode import Episode
 
 
 class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
@@ -91,7 +95,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 raise ConnectionError(f'Unable to authenticate with server')
         except Exception as e:
             log.critical(f'Cannot connect to Emby - returned error {e}')
-            log.exception(f'Bad Emby connection', e)
+            log.exception(f'Bad Emby connection')
             raise HTTPException(
                 status_code=400,
                 detail=f'Cannot connect to Emby - {e}',
@@ -589,7 +593,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
     def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
-            episodes: list[_Episode],
+            episodes: list['Episode'],
             *,
             log: Logger = log,
         ) -> bool:
@@ -642,10 +646,10 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
     def load_title_cards(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_and_cards: list[tuple[_Episode, _Card]],
+            episode_and_cards: list[tuple['Episode', 'Card']],
             *,
             log: Logger = log,
-        ) -> list[tuple[_Episode, _Card]]:
+        ) -> list[tuple['Episode', 'Card']]:
         """
         Load the title cards for the given Series and Episodes.
 
@@ -690,9 +694,9 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                             data=card_base64,
                         )
                         loaded.append((episode, card))
-                    except Exception as e:
+                    except Exception:
                         log.exception(f'Unable to upload {image.resolve()} to '
-                                    f'{series_info}', e)
+                                      f'{series_info}')
                     break
 
         # Log load operations to user

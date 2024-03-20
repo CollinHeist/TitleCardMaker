@@ -191,8 +191,8 @@ class EpisodeInfo(DatabaseInfoContainer):
             airdate = datetime.strptime(
                 info['PremiereDate'], '%Y-%m-%dT%H:%M:%S.%f000000Z'
             )
-        except Exception as e:
-            log.exception(f'Cannot parse airdate', e)
+        except Exception:
+            log.exception(f'Cannot parse airdate')
             log.debug(f'Episode data: {info}')
 
         return cls(

@@ -46,7 +46,8 @@ def catch_and_log(
             except TMDbException:
                 # Get contextual logger if provided as argument to function
                 if ('log' in kwargs
-                    and hasattr(kwargs['log'], 'error')):
+                    and hasattr(kwargs['log'], 'error')
+                    and callable(kwargs['log'].error)):
                     clog = kwargs['log']
                 else:
                     clog = log

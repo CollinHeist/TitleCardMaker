@@ -1013,7 +1013,7 @@ class PreferenceParser(YamlReader):
                     status_code=422,
                     detail=f'Error identifying series info of {series_name}',
                 ) from e
-            log.exception(f'Error identifying series info of {series_name}', e)
+            log.exception(f'Error identifying series info of {series_name}')
             log.debug(f'Series YAML: {series_yaml}')
             series_info = None
 
@@ -1124,8 +1124,8 @@ class PreferenceParser(YamlReader):
             # Create Path object for this file
             try:
                 file = CleanPath(file_).sanitize()
-            except Exception as e:
-                log.exception(f'Invalid series file "{file_}"', e)
+            except Exception:
+                log.exception(f'Invalid series file "{file_}"')
                 continue
 
             # Update progress bar for this file

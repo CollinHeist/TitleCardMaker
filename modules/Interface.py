@@ -1,4 +1,8 @@
 from abc import ABC, abstractmethod
+from typing import Literal
+
+
+InterfaceType = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr', 'Tautulli','TMDb']
 
 
 class Interface(ABC):
@@ -9,7 +13,7 @@ class Interface(ABC):
 
     @property
     @abstractmethod
-    def INTERFACE_TYPE(self) -> str: # pylint: disable=missing-function-docstring
+    def INTERFACE_TYPE(self) -> InterfaceType:
         raise NotImplementedError
 
 

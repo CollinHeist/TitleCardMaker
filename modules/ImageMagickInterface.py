@@ -156,8 +156,8 @@ class ImageMagickInterface:
         # Split command into list of strings for Popen
         try:
             cmd = command_split(command)
-        except ValueError as exc:
-            log.exception(f'Invalid ImageMagick command', exc)
+        except ValueError:
+            log.exception(f'Invalid ImageMagick command')
             log.debug(command)
             return b'', b''
 
@@ -169,8 +169,8 @@ class ImageMagickInterface:
         except TimeoutExpired:
             log.error(f'ImageMagick command timed out')
             log.debug(command)
-        except FileNotFoundError as e:
-            log.exception(f'Command error', e)
+        except FileNotFoundError:
+            log.exception(f'Command error')
             log.debug(command)
 
         # Add command to history and return results

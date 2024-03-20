@@ -109,14 +109,14 @@ class RemoteCardType:
             if self.valid:
                 log.debug(f'Loaded RemoteCardType "{identifier}"')
         # Error looking for module under class name - likely bad naming
-        except KeyError as exc:
+        except KeyError:
             log.exception(f'Cannot load CardType "{identifier}" - cannot '
                           f'identify Card class. Ensure there is a Class of '
-                          f'the same name as the file itself.', exc)
+                          f'the same name as the file itself.')
             self.valid = False
         # Some error in loading, set object as invalid
-        except Exception as exc:
-            log.exception(f'Cannot load CardType "{identifier}"', exc)
+        except Exception:
+            log.exception(f'Cannot load CardType "{identifier}"')
             self.valid = False
 
         return None

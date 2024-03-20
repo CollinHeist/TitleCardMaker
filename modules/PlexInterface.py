@@ -53,15 +53,15 @@ def catch_and_log(message: str, *, default: Any = None) -> Callable:
         def inner(*args, **kwargs):
             try:
                 return function(*args, **kwargs)
-            except PlexApiException as e:
-                log.exception(message, e)
+            except PlexApiException:
+                log.exception(message)
                 return default
-            except (ReadTimeout, PlexConnectionError) as e:
-                log.exception(f'Plex API has timed out, DB might be busy',e)
-                raise e
-            except Exception as e:
-                log.exception(f'Uncaught exception', e)
-                raise e
+            except (ReadTimeout, PlexConnectionError) as exc:
+                log.exception(f'Plex API has timed out, DB might be busy')
+                raise exc
+            except Exception as exc:
+                log.exception(f'Uncaught exception')
+                raise exc
         return inner
     return decorator
 
@@ -795,7 +795,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             except Exception as e:
                 error_count += 1
                 log.exception(f'Unable to upload {card.resolve()} to '
-                              f'{series_info}', e)
+                              f'{series_info}')
                 continue
             else:
                 loaded_count += 1
@@ -978,7 +978,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         except ValueError:
             log.warning(f'Item with rating key {rating_key} has no year')
         except Exception as e:
-            log.exception(f'Rating key {rating_key} has some error', e)
+            log.exception(f'Rating key {rating_key} has some error')
 
         # Error occurred, return empty list
         return []

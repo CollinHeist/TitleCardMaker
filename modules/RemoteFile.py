@@ -67,10 +67,10 @@ class RemoteFile:
         try:
             self.download()
             log.debug(f'Downloaded RemoteFile "{username}/{filename}"')
-        except Exception as e:
+        except Exception:
             self.valid = False
             log.exception(f'Could not download RemoteFile '
-                          f'"{username}/{filename}"', e)
+                          f'"{username}/{filename}"')
             return None
 
         try:

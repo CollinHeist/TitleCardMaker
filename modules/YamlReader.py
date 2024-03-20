@@ -184,13 +184,13 @@ class YamlReader:
         with file.open('r', encoding='utf-8') as file_handle:
             try:
                 return safe_load(file_handle)
-            except Exception as e:
+            except Exception:
                 # Log error, if critical then exit with error code
                 if critical:
-                    log.exception(f'Error encountered while reading file', e)
+                    log.exception(f'Error encountered while reading file')
                     log.critical(f'Error reading "{file.resolve()}"')
                     sys_exit(1)
                 else:
-                    log.exception(f'Error reading "{file.resolve}"', e)
+                    log.exception(f'Error reading "{file.resolve}"')
 
         return {}

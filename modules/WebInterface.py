@@ -180,6 +180,6 @@ class WebInterface:
             # Write content to file, return success
             destination.write_bytes(image)
             return True
-        except Exception as e:
-            log.exception(f'Cannot download image, returned error', e)
+        except Exception: # pylint: disable=broad-except
+            log.exception(f'Cannot download image, returned error')
             return False

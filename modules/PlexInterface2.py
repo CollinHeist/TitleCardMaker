@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from logging import Logger, LoggerAdapter
+from logging import Logger
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
 from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Optional, Union
@@ -61,21 +61,22 @@ def catch_and_log(
         def inner(*args, **kwargs):
             # Get contextual logger if provided as argument to function
             if ('log' in kwargs
-                and isinstance(kwargs['log'], (Logger, LoggerAdapter))):
+                and hasattr(kwargs['log'], 'exception')
+                and callable(kwargs['log'].exception)):
                 clog = kwargs['log']
             else:
                 clog = log
 
             try:
                 return function(*args, **kwargs)
-            except PlexApiException as e:
-                clog.exception(message, e)
+            except PlexApiException:
+                clog.exception(message)
                 return default
             except (ReadTimeout, PlexConnectionError) as e:
-                clog.exception(f'Plex API has timed out, DB might be busy',e)
+                clog.exception(f'Plex API has timed out, DB might be busy')
                 raise e
             except Exception as e:
-                clog.exception(f'Uncaught exception', e)
+                clog.exception(f'Uncaught exception')
                 raise e
         return inner
     return decorator
@@ -797,7 +798,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         # No episodes to load, exit
         if len(episode_and_cards) == 0:
-            log.debug(f'No episodes to load for {series_info}')
+            log.trace(f'No episodes to load for {series_info}')
             return []
 
         # If the given library cannot be found, exit
@@ -842,9 +843,9 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 log.debug(f'{series_info} S{plex_episode.seasonNumber:02}E'
                           f'{plex_episode.episodeNumber:02} Loaded Card into '
                           f'"{library_name}"')
-            except Exception as e:
+            except Exception:
                 log.exception(f'Unable to upload {image.resolve()} to '
-                              f'{series_info}', e)
+                              f'{series_info}')
                 continue
             else:
                 loaded.append((episode, card))
@@ -929,8 +930,8 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             log.warning(f'No item with rating key {rating_key} exists')
         except (ValueError, AssertionError):
             log.warning(f'Item with rating key {rating_key} has no year')
-        except Exception as e:
-            log.exception(f'Rating key {rating_key} has some error', e)
+        except Exception:
+            log.exception(f'Rating key {rating_key} has some error')
 
         # Error occurred, return empty list
         return []
