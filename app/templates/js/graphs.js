@@ -53,9 +53,19 @@ function initializeCardsGraph(labels, rawData) {
 }
 
 function getSnapshots() {
+  // Get search params from URL
+  const params = new URLSearchParams(window.location.search);
+  const previousDays = params.get('days') || 14;
+  const slice = params.get('slice') || 1;
+
+  // Write params to URL
+  params.set('days', previousDays);
+  params.set('slice', slice);
+  window.history.pushState({}, '', `${window.location.origin}${window.location.pathname}?${params.toString()}`);
+
   $.ajax({
     type: 'GET',
-    url: '/api/statistics/snapshots',
+    url: `/api/statistics/snapshots?previous_days=${previousDays}&slice=${slice}`,
     /**
      * Snapshots queried, populate graph
      * @param {Snapshot} snapshots - Snapshots to populate the graph with.
