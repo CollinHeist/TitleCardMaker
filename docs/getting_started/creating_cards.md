@@ -100,6 +100,17 @@ Template specifications.
         Because we entered this card type override on the Episode-level, the
         card type of the Templates are completely ignored.
 
+## Cleanup
+
+The substantive part of the tutorial is over, and I recommend removing cleaning
+up the artifacts from the tutorial. These are:
+
+- Delete the two Templates
+- Delete (or edit) the Sync
+- Set the scheduler task interval to something sensible
+- If you want to use different Cards, then the Series and Fonts can also be
+deleted.
+
 !!! success "Tutorial Completed"
 
     With that finished, you have successfully grabbed Episode data, downloaded

@@ -56,8 +56,12 @@ show and copy the generated API key.
 6. Back within TitleCardMaker, paste the API key from Step 5 into the API key
 input box.
 
-7. Enter some descriptive name (or leave the default), and then click
-<span class="example md-button">Create Agent</span>.
+7. If you want Tautulli to trigger TitleCardMaker when episodes are watched,
+and not just when episodes are added, then leave the `Trigger on Recently
+Watched` checkbox checked. I also recommend entering your username in the
+username input so that Tautulli is only triggered when you watch content.
+
+8. Click <span class="example md-button">Create Agent</span>.
 
 8. Open Plex (on a computer) and navigate to your server settings via the
 :material-wrench-outline: Wrench icon in the top right corner.
