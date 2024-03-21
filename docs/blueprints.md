@@ -255,3 +255,72 @@ the form.
 
 [^1]: TCM will only grab Title Cards that are not blurred or grayscale, and not
 any Cards from Specials (season 0).
+
+# Sets
+
+Blueprints can also be part of Blueprint _Sets_. These are simply groups of
+Blueprints which are all associated with each other. For example:
+
+![](./assets/blueprint_set_light.jpg#only-light){.no-lightbox}
+![](./assets/blueprint_set_dark.jpg#only-dark){.no-lightbox}
+
+## Viewing Sets
+
+When a Series is associated with a Set, it will be noted on the Blueprint on
+either the Series page, or the main Blueprint browser.
+
+## Creating a Set
+
+If you would like to create a Set with some of your _existing_ Blueprints, this
+can be done through the repository, just like creating a new Blueprint.
+
+1. Create a new [issue](https://github.com/TitleCardMaker/Blueprints/issues/new?assignees=CollinHeist&labels=set&projects=&template=new_set.yaml&title=%5BSet%5D+).
+
+2. Give the set some title - e.g. "Marvel Cinematic Universe".
+
+3. Identify which Series and Blueprints you want to add to this Set, and
+navigate to them in the main repository
+[folder structure](https://github.com/TitleCardMaker/Blueprints/tree/master/blueprints).
+
+    1. After you've found the Series, go to the numbered subfolder for the
+    Blueprint - you should now see a `blueprint.json` file (along with some
+    other files). 
+
+    2. Click ++ctrl + shift + .++ (++cmd + shift + .++ on MacOS) to copy the
+    path of this folder.
+
+4. Paste the path you just copied into the _Blueprints_ section of the form.
+
+    !!! example "Example"
+
+        The path should start with `blueprints/` and end with some number. For
+        example:
+
+        ```
+        blueprints/M/Marvel's Agents of S.H.I.E.L.D. (2013)/0
+        ```
+
+5. Repeat steps 3-4 for each Blueprint you want to add, making sure to put each
+Blueprint on a new line. You must specify at least two Blueprints.
+
+    !!! tip "Got them all?"
+
+        Double check you have added all the Blueprints you want in the Set.
+        Currently there is no "automated" way to add existing Blueprints to a
+        Set after it's been created - meaning I will need to manually edit the
+        database.
+
+6. Click the  _Submit new issue_ button.
+
+!!! success "Success"
+
+    After the issue is created, there is an automated action that will validate
+    your submission. If this passes, then your work is done and the Set will be
+    available within TCM shortly.
+
+## Adding to a Set
+
+If you are submitting a new Blueprint and would like to add this to an existing
+Set, then find the Set ID from the table at the bottom of the main repository
+[README](https://github.com/TitleCardMaker/Blueprints). Specify this ID in the
+Blueprint submission form when you are filling it out.
