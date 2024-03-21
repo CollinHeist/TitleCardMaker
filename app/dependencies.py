@@ -99,14 +99,16 @@ def download_blueprint_database(*, log: Logger = log) -> None:
 _db_expiration = datetime.now()
 def get_blueprint_database(
         request: Request,
-        refresh_database: bool = Query(default=False),
+        allow_refresh: bool = Query(default=True),
+        force_refresh: bool = Query(default=False),
     ) -> Iterator[Session]:
     """
     Dependency to get a Session to the Blueprint SQLite database.
 
     Args:
-        refresh_database: Query parameter on whether to force a refresh
-            of the database.
+        allow_refresh: Whether to allow a refresh of the database if it
+            has expired.
+        force_refresh: Whether to force a refresh of the database.
     
     Yields:
         A Session to the database which is closed afterwards.
@@ -117,9 +119,9 @@ def get_blueprint_database(
 
     # If refreshing db, database DNE, or file has expired, re-download
     global _db_expiration # pylint: disable=global-statement
-    if (refresh_database
+    if (force_refresh
         or not BLUEPRINT_DATABASE_FILE.exists()
-        or _db_expiration <= datetime.now()):
+        or (allow_refresh and _db_expiration <= datetime.now())):
         download_blueprint_database()
         log.debug(f'Downloaded Blueprint database')
         _db_expiration = datetime.now() + timedelta(hours=2)

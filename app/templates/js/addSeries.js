@@ -242,7 +242,7 @@ function queryAllBlueprints(page=1, refresh=false) {
     + `&order_by=${orderBy}`
     + `&include_missing_series=${includeMissing}`
     + `&include_imported=${includeImported}`
-    + `&refresh_database=${refresh}`;
+    + `&force_refresh=${refresh}`;
   
   // Only add placeholders if on page 1 (first load)
   const blueprintResults = document.getElementById('all-blueprint-results');
