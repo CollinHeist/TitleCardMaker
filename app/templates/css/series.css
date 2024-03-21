@@ -187,3 +187,7 @@ img[data-action="browse-tmdb"] {
   transform: translate(-2%);
   /* filter: blur(1px); /* grayscale(70%) blur(1px); */
 }
+
+#episode-data-table tr td .ui.input {
+  width: 100%;
+}
