@@ -1509,6 +1509,7 @@ def import_card_files(
         _, CardTypeModel = validate_card_type_model(card_settings, log=log)
 
         # Write card file to file
+        card_settings['card_file'].mkdir(exist_ok=True, parents=True)
         card_settings['card_file'].write_bytes(file)
 
         # Card is valid, create and add to Database
