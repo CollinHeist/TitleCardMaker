@@ -13,7 +13,9 @@ from sqlalchemy.orm import Session
 
 from app.database.query import get_blueprint, get_blueprint_set, get_series
 from app.database.session import Page
-from app.dependencies import Preferences, get_blueprint_database, get_database, get_preferences
+from app.dependencies import (
+    Preferences, get_blueprint_database, get_database, get_preferences
+)
 from app.internal.auth import get_current_user
 from app.internal.blueprint import (
     delay_zip_deletion, generate_series_blueprint, get_blueprint_font_files,
@@ -347,10 +349,10 @@ def query_series_blueprints_(
     - series_id: ID of the Series to search for Blueprints of.
     """
 
-    # Query for this Series, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
-
-    return query_series_blueprints(blueprint_db, series.as_series_info)
+    return query_series_blueprints(
+        blueprint_db,
+        get_series(db, series_id, raise_exc=True).as_series_info
+    )
 
 
 @blueprint_router.get('/query/series')

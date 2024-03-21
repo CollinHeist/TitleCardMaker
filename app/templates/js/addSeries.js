@@ -270,13 +270,12 @@ function queryAllBlueprints(page=1, refresh=false) {
         
         // Assign blacklist function to hide button
         card.querySelector('[data-action="blacklist"]').onclick = () => {
-          $(`#${elementId}`).transition({animation: 'fade', duration: 1000});
           $.ajax({
             type: 'PUT',
             url: `/api/blueprints/blacklist/${blueprint.id}`,
             success: () => {
               // Remove Blueprint card from display
-              $(`#blueprint-id${blueprintId}`).transition({animation: 'fade', duration: 800});
+              $(`#blueprint-id${blueprint.id}`).transition({animation: 'fade', duration: 800});
               setTimeout(() => {
                 document.getElementById(elementId).remove();
                 showInfoToast('Blueprint Hidden');
