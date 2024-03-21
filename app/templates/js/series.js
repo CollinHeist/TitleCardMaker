@@ -789,6 +789,27 @@ async function getFileData(page=currentFilePage) {
 }
 
 /**
+ * Submit an API request to get the number of Blueprints available for this
+ * Series, and then update the blueprint tab text.
+ */
+function getBlueprintCount() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/blueprints/query/series/{{series.id}}?allow_refresh=false',
+    /**
+     * Query successful, update count of available Blueprints.
+     * @param {Blueprint[]} blueprints - List of Blueprints available for
+     * this Series.
+     */
+    success: blueprints => {
+      if (blueprints.length > 0) {
+        $('.menu [data-tab="blueprints"] [data-value="blueprint-count"]').html(`&nbsp;(${blueprints.length})`);
+      }
+    },
+  });
+}
+
+/**
  * 
  * @param {number} page - Page number of Episode data to query.
  */
@@ -1080,6 +1101,7 @@ async function initAll() {
   initStyles();
   getCardData();
   getFileData();
+  getBlueprintCount();
   refreshTheme();
   
   // Schedule recurring statistics query
@@ -1130,21 +1152,6 @@ async function initAll() {
         $('#edit-poster-form')[0].reset();
       }}
     );
-
-  // Delete series modal
-  $('#delete-series-modal').modal('attach events', '#delete-series');
-
-  // Configure new episode modal
-  $('#new-episode-modal')
-    .modal('attach events', '#new-episode', 'show') // Show modal on add buton press
-    .modal('setting', 'transition', 'fade up')      // Fade up modal on reveal
-    .modal('setting', 'closable', false)            // Don't allow closing by clicking outside modal
-    .modal({
-      onApprove: () => {                            // Don't close if form is invalid
-        return $('#new-episode-form').form('is valid');
-      }, blurring: true,                            // Blur background when shown
-    });
-
   // On edit poster modal submission, submit API request
   $('#edit-poster-form').on('submit', event => {
     event.preventDefault();
@@ -1165,6 +1172,20 @@ async function initAll() {
       complete: () =>  setTimeout(() => $('#submit-poster-button').toggleClass('loading', false), 750),
     });
   });
+
+  // Delete series modal
+  $('#delete-series-modal').modal('attach events', '#delete-series');
+
+  // Configure new episode modal
+  $('#new-episode-modal')
+    .modal('attach events', '#new-episode', 'show') // Show modal on add buton press
+    .modal('setting', 'transition', 'fade up')      // Fade up modal on reveal
+    .modal('setting', 'closable', false)            // Don't allow closing by clicking outside modal
+    .modal({
+      onApprove: () => {                            // Don't close if form is invalid
+        return $('#new-episode-form').form('is valid');
+      }, blurring: true,                            // Blur background when shown
+    });
 
   // Add card config form validation
   $('#card-config-form').form({
