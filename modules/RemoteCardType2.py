@@ -24,7 +24,7 @@ class RemoteCardType:
     """Base URL for all remote Card Type files to download"""
     URL_BASE = (
         'https://raw.githubusercontent.com/CollinHeist/'
-        'TitleCardMaker-CardTypes/web-ui'
+        'TitleCardMaker-CardTypes/title-rework'
     )
 
     """Temporary directory all card types are written to"""
@@ -122,7 +122,7 @@ class RemoteCardType:
         return None
 
 
-    def __validate_ui_requirements(self, identifier: str) -> None:
+    def __validate_ui_requirements(self, identifier: str, /) -> None:
         """
         Validate this object's Card class UI requirements and update the
         object's validity.
@@ -144,6 +144,6 @@ class RemoteCardType:
 
         if (hasattr(self.card_class, 'CardModel')
             and not issubclass(self.card_class.CardModel, Base)):
-            log.error(f'CardType "{identifier}" CardModels are invalid - must '
-                      f'be a Pydantic model')
+            log.error(f'CardType "{identifier}" CardModel is invalid - must be '
+                      f'a Pydantic model')
             self.valid = False
