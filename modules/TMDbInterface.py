@@ -67,34 +67,63 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     """Language codes"""
     LANGUAGES = {
         'ar': 'Arabic',
+        'ar-AE': 'Arabic (United Arab Emirates)',
+        'ar-SA': 'Arabic (Saudi Arabian)',
         'bg': 'Bulgarian',
         'ca': 'Catalan',
+        'cn-CN': 'Cantonense',
         'cs': 'Czech',
         'da': 'Danish',
-        'de': 'German',
+        'de-AT': 'German (Austria)',
+        'de-CH': 'German (Switzerland)',
+        'de-DE': 'German (Germany)',
         'el': 'Greek',
         'en': 'English',
-        'es': 'Spanish',
+        'es-ES': 'Spanish (Spain)',
+        'es-MX': 'Spanish (Mexico)',
         'fa': 'Persian',
-        'fr': 'French',
+        'fi': 'Finnish',
+        'fr-CA': 'French (Canada)',
+        'fr-FR': 'French (France)',
         'he': 'Hebrew',
+        'hi': 'Hindi',
         'hu': 'Hungarian',
         'id': 'Indonesian',
-        'it': 'Italian',
+        'it-IT': 'Italian',
+        'it-CH': 'Italian (Switzerland)',
         'ja': 'Japanese',
+        'ka': 'Georgian',
         'ko': 'Korean',
+        'lb': 'Luxembourgish',
+        'lt': 'Lithuanian',
+        'lv': 'Latvian',
         'my': 'Burmese',
+        'nb-NO': 'Norwegian (Bokmål)',
+        'nl-BE': 'Dutch (Belgium)',
+        'nl-NL': 'Dutch (Netherlands)',
+        'nn-NO': 'Norwegian (Nynorsk)',
+        'ms-BN': 'Malay (Brunei Darussalam)',
+        'ms-MY': 'Malay (Malaysia)',
+        'ms-SG': 'Malay (Singapore)',
+        'no': 'Norwegian',
         'pl': 'Polish',
-        'pt': 'Portuguese',
+        'pt-BR': 'Portuguese (Brazil)',
+        'pt-PT': 'Portuguese (Portugal)',
         'ro': 'Romanian',
         'ru': 'Russian',
         'sk': 'Slovak',
-        'sr': 'Serbian',
+        'sr-RS': 'Serbian',
+        'sv-FI': 'Swedish (Findland)',
+        'sv-SE': 'Swedish (Sweden)',
         'th': 'Thai',
         'tr': 'Turkish',
         'uk': 'Ukrainian',
+        'uz-UZ': 'Uzbek',
         'vi': 'Vietnamese',
-        'zh': 'Mandarin',
+        'zh': 'Chinese (Simplified)',
+        'zh-CN': 'Chinese (Simplified, Mainland China)',
+        'zh-HK': 'Chinese (Hong Kong)',
+        'zh-SG': 'Chinese (Singapore)'
     }
     LANGUAGE_CODES = tuple(LANGUAGES.keys())
 
@@ -832,12 +861,17 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         if (episode := self.__find_episode(series_info, episode_info)) is None:
             self.__update_blacklist(series_info, episode_info, 'title')
             return None
+        # Parse the ISO-3166-1 and ISO-639-1 codes from the given language code
+        if '-' in language_code:
+            lc_3166, lc_639 = language_code.split('-', maxsplit=1)
+            lc_3166 = lc_3166.upper()
+        else:
+            lc_3166, lc_639 = None, language_code
 
         # Look for this translation
         for translation in episode.translations:
-            codes = (translation.iso_639_1, translation.iso_3166_1)
-            if (('-' in language_code and language_code == '-'.join(codes))
-                or language_code in codes):
+            if (lc_639 == translation.iso_639_1
+                or (lc_3166 is not None and lc_3166 == translation.iso_3166_1)):
                 # If the title translation is blank (i.e. non-existent)
                 if hasattr(translation, 'name'):
                     title = translation.name
