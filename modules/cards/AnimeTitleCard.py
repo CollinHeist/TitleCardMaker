@@ -331,9 +331,10 @@ class AnimeTitleCard(BaseCardType):
         return [
             *title_commands,
             f'-font "{self.KANJI_FONT.resolve()}"',
-            *self.__title_text_black_stroke,
-            f'-strokewidth {5 * self.font_stroke_width:.1f}',
             f'-pointsize {85 * self.font_size}',
+            f'-strokewidth {5 * self.font_stroke_width:.1f}',
+            f'-fill "{self.kanji_stroke_color}"',
+            f'-stroke "{self.kanji_stroke_color}"',
             f'-annotate +75+{kanji_offset} "{self.kanji}"',
             f'-strokewidth 0.5',
             f'-fill "{self.kanji_color}"',
