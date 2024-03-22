@@ -443,7 +443,7 @@ def load_series_title_cards(
 
         # Determine query for Loaded assets
         if len(series.libraries) == 1:
-            loaded_query = dict(card_id=card.id)
+            loaded_query = dict(episode_id=episode.id)
         elif (len(series.libraries) > 1
             and not get_preferences().library_unique_cards):
             loaded_query = dict(
