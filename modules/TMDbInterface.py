@@ -865,14 +865,14 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         # Parse the ISO-3166-1 and ISO-639-1 codes from the given language code
         if '-' in language_code:
             lc_639, lc_3166 = language_code.split('-', maxsplit=1)
+            lc_3166 = lc_3166.upper()
         else:
-            lc_639, lc_3166 = language_code, language_code
-        lc_3166 = lc_3166.upper()
+            lc_639, lc_3166 = language_code, None
 
         # Look for this translation
         for translation in episode.translations:
             if (lc_639 == translation.iso_639_1
-                and lc_3166 == translation.iso_3166_1):
+                and (not lc_3166 or lc_3166 == translation.iso_3166_1)):
                 # If the title translation is blank (i.e. non-existent)
                 if hasattr(translation, 'name'):
                     title = translation.name
