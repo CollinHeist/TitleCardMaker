@@ -2,7 +2,7 @@ from datetime import datetime
 from json import dumps, JSONEncoder
 from logging import Logger
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from num2words import num2words
 from titlecase import titlecase
@@ -135,8 +135,7 @@ def format_date(date: datetime, fmt: str, /) -> str:
     return date.strftime(fmt)
 
 
-_BUILTINS = {
-    'NEWLINE': '\n',
+__BUILTIN_FUNCTIONS: dict[str, Callable[..., str]] = {
     'titlecase': titlecase,
     'to_roman_numeral': to_roman_numeral,
     'to_cardinal': to_cardinal,
@@ -144,6 +143,10 @@ _BUILTINS = {
     'to_short_ordinal': to_short_ordinal,
     'format_date': format_date,
 }
+__BUILTIN_VARIABLES: dict[str, str] = {
+    'NEWLINE': '\n',
+}
+_BUILTINS = __BUILTIN_FUNCTIONS | __BUILTIN_VARIABLES
 
 
 class FormatString:
