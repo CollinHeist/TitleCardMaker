@@ -150,7 +150,7 @@ many functions which allow for more customization. Each is described below.
 | `to_ordinal()`       | _See above_, but in another language[^2]          | `{to_cardinal(episode_number, 'es')}`      | `sexto`         |
 | `to_short_ordinal()` | Convert the given number to a shorthand ordinal spelling | `{to_short_ordinal(season_number)}` | `2nd`           |
 | `to_short_ordinal()` | _See above_, but in another language[^2]          | `{to_short_ordinal(season_number, 'ja')}`  | `13番目`         |
-| `to_roman_numeral()` | Convert the given number to a roman numeral       | `{to_roman_numeral(episode_number)}`       | `VI`            |
+| `to_roman_numeral()` | Convert the given number to a roman numeral[^4]   | `{to_roman_numeral(episode_number)}`       | `VI`            |
 | `format_date()`      | Write the given date in some specific format[^3]  | `{format_date(airdate, 'Week %-U of 52')}` | `Week 02 of 52` |
 
 ??? note "Support Language Codes"
@@ -204,6 +204,14 @@ many functions which allow for more customization. Each is described below.
     etc.; while ++o++ordinal starts with ++o++ like ++o++rder - so first,
     second, third, etc.
 
+### Built-in Functions
+
+Beyond the TCM-defined functions, all methods of built-in Python types - e.g.
+strings, lists, datetime, etc. - can also be used. See
+[the Python docs](https://docs.python.org/3/library/stdtypes.html) for a
+complete reference; you can also ask on
+[the Discord](https://discord.gg/bJ3bHtw8wH), or use an "AI" bot like ChatGPT.
+
 [^1]: This is _after_ any Font replacements, font case functions, and line
 splitting.
 
@@ -214,3 +222,6 @@ during Card creation.
 [^3]: To write the airdate in any format _other_ than the default, the
 `format_date` function must be used. A reference of all date variables is
 available [here](https://strftime.org/).
+
+[^4]: Roman numerals are not defined for values greater than `3999` (blame the
+Romans). These will raise an error during Card creation.
