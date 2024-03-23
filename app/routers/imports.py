@@ -352,11 +352,16 @@ async def import_cards_for_series(
     # Cards
     if (card_files := [(card.filename, await card.read()) for card in cards]):
         import_card_files(db, series, card_files, True, log=request.state.log)
-    else:
+    elif card_directory:
         import_cards(
             db, series, card_directory.directory,
             card_directory.image_extension, card_directory.force_reload,
             log=request.state.log,
+        )
+    else:
+        raise HTTPException(
+            status_code=422,
+            detail='Must provide either a Card directory or uploaded Card files'
         )
 
 
