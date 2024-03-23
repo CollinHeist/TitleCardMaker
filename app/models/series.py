@@ -409,6 +409,7 @@ class Series(Base):
             'series_full_name': self.full_name,
             'year': self.year,
             'card_filename_format': self.card_filename_format,
+            'auto_split_title': self.auto_split_title,
             'font_color': self.font_color,
             'font_title_case': self.font_title_case,
             'font_size': self.font_size,
@@ -478,6 +479,7 @@ class Series(Base):
             'translations': self.translations,
             'skip_localized_images': self.skip_localized_images,
             'match_titles': match_titles,
+            'auto_split_title': self.auto_split_title,
         }
 
 

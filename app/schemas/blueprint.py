@@ -41,6 +41,7 @@ class ConfigBase(BlueprintBase): # Base of Series, Episodes, and Templates
 class BaseSeriesEpisode(ConfigBase): # Base of Series and Episodes
     template_ids: list[int] = []
     match_titles: Optional[bool] = None
+    auto_split_title: Optional[bool] = None
     font_color: Optional[str] = None
     font_title_case: Optional[TitleCase] = None
     font_size: Optional[float] = None
@@ -59,7 +60,6 @@ class BlueprintSeries(BaseSeriesEpisode):
 class BlueprintEpisode(BaseSeriesEpisode):
     title: Optional[str] = None
     match_title: Optional[bool] = None
-    auto_split_title: Optional[bool] = None
     season_text: Optional[str] = None
     episode_text: Optional[str] = None
 
