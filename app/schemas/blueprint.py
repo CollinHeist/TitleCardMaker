@@ -18,7 +18,7 @@ Base classes
 """
 class BlueprintBase(Base):
     @root_validator(skip_on_failure=True)
-    def delete_null_args(cls, values):
+    def delete_null_args(cls, values: dict) -> dict:
         delete_keys = [key for key, value in values.items() if value is None]
         for key in delete_keys:
             del values[key]
@@ -102,8 +102,19 @@ class DownloadableFile(Base):
     url: str
     filename: str
 
-class ExportBlueprint(Blueprint):
-    ...
+class ExportBlueprint(Base):
+    series: BlueprintSeries
+    episodes: dict[str, BlueprintEpisode] = {}
+    templates: list[BlueprintTemplate] = []
+    fonts: list[BlueprintFont] = []
+
+    @root_validator(skip_on_failure=True)
+    def delete_null_args(cls, values: dict) -> dict:
+        delete_keys = [key for key, value in values.items() if not value]
+        for key in delete_keys:
+            del values[key]
+
+        return values
 
 class ImportBlueprint(Blueprint):
     ...
@@ -132,7 +143,7 @@ class RemoteBlueprint(Base):
         return v if isinstance(v, dict) else loads(v)
 
     @root_validator(skip_on_failure=True)
-    def finalize_preview_urls(cls, values):
+    def finalize_preview_urls(cls, values: dict) -> dict:
         # Remove illegal path characters
         full_name = f'{values["series"].name} ({values["series"].year})'
         clean_name = CleanPath.sanitize_name(full_name)
