@@ -2045,6 +2045,7 @@ function updateSeries(formName) {
         : [],
       data_source_id: $('#series-config-form input[name="data_source_id"]').val() || null,
       match_titles: $('#series-config-form input[name="match_titles"]').is(':checked'),
+      auto_split_title: $('#series-config-form input[name="auto_split_title"]').is(':checked'),
       sync_specials: $('#series-config-form input[name="sync_specials"]').val() || null,
       skip_localized_images: $('#series-config-form input[name="skip_localized_images"]').val() || null,
       directory: $('#series-config-form input[name="directory"]').val() || null,
