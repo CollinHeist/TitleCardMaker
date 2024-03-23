@@ -1,7 +1,7 @@
 from logging import Logger
 from pathlib import Path
 from time import sleep
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy import and_, or_
@@ -96,14 +96,14 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                     for episode in series.episodes:
                         try:
                             create_episode_cards(
-                                db, None, episode, raise_exc=False, log=log
+                                db, episode, raise_exc=False, log=log
                             )
                         except InvalidCardSettings:
                             log.trace(f'{episode} - skipping Card creation')
                             continue
                         except HTTPException as e:
                             if e.status_code != 404:
-                                log.exception(f'{episode} - skipping Card', e)
+                                log.exception(f'{episode} - skipping Card')
                 except (PendingRollbackError, OperationalError):
                     if failures > 10:
                         log.error(f'Database is extremely busy, stopping Task')
@@ -112,7 +112,7 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                     log.debug(f'Database is busy, sleeping..')
                     sleep(30)
     except Exception as e:
-        log.exception(f'Failed to create title cards', e)
+        log.exception(f'Failed to create title cards')
 
 
 def clean_database(*, log: Logger = log) -> None:
@@ -208,7 +208,7 @@ def refresh_remote_card_types(
     """
 
     # Function to get all unique card types for the table model
-    def _get_unique_card_types(model) -> set[str]:
+    def _get_unique_card_types(model: Any) -> set[str]:
         return set(obj[0] for obj in db.query(model.card_type).distinct().all())
 
     # Get all card types globally, from Templates, Series, and Episodes
@@ -655,7 +655,6 @@ def resolve_card_settings(
 
 def create_episode_card(
         db: Session,
-        background_tasks: Optional[BackgroundTasks],
         episode: Episode,
         library: Optional[Library],
         *,
@@ -668,8 +667,6 @@ def create_episode_card(
 
     Args:
         db: Database to query and update.
-        background_tasks: Optional BackgroundTasks to queue card
-            creation within.
         episode: Episode whose Cards are being created.
         raise_exc: Whether to raise any HTTPExceptions.
         log: Logger for all log messages.
@@ -766,7 +763,6 @@ def create_episode_card(
 
 def create_episode_cards(
         db: Session,
-        background_tasks: Optional[BackgroundTasks],
         episode: Episode,
         *,
         raise_exc: bool = True,
@@ -777,8 +773,6 @@ def create_episode_cards(
 
     Args:
         db: Database to query and update.
-        background_tasks: Optional BackgroundTasks to queue Card
-            creation within.
         episode: Episode whose Cards are being created.
         raise_exc: Whether to raise any HTTPExceptions.
         log: Logger for all log messages.
@@ -794,19 +788,16 @@ def create_episode_cards(
         if get_preferences().library_unique_cards:
             for library in episode.series.libraries:
                 create_episode_card(
-                    db, background_tasks, episode, library,
-                    raise_exc=raise_exc, log=log
+                    db, episode, library, raise_exc=raise_exc, log=log
                 )
         # Only create Card for primary library
         else:
             create_episode_card(
-                db, background_tasks, episode, episode.series.libraries[0],
+                db, episode, episode.series.libraries[0],
                 raise_exc=raise_exc, log=log,
             )
     else:
-        create_episode_card(
-            db, background_tasks, episode, None, raise_exc=raise_exc, log=log
-        )
+        create_episode_card(db, episode, None, raise_exc=raise_exc, log=log)
 
 
 def get_watched_statuses(

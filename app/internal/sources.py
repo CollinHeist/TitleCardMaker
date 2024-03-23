@@ -289,7 +289,7 @@ def download_episode_source_image(
     style, source_file = resolve_source_settings(episode, library)
 
     # If source already exists, return that
-    series: Series = episode.series
+    series = episode.series
     if source_file.exists():
         return f'/source/{series.path_safe_name}/{source_file.name}'
 
@@ -355,7 +355,7 @@ def download_episode_source_image(
         # If no source image was returned, increment attempts counter
         if source_image is None:
             episode.image_source_attempts[interface.INTERFACE_TYPE] += 1
-            log.debug(f'{episode} failed to download Source Image from '
+            log.trace(f'{episode} cannot download Source Image from '
                       f'Connection[{interface_id}] {interface.INTERFACE_TYPE}')
             if commit:
                 db.commit()

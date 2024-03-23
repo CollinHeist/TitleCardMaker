@@ -2,7 +2,7 @@ from pathlib import Path
 from re import sub as re_sub, IGNORECASE
 from typing import Any, Iterable, Optional, TYPE_CHECKING
 
-from sqlalchemy import JSON, func
+from sqlalchemy import JSON, String, func
 
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.mutable import MutableList
@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.session import Base
 from app.dependencies import get_preferences
+from app.schemas.font import TitleCase
 
 if TYPE_CHECKING:
     from app.models.episode import Episode
@@ -55,7 +56,7 @@ class Font(Base):
     )
     size: Mapped[float] = mapped_column(default=1.0)
     stroke_width: Mapped[float] = mapped_column(default=1.0)
-    title_case: Mapped[Optional[str]]
+    title_case: Mapped[Optional[TitleCase]] = mapped_column(String,default=None)
     vertical_shift: Mapped[int] = mapped_column(default=0)
     line_split_modifier: Mapped[int] = mapped_column(default=0)
 

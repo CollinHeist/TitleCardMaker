@@ -1,9 +1,7 @@
 from time import sleep
 from typing import Optional
 
-from fastapi import (
-    APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Request
-)
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy import not_
 from sqlalchemy.orm import Session
@@ -12,7 +10,10 @@ from app.database.query import (
     get_card, get_episode, get_font, get_interface, get_series
 )
 from app.database.session import Page
-from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.dependencies import (
+    get_database, get_preferences, require_plex_interface, PlexInterface,
+    Preferences
+)
 from app import models
 from app.internal.auth import get_current_user
 from app.internal.cards import (
@@ -202,7 +203,6 @@ def get_title_card(
 @card_router.post('/series/{series_id}', tags=['Series'],
                   dependencies=[Depends(get_current_user)])
 def create_cards_for_series(
-        background_tasks: BackgroundTasks,
         request: Request,
         series_id: int,
         db: Session = Depends(get_database),
@@ -227,9 +227,9 @@ def create_cards_for_series(
     # Create each associated Episode's Card
     for episode in series.episodes:
         try:
-            create_episode_cards(db, background_tasks, episode, log=log)
-        except Exception as e:
-            log.exception(f'{episode} Card creation failed - {e}', e)
+            create_episode_cards(db, episode, log=log)
+        except Exception as exc:
+            log.exception(f'{episode} Card creation failed - {exc}')
 
 
 @card_router.get('/series/{series_id}', tags=['Series'],
@@ -426,7 +426,7 @@ def create_card_for_episode(
 
     # Create Card for this Episode
     try:
-        create_episode_cards(db, None, episode, log=request.state.log)
+        create_episode_cards(db, episode, log=request.state.log)
     except MissingSourceImage as exc:
         raise HTTPException(
             status_code=404,
@@ -516,7 +516,7 @@ def create_cards_for_plex_rating_key(
         if not any(images):
             log.info(f'{episode} has no source image - skipping')
             continue
-        create_episode_cards(db, None, episode, log=log)
+        create_episode_cards(db, episode, log=log)
 
         # Add this Series to list of Series to load
         if episode not in episodes_to_load:
@@ -628,7 +628,7 @@ def create_cards_for_sonarr_webhook(
         if not images:
             log.info(f'{episode} has no source image - skipping')
             continue
-        create_episode_cards(db, None, episode, log=log)
+        create_episode_cards(db, episode, log=log)
 
         # Refresh this Episode so that relational Card objects are
         # updated, preventing stale (deleted) Cards from being used in

@@ -292,7 +292,7 @@ def process_series(
             # Function
             create_episode_cards,
             # Arguments
-            db, background_tasks, episode, raise_exc=False, log=log
+            db, episode, raise_exc=False, log=log
         )
 
 
