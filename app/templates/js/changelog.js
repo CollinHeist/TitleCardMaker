@@ -210,7 +210,7 @@ const changeLog = [
 <div class="ui ordered list">
   <div class="item">Add documentation to home page on how to update and switch branches</div>
   <div class="item">Add card preview URLs for missing card types to the home page carousel </div>
-  <div class="item">Create new pages for the new <a href="https://titlecardmaker.com/card_types/notification/" target="_blank">Music](https://titlecardmaker.com/card_types/music/) and [Notification</a> cards which list and give visual examples of supported customizations</div>
+  <div class="item">Create new pages for the new <a href="https://titlecardmaker.com/card_types/notification/" target="_blank">Notification</a> and <a href="https://titlecardmaker.com/card_types/music/" target="_blank">Music</a> cards which list and give visual examples of supported customizations</div>
   <div class="item">Remove unrendered nav items in site building</div>
 </div>
 <h2>API Changes</h2>
