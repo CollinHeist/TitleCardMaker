@@ -36,17 +36,16 @@ function addTemplate() {
 }
 
 /**
- * 
+ * Reload the preview image.
  * @param {"watched" | "unwatched"} watchStatus - The type of preview being
  * generated.
  * @param {string} templateElementId - Element ID of the template whose preview
  * is being generated.
- * @param {*} cardElement 
- * @param {*} imgElement 
+ * @param {HTMLElement} cardElement 
+ * @param {HTMLElement} imgElement 
  */
 function reloadPreview(watchStatus, templateElementId, cardElement, imgElement) {
-  // Determine effective style
-  /** @type {Style} */
+  /** @type {Style} Effective style */
   const style = watchStatus === 'watched'
     ? $(`#${templateElementId} input[name="watched_style"]`).val() || '{{preferences.default_watched_style}}'
     : $(`#${templateElementId} input[name="unwatched_style"]`).val() || '{{preferences.default_unwatched_style}}'
@@ -147,8 +146,9 @@ function showDeleteModal(templateId) {
 
 /**
  * Parse the given Form and submit an API request to patch this Template.
+ * @param {number} templateId - ID of the Template being updated.
  */
-function updateTemplate(form, templateId) {
+function updateTemplate(templateId) {
   const data = {
     name: $(`#template-id${templateId} input[name="name"]`).val(),
     filters: parseList(
@@ -205,6 +205,10 @@ function updateTemplate(form, templateId) {
     url: `/api/templates/${templateId}`,
     data: JSON.stringify(data),
     contentType: 'application/json',
+    /**
+     * Template updated, display toast.
+     * @param {Template} updatedTemplate - New Template
+     */
     success: updatedTemplate => showInfoToast(`Updated Template "${updatedTemplate.name}"`),
     error: response => showErrorToast({title: 'Error Updating Template', response}),
   });
@@ -492,7 +496,7 @@ async function getAllTemplates() {
     // Update via API
     $(`#template-id${templateObj.id} form`).on('submit', (event) => {
       event.preventDefault();
-      updateTemplate(new FormData(event.target), templateObj.id);
+      updateTemplate(templateObj.id);
     });
     // Delete via API
     $(`#template-id${templateObj.id} button[button-type="delete"]`).on('click', (event) => {
