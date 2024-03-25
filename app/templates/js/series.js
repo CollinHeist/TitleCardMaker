@@ -4,7 +4,8 @@
 {% if False %}
 import {
   Blueprint, Episode, EpisodePage, ExternalSourceImage, LogEntryPage,
-  RemoteBlueprint, Series, Statistic, SourceImagePage, TitleCardPage, UpdateEpisode
+  MediaServerLibrary, PreviewTitleCard, RemoteBlueprint, Series, Statistic,
+  SourceImagePage, TitleCardPage, UpdateEpisode
 } from './.types.js';
 {% endif %}
 
@@ -1125,8 +1126,8 @@ async function initAll() {
   
   // Schedule recurring statistics query
   getStatistics();
-  getStatisticsId = setInterval(getStatistics, 60000);
-  setInterval(getCardData, 60000);
+  getStatisticsId = setInterval(getStatistics, 90000);
+  setInterval(getCardData, 90000);
   querySeriesLogs();
 
   // Open tab indicated by URL param
