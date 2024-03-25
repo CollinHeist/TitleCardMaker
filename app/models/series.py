@@ -575,49 +575,46 @@ class Series(Base):
         return changed
 
 
-    def get_logo_file(self, source_base: Union[str, Path]) -> Path:
+    def get_logo_file(self) -> Path:
         """
         Get the logo file for this series.
 
-        Args:
-            source_base: Base source directory.
-
         Returns:
             Path to the logo file that corresponds to this series' under
-            the given base source directory.
+            the global source directory.
         """
 
-        return Path(source_base) / self.path_safe_name / 'logo.png'
+        return Path(get_preferences().source_directory) \
+            / self.path_safe_name \
+            / 'logo.png'
 
 
-    def get_series_backdrop(self, source_base: Union[str, Path]) -> Path:
+    def get_series_backdrop(self) -> Path:
         """
         Get the backdrop file for this series.
-
-        Args:
-            source_base: Base source directory.
 
         Returns:
             Path to the backdrop file that corresponds to this series'
-            under the given base source directory.
+            under the global source directory.
         """
 
-        return Path(source_base) / self.path_safe_name / 'backdrop.jpg'
+        return Path(get_preferences().source_directory) \
+            / self.path_safe_name \
+            / 'backdrop.jpg'
 
 
-    def get_series_poster(self, source_base: Union[str, Path]) -> Path:
+    def get_series_poster(self) -> Path:
         """
         Get the backdrop file for this series.
 
-        Args:
-            source_base: Base source directory.
-
         Returns:
             Path to the poster file that corresponds to this series'
-            under the given base source directory.
+            under the global source directory.
         """
 
-        return Path(source_base) / self.path_safe_name / 'poster.jpg'
+        return Path(get_preferences().source_directory) \
+            / self.path_safe_name \
+            / 'poster.jpg'
 
 
     def get_libraries(self,

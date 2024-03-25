@@ -322,7 +322,7 @@ class Template(Base):
             'Series Name': series.name,
             'Series Year': series.year,
             'Series Library Names': library_names,
-            'Series Logo': series.get_logo_file(preferences.source_directory),
+            'Series Logo': series.get_logo_file(),
             'Number of Seasons': series.number_of_seasons,
             'Reference File': None,
         }

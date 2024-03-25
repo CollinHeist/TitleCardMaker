@@ -202,14 +202,12 @@ def download_series_logo(
     """
 
     # Get the Series logo, return if already exists
-    preferences = get_preferences()
-    logo_file = series.get_logo_file(preferences.source_directory)
-    if logo_file.exists():
+    if (logo_file := series.get_logo_file()).exists():
         return f'/source/{series.path_safe_name}/logo.png'
 
     # Go through all image sources
     logo = None
-    for interface_id in preferences.image_source_priority:
+    for interface_id in get_preferences().image_source_priority:
         # Skip if there is no interface for this ID
         if not (interface := get_interface(interface_id)):
             continue

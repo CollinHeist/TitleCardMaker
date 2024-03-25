@@ -1,4 +1,5 @@
 from base64 import b64encode, b64decode
+from logging import Logger
 from typing import Optional
 
 from fastapi import (
@@ -72,7 +73,6 @@ def download_series_backdrop(
         request: Request,
         # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences),
         tmdb_interfaces: InterfaceGroup[int, TMDbInterface] = Depends(get_tmdb_interfaces),
     ) -> str:
     """
@@ -85,14 +85,13 @@ def download_series_backdrop(
     """
     # TODO add ability to download art from a media server
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
     # Get backdrop, return if exists
-    backdrop_file = series.get_series_backdrop(preferences.source_directory)
-    if backdrop_file.exists():
+    if (backdrop_file := series.get_series_backdrop()).exists():
         log.debug(f'{series} Backdrop file exists')
         return f'/source/{series.path_safe_name}/backdrop.jpg'
 
@@ -532,7 +531,6 @@ async def set_series_logo(
         url: Optional[str] = Form(default=None),
         file: Optional[UploadFile] = None,
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences),
     ) -> None:
     """
     Set the logo for the given Series. If there is an existing logo
@@ -569,7 +567,7 @@ async def set_series_logo(
         )
 
     # Get Series logo file
-    file = series.get_logo_file(preferences.source_directory)
+    file = series.get_logo_file()
 
     # If file already exists, warn about overwriting
     if file.exists():
@@ -607,7 +605,6 @@ async def set_series_backdrop(
         url: Optional[str] = Form(default=None),
         file: Optional[UploadFile] = None,
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences),
     ) -> None:
     """
     Set the backdrop for the given Series. If there is an existing
@@ -644,7 +641,7 @@ async def set_series_backdrop(
         )
 
     # Get Series backdrop file
-    file = series.get_series_backdrop(preferences.source_directory)
+    file = series.get_series_backdrop()
 
     # If file already exists, warn about overwriting
     if file.exists():

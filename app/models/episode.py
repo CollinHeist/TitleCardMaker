@@ -163,9 +163,6 @@ class Episode(Base):
         """
         ID's of any Templates associated with this Episode (rather than
         the ORM objects themselves).
-
-        Returns:
-            List of ID's for associated Templates.
         """
 
         return [template.id for template in self.templates]
@@ -185,14 +182,8 @@ class Episode(Base):
         )
 
 
-
     def get_card_properties(self, library: Optional[Library]) -> dict[str, Any]:
-        """
-        Properties to utilize and merge in Title Card creation.
-
-        Returns:
-            Dictionary of properties.
-        """
+        """Properties to utilize and merge in Title Card creation."""
 
         eps = [(
             episode.season_number,
@@ -267,11 +258,8 @@ class Episode(Base):
     @property
     def export_properties(self) -> dict[str, Any]:
         """
-        Properties to export in Blueprints.
-
-        Returns:
-            Dictionary of the properties that can be used in an
-            UpdateEpisode model to modify this object.
+        Properties to export in Blueprints that can be used in an
+        UpdateEpisode model to modify this object.
         """
 
         if self.extras is None:
@@ -304,11 +292,8 @@ class Episode(Base):
     @property
     def as_episode_info(self) -> EpisodeInfo:
         """
-        The EpisodeInfo representation of this Episode.
-
-        Returns:
-            EpisodeInfo created with this Episode's data - e.g. title,
-            indices, database ID's, and airdate.
+        The EpisodeInfo representation of this Episode created with this
+        Episode's data - e.g. title, indices, database IDs, and airdate.
         """
 
         return EpisodeInfo(
@@ -423,15 +408,11 @@ class Episode(Base):
     def watched_statuses_flat(self) -> dict[str, bool]:
         """
         Get a mapping of library names to watched statuses for this
-        Episode.
+        Episode. This is the flattened dictionary for each library name.
 
         >>> ep.watched_statuses = {'1:TV': True, '2:Anime': False}
         >>> ep.watched_statuses_flat
         {'TV': True, 'Anime': False}
-
-        Returns:
-            Flatten dictionary of watched statuses for each defined
-            library name.
         """
 
         return {

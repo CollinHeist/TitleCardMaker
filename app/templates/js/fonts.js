@@ -1,5 +1,7 @@
 {% if False %}
-import {FontAnalysis, NamedFont} from './.types.js';
+import {
+  FontAnalysis, NamedFont, PreviewTitleCard
+} from './.types.js';
 {% endif %}
 
 /**
@@ -57,6 +59,7 @@ function deleteFont(font) {
 function reloadPreview(fontId, fontForm, previewForm, cardElement, imageElement) {
   const fontFormObj = new FormData(fontForm);
   const previewFormObj = new FormData(previewForm);
+  /** @type {PreviewTitleCard} */
   const previewCardObj = {
     card_type: previewFormObj.get('card_type') || '{{preferences.default_card_type}}',
     title_text: previewFormObj.get('title_text'),
