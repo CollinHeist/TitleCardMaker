@@ -735,20 +735,28 @@ def create_episode_card(
 
     # Determine if this Card is different than existing Card
     new_model_json = _card_type_model_to_json(CardTypeModel)
-    different = (
-        # Different card type
-        card.card_type != existing_card.card_type
-        # Different Source file
-        or card.source_file != existing_card.source_file
-        # Old Card defines an attribute not defined by new Card
-        or any(attr not in new_model_json for attr in existing_card.model_json)
-        # New Card defines a different value than the old Card
-        or any(str(new_val) != str(_get_existing(attr))
-            for attr, new_val in new_model_json.items()
-            # Skip randomized attributes
-            if not attr.endswith('_rotation_angle')
-        )
-    )
+    different = False
+    if card.card_type != existing_card.card_type:
+        log.trace(f'{episode}.card_type = {existing_card.card_type} -> '
+                  f'{card.card_type}')
+        different = True
+    elif card.source_file != existing_card.source_file:
+        log.trace(f'{episode}.source_file = {existing_card.source_file} -> '
+                  f'{card.source_file}')
+        different = True
+    else:
+        for attr in existing_card.model_json:
+            if attr not in new_model_json:
+                log.trace(f'{episode}.{attr} reverting to default')
+                different = True
+                break
+        if not different:
+            for attr, new_val in new_model_json.items():
+                if (not attr.endswith('_rotation_angle')
+                    and str(new_val) != str(_get_existing(attr))):
+                    log.trace(f'{episode}.{attr} = {_get_existing(attr)!r} -> {new_val!r}')
+                    different = True
+                    break
 
     # If different, delete existing file, remove from database, create Card
     if different:
