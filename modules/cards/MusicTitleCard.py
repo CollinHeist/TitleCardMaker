@@ -142,8 +142,8 @@ class MusicTitleCard(BaseCardType):
                 tooltip=(
                     'Can be a number (e.g. <v>0.3</v> for 30% filled) between '
                     '<v>0.0</v> and <v>1.0</v>, <v>random</v> to randomize the '
-                    'filled percentage, or a format string for how to calculate'
-                    'the percentage (e.g. <v>{episode_number / '
+                    'filled percentage, or a format string for how to '
+                    'calculate the percentage (e.g. <v>{episode_number / '
                     'season_episode_max}</v> to calculate as a percentage of '
                     'the season). Default is <v>random</v>.'
                 ),
