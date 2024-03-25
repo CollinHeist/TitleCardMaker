@@ -159,7 +159,7 @@ async function initAll() {
   });
 }
 
-/*
+/**
  * Submit an API request to load the Cards for the Series with the given ID.
  */
 function loadCards(seriesId) {
