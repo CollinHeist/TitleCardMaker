@@ -184,7 +184,7 @@ function updateGlobalSettings() {
     default_templates: parseListString($('input[name="default_templates"]').val()),
     card_width: $('input[name="card_width"]').val(),
     card_height: $('input[name="card_height"]').val(),
-    card_quality: $('input[name="card_quality"]').val(),
+    card_quality: $('.slider[data-value="card_quality"]').slider('get value'),
     global_extras: extras,
     // File naming
     card_extension: $('input[name="card_extension"]').val(),
@@ -227,6 +227,14 @@ async function initAll() {
     min: 1,
     max: 100,
     start: {{preferences.card_quality}},
+    onMove: function(newValue) {
+      $('.slider[data-value="card_quality"]')
+        .toggleClass('blue', newValue > 80)
+        .toggleClass('yellow', newValue > 70 && newValue <= 80)
+        .toggleClass('orange', newValue > 50 && newValue <= 70)
+        .toggleClass('red', newValue <= 50)
+      ;
+    },
   });
 
   await getAllConnections();
