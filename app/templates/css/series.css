@@ -32,6 +32,14 @@
   color: rgb(226,179,61);
 }
 
+/* Color blueprint counts */
+.menu:not(.inverted) span[data-value="blueprint-count"] {
+  color: red;
+}
+.inverted.menu span[data-value="blueprint-count"] {
+  color: gold;
+}
+
 /* Remove minimum width on progress bar */
 #card-progress .bar {
   min-width: 0;
