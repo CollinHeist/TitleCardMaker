@@ -17,8 +17,8 @@ from app.dependencies import (
 from app import models
 from app.internal.auth import get_current_user
 from app.internal.cards import (
-    create_episode_cards, delete_cards, get_watched_statuses,
-    validate_card_type_model
+    create_episode_card, create_episode_cards, delete_cards,
+    get_watched_statuses, resolve_card_settings, validate_card_type_model
 )
 from app.internal.episodes import refresh_episode_data
 from app.internal.series import (
@@ -48,8 +48,7 @@ card_router = APIRouter(
 )
 
 
-@card_router.post('/preview', status_code=201,
-                  dependencies=[Depends(get_current_user)])
+@card_router.post('/preview', dependencies=[Depends(get_current_user)])
 def create_preview_card(
         request: Request,
         card: PreviewTitleCard = Body(...),
@@ -162,6 +161,72 @@ def create_preview_card(
     # Delete output if it exists, then create Card
     CardClass, CardTypeModel = validate_card_type_model(card_settings, log=log)
     output.unlink(missing_ok=True)
+    card_maker = CardClass(**CardTypeModel.dict(), preferences=preferences)
+    card_maker.create()
+
+    # Card created, return URI
+    if output.exists():
+        return f'/internal_assets/preview/{output.name}'
+
+    raise HTTPException(
+        status_code=500,
+        detail='Failed to create preview card'
+    )
+
+
+@card_router.post('/preview/episode/{episode_id}', tags=['Episodes'],
+                  dependencies=[Depends(get_current_user)])
+def create_preview_card_for_episode(
+        request: Request,
+        episode_id: int,
+        query_watched_statuses: bool = Query(default=False),
+        db: Session = Depends(get_database),
+        preferences: Preferences = Depends(get_preferences),
+    ) -> str:
+    """
+    Create a preview Title Card for the given Episode.
+
+    - episode_id: ID of the Episode to create the Title Card for.
+    - query_watched_statuses: Whether to query the watched statuses
+    associated with this Episode.
+    """
+
+    # Get contextual logger
+    log = request.state.log
+
+    # Find associated Episode, raise 404 if DNE
+    episode = get_episode(db, episode_id, raise_exc=True)
+
+    # Set watch status(es) of the Episode
+    if query_watched_statuses:
+        get_watched_statuses(db, episode.series, [episode], log=log)
+
+    # Determine appropriate Source and Output file
+    output = preferences.INTERNAL_ASSET_DIRECTORY / 'preview' \
+        / f'card-unique{preferences.card_extension}'
+    output.unlink(missing_ok=True)
+
+    # Create Card for this Episode
+    library = None
+    if episode.series.libraries:
+        library = episode.series.libraries[0]
+
+    try:
+        card_settings = resolve_card_settings(episode, library, log=log)
+        card_settings['card_file'] = output
+    except MissingSourceImage as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=f'Missing the required Source Image',
+        ) from exc
+    except (HTTPException, InvalidCardSettings) as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=f'Invalid Card settings',
+        ) from exc
+
+    # Delete output if it exists, then create Card
+    CardClass, CardTypeModel = validate_card_type_model(card_settings, log=log)
     card_maker = CardClass(**CardTypeModel.dict(), preferences=preferences)
     card_maker.create()
 
@@ -413,6 +478,8 @@ def create_card_for_episode(
     remakes the existing Title Card if it is outdated.
 
     - episode_id: ID of the Episode to create the Title Card for.
+    - query_watched_statuses: Whether to query the watched statuses
+    associated with this Episode.
     """
 
     # Find associated Episode, raise 404 if DNE

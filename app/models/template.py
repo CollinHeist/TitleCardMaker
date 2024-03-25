@@ -224,12 +224,7 @@ class Template(Base):
 
     @property
     def card_properties(self) -> dict[str, Any]:
-        """
-        Properties to utilize and merge in Title Card creation.
-
-        Returns:
-            Dictionary of properties.
-        """
+        """Properties to utilize and merge in Title Card creation."""
 
         return {
             'template_id': self.id,
@@ -250,11 +245,8 @@ class Template(Base):
     @property
     def export_properties(self) -> dict[str, Any]:
         """
-        Properties to export in Blueprints.
-
-        Returns:
-            Dictionary of the properties that can be used in a
-            NewTemplate model to recreate this object.
+        Properties to export in Blueprints that can be used in a
+        NewTemplate model to recreate this object.
         """
 
         if self.season_titles is None:
@@ -377,13 +369,13 @@ class Template(Base):
                         return False
                 # Evaluation raised an error, log and return False
                 except Exception:
-                    log.exception(f'{episode} Condition evaluation '
-                                  f'raised an error')
+                    log.exception(f'{episode} Condition evaluation raised an '
+                                  f'error')
                     return False
             # Operation or Argument are invalid, log and skip
             else:
-                # log.debug(f'{self} [{argument}] [{operation}] '
-                #           f'[{condition["reference"]}] is unevaluatable')
+                log.trace(f'{self} [{argument}] [{operation}] '
+                          f'[{condition["reference"]}] is unevaluatable')
                 continue
 
         # All Filter criteria met
