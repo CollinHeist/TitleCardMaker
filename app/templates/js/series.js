@@ -12,6 +12,17 @@ import {
 const series_name = {{series.name|tojson}};
 /** @type {string} */
 const series_full_name = {{series.full_name|tojson}};
+/** @type {boolean} */
+const global_library_unique_cards = {{preferences.library_unique_cards|tojson}};
+/** @type {MediaServerLibrary[]} */
+const series_libraries = {{series.libraries|safe}};
+
+/**
+ * Get the element ID of the Episode with the given ID.
+ * @param {number} episode_id - ID of the Episode.
+ * @returns {string} Element ID of the row for this Episode.
+ */
+const getEpisodeElementId = (episode_id) => `episode-id${episode_id}`;
 
 /** @type {number} */
 let getStatisticsId;
@@ -34,11 +45,10 @@ function getStatistics() {
       $('#card-count')[0].innerHTML = `<i class="image outline icon"></i><span class="ui pulsate text" onclick="getStatistics();">${cardStat.value} Cards / ${episodeStat.value} Episodes</span>`;
       
       // Determine maximum number of cards
-      {% if preferences.library_unique_cards %}
-        const maxCards = episodeStat.value * {{series.libraries|safe}}.length;
-      {% else %}
-        const maxCards = episodeStat.value;
-      {% endif %}
+      const maxCards = global_library_unique_cards
+        ? episodeStat.value * series_libraries.length
+        : episodeStat.value
+      ;
 
       // Update progress bar
       $('#card-progress').progress({
@@ -55,10 +65,19 @@ function getStatistics() {
   });
 }
 
+/** @type {number[]} Array of edited Episode IDs. */
 let editedEpisodeIds = [];
-function getUpdateEpisodeObject(episodeId) {
+
+/**
+ * 
+ * @param {number} episodeId - ID of the Episode whose object is being
+ * generated.
+ * @param {boolean} [excludeBlank] - Whether to exclude blank (`''`) values.
+ * @returns {UpdateEpisode} Object which defines the given Episode.
+ */
+function getUpdateEpisodeObject(episodeId, excludeBlank=false) {
   // Get all inputs for this episode
-  const episodeInputs = $(`#episode-id${episodeId} input`);
+  const episodeInputs = $(`#${getEpisodeElementId(episodeId)} input`);
   // Construct updateEpisode object
   let updateEpisode = {},
       template_ids = [];
@@ -66,18 +85,18 @@ function getUpdateEpisodeObject(episodeId) {
     if (input.name !== undefined) {
       // Handle Templates
       if (input.name === 'template_ids' && input.value !== '') {
-        template_ids = input.value.split(','); 
+        template_ids = input.value.split(',');
       }
       // Handle percentage values
       else if (input.value != '' && ['font_size', 'font_kerning', 'font_stroke_width'].includes(input.name)) {
         updateEpisode[input.name] = input.value/100.0;
-      } else {
+      } else if (!excludeBlank || (excludeBlank && input.value !== '')) {
         updateEpisode[input.name] = input.value;
       }
     }
   });
   // Append boolean state icons to object as none/true/false
-  $(`#episode-id${episodeId} td[data-type="boolean"]`).each((index, value) => {
+  $(`#${getEpisodeElementId(episodeId)} td[data-type="boolean"]`).each((index, value) => {
     const iconClassList = value.firstChild.classList;
     if (iconClassList.contains('question')) {
       updateEpisode[value.dataset['column']] = null;
@@ -121,7 +140,7 @@ function createEpisodeCard(episodeId) {
     success: () => {
       showInfoToast('Created Title Card');
       getCardData();
-      $(`#episode-id${episodeId}`).toggleClass('left red marked', false);
+      $(`#${getEpisodeElementId(episodeId)}`).toggleClass('left red marked', false);
     },
     error: response => showErrorToast({title: 'Error Creating Title Card', response}),
   });
@@ -201,7 +220,7 @@ async function initalizeSeriesConfig() {
     url: '/api/available/libraries/all',
     success: libraries => {
       // Start library value list with those selected by the Series
-      let values = {{series.libraries|safe}}.map(library => {
+      let values = series_libraries.map(library => {
         return {
           interface: library.interface,
           interface_id: library.interface_id,
@@ -569,7 +588,7 @@ async function editEpisodeExtras(episode, allEpisodes) {
           showInfoToast('Updated Episode');
           // Update the extras/translation modal for this Episode
           allEpisodes[allEpisodes.indexOf(episode)] = updatedEpisode;
-          $(`#episode-id${episode.id} td[data-column="extras"] a`)
+          $(`#${getEpisodeElementId(episode.id)} td[data-column="extras"] a`)
             .off('click')
             .on('click', () => editEpisodeExtras(updatedEpisode, allEpisodes));
         },
@@ -653,7 +672,7 @@ function mirrorSourceImage(episodeId) {
       showInfoToast('Mirrored Source Image');
       getFileData();
       getCardData();
-      $(`#episode-id${episodeId}`).toggleClass('left red marked', true);
+      $(`#${getEpisodeElementId(episodeId)}`).toggleClass('left red marked', true);
     },
     error: response => showErrorToast({title: 'Error Mirroring Source Image', response}),
   });
@@ -845,7 +864,7 @@ async function getEpisodeData(page=1) {
     const row = rowTemplate.content.cloneNode(true);
 
     // Set row ID
-    row.querySelector('tr').id = `episode-id${episode.id}`;
+    row.querySelector('tr').id = `${getEpisodeElementId(episode.id)}`;
     row.querySelector('tr').dataset.episodeId = episode.id;
     // Add red mark if no Card is present
     if (episode.cards.length == 0) { row.querySelector('tr').classList.add('left', 'red', 'marked'); }
@@ -906,24 +925,24 @@ async function getEpisodeData(page=1) {
   await getAllCardTypes();
   episodeData.items.forEach(episode => {
     // Templates
-    $(`#episode-id${episode.id} .dropdown[data-value="template_ids"]`).dropdown({
+    $(`#${getEpisodeElementId(episode.id)} .dropdown[data-value="template_ids"]`).dropdown({
       values: getActiveTemplates(episode.template_ids, availableTemplates),
     });
     // Fonts
-    $(`#episode-id${episode.id} .dropdown[data-value="font_id"]`).dropdown({
+    $(`#${getEpisodeElementId(episode.id)} .dropdown[data-value="font_id"]`).dropdown({
       values: availableFonts.map(({id, name}) => {
         return {name: name, value: id, selected: episode.font_id === id};
       })
     });
     // Card type
     loadCardTypes({
-      element: `#episode-id${episode.id} .dropdown[data-value="card_type"]`,
+      element: `#${getEpisodeElementId(episode.id)} .dropdown[data-value="card_type"]`,
       isSelected: (identifier) => identifier === episode.card_type,
       showExcluded: false,
       dropdownArgs: {}
     });
     // Unwatched style
-    $(`#episode-id${episode.id} .dropdown[data-value="unwatched_style"]`).dropdown({
+    $(`#${getEpisodeElementId(episode.id)} .dropdown[data-value="unwatched_style"]`).dropdown({
       values: [
         {name: 'Art Variations', type: 'header'},
         ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
@@ -936,7 +955,7 @@ async function getEpisodeData(page=1) {
       ],
     });
     // Watched style
-    $(`#episode-id${episode.id} .dropdown[data-value="watched_style"]`).dropdown({
+    $(`#${getEpisodeElementId(episode.id)} .dropdown[data-value="watched_style"]`).dropdown({
       values: [
         {name: 'Art Variations', type: 'header'},
         ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
@@ -1042,15 +1061,15 @@ function getCardData(page=currentCardPage, transition=false) {
         {% endif %}
 
         // If library unique mode is enabled, add the library name to the text (if present)
-        {% if preferences.library_unique_cards %}
+        if (global_library_unique_cards) {
           if (card.library_name) {
             preview.querySelector('.dimmer .content').innerHTML = `<h5>Season ${card.episode.season_number} Episode ${card.episode.episode_number} (${card.library_name})</h5>`;
           } else {
             preview.querySelector('.dimmer .content').innerHTML = `<h5>Season ${card.episode.season_number} Episode ${card.episode.episode_number}</h5>`;
           }
-        {% else %}
+        } else {
           preview.querySelector('.dimmer .content').innerHTML = `<h5>Season ${card.episode.season_number} Episode ${card.episode.episode_number}</h5>`;
-        {% endif %}
+        }
 
         preview.querySelector('img').src = `${card.file_url}?${card.filesize}`;
 
@@ -1273,18 +1292,17 @@ async function initAll() {
 /**
  * Submit an API request clear some list values for this Series. If successful,
  * the data is also removed from the DOM.
- * @param {"season_titles" | "translations" | "extras"} attribute - Name of the
- * attribue being deleted.
+ * @param {"season_titles" | "translations"} attribute - Name of the attribute
+ * being deleted.
  */
 function deleteListValues(attribute) {
-  let data;
+  let data = {};
   if (attribute === 'season_titles') {
     data = {season_title_ranges: null, season_title_values: null};
   } else if (attribute === 'translations') {
     data = {translations: null};
-  } else if (attribute === 'extras') {
-    data = {extra_keys: null, extra_values: null};
-  } else { data = {}; }
+  }
+
   $.ajax({
     type: 'PATCH',
     url: '/api/series/series/{{series.id}}',
@@ -1357,7 +1375,7 @@ function processSeries() {
  * Submit an API request to import the given Blueprint. While processing, the
  * card element with the given ID is marked as loading. If successful (and not
  * a Set), the page is reloaded.
- * @param {str} cardId - ID of the HTMLElement to mark as loading.
+ * @param {string} cardId - ID of the HTMLElement to mark as loading.
  * @param {RemoteBlueprint} blueprint - Blueprint object to import.
  * @param {boolean} [isSet] - Whether this Blueprint is associated with a Set;
  * if so, then the Blueprint is imported via ID NOT to this Series directly.
@@ -1596,7 +1614,7 @@ function exportBlueprint() {
  * Submit an API request to download the given Source Image URL for the Episode
  * with the given ID. If successful, the Series file and Card data is refreshed.
  * @param {number} episodeId - ID of the Episode associated with this image.
- * @param {str} url - URL (or Base64 encoded bytes) to download.
+ * @param {string} url - URL (or Base64 encoded bytes) to download.
  */
 function selectTmdbImage(episodeId, url) {
   // Create psuedo form for this URL
@@ -1621,7 +1639,7 @@ function selectTmdbImage(episodeId, url) {
 
 /**
  * Submit an API request to download the Series logo at the specified URL.
- * @param {str} url - URL of the logo file to download.
+ * @param {string} url - URL of the logo file to download.
  */
 function downloadSeriesLogo(url) {
   // Create psuedo form for this URL
@@ -1649,7 +1667,7 @@ function downloadSeriesLogo(url) {
 
 /**
  * Submit an API request to download the Series backdrop at the specified URL.
- * @param {str} url - URL of the backdrop file to download.
+ * @param {string} url - URL of the backdrop file to download.
  */
 function downloadSeriesBackdrop(url) {
   // Create psuedo form for this URL
@@ -1827,7 +1845,7 @@ function uploadLogo() {
   // Submit API request
   $.ajax({
     type: 'PUT',
-    url: `/api/sources/series/{{series.id}}/logo/upload`,
+    url: '/api/sources/series/{{series.id}}/logo/upload',
     data: form,
     cache: false,
     contentType: false,
@@ -1936,7 +1954,7 @@ function createTitleCards() {
  * Submit an API request to delete this Series' Title Cards. Series statistics
  * are re-queried if successful.
  * @param {number} interfaceId - ID of the library's interface.
- * @param {str} libraryName - Name of the library to load cards into.
+ * @param {string} libraryName - Name of the library to load cards into.
  * @param {bool} [reload] - Whether to force reload the cards.
  */
 function loadCards(interfaceId, libraryName, reload=false) {
@@ -2139,8 +2157,12 @@ function deleteAllEpisodes() {
   $.ajax({
     type: 'DELETE',
     url: '/api/episodes/series/{{series.id}}',
-    success: response => {
-      showInfoToast(`Deleted ${response.length} Episodes`);
+    /**
+     * Episodes deleted, show toast and re-fresh Episode and File data.
+     * @param {number[]} episodeIds - IDs of the Episodes which were deleted.
+     */
+    success: episodeIds => {
+      showInfoToast(`Deleted ${episodeIds.length} Episodes`);
       $('#episode-data-table tr').remove();
       getFileData();
       getStatistics();
@@ -2162,8 +2184,8 @@ function deleteEpisode(id) {
     success: () => {
       showInfoToast('Deleted Episode');
       // Remove this Episode's data row and file
-      $(`#episode-id${id}`).transition({animation: 'slide down', duration: 1000});
-      setTimeout(() => document.getElementById(`episode-id${id}`).remove(), 1000);
+      $(`#${getEpisodeElementId(id)}`).transition({animation: 'slide down', duration: 1000});
+      setTimeout(() => document.getElementById(getEpisodeElementId(id)).remove(), 1000);
       document.getElementById(`file-episode${id}`).remove();
       getStatistics();
       getCardData();
@@ -2203,7 +2225,7 @@ function navigateSeries(next_or_previous) {
 /**
  * Submit an API request to remove the TCM/PMM labels from this Series in Plex.
  * @param {number} interfaceId - ID of the library's interface.
- * @param {str} libraryName - Name of the library to load cards into.
+ * @param {string} libraryName - Name of the library to load cards into.
  */
 function removePlexLabels(interfaceId, libraryName) {  
   const params = `?interface_id=${interfaceId}&library_name=${libraryName}`;
@@ -2215,10 +2237,10 @@ function removePlexLabels(interfaceId, libraryName) {
   });
 }
 
-/**
- * @type {File[]}
- */
+/** @type {File[]} */
 let pendingFiles = [];
+
+/** Display the Card upload modal. */
 function showCardUpload() {
   $('#upload-cards-modal table').css('display', 'none');
   $('#upload-cards-modal table tbody tr').remove();
@@ -2227,8 +2249,10 @@ function showCardUpload() {
 }
 
 /**
- * 
- * @param {DragEvent} event 
+ * Handler function to parse drag-n-dropped Cards in the upload Card dialog.
+ * This parses the filenames of the uploads for season and episode numbers, and
+ * then adds that data to the modal table.
+ * @param {DragEvent} event - Event of the uploaded files.
  */
 function dropHandler(event) {
   // Prevent default behavior (Prevent file from being opened)
