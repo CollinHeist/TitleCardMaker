@@ -17,6 +17,14 @@ const series_full_name = {{series.full_name|tojson}};
 const global_library_unique_cards = {{preferences.library_unique_cards|tojson}};
 /** @type {MediaServerLibrary[]} */
 const series_libraries = {{series.libraries|safe}};
+/** @type {boolean} */
+const reduced_animations = {{preferences.reduced_animations|tojson}};
+/** @type {boolean} */
+const interactive_card_previews = {{preferences.interactive_card_previews|tojson}};
+/** @type {boolean} */
+const simplified_data_table = {{preferences.simplified_data_table|tojson}};
+/** @type {boolean} */
+const sources_as_table = {{preferences.sources_as_table|tojson}};
 
 /**
  * Get the element ID of the Episode with the given ID.
@@ -43,7 +51,7 @@ function getStatistics() {
     success: statistics => {
       // Update card count text
       const [cardStat, episodeStat] = statistics;
-      $('#card-count')[0].innerHTML = `<i class="image outline icon"></i><span class="ui pulsate text" onclick="getStatistics();">${cardStat.value} Cards / ${episodeStat.value} Episodes</span>`;
+      $('#card-count').html(`<i class="image outline icon"></i><span class="ui pulsate text" onclick="getStatistics();">${cardStat.value} Cards / ${episodeStat.value} Episodes</span>`);
       
       // Determine maximum number of cards
       const maxCards = global_library_unique_cards
@@ -700,7 +708,7 @@ async function getFileData(page=currentFilePage) {
         const elementId = `file-episode${source.episode_id}`;
 
         // Create row for this Source
-        {% if preferences.sources_as_table %}
+        if (sources_as_table) {
           const row = rowTemplate.content.cloneNode(true);
           row.querySelector('tr').id = elementId;
           // Season
@@ -745,7 +753,7 @@ async function getFileData(page=currentFilePage) {
       
           return row;
         // Create "Card" for this Source
-        {% else %}
+        } else {
           const file = fileTemplate.content.cloneNode(true);
           // Fill in the card values present on all files
           file.querySelector('.card').id = elementId;
@@ -776,7 +784,7 @@ async function getFileData(page=currentFilePage) {
           }
       
           return file;
-        {% endif %}
+        }
       });
       document.getElementById('source-images').replaceChildren(...sources);
     
@@ -890,7 +898,7 @@ async function getEpisodeData(page=1) {
     row.querySelector('input[name="season_text"]').value = episode.season_text;
     row.querySelector('td[data-column="hide_episode_text"]').innerHTML = getIcon(episode.hide_episode_text, true);
     row.querySelector('input[name="episode_text"]').value = episode.episode_text;
-    {% if not preferences.simplified_data_table %}
+    if (!simplified_data_table) {
       // Unwatched style
       // Watched style
       row.querySelector('input[name="font_color"]').value = episode.font_color;
@@ -902,9 +910,9 @@ async function getEpisodeData(page=1) {
       row.querySelector('input[name="font_vertical_shift"]').value = episode.font_vertical_shift;
       row.querySelector('input[name="source_file"]').value = episode.source_file;
       row.querySelector('input[name="card_file"]').value = episode.card_file;
-    {% endif %}
+    }
     row.querySelector('td[data-column="extras"] a').onclick = () => editEpisodeExtras(episode, episodeData.items);
-    {% if not preferences.simplified_data_table %}
+    if (!simplified_data_table) {
       const embyIdInput = row.querySelector('input[name="emby_id"]');
       if (embyIdInput !== null) { embyIdInput.value = episode.emby_id; }
       row.querySelector('input[name="imdb_id"]').value = episode.imdb_id;
@@ -916,7 +924,7 @@ async function getEpisodeData(page=1) {
       const tvrageIdInput = row.querySelector('input[name="tvrage_id"]')
       if (tvrageIdInput !== null) { tvrageIdInput.value = episode.tvrage_id; }
       row.querySelector('input[name="airdate"]').value = episode.airdate;
-    {% endif %}
+    }
     row.querySelector('td[data-column="delete"] a').onclick = () => deleteEpisode(episode.id);
     return row;
   });
@@ -1043,14 +1051,14 @@ function getCardData(page=currentCardPage, transition=false) {
       const previews = cards.items.map(card => {
         const preview = previewTemplate.content.cloneNode(true);
         // Start hidden if transitioning
-        {% if not preferences.reduced_animations %}
+        if (reduced_animations) {
           if (transition && !isSmallScreen()) {
             preview.querySelector('.image').classList.add('transition', 'hidden');
           }
-        {% endif %}
+        }
 
         // Re-create Card when image is clicked (if enabled)
-        {% if preferences.interactive_card_previews %}
+        if (interactive_card_previews) {
           preview.querySelector('img').onclick = () => createEpisodeCard(card.episode_id);
           // Delete Card and then recreate when image is clicked
           preview.querySelector('img').oncontextmenu = () => {
@@ -1059,7 +1067,7 @@ function getCardData(page=currentCardPage, transition=false) {
               () => createEpisodeCard(card.episode_id),
             );
           }
-        {% endif %}
+        }
 
         // If library unique mode is enabled, add the library name to the text (if present)
         if (global_library_unique_cards) {
@@ -1078,9 +1086,9 @@ function getCardData(page=currentCardPage, transition=false) {
       });
 
       // Add elements to page
-      {% if preferences.reduced_animations %}
+      if (reduced_animations) {
         document.getElementById('card-previews').replaceChildren(...previews);
-      {% else %}
+      } else {
         if (transition && !isSmallScreen()) {
           $('#card-previews .image').transition({transition: 'fade out', interval: 20});
           setTimeout(() => {
@@ -1090,7 +1098,7 @@ function getCardData(page=currentCardPage, transition=false) {
         } else {
           document.getElementById('card-previews').replaceChildren(...previews);
         }
-      {% endif %}
+      }
 
       // Update pagination
       currentCardPage = page;
