@@ -28,7 +28,7 @@
         <div class="sixteen wide column">
           <h1 class="ui header">Importer</h1>
 
-          <h2 class="ui dividing header">Existing Title Cards</h2>
+          <h2 class="ui dividing header">Title Cards</h2>
           <div class="ui dimmer">
             <div class="ui text blue elastic loader">Importing Title Cards..</div>
           </div>
@@ -95,49 +95,11 @@
           </form>
           
           <h2 class="ui dividing header">YAML</h2>
+          
           <div class="ui compact floating visible info message">
             <i class="info circle icon"></i>
             Validate your YAML <i>before</i> importing - an online validator can be found <a href="https://www.yamllint.com/" target="_blank">here</a>.
           </div>
-          <h3 class="ui header">Preferences File</h3>
-          <form id="preferences-form" class="ui form">
-            <div data-value="yaml" class="ui field">
-              <textarea name="yaml" placeholder="Paste YAML here.." rows="10"></textarea>
-            </div>
-
-            <div class="grouped fields">
-              <div class="ui inline field">
-                <div data-value="options" class="ui checkbox">
-                  <input type="checkbox" class="hidden">
-                  <label>Global Options</label>
-                </div>
-              </div>
-
-              <div class="ui inline field">
-                <div data-value="connections" class="ui checkbox">
-                  <input type="checkbox" class="hidden">
-                  <label>Connections (Emby, Jellyfin, Plex, Sonarr, and TMDb)</label>
-                </div>
-              </div>
-
-              <div class="ui inline field">
-                <div data-value="syncs" class="ui checkbox">
-                  <input type="checkbox" class="hidden">
-                  <label>Syncs (All Sections)</label>
-                </div>
-              </div>
-            </div>
-
-            <div data-value="Options" class="ui compact floating error message"></div>
-            <div data-value="Connections" class="ui compact floating error message"></div>
-            <div data-value="Syncs" class="ui compact floating error message"></div>
-            <button class="ui animated primary button" type="submit">
-              <div class="visible content">Submit</div>
-              <div class="hidden content">
-                <i class="right arrow icon"></i>
-              </div>
-            </button>
-          </form>
 
           <h3 class="ui header">Series YAML (or Sync) File</h3>
           <form id="series-form" class="ui form">
