@@ -84,6 +84,16 @@ def get_effective_templates(
                tuple[None, Optional[Template], None]]:
     ...
 
+@overload
+def get_effective_templates(
+        series: Series,
+        episode: Episode = None,
+        library: Optional[Library] = None,
+    ) -> Union[tuple[Optional[Template], None, None],
+               tuple[None, Optional[Template], None],
+               tuple[None, None, Optional[Template]]]:
+    ...
+
 def get_effective_templates(
         series: Series,
         episode: Optional[Episode] = None,
