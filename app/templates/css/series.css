@@ -5,6 +5,9 @@
 
 #poster {
   min-height: 200px;
+.ui.invisible.segment {
+  box-shadow: none;
+  border: none;
 }
 
 #card-count > span {
@@ -22,13 +25,16 @@
   }
 }
 
-#action-buttons .divider[data-interface="Emby"] span[data-value="interface-type"] {
+.divider[data-interface="Emby"] span[data-value="interface-type"],
+[data-interface-type="Emby"] {
   color: #4CAF50;
 }
-#action-buttons .divider[data-interface="Jellyfin"] span[data-value="interface-type"] {
+.divider[data-interface="Jellyfin"] span[data-value="interface-type"],
+[data-interface-type="Jellyfin"] {
   color: rgb(108,119,199);
 }
-#action-buttons .divider[data-interface="Plex"] span[data-value="interface-type"] {
+.divider[data-interface="Plex"] span[data-value="interface-type"],
+[data-interface-type="Plex"] {
   color: rgb(226,179,61);
 }
 

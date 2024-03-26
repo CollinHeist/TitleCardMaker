@@ -1131,6 +1131,7 @@ async function initAll() {
   getFileData();
   getBlueprintCount();
   refreshTheme();
+  getEpisodeOverviews();
   
   // Schedule recurring statistics query
   getStatistics();
@@ -2358,5 +2359,89 @@ function uploadCards() {
       getCardData();
       getFileData();
     }
+  });
+}
+
+function getEpisodeOverviews() {
+  const disableDropdown = () => {
+    $('.dropdown[data-value="episode_id"]').dropdown({
+      values: [],
+      placeholder: 'No Episodes'
+    });
+    $('#preview-episode-dropdown').toggleClass('disabled', true);
+  };
+
+  // Custom comparison function
+  function compareEpisodes(a, b) {
+    if (a.season_number === 0 && b.season_number !== 0) {
+      // Season 0 comes after all other seasons
+      return 1;
+    } else if (a.season_number !== 0 && b.season_number === 0) {
+      // All other seasons come before season 0
+      return -1;
+    } else if (a.season_number !== b.season_number) {
+      // Sort by season number
+      return a.season_number - b.season_number; 
+    } else {
+      // If seasons are equal, sort by episode number
+      return a.episode_number - b.episode_number; 
+    }
+  }
+
+  $.ajax({
+    type: 'GET',
+    url: '/api/episodes/series/{{series.id}}/overview?size=500',
+    success: overviews => {
+      if (overviews.items.length === 0) {
+        disableDropdown();
+      } else {
+        const firstEpisodeId = overviews.items.sort(compareEpisodes)[0].id;
+        $('.dropdown[data-value="episode_id"]').dropdown({
+          onChange: refreshPreview,
+          values: overviews.items.map(({id, season_number, episode_number}) => {
+            return {
+              name: `Season ${season_number} Episode ${episode_number}`,
+              value: id,
+              selected: id === firstEpisodeId,
+            };
+          }),
+        });
+      }
+    },
+    error: response => {
+      showErrorToast({title: 'Error Querying Episodes', response});
+      disableDropdown();
+    },
+  });
+}
+
+function refreshPreview() {
+  // Get Episode ID to generate preview of
+  const episodeId = $('#preview-episode-dropdown input[name="episode_id"]').val();
+  if (episodeId === undefined) {
+    showErrorToast({title: 'No Episode to display Preview of'});
+    return;
+  }
+
+  // Get preview data
+  const data = {
+    update_episode: getUpdateEpisodeObject(episodeId),
+    update_series: getSeriesCardConfigData(),
+  }
+
+  // Mark dropdown as loading
+  $('#preview-episode-dropdown .dropdown').toggleClass('loading', true),
+
+  // Submit API request
+  $.ajax({
+    type: 'POST',
+    url: `/api/cards/preview/episode/${episodeId}`,
+    data: JSON.stringify(data),
+    contentType: 'application/json',
+    success: preview_uri => {
+      document.getElementById('live-preview').src = `${preview_uri}?${new Date().getTime()}`;
+    },
+    error: response => showErrorToast({title: 'Error Updating Preview', response}),
+    complete: () => $('#preview-episode-dropdown .dropdown').toggleClass('loading', false),
   });
 }
