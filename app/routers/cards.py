@@ -1,3 +1,4 @@
+from logging import Logger
 from time import sleep
 from typing import Optional
 
@@ -17,12 +18,13 @@ from app.dependencies import (
 from app import models
 from app.internal.auth import get_current_user
 from app.internal.cards import (
-    create_episode_card, create_episode_cards, delete_cards,
-    get_watched_statuses, resolve_card_settings, validate_card_type_model
+    create_episode_cards, delete_cards, get_watched_statuses,
+    resolve_card_settings, validate_card_type_model
 )
-from app.internal.episodes import refresh_episode_data
+from app.internal.episodes import refresh_episode_data, update_episode_config
 from app.internal.series import (
-    load_all_series_title_cards, load_episode_title_card,load_series_title_cards
+    load_all_series_title_cards, load_episode_title_card,
+    load_series_title_cards, update_series_config
 )
 from app.internal.snapshot import take_snapshot
 from app.internal.sources import download_episode_source_images
@@ -31,8 +33,9 @@ from app.models.episode import Episode
 from app.models.series import Series
 from app.schemas.card import CardActions, TitleCard, PreviewTitleCard
 from app.schemas.connection import SonarrWebhook
-from app.schemas.episode import Episode as EpisodeSchema
+from app.schemas.episode import Episode as EpisodeSchema, UpdateEpisode
 from app.schemas.font import DefaultFont
+from app.schemas.series import UpdateSeries
 from modules.Debug import InvalidCardSettings, MissingSourceImage
 
 from modules.EpisodeInfo2 import EpisodeInfo
@@ -179,6 +182,8 @@ def create_preview_card(
 def create_preview_card_for_episode(
         request: Request,
         episode_id: int,
+        update_episode: UpdateEpisode = Body(...),
+        update_series: UpdateSeries = Body(...),
         query_watched_statuses: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
@@ -187,15 +192,29 @@ def create_preview_card_for_episode(
     Create a preview Title Card for the given Episode.
 
     - episode_id: ID of the Episode to create the Title Card for.
+    
     - query_watched_statuses: Whether to query the watched statuses
     associated with this Episode.
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Find associated Episode, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
+
+    # Raise exception if Template IDs are part of update object; cannot
+    # be reflected in the live preview because relationship objects will
+    # not be reflected until a commit
+    if (update_episode.template_ids != episode.template_ids
+        or update_series.template_ids != episode.series.template_ids):
+        raise HTTPException(
+            status_code=422,
+            detail='Preview Card cannot reflect Template changes'
+        )
+
+    update_episode_config(db, episode, update_episode, log=log)
+    update_series_config(db, episode.series, update_series, commit=False, log=log)
 
     # Set watch status(es) of the Episode
     if query_watched_statuses:
