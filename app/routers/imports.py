@@ -328,13 +328,42 @@ def import_series_yaml(
 
     return all_series
 
+@import_router.post('/series/{series_id}/cards', deprecated=True)
+def import_cards_for_series() -> None:
+    return None
 
-@import_router.post('/series/{series_id}/cards', tags=['Title Cards', 'Series'])
-async def import_cards_for_series(
+@import_router.post('/series/{series_id}/cards/files',
+                    tags=['Title Cards', 'Series'])
+async def import_card_files_for_series(
         request: Request,
         series_id: int,
-        card_directory: Optional[ImportCardDirectory] = Form(default=None),
         cards: list[UploadFile] = [],
+        db: Session = Depends(get_database)
+    ) -> None:
+    """
+    Import any existing Title Cards for the given Series. This finds
+    card files by filename, and makes the assumption that each file
+    exactly matches the Episode's currently specified config.
+
+    - series_id: ID of the Series whose cards are being imported.
+    - cards: List of uploaded Card files to import.
+    """
+
+    # Get this Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Cards
+    if (card_files := [(card.filename, await card.read()) for card in cards]):
+        import_card_files(db, series, card_files, True, log=request.state.log)
+
+    
+
+@import_router.post('/series/{series_id}/cards/directory',
+                    tags=['Title Cards', 'Series'])
+def import_card_directory_for_series(
+        request: Request,
+        series_id: int,
+        card_directory: ImportCardDirectory = Body(...),
         db: Session = Depends(get_database)
     ) -> None:
     """
@@ -349,20 +378,11 @@ async def import_cards_for_series(
     # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    # Cards
-    if (card_files := [(card.filename, await card.read()) for card in cards]):
-        import_card_files(db, series, card_files, True, log=request.state.log)
-    elif card_directory:
-        import_cards(
-            db, series, card_directory.directory,
-            card_directory.image_extension, card_directory.force_reload,
-            log=request.state.log,
-        )
-    else:
-        raise HTTPException(
-            status_code=422,
-            detail='Must provide either a Card directory or uploaded Card files'
-        )
+    import_cards(
+        db, series, card_directory.directory,
+        card_directory.image_extension, card_directory.force_reload,
+        log=request.state.log,
+    )
 
 
 @import_router.post('/series/cards', tags=['Title Cards', 'Series'])
