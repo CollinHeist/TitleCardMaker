@@ -296,7 +296,7 @@ def process_series(
         )
 
 
-def update_series(
+def update_series_config(
         db: Session,
         series: Series,
         update_series: UpdateSeries,

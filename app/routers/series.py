@@ -18,7 +18,7 @@ from app import models
 from app.internal.cards import delete_cards
 from app.internal.series import (
     add_series, delete_series, download_series_poster, lookup_series,
-    process_series, update_series,
+    process_series, update_series_config,
 )
 from app.internal.auth import get_current_user
 from app.models.card import Card
@@ -342,7 +342,7 @@ def get_series_config(
 
 
 @series_router.patch('/series/{series_id}')
-def update_series_(
+def update_series(
         series_id: int,
         request: Request,
         update: UpdateSeries = Body(...),
@@ -359,7 +359,7 @@ def update_series_(
     series = get_series(db, series_id, raise_exc=True)
 
     # Modify Series
-    update_series(db, series, update, commit=True, log=request.state.log)
+    update_series_config(db, series, update, commit=True, log=request.state.log)
 
     return series
 
@@ -573,7 +573,7 @@ def batch_update_series(
         all_series.append(series)
 
         # Update this Series
-        changed |= update_series(
+        changed |= update_series_config(
             db, series, update.update, commit=False, log=request.state.log
         )
 
