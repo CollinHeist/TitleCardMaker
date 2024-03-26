@@ -5,13 +5,17 @@ from typing import Iterable, Optional
 from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy.orm import Session
 
-from app.database.query import get_interface
-from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.database.query import get_all_templates, get_font, get_interface
+from app.dependencies import (
+    get_preferences, get_sonarr_interfaces, get_tmdb_interfaces
+)
 from app.internal.templates import get_effective_templates
 from app.models.card import Card
 from app.models.episode import Episode
 from app.models.series import Series
 
+from app.schemas.base import UNSPECIFIED
+from app.schemas.episode import UpdateEpisode
 from modules.Debug import log
 from modules.EpisodeDataSource2 import WatchedStatus
 from modules.EpisodeInfo2 import EpisodeInfo
@@ -260,3 +264,47 @@ def refresh_episode_data(
     # Commit to database if changed
     if changed:
         db.commit()
+
+
+def update_episode_config(
+        db: Session,
+        episode: Episode,
+        update_episode: UpdateEpisode,
+        *,
+        log: Logger = log,
+    ) -> bool:
+    """
+    Update the given Episode.
+
+    Args:
+        db: Database to query for Fonts or Templates if indicated.
+        episode: Episode to update.
+        update_episode: Objet detailing which attributes of the given
+            Episode to update.
+        log: Logger for all log messages.
+
+    Returns:
+        True if the given Episode was modified, False otherwise.
+    """
+
+    # If any reference ID's were indicated, verify referenced object exists
+    update_episode_dict = update_episode.dict()
+    get_font(db, update_episode_dict.get('font_id'), raise_exc=True)
+
+    # Assign Templates if indicated
+    changed = False
+    if ((template_ids := update_episode_dict.get('template_ids', None))
+        not in (None, UNSPECIFIED)):
+        if episode.template_ids != template_ids:
+            templates = get_all_templates(db, update_episode_dict)
+            episode.assign_templates(templates, log=log)
+            changed = True
+
+    # Update each attribute of the object
+    for attr, value in update_episode_dict.items():
+        if value != UNSPECIFIED and getattr(episode, attr) != value:
+            log.debug(f'Episode[{episode.id}].{attr} = {value}')
+            setattr(episode, attr, value)
+            changed = True
+
+    return changed

@@ -20,6 +20,7 @@ from app.models.template import Template
 
 from modules.Debug import log
 
+
 _ObjectType = TypeVar('_ObjectType', bound=Base)
 
 
@@ -27,7 +28,7 @@ def _get_obj(
         db: Session,
         model: _ObjectType,
         model_name: str,
-        object_id: int,
+        object_id: Optional[int],
         raise_exc: bool = True
     ) -> Optional[_ObjectType]:
     """
@@ -79,7 +80,7 @@ def get_blueprint(
 
 def get_blueprint(
         db: Session,
-        blueprint_id: int,
+        blueprint_id: Optional[int],
         *,
         raise_exc: bool = True
     ) -> Optional[Blueprint]:
@@ -100,7 +101,7 @@ def get_blueprint_set(
 
 def get_blueprint_set(
         db: Session,
-        set_id: int,
+        set_id: Optional[int],
         *,
         raise_exc: bool = True
     ) -> BlueprintSet:
@@ -121,7 +122,7 @@ def get_card(
 
 def get_card(
         db: Session,
-        card_id: int,
+        card_id: Optional[int],
         *,
         raise_exc: bool = True
     ) -> Optional[Card]:
@@ -142,7 +143,7 @@ def get_connection(
 
 def get_connection(
         db: Session,
-        connection_id: int,
+        connection_id: Optional[int],
         /,
         *,
         raise_exc: bool = True,
@@ -164,7 +165,7 @@ def get_episode(
 
 def get_episode(
         db: Session,
-        episode_id: int,
+        episode_id: Optional[int],
         *,
         raise_exc: bool = True
     ) -> Optional[Episode]:
@@ -185,7 +186,7 @@ def get_font(
 
 def get_font(
         db: Session,
-        font_id: int,
+        font_id: Optional[int],
         *,
         raise_exc: bool = True
     ) -> Optional[Font]:
@@ -206,7 +207,7 @@ def get_series(
 
 def get_series(
         db: Session,
-        series_id: int,
+        series_id: Optional[int],
         *,
         raise_exc: bool = True
     ) -> Optional[Series]:
@@ -227,7 +228,7 @@ def get_sync(
 
 def get_sync(
         db: Session,
-        sync_id: int,
+        sync_id: Optional[int],
         *,
         raise_exc: bool = True
     ) -> Optional[Sync]:
@@ -248,7 +249,7 @@ def get_template(
 
 def get_template(
         db: Session,
-        template_id: int,
+        template_id: Optional[int],
         *,
         raise_exc: bool = True
     ) -> Optional[Template]:
@@ -309,7 +310,7 @@ def get_interface(
     ...
 
 def get_interface(
-        interface_id: int,
+        interface_id: Optional[int],
         *,
         raise_exc: bool = True,
     ) -> Optional[Union[EmbyInterface, JellyfinInterface, PlexInterface,

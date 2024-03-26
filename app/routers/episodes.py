@@ -1,22 +1,22 @@
+from logging import Logger
 from typing import Literal
 
 from fastapi import APIRouter, Body, Depends, Query, Request
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 
-from app.database.query import (
-    get_all_templates, get_episode, get_font, get_series
-)
+from app.database.query import get_all_templates, get_episode, get_series
 from app.database.session import Page
 from app.dependencies import get_database
 from app.internal.auth import get_current_user
 from app.internal.cards import delete_cards, refresh_remote_card_types
-from app.internal.episodes import set_episode_ids, refresh_episode_data
+from app.internal.episodes import (
+    set_episode_ids, refresh_episode_data, update_episode_config
+)
 from app.models.card import Card
 from app.models.episode import Episode as EpisodeModel
 from app.models.loaded import Loaded
 from app.models.series import Series
-from app.schemas.base import UNSPECIFIED
 from app.schemas.episode import (
     BatchUpdateEpisode, Episode, NewEpisode, UpdateEpisode
 )
@@ -180,30 +180,11 @@ def update_multiple_episode_configs(
     # Update each Episode in the list
     episodes, changed = [], False
     for update_obj in update_episodes:
-        episode_id = update_obj.episode_id
-        update_episode = update_obj.update_episode
-
         # Get this Episode, raise 404 if DNE
         episode = get_episode(db, update_obj.episode_id, raise_exc=True)
-        update_episode_dict = update_obj.update_episode.dict(exclude_defaults=True)
 
-        # If any reference ID's were indicated, verify referenced object exists
-        get_font(db, getattr(update_episode, 'font_id', None), raise_exc=True)
-
-        # Assign Templates if indicated
-        if ((template_ids := update_episode_dict.get('template_ids', None))
-            not in (None, UNSPECIFIED)):
-            if episode.template_ids != template_ids:
-                templates = get_all_templates(db, update_episode_dict)
-                episode.assign_templates(templates, log=log)
-                changed = True
-
-        # Update each attribute of the object
-        for attr, value in update_episode.dict().items():
-            if value != UNSPECIFIED and getattr(episode, attr) != value:
-                log.debug(f'Episode[{episode_id}].{attr} = {value}')
-                setattr(episode, attr, value)
-                changed = True
+        # Apply changes
+        changed |= update_episode_config(db, episode, update_obj, log=log)
 
         # Append updated Episode
         episodes.append(episode)
@@ -217,7 +198,7 @@ def update_multiple_episode_configs(
 
 
 @episodes_router.patch('/episode/{episode_id}')
-def update_episode_config(
+def update_episode_config_(
         request: Request,
         episode_id: int,
         update_episode: UpdateEpisode = Body(...),
@@ -232,37 +213,17 @@ def update_episode_config(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Get this Episode, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
-    update_episode_dict = update_episode.dict()
-
-    # If any reference ID's were indicated, verify referenced object exists
-    get_font(db, getattr(update_episode, 'font_id', None), raise_exc=True)
-
-    # Assign Templates if indicated
-    changed = False
-    if ((template_ids := update_episode_dict.get('template_ids', None))
-        not in (None, UNSPECIFIED)):
-        if episode.template_ids != template_ids:
-            templates = get_all_templates(db, update_episode_dict)
-            episode.assign_templates(templates, log=log)
-            changed = True
-
-    # Update each attribute of the object
-    for attr, value in update_episode_dict.items():
-        if value != UNSPECIFIED and getattr(episode, attr) != value:
-            log.debug(f'Episode[{episode_id}].{attr} = {value}')
-            setattr(episode, attr, value)
-            changed = True
 
     # If any values were changed, commit to database
-    if changed:
+    if update_episode_config(db, episode, update_episode, log=log):
         db.commit()
 
-    # Refresh card types in case new remote type was specified
-    refresh_remote_card_types(db, log=log)
+        # Refresh card types in case new remote type was specified
+        refresh_remote_card_types(db, log=log)
 
     return episode
 
