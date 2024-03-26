@@ -155,6 +155,11 @@ class SeriesData(Base):
     name: str
     small_poster_url: str
 
+class EpisodeOverview(Base):
+    id: int
+    season_number: int
+    episode_number: int
+
 class Episode(Base):
     id: int
     series_id: int

@@ -18,7 +18,7 @@ from app.models.episode import Episode as EpisodeModel
 from app.models.loaded import Loaded
 from app.models.series import Series
 from app.schemas.episode import (
-    BatchUpdateEpisode, Episode, NewEpisode, UpdateEpisode
+    BatchUpdateEpisode, Episode, EpisodeOverview, NewEpisode, UpdateEpisode
 )
 
 
@@ -234,6 +234,34 @@ def get_all_series_episodes(
         order_by: Literal['index', 'absolute', 'id'] = 'index',
         db: Session = Depends(get_database),
     ) -> Page[Episode]:
+    """
+    Get all the episodes associated with the given series.
+
+    - series_id: Series being queried.
+    - order_by: How to order the returned episodes.
+    """
+
+    # Query for Episodes of this Series
+    query = db.query(EpisodeModel).filter_by(series_id=series_id)
+
+    # Order by indicated attribute
+    if order_by == 'index':
+        sorted_query = query.order_by(EpisodeModel.season_number)\
+            .order_by(EpisodeModel.episode_number)
+    elif order_by == 'absolute':
+        sorted_query = query.order_by(EpisodeModel.absolute_number)
+    elif order_by == 'id':
+        sorted_query = query
+
+    return paginate(sorted_query)
+
+
+@episodes_router.get('/series/{series_id}/overview', tags=['Series'])
+def get_series_episode_overview_data(
+        series_id: int,
+        order_by: Literal['index', 'absolute', 'id'] = 'index',
+        db: Session = Depends(get_database),
+    ) -> Page[EpisodeOverview]:
     """
     Get all the episodes associated with the given series.
 
