@@ -1993,69 +1993,77 @@ function deleteSeries() {
 }
 
 /**
+ * Get the config data for this Series' Card Form.
+ * @returns {Series}
+ */
+function getSeriesCardConfigData() {
+  /** Parse a percentage input field. */
+  const parsePercentageField = value => value === '' ? null : value / 100.0;
+
+  /** Parse some list value, converting empty lists to null */
+  const parseList = value => value.length ? value : null;
+
+  return {
+    template_ids: $('#card-config-form input[name="template_ids"]').val()
+      ? $('#card-config-form input[name="template_ids"]').val().split(',')
+      : [],
+    card_type: $('#card-config-form input[name="card_type"]').val() || null,
+    font_id: $('#card-config-form input[name="font_id"]').val() || null,
+    watched_style: $('#card-config-form input[name="watched_style"]').val() || null,
+    unwatched_style: $('#card-config-form input[name="unwatched_style"]').val() || null,
+    font_color: $('#card-config-form input[name="font_color"]').val() || null,
+    font_title_case: $('#card-config-form input[name="font_title_case"]').val() || null,
+    font_size: parsePercentageField($('#card-config-form input[name="font_size"]').val()),
+    font_kerning: parsePercentageField($('#card-config-form input[name="font_kerning"]').val()),
+    font_stroke_width: parsePercentageField($('#card-config-form input[name="font_stroke_width"]').val()),
+    font_interline_spacing: $('#card-config-form input[name="font_interline_spacing"]').val() || null,
+    font_interword_spacing: $('#card-config-form input[name="font_interword_spacing"]').val() || null,
+    font_vertical_shift: $('#card-config-form input[name="font_vertical_shift"]').val() || null,
+    hide_season_text: $('#card-config-form input[name="hide_season_text"]').val() || null,
+    season_title_ranges: parseList(
+        Array.from(document.querySelectorAll('#card-config-form input[name="season_title_ranges"]')).map(input => input.value)
+      ),
+    season_title_values: parseList(
+        Array.from(document.querySelectorAll('#card-config-form input[name="season_title_values"]')).map(input => input.value)
+      ),
+    hide_episode_text: $('#card-config-form input[name="hide_episode_text"]').val() || null,
+    episode_text_format: $('#card-config-form input[name="episode_text_format"]').val() || null,
+    translations: parseList(
+        Array.from(document.querySelectorAll('#card-config-form input[name="language_code"]')).map((input, index) => {
+          return {
+            language_code: input.value,
+            data_key: document.querySelectorAll('#card-config-form input[name="data_key"]')[index].value,
+          };
+        })
+      ),
+    extra_keys: parseList(
+        $('#card-config-form section[aria-label="extras"] input').map(function() {
+          if ($(this).val() !== '') { 
+            return $(this).attr('name'); 
+          }
+        }).get()
+      ),
+    extra_values: parseList(
+        $('#card-config-form section[aria-label="extras"] input').map(function() {
+          if ($(this).val() !== '') {
+            return $(this).val(); 
+          }
+        }).get(),
+      ),
+  }
+}
+
+/**
  * 
  * @param {"card" | "options" | "ids"} formName 
  */
 function updateSeries(formName) {
-  /** Parse a percentage input field. */
-  const parsePercentageField = value => value === '' ? null : value / 100.0;
-  /** Parse some list value, converting empty lists to null */
-  const parseList = value => value.length ? value : null;
-
   // Parse card config data
   let data = {};
   if (formName === 'card') {
     // Validate form
     if (!$('#card-config-form').form('is valid')) { return; }
-
-    data = {
-      template_ids: $('#card-config-form input[name="template_ids"]').val()
-        ? $('#card-config-form input[name="template_ids"]').val().split(',')
-        : [],
-      card_type: $('#card-config-form input[name="card_type"]').val() || null,
-      font_id: $('#card-config-form input[name="font_id"]').val() || null,
-      watched_style: $('#card-config-form input[name="watched_style"]').val() || null,
-      unwatched_style: $('#card-config-form input[name="unwatched_style"]').val() || null,
-      font_color: $('#card-config-form input[name="font_color"]').val() || null,
-      font_title_case: $('#card-config-form input[name="font_title_case"]').val() || null,
-      font_size: parsePercentageField($('#card-config-form input[name="font_size"]').val()),
-      font_kerning: parsePercentageField($('#card-config-form input[name="font_kerning"]').val()),
-      font_stroke_width: parsePercentageField($('#card-config-form input[name="font_stroke_width"]').val()),
-      font_interline_spacing: $('#card-config-form input[name="font_interline_spacing"]').val() || null,
-      font_interword_spacing: $('#card-config-form input[name="font_interword_spacing"]').val() || null,
-      font_vertical_shift: $('#card-config-form input[name="font_vertical_shift"]').val() || null,
-      hide_season_text: $('#card-config-form input[name="hide_season_text"]').val() || null,
-      season_title_ranges: parseList(
-          Array.from(document.querySelectorAll('#card-config-form input[name="season_title_ranges"]')).map(input => input.value)
-        ),
-      season_title_values: parseList(
-          Array.from(document.querySelectorAll('#card-config-form input[name="season_title_values"]')).map(input => input.value)
-        ),
-      hide_episode_text: $('#card-config-form input[name="hide_episode_text"]').val() || null,
-      episode_text_format: $('#card-config-form input[name="episode_text_format"]').val() || null,
-      translations: parseList(
-          Array.from(document.querySelectorAll('#card-config-form input[name="language_code"]')).map((input, index) => {
-            return {
-              language_code: input.value,
-              data_key: document.querySelectorAll('#card-config-form input[name="data_key"]')[index].value,
-            };
-          })
-        ),
-      extra_keys: parseList(
-          $('#card-config-form section[aria-label="extras"] input').map(function() {
-            if ($(this).val() !== '') { 
-              return $(this).attr('name'); 
-            }
-          }).get()
-        ),
-      extra_values: parseList(
-          $('#card-config-form section[aria-label="extras"] input').map(function() {
-            if ($(this).val() !== '') {
-              return $(this).val(); 
-            }
-          }).get(),
-        ),
-    }
+    data = getSeriesCardConfigData();
   }
   // Parse options data
   else if (formName === 'options') {
