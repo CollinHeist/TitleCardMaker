@@ -2328,7 +2328,7 @@ function uploadCards() {
   // Submit API request
   $.ajax({
     type: 'POST',
-    url: '/api/import/series/{{series.id}}/cards',
+    url: '/api/import/series/{{series.id}}/cards/files',
     data: f,
     cache: false,
     contentType: false,
