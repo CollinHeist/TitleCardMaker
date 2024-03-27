@@ -1,14 +1,13 @@
-from datetime import datetime, timedelta
-from logging import Logger
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from requests import get as req_get
 from sqlalchemy.orm import Session
 
-from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.dependencies import *
 from app.internal.auth import get_current_user
-from app.internal.availability import get_latest_version
+from app.internal.availability import (
+    get_latest_version, get_local_cards, get_remote_cards
+)
 from app import models
 from app.models.preferences import Preferences
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
@@ -24,14 +23,7 @@ from app.schemas.series import MediaServerLibrary
 from app.schemas.sync import Tag
 
 from modules.cards.available import LocalCards
-from modules.Debug import log
 
-
-# URL for user card types
-USER_CARD_TYPE_URL = (
-    'https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/'
-    'web-ui/cards.json'
-)
 
 # Extra variable overrides
 VARIABLE_OVERRIDES = [
@@ -58,50 +50,6 @@ VARIABLE_OVERRIDES = [
         ),
     )
 ]
-
-
-def _get_local_cards(preferences: Preferences) -> list[LocalCardType]:
-    """
-    Get the list of availably locally specified card types.
-
-    Args:
-        preferences: Global preferences.
-
-    Returns:
-        List of LocalCardType objects.
-    """
-
-    return [
-        card_class.API_DETAILS
-        for card_class in preferences.local_card_types.values()
-    ]
-
-
-_cache = {'content': [], 'expires': datetime.now()}
-def _get_remote_cards(*, log: Logger = log) -> list[RemoteCardType]:
-    """
-    Get the list of available RemoteCardTypes. This will cache results
-    for 30 minutes. If the available data is older than 30 minutes, the
-    GitHub is re-queried.
-
-    Args:
-        log: Logger for all log messages.
-
-    Returns:
-        List of RemoteCardTypes.
-    """
-
-    # If the cached content has expired, request and update cache
-    if _cache['expires'] <= datetime.now():
-        log.debug(f'Refreshing cached RemoteCardTypes..')
-        response = req_get(USER_CARD_TYPE_URL, timeout=30).json()
-        _cache['content'] = response
-        _cache['expires'] = datetime.now() + timedelta(hours=6)
-    # Cache has not expired, use cached content
-    else:
-        response = _cache['content']
-
-    return [RemoteCardType(**card) for card in response]
 
 
 # Create sub router for all /connection API requests
@@ -138,8 +86,8 @@ def get_all_available_card_types(
     log = request.state.log
 
     all_cards = LocalCards \
-        + _get_local_cards(preferences) \
-        + _get_remote_cards(log=log)
+        + get_local_cards(preferences) \
+        + get_remote_cards(log=log)
     if show_excluded:
         return all_cards
 
@@ -159,24 +107,24 @@ def get_builtin_card_types() -> list[BuiltinCardType]:
 
 
 @availablility_router.get('/card-types/local', status_code=200, tags=['Title Cards'])
-def get_local_card_types(
+def get_local_card_types_(
         preferences: Preferences = Depends(get_preferences),
     ) -> list[LocalCardType]:
     """
     Get all locally defined card types.
     """
 
-    return _get_local_cards(preferences)
+    return get_local_cards(preferences)
 
 
 @availablility_router.get('/card-types/remote', status_code=200, tags=['Title Cards'])
-def get_remote_card_types(request: Request) -> list[RemoteCardType]:
+def get_remote_card_types_(request: Request) -> list[RemoteCardType]:
     """
     Get all available remote card types.
     """
 
     try:
-        return _get_remote_cards(log=request.state.log)
+        return get_remote_cards(log=request.state.log)
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -207,7 +155,7 @@ def get_all_supported_extras(
 
     return [
         {'card_type': card_type.identifier} | extra.dict()
-        for card_type in LocalCards + _get_remote_cards(log=request.state.log)
+        for card_type in LocalCards + get_remote_cards(log=request.state.log)
         if (show_excluded
             or card_type.identifier not in preferences.excluded_card_types)
         for extra in card_type.supported_extras

@@ -1,8 +1,8 @@
 from shutil import copyfile
-from typing import Literal, Optional
+from typing import Literal
 
 from fastapi import (
-    APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, Request,
+    APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request,
     UploadFile
 )
 from pydantic.error_wrappers import ValidationError
@@ -12,9 +12,9 @@ from app.database.query import get_all_templates, get_series
 from app.dependencies import get_database, get_preferences
 from app.internal.auth import get_current_user
 from app.internal.imports import (
-    import_card_files, import_cards, parse_emby, parse_fonts, parse_jellyfin, parse_plex,
-    parse_preferences, parse_raw_yaml, parse_series, parse_sonarr, parse_syncs,
-    parse_templates, parse_tmdb
+    import_card_files, import_cards, parse_emby, parse_fonts, parse_jellyfin,
+    parse_plex, parse_preferences, parse_raw_yaml, parse_series, parse_sonarr,
+    parse_syncs, parse_templates, parse_tmdb
 )
 from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo

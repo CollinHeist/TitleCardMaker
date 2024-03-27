@@ -3,13 +3,14 @@ from pathlib import Path
 from time import sleep
 from typing import Any, Optional
 
-from fastapi import BackgroundTasks, HTTPException
+from fastapi import HTTPException
 from sqlalchemy import and_, or_
 from sqlalchemy.exc import OperationalError, PendingRollbackError
 from sqlalchemy.orm import Query, Session
 
 from app.database.query import get_interface
 from app.dependencies import get_database, get_preferences
+from app.internal.availability import get_remote_card_hash, get_remote_cards
 from app.internal.episodes import refresh_episode_data
 from app.internal.sources import download_episode_source_images
 from app.internal.templates import get_effective_templates
@@ -101,8 +102,8 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                         except InvalidCardSettings:
                             log.trace(f'{episode} - skipping Card creation')
                             continue
-                        except HTTPException as e:
-                            if e.status_code != 404:
+                        except HTTPException as exc:
+                            if exc.status_code != 404:
                                 log.exception(f'{episode} - skipping Card')
                 except (PendingRollbackError, OperationalError):
                     if failures > 10:
@@ -111,7 +112,7 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                     failures += 1
                     log.debug(f'Database is busy, sleeping..')
                     sleep(30)
-    except Exception as e:
+    except Exception:
         log.exception(f'Failed to create title cards')
 
 
@@ -187,8 +188,8 @@ def refresh_all_remote_card_types(*, log: Logger = log) -> None:
         # Refresh the remote cards
         with next(get_database()) as db:
             refresh_remote_card_types(db, reset=True, log=log)
-    except Exception as e:
-        log.exception(f'Failed to refresh RemoteCardTypes', e)
+    except Exception:
+        log.exception(f'Failed to refresh RemoteCardTypes')
 
 
 def refresh_remote_card_types(
@@ -223,6 +224,7 @@ def refresh_remote_card_types(
         RemoteFile.reset_loaded_database()
 
     # Refresh all remote card types
+    remote_card_types = []
     for card_identifier in card_identifiers:
         # Skip blank identifiers, and builtin or local cards
         if (card_identifier is None
@@ -234,9 +236,15 @@ def refresh_remote_card_types(
         if not reset and card_identifier in preferences.remote_card_types:
             continue
 
+        # Get reference hash of card
+        if not (card_hash := get_remote_card_hash(card_identifier, log=log)):
+            log.error(f'Cannot validate RemoteCardType[{card_identifier}] - '
+                      f'skipping')
+            continue
+
         # Load new type
         log.debug(f'Loading RemoteCardType[{card_identifier}]..')
-        card_type = RemoteCardType(card_identifier, log=log)
+        card_type = RemoteCardType(card_identifier, card_hash, log=log)
         if card_type.valid and card_type is not None:
             preferences.remote_card_types[card_identifier] =card_type.card_class
 

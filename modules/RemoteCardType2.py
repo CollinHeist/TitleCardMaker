@@ -1,3 +1,4 @@
+from hashlib import md5
 from importlib.util import spec_from_file_location, module_from_spec
 from logging import Logger
 import sys
@@ -24,7 +25,7 @@ class RemoteCardType:
     """Base URL for all remote Card Type files to download"""
     URL_BASE = (
         'https://raw.githubusercontent.com/CollinHeist/'
-        'TitleCardMaker-CardTypes/title-rework'
+        'TitleCardMaker-CardTypes/hash-validation'
     )
 
     """Temporary directory all card types are written to"""
@@ -37,6 +38,7 @@ class RemoteCardType:
     def __init__(self,
             /,
             identifier: Union[str, Path],
+            file_hash: Optional[str] = None,
             *,
             log: Logger = log,
         ) -> None:
@@ -51,6 +53,9 @@ class RemoteCardType:
             identifier: Local filepath to the card class or the URL to
                 remote card to inject. If a remote class, it must be
                 specified like `{username}/{class_name}`.
+            file_hash: MD5 hash of the file contents for the associated
+                remote card. Not required if `identifier` is associated
+                with a local file.
             log: Logger for all log messages.
         """
 
@@ -84,6 +89,19 @@ class RemoteCardType:
             file_name.parent.mkdir(parents=True, exist_ok=True)
             with (file_name).open('wb') as fh:
                 fh.write(response.content)
+
+        # Check file hash to verify contents
+        if file_hash:
+            hash_ = md5(Path(file_name).read_text().encode('utf-8')).hexdigest()
+            if file_hash == hash_:
+                log.trace(f'CardType "{identifier}" has matching MD5 hash of '
+                          f'{file_hash}')
+            # Hash does not match, set invalid
+            else:
+                log.error(f'CardType "{identifier}" MD5 hash does not match '
+                          f'{file_hash} - not loading CardType')
+                self.valid = False
+                return None
 
         # Import new file as module
         try:

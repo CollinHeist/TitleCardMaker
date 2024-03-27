@@ -394,7 +394,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     airdate = datetime.strptime(
                         episode['PremiereDate'], self.AIRDATE_FORMAT
                     )
-                except Exception as e:
+                except Exception:
                     log.exception(f'Cannot parse airdate')
                     log.debug(f'Episode data: {episode}')
 

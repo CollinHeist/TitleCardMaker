@@ -135,7 +135,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         except Unauthorized:
             log.critical(f'Invalid Plex Token "{x_plex_token}"')
             sys_exit(1)
-        except Exception as e:
+        except Exception:
             log.critical(f'Cannot connect to Plex - returned error: "{e}"')
             sys_exit(1)
 
@@ -792,7 +792,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 # If integrating with PMM, remove label
                 if self.integrate_with_pmm:
                     pl_episode.removeLabel(['Overlay'])
-            except Exception as e:
+            except Exception:
                 error_count += 1
                 log.exception(f'Unable to upload {card.resolve()} to '
                               f'{series_info}')
@@ -977,7 +977,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             log.error(f'No item with rating key {rating_key} exists')
         except ValueError:
             log.warning(f'Item with rating key {rating_key} has no year')
-        except Exception as e:
+        except Exception:
             log.exception(f'Rating key {rating_key} has some error')
 
         # Error occurred, return empty list

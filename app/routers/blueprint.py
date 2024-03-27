@@ -24,7 +24,7 @@ from app.internal.blueprint import (
 from app.internal.episodes import get_all_episode_data
 from app.internal.series import add_series
 from app import models
-from app.models.blueprint import Blueprint, BlueprintSeries, BlueprintSet
+from app.models.blueprint import Blueprint, BlueprintSeries
 from app.models.card import Card
 from app.schemas.blueprint import (
     DownloadableFile, ExportBlueprint, RemoteBlueprint, RemoteBlueprintSet,

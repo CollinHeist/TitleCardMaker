@@ -1,7 +1,7 @@
 from copy import deepcopy
 from pathlib import Path
 from re import compile as re_compile
-from typing import Any, Optional, Union
+from typing import Any, Iterable, Optional, Union
 
 from modules import global_objects
 from modules.BaseCardType import BaseCardType
@@ -171,8 +171,7 @@ class Episode:
                 this Episode's base source directory - if that file DNE
                 then it's taken as a Path and converted; if None,
                 nothing happens.
-            downloadable: (Keyword) Whether the new source is
-                downloadable or not.
+            downloadable: Whether the new source is downloadable.
 
         Returns:
             True if a new non-None source was provided, False otherwise.
@@ -201,30 +200,26 @@ class Episode:
         Delete the title card for this Episode.
 
         Args:
-            reason: (Keyword) String to log why the card is being
-                deleted.
+            reason: String to log why the card is being deleted.
 
         Returns:
             True if card was deleted, False otherwise.
         """
 
         # No destination, nothing to delete
-        if self.destination is None:
+        if self.destination is None or not self.destination.exists():
             return False
 
         # Destination exists, delete and return True
-        if self.destination.exists():
-            self.destination.unlink()
+        self.destination.unlink(missing_ok=True)
 
-            # Log deletion
-            message = f'Deleted "{self.destination.resolve()}"'
-            if reason:
-                message += f' [{reason}]'
-            log.debug(message)
+        # Log deletion
+        message = f'Deleted "{self.destination.resolve()}"'
+        if reason:
+            message += f' [{reason}]'
+        log.debug(message)
 
-            return True
-
-        return False
+        return True
 
 
 class MultiEpisode:
@@ -246,7 +241,7 @@ class MultiEpisode:
 
 
     def __init__(self,
-            episodes: list[Episode],
+            episodes: Iterable[Episode],
             title: Title,
         ) -> None:
         """

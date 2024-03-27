@@ -363,7 +363,7 @@ class Preferences:
         # Parse all Python files in the card type directory
         for file in self.card_type_directory.glob('*.py'):
             # Attempt to load each file; skip if invalid
-            if not (card_type := RemoteCardType(file)).valid:
+            if not (card_type := RemoteCardType(file, log=log)).valid:
                 log.critical(f'Error reading local CardType')
                 continue
 
@@ -384,12 +384,7 @@ class Preferences:
 
     @property
     def card_properties(self) -> dict[str, str]:
-        """
-        Properties to utilize and merge in Title Card creation.
-
-        Returns:
-            Dictionary of properties.
-        """
+        """Properties to utilize and merge in Title Card creation."""
 
         return {
             'card_type': self.default_card_type,
