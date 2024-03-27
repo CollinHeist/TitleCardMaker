@@ -27,11 +27,18 @@ const simplified_data_table = {{preferences.simplified_data_table|tojson}};
 const sources_as_table = {{preferences.sources_as_table|tojson}};
 
 /**
- * Get the element ID of the Episode with the given ID.
+ * Get the DOM element ID of the Episode with the given ID.
  * @param {number} episode_id - ID of the Episode.
  * @returns {string} Element ID of the row for this Episode.
  */
 const getEpisodeElementId = (episode_id) => `episode-id${episode_id}`;
+
+/**
+ * Get the DOM element ID of the Episode with the given ID.
+ * @param {number} episode_id - ID of the Episode.
+ * @returns {string} Element ID of the source image for this Episode.
+ */
+const getSourceImageElementId = (episode_id) => `file-episode${episode_id}`;
 
 /** @type {number} */
 let getStatisticsId;
@@ -115,7 +122,6 @@ function getUpdateEpisodeObject(episodeId, excludeBlank=false) {
       updateEpisode[value.dataset['column']] = false;
     }
   });
-
   return {...updateEpisode, template_ids: template_ids};
 }
 
@@ -716,7 +722,7 @@ async function getFileData(page=currentFilePage) {
 
       const sources = allFiles.items.map(source => {
         // Current element ID on the page
-        const elementId = `file-episode${source.episode_id}`;
+        const elementId = getSourceImageElementId(source.episode_id);
 
         // Create row for this Source
         if (sources_as_table) {
@@ -807,6 +813,7 @@ async function getFileData(page=currentFilePage) {
         const image = document.getElementById('preview-image-template').content.cloneNode(true);
         image.querySelector('.dimmer .content').innerHTML = `<h4>Season ${source.season_number} Episode ${source.episode_number} (${source.source_file_name})</h4>`;
         image.querySelector('img').src = `${source.source_url}?${source.filesize}`;
+        image.querySelector('img').onclick = () => browseSourceImages(source.episode_id, getSourceImageElementId(source.episode_id), episodeIds);
         sourceImages.push(image);
       });
       document.getElementById('source-image-previews').replaceChildren(...sourceImages);
@@ -1068,7 +1075,7 @@ function getCardData(page=currentCardPage, transition=false) {
           }
         }
 
-        // Re-create Card when image is clicked (if enabled)
+        // Re-create Card when image is clicked or right-clicked (if enabled)
         if (interactive_card_previews) {
           preview.querySelector('img').onclick = () => createEpisodeCard(card.episode_id);
           // Delete Card and then recreate when image is clicked
@@ -1764,14 +1771,14 @@ function browseSourceImages(episodeId, cardElementId, episodeIds) {
       const previousEpisodeId = episodeIds[episodeIds.indexOf(episodeId) - 1];
       $('#browse-tmdb-modal [data-action="previous-episode"]')[0].onclick =
         (previousEpisodeId
-        ? () => browseSourceImages(previousEpisodeId, `file-episode${previousEpisodeId}`, episodeIds)
+        ? () => browseSourceImages(previousEpisodeId, getSourceImageElementId(previousEpisodeId), episodeIds)
         : () => showInfoToast('No previous Episode on current Page'))
       ;
 
       const nextEpisodeId = episodeIds[episodeIds.indexOf(episodeId) + 1];
       $('#browse-tmdb-modal [data-action="next-episode"]')[0].onclick =
         (nextEpisodeId
-        ? () => browseSourceImages(nextEpisodeId, `file-episode${nextEpisodeId}`, episodeIds)
+        ? () => browseSourceImages(nextEpisodeId, getSourceImageElementId(nextEpisodeId), episodeIds)
         : () => showInfoToast('No next Episode on current Page'))
       ;
 
@@ -2215,7 +2222,7 @@ function deleteEpisode(id) {
       // Remove this Episode's data row and file
       $(`#${getEpisodeElementId(id)}`).transition({animation: 'slide down', duration: 1000});
       setTimeout(() => document.getElementById(getEpisodeElementId(id)).remove(), 1000);
-      document.getElementById(`file-episode${id}`).remove();
+      document.getElementById(getSourceImageElementId(id)).remove();
       getStatistics();
       getCardData();
       getFileData();
@@ -2253,14 +2260,14 @@ function navigateSeries(next_or_previous) {
 
 /**
  * Submit an API request to remove the TCM/PMM labels from this Series in Plex.
- * @param {number} interfaceId - ID of the library's interface.
- * @param {string} libraryName - Name of the library to load cards into.
+ * @param {number} interface_id - ID of the library's interface.
+ * @param {string} library_name - Name of the library to load cards into.
  */
-function removePlexLabels(interfaceId, libraryName) {  
-  const params = `?interface_id=${interfaceId}&library_name=${libraryName}`;
+function removePlexLabels(interface_id, library_name) {  
+  const params = new URLSearchParams({interface_id, library_name}).toString();
   $.ajax({
     type: 'DELETE',
-    url: `/api/series/series/{{series.id}}/plex-labels/library${params}`,
+    url: `/api/series/series/{{series.id}}/plex-labels/library?${params}`,
     success: () => showInfoToast('Removed Labels'),
     error: response => showErrorToast({title: 'Error Removing Labels', response}),
   });
