@@ -770,7 +770,6 @@ async function initializeExtras(
 
   // Initialize tabs
   $(`${sectionQuerySelector} .item`).tab();
-  // $(`${sectionQuerySelector} .item`).tab('change tab', activeTab);
 }
 
 /**

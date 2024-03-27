@@ -399,7 +399,7 @@ async function initalizeSeriesConfig() {
     {% else %}
       '{{preferences.default_card_type}}',
     {% endif %}
-    'section[aria-label="extras"]',
+    '#card-config-form section[aria-label="extras"]',
     document.getElementById('extra-input-template'),
   );
   // Add season title on button press
