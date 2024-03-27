@@ -675,7 +675,7 @@ function uploadEpisodeSource(episodeId) {
       processData: false,
       success: () => {
         showInfoToast('Updated Source Image');
-        getFileData();
+        getSourceFileData();
       },
       error: response => showErrorToast({title: 'Error Updating Source Image', response}),
       complete: () => $('#upload-source-form')[0].reset(),
@@ -696,7 +696,7 @@ function mirrorSourceImage(episodeId) {
     url: `/api/sources/episode/${episodeId}/mirror`,
     success: () => {
       showInfoToast('Mirrored Source Image');
-      getFileData();
+      getSourceFileData();
       getCardData();
       $(`#${getEpisodeElementId(episodeId)}`).toggleClass('left red marked', true);
     },
@@ -704,8 +704,14 @@ function mirrorSourceImage(episodeId) {
   });
 }
 
+/** @type {number} Current page number for the source files. */
 let currentFilePage = 1;
-async function getFileData(page=currentFilePage) {
+
+/**
+ * Query and display the Source Images on the webpage.
+ * @param {number} page - Page number of source files to query and display.
+ */
+async function getSourceFileData(page=currentFilePage) {
   const fileTemplate = document.getElementById('file-card-template');
   const rowTemplate = document.getElementById('file-row-template');
 
@@ -822,7 +828,7 @@ async function getFileData(page=currentFilePage) {
       currentFilePage = page;
       updatePagination({
         paginationElementId: 'file-pagination',
-        navigateFunction: getFileData,
+        navigateFunction: getSourceFileData,
         page: allFiles.page,
         pages: allFiles.pages,
         amountVisible: isSmallScreen() ? 6 : 15,
@@ -1146,7 +1152,7 @@ async function initAll() {
   getEpisodeData();
   initStyles();
   getCardData();
-  getFileData();
+  getSourceFileData();
   getBlueprintCount();
   refreshTheme();
   getEpisodeOverviews();
@@ -1658,7 +1664,7 @@ function selectTmdbImage(episodeId, url) {
     processData: false,
     success: () => {
       showInfoToast('Updated Source Image');
-      getFileData();
+      getSourceFileData();
       getCardData();
     },
     error: response => showErrorToast({title: 'Error Updating Source Image', response}),
@@ -1951,7 +1957,7 @@ function getSourceImages() {
   $.ajax({
     type: 'POST',
     url: '/api/sources/series/{{series.id}}',
-    success: () => getFileData(),
+    success: () => getSourceFileData(),
     error: response => showErrorToast({title: 'Error Download Source Images', response}),
     complete: () => $('.button[data-action="download-source-images"]').toggleClass('disabled', false),
   });
@@ -2200,7 +2206,7 @@ function deleteAllEpisodes() {
     success: episodeIds => {
       showInfoToast(`Deleted ${episodeIds.length} Episodes`);
       $('#episode-data-table tr').remove();
-      getFileData();
+      getSourceFileData();
       getStatistics();
     },
     error: response => showErrorToast({title: 'Error Deleting Episodes', response}),
@@ -2225,7 +2231,7 @@ function deleteEpisode(id) {
       document.getElementById(getSourceImageElementId(id)).remove();
       getStatistics();
       getCardData();
-      getFileData();
+      getSourceFileData();
     },
     error: response => showErrorToast({title: 'Error Deleting Episode', response}),
   });
@@ -2375,7 +2381,7 @@ function uploadCards() {
     complete: () => {
       getStatistics();
       getCardData();
-      getFileData();
+      getSourceFileData();
     }
   });
 }
