@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from pathlib import Path
 from re import compile as re_compile
+from typing import Union
 
 try:
     from modules.Debug import log
@@ -229,7 +230,7 @@ class Changelog:
     IMAGE_REGEX = re_compile(r'^\s+<img.*src="(.+)".*\/?>$')
 
 
-    def __init__(self, file: Path, /) -> None:
+    def __init__(self, file: Union[Path, str], /) -> None:
         """
         Parse the Changelog (Markdown) in the given file.
         
@@ -241,7 +242,7 @@ class Changelog:
         html: list[str] = []
         _prev_indent = 0
 
-        for line in file.read_text().splitlines():
+        for line in Path(file).read_text().splitlines():
             # Header -> <h2>
             if (match := self.HEADER_REGEX.match(line)):
                 # Close previous indented list
@@ -341,10 +342,10 @@ class Changelog:
             )
         )
 
-    def write(self, file: Path, /) -> None:
+    def write(self, file: Union[Path, str], /) -> None:
         """Write this Changelog (HTML) to the given file."""
 
-        file.write_text(self.html)
+        Path(file).write_text(self.html)
         log.info(f'Wrote converted HTML changelog to {file}')
 
 

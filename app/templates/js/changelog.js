@@ -1,5 +1,149 @@
 const changeLog = [
   {
+    version: `v2.0-alpha.9.1`,
+    changelog: `
+<h2>Major Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Allow Series level toggle of title auto-splitting
+    <div class="list">
+      <div class="item">Add SQL schema and migration <b>f1692007cf8a</b> to add the <b>Series.auto_split_title</b> column</div>
+      <div class="item">Migrate all <b>True</b> Episode-level splits to null</div>
+    </div>
+  </div>
+  <div class="item">Allow named Fonts to affect after how many characters TCM will attempt to split titles into multiple lines 
+    <div class="list">
+      <div class="item">All Named Fonts can specify a "Title Split Modifier" which is the number of characters to add/remove from the card's default split amount.</div>
+      <div class="item">For example, if a Card typically splits lines after 25 characters, specifying a modifier of +5 would mean the titles would be split after<i>30</i>characters.</div>
+      <div class="item">This can be used to give more fitting behavior for Fonts which are very small or very large</div>
+      <div class="item">Add SQL schema <b>1be1951acc40</b> to add the <b>Font.line_split_modifier</b> column</div>
+    </div>
+  </div>
+  <div class="item">Allow card types to adjust the title split behavior on-the-fly
+    <div class="list">
+      <div class="item">After how many characters a Title is split is now scaled by the specified font size (if the default Font is specified)</div>
+    </div>
+  </div>
+  <div class="item">Separate the watched and recently added Tautulli agents
+    <div class="list">
+      <div class="item">Allows <i>only</i> enabling the recently added trigger; or enabling both</div>
+      <div class="item">Add a "username" input to the Tautulli setup modal so the watched agent can only be triggered when you watch content</div>
+      <div class="item">Old agents will still work</div>
+    </div>
+  </div>
+  <div class="item">Create a "Missing" page (<b>/missing</b>) which lists all the Episodes which do not have an associated Title Card</div>
+  <div class="item">Allow creation of Blueprint "Sets"
+    <div class="list">
+      <div class="item">A "Set" is a group of associated Blueprints. These can be Blueprints which all use the same style, or are part of the same franchise, etc.</div>
+      <div class="item">For example, I created a Set of all my Scooby-Doo Blueprints as they all use the same design, Template, and Font</div>
+      <div class="item">If a Blueprint has any associated Sets, it will be displayed on the BP itself
+    <div class="list">
+      <img width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/324874a2-5508-43f3-9d40-57748125b7dc">
+    </div>
+  </div>
+      <div class="item">Sets of<i>existing</i>Blueprints can be created directly on the Blueprints GitHub via this <a href="https://github.com/TitleCardMaker/Blueprints/issues/new/choose" target="_blank">issue form</a>; or new Blueprints can be assigned to existing Sets when they are submitted</div>
+    </div>
+  </div>
+  <div class="item">Add functionality to upload Cards directly to a Series to import them</div>
+  <div class="item">Display a small count number - e.g. <b>(3)</b> - in the Blueprint tab menu on the Series page. This count represents how many Blueprints are available for the Series (idea from bugmacnx)</div>
+  <div class="item">Begin redesign of the Series page; currently can only be accessed by defining the <b>TCM_NEW_SERIES_VIEW</b> environment variable as <b>TRUE</b></div>
+</div>
+<h2>Major Fixes </h2>
+<div class="ui ordered list">
+  <div class="item">Query and delete old Loaded assets by Episode ID (not Card) when loading Title Cards</div>
+  <div class="item">Fix Episode title translation for various regional languages which were using their "fallback" languages</div>
+  <div class="item">Correctly parse the global card quality setting</div>
+  <div class="item">Handle TMDb movie IDs in Emby episode parsing</div>
+  <div class="item">Do not link the edit of Episode and Series extra fields</div>
+</div>
+<h2>Minor Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Do not instantiate <b>Title</b> objects during <b>EpisodeInfo</b> initialization - minor speed improvement</div>
+  <div class="item">Do not add intermediate background task queue for Card creation - minor speed improvement</div>
+  <div class="item">Add airdate column to the Episode data tables (advanced mode only)</div>
+  <div class="item">Only keep log records for one week, not two</div>
+  <div class="item">Do not include the <b>delete_missing</b> attribute in Font exports in Blueprints if _true_</div>
+  <div class="item">Scroll to the top of the page when navigating between pages of Blueprints</div>
+  <div class="item">Add "rich" representation of all SQL models to tracebacks</div>
+  <div class="item">Force delete and re-create the Card when the preview is right-clicked on the Series page</div>
+  <div class="item">Add global option to enable/disable Card interactions like the left- and right-click functionality on the Series page</div>
+  <div class="item">Rename "Sync Specials" setting to "Enable Specials" to avoid conflation with the "Sync" feature</div>
+  <div class="item">Remove the support button from the header</div>
+  <div class="item">Improve logging for changes to an existing Card config</div>
+  <div class="item">Change update info frequency on series page to 90 seconds (from 60)</div>
+  <div class="item">Remove <b>preferences.yml</b> YAML import from the importer page - it is way easier and less error prone to just adjust the settings directly.</div>
+  <div class="item">Indicate the loading status during Episode extra changes</div>
+  <div class="item">Add click interaction to the Source Image previews - modal will be launched when the preview image is clicked</div>
+</div>
+<h2>Minor Fixes</h2>
+<div class="ui ordered list">
+  <div class="item">Fix the "Forgot Password?" link on the login page - was using old website URL</div>
+  <div class="item">Properly set the modal headers when browsing logos and backdrops</div>
+  <div class="item">Initialize the log level dropdown<i>before</i>querying for Logs so it can be interacted with while the page loads</div>
+  <div class="item">Use a centered Unicode bar character <b>｜</b> in the library dividers for better vertical alignment</div>
+  <div class="item">Do not display Loaded asset counts which exceed the Card count</div>
+  <div class="item">Allow the Series Episode data table to take up the full container width on very large displays</div>
+  <div class="item">Remove blank fields from Blueprint JSON exports</div>
+  <div class="item">Fix tooltip typo in the Music card</div>
+  <div class="item">Fix link typo in changelog</div>
+  <div class="item">Fix the next/previous Episode buttons in the edit Episode extra modal from resetting after submitting changes</div>
+</div>
+<h2>Title Card Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Anime
+    <div class="list">
+      <div class="item">Add Kanji stroke color extra</div>
+      <div class="item">Correctly scale the kanji stroke width with the Font stroke width</div>
+    </div>
+  </div>
+  <div class="item">Banner
+    <div class="list">
+      <div class="item">Change lower title text margin to 40 pixels (from 20)</div>
+    </div>
+  </div>
+  <div class="item">Music
+    <div class="list">
+      <div class="item">Change the default long-line truncation behavior to three lines (from two)</div>
+      <div class="item">Adjust the title split cutoff based on the specified player width</div>
+      <div class="item">Limit player inset between 0 and 1200 pixels</div>
+    </div>
+  </div>
+  <div class="item">Tinted Glass
+    <div class="list">
+      <div class="item">Add rounding radius extra</div>
+    </div>
+  </div>
+</div>
+<h2>Documentation Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Add documentation on Blueprint Sets</div>
+  <div class="item">Revise Tautulli getting started docs to mention new separate agents</div>
+</div>
+<h2>API Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Modify the <b>GET</b> <b>/api/statistics/snapshots</b> endpoint
+    <div class="list">
+      <div class="item">Add <b>previous_days</b> query parameter to control how many days of snapshots to return</div>
+      <div class="item">Add <b>slice</b> query parameter to every n-th snapshots to return</div>
+    </div>
+  </div>
+  <div class="item">Deprecate and remove <b>POST</b> <b>/api/import/series/{series_id}/cards</b> endpoint</div>
+  <div class="item">Create new <b>POST</b> <b>/api/import/series/{series_id}/cards/files</b> endpoint to upload Card files directly</div>
+  <div class="item">Create new <b>POST</b> <b>/api/import/series/{series_id}/cards/directory</b> endpoint to import Cards via directory searching</div>
+  <div class="item">Modify all Blueprint database dependency query arguments (affects all endpoints which have this injection)
+    <div class="list">
+      <div class="item">Rename <b>refresh_database</b> query argument to <b>force_refresh</b></div>
+      <div class="item">Add <b>allow_refresh</b> query argument on whether to <i>allow</i> a refresh from an "expired" database</div>
+    </div>
+  </div>
+  <div class="item">Create <b>POST</b> <b>/api/cards/preview/episode/{episode_id}</b> endpoint to create a preview Card for a given Episode
+    <div class="list">
+      <div class="item">Functionally equivalent to the <b>/api/cards/episode/{episode_id}</b> endpoint, but does not write to the database and writes the file to the preview directory</div>
+    </div>
+  </div>
+  <div class="item">Create <b>GET</b> <b>/api/episodes/series/{series_id}/overview</b> endpoint to get "overview" info of a Series' Episodes</div>
+</div>`
+  },
+  {
     version: 'v2.0-alpha.9.0',
     changelog: `
 <h2>Major Changes</h2>
