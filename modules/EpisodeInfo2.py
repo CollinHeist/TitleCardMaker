@@ -191,9 +191,15 @@ class EpisodeInfo(DatabaseInfoContainer):
             airdate = datetime.strptime(
                 info['PremiereDate'], '%Y-%m-%dT%H:%M:%S.%f000000Z'
             )
+        except KeyError:
+            log.debug(f'Cannot parse episode airdate')
         except Exception:
             log.exception(f'Cannot parse airdate')
             log.debug(f'Episode data: {info}')
+
+        # TMDb movies might have an ID formatted as {id}-{name}
+        if (tmdb_id := info['ProviderIds'].get('Tmdb')) is not None:
+            tmdb_id = str(tmdb_id).split('-')[0]
 
         return cls(
             info['Name'],
@@ -201,7 +207,7 @@ class EpisodeInfo(DatabaseInfoContainer):
             info['IndexNumber'],
             emby_id=f'{interface_id}:{library_name}:{info["Id"]}',
             imdb_id=info['ProviderIds'].get('Imdb'),
-            tmdb_id=info['ProviderIds'].get('Tmdb'),
+            tmdb_id=tmdb_id,
             tvdb_id=info['ProviderIds'].get('Tvdb'),
             tvrage_id=info['ProviderIds'].get('TvRage'),
             airdate=airdate,
