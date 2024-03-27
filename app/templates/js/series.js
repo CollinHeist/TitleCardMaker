@@ -488,6 +488,9 @@ async function editEpisodeExtras(episode, allEpisodes) {
   $('#episode-extras-modal .field > .field, ' +
     '#episode-extras-modal .fields > .field > input').remove();
 
+  // Update header
+  $('#episode-extras-modal .header span').text(`Season ${episode.season_number} Episode ${episode.episode_number}`);
+
   // Add existing translations
   for (let [data_key, value] of Object.entries(episode.translations)) {
     const newKey = document.createElement('input');
