@@ -527,23 +527,26 @@ async function editEpisodeExtras(episode, allEpisodes) {
   refreshTheme();
 
   // Assign functions to previous/next buttons
-  $('#episode-extras-modal [data-action="previous-episode"]')
-    .off('click')
-    .on('click', () => {
-      const previousEpisode = allEpisodes[allEpisodes.indexOf(episode) - 1];
-      if (previousEpisode) { editEpisodeExtras(previousEpisode, allEpisodes);      }
-      else {                 showInfoToast('No previous Episode on current page'); }
-    });
-  $('#episode-extras-modal [data-action="next-episode"]')
-    .off('click')
-    .on('click', () => {
-      const nextEpisode = allEpisodes[allEpisodes.indexOf(episode) + 1];
-      if (nextEpisode) {
-        editEpisodeExtras(nextEpisode, allEpisodes);
-      } else {
-        showInfoToast('No next Episode on current page');
-      }
-    });
+  const assignButtonNavs = (ep) => {
+    $('#episode-extras-modal [data-action="previous-episode"]')
+      .off('click')
+      .on('click', () => {
+        const previousEpisode = allEpisodes[allEpisodes.indexOf(ep) - 1];
+        if (previousEpisode) { editEpisodeExtras(previousEpisode, allEpisodes);      }
+        else {                 showInfoToast('No previous Episode on current page'); }
+      });
+    $('#episode-extras-modal [data-action="next-episode"]')
+      .off('click')
+      .on('click', () => {
+        const nextEpisode = allEpisodes[allEpisodes.indexOf(ep) + 1];
+        if (nextEpisode) {
+          editEpisodeExtras(nextEpisode, allEpisodes);
+        } else {
+          showInfoToast('No next Episode on current page');
+        }
+      });
+  };
+  assignButtonNavs(episode);
 
   // Show modal
   $('#episode-extras-modal').modal('show');
@@ -603,6 +606,7 @@ async function editEpisodeExtras(episode, allEpisodes) {
           $(`#${getEpisodeElementId(episode.id)} td[data-column="extras"] a`)
             .off('click')
             .on('click', () => editEpisodeExtras(updatedEpisode, allEpisodes));
+          assignButtonNavs(updatedEpisode);
         },
         error: response => showErrorToast({title: 'Error Updating Episode', response}),
       });
