@@ -558,6 +558,9 @@ async function editEpisodeExtras(episode, allEpisodes) {
       // Prevent page reload
       event.preventDefault();
 
+      // Mark button as loading
+      $('#episode-extras-modal .button[type="submit"]').toggleClass('loading', true);
+
       /** Parse some list value, converting empty lists to null */
       const parseList = (value, _default) => value.length ? value : _default;
 
@@ -609,6 +612,7 @@ async function editEpisodeExtras(episode, allEpisodes) {
           assignButtonNavs(updatedEpisode);
         },
         error: response => showErrorToast({title: 'Error Updating Episode', response}),
+        complete: () => $('#episode-extras-modal .button[type="submit"]').toggleClass('loading', false),
       });
     });
 }
