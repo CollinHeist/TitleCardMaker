@@ -457,7 +457,8 @@ class Series(Base):
             ex_keys = list(self.extras.keys())
             ex_values = list(self.extras.values())
 
-        match_titles = None if self.match_titles else self.match_titles
+        match_titles = None if self.match_titles else False
+        auto_split_title = None if self.auto_split_title else False
 
         return {
             'font_color': self.font_color,
@@ -479,7 +480,7 @@ class Series(Base):
             'translations': self.translations,
             'skip_localized_images': self.skip_localized_images,
             'match_titles': match_titles,
-            'auto_split_title': self.auto_split_title,
+            'auto_split_title': auto_split_title,
         }
 
 
