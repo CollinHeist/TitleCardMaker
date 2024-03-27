@@ -1,7 +1,7 @@
 from base64 import b64encode
 from datetime import datetime
 from logging import Logger
-from typing import TYPE_CHECKING, Iterator, Optional, Union
+from typing import TYPE_CHECKING, Iterator, Literal, Optional, Union, overload
 
 from fastapi import HTTPException
 
@@ -165,6 +165,13 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             for lib in libraries
         }
 
+
+    @overload
+    def __get_series_id(self,
+            library_name: str, series_info: SeriesInfo, *,
+            raw_obj: Literal[True] = True, log: Logger = log
+        ) -> Optional[dict]:
+        ...
 
     def __get_series_id(self,
             library_name: str,
@@ -332,7 +339,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         series = self.__get_series_id(
             library_name, series_info, raw_obj=True, log=log
         )
-        if series is None:
+        if series is None or not isinstance(series, dict):
             log.warning(f'Series "{series_info}" was not found under library '
                         f'"{library_name}" in Emby')
             return None
@@ -374,7 +381,8 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         # Match to existing info
         for old_episode_info in episode_infos:
             for new_episode_info, _ in new_episode_infos:
-                if isinstance(old_episode_info, EpisodeInfo) and isinstance(new_episode_info, EpisodeInfo):
+                if (isinstance(old_episode_info, EpisodeInfo)
+                    and isinstance(new_episode_info, EpisodeInfo)):
                     if old_episode_info == new_episode_info:
                         old_episode_info.copy_ids(new_episode_info, log=log)
 
@@ -419,7 +427,8 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 tmdb_id=result.get('ProviderIds', {}).get('Tmdb'),
                 tvdb_id=result.get('ProviderIds', {}).get('Tvdb'),
                 tvrage_id=result.get('ProviderIds', {}).get('TvRage'),
-            ) for result in search_results['Items']
+            )
+            for result in search_results['Items']
             if 'ProductionYear' in result
         ]
 
