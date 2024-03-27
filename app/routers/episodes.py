@@ -184,7 +184,9 @@ def update_multiple_episode_configs(
         episode = get_episode(db, update_obj.episode_id, raise_exc=True)
 
         # Apply changes
-        changed |= update_episode_config(db, episode, update_obj, log=log)
+        changed |= update_episode_config(
+            db, episode, update_obj.update_episode, log=log
+        )
 
         # Append updated Episode
         episodes.append(episode)
