@@ -1450,9 +1450,16 @@
           <tbody></tbody>
         </table>
       </div>
+
       <div class="center aligned actions">
-        <div class="ui negative button">Cancel</div>
-        <div class="ui positive button" onclick="uploadCards();">OK</div>
+        <button class="ui cancel button">Cancel</button>
+        <button class="ui teal button" onclick="uploadCards(true);">Upload as Textless</button>
+        <button form="episode-extras-form" class="ui animated primary button" onclick="uploadCards(false);">
+          <div class="visible content">Upload</div>
+          <div class="hidden content">
+            <i class="right arrow icon"></i>
+          </div>
+        </button>
       </div>
     </div>
 

@@ -2354,8 +2354,10 @@ function dropHandler(event) {
 /**
  * Submit an API request to upload and import the cards which are currently
  * loaded. After the request is finished, all series-data is re-queried.
+ * @param {boolean} setTextless - Whether to set the Episodes as textless on
+ * import.
  */
-function uploadCards() {
+function uploadCards(setTextless) {
   // No files uploaded, exit
   if (pendingFiles.length === 0) {
     showInfoToast('No Cards to Upload');
@@ -2369,7 +2371,7 @@ function uploadCards() {
   // Submit API request
   $.ajax({
     type: 'POST',
-    url: '/api/import/series/{{series.id}}/cards/files',
+    url: `/api/import/series/{{series.id}}/cards/files?textless=${setTextless}`,
     data: f,
     cache: false,
     contentType: false,

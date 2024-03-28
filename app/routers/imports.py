@@ -2,7 +2,7 @@ from shutil import copyfile
 from typing import Literal
 
 from fastapi import (
-    APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request,
+    APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Request,
     UploadFile
 )
 from pydantic.error_wrappers import ValidationError
@@ -338,6 +338,8 @@ async def import_card_files_for_series(
         request: Request,
         series_id: int,
         cards: list[UploadFile] = [],
+        force_reload: bool = Query(default=True),
+        textless: bool = Query(default=True),
         db: Session = Depends(get_database)
     ) -> None:
     """
@@ -354,8 +356,10 @@ async def import_card_files_for_series(
 
     # Cards
     if (card_files := [(card.filename, await card.read()) for card in cards]):
-        import_card_files(db, series, card_files, True, log=request.state.log)
-
+        import_card_files(
+            db, series, card_files, force_reload=force_reload,
+            as_textless=textless, log=request.state.log
+        )
     
 
 @import_router.post('/series/{series_id}/cards/directory',
