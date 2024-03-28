@@ -39,6 +39,7 @@ class LocalCardType(CardTypeDescription):
 
 class RemoteCardType(CardTypeDescription):
     source: str = 'remote'
+    hash: str
 
 """
 Base classes
