@@ -732,9 +732,9 @@ class TintedFrameCardType(BaseCardTypeAllText):
 
     @root_validator(skip_on_failure=True)
     def validate_episode_text_font_file(cls, values: dict) -> dict:
-        etf = values['episode_text_font']
+        etf = Path(values['episode_text_font'])
         # Episode text font does not exist, search alongside source image
-        if isinstance(etf, Path) and not etf.exists():
+        if not Path(etf).exists():
             if (new_etf := values['source_file'].parent / etf.name).exists():
                 values['episode_text_font'] = new_etf
         if not Path(values['episode_text_font']).exists():
