@@ -569,6 +569,12 @@ function populateBlueprintCard(card, blueprint, blueprintId) {
   card.querySelector('[data-value="creator"]').innerText = blueprint.creator;
 
   // If there is a Series name element, fill out
+  if (card.querySelector('[data-value="name"]')) {
+    card.querySelector('[data-value="name"]').innerText = blueprint.series.name;
+  }
+  if (card.querySelector('[data-value="year"]')) {
+    card.querySelector('[data-value="year"]').innerText = `(${blueprint.series.year})`;
+  }
   if (card.querySelector('[data-value="series_full_name"')) {
     card.querySelector('[data-value="series_full_name"').innerText = `${blueprint.series.name} (${blueprint.series.year})`;
   }

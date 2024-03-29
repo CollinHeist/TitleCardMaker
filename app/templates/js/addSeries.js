@@ -166,7 +166,7 @@ function queryBlueprints(result, resultElementId) {
         const card = populateBlueprintCard(blueprintTemplate.content.cloneNode(true), blueprint, `series-blueprint-id${blueprintId}`);
 
         // Assign function to import button
-        card.querySelector('a[data-action="import"]').onclick = () => importBlueprint(blueprint.id, resultElementId);
+        card.querySelector('[data-action="import"]').onclick = () => importBlueprint(blueprint.id, resultElementId);
         return card;
       });
 
@@ -249,7 +249,7 @@ function queryAllBlueprints(page=1, refresh=false) {
   if (page === 1) {
     addPlaceholders(blueprintResults, 9, 'blueprint-placeholder-template');
   }
-  
+
   // Submit API request
   $.ajax({
     type: 'GET',
@@ -264,6 +264,13 @@ function queryAllBlueprints(page=1, refresh=false) {
         // Clone template, fill out basic info
         const elementId = `blueprint-id${blueprint.id}`;
         const card = populateBlueprintCard(blueprintTemplate.content.cloneNode(true), blueprint, elementId);
+
+        // Assign function to clicking name
+        card.querySelector('[data-action="search-series"]').onclick = () => {
+          $('#search-query').val(blueprint.series.name);
+          querySeries();
+          document.getElementById('search-query').scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
 
         // Assign function to import button
         card.querySelector('[data-action="import"]').onclick = () => importBlueprint(blueprint.id, elementId);

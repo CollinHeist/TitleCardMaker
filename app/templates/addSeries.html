@@ -105,7 +105,12 @@
       <div class="content">
         <i data-action="blacklist" class="right floated eye slash outline icon"></i>
         <i data-action="import" class="right floated cloud download alternate icon"></i>
-        <div data-value="series_full_name" class="header">{series_name} ({series_year})</div>
+        <div class="header">
+          <a class="no-link" data-action="search-series">
+            <span data-value="name">{series_name}</span>
+          </a>
+          <span class="ui grey uninvertible text" data-value="year">({series_year})</span>
+        </div>
         <div class="meta">
           <span><i>by</span><span data-value="creator">{author}</span></i>
           <span data-value="font-count"><b>{x}</b> Named Font</span>

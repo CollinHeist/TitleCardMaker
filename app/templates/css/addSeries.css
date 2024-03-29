@@ -5,6 +5,14 @@
   overflow: scroll;
 }
 
+/* Remove color from linked Blueprint headers */
+.blueprint.card .header a {
+  color: unset;
+}
+.blueprint.card .header a:hover {
+  color: #4183c4;
+}
+
 /* Do not allow disabled card description text to be selected */
 .disabled.card {
   user-select: none;
