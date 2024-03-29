@@ -8,6 +8,7 @@ from requests import get
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_preferences
+from app.internal.cards import refresh_remote_card_types
 from app.models.blueprint import Blueprint, BlueprintSeries
 from app.models.episode import Episode
 from app.models.font import Font
@@ -416,3 +417,6 @@ def import_blueprint(
     # Commit changes to Database
     if changed:
         db.commit()
+
+        # Refresh card types
+        refresh_remote_card_types(db, reset=False, log=log)
