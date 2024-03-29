@@ -1110,19 +1110,21 @@ function getCardData(page=currentCardPage, transition=false) {
       });
 
       // Add elements to page
+      const previewElement = document.getElementById('card-previews');
       if (reduced_animations) {
-        document.getElementById('card-previews').replaceChildren(...previews);
+        previewElement.replaceChildren(...previews);
       } else {
         if (transition && !isSmallScreen()) {
           $('#card-previews .image').transition({transition: 'fade out', interval: 20});
           setTimeout(() => {
-            document.getElementById('card-previews').replaceChildren(...previews);
+            previewElement.replaceChildren(...previews);
             $('#card-previews .image').transition({transition: 'fade out', interval: 20});
           }, 500);
         } else {
-          document.getElementById('card-previews').replaceChildren(...previews);
+          previewElement.replaceChildren(...previews);
         }
       }
+      previewElement.scrollIntoView({behavior: 'smooth', block: 'start'});
 
       // Update pagination
       currentCardPage = page;

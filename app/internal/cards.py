@@ -224,7 +224,6 @@ def refresh_remote_card_types(
         RemoteFile.reset_loaded_database()
 
     # Refresh all remote card types
-    remote_card_types = []
     for card_identifier in card_identifiers:
         # Skip blank identifiers, and builtin or local cards
         if (card_identifier is None
