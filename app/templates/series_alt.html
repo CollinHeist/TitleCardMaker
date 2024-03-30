@@ -371,6 +371,7 @@
         {% for library in series.libraries %}
         <div class="ui dropdown item">
           {{library.name}}｜<span data-interface-type="{{library.interface}}" data-value="interface-type">{{library.interface}}</span>
+          <i class="dropdown icon"></i>
           <div class="menu">
             <a class="item" onclick="loadCards({{library.interface_id}}, `{{library.name}}`, false);">
               <i class="hdd outline icon"></i>
