@@ -1513,7 +1513,8 @@ function viewBlueprintSets(blueprintId) {
     success: blueprintSets => {
       const blueprintTemplate = document.getElementById('blueprint-template');
       const setSection = document.getElementById('blueprint-sets');
-      setSection.replaceChildren(); setSection.style.display = 'unset';
+      setSection.replaceChildren();
+      setSection.style.display = 'unset';
 
       for (let set of blueprintSets) {
         const header = document.createElement('h3');
@@ -1695,7 +1696,7 @@ function downloadSeriesLogo(url) {
       // Update logo source to force refresh
       logo = document.getElementById('logo');
       logo.src = `/source/{{series.path_safe_name}}/logo.png?${new Date().getTime()}`;
-      logo.style.display = 'unset';
+      logo.style.display = 'block';
     },
     error: response => showErrorToast({title: 'Error Downloading Logo', response}),
   });
@@ -1722,7 +1723,7 @@ function downloadSeriesBackdrop(url) {
       showInfoToast('Downloaded Backdrop');
       const backdrop = document.getElementById('backdrop');
       backdrop.src = `/source/{{series.path_safe_name}}/backdrop.jpg?${new Date().getTime()}`;
-      backdrop.style.display = 'unset';
+      backdrop.style.display = 'block';
     },
     error: response => showErrorToast({title: 'Error Downloading Backdrop', response}),
   });
@@ -1890,7 +1891,7 @@ function uploadLogo() {
       showInfoToast('Updated Logo');
       const logo = document.querySelector('#logo');
       logo.src = `/source/{{series.path_safe_name}}/logo.png?${new Date().getTime()}`;
-      logo.style.display = 'unset';
+      logo.style.display = 'block';
     },
     error: response => showErrorToast({title: 'Error Updating Logo', response}),
   });
@@ -1928,7 +1929,7 @@ function uploadBackdrop() {
       showInfoToast('Updated Backdrop');
       const backdrop = document.getElementById('backdrop');
       backdrop.src = `/source/{{series.path_safe_name}}/backdrop.jpg?${new Date().getTime()}`;
-      backdrop.style.display = 'unset';
+      backdrop.style.display = 'block';
     },
     error: response => showErrorToast({title: 'Error Updating Backdrop', response}),
   });
