@@ -622,7 +622,7 @@ function populateBlueprintCard(card, blueprint, blueprintId) {
     card.querySelector('[data-value="set-count"]').innerText = blueprint.set_ids.length > 1
       ? `${blueprint.set_ids.length} Associated Sets`
       : `1 Associated Set`;
-  } else {
+  } else if (card.querySelector('.extra.content')) {
     card.querySelector('.extra.content').remove();
   }
 
