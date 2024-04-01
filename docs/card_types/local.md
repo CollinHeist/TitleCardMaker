@@ -53,27 +53,30 @@ structured in order to integrate into TCM. These are outlined below.
             ...
         ```
 
-3. The class must define `TITLE_CHARACTERISTICS`, which is a dictionary with the
-following format:
+3. The class must define `TITLE_CHARACTERISTICS`, which is a dictionary which
+matches the type definition of `modules.Title.SplitCharacteristics`, which is:
 
     ```python
-    TITLE_CHARACTERISTICS = {
-        'max_line_width': int, # Character count to begin splitting titles
-        'max_line_count': int, # Maximum number of lines a title can take up
-        'top_heavy': bool,     # True for top-heavy title splitting
-    }
+    class SplitCharacteristics(TypedDict):
+        # Character count to begin splitting titles into multiple lines
+        max_line_width: int
+        # Maximum number of lines a title can take up
+        max_line_count: int
+        # How to split titles into multiple lines
+        style: Literal['top', 'bottom', 'even', 'forced even']
     ```
 
     ??? example "Example"
 
-        ```python title="FancyTitleCard.py" linenums="1" hl_lines="4-8"
+        ```python title="FancyTitleCard.py" linenums="1" hl_lines="5-9"
         from modules.BaseCardType import BaseCardType
+        from modules.Title import SplitCharacteristics
 
         class FancyTitleCard(BaseCardType):
-            TITLE_CHARACTERISTICS = {
+            TITLE_CHARACTERISTICS: SplitCharacteristics = {
                 'max_line_width': 20,
                 'max_line_count': 2,
-                'top_heavy': True,
+                'style': 'top',
             }
         ```
 
@@ -88,17 +91,18 @@ directory used by TCM itself - accessed at `BaseCardType.BASE_REF_DIRECTORY`.
 
     ??? example "Example"
 
-        ```python title="FancyTitleCard.py" linenums="1" hl_lines="13"
+        ```python title="FancyTitleCard.py" linenums="1" hl_lines="14"
         from pathlib import Path
         from modules.BaseCardType import BaseCardType
+        from modules.Title import SplitCharacteristics
 
         class FancyTitleCard(BaseCardType):
             REF_DIRECTORY = Path(__file__).parent / 'fancy_files'
 
-            TITLE_CHARACTERISTICS = {
+            TITLE_CHARACTERISTICS: SplitCharacteristics = {
                 'max_line_width': 20,
                 'max_line_count': 2,
-                'top_heavy': True,
+                'style': 'top',
             }
 
             TITLE_FONT = str((REF_DIRECTORY / 'DefaultFont.ttf').resolve())
@@ -113,17 +117,18 @@ Any format of ImageMagick
 
     ??? example "Example"
 
-        ```python title="FancyTitleCard.py" linenums="1" hl_lines="14"
+        ```python title="FancyTitleCard.py" linenums="1" hl_lines="15"
         from pathlib import Path
         from modules.BaseCardType import BaseCardType
+        from modules.Title import SplitCharacteristics
 
         class FancyTitleCard(BaseCardType):
             REF_DIRECTORY = Path(__file__).parent / 'fancy_files'
 
-            TITLE_CHARACTERISTICS = {
+            TITLE_CHARACTERISTICS: SplitCharacteristics = {
                 'max_line_width': 20,
                 'max_line_count': 2,
-                'top_heavy': True,
+                'style': 'top',
             }
 
             TITLE_FONT = str((REF_DIRECTORY / 'DefaultFont.ttf').resolve())
@@ -144,17 +149,18 @@ Each is described below:
 
     ??? example "Example"
 
-        ```python title="FancyTitleCard.py" linenums="1" hl_lines="13-15"
+        ```python title="FancyTitleCard.py" linenums="1" hl_lines="14-16"
         from pathlib import Path
         from modules.BaseCardType import BaseCardType
+        from modules.Title import SplitCharacteristics
 
         class FancyTitleCard(BaseCardType):
             REF_DIRECTORY = Path(__file__).parent / 'fancy_files'
 
-            TITLE_CHARACTERISTICS = {
+            TITLE_CHARACTERISTICS: SplitCharacteristics = {
                 'max_line_width': 20,
                 'max_line_count': 2,
-                'top_heavy': True,
+                'style': 'top',
             }
 
             TITLE_FONT = str((REF_DIRECTORY / 'DefaultFont.ttf').resolve())
@@ -169,17 +175,18 @@ the default Font.
 
     ??? example "Example"
 
-        ```python title="FancyTitleCard.py" linenums="1" hl_lines="16-19"
+        ```python title="FancyTitleCard.py" linenums="1" hl_lines="17-20"
         from pathlib import Path
         from modules.BaseCardType import BaseCardType
+        from modules.Title import SplitCharacteristics
 
         class FancyTitleCard(BaseCardType):
             REF_DIRECTORY = Path(__file__).parent / 'fancy_files'
 
-            TITLE_CHARACTERISTICS = {
+            TITLE_CHARACTERISTICS: SplitCharacteristics = {
                 'max_line_width': 20,
                 'max_line_count': 2,
-                'top_heavy': True,
+                'style': 'top',
             }
 
             TITLE_FONT = str((REF_DIRECTORY / 'DefaultFont.ttf').resolve())
@@ -201,17 +208,18 @@ function which accepts only keyword arguments (and `**`). It must have the
 
     ??? example "Example"
 
-        ```python title="FancyTitleCard.py" linenums="1" hl_lines="21-35"
+        ```python title="FancyTitleCard.py" linenums="1" hl_lines="22-36"
         from pathlib import Path
         from modules.BaseCardType import BaseCardType
+        from modules.Title import SplitCharacteristics
 
         class FancyTitleCard(BaseCardType):
             REF_DIRECTORY = Path(__file__).parent / 'fancy_files'
 
-            TITLE_CHARACTERISTICS = {
+            TITLE_CHARACTERISTICS: SplitCharacteristics = {
                 'max_line_width': 20,
                 'max_line_count': 2,
-                'top_heavy': True,
+                'style': 'top',
             }
 
             TITLE_FONT = str((REF_DIRECTORY / 'DefaultFont.ttf').resolve())
@@ -244,17 +252,18 @@ strings.
 
     ??? example "Example"
 
-        ```python title="FancyTitleCard.py" linenums="1" hl_lines="21 35-37"
+        ```python title="FancyTitleCard.py" linenums="1" hl_lines="22 36-38"
         from pathlib import Path
         from modules.BaseCardType import BaseCardType
+        from modules.Title import SplitCharacteristics
 
         class FancyTitleCard(BaseCardType):
             REF_DIRECTORY = Path(__file__).parent / 'fancy_files'
 
-            TITLE_CHARACTERISTICS = {
+            TITLE_CHARACTERISTICS: SplitCharacteristics = {
                 'max_line_width': 20,
                 'max_line_count': 2,
-                'top_heavy': True,
+                'style': 'top',
             }
 
             TITLE_FONT = str((REF_DIRECTORY / 'DefaultFont.ttf').resolve())
@@ -290,17 +299,18 @@ created by the Card.
 
     ??? example "Example"
 
-        ```python title="FancyTitleCard.py" linenums="1" hl_lines="40-55"
+        ```python title="FancyTitleCard.py" linenums="1" hl_lines="41-56"
         from pathlib import Path
         from modules.BaseCardType import BaseCardType
+        from modules.Title import SplitCharacteristics
 
         class FancyTitleCard(BaseCardType):
             REF_DIRECTORY = Path(__file__).parent / 'fancy_files'
 
-            TITLE_CHARACTERISTICS = {
+            TITLE_CHARACTERISTICS: SplitCharacteristics = {
                 'max_line_width': 20,
                 'max_line_count': 2,
-                'top_heavy': True,
+                'style': 'top',
             }
 
             TITLE_FONT = str((REF_DIRECTORY / 'DefaultFont.ttf').resolve())
@@ -353,9 +363,10 @@ attributes defined. This information is what is displayed in the UI.
 
     ??? example "Example"
 
-        ```python title="FancyTitleCard.py" linenums="1" hl_lines="2 6-23"
+        ```python title="FancyTitleCard.py" linenums="1" hl_lines="2 7-24"
         from pathlib import Path
         from modules.BaseCardType import BaseCardType, Extra, CardDescription
+        from modules.Title import SplitCharacteristics
 
         class FancyTitleCard(BaseCardType):
 
@@ -380,10 +391,10 @@ attributes defined. This information is what is displayed in the UI.
 
             REF_DIRECTORY = Path(__file__).parent / 'fancy_files'
 
-            TITLE_CHARACTERISTICS = {
+            TITLE_CHARACTERISTICS: SplitCharacteristics = {
                 'max_line_width': 20,
                 'max_line_count': 2,
-                'top_heavy': True,
+                'style': 'top',
             }
 
             TITLE_FONT = str((REF_DIRECTORY / 'DefaultFont.ttf').resolve())
@@ -440,10 +451,11 @@ validation.
 
     ??? example "Example"
 
-        ```python title="FancyTitleCard.py" linenums="1" hl_lines="2 26-27"
+        ```python title="FancyTitleCard.py" linenums="1" hl_lines="2 27-28"
         from pathlib import Path
         from app.schemas.card_type import BaseCardModel
         from modules.BaseCardType import BaseCardType, Extra, CardDescription
+        from modules.Title import SplitCharacteristics
 
         class FancyTitleCard(BaseCardType):
 
@@ -471,10 +483,10 @@ validation.
 
             REF_DIRECTORY = Path(__file__).parent / 'fancy_files'
 
-            TITLE_CHARACTERISTICS = {
+            TITLE_CHARACTERISTICS: SplitCharacteristics = {
                 'max_line_width': 20,
                 'max_line_count': 2,
-                'top_heavy': True,
+                'style': 'top',
             }
 
             TITLE_FONT = str((REF_DIRECTORY / 'DefaultFont.ttf').resolve())
