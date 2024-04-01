@@ -324,6 +324,9 @@ class Series(Base):
         """
         Whether the given name comes after this Series.
 
+        Args:
+            name: Name of the Series being evaluated.
+
         Returns:
             True if the given `name` comes after this Series'
             alphabetically. False otherwise.
@@ -649,3 +652,59 @@ class Series(Base):
                 or (isinstance(interface, str)
                     and library['interface'] == interface)):
                 yield library['interface_id'], library['name']
+
+
+    def reset_card_config(self) -> None:
+        """
+        Reset this Series to a "default" un-customized state. This only
+        affects Card-related properties.
+        """
+
+        self.font_id = None
+        self.templates = []
+        self.translations = None
+        self.match_titles = True
+        self.auto_split_title = True
+        self.card_type = None
+        self.hide_season_text = None
+        self.season_titles = None
+        self.hide_episode_text = None
+        self.episode_text_format = None
+        self.font_color = None
+        self.font_title_case = None
+        self.font_size = None
+        self.font_kerning = None
+        self.font_stroke_width = None
+        self.font_interline_spacing = None
+        self.font_interword_spacing = None
+        self.font_vertical_shift = None
+        self.extras = {}
+
+
+    def copy_card_config(self, from_: 'Series', /) -> None:
+        """
+        Copy the Card properties from the given Series to this object.
+
+        Args:
+            from_: Series to copy configuration from.
+        """
+
+        self.font_id = from_.font_id
+        self.assign_templates(from_.templates)
+        self.translations = from_.translations
+        self.match_titles = from_.match_titles
+        self.auto_split_title = from_.auto_split_title
+        self.card_type = from_.card_type
+        self.hide_season_text = from_.hide_season_text
+        self.season_titles = from_.season_titles
+        self.hide_episode_text = from_.hide_episode_text
+        self.episode_text_format = from_.episode_text_format
+        self.font_color = from_.font_color
+        self.font_title_case = from_.font_title_case
+        self.font_size = from_.font_size
+        self.font_kerning = from_.font_kerning
+        self.font_stroke_width = from_.font_stroke_width
+        self.font_interline_spacing = from_.font_interline_spacing
+        self.font_interword_spacing = from_.font_interword_spacing
+        self.font_vertical_shift = from_.font_vertical_shift
+        self.extras = from_.extras

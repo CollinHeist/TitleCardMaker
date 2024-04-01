@@ -11,7 +11,10 @@ from requests import get
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 
-from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.dependencies import (
+    get_database, get_preferences, require_interface, require_tmdb_interface,
+    Preferences, TMDbInterface
+)
 from app.database.session import Page
 from app.database.query import get_interface, get_series
 from app import models
@@ -343,10 +346,10 @@ def get_series_config(
 
 @series_router.patch('/series/{series_id}')
 def update_series(
-        series_id: int,
         request: Request,
+        series_id: int,
         update: UpdateSeries = Body(...),
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> Series:
     """
     Update the config of the given Series.
@@ -362,6 +365,41 @@ def update_series(
     update_series_config(db, series, update, commit=True, log=request.state.log)
 
     return series
+
+
+@series_router.put('/series/{series_id}/copy')
+def copy_series_config(
+        request: Request,
+        series_id: int,
+        from_series_id: int = Query(...),
+        reset_series: bool = Query(default=True),
+        reset_episodes: bool = Query(default=False),
+        db: Session = Depends(get_database),
+    ) -> Series:
+    """
+    
+    """
+
+    # Get to- and from-Series
+    to_series = get_series(db, series_id, raise_exc=True)
+    from_series = get_series(db, from_series_id, raise_exc=True)
+
+    # Reset Series/Episode if indicated
+    if reset_series:
+        to_series.reset_card_config()
+        request.state.log.debug(f'Reset {to_series}')
+    if reset_episodes:
+        for episode in to_series.episodes:
+            episode.reset_card_config()
+            request.state.log.debug(f'Reset {episode}')
+
+    # Copy config over
+    to_series.copy_card_config(from_series)
+    request.state.log.info(f'Copied Card config from {from_series} to {to_series}')
+
+    # Commit changes
+    db.commit()
+    return to_series
 
 
 @series_router.put('/series/{series_id}/toggle-monitor')

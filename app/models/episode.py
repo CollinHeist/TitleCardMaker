@@ -466,3 +466,26 @@ class Episode(Base):
         # Interface has no mappings, add
         self.watched_statuses[key] = status.status
         return True
+
+
+    def reset_card_config(self) -> None:
+        """
+        Reset this Episode to a "default" un-customized state. This only
+        affects Card-related properties.
+        """
+
+        self.font_id = None
+        self.templates = []
+        self.card_type = None
+        self.hide_season_text = None
+        self.season_text = None
+        self.hide_episode_text = None
+        self.episode_text = None
+        self.font_color = None
+        self.font_size = None
+        self.font_kerning = None
+        self.font_stroke_width = None
+        self.font_interline_spacing = None
+        self.font_interword_spacing = None
+        self.font_vertical_shift = None
+        self.extras = {}
