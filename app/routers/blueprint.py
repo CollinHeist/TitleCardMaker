@@ -1,4 +1,5 @@
 from json import dump
+from logging import Logger
 from pathlib import Path
 from random import choice as random_choice
 from shutil import copy as copy_file, make_archive as zip_directory
@@ -9,6 +10,7 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse
 from fastapi_pagination import paginate as paginate_sequence
+from PIL import Image
 from sqlalchemy.orm import Session
 
 from app.database.query import get_blueprint, get_blueprint_set, get_series
@@ -30,7 +32,6 @@ from app.schemas.blueprint import (
     DownloadableFile, ExportBlueprint, RemoteBlueprint, RemoteBlueprintSet,
 )
 from app.schemas.series import Series
-
 from modules.Debug import generate_context_id
 from modules.SeriesInfo2 import SeriesInfo
 
@@ -136,7 +137,7 @@ async def export_series_blueprint_as_zip(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Query for this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
@@ -205,6 +206,11 @@ async def export_series_blueprint_as_zip(
     # Copy preview into main zip directory
     if card_file is None:
         log.warning(f'No applicable Title Cards found for preview')
+    # .webp must be converted, GitHub does not support natively
+    elif card_file.suffix == '.webp':
+        Image.open(card_file).convert('RGB').save(zip_dir / 'preview.jpg')
+        log.debug(f'Converted "{card_file}" to .jpg')
+        log.debug(f'Copied "{card_file}" into zip directory')
     else:
         copy_file(card_file, zip_dir / f'preview{card_file.suffix}')
         log.debug(f'Copied "{card_file}" into zip directory')
