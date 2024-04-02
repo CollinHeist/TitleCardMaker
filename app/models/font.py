@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.session import Base
 from app.dependencies import get_preferences
+from app.schemas.blueprint import BlueprintFont
 from app.schemas.font import TitleCase
 
 if TYPE_CHECKING:
@@ -187,3 +188,32 @@ class Font(Base):
             'title_case': self.title_case,
             'vertical_shift': self.vertical_shift or None,
         }
+
+
+    def equals(self, other: BlueprintFont) -> bool:
+        """
+        Determine whether this Font is equivalent to another.
+
+        Args:
+            other: The other Font being evaluated.
+
+        Returns:
+            True if the Font is equivalent, False otherwise.
+        """
+
+        return (
+            self.color == other.color
+            and self.delete_missing == other.delete_missing
+            and self.file_name == other.file
+            and self.interline_spacing == other.interline_spacing
+            and self.interword_spacing == other.interword_spacing
+            and self.kerning == other.kerning
+            # Do not evaluate since these frequently change
+            # and self.replacements_in == other.replacements_in
+            # and self.replacements_out == other.replacements_out
+            and self.size == other.size
+            and self.stroke_width == other.stroke_width
+            and self.title_case == other.title_case
+            and self.vertical_shift == other.vertical_shift
+            and self.line_split_modifier == other.line_split_modifier
+        )

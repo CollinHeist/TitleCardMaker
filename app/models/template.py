@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from app.models.preferences import Preferences
     from app.models.series import Series
     from app.models.sync import Sync
+    from app.schemas.blueprint import BlueprintTemplate
 
 
 def regex_replace(pattern, replacement, string):
@@ -380,3 +381,38 @@ class Template(Base):
 
         # All Filter criteria met
         return True
+
+
+    def equals(self, other: 'BlueprintTemplate') -> bool:
+        """
+        Determine whether this Template is equivalent to another.
+
+        Args:
+            other: The other Template being evaluated.
+
+        Returns:
+            True if the Template is equivalent, False otherwise.
+        """
+
+        st_ranges, st_values = None, None
+        if self.season_titles:
+            st_ranges = list(self.season_titles.keys())
+            st_values = list(self.season_titles.values())
+        ex_keys, ex_values = None, None
+        if self.extras:
+            ex_keys = list(self.extras.keys())
+            ex_values = list(self.extras.values())
+
+        return (
+            self.filters == other.filters
+            and self.card_type == other.card_type
+            and self.hide_season_text == other.hide_season_text
+            and self.hide_episode_text == other.hide_episode_text
+            and st_ranges == other.season_title_ranges
+            and st_values == other.season_title_values
+            and self.episode_text_format == other.episode_text_format
+            and self.translations == other.translations
+            and ex_keys == other.extra_keys
+            and ex_values == other.extra_values
+            and self.skip_localized_images == other.skip_localized_images
+        )
