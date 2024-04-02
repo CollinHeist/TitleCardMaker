@@ -116,7 +116,9 @@ class AnimeCardType(BaseCardTypeCustomFontAllText):
     kanji: Optional[str] = None
     require_kanji: bool = False
     kanji_color: Optional[str] = AnimeTitleCard.TITLE_COLOR
+    kanji_font_size: PositiveFloat = 1.0
     kanji_stroke_color: Optional[str] = None
+    kanji_stroke_width: float = 1.0
     kanji_vertical_shift: int = 0
     separator: str = '·'
     omit_gradient: bool = False
@@ -132,8 +134,7 @@ class AnimeCardType(BaseCardTypeCustomFontAllText):
         return values
 
     @root_validator(skip_on_failure=True)
-    def assign_unassigned_colors(cls, values: dict) -> dict:
-        # None means match stroke color
+    def assign_unassigned_values(cls, values: dict) -> dict:
         if values['kanji_stroke_color'] is None:
             values['kanji_stroke_color'] = values['stroke_color']
 
