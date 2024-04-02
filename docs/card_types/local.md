@@ -14,6 +14,10 @@ description: >
     but I do not have time to teach these concepts in addition to developing
     TCM.
 
+    If you have an idea for a card type, but are not interested in (or cannot
+    dedicate the time to) developing it yourself, I offer card design as a
+    [Sponsor reward](https://github.com/sponsors/CollinHeist?frequency=one-time&sponsor=CollinHeist) on GitHub.
+
 ## File Location
 
 Any local card type files should be placed inside the `card_types` directory in
