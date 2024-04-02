@@ -1,6 +1,6 @@
 {% if False %}
 import {
-  RemoteBlueprintPage, RemoteBlueprintSet, SearchResult, Series
+  RemoteBlueprint, RemoteBlueprintPage, RemoteBlueprintSet, SearchResult, Series
 } from './.types.js';
 {% endif %}
 
@@ -148,7 +148,7 @@ function queryBlueprints(result, resultElementId) {
     url: `/api/blueprints/query/series?${query}`,
     /**
      * 
-     * @param {Array<import('./.types.js').RemoteBlueprint>} blueprints - Blueprints associated with
+     * @param {RemoteBlueprint[]} blueprints - Blueprints associated with
      * this search result.
      */
     success: blueprints => {

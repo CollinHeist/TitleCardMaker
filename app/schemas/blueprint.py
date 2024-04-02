@@ -5,7 +5,7 @@ from json import loads
 from re import sub as re_sub, IGNORECASE
 from typing import Any, Optional
 
-from pydantic import Field, root_validator, validator # pylint: disable=no-name-in-module
+from pydantic import Field, root_validator, validator
 
 from app.schemas.base import Base
 from app.schemas.font import TitleCase

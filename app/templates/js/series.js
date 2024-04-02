@@ -1058,10 +1058,11 @@ let currentCardPage = 1;
  * successful, then the cards are loaded into the page under the appropriate
  * element, and the pagination menu is updated.
  * @param {number} [page] - The page number of card data to query.
- * @param {bool} [transition] - Whether to transition the HTMLElements when
+ * @param {boolean} [transition] - Whether to transition the HTMLElements when
  * updating the DOM.
+ * @param {boolean} [scroll] - Whether to scroll to the top of the Card display.
  */
-function getCardData(page=currentCardPage, transition=false) {
+function getCardData(page=currentCardPage, transition=false, scroll=false) {
   const pageSize = isSmallScreen() ? 3 : 12;
   $.ajax({
     type: 'GET',
@@ -1124,13 +1125,15 @@ function getCardData(page=currentCardPage, transition=false) {
           previewElement.replaceChildren(...previews);
         }
       }
-      previewElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+      if (scroll) {
+        previewElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+      }
 
       // Update pagination
       currentCardPage = page;
       updatePagination({
         paginationElementId: 'card-pagination',
-        navigateFunction: getCardData,
+        navigateFunction: (p, t) => getCardData(p, t, true),
         page: cards.page,
         pages: cards.pages,
         amountVisible: isSmallScreen() ? 6 : 15,
@@ -2360,7 +2363,7 @@ function dropHandler(event) {
  * @param {boolean} setTextless - Whether to set the Episodes as textless on
  * import.
  */
-function uploadCards(setTextless) {
+function uploadCards(setTextless=false) {
   // No files uploaded, exit
   if (pendingFiles.length === 0) {
     showInfoToast('No Cards to Upload');
