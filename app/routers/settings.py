@@ -66,9 +66,7 @@ def get_global_episode_data_source(
         db: Session = Depends(get_database),
         preferences: PreferencesModel = Depends(get_preferences),
     ) -> list[EpisodeDataSourceToggle]:
-    """
-    Get the list of Episode data sources.
-    """
+    """Get the list of Episode data sources."""
 
     return [{
         'interface': connection.interface_type,

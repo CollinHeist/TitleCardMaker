@@ -1,9 +1,20 @@
 {% if False %}
 import {
-  NamedFont, PreviewTitleCard, SeriesPage, Style, StyleOption, Template,
-  TemplateFilter, TemplatePage, Translation
+  AvailableFont, PreviewTitleCard, SeriesPage, Style, Template, TemplateFilter,
+  TemplatePage, Translation
 } from './.types.js';
 {% endif %}
+
+const allStyles = [
+  {name: 'Art', value: 'art', style_type: 'art'},
+  {name: 'Blurred Art', value: 'art blur', style_type: 'art'},
+  {name: 'Grayscale Art', value: 'art grayscale', style_type: 'art'},
+  {name: 'Blurred Grayscale Art', value: 'art blur grayscale', style_type: 'art'},
+  {name: 'Unique', value: 'unique', style_type: 'unique'},
+  {name: 'Blurred Unique', value: 'blur unique', style_type: 'unique'},
+  {name: 'Grayscale Unique', value: 'grayscale unique', style_type: 'unique'},
+  {name: 'Blurred Grayscale Unique', value: 'blur grayscale unique', style_type: 'unique'},
+];
 
 /**
  * Parse some list value, converting empty lists to the fallback
@@ -215,19 +226,10 @@ function updateTemplate(templateId) {
 }
 
 async function getAllTemplates() {
-  /** @type {TemplateFilter} */
-  const allFilterOptions = await fetch('/api/available/template-filters').then(resp => resp.json());
-  /** @type {NamedFont[]} */
-  const allFonts = await fetch('/api/fonts/all').then(resp => resp.json());
-  /** @type {StyleOption[]} */
-  const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
-  /** @type {TemplatePage} */
+  /** @type {TemplatePage} Query all Templates */
   const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
-  const allEpisodeDataSources = await fetch('/api/settings/episode-data-source').then(resp => resp.json());
-  /** @type {Translation[]} */
-  const allTranslations = await fetch('/api/available/translations').then(resp => resp.json());
-  await queryAvailableExtras();
-  await getAllCardTypes();
+
+  // Create elements to add to the page
   const elements = [],
         hasManyTemplates = allTemplates.items.length > 10;
   let currentHeader = '';
@@ -283,7 +285,6 @@ async function getAllTemplates() {
     // Translations added later
     // Extras later
     // Update card preview(s)
-    const form = base.querySelector('form');
     const watchedCard = base.querySelector('.card[content-type="watched"]'),
         unwatchedCard = base.querySelector('.card[content-type="unwatched"]');
     const watchedImg = base.querySelector('img[content-type="watched"]'),
@@ -291,13 +292,27 @@ async function getAllTemplates() {
     base.querySelector('.button[data-action="refresh"]').onclick = () => {
       reloadPreview('watched', templateElementId, watchedCard, watchedImg);
       reloadPreview('unwatched', templateElementId, unwatchedCard, unwatchedImg);
-    }
+    };
+    watchedCard.onclick = () => reloadPreview('watched', templateElementId, watchedCard, watchedImg);
+    unwatchedCard.onclick = () => reloadPreview('unwatched', templateElementId, unwatchedCard, unwatchedImg);
     elements.push(base);
   });
 
+  // Add elements to the page, refresh theme, and then initialize accordions
   document.getElementById('templates').replaceChildren(...elements);
+  refreshTheme();
   $('.ui.accordion').accordion();
-  $('.ui.checkbox').checkbox();
+
+  // Query all "extra" content necessary for dropdowns and such
+  /** @type {TemplateFilter} */
+  const allFilterOptions = await fetch('/api/available/template-filters').then(resp => resp.json());
+  /** @type {AvailableFont[]} */
+  const allFonts = await fetch('/api/available/fonts').then(resp => resp.json());
+  const allEpisodeDataSources = await fetch('/api/settings/episode-data-source').then(resp => resp.json());
+  /** @type {Translation[]} */
+  const allTranslations = await fetch('/api/available/translations').then(resp => resp.json());
+  await queryAvailableExtras();
+  await getAllCardTypes();
 
   // Fill in fancy values
   allTemplates.items.forEach(templateObj => {
@@ -346,7 +361,7 @@ async function getAllTemplates() {
     });
     // Card type
     loadCardTypes({
-      element: `#template-id${templateObj.id} >* .dropdown[data-value="card-types"]`,
+      element: `#template-id${templateObj.id} .dropdown[data-value="card-types"]`,
       isSelected: (identifier) => identifier === templateObj.card_type,
       dropdownArgs: {
         placeholder: 'Global Default',
@@ -354,9 +369,10 @@ async function getAllTemplates() {
     });
     // Font
     $(`#template-id${templateObj.id} .dropdown[data-value="font-dropdown"]`).dropdown({
+      placeholder: 'Card Default',
       values: allFonts.map(({id, name}) => {
         return {name: name, value: id, selected: id === templateObj.font_id};
-      }), placeholder: 'Card Default',
+      }),
     });
     // Update/remove link to Font
     if (templateObj.font_id === null) {
@@ -366,6 +382,7 @@ async function getAllTemplates() {
     }
     // Watched style
     $(`#template-id${templateObj.id} .dropdown[data-value="watched-style"]`).dropdown({
+      placeholder: 'Global Default',
       values: [
         {name: 'Art Variations', type: 'header'},
         ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
@@ -375,10 +392,11 @@ async function getAllTemplates() {
         ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
           return {name: name, value: value, selected: value === templateObj.watched_style};
         }),
-      ], placeholder: 'Global Default',
+      ],
     });
     // Unwatched style
-    $(`#template-id${templateObj.id} >* .dropdown[data-value="unwatched-style"]`).dropdown({
+    $(`#template-id${templateObj.id} .dropdown[data-value="unwatched-style"]`).dropdown({
+      placeholder: 'Global Default',
       values: [
         {name: 'Art Variations', type: 'header'},
         ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
@@ -388,7 +406,7 @@ async function getAllTemplates() {
         ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
           return {name: name, value: value, selected: value === templateObj.unwatched_style};
         }),
-      ], placeholder: 'Global Default',
+      ],
     });
     // Hide season text
     initializeNullableBoolean({
@@ -507,6 +525,7 @@ async function getAllTemplates() {
 
   // Enable accordion/dropdown/checkbox elements
   $('.ui.accordion').accordion();
+  $('.ui.checkbox').checkbox();
   $('.field[data-value="season-titles"] label i').popup({
     popup: '#season-title-popup',
     position: 'right center',

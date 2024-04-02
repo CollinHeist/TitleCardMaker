@@ -3,6 +3,11 @@ img {
   max-width: 100%;
 }
 
+/* Indicate preview cards are clickable */
+.preview.card {
+  cursor: pointer;
+}
+
 /* Make sure card loader is below the search bar */
 .ui.loading.card::before {
   z-index: 10;

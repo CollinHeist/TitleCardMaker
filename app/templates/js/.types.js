@@ -21,6 +21,12 @@
  */
 
 /**
+ * @typedef {Object} AvailableFont
+ * @property {number} id
+ * @property {string} name
+ */
+
+/**
  * @typedef {Object} Extra
  * @property {string} name
  * @property {DictKey} identifier
