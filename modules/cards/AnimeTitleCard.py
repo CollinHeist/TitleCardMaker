@@ -57,6 +57,7 @@ class AnimeTitleCard(BaseCardType):
         'font_vertical_shift', 'omit_gradient', 'stroke_color', 'separator',
         'kanji', 'use_kanji', 'require_kanji', 'kanji_vertical_shift',
         'episode_text_color', 'kanji_color', 'episode_stroke_color',
+        'kanji_stroke_color', 'kanji_stroke_width', 'kanji_font_size',
     )
 
     def __init__(self, *,
@@ -83,8 +84,11 @@ class AnimeTitleCard(BaseCardType):
             separator: str = '·',
             omit_gradient: bool = False,
             require_kanji: bool = False,
-            kanji_vertical_shift: float = 0.0,
             kanji_color: str = TITLE_COLOR,
+            kanji_font_size: float = 1.0,
+            kanji_stroke_color: str = 'black',
+            kanji_stroke_width: float = 1.0,
+            kanji_vertical_shift: float = 0.0,
             stroke_color: str = 'black',
             preferences: Optional['PreferenceParser'] = None,
             **unused,
@@ -125,6 +129,9 @@ class AnimeTitleCard(BaseCardType):
         self.episode_text_color = episode_text_color
         self.omit_gradient = omit_gradient
         self.kanji_color = kanji_color
+        self.kanji_font_size = kanji_font_size
+        self.kanji_stroke_color = kanji_stroke_color
+        self.kanji_stroke_width = kanji_stroke_width
         self.separator = separator
         self.stroke_color = stroke_color
 
@@ -226,13 +233,15 @@ class AnimeTitleCard(BaseCardType):
         return [
             *title_commands,
             f'-font "{self.KANJI_FONT.resolve()}"',
-            *self.__title_text_black_stroke,
-            f'-strokewidth 5',
-            f'-pointsize {85 * self.font_size}',
+            f'-kerning -3.0',
+            f'-pointsize {85 * self.kanji_font_size}',
+            f'-strokewidth {5 * self.kanji_stroke_width:.2f}',
+            f'-fill "{self.kanji_stroke_color}"',
+            f'-stroke "{self.kanji_stroke_color}"',
             f'-annotate +75+{kanji_offset} "{self.kanji}"',
-            f'-strokewidth 0.5',
             f'-fill "{self.kanji_color}"',
-            f'-stroke "{self.kanji_color}"',
+            f'-stroke "{self.kanji_stroke_color}"',
+            f'-strokewidth 0.5',
             f'-annotate +75+{kanji_offset} "{self.kanji}"',
         ]
 
@@ -322,6 +331,12 @@ class AnimeTitleCard(BaseCardType):
             if 'episode_text_color' in extras:
                 extras['episode_text_color'] =\
                     AnimeTitleCard.SERIES_COUNT_TEXT_COLOR
+            if 'kanji_font_size' in extras:
+                extras['kanji_font_size'] = 1.0
+            if 'kanji_stroke_width' in extras:
+                extras['kanji_stroke_width'] = 1.0
+            if 'kanji_stroke_color' in extras:
+                extras['episode_stroke_color'] = 'black'
             if 'kanji_vertical_shift' in extras:
                 extras['kanji_vertical_shift'] = 0
             if 'stroke_color' in extras:
@@ -349,6 +364,11 @@ class AnimeTitleCard(BaseCardType):
                 and extras['episode_text_color'] != AnimeTitleCard.SERIES_COUNT_TEXT_COLOR)
             or ('kanji_color' in extras
                 and extras['kanji_color'] != AnimeTitleCard.TITLE_COLOR)
+            or ('kanji_font_size' in extras and extras['kanji_font_size'] !=1.0)
+            or ('kanji_stroke_color' in extras
+                and extras['kanji_stroke_color'] != 'black')
+            or ('kanji_stroke_width' in extras
+                and extras['kanji_stroke_width'] != 1.0)
             or ('kanji_vertical_shift' in extras
                 and extras['kanji_vertical_shift'] != 0)
             or ('stroke_color' in extras
