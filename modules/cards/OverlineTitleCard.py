@@ -13,8 +13,8 @@ if TYPE_CHECKING:
 class OverlineTitleCard(BaseCardType):
     """
     This class describes a CardType that produces title cards featuring
-    a thin line over (or under) the title text. This line is
-    interesected by the episode text, and can be recolored.
+    a thin line over (or under) the title text. This line is intersected
+    by the episode text, and can be recolored.
     """
 
     """Directory where all reference files used by this card are stored"""
@@ -399,6 +399,8 @@ class OverlineTitleCard(BaseCardType):
             *self.index_text_commands,
             # Add line
             *self.line_commands(title_text_dimensions, index_text_dimensions),
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
