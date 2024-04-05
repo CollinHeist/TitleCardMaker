@@ -274,9 +274,8 @@ function queryAllBlueprints(page=1, refresh=false) {
 
         // Assign function to clicking name
         card.querySelector('[data-action="search-series"]').onclick = () => {
-          $('#search-query').val(blueprint.series.name);
-          querySeries();
-          document.getElementById('search-query').scrollIntoView({behavior: 'smooth', block: 'start'});
+          $('input[name="blueprint_series_name"]').val(blueprint.series.name);
+          queryAllBlueprints();
         }
 
         // Assign function to import button

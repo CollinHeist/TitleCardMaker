@@ -1,7 +1,7 @@
 from collections import namedtuple
 from pathlib import Path
 from sys import exit as sys_exit
-from typing import Any, Iterator, Optional, Union
+from typing import Any, Iterator, Literal, Optional, Union, overload
 
 from fastapi import HTTPException
 from num2words import CONVERTER_CLASSES as SUPPORTED_LANGUAGE_CODES
@@ -216,9 +216,10 @@ class PreferenceParser(YamlReader):
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        attributes = ', '.join(f'{attr}={getattr(self, attr)!r}'
-                               for attr in self.__dict__
-                               if not attr.startswith('_'))
+        attributes = ', '.join(
+            f'{attr}={getattr(self, attr)!r}' for attr in self.__dict__
+            if not attr.startswith('_')
+        )
 
         return f'<PreferenceParser {attributes}>'
 
@@ -953,7 +954,8 @@ class PreferenceParser(YamlReader):
     def apply_template(
             templates: dict[str, Template],
             series_yaml: dict[str, Any],
-            series_name: str, *,
+            series_name: str,
+            *,
             raise_exc: bool = False
         ) -> bool:
         """
@@ -966,6 +968,8 @@ class PreferenceParser(YamlReader):
                 apply.
             series_yaml: The YAML of the series to modify.
             series_name: The name of the series being modified.
+            raise_exc: Whether to raise an Exception if the YAML is
+                invalid.
 
         Returns:
             True if the given series contained all the required template
@@ -1029,7 +1033,8 @@ class PreferenceParser(YamlReader):
             show_yaml: dict[str, Any],
             templates: dict[str, Template],
             library_map: dict[str, Any],
-            font_map: dict[str, Any], *,
+            font_map: dict[str, Any],
+            *,
             default_media_server: str = 'plex',
             raise_exc: bool = False
         ) -> Optional[dict]:
@@ -1375,6 +1380,11 @@ class PreferenceParser(YamlReader):
             log.exception(f'Invalid season folder format')
             sys_exit(1)
 
+
+    @overload
+    def filesize_as_bytes(self, filesize: str) -> int: ...
+    @overload
+    def filesize_as_bytes(self, filesize: Literal[None]) -> None: ...
 
     def filesize_as_bytes(self, filesize: Optional[str]) -> Optional[int]:
         """
