@@ -640,9 +640,9 @@ class TintedFrameTitleCard(BaseCardType):
             # Add blurred edges (if indicated)
             *self.blur_commands,
             # Add remaining sub-components
+            *self.logo_commands,
             *self.title_text_commands,
             *self.index_text_commands,
-            *self.logo_commands,
             *self.frame_commands,
             # Attempt to overlay mask
             *self.add_overlay_mask(self.source_file),
