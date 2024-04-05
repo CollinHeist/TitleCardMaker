@@ -75,7 +75,7 @@ class ImageMagickInterface:
         self.timeout = timeout
 
         # Command history for debug purposes
-        self.__history = []
+        self.__history: list[tuple[str, bytes, bytes]] = []
 
 
     def validate_interface(self) -> bool:
@@ -208,10 +208,9 @@ class ImageMagickInterface:
         """Print the command history of this Interface."""
 
         for command, stdout, stderr in self.__history:
-            log.debug(f'Command: {command}\n\n'
-                      f'stdout: {stdout}\n\n'
-                      f'stderr: {stderr}\n'
-                      f'{"-" * 60}')
+            log.debug(f'Command:\n{command}\n\n'
+                      f'stdout:\n{stdout.decode()}\n\n'
+                      f'stderr:\n{stderr.decode()}')
 
 
     def get_image_dimensions(self, image: Path) -> Dimensions:
