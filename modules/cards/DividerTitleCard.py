@@ -177,13 +177,12 @@ class DividerTitleCard(BaseCardType):
     @property
     def divider_height(self) -> int:
         """
-        Get the height of the divider between the index and title text.
-
-        Returns:
-            Height of the divider to create.
+        The height of the divider between the index and title text. This
+        is calculated based on the maximum of the height of the index
+        and title text. 0 is returned if a divider is not needed.
         """
 
-        # No need for divider, use blank command
+        # No need for divider if either text is hidden, return 0
         if (len(self.title_text) == 0
             or (self.hide_season_text and self.hide_episode_text)):
             return 0
@@ -405,6 +404,8 @@ class DividerTitleCard(BaseCardType):
             # Overlay title text in correct position
             f'-gravity {gravity}',
             f'-composite',
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
