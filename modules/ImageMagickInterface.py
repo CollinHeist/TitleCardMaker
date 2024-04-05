@@ -1,8 +1,11 @@
 from os import environ, name as os_name
 from pathlib import Path
+from random import choices as random_choices
+from re import findall
 from shlex import split as command_split
+from string import hexdigits
 from subprocess import Popen, PIPE, TimeoutExpired
-from typing import Literal, NamedTuple, Optional, overload
+from typing import Iterable, Literal, NamedTuple, Optional, overload
 
 from imagesize import get as im_get
 
@@ -32,6 +35,9 @@ class ImageMagickInterface:
 
     """How long to wait before terminating a command as timed out"""
     COMMAND_TIMEOUT_SECONDS = 60
+
+    """Default quality for image creation"""
+    DEFAULT_CARD_QUALITY = 95
 
     """Directory for all temporary images created during image creation"""
     TEMP_DIR = Path(__file__).parent / '.objects'
