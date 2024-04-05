@@ -10,7 +10,7 @@ from sqlalchemy.orm import Query, Session
 
 from app.database.query import get_interface
 from app.dependencies import get_database, get_preferences
-from app.internal.availability import get_remote_card_hash, get_remote_cards
+from app.internal.availability import get_remote_card_hash
 from app.internal.episodes import refresh_episode_data
 from app.internal.sources import download_episode_source_images
 from app.internal.templates import get_effective_templates
@@ -107,10 +107,10 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                                 log.exception(f'{episode} - skipping Card')
                 except (PendingRollbackError, OperationalError):
                     if failures > 10:
-                        log.error(f'Database is extremely busy, stopping Task')
+                        log.exception(f'Database is extremely busy, stopping Task')
                         break
                     failures += 1
-                    log.debug(f'Database is busy, sleeping..')
+                    log.exception(f'Database is busy, sleeping..')
                     sleep(30)
     except Exception:
         log.exception(f'Failed to create title cards')
@@ -183,9 +183,8 @@ def refresh_all_remote_card_types(*, log: Logger = log) -> None:
     """
 
     try:
-        # Refresh the local cards
         get_preferences().parse_local_card_types(log=log)
-        # Refresh the remote cards
+
         with next(get_database()) as db:
             refresh_remote_card_types(db, reset=True, log=log)
     except Exception:
@@ -285,12 +284,13 @@ def add_card_to_database(
     Args:
         db: Database to add the Card entry to.
         card_model: NewTitleCard model being added to the Database.
+        CardTypeModel: Pydantic model containing the card JSON to store.
         card_file: Path to the Card associated with the given model
             being added to the Database.
         library: Library the Card is associated with.
 
     Returns:
-        Created Card entry within the Database.
+        Card entry created within the Database.
     """
 
     # Add Card to database
@@ -411,8 +411,8 @@ def resolve_card_settings(
         The resolved Card settings as a dictionary.
 
     Raises:
-        HTTPException (400): Invalid Card type / class.
-        HTTPException (404): A specified Template / Font is missing.
+        HTTPException (400): Invalid Card type or class.
+        HTTPException (404): A specified Template or Font is missing.
         MissingSourceImage: The required Source Image is missing.
     """
 
@@ -793,8 +793,8 @@ def create_episode_cards(
         log: Logger for all log messages.
 
     Raises:
-        HTTPException: If the card settings are invalid and `raise_exc`
-            is True.
+        HTTPException: The card settings are invalid and `raise_exc` is
+            True.
     """
 
     # If parent Series has multiple libraries

@@ -336,9 +336,7 @@ def get_sonarr_tags(
 def get_available_fonts(
         db: Session = Depends(get_database),
     ) -> list[AvailableFont]:
-    """
-    Get all the available Font base data.
-    """
+    """Get all the available Font base data."""
 
     return db.query(models.font.Font).order_by(models.font.Font.sort_name).all()
 

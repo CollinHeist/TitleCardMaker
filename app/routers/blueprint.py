@@ -364,7 +364,7 @@ def query_series_blueprints_(
 @blueprint_router.get('/query/series')
 def query_blueprints_by_info(
         name: str = Query(..., min_length=1),
-        year: int = Query(..., min=1900),
+        year: Optional[int] = Query(default=None, min=1900),
         imdb_id: Optional[str] = Query(default=None),
         tmdb_id: Optional[int] = Query(default=None),
         tvdb_id: Optional[int] = Query(default=None),
@@ -377,12 +377,23 @@ def query_blueprints_by_info(
     - year: Year of the Series to look up Blueprints for.
     """
 
-    series_info = SeriesInfo(
-        name=name, year=year,
-        imdb_id=imdb_id, tmdb_id=tmdb_id, tvdb_id=tvdb_id,
-    )
+    # Year provided, do normal query
+    if year is not None:
+        series_info = SeriesInfo(
+            name=name, year=year,
+            imdb_id=imdb_id, tmdb_id=tmdb_id, tvdb_id=tvdb_id,
+        )
 
-    return query_series_blueprints(blueprint_db, series_info)
+        return query_series_blueprints(blueprint_db, series_info)
+
+    # No year provided, filter by name alone
+    blueprint_series = blueprint_db.query(BlueprintSeries)\
+        .filter(BlueprintSeries.name.contains(name))\
+        .all()
+
+    return blueprint_db.query(Blueprint)\
+        .filter(Blueprint.series_id.in_([bp.id for bp in blueprint_series]))\
+        .all()
 
 
 @blueprint_router.post('/import/blueprint/{blueprint_id}', status_code=201)

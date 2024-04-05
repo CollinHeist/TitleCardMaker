@@ -257,7 +257,6 @@ def process_series(
     if series.monitored:
         log.debug(f'{series} Started refreshing Episode data')
         refresh_episode_data(db, series, log=log)
-    db.commit()
 
     # Update watch statuses
     get_watched_statuses(db, series, series.episodes, log=log)
