@@ -225,6 +225,9 @@ function updateTemplate(templateId) {
   });
 }
 
+/**
+ * Query all templates, adding their content to the page.
+ */
 async function getAllTemplates() {
   /** @type {TemplatePage} Query all Templates */
   const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());

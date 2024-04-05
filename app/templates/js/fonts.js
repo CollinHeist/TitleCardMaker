@@ -298,6 +298,7 @@ function populateFontElement(template, font, activeFontId) {
   const previewImage = template.querySelector('img');
   const fontForm = template.querySelector('form[data-value="font-form"]');
   const previewForm =  template.querySelector('form[data-value="preview-form"]');
+  template.querySelector('.card').onclick = () => reloadPreview(font.id, fontForm, previewForm, previewCard, previewImage);
   template.querySelector('.button[data-action="refresh"]').onclick = () => reloadPreview(font.id, fontForm, previewForm, previewCard, previewImage);
   // If this font was indicated in URL, initiate preview load
   if (activeFontId && `font-id${font.id}` === activeFontId) {
