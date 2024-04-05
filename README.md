@@ -7,7 +7,8 @@
 
 An automated title card maker for the Plex, Jellyfin, and Emby media servers. All user documentation is available on the [Wiki](https://github.com/CollinHeist/TitleCardMaker/wiki).
 
-Version 2.0 - the Web UI - has officially entered pre-release, and is currently available for project [Sponsors](https://github.com/sponsors/CollinHeist).
+> [!IMPORTANT] 
+> Version 2.0 - the Web UI - has officially entered pre-release, and is currently available for project [Sponsors](https://github.com/sponsors/CollinHeist).
 
 <img alt="Web UI" src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker/web-ui/docs/assets/home_dark.webp"/>
 
@@ -31,6 +32,7 @@ TitleCardMaker can be automated such that everything can be done without manual 
 All configuration/automation of the TitleCardMaker is done via YAML files, and the actual image creation is done using the open-source and free image library called [ImageMagick](https://imagemagick.org/).
 
 ## Getting Started
+> [!NOTE]
 > The [Wiki](https://github.com/CollinHeist/TitleCardMaker/wiki) has very extensive documentation on every feature and customization available in TitleCardMaker. I __highly__ recommend looking here as the first step when troubleshooting or customizing your setup. [The Discord](https://discord.gg/bJ3bHtw8wH) is also a great place to get detailed help.
 
 Read the [Getting Started](https://github.com/CollinHeist/TitleCardMaker/wiki) page on the Wiki for the traditional install, or the [Getting Started on Docker](https://github.com/CollinHeist/TitleCardMaker/wiki/Docker-Tutorial) page to install using Docker.
@@ -46,6 +48,7 @@ pipenv run python main.py --run
 
 For invocation and configuration details, read [here](https://github.com/CollinHeist/TitleCardMaker/wiki/Running-the-TitleCardMaker).
 
+> [!TIP]
 > If you have trouble getting the Maker working, or have a problem, [create an issue on GitHub](https://github.com/CollinHeist/TitleCardMaker/issues/new), or [join the Discord](https://discord.gg/bJ3bHtw8wH) for help.
 
 ## Examples
