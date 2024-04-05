@@ -1,3 +1,4 @@
+from functools import lru_cache
 from re import compile as re_compile, IGNORECASE
 from typing import TYPE_CHECKING, Literal, Optional, Union
 
@@ -331,6 +332,7 @@ class Title:
 
 
     @staticmethod
+    @lru_cache(maxsize=256)
     def get_matching_title(text: str) -> str:
         """
         Remove all non A-Z characters from the given title.
