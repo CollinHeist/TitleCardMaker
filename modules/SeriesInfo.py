@@ -1,4 +1,4 @@
-from re import match, compile as re_compile
+from re import compile as re_compile, match, sub as re_sub, IGNORECASE
 from typing import Optional, Union
 
 from plexapi.video import Show as PlexShow
@@ -197,15 +197,15 @@ class SeriesInfo(DatabaseInfoContainer):
 
     def set_emby_id(self, emby_id: int) -> None:
         """Set this object's Emby ID - see `_update_attribute()`."""
-        self._update_attribute('emby_id', emby_id, int)
+        self._update_attribute('emby_id', emby_id, type_=int)
 
     def set_imdb_id(self, imdb_id: str) -> None:
         """Set this object's IMDb ID - see `_update_attribute()`."""
-        self._update_attribute('imdb_id', imdb_id, str)
+        self._update_attribute('imdb_id', imdb_id, type_=str)
 
     def set_jellyfin_id(self, jellyfin_id: str) -> None:
         """Set this object's Jellyfin ID - see `_update_attribute()`."""
-        self._update_attribute('jellyfin_id', jellyfin_id, str)
+        self._update_attribute('jellyfin_id', jellyfin_id, type_=str)
 
     def set_sonarr_id(self, sonarr_id: str) -> None:
         """Set this object's Sonarr ID - see `_update_attribute()`."""
@@ -213,15 +213,15 @@ class SeriesInfo(DatabaseInfoContainer):
 
     def set_tmdb_id(self, tmdb_id: int) -> None:
         """Set this object's TMDb ID - see `_update_attribute()`."""
-        self._update_attribute('tmdb_id', tmdb_id, int)
+        self._update_attribute('tmdb_id', tmdb_id, type_=int)
 
     def set_tvdb_id(self, tvdb_id: int) -> None:
         """Set this object's TVDb ID - see `_update_attribute()`."""
-        self._update_attribute('tvdb_id', tvdb_id, int)
+        self._update_attribute('tvdb_id', tvdb_id, type_=int)
 
     def set_tvrage_id(self, tvrage_id: int) -> None:
         """Set this object's TVRage ID - see `_update_attribute()`."""
-        self._update_attribute('tvrage_id', tvrage_id, int)
+        self._update_attribute('tvrage_id', tvrage_id, type_=int)
 
 
     @staticmethod
@@ -237,6 +237,13 @@ class SeriesInfo(DatabaseInfoContainer):
         """
 
         return ''.join(filter(str.isalnum, text)).lower()
+
+
+    @property
+    def sort_name(self) -> str:
+        """The sort-friendly name of this Series."""
+
+        return re_sub(r'^(a|an|the)(\s)', '', self.name.lower(), IGNORECASE)
 
 
     def matches(self, *names: tuple[str]) -> bool:
