@@ -81,6 +81,16 @@ class Coordinate:
         return self
 
 
+    def __repr__(self) -> str:
+        """
+        Detailed object representation.
+        
+        >>> repr(Coordinate(2, 3))
+        'Coordinate(2, 3)'
+        """
+        return f'Coordinate({self.x}, {self.y})'
+
+
     def __str__(self) -> str:
         """
         Represent this Coordinate as a string.
@@ -151,6 +161,12 @@ class Rectangle:
         self.end = end
 
 
+    def __repr__(self) -> str:
+        """Unambigious representation of this object."""
+
+        return f'Rectangle({self.start!r}, {self.end!r})'
+
+
     def __str__(self) -> str:
         """
         Represent this Rectangle as a string. This is the joined string
@@ -158,6 +174,19 @@ class Rectangle:
         """
 
         return f'{str(self.start)},{str(self.end)}'
+
+
+    @property
+    def width(self) -> float:
+        """Width of this Rectangle."""
+
+        return abs(self.start.x - self.end.x)
+
+    @property
+    def height(self) -> float:
+        """Height of this Rectangle."""
+
+        return abs(self.start.y - self.end.y)
 
 
     def draw(self) -> str:
@@ -318,9 +347,10 @@ class BaseCardType(ImageMaker):
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        attributes = ', '.join(f'{attr}={getattr(self, attr)!r}'
-                               for attr in self.__slots__
-                               if not attr.startswith('__'))
+        attributes = ', '.join(
+            f'{attr}={getattr(self, attr)!r}' for attr in self.__slots__
+            if not attr.startswith('__')
+        )
 
         return f'<{self.__class__.__name__} {attributes}>'
 
@@ -355,6 +385,7 @@ class BaseCardType(ImageMaker):
         Returns:
             True if a custom font is indicated, False otherwise.
         """
+
         raise NotImplementedError
 
 
@@ -371,6 +402,7 @@ class BaseCardType(ImageMaker):
         Returns:
             True if a custom season title is indicated, False otherwise.
         """
+
         raise NotImplementedError
 
 
@@ -476,25 +508,27 @@ class BaseCardType(ImageMaker):
             return []
 
         # Look for mask file corresponding to this source image
-        mask = file.parent / f'{file.stem}-mask.png'
+        # Prioritize episode-specific mask, then general mask
+        if (mask := list(file.parent.glob(f'{file.stem}-mask.*'))):
+            mask = mask[0]
+        elif (mask := list(file.parent.glob(f'{file.stem}_mask.*'))):
+            mask = mask[0]
+        elif (mask := list(file.parent.glob(f'mask.*'))):
+            mask = mask[0]
+        else:
+            return []
 
-        # If source mask does not exist, query for global mask
-        mask = mask if mask.exists() else file.parent / 'mask.png'
+        log.debug(f'Identified mask image "{mask.resolve()}"')
+        if pre_processing is None:
+            pre_processing = self.resize_and_style
 
-        # Mask exists, return commands to compose atop image
-        if mask.exists():
-            log.debug(f'Identified mask image "{mask.resolve()}"')
-            if pre_processing is None:
-                pre_processing = self.resize_and_style
-
-            return [
-                f'\( "{mask.resolve()}"',
-                *pre_processing,
-                f'\) -geometry {x:+}{y:+}',
-                f'-composite',
-            ]
-
-        return []
+        return [
+            f'\( "{mask.resolve()}"',
+            *self.resize,
+            *pre_processing,
+            f'\) -geometry {x:+}{y:+}',
+            f'-composite',
+        ]
 
 
     @property
