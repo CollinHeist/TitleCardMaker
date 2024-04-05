@@ -41,10 +41,10 @@ def catch_and_log(
         def inner(*args, **kwargs):
             try:
                 return function(*args, **kwargs)
-            except TMDbException as e:
+            except TMDbException:
                 log_func(message)
                 log.exception(f'TMDbException from {function.__name__}'
-                                f'({args}, {kwargs})', e)
+                                f'({args}, {kwargs})')
                 return default
         return inner
     return decorator
@@ -878,7 +878,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
                     title = translation.name
                 else:
                     title = translation.title
-                if len(title) == 0:
+                if not title:
                     break
 
                 # If translation is generic, blacklist and skip

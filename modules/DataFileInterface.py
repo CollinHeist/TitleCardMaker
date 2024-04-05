@@ -166,7 +166,7 @@ class DataFileInterface:
                 # Ensure Title can be created
                 try:
                     title_obj = Title(title, original_title=original_title)
-                except TypeError as e:
+                except TypeError:
                     log.exception(
                         f'Title for S{season_number:02}E{episode_number:02} of '
                         'the {self.series_info} datafile is invalid'

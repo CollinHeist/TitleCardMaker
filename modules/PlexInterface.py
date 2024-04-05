@@ -53,15 +53,15 @@ def catch_and_log(message: str, *, default: Any = None) -> Callable:
         def inner(*args, **kwargs):
             try:
                 return function(*args, **kwargs)
-            except PlexApiException as e:
-                log.exception(message, e)
+            except PlexApiException:
+                log.exception(message)
                 return default
-            except (ReadTimeout, PlexConnectionError) as e:
-                log.exception(f'Plex API has timed out, DB might be busy',e)
-                raise e
-            except Exception as e:
-                log.exception(f'Uncaught exception', e)
-                raise e
+            except (ReadTimeout, PlexConnectionError) as exc:
+                log.exception(f'Plex API has timed out, DB might be busy')
+                raise exc
+            except Exception as exc:
+                log.exception(f'Uncaught exception')
+                raise exc
         return inner
     return decorator
 
@@ -135,7 +135,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         except Unauthorized:
             log.critical(f'Invalid Plex Token "{x_plex_token}"')
             sys_exit(1)
-        except Exception as e:
+        except Exception:
             log.critical(f'Cannot connect to Plex - returned error: "{e}"')
             sys_exit(1)
 
@@ -792,10 +792,10 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 # If integrating with PMM, remove label
                 if self.integrate_with_pmm:
                     pl_episode.removeLabel(['Overlay'])
-            except Exception as e:
+            except Exception:
                 error_count += 1
                 log.exception(f'Unable to upload {card.resolve()} to '
-                              f'{series_info}', e)
+                              f'{series_info}')
                 continue
             else:
                 loaded_count += 1
@@ -977,8 +977,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             log.error(f'No item with rating key {rating_key} exists')
         except ValueError:
             log.warning(f'Item with rating key {rating_key} has no year')
-        except Exception as e:
-            log.exception(f'Rating key {rating_key} has some error', e)
+        except Exception:
+            log.exception(f'Rating key {rating_key} has some error')
 
         # Error occurred, return empty list
         return []

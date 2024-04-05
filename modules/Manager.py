@@ -418,8 +418,8 @@ class Manager:
             # Run all functions on this series
             try:
                 self.__run(serial=True)
-            except Exception as e:
-                log.exception(f'Uncaught Exception while processing {show}', e)
+            except Exception:
+                log.exception(f'Uncaught Exception while processing {show}')
                 continue
 
 

@@ -100,6 +100,12 @@ class Title:
         return f'<Title title="{self.full_title}", lines={self.__title_lines}>'
 
 
+    def __len__(self) -> int:
+        """Length of this title (without splitting)."""
+
+        return len(self.full_title)
+
+
     def get_partless_title(self) -> str:
         """
         Gets the partless title for this object. This removes

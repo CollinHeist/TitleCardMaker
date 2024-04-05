@@ -66,8 +66,8 @@ class SeriesYamlWriter:
                 return str(CleanPath(p).sanitize())
             self.volume_map = {standardize(source): standardize(tcm)
                                for source, tcm in volume_map.items()}
-        except Exception as e:
-            log.exception(f'Invalid "volumes" - must all be valid paths', e)
+        except Exception:
+            log.exception(f'Invalid "volumes" - must all be valid paths')
             self.valid = False
 
         # Validate/store sync mode
@@ -190,8 +190,8 @@ class SeriesYamlWriter:
                 try:
                     with Path(value).open('r', encoding='utf-8') as file_handle:
                         read_yaml = YAML().load(file_handle)
-                except Exception as e:
-                    log.exception(f'Cannot read "{value}" as exclusion file', e)
+                except Exception:
+                    log.exception(f'Cannot read "{value}" as exclusion file')
                     continue
 
                 # Delete each file's specified series
