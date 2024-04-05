@@ -101,9 +101,9 @@ class TintedGlassTitleCard(BaseCardType):
         self.output_file = card_file
 
         self.title_text = self.image_magick.escape_chars(title_text)
-        self.__line_count = len(title_text.split('\n'))
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
         self.hide_episode_text = hide_episode_text or len(episode_text) == 0
+        self.__line_count = len(title_text.splitlines())
 
         self.font_file = font_file
         self.font_size = font_size
@@ -219,9 +219,11 @@ class TintedGlassTitleCard(BaseCardType):
             BoxCoordinates of the bounding box.
         """
 
-        # Get dimensions of text - since text is stacked, do max/sum operations
-        width, height = self.get_text_dimensions(
-            self.title_text_commands, width='max', height='sum'
+        # Get dimensions of title text
+        width, height = self.image_magick.get_text_dimensions(
+            self.title_text_commands,
+            interline_spacing=self.font_interline_spacing,
+            line_count=self.__line_count,
         )
 
         # Get start coordinates of the bounding box
@@ -229,16 +231,13 @@ class TintedGlassTitleCard(BaseCardType):
         y_start, y_end = self.HEIGHT - 300 - height, self.HEIGHT - 300
 
         # Additional offsets necessary for equal padding
-        x_start -= 50
-        x_end += 50
+        x_start -= 40
+        x_end += 28
         y_start += 12
 
         # Shift y coordinates by vertical shift
         y_start -= self.font_vertical_shift + self.vertical_adjustment
         y_end -= self.font_vertical_shift + self.vertical_adjustment
-
-        # Adjust upper bounds of box if title is multi-line
-        y_start += (65 * (self.__line_count-1)) if self.__line_count > 1 else 0
 
         # Adjust bounds by any manual box adjustments
         x_start -= self.box_adjustments[3]
@@ -290,8 +289,8 @@ class TintedGlassTitleCard(BaseCardType):
             f'-annotate {position} "{self.episode_text}"',
         ]
 
-        width, height = self.get_text_dimensions(
-            command, width='max', height='max'
+        width, height = self.image_magick.get_text_dimensions(
+            command, width='max', height='sum'
         )
 
         # Center positioning requires padding adjustment
