@@ -234,7 +234,81 @@ class ImageMagickInterface:
         if not image or not image.exists():
             return Dimensions(0, 0)
 
-        return im_get(image)
+        return Dimensions(*im_get(image))
+
+
+    def get_text_dimensions(self,
+            text_command: list[str],
+            *,
+            density: Optional[int] = None,
+            interline_spacing: int = 0,
+            line_count: int = 1,
+            width: Literal['sum', 'max'] = 'max',
+            height: Literal['sum', 'max'] = 'sum',
+        ) -> Dimensions:
+        """
+        Get the dimensions of the text produced by the given text
+        command. For 'width' and 'height' arguments, if 'max' then the
+        maximum value of the text is utilized, while 'sum' will add each
+        value. For example, if the given text command produces text like:
+
+            Top Line Text
+            Bottom Text
+
+        Specifying width='sum', will add the widths of the two lines
+        (not very meaningful), width='max' will return the maximum width
+        of the two lines. Specifying height='sum' will return the total
+        height of the text, and height='max' will return the tallest
+        single line of text.
+
+        Args:
+            text_command: ImageMagick commands that produce text(s) to
+                measure.
+            density: Density of the image.
+            width: How to process the width of the produced text(s).
+            height: How to process the height of the produced text(s).
+
+        Returns:
+            Dimensions namedtuple.
+        """
+
+        # No text
+        if not text_command:
+            return Dimensions(0, 0)
+
+        text_command = ' '.join([
+            f'convert',
+            f'-debug annotate',
+            f'-density {density}' if density else '',
+            f'' if '-annotate ' in ' '.join(text_command) else f'xc: ',
+            *text_command,
+            f'null: 2>&1',
+        ])
+
+        # Execute dimension command, parse output
+        metrics = self.run_get_output(text_command)
+        widths = list(map(int, findall(r'Metrics:.*width:\s+(\d+)', metrics)))
+        heights = list(map(int, findall(r'Metrics:.*height:\s+(\d+)', metrics)))
+        ascents = list(map(int, findall(r'Metrics:.*ascent:\s+(\d+)', metrics)))
+        descents = list(map(int, findall(r'Metrics:.*descent:\s+-(\d+)', metrics)))
+
+        try:
+            # Label text produces duplicate Metrics
+            def sum_(dims: Iterable[float]) -> int:
+                return sum(dims) / (2 if ' label:"' in text_command else 1)
+
+            # Process according to given methods
+            height_adjustment = interline_spacing * (line_count - 1)
+            return Dimensions(
+                sum_(widths)  if width  == 'sum' else max(widths),
+                (sum_(ascents) + sum_(descents)) + height_adjustment,
+                # (sum_(ascents) + sum_(descents)) * (density or 72) / 72 + height_adjustment,
+                # sum_(heights) if height == 'sum' else max(heights),
+            )
+        except ValueError as e:
+            log.debug(f'Cannot identify text dimensions - {e}')
+            log.trace(f'{widths=} {heights=}')
+            return Dimensions(0, 0)
 
 
     def resize_image(self,
