@@ -552,7 +552,7 @@ function batchProcess() {
     contentType: 'application/json',
     success: () => {
       showInfoToast(`Started Processing ${selectedSeries.length} Series`);
-      getAllSeries(undefined, true);
+      // getAllSeries(undefined, true);
       getAllStatistics();
     },
     error: response => showErrorToast({title: 'Error Processing Series', response}),
@@ -589,7 +589,7 @@ function batchDeleteEpisodes() {
     contentType: 'application/json',
     success: actions => {
       showInfoToast(`Deleted Episodes and Title Cards`);
-      getAllSeries(undefined, true);
+      // getAllSeries(undefined, true);
       getAllStatistics();
     },
     error: response => showErrorToast({title: 'Error Deleting Episodes', response}),
@@ -609,7 +609,7 @@ function batchDeleteCards() {
     contentType: 'application/json',
     success: actions => {
       showInfoToast(`Deleted ${actions.deleted} Title Cards`);
-      getAllSeries(undefined, true);
+      // getAllSeries(undefined, true);
       getAllStatistics();
     },
     error: response => showErrorToast({title: 'Error Deleting Title Cards', response}),
@@ -628,7 +628,7 @@ function batchDeleteSeries() {
     contentType: 'application/json',
     success: () => {
       showInfoToast(`Deleted ${selectedSeries.length} Series`);
-      getAllSeries(undefined, false); // Clear selection
+      // getAllSeries(undefined, false); // Clear selection
       getAllStatistics();
     },
     error: response => showErrorToast({title: 'Error Deleting Series', response}),
