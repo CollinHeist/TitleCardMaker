@@ -179,15 +179,18 @@
         Browse Blueprints
       </h4>
 
-      <div class="ui action input">
+      <div class="ui blue right action left icon input">
+        <i class="search icon"></i>
+        <input type="text" name="blueprint_series_name" placeholder="Filter by Name..">
         <select data-value="order_by" class="ui compact selection dropdown">
           <option value="date" selected="">Order by Date</option>
           <option value="name">Order by Name</option>
         </select>
-        <button data-action="browse-blueprints" class="ui green button" onclick="queryAllBlueprints();">
-          Browse Blueprints
-        </button>
       </div>
+      <button data-action="browse-blueprints" class="ui green button" onclick="queryAllBlueprints();">
+        Browse Blueprints
+      </button>
+
       <br><br>
       <div class="ui two fields">
         <div data-value="include_missing_series" class="ui checkbox field">

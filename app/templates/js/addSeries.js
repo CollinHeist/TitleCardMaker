@@ -234,6 +234,7 @@ function viewBlueprintSets(blueprintId) {
  */
 function queryAllBlueprints(page=1, refresh=false) {
   // Generate endpoint URL
+  const filterName = $('input[name="blueprint_series_name"]').val();
   const orderBy = $('[data-value="order_by"]').val();
   const includeMissing = $('.checkbox[data-value="include_missing_series"]').checkbox('is unchecked');
   const includeImported = $('.checkbox[data-value="included_imported"]').checkbox('is checked');
@@ -242,7 +243,8 @@ function queryAllBlueprints(page=1, refresh=false) {
     + `&order_by=${orderBy}`
     + `&include_missing_series=${includeMissing}`
     + `&include_imported=${includeImported}`
-    + `&force_refresh=${refresh}`;
+    + `&force_refresh=${refresh}`
+    + `&name=${filterName}`;
   
   // Only add placeholders if on page 1 (first load)
   const blueprintResults = document.getElementById('all-blueprint-results');
@@ -250,17 +252,22 @@ function queryAllBlueprints(page=1, refresh=false) {
     addPlaceholders(blueprintResults, 9, 'blueprint-placeholder-template');
   }
 
+  // Query by series name if provided, otherwise query all
+  const apiUrl = filterName ? '/api/blueprints/query/series' : '/api/blueprints/query/all';
+
   // Submit API request
   $.ajax({
     type: 'GET',
-    url: `/api/blueprints/query/all?${query}`,
+    url: `${apiUrl}?${query}`,
     /**
      * Query successful, populate page with Blueprint cards.
      * @param {RemoteBlueprintPage} allBlueprints - Page of Blueprints to display.
      */
     success: allBlueprints => {
       const blueprintTemplate = document.getElementById('all-blueprint-template');
-      const blueprintCards = allBlueprints.items.map(blueprint => {
+      // If filtered by name, return is just list of BPs; otherwise a Page
+      const items = filterName ? allBlueprints : allBlueprints.items;
+      const blueprintCards = items.map(blueprint => {
         // Clone template, fill out basic info
         const elementId = `blueprint-id${blueprint.id}`;
         const card = populateBlueprintCard(blueprintTemplate.content.cloneNode(true), blueprint, elementId);
