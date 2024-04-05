@@ -154,7 +154,7 @@ class BannerTitleCard(BaseCardType):
 
         # Determine placement
         x = self.x_offset
-        y = self.HEIGHT - self.banner_height - self.font_vertical_shift - 48
+        y = self.HEIGHT - self.banner_height - self.font_vertical_shift - 44
 
         return [
             f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
@@ -250,7 +250,7 @@ class BannerTitleCard(BaseCardType):
 
             # If within 35px of edge of index text, move right
             if bottom_x < left_boundary + 35:
-                bottom_x = left_boundary + 55 # 20px spacing
+                bottom_x = left_boundary + 35 + 40 # 40px spacing
             # If would overlap from right edge, move left
             if bottom_x + bottom_width > self.WIDTH - self.x_offset:
                 bottom_x = self.WIDTH - self.x_offset - bottom_width
