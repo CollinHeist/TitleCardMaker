@@ -192,7 +192,7 @@ class BannerTitleCard(BaseCardType):
         # Return width of the longest text
         modified_commands = self.index_text_commands
         modified_commands[-1] = f'"{text}"'
-        return self.get_text_dimensions(modified_commands)[0]
+        return self.image_magick.get_text_dimensions(modified_commands)[0]
 
 
     @property
@@ -227,7 +227,7 @@ class BannerTitleCard(BaseCardType):
             f'-gravity southwest',
             f'label:"{self.top_title_text}" \)',
         ]
-        top_width, _ = self.get_text_dimensions(top_text_commands)
+        top_width, _ = self.image_magick.get_text_dimensions(top_text_commands)
 
         # Determine commands for the bottom line of text
         if self.bottom_title_text:
@@ -246,7 +246,9 @@ class BannerTitleCard(BaseCardType):
 
             # Determine the width of the text to avoid overlap
             left_boundary = self.x_offset + self.index_text_width
-            bottom_width, _ = self.get_text_dimensions(bottom_text_commands)
+            bottom_width, _ = self.image_magick.get_text_dimensions(
+                bottom_text_commands,
+            )
 
             # If within 35px of edge of index text, move right
             if bottom_x < left_boundary + 35:

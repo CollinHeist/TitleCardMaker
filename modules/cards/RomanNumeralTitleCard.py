@@ -513,24 +513,24 @@ class RomanNumeralTitleCard(BaseCardType):
             )
 
         # Get width of whole line
-        total_width, _ = self.get_text_dimensions(
-            numeral_command, width='sum', height='max'
+        total_width, _ = self.image_magick.get_text_dimensions(
+            numeral_command, width='sum',
         )
 
         # Get width of line to the left of the selected numeral
         left_width = 0
         if len(left_text) > 0:
-            left_width, _ = self.get_text_dimensions(
+            left_width, _ = self.image_magick.get_text_dimensions(
                 self.create_roman_numeral_command(left_text),
-                width='sum', height='max'
+                width='sum',
             )
 
         # Get width of line to the right of the selected numeral
         right_width = 0
         if len(right_text) > 0:
-            right_width, _ = self.get_text_dimensions(
+            right_width, _ = self.image_magick.get_text_dimensions(
                 self.create_roman_numeral_command(right_text),
-                width='sum', height='max'
+                width='sum',
             )
 
         # Determine necesary offset by position within the line
@@ -565,7 +565,7 @@ class RomanNumeralTitleCard(BaseCardType):
             return None
 
         # Get boundaries of title text
-        width, height = self.get_text_dimensions(
+        width, height = self.image_magick.get_text_dimensions(
             self.title_text_command, width='width', height='sum'
         )
         box0 = {
@@ -591,9 +591,9 @@ class RomanNumeralTitleCard(BaseCardType):
             self.rotation, self.offset = rotation, offset
 
             # Get dimensions of season text
-            season_width, season_height = self.get_text_dimensions(
+            season_width, season_height = self.image_magick.get_text_dimensions(
                 self.create_season_text_command(rotation, offset),
-                width='max', height='max'
+                width='max', height='sum'
             )
 
             # Modify dimensions or add margin based on rotation of text

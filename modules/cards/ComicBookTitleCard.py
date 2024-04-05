@@ -285,10 +285,10 @@ class ComicBookTitleCard(BaseCardType):
         # Get dimensions of the title text
         title_width, title_height = self.image_magick.get_text_dimensions(
             self.title_text_commands,
+            interline_spacing=self.font_interline_spacing,
+            line_count=len(self.title_text.splitlines()),
             width='max',
-            height='sum',
         )
-        title_height += self.font_interline_spacing
 
         # Create the rectangle that will border the title text
         title_text_rectangle = SvgRectangle(
@@ -414,7 +414,6 @@ class ComicBookTitleCard(BaseCardType):
         index_width, index_height = self.image_magick.get_text_dimensions(
             self.index_text_commands,
             width='max',
-            height='sum',
         )
 
         # Create the rectangle that will border the index text

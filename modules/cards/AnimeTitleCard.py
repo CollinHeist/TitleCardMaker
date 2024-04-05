@@ -223,12 +223,17 @@ class AnimeTitleCard(BaseCardType):
             return title_commands
 
         # Determine kanji positioning based on height of title text
-        _, title_height = self.get_text_dimensions(
-            title_commands, width='max', height='sum'
+        _, title_height = self.image_magick.get_text_dimensions(
+            [
+                *self.__title_text_global_effects,
+                *self.__title_text_effects,
+                f'-annotate +75+{base_offset} "{self.title_text}"',
+            ],
+            interline_spacing=self.font_interline_spacing,
+            line_count=len(self.title_text.splitlines()),
+            width='max', height='sum'
         )
-        line_count = len(self.title_text.split('\n'))
-        kanji_offset = base_offset + (title_height / 2) \
-            - (43 * (line_count - 1)) + self.kanji_vertical_shift
+        kanji_offset = base_offset + title_height + self.kanji_vertical_shift
 
         return [
             *title_commands,
