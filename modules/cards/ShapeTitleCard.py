@@ -438,6 +438,7 @@ class ShapeTitleCard(BaseCardType):
         return [
             f'-font "{self.font_file}"',
             f'-interline-spacing {interline_spacing}',
+            f'-interword-spacing {self.font_interword_spacing}',
             f'-pointsize {size:.1f}',
             f'-fill "{self.font_color}"',
             f'+stroke',
