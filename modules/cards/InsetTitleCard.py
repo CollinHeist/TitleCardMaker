@@ -102,7 +102,7 @@ class InsetTitleCard(BaseCardType):
         # Font/card customizations
         self.font_color = font_color
         self.font_file = font_file
-        self.font_interline_spacing = font_interline_spacing
+        self.font_interline_spacing = -100 + font_interline_spacing
         self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_size = font_size
@@ -127,19 +127,15 @@ class InsetTitleCard(BaseCardType):
         if not self.title_text:
             return []
 
-        # Font characteristics
-        interline_spacing = -100
-        interword_spacing = 0
-        kerning = 1.0 * self.font_kerning
         size = 250 * self.font_size
 
         return [
             f'\( -background none',
             f'-pointsize {size}',
             f'-font "{self.font_file}"',
-            f'-interline-spacing {interline_spacing}',
-            f'-interword-spacing {interword_spacing}',
-            f'-kerning {kerning}',
+            f'-interline-spacing {self.font_interline_spacing}',
+            f'-interword-spacing {self.font_interword_spacing}',
+            f'-kerning {self.font_kerning}',
             f'-fill "{self.font_color}"',
             f'label:"{self.title_text}" \)',
             f'-gravity south',
@@ -157,7 +153,7 @@ class InsetTitleCard(BaseCardType):
         # Determine the height of the text
         if self._title_height is None:
             # Utilize only the bottom line of text for the line height
-            bottom_line = self.title_text.rsplit('\n', maxsplit=1)[-1]
+            bottom_line = self.title_text.splitlines()[-1]
             modified_commands = self.title_text_commands
             modified_commands[-2] = f'label:"{bottom_line}"'
 
@@ -188,6 +184,7 @@ class InsetTitleCard(BaseCardType):
         index_text_commands = [
             f'\( -background none',
             f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
+            f'+interline-spacing',
             f'-fill "{self.episode_text_color}"',
             f'-pointsize {size}',
             f'-gravity south',

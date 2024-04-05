@@ -85,7 +85,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 raise ConnectionError(f'Unable to authenticate with server')
         except Exception as exc: # pylint: disable=broad-except
             log.critical(f'Cannot connect to Emby - returned error {exc}')
-            log.exception(f'Bad Emby connection', exc)
+            log.exception(f'Bad Emby connection')
             sys_exit(1)
 
         # Get user ID
@@ -404,8 +404,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             try:
                 airdate = datetime.strptime(episode['PremiereDate'],
                                             self.AIRDATE_FORMAT)
-            except ValueError as e:
-                log.exception(f'Cannot parse airdate', e)
+            except ValueError:
+                log.exception(f'Cannot parse airdate')
                 log.debug(f'Episode data: {episode}')
 
             # Create new EpisodeInfo via global MediaInfoSet object
