@@ -262,6 +262,8 @@ class CutoutTitleCard(BaseCardType):
             *self.transparency_overlay_commands,
             # Add title text
             *self.title_text_commands,
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
