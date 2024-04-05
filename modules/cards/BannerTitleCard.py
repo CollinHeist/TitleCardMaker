@@ -218,7 +218,7 @@ class BannerTitleCard(BaseCardType):
 
         # Determine placement
         x = self.x_offset
-        y = self.HEIGHT - self.banner_height - self.font_vertical_shift - 48
+        y = self.HEIGHT - self.banner_height - self.font_vertical_shift - 44
 
         return [
             f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
