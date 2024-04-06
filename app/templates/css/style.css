@@ -53,6 +53,8 @@ body > div:first-of-type {
   overflow-x: hidden;
   /* Add margin for main content to space from header and sidebar */
   padding: 15px 15px 15px 115px;
+  /* Always position below header */
+  z-index: 98;
 }
 
 /* Stylize "code" color text */
