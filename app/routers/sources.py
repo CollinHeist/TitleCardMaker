@@ -345,10 +345,7 @@ def get_existing_episode_source_image(
     - episode_id: ID of the Episode to get the details of.
     """
 
-    # Get the Episode with this ID, raise 404 if DNE
-    episode = get_episode(db, episode_id, raise_exc=True)
-
-    return get_source_image(episode)
+    return get_source_image(get_episode(db, episode_id, raise_exc=True))
 
 
 @source_router.delete('/episode/{episode_id}')
@@ -365,7 +362,7 @@ def delete_episode_source_images(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Get the Episode with this ID, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
@@ -402,7 +399,7 @@ async def set_episode_source_image(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Get Episode with this ID, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
@@ -411,8 +408,8 @@ async def set_episode_source_image(
     uploaded_file = b''
     if file is not None:
         uploaded_file = await file.read()
-    elif url is not None and url.startswith('data:image/jpg;base64,'):
-        uploaded_file = b64decode(url[len('data:image/jpg;base64,'):])
+    elif url and url.startswith('data:image/jpg;base64,'):
+        uploaded_file = b64decode(url.removeprefix('data:image/jpeg;base64,'))
 
     # Send error if both a URL and file were provided
     if (url is not None
@@ -424,7 +421,7 @@ async def set_episode_source_image(
         )
 
     # Send error if neither were provided
-    if url is None and len(uploaded_file) == 0:
+    if not url and not uploaded_file:
         raise HTTPException(
             status_code=422,
             detail='URL or file are required',
@@ -439,14 +436,14 @@ async def set_episode_source_image(
                  f'"{source_file.resolve()}" exists - replacing')
 
     # Either download URL or write content directly
-    if url is None:
+    if uploaded_file:
         source_file.write_bytes(uploaded_file)
+        log.debug(f'Wrote {len(uploaded_file)} bytes to {source_file}')
     else:
         # If proxied, de-proxy using associated interface
         if url.startswith('/api/proxy/plex?url='):
             # Use first Plex Connection if no ID provided
-            if interface_id is None:
-                interface_id = plex_interfaces.first_interface_id
+            interface_id = interface_id or plex_interfaces.first_interface_id
 
             # If no interface ID, raise
             if interface_id is None:
@@ -458,14 +455,10 @@ async def set_episode_source_image(
             # Get Connection with this ID, raise 404 if DNE
             connection = get_connection(db, interface_id, raise_exc=True)
 
-            url = url.split('/api/proxy/plex?url=', maxsplit=1)[1]
-            if connection.url.endswith('/'):
-                url = connection.url[:-1] + url
-            else:
-                url = connection.url + url
-
-            # Add token to URL as query param
-            url += f'?X-Plex-Token={connection.api_key}'
+            # Use server URL, de-proxied URL, and add the token as a param
+            url = connection.url.removesuffix('/') \
+                + url.split('/api/proxy/plex?url=', maxsplit=1)[1] \
+                + f'?X-Plex-Token={connection.api_key}'
 
         if not WebInterface.download_image(url, source_file, log=log):
             raise HTTPException(
@@ -481,7 +474,7 @@ async def set_episode_source_image(
         log=log,
     )
 
-    # Return created SourceImage
+    # Return created Source Image
     return get_source_image(episode)
 
 
@@ -510,7 +503,7 @@ def mirror_episode_source_image(
             detail=f'Episode {episode} has no Source Image'
         )
 
-    # Mirror source, overwriting existing file
+    # Mirror Source and overwrite existing file
     ImageOps.mirror(Image.open(source_image)).save(source_image)
 
     # Delete existing Card and Loaded entries for this Episode
@@ -542,7 +535,7 @@ async def set_series_logo(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Get Series with this ID, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
@@ -553,31 +546,31 @@ async def set_series_logo(
         uploaded_file = await file.read()
 
     # Send error if both a URL and file were provided
-    if url is not None and len(uploaded_file) > 0:
+    if url or uploaded_file:
         raise HTTPException(
             status_code=422,
             detail='Cannot provide multiple images'
         )
 
     # Send error if neither were provided
-    if url is None and len(uploaded_file) == 0:
+    if not url and not uploaded_file:
         raise HTTPException(
             status_code=422,
             detail='URL or file are required',
         )
 
     # Get Series logo file
-    file = series.get_logo_file()
+    logo_file = series.get_logo_file()
 
     # If file already exists, warn about overwriting
-    if file.exists():
+    if logo_file.exists():
         log.info(f'{series} logo file exists - replacing')
 
     # If only URL was required, attempt to download, error if unable
     if url is not None:
         # If logo is SVG, handle separately
         if url.endswith('.svg'):
-            process_svg_logo(url, series, file, log=log)
+            process_svg_logo(url, series, logo_file, log=log)
             return None
 
         try:
@@ -594,7 +587,7 @@ async def set_series_logo(
         content = uploaded_file
 
     # Write new file to the disk
-    file.write_bytes(content)
+    logo_file.write_bytes(content)
     return None
 
 
@@ -616,7 +609,7 @@ async def set_series_backdrop(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Get Series with this ID, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
@@ -627,7 +620,7 @@ async def set_series_backdrop(
         uploaded_file = await file.read()
 
     # Send error if both a URL and file were provided
-    if url is not None and len(uploaded_file) > 0:
+    if url or uploaded_file:
         raise HTTPException(
             status_code=422,
             detail='Cannot provide multiple images'
@@ -641,10 +634,10 @@ async def set_series_backdrop(
         )
 
     # Get Series backdrop file
-    file = series.get_series_backdrop()
+    backdrop_file = series.get_series_backdrop()
 
     # If file already exists, warn about overwriting
-    if file.exists():
+    if backdrop_file.exists():
         log.info(f'{series} backdrop file exists - replacing')
 
     # If only URL was required, attempt to download, error if unable
@@ -652,15 +645,15 @@ async def set_series_backdrop(
         try:
             content = get(url, timeout=30).content
             log.debug(f'Downloaded {len(content)} bytes from {url}')
-        except Exception as e:
-            log.exception(f'Download failed', e)
+        except Exception as exc:
+            log.exception(f'Download failed')
             raise HTTPException(
                 status_code=400,
-                detail=f'Unable to download image - {e}'
-            ) from e
+                detail=f'Unable to download image - {exc}'
+            ) from exc
     # Use uploaded file if provided
     else:
         content = uploaded_file
 
     # Write new file to the disk
-    file.write_bytes(content)
+    backdrop_file.write_bytes(content)
