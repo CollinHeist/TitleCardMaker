@@ -409,7 +409,7 @@ async def set_episode_source_image(
     if file is not None:
         uploaded_file = await file.read()
     elif url and url.startswith('data:image/jpg;base64,'):
-        uploaded_file = b64decode(url.removeprefix('data:image/jpeg;base64,'))
+        uploaded_file = b64decode(url.removeprefix('data:image/jpg;base64,'))
 
     # Send error if both a URL and file were provided
     if (url is not None
