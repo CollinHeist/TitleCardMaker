@@ -145,6 +145,7 @@ __BUILTIN_FUNCTIONS: dict[str, Callable[..., str]] = {
 }
 __BUILTIN_VARIABLES: dict[str, str] = {
     'NEWLINE': '\n',
+    'BACKSLASH': '\\'
 }
 _BUILTINS = __BUILTIN_FUNCTIONS | __BUILTIN_VARIABLES
 
