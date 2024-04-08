@@ -182,6 +182,16 @@
           </div>
         </div>
         {% endif %}
+        {% if preferences.home_page_table_view %}
+          <a class="item" data-action="change-display" onclick="toggleDisplayStyle('poster');">
+            <i class="file image outline icon"></i>
+            Poster View
+          </a>
+        {% else %}
+          <a class="item" data-action="change-display" onclick="toggleDisplayStyle('table');">
+            <i class="table icon"></i>
+            Table View
+        {% endif %}
       </div>
 
       <!-- Loader -->

@@ -634,3 +634,19 @@ function batchDeleteSeries() {
     error: response => showErrorToast({title: 'Error Deleting Series', response}),
   });
 }
+
+/**
+ * Change the global display style to the poster or tabular view. This submits
+ * an API request and, if successful, reloads the page.
+ * @param {"poster" | "table"} style 
+ */
+function toggleDisplayStyle(style) {
+  $.ajax({
+    type: 'PATCH',
+    url: '/api/settings/update',
+    data: JSON.stringify({home_page_table_view: style === 'table'}),
+    contentType: 'application/json',
+    success: () => location.reload(),
+    error: response => showErrorToast({title: 'Error Changing View', response}),
+  });
+}

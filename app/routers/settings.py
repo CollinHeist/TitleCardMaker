@@ -52,7 +52,8 @@ def update_global_settings(
     """
 
     # Verify all specified Templates exist
-    if update_preferences.default_templates != UNSPECIFIED:
+    if (hasattr(update_preferences, 'default_templates')
+        and update_preferences.default_templates != UNSPECIFIED):
         for template_id in update_preferences.default_templates:
             get_template(db, template_id, raise_exc=True)
 
