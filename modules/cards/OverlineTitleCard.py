@@ -285,6 +285,7 @@ class OverlineTitleCard(BaseCardType):
             f'-strokewidth 2',
             f'-pointsize 22',
             f'-interword-spacing 18',
+            f'-kerning -2',
             f'-annotate +0+{vertical_shift} "{index_text}"'
         ]
 
@@ -321,11 +322,11 @@ class OverlineTitleCard(BaseCardType):
             right_rectangle = Rectangle(Coordinate(0, 0), Coordinate(0, 0))
             left_rectangle = Rectangle(
                 Coordinate(
-                    (self.WIDTH / 2) - (title_text_dimensions.width / 2) + 30,
+                    (self.WIDTH - title_text_dimensions.width) / 2 + 30,
                     vertical_position - (self.line_width / 2)
                 ),
                 Coordinate(
-                    (self.WIDTH / 2) + (title_text_dimensions.width / 2) - 30,
+                    (self.WIDTH + title_text_dimensions.width) / 2 - 30,
                     vertical_position + (self.line_width / 2),
                 )
             )
@@ -333,11 +334,11 @@ class OverlineTitleCard(BaseCardType):
             # Create left rectangle
             left_rectangle = Rectangle(
                 Coordinate(
-                    (self.WIDTH / 2) - (title_text_dimensions.width / 2) + 30,
+                    (self.WIDTH - title_text_dimensions.width) / 2 + 30,
                     vertical_position - (self.line_width / 2),
                 ),
                 Coordinate(
-                    (self.WIDTH / 2) - (index_text_dimensions.width / 2),
+                    (self.WIDTH - index_text_dimensions.width) / 2 - 10,
                     vertical_position + (self.line_width / 2),
                 )
             )
@@ -345,11 +346,11 @@ class OverlineTitleCard(BaseCardType):
             # Create right rectangle
             right_rectangle = Rectangle(
                 Coordinate(
-                    (self.WIDTH / 2) + (index_text_dimensions.width / 2),
+                    (self.WIDTH + index_text_dimensions.width) / 2 + 10,
                     vertical_position - (self.line_width / 2),
                 ),
                 Coordinate(
-                    (self.WIDTH / 2) + (title_text_dimensions.width / 2) - 30,
+                    (self.WIDTH + title_text_dimensions.width) / 2 - 30,
                     vertical_position + (self.line_width / 2),
                 )
             )
