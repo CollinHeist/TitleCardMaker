@@ -79,6 +79,17 @@ class NotificationTitleCard(BaseCardType):
                 ),
             ),
             Extra(
+                name='Notification Box Adjustments',
+                identifier='box_adjustments',
+                description='Adjustments to the bounds of the notification',
+                tooltip=(
+                    'Specifiy as <v>{top} {right} {bottom} {left}</v> - e.g. '
+                    '<v>-20 10 0 5</v>. Positive values move that face out, '
+                    'negative values move the face in. Default is '
+                    '<v>0 0 0 0</v>. Unit is pixels.'
+                ),
+            ),
+            Extra(
                 name='Separator Character',
                 identifier='separator',
                 description=(
@@ -138,6 +149,7 @@ class NotificationTitleCard(BaseCardType):
         'font_kerning', 'font_size', 'font_vertical_shift', 'edge_color',
         'edge_width', 'episode_text_color', 'episode_text_font_size',
         'episode_text_vertical_shift', 'glass_color', 'position', 'separator',
+        'box_adjustments',
     )
 
 
@@ -158,6 +170,7 @@ class NotificationTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
+            box_adjustments: tuple[int, int, int, int] = (0, 0, 0, 0),
             edge_color: str = EDGE_COLOR,
             edge_width: int = EDGE_WIDTH,
             episode_text_color: str = EPISODE_TEXT_COLOR,
@@ -194,6 +207,7 @@ class NotificationTitleCard(BaseCardType):
         self.font_vertical_shift = font_vertical_shift
 
         # Extras
+        self.box_adjustments = box_adjustments
         self.edge_color = edge_color
         self.edge_width = edge_width
         self.episode_text_color = episode_text_color
@@ -264,6 +278,7 @@ class NotificationTitleCard(BaseCardType):
             line_count: int,
             margin: int,
             y_offset: int,
+            adjustments: tuple[int, int, int, int] = (0, 0, 0, 0),
         ) -> ImageMagickCommands:
         """
         Subcommands to add the "glass" effect to the image.
@@ -274,6 +289,7 @@ class NotificationTitleCard(BaseCardType):
             margin: Margin between the text and side of the glass.
             y_offset: How far from the bottom of the image the glass
                 should be drawn.
+            adjustments: Adjustments for the bounds of the glass.
 
         Returns:
             List of ImageMagick commands to draw the defined glass.
@@ -297,15 +313,15 @@ class NotificationTitleCard(BaseCardType):
         # Draw left-aligned rectangles
         if self.position == 'left':
             top_left = Coordinate(
-                0,
-                self.HEIGHT - y_offset - height - (margin / 3)
+                0 - adjustments[3],
+                self.HEIGHT - y_offset - height - (margin / 3) - adjustments[0]
             )
 
             glass = Rectangle(
                 top_left,
                 Coordinate(
-                    x_offset + width + margin,
-                    self.HEIGHT - y_offset + (margin / 3),
+                    x_offset + width + margin + adjustments[1],
+                    self.HEIGHT - y_offset + (margin / 3) + adjustments[2],
                 )
             )
 
@@ -316,15 +332,15 @@ class NotificationTitleCard(BaseCardType):
         # Draw right-aligned rectangles
         else:
             top_left = Coordinate(
-                self.WIDTH - x_offset - width - margin,
-                self.HEIGHT - y_offset - height - (margin / 3),
+                self.WIDTH - x_offset - width - margin - adjustments[3],
+                self.HEIGHT - y_offset - height - (margin / 3) - adjustments[0],
             )
 
             glass = Rectangle(
                 top_left,
                 Coordinate(
-                    self.WIDTH,
-                    self.HEIGHT - y_offset + (margin / 3)
+                    self.WIDTH + adjustments[1],
+                    self.HEIGHT - y_offset + (margin / 3) + adjustments[2]
                 )
             )
 
@@ -460,6 +476,7 @@ class NotificationTitleCard(BaseCardType):
                 len(self.title_text.splitlines()),
                 self._TITLE_TEXT_MARGIN,
                 y_offset=self._TITLE_TEXT_Y_OFFSET + self.font_vertical_shift,
+                adjustments=self.box_adjustments,
             ),
             *self.get_glass_commands(
                 self.index_text_commands,

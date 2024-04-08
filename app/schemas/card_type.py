@@ -539,6 +539,7 @@ class NotificationCardType(BaseCardTypeCustomFontAllText):
     episode_text: str
     font_color: str = NotificationTitleCard.TITLE_COLOR
     font_file: FilePath = NotificationTitleCard.TITLE_FONT
+    box_adjustments: BoxAdjustments = (0, 0, 0, 0)
     edge_color: Optional[str] = None
     edge_width: conint(ge=0) = NotificationTitleCard.EDGE_WIDTH
     episode_text_color: Optional[str] = None
@@ -547,6 +548,10 @@ class NotificationCardType(BaseCardTypeCustomFontAllText):
     glass_color: str = NotificationTitleCard.GLASS_COLOR
     position: Literal['left', 'right'] = 'right'
     separator: str = '-'
+
+    @validator('box_adjustments')
+    def parse_box_adjustments(cls, val: str) -> tuple[int, int, int, int]:
+        return tuple(map(int, re_match(BoxAdjustmentRegex, val).groups()))
 
     @root_validator(skip_on_failure=True)
     def assign_unassigned_color(cls, values: dict) -> dict:
