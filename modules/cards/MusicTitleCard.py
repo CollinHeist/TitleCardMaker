@@ -463,13 +463,11 @@ class MusicTitleCard(BaseCardType):
         elif self.player_position == 'right':
             x = self.WIDTH - self.player_width - self.player_inset + MARGIN
 
-        # Determine y position based on whether a subtitle is present
         y = self.player_inset \
             + self._control_height \
             + self._timeline_height \
             + self._subtitle_height \
             + self.font_vertical_shift
-        # Dist / controls / timeline / subtitle / text diff
 
         return [
             f'-font "{self.font_file}"',
