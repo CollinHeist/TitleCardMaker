@@ -811,7 +811,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         # Go through each episode within Plex, set title cards
         loaded = []
-        for plex_episode in series.episodes(container_size=500):
+        for plex_episode in series.episodes(container_size=100):
             # Skip episode if no associated episode was provided
             found = False
             for episode, card in episode_and_cards:
@@ -827,7 +827,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             if (image := self.compress_image(card.card_file, log=log)) is None:
                 continue
 
-            # Upload card to Plex, optionally remove Overlay label
+            # Upload card
             try:
                 # If integrating with PMM, add EXIF data
                 if self.integrate_with_pmm:
