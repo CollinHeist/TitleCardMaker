@@ -44,7 +44,7 @@ class MediaServer(ABC):
 
 
     def compress_image(self,
-            image: Path,
+            image: Union[str, Path],
             *,
             log: Logger = log
         ) -> Optional[Path]:
@@ -57,13 +57,16 @@ class MediaServer(ABC):
 
         Returns:
             Path to the compressed image, or None if the image could not
-            be compressed.
+            be compressed (or image DNE).
         """
 
-        # No compression necessary
         image = Path(image)
+        if not (image := Path(image)).exists():
+            return None
+
+        # No compression necessary
         if (self.filesize_limit is None
-            or (image := Path(image)).stat().st_size <= self.filesize_limit):
+            or image.stat().st_size <= self.filesize_limit):
             return image
 
         # Start with a quality of 95%, decrement by 5% each time
@@ -85,7 +88,7 @@ class MediaServer(ABC):
             return None
 
         # Compression successful, log and return intermediate image
-        log.debug(f'Compressed "{image.resolve()}" at {quality}% quality')
+        log.trace(f'Compressed "{image.resolve()}" at {quality}% quality')
         return small_image
 
 
@@ -109,7 +112,9 @@ class MediaServer(ABC):
             *,
             log: Logger = log,
         ) -> list[tuple[_Episode, _Card]]:
-        """Abstract method to load title cards within this MediaServer."""
+        """
+        Abstract method to load title cards within this MediaServer.
+        """
         raise NotImplementedError
 
 
