@@ -114,6 +114,9 @@ class ShowArchive:
                 )
             )
 
+        if self.shows:
+            self.shows[0]._is_sub_archive = False
+
 
     def __str__(self) -> str:
         """Returns a string representation of the object."""
