@@ -479,11 +479,12 @@ def import_series_blueprint_(
     - blueprint: Blueprint object to import.
     """
 
-    # Query for this Series, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
-
-    # Import Blueprint
-    import_blueprint(db, series, blueprint, log=request.state.log)
+    import_blueprint(
+        db,
+        get_series(db, series_id, raise_exc=True),
+        blueprint,
+        log=request.state.log
+    )
 
 
 @blueprint_router.get('/sets/set/{set_id}')

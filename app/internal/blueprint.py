@@ -23,6 +23,7 @@ from modules.EpisodeInfo2 import EpisodeInfo
 from modules.SeriesInfo2 import SeriesInfo
 from modules.TieredSettings import TieredSettings
 
+
 """
 Regex to extract the season and episode number from an Episode override
 key.
@@ -260,12 +261,14 @@ def import_blueprint(
     # Import Fonts
     font_map: dict[int, Font] = {}
     for font_id, font in enumerate(blueprint.blueprint.fonts):
-        # See if this Font already exists (match by name)
-        if ((existing_font := db.query(Font).filter_by(name=font.name).first())
-            is not None):
-            font_map[font_id] = existing_font
-            log.info(f'Matched Blueprint Font[{font_id}] to existing Font '
-                     f'{existing_font}')
+        # See if this Font already exists
+        for other_font in db.query(Font).all():
+            if other_font.equals(font):
+                font_map[font_id] = other_font
+                log.info(f'Matched Blueprint Font[{font_id}] to existing Font '
+                        f'{other_font}')
+                break
+        if font_map.get(font_id) is not None:
             continue
 
         # This Font has a file that can be directly downloaded
@@ -292,7 +295,7 @@ def import_blueprint(
         # Download Font file if provided
         if font_content:
             font_directory = get_preferences().asset_directory / 'fonts'
-            file_path = font_directory / str(new_font.id) / font.file
+            file_path: Path = font_directory / str(new_font.id) / font.file
             file_path.parent.mkdir(exist_ok=True, parents=True)
             file_path.write_bytes(font_content)
             log.info(f'{new_font} Downloaded File "{font.file}"')
@@ -307,13 +310,14 @@ def import_blueprint(
     # Import Templates
     template_map: dict[int, Template] = {}
     for template_id, template in enumerate(blueprint.blueprint.templates):
-        # See if this Template already exists (match by name)
-        existing_template = db.query(Template).filter_by(name=template.name)\
-            .first()
-        if existing_template is not None:
-            template_map[template_id] = existing_template
-            log.info(f'Matched Blueprint Template[{template_id}] to existing '
-                     f'Template {existing_template}')
+        # See if this Template already exists
+        for other_template in db.query(Template).all():
+            if other_template.equals(template):
+                template_map[template_id] = other_template
+                log.info(f'Matched Blueprint Template[{template_id}] to '
+                         f'existing Template {other_template}')
+                break
+        if template_map.get(template_id) is not None:
             continue
 
         # Update Font ID from Font map if indicated

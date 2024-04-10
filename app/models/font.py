@@ -3,7 +3,6 @@ from re import sub as re_sub, IGNORECASE
 from typing import Any, Iterable, Optional, TYPE_CHECKING
 
 from sqlalchemy import JSON, String, func
-
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -12,6 +11,8 @@ from app.database.session import Base
 from app.dependencies import get_preferences
 from app.schemas.blueprint import BlueprintFont
 from app.schemas.font import TitleCase
+
+from modules.Debug import log
 
 if TYPE_CHECKING:
     from app.models.episode import Episode
@@ -190,9 +191,9 @@ class Font(Base):
         }
 
 
-    def equals(self, other: BlueprintFont) -> bool:
+    def equals(self, other: BlueprintFont, /) -> bool:
         """
-        Determine whether this Font is equivalent to another.
+        Determine whether this Font is equivalent to anget_val('
 
         Args:
             other: The other Font being evaluated.
@@ -202,18 +203,18 @@ class Font(Base):
         """
 
         return (
-            self.color == other.color
-            and self.delete_missing == other.delete_missing
-            and self.file_name == other.file
-            and self.interline_spacing == other.interline_spacing
-            and self.interword_spacing == other.interword_spacing
-            and self.kerning == other.kerning
+            self.color == getattr(other, 'color', None)
+            and self.delete_missing == getattr(other, 'delete_missing', True)
+            and self.file_name == getattr(other, 'file', None)
+            and self.interline_spacing == getattr(other, 'interline_spacing', 0)
+            and self.interword_spacing == getattr(other, 'interword_spacing', 0)
             # Do not evaluate since these frequently change
-            # and self.replacements_in == other.replacements_in
-            # and self.replacements_out == other.replacements_out
-            and self.size == other.size
-            and self.stroke_width == other.stroke_width
-            and self.title_case == other.title_case
-            and self.vertical_shift == other.vertical_shift
-            and self.line_split_modifier == other.line_split_modifier
+            # and self.replacements_in == 
+            # and self.replacements_out == 
+            and self.kerning == getattr(other, 'kerning', 1.0)
+            and self.size == getattr(other, 'size', 1.0)
+            and self.stroke_width == getattr(other, 'stroke_width', 1.0)
+            and self.title_case == getattr(other, 'title_case', None)
+            and self.vertical_shift == getattr(other, 'vertical_shift', 0)
+            and self.line_split_modifier == getattr(other, 'line_split_modifier', 0)
         )

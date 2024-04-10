@@ -404,15 +404,15 @@ class Template(Base):
             ex_values = list(self.extras.values())
 
         return (
-            self.filters == other.filters
-            and self.card_type == other.card_type
-            and self.hide_season_text == other.hide_season_text
-            and self.hide_episode_text == other.hide_episode_text
-            and st_ranges == other.season_title_ranges
-            and st_values == other.season_title_values
-            and self.episode_text_format == other.episode_text_format
-            and self.translations == other.translations
-            and ex_keys == other.extra_keys
-            and ex_values == other.extra_values
-            and self.skip_localized_images == other.skip_localized_images
+            self.filters == getattr(other, 'filters', [])
+            and self.card_type == getattr(other, 'card_type', None)
+            and self.hide_season_text == getattr(other, 'hide_season_text',None)
+            and self.hide_episode_text == getattr(other, 'hide_episode_text', None)
+            and st_ranges == getattr(other, 'season_title_ranges', None)
+            and st_values == getattr(other, 'season_title_values', None)
+            and self.episode_text_format == getattr(other, 'episode_text_format', None)
+            and self.translations == getattr(other, 'translations', [])
+            and ex_keys == getattr(other, 'extra_keys', None)
+            and ex_values == getattr(other, 'extra_values', None)
+            and self.skip_localized_images == getattr(other, 'skip_localized_images', None)
         )
