@@ -7,6 +7,15 @@ import {
 /** @type {number[]} */
 let allIds = [];
 
+/** @type {boolean} */
+const library_unique_cards = {{preferences.library_unique_cards|tojson}};
+/** @type {boolean} */
+const stylize_unmonitored_posters = {{preferences.stylize_unmonitored_posters|tojson}};
+/** @type {boolean} */
+const reduced_animations = {{preferences.reduced_animations|tojson}};
+/** @type {boolean} */
+const home_page_table_view = {{preferences.home_page_table_view|tojson}};
+
 /**
  * Refresh the Card data (progress and card counts) for the Series with the
  * given ID.
@@ -186,11 +195,10 @@ function _populateSeriesRow(series, template) {
   row.querySelector('tr').id = `series-id${series.id}`;
 
   // Determine maximum number of Cards based on libraries
-  {% if preferences.library_unique_cards %}
-    const maxCards = series.episode_count * series.libraries.length;
-  {% else %}
-    const maxCards = series.episode_count;
-  {% endif %}
+  const maxCards = library_unique_cards
+    ? series.episode_count * series.libraries.length
+    : series.episode_count
+  ;
 
   // Make row red / yellow depending on Card count
   if (series.card_count === 0 && series.episode_count > 0) {
@@ -214,11 +222,9 @@ function _populateSeriesRow(series, template) {
   poster.src = series.small_poster_url;
 
   // Add unmonitored class if styling
-  {% if preferences.stylize_unmonitored_posters %}
-  if (!series.monitored) {
+  if (stylize_unmonitored_posters && !series.monitored) {
     poster.classList.add('unmonitored'); 
   }
-  {% endif %}
 
   // Add year
   row.querySelector('td[data-row="year"').innerText = series.year;
@@ -265,22 +271,19 @@ function _populateSeriesRow(series, template) {
  * the DOM.
  */
 function _populateSeriesCard(series, template) {
-  // Clone template
   const clone = template.content.cloneNode(true);
 
   // Set poster image src and alt text
   const img = clone.querySelector('img');
   img.src = `${series.small_poster_url}?${series.name[0]}${series.year}`;
-  img.alt = `Poster for ${series.name}`;
 
   // Grayscale if unmonitored (and enabled)
-  {% if preferences.stylize_unmonitored_posters %}
-  if (!series.monitored) {
+  if (stylize_unmonitored_posters && !series.monitored) {
     img.classList.add('unmonitored'); 
   }
-  {% endif %}
 
   // Link name and poster to the Series page
+  console.log(clone);
   const as = clone.querySelectorAll('a');
   as[0].href = `/series/${series.id}`;
   as[1].href = `/series/${series.id}`;
@@ -326,13 +329,13 @@ async function getAllSeries(page=undefined, keepSelection=false) {
   const sortParam = window.localStorage.getItem('sort-by') || 'alphabetical'
 
   // Fade out existing posters
-  {% if not preferences.reduced_animations %}
-    {% if preferences.home_page_table_view %}
-    $('#series-table tr').transition({animation: 'scale', interval: 10, reverse: true});
-    {% else %}
-    $('#series-list .card').transition({animation: 'scale', interval: 10, reverse: true});
-    {% endif %}
-  {% endif %}
+  if (!reduced_animations) {
+    if (home_page_table_view) {
+      $('#series-table tr').transition({animation: 'scale', interval: 10, reverse: true});
+    } else {
+      $('#series-list .card').transition({animation: 'scale', interval: 10, reverse: true});
+    }
+  }
 
   // Get this page of Series data
   /** @type {SeriesPage} */
@@ -345,7 +348,7 @@ async function getAllSeries(page=undefined, keepSelection=false) {
   $('.loading.container').transition('fade out');
 
   // Create elements of each Series
-  {% if preferences.home_page_table_view %}
+  if (home_page_table_view) {
     const template = document.getElementById('series-row-template');
 
     // Clear selected series if indicated
@@ -356,9 +359,9 @@ async function getAllSeries(page=undefined, keepSelection=false) {
   
     // Add rows, transition them in (if enabled)
     document.getElementById('series-table').replaceChildren(...rows);
-    {% if not preferences.reduced_animations %}
+    if (!reduced_animations) {
       $('#series-table tr').transition({animation: 'scale', interval: 15});
-    {% endif %}
+    }
     $('.progress').progress({duration: 1800});
 
     // Set selected statuses
@@ -392,20 +395,20 @@ async function getAllSeries(page=undefined, keepSelection=false) {
         },
       });
     });
-  {% else %}
+  } else {
     const template = document.getElementById('series-template');
     let allSeriesCards = allSeries.map(series => _populateSeriesCard(series, template));
 
     // Add new cards, transition them in (if enabled)
     document.getElementById('series-list').replaceChildren(...allSeriesCards);
-    {% if not preferences.reduced_animations %}
+    if (!reduced_animations) {
       $('#series-list .card').transition({animation: 'scale', interval: 15});
-    {% endif %}
+    }
     $('.progress').progress({duration: 2000});
 
     // Dim Series posters on hover
     $('.ui.cards .image').dimmer({on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'});
-  {% endif %}
+  }
 
   // Update pagination
   updatePagination({
@@ -640,7 +643,7 @@ function batchDeleteSeries() {
  * an API request and, if successful, reloads the page.
  * @param {"poster" | "table"} style 
  */
-function toggleDisplayStyle(style) {
+function toggleGlobalDisplayStyle(style) {
   $.ajax({
     type: 'PATCH',
     url: '/api/settings/update',
