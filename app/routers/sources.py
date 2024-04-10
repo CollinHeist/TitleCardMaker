@@ -13,7 +13,12 @@ from sqlalchemy.orm import Session
 
 from app.database.query import get_connection, get_episode, get_series
 from app.database.session import Page
-from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.dependencies import (
+    get_database, get_emby_interfaces, get_jellyfin_interfaces,
+    get_plex_interfaces, get_preferences, get_tmdb_interfaces,
+    require_tmdb_interface, EmbyInterface, JellyfinInterface, PlexInterface,
+    TMDbInterface
+)
 from app.internal.auth import get_current_user
 from app.internal.cards import delete_cards
 from app.internal.sources import (
@@ -546,7 +551,7 @@ async def set_series_logo(
         uploaded_file = await file.read()
 
     # Send error if both a URL and file were provided
-    if url or uploaded_file:
+    if url and uploaded_file:
         raise HTTPException(
             status_code=422,
             detail='Cannot provide multiple images'
@@ -620,7 +625,7 @@ async def set_series_backdrop(
         uploaded_file = await file.read()
 
     # Send error if both a URL and file were provided
-    if url or uploaded_file:
+    if url and uploaded_file:
         raise HTTPException(
             status_code=422,
             detail='Cannot provide multiple images'
