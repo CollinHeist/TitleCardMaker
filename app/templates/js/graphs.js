@@ -161,9 +161,9 @@ function getSnapshots() {
                 // Luxon format string
                 tooltipFormat: 'DD T'
               },
-              grid: {
-                drawOnChartArea: false,
-              },
+              // grid: {
+              //   drawOnChartArea: false,
+              // },
               title: {
                 display: true,
                 text: 'Date'
@@ -253,6 +253,9 @@ function getSnapshots() {
               time: {
                 // Luxon format string
                 tooltipFormat: 'DD T'
+              },
+              grid: {
+                drawOnChartArea: false,
               },
               title: {
                 display: true,
