@@ -266,10 +266,6 @@ def read_update_list() -> None:
     # Remake all indicated cards
     Manager(check_tautulli=False).remake_cards(update_list)
 
-# Run immediately if specified
-if args.run:
-    log.info(f'Starting TitleCardMaker ({pp.version})')
-    run()
 
 # Sync if specified
 if args.sync:
@@ -278,6 +274,18 @@ if args.sync:
 
     # Create Manager, run, and write missing report
     Manager(check_tautulli=False).sync_series_files()
+
+# Run immediately if specified
+if args.run:
+    log.info(f'Starting TitleCardMaker ({pp.version})')
+    from cProfile import Profile
+    from pstats import Stats
+
+    with Profile() as pr:
+        run()
+
+    stats = Stats(pr)
+    stats.dump_stats(filename='all.prof')
 
 # Schedule first run, which then schedules subsequent runs
 if hasattr(args, 'runtime'):

@@ -2,60 +2,12 @@
 import {Snapshot} from './.types.js';
 {% endif %}
 
-function initializeCardsGraph(labels, rawData) {
-  const chartContext = document.getElementById('titleCardsGraph');
-  new Chart(chartContext, {
-    type: 'line',
-    data: {
-      fill: true,
-      stepped: true,
-      labels: labels,
-      datasets: {
-        
-      },
-    },
-    options: {
-      responsive: true,
-      stacked: false,
-      interaction: {
-        intersect: false,
-        axis: 'x'
-      },
-      plugins: {
-        filler: {
-          propagate: false
-        },
-        title: {
-          display: true,
-          text: (ctx) => 'Title Cards Created',
-        }
-      },
-      scales: {
-        x: {
-          type: 'time',
-          time: {
-            // Luxon format string
-            tooltipFormat: 'DD T'
-          },
-          title: {
-            display: true,
-            text: 'Date'
-          }
-        },
-        y: {
-          type: 'linear',
-          display: true,
-          position: 'left',
-        },
-      }
-    }
-  });
-}
+let cardGraph, countsGraph;
 
 function getSnapshots() {
   // Get search params from URL
   const params = new URLSearchParams(window.location.search);
-  const previousDays = params.get('days') || 14;
+  const previousDays = $('input[name="days"]').val() || params.get('days') || 14;
   const slice = params.get('slice') || 1;
 
   // Write params to URL
@@ -121,9 +73,11 @@ function getSnapshots() {
         }
       ];
 
+      // If graph already exists, destroy and recreate
+      if (cardGraph) { cardGraph.destroy(); }
+
       const ctx = document.getElementById('graph');
-      const TOTAL_DELAY = 2000;
-      new Chart(ctx, {
+      cardGraph = new Chart(ctx, {
         type: 'line',
         data: {
           labels: labels,
@@ -146,9 +100,9 @@ function getSnapshots() {
                 // Luxon format string
                 tooltipFormat: 'DD T'
               },
-              // grid: {
-              //   drawOnChartArea: false,
-              // },
+              grid: {
+                drawOnChartArea: false,
+              },
               title: {
                 display: true,
                 text: 'Date'
@@ -195,7 +149,7 @@ function getSnapshots() {
         }
       });
 
-      // -----------------------------------------------------------------------
+      // Counts graph data
       const countDatasets = [
         {
           label: 'Blueprints',
@@ -215,8 +169,11 @@ function getSnapshots() {
         },
       ];
 
+      // Graph already exists, destroy and recreate
+      if (countsGraph) { countsGraph.destroy(); }
+
       const countCtx = document.getElementById('dbCountsGraph');
-      new Chart(countCtx, {
+      countsGraph = new Chart(countCtx, {
         type: 'line',
         data: {
           labels: labels,
@@ -255,10 +212,15 @@ function getSnapshots() {
           }
         }
       });
+
     },
   });
 }
 
 function initAll() {
+  // Query snapshots to initialize charts
   getSnapshots();
+
+  // Re-query when input is changed
+  $('input[name="days"]').on('change', getSnapshots);
 }
