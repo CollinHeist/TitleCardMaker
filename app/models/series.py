@@ -581,7 +581,7 @@ class Series(Base):
 
     def get_logo_file(self) -> Path:
         """
-        Get the logo file for this series.
+        Get the logo file for this Series.
 
         Returns:
             Path to the logo file that corresponds to this series' under
@@ -591,6 +591,23 @@ class Series(Base):
         return Path(get_preferences().source_directory) \
             / self.path_safe_name \
             / 'logo.png'
+    
+    @property
+    def logo_uri(self) -> str:
+        """
+        Get the logo file URI for this Series. This is relative to the
+        browser `/source/` directory, and embeds the file size in the
+        URL if the logo exists.
+        """
+
+        logo =  get_preferences().source_directory \
+            / self.path_safe_name \
+            / 'logo.png'
+
+        if logo.exists():
+            return f'/source/{logo.parent.name}/logo.png?{logo.stat().st_size}'
+
+        return f'/source/{logo.parent.name}/logo.png'
 
 
     def get_series_backdrop(self) -> Path:

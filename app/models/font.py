@@ -193,7 +193,7 @@ class Font(Base):
 
     def equals(self, other: BlueprintFont, /) -> bool:
         """
-        Determine whether this Font is equivalent to anget_val('
+        Determine whether this Font is equivalent to another.
 
         Args:
             other: The other Font being evaluated.
