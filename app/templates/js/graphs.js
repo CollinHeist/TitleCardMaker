@@ -132,21 +132,6 @@ function getSnapshots() {
           datasets: datasets
         },
         options: {
-          // animation: {
-          //   x: {
-          //     type: 'number',
-          //     easing: 'linear',
-          //     duration: TOTAL_DELAY,
-          //     from: NaN,
-          //     delay(ctx) {
-          //       if (ctx.type !== 'data' || ctx.xStarted) {
-          //         return 0;
-          //       }
-          //       ctx.xStarted = true;
-          //       return ctx.index * (TOTAL_DELAY / labels.length);
-          //     }
-          //   },
-          // },
           responsive: true,
           stacked: false,
           interaction: {
