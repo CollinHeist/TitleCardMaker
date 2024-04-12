@@ -407,6 +407,8 @@ async function initalizeSeriesConfig() {
     {% endif %}
     '#card-config-form section[aria-label="extras"]',
     document.getElementById('extra-input-template'),
+    false,
+    3,
   );
   // Add season title on button press
   $('#card-config-form .button[data-value="addTitle"]').on('click', () => {
@@ -1076,10 +1078,8 @@ function getCardData(page=currentCardPage, transition=false, scroll=false) {
       const previews = cards.items.map(card => {
         const preview = previewTemplate.content.cloneNode(true);
         // Start hidden if transitioning
-        if (reduced_animations) {
-          if (transition && !isSmallScreen()) {
-            preview.querySelector('.image').classList.add('transition', 'hidden');
-          }
+        if (!reduced_animations && transition && !isSmallScreen()) {
+          preview.querySelector('.image').classList.add('transition', 'hidden');
         }
 
         // Re-create Card when image is clicked or right-clicked (if enabled)
@@ -1116,10 +1116,10 @@ function getCardData(page=currentCardPage, transition=false, scroll=false) {
         previewElement.replaceChildren(...previews);
       } else {
         if (transition && !isSmallScreen()) {
-          $('#card-previews .image').transition({transition: 'fade out', interval: 20});
+          $('#card-previews .image').transition({transition: 'fade up', interval: 20});
           setTimeout(() => {
             previewElement.replaceChildren(...previews);
-            $('#card-previews .image').transition({transition: 'fade out', interval: 20});
+            $('#card-previews .image').transition({transition: 'fade down', interval: 20});
           }, 500);
         } else {
           previewElement.replaceChildren(...previews);
@@ -1140,8 +1140,10 @@ function getCardData(page=currentCardPage, transition=false, scroll=false) {
       });
 
       // Refresh theme, initialize dimmers
-      refreshTheme();
-      $('#card-previews .image .dimmer').dimmer({transition: 'fade up', on: 'hover'});
+      setTimeout(() => {
+        refreshTheme();
+        $('#card-previews .image .dimmer').dimmer({transition: 'fade up', on: 'hover'})
+      }, 525);
     },
   });
 }
