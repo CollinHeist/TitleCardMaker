@@ -383,7 +383,7 @@ class Template(Base):
         return True
 
 
-    def equals(self, other: 'BlueprintTemplate') -> bool:
+    def equals(self, other: 'BlueprintTemplate', /) -> bool:
         """
         Determine whether this Template is equivalent to another.
 

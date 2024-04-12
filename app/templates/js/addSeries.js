@@ -1,6 +1,7 @@
 {% if False %}
 import {
-  RemoteBlueprint, RemoteBlueprintPage, RemoteBlueprintSet, SearchResult, Series
+  AnyConnection, RemoteBlueprint, RemoteBlueprintPage, RemoteBlueprintSet,
+  SearchResult, SearchResultsPage, Series
 } from './.types.js';
 {% endif %}
 
@@ -196,20 +197,25 @@ function viewBlueprintSets(blueprintId) {
       setSection.replaceChildren();
 
       for (let set of blueprintSets) {
+        // Add header for this Set
         const header = document.createElement('h4');
         header.innerText = set.name; header.className = 'ui header';
         setSection.appendChild(header);
 
+        // Create section of cards for Blueprints of this Set
         const bpCards = document.createElement('div');
         bpCards.className = 'ui three stackable raised cards';
         setSection.appendChild(bpCards);
 
-        for (let blueprint of set.blueprints) {
+        // Add all BPs in the set
+        for (let blueprint of set.blueprints.sort((a, b) => a.series.name.localeCompare(b.series.name))) {
           const elementId = `blueprint-set-id${blueprint.id}`;
           blueprint.set_ids = [];
           const card = populateBlueprintCard(
             blueprintTemplate.content.cloneNode(true), blueprint, elementId
           );
+          // Remove blacklist button
+          card.querySelector('[data-action="blacklist"]').remove();
 
           // Assign function to import button
           card.querySelector('[data-action="import"]').onclick = () => importBlueprint(blueprint.id, elementId);
@@ -434,7 +440,7 @@ function initializeLibraryDropdowns() {
     url: '/api/connection/all',
     /**
      * Connections queried, store and then query all libraries.
-     * @param {Array<import('./.types.js').AnyConnection>} connections - All globally
+     * @param {AnyConnection[]} connections - All globally
      * defined and enabled Connections.
      */
     success: connections => {
@@ -516,7 +522,7 @@ function querySeries() {
     url: `/api/series/lookup?name=${query}&interface_id=${interfaceId}`,
     /**
      * Lookup successful, populate page.
-     * @param {import('./.types.js').SearchResultsPage} allResults - Search results for this query.
+     * @param {SearchResultsPage} allResults - Search results for this query.
     */
     success: allResults => {
       const results = allResults.items.map((result, index) => {
