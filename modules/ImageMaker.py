@@ -60,14 +60,12 @@ class ImageMaker(ABC):
 
         # No Preferences object, use global
         if preferences is None:
-            self.card_dimensions = getattr(
-                global_objects.pp, 'card_dimensions', '3200x1800'
-            )
-            self.quality = getattr(global_objects.pp, 'card_quality', 92)
+            self.card_dimensions = global_objects.pp.card_dimensions
+            self.quality = global_objects.pp.card_quality
             self.image_magick = ImageMagickInterface(
-                getattr(global_objects.pp, 'imagemagick_container', 'ImageMagick'),
-                getattr(global_objects.pp, 'use_magick_prefix', True),
-                getattr(global_objects.pp, 'imagemagick_timeout', 30),
+                global_objects.pp.imagemagick_container,
+                global_objects.pp.use_magick_prefix,
+                global_objects.pp.imagemagick_timeout,
             )
         # Preferences object provided, use directly
         else:

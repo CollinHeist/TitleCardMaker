@@ -76,15 +76,11 @@ plugins:
   - termynal:
       title: Command Line
 
-  # Enable page tagging
-  # - tags:
-  #     tags_file: tags.md
-
   # Enable social cards
-  # - social:
-  #     enabled: !ENV [CI, false]
-  #     cards_layout_options:
-  #       background_color: rgb(29, 29, 29)
+  - social:
+      enabled: !ENV [CI, false]
+      cards_layout_options:
+        background_color: rgb(29, 29, 29)
 
 # Hooks
 hooks:
@@ -104,10 +100,6 @@ extra:
       link: https://github.com/sponsors/CollinHeist
       name: Become a Sponsor
 
-  # Add analytics
-  # analytics:
-  #   provider: google
-  #   property: G-FN7377XDFK
 
 extra_css:
   - stylesheets/extra.css
@@ -131,13 +123,7 @@ markdown_extensions:
   # Annotations
   # - attr_list
   - md_in_html
-
-  # Enable mermaid diagrams
-  - pymdownx.superfences:
-      custom_fences:
-      - name: mermaid
-        class: mermaid
-        format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.superfences
 
   # Checklists
   - pymdownx.tasklist:
@@ -151,9 +137,6 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:materialx.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
-      options:
-        custom_icons:
-          - docs/overrides/.icons/
 
   # Code blocks
   - pymdownx.highlight:
@@ -256,6 +239,4 @@ nav:
   - Development:
     - Contributing: development/contributing.md
     - The API: development/api.md
-    # - Changelog: development/changelog.md
   - Help & Support: help_and_support.md
-  # - Tags: tags.md

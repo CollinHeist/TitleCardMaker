@@ -37,9 +37,7 @@ loguru = "==0.7.2"
 better-exceptions = "==0.2.1"
 colorama = "==0.4.6"
 win32-setctime = "==1.1.0"
-websockets = "==12.0"
-colorthief = "==0.2.1"
-wand = "==0.6.13"
+rich = "==13.7.1"
 
 [dev-packages]
 mkdocs = "*"
@@ -52,4 +50,4 @@ mkdocs-glightbox = "==0.3.4"
 ruff = "==0.1.6"
 
 [requires]
-python_version = "3.9"
+python_version = "3.11"
