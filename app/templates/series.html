@@ -1101,7 +1101,7 @@
             <label for="logo-upload" class="ui green tertiary button">
               Upload
             </label>
-            <img id="logo" class="ui rounded image" src="/source/{{series.path_safe_name}}/logo.png" loading="lazy" onerror="this.style.display='none';">
+            <img id="logo" class="ui rounded image" src="{{series.logo_uri}}" loading="lazy" onerror="this.style.display='none';">
             
             <div class="ui yellow tertiary button" onclick="analyzePalette('#logo', '#logo-palette');">
               Analyze Palette
