@@ -155,7 +155,6 @@ class Series(Base):
         return f'Series[{self.id}] {self.full_name}'
 
 
-    # Columns from relationships
     @property
     def episode_ids(self) -> list[int]:
         """
@@ -224,7 +223,7 @@ class Series(Base):
     def full_name(cls: 'Series') -> ColumnElement[str]:
         """Class-expression of `full_name` property."""
 
-        return cls.name + '(' + cls.year + ')'
+        return cls.name + ' (' + cls.year + ')'
 
 
     @hybrid_property

@@ -1,8 +1,8 @@
 from typing import Optional, Union
 
-from app.schemas.episode import Episode
+from app.models.episode import Episode
+from app.models.series import Series
 from app.schemas.font import NamedFont
-from app.schemas.series import Series
 
 
 def get_effective_fonts(

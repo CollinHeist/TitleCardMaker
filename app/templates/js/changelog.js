@@ -13,7 +13,7 @@ const changeLog = [
   <div class="item">Allow named Fonts to affect after how many characters TCM will attempt to split titles into multiple lines 
     <div class="list">
       <div class="item">All Named Fonts can specify a "Title Split Modifier" which is the number of characters to add/remove from the card's default split amount.</div>
-      <div class="item">For example, if a Card typically splits lines after 25 characters, specifying a modifier of +5 would mean the titles would be split after<i>30</i>characters.</div>
+      <div class="item">For example, if a Card typically splits lines after 25 characters, specifying a modifier of +5 would mean the titles would be split after <i>30</i> characters.</div>
       <div class="item">This can be used to give more fitting behavior for Fonts which are very small or very large</div>
       <div class="item">Add SQL schema <b>1be1951acc40</b> to add the <b>Font.line_split_modifier</b> column</div>
     </div>
@@ -40,7 +40,8 @@ const changeLog = [
       <img width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/324874a2-5508-43f3-9d40-57748125b7dc">
     </div>
   </div>
-      <div class="item">Sets of<i>existing</i>Blueprints can be created directly on the Blueprints GitHub via this <a href="https://github.com/TitleCardMaker/Blueprints/issues/new/choose" target="_blank">issue form</a>; or new Blueprints can be assigned to existing Sets when they are submitted</div>
+      <div class="item">Sets of <i>existing</i> Blueprints can be created directly on the Blueprints GitHub via this <a href="https://github.com/TitleCardMaker/Blueprints/issues/new/choose" target="_blank">issue form</a>.</div>
+      <div class="item">New Blueprints can be assigned to existing Sets when they are submitted</div>
     </div>
   </div>
   <div class="item">Add functionality to upload Cards directly to a Series to import them</div>
@@ -61,7 +62,7 @@ const changeLog = [
   <div class="item">Do not add intermediate background task queue for Card creation - minor speed improvement</div>
   <div class="item">Add airdate column to the Episode data tables (advanced mode only)</div>
   <div class="item">Only keep log records for one week, not two</div>
-  <div class="item">Do not include the <b>delete_missing</b> attribute in Font exports in Blueprints if _true_</div>
+  <div class="item">Do not include the <b>delete_missing</b> attribute in Font exports in Blueprints if <b>True</b></div>
   <div class="item">Scroll to the top of the page when navigating between pages of Blueprints</div>
   <div class="item">Add "rich" representation of all SQL models to tracebacks</div>
   <div class="item">Force delete and re-create the Card when the preview is right-clicked on the Series page</div>
@@ -78,7 +79,7 @@ const changeLog = [
 <div class="ui ordered list">
   <div class="item">Fix the "Forgot Password?" link on the login page - was using old website URL</div>
   <div class="item">Properly set the modal headers when browsing logos and backdrops</div>
-  <div class="item">Initialize the log level dropdown<i>before</i>querying for Logs so it can be interacted with while the page loads</div>
+  <div class="item">Initialize the log level dropdown <i>before</i> querying for Logs so it can be interacted with while the page loads</div>
   <div class="item">Use a centered Unicode bar character <b>｜</b> in the library dividers for better vertical alignment</div>
   <div class="item">Do not display Loaded asset counts which exceed the Card count</div>
   <div class="item">Allow the Series Episode data table to take up the full container width on very large displays</div>

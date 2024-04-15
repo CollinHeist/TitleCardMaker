@@ -253,7 +253,7 @@ def get_suggested_font_replacements(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Get Font with this ID, raise 404 if DNE
     font = get_font(db, font_id, raise_exc=True)
