@@ -2,7 +2,7 @@
 
 document$.subscribe(function() {
   // Only run on card type pages
-  if (!window.location.pathname.startsWith('/card_types/')) { return; }
+  // if (!window.location.pathname.startsWith('/card_types/')) { return; }
   console.log('Loading ImageCompares..');
 
   const options = {

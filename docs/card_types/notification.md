@@ -156,10 +156,10 @@ _Separator Character_ extra.
 
 ## Mask Images
 
-This card also natively supports [mask images](...). Like all mask images, TCM
-will automatically search for a `-mask.png` (e.g. `s3e2-mask.png`) image
-alongside the input Source Image in the Series' source directory, and apply this
-atop all other Card effects.
+This card also natively supports [mask images](../user_guide/mask_images.md).
+Like all mask images, TCM will automatically search for alongside the input
+Source Image in the Series' source directory, and apply this atop all other Card
+effects.
 
 !!! example "Example"
 

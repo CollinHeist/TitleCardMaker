@@ -8,7 +8,7 @@ tags:
     - Blueprints
 ---
 
-# Blueprints
+## Blueprints
 
 Blueprints can be viewed as amped-up [Templates](./user_guide/templates.md).
 These are ready-made collections of cards configurations that apply to a single
@@ -33,7 +33,7 @@ All Blueprints are hosted on the
 can (and is encouraged to!) submit a Blueprint for availability across all of
 TCM. This process is described [below](#sharing-your-own-blueprint).
 
-## Viewing Blueprints
+### Viewing Blueprints
 
 There are two main ways of browsing Blueprints.
 
@@ -47,7 +47,7 @@ Some Blueprints will also have multiple preview images. This will be indicated
 by a slight animation when the preview is hovered over. Clicking on the image
 will then cycle through the available previews.
 
-## Importing Blueprints
+### Importing Blueprints
 
 ??? note "Note about Font Files"
 
@@ -59,7 +59,7 @@ will then cycle through the available previews.
     TCM will import the rest of the Font customizations for you, so just be sure
     to upload the Font files before you start Title Card creation.
 
-### By Series
+#### By Series
 
 To import a Blueprint for a Series, simply open the
 [Series' page](./user_guide/series.md) and then open the _Blueprints_ tab. Click
@@ -83,7 +83,7 @@ re-importing the Blueprint.
 ![](./assets/blueprint_series_light.jpg#only-light){.no-lightbox}
 ![](./assets/blueprint_series_dark.jpg#only-dark){.no-lightbox}
 
-### Browsing
+#### Browsing
 
 If you'd like to browse all available Blueprints, go to the new Series page
 (the `/add` URL) and scroll down to the Blueprints section. After clicking
@@ -94,7 +94,7 @@ This is covered in greater detail [here](./user_guide/new_series.md).
 ![](./assets/blueprint_all_light.webp#only-light){.no-lightbox}
 ![](./assets/blueprint_all_dark.webp#only-dark){.no-lightbox}
 
-## Sharing your own Blueprint
+### Sharing your own Blueprint
 
 In order to help other TitleCardMaker users, it is encouraged to share any
 Blueprints you think would be valuable to others. This process is designed to be
@@ -118,7 +118,7 @@ as easy as possible.
         - [x] Include any Source Images in a `.zip` and make  mention of them in
         the description.
 
-### Exporting the Data
+#### Exporting the Data
 
 Once you've customized a Series' Cards to :pinched_fingers: _perfection_, open
 it's page in TitleCardMaker, and then go to the _Blueprints_ tab. Click the
@@ -143,7 +143,7 @@ It is important to note that TCM cannot automatically detect when a Source Image
 should be included in a Blueprint export. Because of this you will need to
 manually copy and zip the files you would like included.
 
-### Editing the Blueprint
+#### Editing the Blueprint
 
 Before submitting the Blueprint to the repository, it's best to double-check the
 data in the Blueprint submission.
@@ -211,7 +211,7 @@ if the author's license is listed as open and/or free for public
 7. Grab any Source Images that are instrumental to the Blueprint (this is most
 often a logo file) and zip them into a `.zip` file.
 
-### Submitting the Blueprint
+#### Submitting the Blueprint
 
 With this Blueprint, the next (and final) step is to submit it to the Blueprints
 repository.
@@ -256,20 +256,20 @@ the form.
 [^1]: TCM will only grab Title Cards that are not blurred or grayscale, and not
 any Cards from Specials (season 0).
 
-# Sets
+## Sets
 
 Blueprints can also be part of Blueprint _Sets_. These are simply groups of
 Blueprints which are all associated with each other. For example:
 
-![](./assets/blueprint_set_light.jpg#only-light){.no-lightbox}
-![](./assets/blueprint_set_dark.jpg#only-dark){.no-lightbox}
+![](./assets/blueprint_set_light.webp#only-light){.no-lightbox}
+![](./assets/blueprint_set_dark.webp#only-dark){.no-lightbox}
 
-## Viewing Sets
+### Viewing Sets
 
 When a Series is associated with a Set, it will be noted on the Blueprint on
 either the Series page, or the main Blueprint browser.
 
-## Creating a Set
+### Creating a Set
 
 If you would like to create a Set with some of your _existing_ Blueprints, this
 can be done through the repository, just like creating a new Blueprint.
@@ -286,7 +286,7 @@ navigate to them in the main repository
     Blueprint - you should now see a `blueprint.json` file (along with some
     other files). 
 
-    2. Click ++ctrl + shift + .++ (++cmd + shift + .++ on MacOS) to copy the
+    2. Click ++ctrl+shift+period++ (++cmd+shift+period++ on MacOS) to copy the
     path of this folder.
 
 4. Paste the path you just copied into the _Blueprints_ section of the form.
@@ -318,7 +318,7 @@ Blueprint on a new line. You must specify at least two Blueprints.
     your submission. If this passes, then your work is done and the Set will be
     available within TCM shortly.
 
-## Adding to a Set
+### Adding to a Set
 
 If you are submitting a new Blueprint and would like to add this to an existing
 Set, then find the Set ID from the table at the bottom of the main repository
