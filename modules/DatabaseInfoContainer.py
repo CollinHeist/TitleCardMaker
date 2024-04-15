@@ -427,7 +427,11 @@ class DatabaseInfoContainer(ABC):
             if type_ is None:
                 setattr(self, attribute, value)
             else:
-                setattr(self, attribute, type_(value))
+                try:
+                    setattr(self, attribute, type_(value))
+                except ValueError:
+                    log.exception(f'Invalid ID {attribute} of {value} - cannot '
+                                  f'be converted to type {type_}')
 
         return None
 
