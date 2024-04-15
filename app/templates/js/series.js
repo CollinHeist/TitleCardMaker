@@ -1519,7 +1519,7 @@ function viewBlueprintSets(blueprintId) {
       const blueprintTemplate = document.getElementById('blueprint-template');
       const setSection = document.getElementById('blueprint-sets');
       setSection.replaceChildren();
-      setSection.style.display = 'unset';
+      setSection.style.display = 'block';
 
       for (let set of blueprintSets) {
         const header = document.createElement('h3');
