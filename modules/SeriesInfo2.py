@@ -87,12 +87,12 @@ class SeriesInfo(DatabaseInfoContainer):
         self.name = name
         self.year = year
         self.emby_id = InterfaceID(emby_id, type_=str, libraries=True)
-        self.imdb_id = None
+        self.imdb_id: Optional[str] = None
         self.jellyfin_id = InterfaceID(jellyfin_id, type_=str, libraries=True)
         self.sonarr_id = InterfaceID(sonarr_id, type_=int, libraries=False)
-        self.tmdb_id = None
-        self.tvdb_id = None
-        self.tvrage_id = None
+        self.tmdb_id: Optional[int] = None
+        self.tvdb_id: Optional[int] = None
+        self.tvrage_id: Optional[int] = None
         self.match_titles = match_titles
 
         self.set_imdb_id(imdb_id)
