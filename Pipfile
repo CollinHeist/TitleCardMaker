@@ -18,7 +18,7 @@ schedule = "==1.2.1"
 tmdbapis = "==1.2.0"
 "ruamel.yaml" = "==0.17.21"
 imagesize = "==1.4.1"
-pillow = "==10.0.1"
+pillow = "==10.3.0"
 
 [dev-packages]
 ruff = "*"
