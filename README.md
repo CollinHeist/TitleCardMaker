@@ -9,7 +9,7 @@ An automated title card maker for the Plex, Jellyfin, and Emby media servers. Al
 
 Version 2.0 - the Web UI - has officially entered pre-release, and is currently available for project [Sponsors](https://github.com/sponsors/CollinHeist).
 
-<img alt="Web UI" src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker/web-ui/docs/assets/home_dark.webp"/>
+<img alt="Web UI" src="https://titlecardmaker.com/assets/series_dark.webp"/>
 
 More details are located at [titlecardmaker.com](https://titlecardmaker.com/) - this README (and the Wiki documentation) are primarily geared towards the non-UI (v1).
 
