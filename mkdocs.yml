@@ -214,6 +214,7 @@ nav:
     # - Importer: user_guide/importer.md
     - Logs: user_guide/logs.md
     - Setting Priority: user_guide/setting_priority.md
+    - Mask Images: user_guide/mask_images.md
     # - FAQ: user_guide/faq.md
   - Card Types:
     - card_types/index.md
