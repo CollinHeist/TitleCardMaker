@@ -584,6 +584,7 @@ class OverlineCardType(BaseCardTypeCustomFontAllText):
     font_color: BetterColor = OverlineTitleCard.TITLE_COLOR
     font_file: FilePath = OverlineTitleCard.TITLE_FONT
     episode_text_color: Optional[BetterColor] = None
+    episode_text_font_size: PositiveFloat = 1.0
     hide_line: bool = False
     line_color: Optional[BetterColor] = None
     line_position: Literal['top', 'bottom'] = 'top'

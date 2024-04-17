@@ -37,6 +37,12 @@ class OverlineTitleCard(BaseCardType):
                 tooltip='Default is to match the Font color.',
             ),
             Extra(
+                name='Episode Text Font Size',
+                identifier='f',
+                description='Size adjustment for the season and episode text',
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
+            ),
+            Extra(
                 name='Line Color',
                 identifier='line_color',
                 description='Color of the line',
@@ -132,8 +138,9 @@ class OverlineTitleCard(BaseCardType):
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_file',
         'font_size', 'font_color', 'font_interline_spacing',
         'font_interword_spacing', 'font_kerning', 'font_stroke_width',
-        'font_vertical_shift', 'episode_text_color', 'line_color', 'hide_line',
-        'line_position', 'line_width', 'omit_gradient', 'separator',
+        'font_vertical_shift', 'episode_text_color', 'episode_text_font_size',
+        'line_color', 'hide_line', 'line_position', 'line_width',
+        'omit_gradient', 'separator',
     )
 
     def __init__(self, *,
@@ -155,6 +162,7 @@ class OverlineTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
+            episode_text_font_size: float = 1.0,
             hide_line: bool = False,
             line_color: str = TITLE_COLOR,
             line_position: Literal['top', 'bottom'] = 'top',
@@ -191,6 +199,7 @@ class OverlineTitleCard(BaseCardType):
 
         # Optional extras
         self.episode_text_color = episode_text_color
+        self.episode_text_font_size = episode_text_font_size
         self.hide_line = hide_line
         self.line_color = line_color
         self.line_position = line_position
@@ -283,7 +292,7 @@ class OverlineTitleCard(BaseCardType):
             f'-font "{self.REF_DIRECTORY.parent / "Proxima Nova Semibold.otf"}"',
             f'-fill "{self.episode_text_color}"',
             f'-strokewidth 2',
-            f'-pointsize 22',
+            f'-pointsize {22 * self.episode_text_font_size:.1f}',
             f'-interword-spacing 18',
             f'-kerning -2',
             f'-annotate +0+{vertical_shift} "{index_text}"'
