@@ -20,9 +20,8 @@ SonarrLibraries = dict[Literal['interface_id', 'name', 'path'], Union[int, str]]
 
 class Connection(Base):
     """
-    SQL Table that defines a connection to Emby, Jellyfin, Plex, or
-    Sonarr. Not all types of connections care about or use all
-    attributes.
+    SQL Table that defines a connection to Emby, Jellyfin, Plex, Sonarr,
+    TMDb, or TVDb. Not all types of connections use all attributes.
     """
 
     __tablename__ = 'connection'
@@ -159,7 +158,6 @@ class Connection(Base):
                 'api_key': self.api_key,
                 'minimum_source_width': self.minimum_width,
                 'minimum_source_height': self.minimum_height,
-                # 'blacklist_threshold': ...,
                 'logo_language_priority': self.logo_language_priority,
             }
 

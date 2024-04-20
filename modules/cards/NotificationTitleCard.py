@@ -265,6 +265,9 @@ class NotificationTitleCard(BaseCardType):
 
         return [
             f'-gravity {gravity}',
+            f'-interline-spacing -10',
+            f'-interword-spacing 0',
+            f'-kerning 1',
             f'-pointsize {40 * self.episode_text_font_size}',
             f'-fill "{self.episode_text_color}"',
             f'-font "{self.TITLE_FONT}"',
