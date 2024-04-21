@@ -1,7 +1,7 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from typing import Literal, Union
 
-from pydantic import BaseModel, constr, root_validator # pylint: disable=no-name-in-module
+from pydantic import BaseModel, constr, root_validator
 
 
 # Default value to use for arguments in Update objects that accept None
@@ -61,8 +61,8 @@ def validate_argument_lists_to_dict(
         unmodified dictionary is returned.
 
     Raises:
-        ValueError if only one set of the provided values is a list, or
-            if the two lists are not the equal length.
+        ValueError: Only one set of the provided values is a list, or if
+            the two lists are not the equal length.
     """
 
     # Get values for these keys

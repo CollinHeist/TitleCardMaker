@@ -53,7 +53,8 @@ def initialize_connections(
             (get_jellyfin_interfaces(), 'Jellyfin'),
             (get_plex_interfaces(), 'Plex'),
             (get_sonarr_interfaces(), 'Sonarr'),
-            (get_tmdb_interfaces(), 'TMDb')):
+            (get_tmdb_interfaces(), 'TMDb')
+        ):
 
         # Get all Connections of this interface type
         connections: list[Connection] = db.query(Connection)\
