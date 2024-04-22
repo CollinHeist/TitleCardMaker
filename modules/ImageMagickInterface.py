@@ -410,6 +410,24 @@ class ImageMagickInterface:
         return None
 
 
+    def get_random_filename(self, base: Path, extension: str = 'webp') -> Path:
+        """
+        Get the path to a randomly named image.
+
+        Args:
+            base: Base image used for the randomized path.
+            extension: Extension of randomized file to create.
+
+        Returns:
+            Path to the randomized file. This file LIKELY DOES NOT
+            exist.
+        """
+
+        random_chars = ''.join(random_choices(hexdigits, k=8))
+
+        return base.parent / f'{base.stem}.{random_chars}.{extension}'
+
+
     def round_image_corners(self,
             image: Path,
             commands: list[str],
@@ -436,10 +454,7 @@ class ImageMagickInterface:
         if not dimensions:
             dimensions = self.get_image_dimensions(image)
 
-        # Path to temporary file for rounded image
-        random_chars = ''.join(random_choices(hexdigits, k=6))
-        temp_image = image.parent / f'{image.stem}.{random_chars}.webp'
-
+        temp_image = self.get_random_filename(image)
         self.run(' '.join([
             f'convert',
             f'-background none',
