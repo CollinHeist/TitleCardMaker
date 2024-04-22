@@ -23,6 +23,10 @@ class ImageMagickInterface:
     with a valid docker container (name or ID), then all given
     ImageMagick commands will be run through that docker container.
 
+    If the `TCM_IM_PATH` environment variable is defined, then that is
+    assumed to be a path to an ImageMagick executable, which is then
+    used for command execution.
+
     Note: This class does not validate the provided container
     corresponds to a valid ImageMagick container. Commands are passed to
     docker so long as any container name/ID is provided.
@@ -51,7 +55,9 @@ class ImageMagickInterface:
     """Substrings that must be present in --version output"""
     __REQUIRED_VERSION_SUBSTRINGS = ('Version','Copyright','License','Features')
 
-    __slots__ = ('container', 'use_docker', 'prefix', 'timeout', '__history')
+    __slots__ = (
+        'executable', 'container', 'use_docker', 'prefix', 'timeout', '__history'
+    )
 
 
     def __init__(self,
@@ -60,11 +66,10 @@ class ImageMagickInterface:
             timeout: int = COMMAND_TIMEOUT_SECONDS,
         ) -> None:
         """
-        Construct a new instance. If container is falsey, then commands
-        will not use a docker container.
+        Construct a new instance of an interface to ImageMagick.
 
        Args:
-            container: Optional docker container name/ID to sending
+            container: Optional Docker container name/ID to sending
                 ImageMagick commands to.
             use_magick_prefix: Whether to use 'magick' command prefix.
             timeout: How many seconds to wait for a command to execute.
@@ -73,6 +78,7 @@ class ImageMagickInterface:
         # Definitions of this interface, i.e. whether to use docker and how
         self.container = container
         self.use_docker = bool(container)
+        self.executable = environ.get('TCM_IM_PATH', None)
 
         # Whether to prefix commands with "magick" or not
         self.prefix = 'magick ' if use_magick_prefix else ''
@@ -149,6 +155,9 @@ class ImageMagickInterface:
         # otherwise, execute on the host machine (no docker wrapper)
         if self.use_docker:
             command = f'docker exec -t {self.container} {self.prefix}{command}'
+        # If an executable was indicated, use as 
+        elif self.executable:
+            command = f'{self.executable} {command}'
         else:
             command = f'{self.prefix}{command}'
 
