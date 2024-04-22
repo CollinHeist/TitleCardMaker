@@ -240,7 +240,7 @@ class ImageMagickInterface:
         """
 
         # Return dimenions of zero if image DNE
-        if not image or not image.exists():
+        if not image.exists():
             return Dimensions(0, 0)
 
         return Dimensions(*im_get(image))
@@ -311,8 +311,6 @@ class ImageMagickInterface:
             return Dimensions(
                 sum_(widths)  if width  == 'sum' else max(widths),
                 (sum_(ascents) + sum_(descents)) + height_adjustment,
-                # (sum_(ascents) + sum_(descents)) * (density or 72) / 72 + height_adjustment,
-                # sum_(heights) if height == 'sum' else max(heights),
             )
         except ValueError as e:
             log.debug(f'Cannot identify text dimensions - {e}')
