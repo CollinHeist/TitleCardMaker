@@ -154,7 +154,7 @@ class BannerTitleCard(BaseCardType):
 
         # Determine placement
         x = self.x_offset
-        y = self.HEIGHT - self.banner_height - self.font_vertical_shift - 44
+        y = self.HEIGHT - self.banner_height - 43
 
         return [
             f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
@@ -192,6 +192,7 @@ class BannerTitleCard(BaseCardType):
         # Return width of the longest text
         modified_commands = self.index_text_commands
         modified_commands[-1] = f'"{text}"'
+
         return self.image_magick.get_text_dimensions(modified_commands)[0]
 
 
