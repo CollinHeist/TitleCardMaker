@@ -371,14 +371,12 @@ class FormulaOneTitleCard(BaseCardType):
             f'convert "{self.source_file.resolve()}"',
             # Resize and apply styles to source image
             *self.resize_and_style,
-
             *self.static_commands,
             *self.race_commands,
             *self.episode_text_commands,
             *self.season_text_commands,
             *self.title_text_commands,
             *self.year_commands,
-
             # Attempt to overlay mask
             *self.add_overlay_mask(self.source_file),
             # Create card

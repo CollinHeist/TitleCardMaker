@@ -157,7 +157,11 @@ class InsetTitleCard(BaseCardType):
             modified_commands = self.title_text_commands
             modified_commands[-2] = f'label:"{bottom_line}"'
 
-            _, self._title_height = self.get_text_dimensions(modified_commands)
+            _, self._title_height = self.image_magick.get_text_dimensions(
+                modified_commands,
+                interline_spacing=self.font_interline_spacing,
+                line_count=1,
+            )
 
         return self._title_height
 
@@ -190,7 +194,9 @@ class InsetTitleCard(BaseCardType):
             f'-gravity south',
             f'label:"{index_text}" \)',
         ]
-        index_width, index_height =self.get_text_dimensions(index_text_commands)
+        index_width, index_height = self.image_magick.get_text_dimensions(
+            index_text_commands
+        )
         crop_width = index_width + 40 # Increase margin
         crop_height = index_height - 20 # Reduce margin
         crop_y = self.font_vertical_shift + (self.title_height / 2) \
