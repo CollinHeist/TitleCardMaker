@@ -191,6 +191,6 @@ class YamlReader:
                     log.critical(f'Error reading "{file.resolve()}"')
                     sys_exit(1)
                 else:
-                    log.exception(f'Error reading "{file.resolve}"')
+                    log.exception(f'Error reading "{file.resolve()}"')
 
         return {}
