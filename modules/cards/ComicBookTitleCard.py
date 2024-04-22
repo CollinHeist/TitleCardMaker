@@ -604,6 +604,8 @@ class ComicBookTitleCard(BaseCardType):
             *self.title_text_commands,
             # Add index text
             *self.index_text_commands,
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
