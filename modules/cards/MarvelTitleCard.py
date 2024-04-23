@@ -7,6 +7,7 @@ from modules.BaseCardType import (
 from modules.ImageMagickInterface import Dimensions
 
 if TYPE_CHECKING:
+    from modules.PreferenceParser import PreferenceParser
     from modules.Font import Font
 
 
@@ -92,7 +93,7 @@ class MarvelTitleCard(BaseCardType):
             hide_border: bool = False,
             text_box_color: str = DEFAULT_TEXT_BOX_COLOR,
             text_box_height: int = DEFAULT_TEXT_BOX_HEIGHT,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
         """Construct a new instance of this Card."""

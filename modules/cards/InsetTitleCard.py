@@ -1,10 +1,11 @@
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional
 
-from modules.BaseCardType import BaseCardType, ImageMagickCommands
+from modules.BaseCardType import BaseCardType, ImageMagickCommands, Shadow
 from modules.Debug import log
 
 if TYPE_CHECKING:
+    from modules.PreferenceParser import PreferenceParser
     from modules.Font import Font
 
 
@@ -81,7 +82,7 @@ class InsetTitleCard(BaseCardType):
             omit_gradient: bool = False,
             separator: str = '-',
             transparency: float = 1.0,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
         """Construct a new instance of this Card."""
@@ -334,7 +335,7 @@ class InsetTitleCard(BaseCardType):
             # Add title text with a drop shadow
             *self.add_drop_shadow(
                 self.title_text_commands,
-                '95x6-12+12',
+                Shadow(opacity=95, sigma=6, x=-12, y=12),
                 x=0, y=self.font_vertical_shift,
             ),
             # Add index text

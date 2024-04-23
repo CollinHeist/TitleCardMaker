@@ -335,13 +335,15 @@ class TintedFrameTitleCard(BaseCardType):
         else:
             resize_command = [f'-resize x{logo_height}']
 
-        return [
-            f'\( "{self.logo.resolve()}"',
-            *resize_command,
-            f'\) -gravity center',
-            f'-geometry +0{vertical_shift:+}',
-            f'-composite',
-        ]
+        return self.add_drop_shadow(
+            [
+                f'\( "{self.logo.resolve()}"',
+                *resize_command,
+                f'\) -gravity center',
+            ],
+            shadow=Shadow(opacity=85, sigma=4),
+            x=0, y=vertical_shift,
+        )
 
 
     @property

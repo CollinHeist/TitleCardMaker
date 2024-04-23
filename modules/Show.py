@@ -105,8 +105,8 @@ class Show(YamlReader):
         self.card_filename_format = preferences.card_filename_format
         self.card_class = preferences.card_class
         self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
-        self.library_name = None
-        self.library = None
+        self.library_name: Optional[str] = None
+        self.library: Optional[str] = None
         self.media_directory = None
         self.media_server: MediaServer = preferences.default_media_server
         self.image_source_priority = preferences.image_source_priority
@@ -251,17 +251,17 @@ class Show(YamlReader):
         """
 
         if (value := self.get('library', type_=dict)) is not None:
-            self.library_name = value['name']
-            self.library = value['path']
+            self.library_name: str = value['name']
+            self.library: str = value['path']
             self.media_directory = self.library/self.series_info.full_clean_name
-            self.media_server = value['media_server']
+            self.media_server: str = value['media_server']
 
         if (value := self.get('media_directory', type_=str)) is not None:
             self.media_directory = CleanPath(value).sanitize()
 
         if (value := self.get('filename_format', type_=str)) is not None:
             if TitleCard.validate_card_format_string(value):
-                self.card_filename_format = value
+                self.card_filename_format: str = value
             else:
                 self.valid = False
 
@@ -583,7 +583,7 @@ class Show(YamlReader):
             'plex': self.plex_interface,
             'sonarr': self.sonarr_interface,
             'tmdb': self.tmdb_interface,
-        }.get(self.episode_data_source, None)
+        }.get(self.episode_data_source)
         if not interface:
             log.warning(f'Cannot source episodes for {self} from '
                         f'{self.episode_data_source}')
@@ -639,7 +639,7 @@ class Show(YamlReader):
             return None
 
         # Filter episodes needing ID's - i.e. missing card or translation
-        def episode_needs_id(episode) -> bool:
+        def episode_needs_id(episode: Episode) -> bool:
             # Episodes with all ID's or no card do not need ID's
             if episode.episode_info.has_all_ids or episode.destination is None:
                 return False
@@ -736,8 +736,8 @@ class Show(YamlReader):
                 )
 
                 # Adding translated title, log it
-                log.debug(f'Added "{language_title}" to '
-                          f'"{translation["key"]}" for {self} {episode}')
+                log.debug(f'Added "{language_title}" to "{translation["key"]}" '
+                          f'for {self} {episode}')
 
                 # Delete old card
                 episode.delete_card(reason='adding translation')

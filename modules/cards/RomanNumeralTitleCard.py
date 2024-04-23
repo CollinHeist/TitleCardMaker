@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING, Optional
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
-
 if TYPE_CHECKING:
+    from modules.PreferenceParser import PreferenceParser
     from modules.Font import Font
 
 
@@ -272,12 +272,10 @@ class RomanNumeralTitleCard(BaseCardType):
             background: str = BACKGROUND_COLOR,
             roman_numeral_color: str = ROMAN_NUMERAL_TEXT_COLOR,
             season_text_color: str = SEASON_TEXT_COLOR,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this Card.
-        """
+        """Construct a new instance of this Card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)

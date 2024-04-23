@@ -213,9 +213,10 @@ class PreferenceParser(YamlReader):
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        attributes = ', '.join(f'{attr}={getattr(self, attr)!r}'
-                               for attr in self.__dict__
-                               if not attr.startswith('_'))
+        attributes = ', '.join(
+            f'{attr}={getattr(self, attr)!r}' for attr in self.__dict__
+            if not attr.startswith('_')
+        )
 
         return f'<PreferenceParser {attributes}>'
 
