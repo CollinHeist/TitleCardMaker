@@ -19,10 +19,13 @@ from modules.cards.DividerTitleCard import DividerTitleCard
 from modules.cards.FadeTitleCard import FadeTitleCard
 from modules.cards.FormulaOneTitleCard import FormulaOneTitleCard
 from modules.cards.FrameTitleCard import FrameTitleCard
+from modules.cards.GraphTitleCard import GraphTitleCard
 from modules.cards.InsetTitleCard import InsetTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
 from modules.cards.MarvelTitleCard import MarvelTitleCard
+from modules.cards.MusicTitleCard import MusicTitleCard
+from modules.cards.NotificationTitleCard import NotificationTitleCard
 from modules.cards.OlivierTitleCard import OlivierTitleCard
 from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
@@ -82,6 +85,7 @@ class TitleCard:
         'formula 1': FormulaOneTitleCard,
         'frame': FrameTitleCard,
         'generic': StandardTitleCard,
+        'graph': GraphTitleCard,
         'gundam': PosterTitleCard,
         'import': TextlessTitleCard,
         'inset': InsetTitleCard,
@@ -89,7 +93,9 @@ class TitleCard:
         'landscape': LandscapeTitleCard,
         'logo': LogoTitleCard,
         'marvel': MarvelTitleCard,
+        'music': MusicTitleCard,
         'musikmann': WhiteBorderTitleCard,
+        'notification': NotificationTitleCard,
         'olivier': OlivierTitleCard,
         'overline': OverlineTitleCard,
         'phendrena': CutoutTitleCard,
@@ -101,6 +107,7 @@ class TitleCard:
         'roman numeral': RomanNumeralTitleCard,
         'shape': ShapeTitleCard,
         'sherlock': TintedGlassTitleCard,
+        'spotify': MusicTitleCard,
         'standard': StandardTitleCard,
         'star wars': StarWarsTitleCard,
         'textless': TextlessTitleCard,
