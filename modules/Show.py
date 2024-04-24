@@ -120,7 +120,7 @@ class Show(YamlReader):
         self.tmdb_sync = preferences.use_tmdb
         self.tmdb_skip_localized_images = preferences.tmdb_skip_localized_images
         self.hide_seasons = False
-        self.title_languages = {}
+        self.title_languages: list[dict] = []
         self.extras = {}
         if self.media_server == 'emby':
             self.style_set = copy(preferences.emby_style_set)
@@ -617,8 +617,7 @@ class Show(YamlReader):
             return True
 
         # Apply filter formula to list of Episodes from data source
-        new_episodes = tuple(filter(include_episode, all_episodes))
-        if len(new_episodes) == 0:
+        if not (new_episodes := list(filter(include_episode, all_episodes))):
             return None
 
         # If any new episodes remain, add to datafile and create Episode object
@@ -701,7 +700,7 @@ class Show(YamlReader):
         """
 
         # If no translations were specified, or TMDb syncing isn't enabled, skip
-        if not self.tmdb_interface or len(self.title_languages) == 0:
+        if not self.tmdb_interface or not self.title_languages:
             return None
 
         # Go through every episode and look for translations

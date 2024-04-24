@@ -260,6 +260,9 @@ class BaseCardType(ImageMaker):
     """Whether this class uses unique source images for card creation"""
     USES_UNIQUE_SOURCES = True
 
+    """Whether this class uses Source Images at all"""
+    USES_SOURCE_IMAGES = True
+
     """Standard size for all title cards"""
     WIDTH = 3200
     HEIGHT = 1800
@@ -267,16 +270,6 @@ class BaseCardType(ImageMaker):
 
     """Standard blur effect to apply to spoiler-free images"""
     BLUR_PROFILE = '0x60'
-
-    @property
-    @abstractmethod
-    def TITLE_CHARACTERISTICS(self) -> dict[str, Union[int, bool]]:
-        """
-        Characteristics of title splitting for this card type. Must have
-        keys for max_line_width, max_line_count, and top_heavy. See
-        `Title` class for details.
-        """
-        raise NotImplementedError
 
 
     @property

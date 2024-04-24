@@ -6,7 +6,7 @@ from modules.BaseCardType import (
     BaseCardType, Coordinate, Dimensions, ImageMagickCommands, Rectangle, Shadow
 )
 from modules.Debug import log
-from modules.EpisodeInfo2 import EpisodeInfo
+from modules.EpisodeInfo import EpisodeInfo
 
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
@@ -858,43 +858,6 @@ class MusicTitleCard(BaseCardType):
 
         return (custom_episode_map
                 or episode_text_format.upper() != standard_etf)
-
-
-    @staticmethod
-    def get_title_split_characteristics(
-            characteristics: SplitCharacteristics,
-            default_font_file: str,
-            data: dict,
-        ) -> SplitCharacteristics:
-        """
-        Get the title split characteristics for the card defined by the
-        given card data. This modifies the max line width value based
-        on the specified `player_width`.
-
-        Args:
-            characteristics: Base split characteristics being modified
-                for this card.
-            default_font_file: Default font file for font size
-                evaluation.
-            data: Dictionary of card data to evaluate for any changes
-                to the split characteristics.
-
-        Returns:
-            SplitCharacteristics object which defines how to split
-            titles.
-        """
-
-        if 'player_width' in data:
-            characteristics['max_line_width'] = int(
-                characteristics['max_line_width']
-                * int(data['player_width'])
-                / MusicTitleCard.DEFAULT_PLAYER_WIDTH
-            )
-
-        # Apply defaults
-        return BaseCardType.get_title_split_characteristics(
-            characteristics, default_font_file, data
-        )
 
 
     def create(self) -> None:
