@@ -4,7 +4,11 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
-from app.dependencies import *
+from app.dependencies import (
+    get_database, get_emby_interfaces, get_jellyfin_interfaces,
+    get_plex_interfaces, get_preferences, get_sonarr_interfaces,
+    require_emby_interface, require_jellyfin_interface, require_plex_interface
+)
 from app.internal.auth import get_current_user
 from app.internal.availability import (
     get_latest_version, get_local_cards, get_remote_cards
@@ -23,6 +27,12 @@ from app.schemas.preferences import StyleOption
 from app.schemas.series import MediaServerLibrary
 from app.schemas.sync import Tag
 
+from modules.EmbyInterface2 import EmbyInterface
+from modules.InterfaceGroup import InterfaceGroup
+from modules.JellyfinInterface2 import JellyfinInterface
+from modules.PlexInterface2 import PlexInterface
+from modules.SonarrInterface2 import SonarrInterface
+from modules.TMDbInterface2 import TMDbInterface
 from modules.cards.available import LocalCards
 from modules.Debug import log
 
@@ -62,16 +72,14 @@ availablility_router = APIRouter(
 )
 
 
-@availablility_router.get('/version', status_code=200)
+@availablility_router.get('/version')
 def get_latest_available_version(request: Request) -> Optional[str]:
-    """
-    Get the latest version number for TitleCardMaker.
-    """
+    """Get the latest version number for TitleCardMaker."""
 
     return get_latest_version(log=request.state.log)
 
 
-@availablility_router.get('/card-types', status_code=200, tags=['Title Cards'])
+@availablility_router.get('/card-types', tags=['Title Cards'])
 def get_all_available_card_types(
         request: Request,
         show_excluded: bool = Query(default=False),
@@ -84,12 +92,9 @@ def get_all_available_card_types(
     the returned list.
     """
 
-    # Get contextual logger
-    log: Logger = getattr(request.state, 'log', log)
-
     all_cards = LocalCards \
         + get_local_cards(preferences) \
-        + get_remote_cards(log=log)
+        + get_remote_cards(log=getattr(request.state, 'log', log))
     if show_excluded:
         return all_cards
 
@@ -99,31 +104,25 @@ def get_all_available_card_types(
     ]
 
 
-@availablility_router.get('/card-types/builtin', status_code=200, tags=['Title Cards'])
+@availablility_router.get('/card-types/builtin', tags=['Title Cards'])
 def get_builtin_card_types() -> list[BuiltinCardType]:
-    """
-    Get all pre-built card types.
-    """
+    """Get all pre-built card types."""
 
     return LocalCards
 
 
-@availablility_router.get('/card-types/local', status_code=200, tags=['Title Cards'])
+@availablility_router.get('/card-types/local', tags=['Title Cards'])
 def get_local_card_types_(
         preferences: Preferences = Depends(get_preferences),
     ) -> list[LocalCardType]:
-    """
-    Get all locally defined card types.
-    """
+    """Get all locally defined card types."""
 
     return get_local_cards(preferences)
 
 
-@availablility_router.get('/card-types/remote', status_code=200, tags=['Title Cards'])
+@availablility_router.get('/card-types/remote', tags=['Title Cards'])
 def get_remote_card_types_(request: Request) -> list[RemoteCardType]:
-    """
-    Get all available remote card types.
-    """
+    """Get all available remote card types."""
 
     try:
         return get_remote_cards(log=request.state.log)
@@ -164,7 +163,7 @@ def get_all_supported_extras(
     ] + local_extras + VARIABLE_OVERRIDES
 
 
-@availablility_router.get('/template-filters', status_code=200, tags=['Templates'])
+@availablility_router.get('/template-filters', tags=['Templates'])
 def get_available_template_filters() -> dict[str, list[str]]:
     """
     Get all available Tempalte filter condition argument and operation
@@ -177,11 +176,9 @@ def get_available_template_filters() -> dict[str, list[str]]:
     }
 
 
-@availablility_router.get('/translations', status_code=200)
+@availablility_router.get('/translations')
 def get_available_tmdb_translations() -> list[TranslationLanguage]:
-    """
-    Get all supported translations from TMDb.
-    """
+    """Get all supported translations from TMDb."""
 
     return [
         {'language_code': code, 'language': language}
@@ -191,11 +188,9 @@ def get_available_tmdb_translations() -> list[TranslationLanguage]:
     ]
 
 
-@availablility_router.get('/logo-languages', status_code=200)
+@availablility_router.get('/logo-languages')
 def get_available_tmdb_logo_languages() -> list[dict]:
-    """
-    Get the list of available TMDb logo languages.
-    """
+    """Get the list of available TMDb logo languages."""
 
     return [
         {'name': label, 'value': language_code}
@@ -203,13 +198,11 @@ def get_available_tmdb_logo_languages() -> list[dict]:
     ]
 
 
-@availablility_router.get('/libraries/emby', status_code=200, tags=['Emby'])
+@availablility_router.get('/libraries/emby', tags=['Emby'])
 def get_emby_libraries(
         emby_interface: EmbyInterface = Depends(require_emby_interface),
     ) -> list[MediaServerLibrary]:
-    """
-    Get all available libraries for the given Emby interface.
-    """
+    """Get all available libraries for the given Emby interface."""
 
     return [
         MediaServerLibrary(
@@ -220,7 +213,7 @@ def get_emby_libraries(
     ]
 
 
-@availablility_router.get('/libraries/emby', status_code=200, tags=['Jellyfin'])
+@availablility_router.get('/libraries/emby', tags=['Jellyfin'])
 def get_jellyfin_libraries(
         jellyfin_interface: JellyfinInterface = Depends(require_jellyfin_interface),
     ) -> list[MediaServerLibrary]:
@@ -237,7 +230,7 @@ def get_jellyfin_libraries(
     ]
 
 
-@availablility_router.get('/libraries/plex', status_code=200, tags=['Plex'])
+@availablility_router.get('/libraries/plex', tags=['Plex'])
 def get_plex_libraries(
         plex_interface: PlexInterface = Depends(require_plex_interface),
     ) -> list[MediaServerLibrary]:
@@ -254,7 +247,7 @@ def get_plex_libraries(
     ]
 
 
-@availablility_router.get('/libraries/all', status_code=200,
+@availablility_router.get('/libraries/all',
                           tags=['Emby', 'Jellyfin', 'Plex'])
 def get_server_libraries(
         emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
@@ -294,35 +287,29 @@ def get_server_libraries(
     return libraries
 
 
-@availablility_router.get('/usernames/emby', status_code=200, tags=['Emby'])
+@availablility_router.get('/usernames/emby', tags=['Emby'])
 def get_emby_usernames(
         emby_interface: EmbyInterface = Depends(require_emby_interface),
     ) -> list[str]:
-    """
-    Get all the public usernames in Emby.
-    """
+    """Get all the public usernames in Emby."""
 
     return emby_interface.get_usernames()
 
 
-@availablility_router.get('/usernames/jellyfin', status_code=200, tags=['Jellyfin'])
+@availablility_router.get('/usernames/jellyfin', tags=['Jellyfin'])
 def get_jellyfin_usernames(
         jellyfin_interface: EmbyInterface = Depends(require_jellyfin_interface),
     ) -> list[str]:
-    """
-    Get all the public usernames in Jellyfin.
-    """
+    """Get all the public usernames in Jellyfin."""
 
     return jellyfin_interface.get_usernames()
 
 
-@availablility_router.get('/tags/sonarr', status_code=200, tags=['Sonarr'])
+@availablility_router.get('/tags/sonarr', tags=['Sonarr'])
 def get_sonarr_tags(
         sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces)
     ) -> list[Tag]:
-    """
-    Get all tags defined in all Sonarr interfaces.
-    """
+    """Get all tags defined in all Sonarr interfaces."""
 
     tags = []
     for interface_id, interface in sonarr_interfaces:
@@ -334,7 +321,7 @@ def get_sonarr_tags(
     return tags
 
 
-@availablility_router.get('/fonts', status_code=200, tags=['Fonts'])
+@availablility_router.get('/fonts', tags=['Fonts'])
 def get_available_fonts(
         db: Session = Depends(get_database),
     ) -> list[AvailableFont]:
@@ -343,13 +330,11 @@ def get_available_fonts(
     return db.query(models.font.Font).order_by(models.font.Font.sort_name).all()
 
 
-@availablility_router.get('/series', status_code=200, tags=['Series'])
+@availablility_router.get('/series', tags=['Series'])
 def get_available_series(
         db: Session = Depends(get_database),
     ) -> list[AvailableSeries]:
-    """
-    Get all the available Series base data.
-    """
+    """Get all the available Series base data."""
 
     return db.query(models.series.Series)\
         .order_by(models.series.Series.sort_name)\
@@ -357,37 +342,28 @@ def get_available_series(
         .all()
 
 
-@availablility_router.get('/templates', status_code=200, tags=['Templates'])
+@availablility_router.get('/templates', tags=['Templates'])
 def get_available_templates(
         db: Session = Depends(get_database),
     ) -> list[AvailableTemplate]:
-    """
-    Get the names of all the available Templates.
-    """
+    """Get the names of all the available Templates."""
 
     return db.query(models.template.Template)\
         .order_by(models.template.Template.name)\
         .all()
 
 
-@availablility_router.get('/styles', status_code=200)
+@availablility_router.get('/styles')
 def get_available_styles() -> list[StyleOption]:
-    """
-    Get all supported Styles.
-    """
+    """Get all supported Styles."""
 
     return [
         {'name': 'Art', 'value': 'art', 'style_type': 'art'},
         {'name': 'Blurred Art', 'value': 'art blur', 'style_type': 'art'},
-        {'name': 'Grayscale Art', 'value': 'art grayscale',
-         'style_type': 'art'},
-        {'name': 'Blurred Grayscale Art', 'value': 'art blur grayscale',
-         'style_type': 'art'},
+        {'name': 'Grayscale Art', 'value': 'art grayscale', 'style_type': 'art'},
+        {'name': 'Blurred Grayscale Art', 'value': 'art blur grayscale', 'style_type': 'art'},
         {'name': 'Unique', 'value': 'unique', 'style_type': 'unique'},
-        {'name': 'Blurred Unique', 'value': 'blur unique',
-         'style_type': 'unique'},
-        {'name': 'Grayscale Unique', 'value': 'grayscale unique',
-         'style_type': 'unique'},
-        {'name': 'Blurred Grayscale Unique', 'value': 'blur grayscale unique',
-         'style_type': 'unique'},
+        {'name': 'Blurred Unique', 'value': 'blur unique', 'style_type': 'unique'},
+        {'name': 'Grayscale Unique', 'value': 'grayscale unique', 'style_type': 'unique'},
+        {'name': 'Blurred Grayscale Unique', 'value': 'blur grayscale unique', 'style_type': 'unique'},
     ]
