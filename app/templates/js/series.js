@@ -461,7 +461,7 @@ function queryTMDbPoster() {
      */
     success: posterUrl => {
       if (posterUrl === null) {
-        $.ajax({class: 'error', title: 'TMDb returned no images'});
+        $.toast({class: 'error', title: 'TMDb returned no images'});
       } else {
         $('#edit-poster-modal input[name="poster_url"]').val(posterUrl);
       }
