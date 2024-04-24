@@ -511,11 +511,9 @@ def query_series_poster(
     - series_id: Series being queried.
     """
 
-    # Find Series with this ID, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
-
-    # Return queried poster
-    return tmdb_interface.get_series_poster(series.as_series_info)
+    return tmdb_interface.get_series_poster(
+        get_series(db, series_id, raise_exc=True).as_series_info
+    )
 
 
 @series_router.put('/series/{series_id}/poster', status_code=201)

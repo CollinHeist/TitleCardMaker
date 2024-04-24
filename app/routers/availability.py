@@ -1,3 +1,4 @@
+from logging import Logger
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -23,6 +24,7 @@ from app.schemas.series import MediaServerLibrary
 from app.schemas.sync import Tag
 
 from modules.cards.available import LocalCards
+from modules.Debug import log
 
 
 # Extra variable overrides
@@ -83,7 +85,7 @@ def get_all_available_card_types(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = getattr(request.state, 'log', log)
 
     all_cards = LocalCards \
         + get_local_cards(preferences) \
