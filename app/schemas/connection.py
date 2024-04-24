@@ -2,7 +2,7 @@
 # pyright: reportInvalidTypeForm=false
 from typing import Any, Literal, Optional, Union
 
-from pydantic import AnyUrl, constr, validator # pylint: disable=no-name-in-module
+from pydantic import AnyUrl, constr, validator
 
 from app.schemas.base import Base, InterfaceType, UpdateBase, UNSPECIFIED
 from modules.EmbyInterface2 import EmbyInterface

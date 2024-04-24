@@ -4,7 +4,7 @@ from typing import Any, Callable, Literal, Optional, Union
 
 from fastapi import HTTPException
 from tinydb import Query, where
-from tmdbapis import TMDbAPIs, NotFound, Unauthorized, TMDbException
+from tmdbapis import Poster, TMDbAPIs, NotFound, Unauthorized, TMDbException
 from tmdbapis.objs.reload import Episode as TMDbEpisode, Movie as TMDbMovie
 from tmdbapis.objs.image import Still as TMDbStill
 
@@ -1385,18 +1385,28 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             log.debug(f'Cannot find {series_info} on TMDb')
             return None
 
-        if len(series.posters) == 0:
+        posters: list[Poster] = series.posters
+        if not posters:
             return None
 
-        # Filter out non-English posters, exiting if there are none
-        valid = [poster for poster in series.posters if poster.iso_639_1 == 'en']
-        if len(valid) == 0:
-            return None
+        def _sort(poster: Poster) -> int:
+            # Score dimensionally 0 -> 2.0 @ 4K resolution
+            dimension_score = (poster.width / 3840) + (poster.height / 2160)
 
-        # Find best (valid) poster by pixel count, starting with the first one
-        best = valid[0]
-        for poster in valid:
-            if poster.width * poster.height > best.width * best.height:
-                best = poster
+            # Textless posters get scored as neutral priority
+            if poster.iso_639_1 is None:
+                return dimension_score
 
-        return best.url
+            # Give priority scoring to languages in the priority list
+            try:
+                # Reverse list so first elements get higher index
+                lang_score = self.logo_language_priority[::-1].index(
+                    poster.iso_639_1
+                )
+
+                return (lang_score * 10) + dimension_score
+            # Languages not in the priority list use a negative modifier
+            except ValueError:
+                return -10 + dimension_score
+
+        return sorted(series.posters, key=_sort)[0].url
