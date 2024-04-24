@@ -151,7 +151,7 @@ class PreferenceParser(YamlReader):
         self.plex_url = None
         self.plex_token = 'NA'
         self.plex_verify_ssl = True
-        self.integrate_with_pmm_overlays = False
+        self.integrate_with_kometa = False
         self.plex_filesize_limit = self.filesize_as_bytes(
             PlexInterface.DEFAULT_FILESIZE_LIMIT
         )
@@ -660,9 +660,13 @@ class PreferenceParser(YamlReader):
         if (value := self.get('plex', 'verify_ssl', type_=bool)) is not None:
             self.plex_verify_ssl = value
 
-        if (value := self.get('plex', 'integrate_with_pmm_overlays',
-                               type_=bool)) is not None:
-            self.integrate_with_pmm_overlays = value
+        integrate = self.get(
+            'plex', 'integrate_with_kometa',
+            type_=bool,
+            default=self.get('plex', 'integrate_with_pmm_overlays', type_=bool)
+        )
+        if integrate is not None:
+            self.integrate_with_kometa = value
 
         if (value := self.get('plex', 'filesize_limit',
                                type_=self.filesize_as_bytes)) is not None:
@@ -1279,13 +1283,13 @@ class PreferenceParser(YamlReader):
 
     @property
     def plex_interface_kwargs(self) -> dict[str, Union[str, bool, int]]:
-        """Arguments for initializing a PlexInterfa"""
+        """Arguments for initializing a PlexInterface"""
 
         return {
             'url': self.plex_url,
             'x_plex_token': self.plex_token,
             'verify_ssl': self.plex_verify_ssl,
-            'integrate_with_pmm_overlays': self.integrate_with_pmm_overlays,
+            'integrate_with_kometa': self.integrate_with_kometa,
             'filesize_limit': self.plex_filesize_limit,
             'plex_timeout': self.plex_timeout
         }

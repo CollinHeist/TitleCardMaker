@@ -140,7 +140,8 @@ class Connection(Base):
                 'api_key': self.api_key,
                 'use_ssl': self.use_ssl,
                 'filesize_limit': self.filesize_limit_value,
-                'integrate_with_pmm': self.integrate_with_pmm,
+                # PMM rebranded to Kometa; not worth Schema migration
+                'integrate_with_kometa': self.integrate_with_pmm,
             }
 
         if self.interface_type == 'Sonarr':

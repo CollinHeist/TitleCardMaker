@@ -17,6 +17,7 @@ from app.schemas.sync import (
     NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync
 )
 from modules.Debug import log
+from modules.NotificationGroup import SyncNotification
 
 
 def sync_all(*, log: Logger = log) -> None:
@@ -24,22 +25,26 @@ def sync_all(*, log: Logger = log) -> None:
     Schedule-able function to run all defined Syncs in the Database.
     """
 
+    notifications = SyncNotification(log)
+
     try:
         # Get the Database
         with next(get_database()) as db:
             # Get and run all Syncs
             for sync in db.query(Sync).all():
                 try:
-                    run_sync(db, sync, log=log)
+                    run_sync(db, sync, log=notifications)
                 except HTTPException as e:
                     log.exception(f'{sync} Error Syncing - {e.detail}', e)
                 except OperationalError:
                     log.debug(f'Database is busy, sleeping..')
                     sleep(30)
-                db.commit()
     except Exception as e:
         log.exception(f'Failed to run all Syncs', e)
+        notifications.mark_failure()
+
     get_preferences().currently_running_sync = None
+    notifications.notify()
 
 
 def add_sync(
@@ -81,7 +86,7 @@ def run_sync(
         sync: Sync,
         background_tasks: Optional[BackgroundTasks] = None,
         *,
-        log: Logger = log,
+        log: SyncNotification = log,
     ) -> list[Series]:
     """
     Run the given Sync. This adds any missing Series from the given Sync
@@ -135,6 +140,7 @@ def run_sync(
                     .filter_by(id=interface_id)\
                     .first()
                 if library_connection is None:
+                    log.increment_count('Failed Library Assignments')
                     log.error(f'No Connection of ID {interface_id} - cannot '
                               f'assign library')
                     continue
@@ -163,6 +169,7 @@ def run_sync(
                 if not exists:
                     existing.libraries.append(new)
                     log.debug(f'Added Library "{new["name"]}" to {existing}')
+                    log.increment_count('Libraries Updated')
 
             # Update IDs
             existing.update_from_series_info(series_info)
@@ -170,6 +177,7 @@ def run_sync(
             continue
 
         # Create NewSeries for this entry
+        log.add_to_list('Series Added', series_info.full_name)
         added.append(NewSeries(
             name=series_info.name, year=series_info.year, libraries=libraries,
             **series_info.ids, sync_id=sync.id, template_ids=sync.template_ids,

@@ -1,0 +1,4 @@
+{
+    "python.linting.enabled": true,
+    "svg.preview.background": "dark-transparent"
+}

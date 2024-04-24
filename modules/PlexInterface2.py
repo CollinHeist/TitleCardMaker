@@ -90,7 +90,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
     """Series ID's that can be set by TMDb"""
     SERIES_IDS = ('imdb_id', 'tmdb_id', 'tvdb_id')
 
-    """EXIF data to write to images if PMM integration is enabled"""
+    """EXIF data to write to images if Kometa integration is enabled"""
     EXIF_TAG = {'key': 0x4242, 'data': 'titlecard'}
 
     """Episode titles that indicate a placeholder and are to be ignored"""
@@ -101,7 +101,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             url: str,
             api_key: str = 'NA',
             use_ssl: bool = True,
-            integrate_with_pmm: bool = False,
+            integrate_with_kometa: bool = False,
             filesize_limit: int = 10485760,
             *,
             interface_id: int = 0,
@@ -114,8 +114,8 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             url: URL of plex server.
             api_key: X-Plex Token for sending API requests to Plex.
             use_ssl: Whether to use SSL in all requests.
-            integrate_with_pmm: Whether to integrate with PMM in image
-                uploads.
+            integrate_with_kometa: Whether to integrate with Kometa in
+                image uploads.
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
             interface_id: ID of this interface.
@@ -146,7 +146,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             ) from exc
 
         # Store integration
-        self.integrate_with_pmm = integrate_with_pmm
+        self.integrate_with_kometa = integrate_with_kometa
 
         # List of "not found" warned series
         self.__warned = set()
@@ -658,7 +658,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             return None
 
         # Labels that will result in source skip
-        bad_labels = ('Overlay', 'TCM') if self.integrate_with_pmm else ('TCM',)
+        bad_labels = ('Overlay', 'TCM') if self.integrate_with_kometa else ('TCM',)
 
         # Get Episode from within Plex
         try:
@@ -670,7 +670,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         except NotFound:
             return None
 
-        # Verify this Episode does not have the PMM overlay label (if not proxying)
+        # Verify this Episode does not have the Kometa overlay label
         if any(label.tag in bad_labels for label in plex_episode.labels):
             log.debug(f'{series_info} {episode_info} Cannot use Plex '
                         f'thumbnail, has existing Overlay or Title Card')
@@ -771,9 +771,17 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         card_image = Image.open(card)
         exif = card_image.getexif()
 
-        # Add EXIF data, write modified file
+        # Add EXIF data
         exif[self.EXIF_TAG['key']] = self.EXIF_TAG['data']
-        card_image.save(card.resolve(), exif=exif)
+
+        # Try and write explicitly; if an error OSError is raised then
+        # that implies image has an alpha channel that is not supported
+        # by file extension - convert and try again
+        try:
+            card_image.save(card.resolve(), exif=exif)
+        except OSError:
+            card_image.convert('RGB').save(card.resolve(), exif=exif)
+
         log.trace(f'Added EXIF data {self.EXIF_TAG} to {card}')
 
 
@@ -797,7 +805,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         """
 
         # No episodes to load, exit
-        if len(episode_and_cards) == 0:
+        if not episode_and_cards == 0:
             log.trace(f'No episodes to load for {series_info}')
             return []
 
@@ -829,15 +837,15 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
             # Upload card
             try:
-                # If integrating with PMM, add EXIF data
-                if self.integrate_with_pmm:
+                # If integrating with Kometa, add EXIF data
+                if self.integrate_with_kometa:
                     self.__add_exif_tag(image, log=log)
 
                 # Upload card
                 self.__retry_upload(plex_episode, image.resolve())
 
-                # If integrating with PMM, remove label
-                if self.integrate_with_pmm:
+                # If integrating with Kometa, remove label
+                if self.integrate_with_kometa:
                     plex_episode.removeLabel(['Overlay'])
                     log.trace(f'Removed "Overlay" label from {plex_episode}')
                 log.debug(f'{series_info} S{plex_episode.seasonNumber:02}E'
