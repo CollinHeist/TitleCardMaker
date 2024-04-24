@@ -833,7 +833,7 @@ async function getSourceFileData(page=currentFilePage) {
         navigateFunction: getSourceFileData,
         page: allFiles.page,
         pages: allFiles.pages,
-        amountVisible: isSmallScreen() ? 6 : 15,
+        amountVisible: isSmallScreen() ? 8 : 16,
       });
       refreshTheme();
       $('#source-image-previews .image .dimmer').dimmer({transition: 'fade up', on: 'hover'});
@@ -1012,7 +1012,7 @@ async function getEpisodeData(page=1) {
     navigateFunction: getEpisodeData,
     page: episodeData.page,
     pages: episodeData.pages,
-    amountVisible: isSmallScreen() ? 6 : 12,
+    amountVisible: isSmallScreen() ? 8 : 16,
   });
 }
 
@@ -1136,7 +1136,7 @@ function getCardData(page=currentCardPage, transition=false, scroll=false) {
         navigateFunction: (p, t) => getCardData(p, t, true),
         page: cards.page,
         pages: cards.pages,
-        amountVisible: isSmallScreen() ? 6 : 15,
+        amountVisible: isSmallScreen() ? 6 : 12,
       });
 
       // Refresh theme, initialize dimmers
