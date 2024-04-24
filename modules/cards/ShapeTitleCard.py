@@ -122,7 +122,9 @@ class ShapeTitleCard(BaseCardType):
             card_file: Path,
             title_text: str,
             season_text: str,
+            episode_text: str,
             hide_season_text: bool = False,
+            hide_episode_text: bool = False,
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
@@ -160,7 +162,7 @@ class ShapeTitleCard(BaseCardType):
         self.output_file = card_file
 
         # Add episode text to title text if not hidden
-        if not hide_episode_text and len(episode_text) > 0:
+        if not hide_episode_text and episode_text:
             title_text = f'{episode_text} {title_text}'
 
         # Ensure characters that need to be escaped are
