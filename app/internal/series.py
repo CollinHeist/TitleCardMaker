@@ -4,7 +4,7 @@ from time import sleep
 from typing import Optional, Union
 
 from fastapi import BackgroundTasks, HTTPException
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from requests import get
 from sqlalchemy.exc import InvalidRequestError, OperationalError
 from sqlalchemy.orm import Session
@@ -206,18 +206,33 @@ def download_series_poster(
         log.warning(f'{series} no posters found')
         return None
 
-    # Get path to the poster to download
+    # Get path to the poster to download, download
     path = get_preferences().asset_directory / str(series.id) / 'poster.jpg'
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
-        # Write or download
-        if isinstance(poster, bytes):
-            path.write_bytes(poster)
-        else:
-            path.write_bytes(get(poster, timeout=30).content)
-    except Exception as e:
-        log.error(f'{series} Error downloading poster', e)
+        # Download
+        pb = poster if isinstance(poster, bytes) else get(poster, timeout=30).content
+
+        # Assume corruption if poster is smaller than 1kB
+        if len(pb) < 1024:
+            raise ValueError
+
+        # Write content
+        path.write_bytes(poster)
+    except ValueError:
+        log.exception(f'{series} poster is corrupted')
         return None
+    except Exception:
+        log.error(f'{series} Error downloading poster')
+        return None
+
+    # Verify image file is not corrupt by attempting a read
+    try:
+        Image.open(path)
+    except UnidentifiedImageError:
+        log.exception(f'{series} poster is corrupted')
+        return None
+
     filesize = path.stat().st_size
     series.poster_file = str(path)
     series.poster_url = f'/assets/{series.id}/poster.jpg?{filesize}'
