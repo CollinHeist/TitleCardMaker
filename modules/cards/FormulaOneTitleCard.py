@@ -28,7 +28,7 @@ class FormulaOneTitleCard(BaseCardType):
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'formula'
 
     """Characteristics for title splitting by this class"""
-    TITLE_CHARACTERISTICS: {
+    TITLE_CHARACTERISTICS = {
         'max_line_width': 40,
         'max_line_count': 1,
         'top_heavy': False,
