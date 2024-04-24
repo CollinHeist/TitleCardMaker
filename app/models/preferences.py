@@ -67,12 +67,6 @@ class Preferences:
         'imported_blueprints', 'colorblind_mode', 'library_unique_cards',
         'invalid_connections', 'home_page_table_view', 'reduced_animations',
         'currently_running_sync', 'interactive_card_previews',
-        # Arguments required only for the Connection data migrations
-        'emby_url', 'emby_api_key', 'emby_username', 'emby_use_ssl', 'emby_filesize_limit_number', 'emby_filesize_limit_unit',
-        'jellyfin_url', 'jellyfin_api_key', 'jellyfin_username', 'jellyfin_use_ssl', 'jellyfin_filesize_limit_number', 'jellyfin_filesize_limit_unit',
-        'plex_url', 'plex_token', 'plex_use_ssl', 'plex_integrate_with_pmm', 'plex_filesize_limit_number', 'plex_filesize_limit_unit',
-        'sonarr_url', 'sonarr_api_key', 'sonarr_use_ssl', 'sonarr_downloaded_only', 'sonarr_libraries',
-        'tmdb_api_key', 'tmdb_logo_language_priority', 'tmdb_minimum_width', 'tmdb_minimum_height', 'tmdb_skip_localized', 'tmdb_download_logos',
     )
 
 
@@ -202,13 +196,6 @@ class Preferences:
         self.use_sonarr = False
         self.use_tmdb = False
 
-        self.tmdb_api_key = ''
-        self.tmdb_minimum_width = 0
-        self.tmdb_minimum_height = 0
-        self.tmdb_skip_localized = False
-        self.tmdb_download_logos = True
-        self.tmdb_logo_language_priority = ['en']
-
         self.use_magick_prefix = False
         self.blacklisted_blueprints: set[int] = set()
         self.imported_blueprints: set[int] = set()
@@ -223,31 +210,6 @@ class Preferences:
         self.home_page_table_view = True
         self.colorblind_mode = False
         self.reduced_animations = False
-
-        # Data migration attributes
-        self.emby_url = ''
-        self.emby_api_key = ''
-        self.emby_username = None
-        self.emby_use_ssl = True
-        self.emby_filesize_limit_number = None
-        self.emby_filesize_limit_unit = None
-        self.jellyfin_url = ''
-        self.jellyfin_api_key = ''
-        self.jellyfin_username = None
-        self.jellyfin_use_ssl = True
-        self.jellyfin_filesize_limit_number = None
-        self.jellyfin_filesize_limit_unit = None
-        self.plex_url = ''
-        self.plex_token = ''
-        self.plex_use_ssl = True
-        self.plex_integrate_with_pmm = False
-        self.plex_filesize_limit_number = 10
-        self.plex_filesize_limit_unit = 'Megabytes'
-        self.sonarr_url = ''
-        self.sonarr_api_key = ''
-        self.sonarr_use_ssl = True
-        self.sonarr_downloaded_only = True
-        self.sonarr_libraries = []
 
 
     def read_file(self) -> Optional[object]:
@@ -455,11 +417,12 @@ class Preferences:
             return '0', 'Bytes'
 
         for ref_value, unit in (
-                (10**12, 'Terabytes'),
-                (10**9,  'Gigabytes'),
-                (10**6,  'Megabytes'),
-                (10**3,  'Kilobytes'),
-                (1,      'Bytes')):
+            (10**12, 'Terabytes'),
+            (10**9,  'Gigabytes'),
+            (10**6,  'Megabytes'),
+            (10**3,  'Kilobytes'),
+            (1,      'Bytes')
+        ):
             if value > ref_value:
                 return f'{value/ref_value:,.1f}', unit
 
