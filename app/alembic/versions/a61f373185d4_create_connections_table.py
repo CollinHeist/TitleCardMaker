@@ -193,7 +193,7 @@ def upgrade() -> None:
         batch_op.add_column(sa.Column('watched_statuses', sa.JSON(), server_default='{}', nullable=False))
 
     with op.batch_alter_table('loaded', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('library_name', sa.String(), nullable=True))
+        batch_op.add_column(sa.Column('library_name', sa.String(), nullable=False))
         batch_op.add_column(sa.Column('interface_id', sa.Integer(), nullable=True))
         batch_op.create_foreign_key('fk_connection_loaded', 'connection', ['interface_id'], ['id'])
 
@@ -320,14 +320,26 @@ def upgrade() -> None:
             loaded.interface_id = emby.id
             if loaded.series.emby_library_name:
                 loaded.library_name = loaded.series.emby_library_name
+            else:
+                log.debug(f'Loaded[{loaded.id}] has no library - deleting')
+                session.delete(loaded)
+                continue
         elif loaded.media_server == 'Jellyfin' and jellyfin:
             loaded.interface_id = jellyfin.id
             if loaded.series.jellyfin_library_name:
                 loaded.library_name = loaded.series.jellyfin_library_name
+            else:
+                log.debug(f'Loaded[{loaded.id}] has no library - deleting')
+                session.delete(loaded)
+                continue
         elif loaded.media_server == 'Plex' and plex:
             loaded.interface_id = plex.id
             if loaded.series.plex_library_name:
                 loaded.library_name = loaded.series.plex_library_name
+            else:
+                log.debug(f'Loaded[{loaded.id}] has no library - deleting')
+                session.delete(loaded)
+                continue
     log.debug(f'Migrated Loaded.interface_id and Loaded.library_name')
 
     # Migrate Card interface_id and library_name
