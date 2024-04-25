@@ -223,7 +223,7 @@ def download_series_poster(
         log.exception(f'{series} poster is corrupted')
         return None
     except Exception:
-        log.error(f'{series} Error downloading poster')
+        log.exception(f'{series} Error downloading poster')
         return None
 
     # Verify image file is not corrupt by attempting a read
