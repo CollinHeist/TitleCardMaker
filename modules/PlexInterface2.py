@@ -805,7 +805,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         """
 
         # No episodes to load, exit
-        if not episode_and_cards == 0:
+        if not episode_and_cards:
             log.trace(f'No episodes to load for {series_info}')
             return []
 
