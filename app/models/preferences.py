@@ -279,10 +279,7 @@ class Preferences:
         for name, value in update_kwargs.items():
             if value != UNSPECIFIED and value != getattr(self, name, '*'):
                 setattr(self, name, value)
-                if name in ('tmdb_api_key', ):
-                    log.debug(f'Preferences.{name} = *****')
-                else:
-                    log.debug(f'Preferences.{name} = {value}')
+                log.debug(f'Preferences.{name} = {value}')
 
         # Commit changes
         self.commit()

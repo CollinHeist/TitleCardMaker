@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from modules.cards.AnimeTitleCard import AnimeTitleCard
 from modules.cards.BannerTitleCard import BannerTitleCard
 from modules.cards.CalligraphyTitleCard import CalligraphyTitleCard
@@ -26,7 +27,10 @@ from modules.cards.TintedFrameTitleCard import TintedFrameTitleCard
 from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 
-LocalCards = [
+if TYPE_CHECKING:
+    from modules.BaseCardType import CardDescription
+
+LocalCards: list['CardDescription'] = [
     AnimeTitleCard.API_DETAILS,
     BannerTitleCard.API_DETAILS,
     CalligraphyTitleCard.API_DETAILS,

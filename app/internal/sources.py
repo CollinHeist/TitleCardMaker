@@ -6,7 +6,7 @@ from typing import Optional
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.database.query import get_interface
+from app.database.query import get_connection, get_interface
 from app.dependencies import (
     get_database, get_imagemagick_interface, get_preferences
 )
@@ -304,21 +304,12 @@ def download_episode_source_image(
         series, episode, library,
     )
 
-    # Get source image settings
-    preferences = get_preferences()
-    skip_localized_images = TieredSettings.resolve_singular_setting(
-        preferences.tmdb_skip_localized,
-        getattr(global_template, 'skip_localized_images', None),
-        getattr(series_template, 'skip_localized_images', None),
-        series.skip_localized_images,
-        getattr(episode_template, 'skip_localized_images', None),
-    )
-
     # Go through all image sources
-    for interface_id in preferences.image_source_priority:
+    for interface_id in get_preferences().image_source_priority:
         # Skip if this interface cannot be communicated with
         if not (interface := get_interface(interface_id, raise_exc=raise_exc)):
             continue
+        connection = get_connection(db, interface_id, raise_exc=raise_exc)
 
         # Skip if sourcing art from a media server
         if (interface.INTERFACE_TYPE in ('Emby', 'Jellyfin', 'Plex')
@@ -340,7 +331,14 @@ def download_episode_source_image(
                 if source_image:
                     break
         elif interface.INTERFACE_TYPE == 'TMDb':
-            # TODO implement blacklist bypassing
+            skip_localized_images = TieredSettings.resolve_singular_setting(
+                connection.skip_localized,
+                getattr(global_template, 'skip_localized_images', None),
+                getattr(series_template, 'skip_localized_images', None),
+                series.skip_localized_images,
+                getattr(episode_template, 'skip_localized_images', None),
+            )
+
             # Get art backdrop
             if 'art' in style:
                 source_image = interface.get_series_backdrop(
