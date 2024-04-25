@@ -215,7 +215,7 @@ def upgrade() -> None:
 
     # Turn existing connections from Preferences into Connection objects
     emby, jellyfin, plex, sonarr, tmdb = None, None, None, None, None
-    if PreferencesLocal.emby_url:
+    if hasattr(PreferencesLocal, 'emby_url') and PreferencesLocal.emby_url:
         emby = Connection(
             interface_type='Emby',
             enabled=True,
@@ -228,7 +228,7 @@ def upgrade() -> None:
         session.add(emby)
         session.commit()
         log.info(f'Created Emby Connection[{emby.id}]')
-    if PreferencesLocal.jellyfin_url:
+    if hasattr(PreferencesLocal, 'jellyfin_url') and PreferencesLocal.jellyfin_url:
         jellyfin = Connection(
             interface_type='Jellyfin',
             enabled=True,
@@ -241,7 +241,7 @@ def upgrade() -> None:
         session.add(jellyfin)
         session.commit()
         log.info(f'Created Jellyfin Connection[{jellyfin.id}]')
-    if PreferencesLocal.plex_url:
+    if hasattr(PreferencesLocal, 'plex_url') and PreferencesLocal.plex_url:
         plex = Connection(
             interface_type='Plex',
             enabled=True,
@@ -254,7 +254,7 @@ def upgrade() -> None:
         session.add(plex)
         session.commit()
         log.info(f'Created Plex Connection[{plex.id}]')
-    if PreferencesLocal.sonarr_url:
+    if hasattr(PreferencesLocal, 'sonarr_url') and PreferencesLocal.sonarr_url:
         sonarr = Connection(
             interface_type='Sonarr',
             enabled=True,
@@ -268,7 +268,7 @@ def upgrade() -> None:
         session.commit()
         log.info(f'Created Sonarr Connection[{sonarr.id}]')
         log.warning(f'Cannot migrate Sonarr Libraries data - resetting')
-    if PreferencesLocal.tmdb_api_key:
+    if hasattr(PreferencesLocal, 'tmdb_api_key') and PreferencesLocal.tmdb_api_key:
         tmdb = Connection(
             interface_type='TMDb',
             enabled=True,
