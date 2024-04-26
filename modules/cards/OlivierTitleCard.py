@@ -22,7 +22,7 @@ class OlivierTitleCard(BaseCardType):
         name='Olivier',
         identifier='olivier',
         example='/internal_assets/cards/olivier.jpg',
-        creators=['/u/Olivier_286', 'Yozora', 'CollinHeist'],
+        creators=['/u/Olivier_286', 'CollinHeist', 'Yozora'],
         source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=True,
@@ -195,10 +195,7 @@ class OlivierTitleCard(BaseCardType):
 
     @property
     def title_text_command(self) -> ImageMagickCommands:
-        """
-        Get the ImageMagick commands to add the episode title text to an
-        image.
-        """
+        """ImageMagick commands to add the title text."""
 
         font_size = 124 * self.font_size
         stroke_width = 8.0 * self.font_stroke_width
@@ -226,10 +223,7 @@ class OlivierTitleCard(BaseCardType):
 
     @property
     def episode_prefix_command(self) -> ImageMagickCommands:
-        """
-        Get the ImageMagick commands to add the episode prefix text to
-        an image.
-        """
+        """ImageMagick commands to add the episode prefix text."""
 
         # No episode prefix/text, return empty command
         if self.episode_prefix is None or self.hide_episode_text:
@@ -258,10 +252,7 @@ class OlivierTitleCard(BaseCardType):
 
     @property
     def episode_number_text_command(self) -> ImageMagickCommands:
-        """
-        Get the ImageMagick commands to add the episode number text to
-        an image.
-        """
+        """ImageMagick commands to add the episode number text."""
 
         # No episode text, return empty command
         if self.hide_episode_text:
@@ -385,9 +376,10 @@ class OlivierTitleCard(BaseCardType):
             False otherwise.
         """
 
-        standard_etf = OlivierTitleCard.EPISODE_TEXT_FORMAT.upper()
-
-        return episode_text_format.upper() != standard_etf
+        return (
+            episode_text_format.upper() != \
+                OlivierTitleCard.EPISODE_TEXT_FORMAT.upper()
+        )
 
 
     def create(self) -> None:
