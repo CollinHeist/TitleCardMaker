@@ -76,6 +76,7 @@ All Fonts have the following options which can be adjusted:
 - [File](#file)
 - [Color](#color)
 - [Text Case](#text-case)
+- [Title Split Modifier](#title-split-modifier)
 - [Size](#size)
 - [Kerning](#kerning)
 - [Stroke Width](#stroke-width)
@@ -159,6 +160,59 @@ one of the following:
 
 Generally, leaving this as _Default_ or _Source_ is recommended, but it is often
 quite Font and Card type dependent.
+
+### Title Split Modifier
+
+!!! note "Advanced Setting"
+
+    This setting is fairly complicated, rarely used, and can safely be ignored
+    by most users.
+
+By default, TCM will try and automatically split title text into multiple lines.
+This is done based on the number of characters in the text, as well as the
+specific [card type](../card_types/index.md) being used. This setting allows
+adjusting after how many characters TCM will try and split into multiple lines.
+
+Positive values mean TCM will require _more_ characters in a line before
+splitting (i.e. longer lines), and negative values will require _less_
+characters (i.e. shorter lines).
+
+This is especially useful if a custom Font [file](#file) is being used which
+has a vastly different spacing or sizing than the card type's default Font.
+
+??? example "Example"
+
+    Take the title _The One After Ross Says Rachel_. Depending on the Card, TCM
+    might split this into two lines of text like:
+
+    ```
+    The One After
+    Ross Says Rachel
+    ```
+
+    But, if a modifier of +8 was specified, then TCM will now try and "fit"
+    10 extra characters into one line of text, for example:
+
+    ```
+    The One
+    After Ross Says Rachel
+    ```
+
+    Notice how more of the title has fit on the first line.
+
+??? question "Why doesn't TCM split titles to always fit in the image?"
+
+    TCM currently does all the "title splitting" logic in Python - but this has
+    the downside of occasionally requiring manual adjustment, and can result in
+    some very long titles extending beyond the bounds of the image.
+
+    So this inevitably begs the question: why not measure the _actual_ length of
+    the title text in the image to ensure this never happens?
+
+    The short answer is: performance. Although TCM _does_ do quite a bit of
+    text metric analysis[^1] for various aspects of Cards, it is generally much
+    slower than doing this in Python, and would be especially slow if required
+    multiple times (like would be the case when "fitting" text on an image).
 
 ### Size
 
@@ -258,3 +312,7 @@ applicable), and finally attempt a Unicode character decomposition.
 
     Say the Font in question does not have the character `Á` - TCM will look for
     a "common" replacement; then `á`; and finally an `A` or `a` character.
+
+[^1]: Technical term for analyzing some text by loading it into a "fake"
+temporary image of _just_ text and taking measurements of the image space
+required to display the text.
