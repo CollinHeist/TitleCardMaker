@@ -218,7 +218,7 @@ def download_series_poster(
             raise ValueError
 
         # Write content
-        path.write_bytes(poster)
+        path.write_bytes(pb)
     except ValueError:
         log.exception(f'{series} poster is corrupted')
         return None

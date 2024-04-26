@@ -193,7 +193,7 @@ def upgrade() -> None:
         batch_op.add_column(sa.Column('watched_statuses', sa.JSON(), server_default='{}', nullable=False))
 
     with op.batch_alter_table('loaded', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('library_name', sa.String(), nullable=False))
+        batch_op.add_column(sa.Column('library_name', sa.String(), nullable=True))
         batch_op.add_column(sa.Column('interface_id', sa.Integer(), nullable=True))
         batch_op.create_foreign_key('fk_connection_loaded', 'connection', ['interface_id'], ['id'])
 

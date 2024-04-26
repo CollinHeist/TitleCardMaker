@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from logging import Logger
-from typing import Any, Iterator, Optional, Union
+from typing import Any, Iterator, Optional, TypeVar, Union
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import HTTPException, Query, Request
@@ -17,6 +17,7 @@ from app.models.preferences import Preferences
 from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
 from modules.ImageMagickInterface import ImageMagickInterface
+from modules.Interface import Interface
 from modules.InterfaceGroup import InterfaceGroup
 from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
@@ -54,9 +55,8 @@ def get_database() -> Iterator[Session]:
     """
     Dependency to get a Session to the SQLite database.
 
-    Returns:
-        Iterator that yields a Session to the database then closes the
-        connection.
+    Yields:
+        A Session connection to the database.
     """
 
     db = SessionLocal()
@@ -68,16 +68,21 @@ def get_database() -> Iterator[Session]:
 
 def download_blueprint_database(*, log: Logger = log) -> None:
     """
-    Download the Blueprint SQL database from the GitHub repository.
+    Download the Blueprint SQL database from the GitHub repository and
+    then write its contents locally.
 
     Args:
         log: Logger for all log messages.
+
+    Raises:
+        HTTPException (404): There is no blueprint database file at the
+            attempted URL (`BLUEPRINT_DATABASE_URL`).
+        HTTPException: There is some error downloading the blueprint
+            database file.
     """
 
-    response = get(BLUEPRINT_DATABASE_URL, timeout=30)
-
     # If no file was found, raise
-    if response.status_code == 404:
+    if (response := get(BLUEPRINT_DATABASE_URL, timeout=30)).status_code == 404:
         log.error(f'No blueprint database file found at "{BLUEPRINT_DATABASE_URL}"')
         raise HTTPException(
             status_code=404,
@@ -155,11 +160,12 @@ def get_preferences() -> Preferences:
     return PreferencesLocal
 
 
+_InterfaceType = TypeVar('_InterfaceType', bound=Interface)
 def _require_interface(
-        interface_group: InterfaceGroup,
+        interface_group: InterfaceGroup[int, _InterfaceType],
         interface_id: int,
         name: str,
-    ) -> Any:
+    ) -> _InterfaceType:
     """
     Dependency to get the interface with the given ID from the given
     `InterfaceGroup`.
