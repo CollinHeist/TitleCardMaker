@@ -90,8 +90,8 @@ class Preferences:
         self.parse_file(self.read_file())
 
         # Initialize paths
-        self.asset_directory = Path(self.asset_directory)
-        self.card_directory = Path(self.card_directory)
+        self.asset_directory: Path = Path(self.asset_directory)
+        self.card_directory: Path = Path(self.card_directory)
         self.card_type_directory = Path(self.card_type_directory)
         self.source_directory = Path(self.source_directory)
         for folder in (self.asset_directory, self.card_directory,
@@ -150,15 +150,15 @@ class Preferences:
         """Initialize this object with all default values."""
 
         if self.is_docker:
-            self.asset_directory = Path('/config/assets')
-            self.card_directory = Path('/config/cards')
-            self.card_type_directory = Path('/config/card_types')
-            self.source_directory = Path('/config/source')
+            self.asset_directory: Path = Path('/config/assets')
+            self.card_directory: Path = Path('/config/cards')
+            self.card_type_directory: Path = Path('/config/card_types')
+            self.source_directory: Path = Path('/config/source')
         else:
-            self.asset_directory = CONFIG_ROOT / 'assets'
-            self.card_directory = CONFIG_ROOT / 'cards'
-            self.card_type_directory = CONFIG_ROOT / 'card_types'
-            self.source_directory = CONFIG_ROOT / 'source'
+            self.asset_directory: Path = CONFIG_ROOT / 'assets'
+            self.card_directory: Path = CONFIG_ROOT / 'cards'
+            self.card_type_directory: Path = CONFIG_ROOT / 'card_types'
+            self.source_directory: Path = CONFIG_ROOT / 'source'
 
         self.card_width = TitleCard.DEFAULT_WIDTH
         self.card_height = TitleCard.DEFAULT_HEIGHT
