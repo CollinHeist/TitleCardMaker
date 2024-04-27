@@ -1,6 +1,5 @@
 from logging import Logger
 from pathlib import Path
-from re import compile as re_compile, IGNORECASE
 from typing import Optional
 
 from fastapi import HTTPException
@@ -13,19 +12,12 @@ from app.dependencies import (
 from app.internal.templates import get_effective_templates
 from app.models.episode import Episode
 from app.models.series import Library, Series
-from app.schemas.card import SourceAsset, SourceImage
+from app.schemas.card import SourceImage
 from app.schemas.preferences import Style
 
 from modules.Debug import log
 from modules.TieredSettings import TieredSettings
 from modules.WebInterface import WebInterface
-
-
-_BACKDROP_REGEX = re_compile(
-    r'^backdrop(?:[_-]season(?P<season_number>\d+))?'
-    r'(?:[_-]episode(?P<episode_number>\d+))?$',
-    IGNORECASE,
-)
 
 
 def download_all_series_logos(*, log: Logger = log) -> None:
@@ -456,30 +448,3 @@ def get_source_image(episode: Episode) -> SourceImage:
         }
 
     return source
-
-
-def read_series_backdrops(series: Series) -> list[SourceAsset]:
-    """
-    
-    """
-
-    # Create list of backdrop data
-    backdrops = []
-    image_magick = get_imagemagick_interface()
-
-    for backdrop in series.source_directory.glob('backdrop*'):
-        if (match := _BACKDROP_REGEX.match(backdrop.stem)):
-            width, height = image_magick.get_image_dimensions(
-                backdrop
-            )
-
-            backdrops.append(SourceAsset(
-                file_name=backdrop.name,
-                file=str(backdrop),
-                url=f'/source/{backdrop.parent.name}/{backdrop.name}',
-                **match.groupdict(),
-                filesize=backdrop.stat().st_size,
-                width=width, heigh=height,
-            ))
-
-    return backdrops
