@@ -190,8 +190,8 @@ class FormulaOneTitleCard(BaseCardType):
             episode_text_color: str = TITLE_COLOR,
             episode_text_font_size: float = 1.0,
             flag: Optional[Path] = None,
+            frame_year: int = 2024,
             race: str = 'GRAND PRIX',
-            year: int = 2024,
             preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
@@ -228,8 +228,8 @@ class FormulaOneTitleCard(BaseCardType):
             self.country = flag
         self.episode_text_color = episode_text_color
         self.episode_text_font_size = episode_text_font_size
+        self.year = frame_year
         self.race = race
-        self.year = year
 
 
     @property

@@ -279,7 +279,7 @@ class FormulaOneCardType(BaseCardTypeAllText):
     episode_text_color: str = FormulaOneTitleCard.EPISODE_TEXT_COLOR
     episode_text_font_size: PositiveFloat = 1.0
     flag: Optional[Path] = None
-    frame_year: Optional[Union[Literal[2023], Literal[2024]]] = None
+    frame_year: Optional[PositiveInt] = None
     race: constr(min_length=1, to_upper=True) = 'GRAND PRIX'
 
     @root_validator(skip_on_failure=True)
