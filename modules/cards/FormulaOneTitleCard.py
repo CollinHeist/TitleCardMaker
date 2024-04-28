@@ -85,9 +85,8 @@ class FormulaOneTitleCard(BaseCardType):
                 identifier='frame_year',
                 description='Which frame year to utilize',
                 tooltip=(
-                    'Either <v>2023</v> or <v>2024</v>. Default is the year '
-                    'the Episode aired - or, if that is not available, '
-                    '<v>2024</v>.'
+                    'Default is the year the Episode aired - or, if that is '
+                    'not available, <v>2024</v>.'
                 ),
             ),
         ],
