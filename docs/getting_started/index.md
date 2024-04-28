@@ -8,6 +8,45 @@ description: >
 # Getting Started
 ## Installation
 
+### Downloading ImageMagick
+
+!!! note "Non-Docker Users Only"
+
+    The Docker container comes with an installation of ImageMagick, so this step
+    can be skipped by all Docker users.
+
+
+=== ":material-linux: Linux"
+
+    Depending on your Linux distro, you might be able to use whatever package
+    manager comes installed. Some of the common installations are detailed
+    [here](https://www.xmodulo.com/install-imagemagick-linux.html). For example,
+    the following command works on Debian and Ubuntu:
+
+    ```bash
+    sudo apt-get install imagemagick
+    ```
+
+=== ":material-apple: MacOS"
+
+    Follow the ImageMagick installation and setup instructions listed
+    [here](https://imagemagick.org/script/download.php).
+
+=== ":material-powershell: Windows (Powershell)"
+
+    Download the Windows Binary Release from the
+    [ImageMagick website](https://imagemagick.org/script/download.php#windows).
+
+    During the installation, be sure to check the _Add application directory to
+    your system path_ and _Install legacy utilities (e.g. convert) boxes_. The
+    other options are optional.
+
+=== ":material-microsoft-windows: Windows (Non-Powershell)"
+
+    ```bash
+    mkdir config
+    ```
+
 ### Downloading the Code
 
 Sponsors of the project will be invited to a [private GitHub

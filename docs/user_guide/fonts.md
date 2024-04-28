@@ -191,7 +191,7 @@ has a vastly different spacing or sizing than the card type's default Font.
     ```
 
     But, if a modifier of +8 was specified, then TCM will now try and "fit"
-    10 extra characters into one line of text, for example:
+    8 more characters into one line of text, for example:
 
     ```
     The One

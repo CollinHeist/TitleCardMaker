@@ -262,14 +262,13 @@ is covered in
 
 Whether to connect with HTTPS instead of HTTP.
 
-### PMM Integration
+### Kometa Integration
 
 Whether to remove the `Overlay` label after uploading Title Cards. This also
 prevents TCM from grabbing Source Images with overlays applied.
 
 Only check this box if you use (or have used)
-[Plex Meta Manager](https://github.com/meisnate12/Plex-Meta-Manager) Episode
-overlays.
+[Kometa](https://github.com/Kometa-Team/Kometa) Episode overlays.
 
 ### Filesize Limit
 
@@ -295,9 +294,9 @@ Although Sonarr can only serve as an
 faster than the other alternatives (Emby, Jellyfin, Plex) and is generally the
 recommended option for most users.
 
-In addition to this, Sonarr can act as a [Tautulli](#tautulli_1) alternative which
-works for non-Plex Media Servers and triggers immediate Title Card creation
-when new Episodes are added - settings this up is detailed
+In addition to this, Sonarr can act as a [Tautulli](#tautulli_1) alternative
+which works for non-Plex Media Servers and triggers immediate Title Card
+creation when new Episodes are added - settings this up is detailed
 [here](../getting_started/connections/sonarr.md#webhook-integration).
 
 ### Connection Name
