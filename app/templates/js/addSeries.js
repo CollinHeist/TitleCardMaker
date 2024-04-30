@@ -330,7 +330,7 @@ function queryAllBlueprints(page=1, refresh=false) {
         page: allBlueprints.page,
         pages: allBlueprints.pages,
         amountVisible: isSmallScreen() ? 5 : 15,
-        hideIfSinglePage: true,
+        hideIfSinglePage: false,
       });
 
       // Transition elements in
