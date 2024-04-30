@@ -1,7 +1,7 @@
 from logging import Logger
 from pathlib import Path
 from re import match, IGNORECASE
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Optional, TypeVar, Union
 
 from fastapi import HTTPException
 from ruamel.yaml import YAML
@@ -67,7 +67,7 @@ def parse_raw_yaml(yaml: str) -> dict[str, Any]:
         via ruamel.yaml.
 
     Raises:
-        HTTPException (422) if the YAML parser raises an Exception while
+        HTTPException (422): The YAML parser raises an Exception while
             parsing the given YAML string.
     """
 
@@ -81,11 +81,12 @@ def parse_raw_yaml(yaml: str) -> dict[str, Any]:
         ) from exc
 
 
+_AttributeType = TypeVar('_AttributeType')
 def _get(yaml_dict: dict[str, Any],
-        *keys: tuple[str],
-        type_: Optional[Callable[..., Any]] = None,
+        *keys: str,
+        type_: Optional[Callable[..., _AttributeType]] = None,
         default: Any = None,
-    ) -> Any:
+    ) -> _AttributeType:
     """
     Get the value at the given location in YAML.
 
@@ -103,7 +104,7 @@ def _get(yaml_dict: dict[str, Any],
         `default` otherwise.
 
     Raises:
-        HTTPException (422) if the indicated type conversion raises any
+        HTTPException (422): The indicated type conversion raises any
             Exceptions.
     """
 
@@ -589,7 +590,7 @@ def parse_plex(
         return None
 
     # Get jellyfin options
-    plex = _get(yaml_dict, 'plex', default={})
+    plex = _get(yaml_dict, 'plex', type_=dict, default={})
 
     # If there is an existing Plex interface, update instead of create
     existing = db.query(Connection).filter_by(interface_type='Plex').first()
