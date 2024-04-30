@@ -20,7 +20,7 @@
 .ui.cards > .card {
   min-width: 100px;
   width: 10%;
-  max-width: 150px
+  max-width: 150px;
 }
 
 /* Force the aspect ratio for all posters */
@@ -97,6 +97,11 @@ table .dropdown[data-value="libraries"] .active.item {
   margin-bottom: 0.5em !important;
 }
 
+/* Add margin above pagination menu */
+.cards ~ #pagination {
+  margin-top: 1em;
+}
+
 @media only screen and (hover: none) and (pointer: coarse) {
   #pagination {
     /* On mobile, wrap pagination if wider than screen */
@@ -107,7 +112,6 @@ table .dropdown[data-value="libraries"] .active.item {
   }
 }
 
-/* START OF TEST */
 :root {
   --layer-size: 9em;
   --moveup-distance: 2em; /* 1em */
