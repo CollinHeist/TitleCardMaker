@@ -1380,12 +1380,10 @@ function toggleMonitorStatus() {
       // Show toast, toggle text and icon to show new status
       if (response.monitored) {
         showInfoToast('Started Monitoring Series');
-        $('#monitor-status span').toggleClass('red', false).toggleClass('green', true);
-        $('#monitor-status span')[0].innerHTML = '<i class="ui eye outline green icon"></i>Monitored<p class="help">Click to unmonitor</p>';
+        $('#monitor-status .icon').toggleClass('red slash', false).toggleClass('green', true);
       } else {
         showInfoToast('Stopped Monitoring Series');
-        $('#monitor-status span').toggleClass('red', true).toggleClass('green', false);
-        $('#monitor-status span')[0].innerHTML = '<i class="ui eye slash outline red icon"></i>Unmonitored<p class="help">Click to monitor</p>';
+        $('#monitor-status .icon').toggleClass('red slash', true).toggleClass('green', false);
       }
       refreshTheme();
     },
