@@ -223,7 +223,7 @@ function _populateSeriesRow(series, template) {
 
   // Add unmonitored class if styling
   if (stylize_unmonitored_posters && !series.monitored) {
-    poster.classList.add('unmonitored'); 
+    poster.classList.add('unmonitored');
   }
 
   // Add year
@@ -281,9 +281,11 @@ function _populateSeriesCard(series, template) {
   if (stylize_unmonitored_posters && !series.monitored) {
     img.classList.add('unmonitored'); 
   }
+  // if (stylize_unmonitored_posters) {
+  //   clone.querySelector('.image').classList.add(series.monitored ? 'monitored' : 'unmonitored');
+  // }
 
   // Link name and poster to the Series page
-  console.log(clone);
   const as = clone.querySelectorAll('a');
   as[0].href = `/series/${series.id}`;
   as[1].href = `/series/${series.id}`;

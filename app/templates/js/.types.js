@@ -569,6 +569,7 @@
  * @property {?string} imdb_id
  * @property {?number} tmdb_id
  * @property {?number} tvdb_id
+ * @property {number} blueprint_count
  */
 
 /**

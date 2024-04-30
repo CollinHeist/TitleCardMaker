@@ -5,7 +5,7 @@ from json import loads
 from re import sub as re_sub, IGNORECASE
 from typing import Any, Optional
 
-from pydantic import Field, root_validator, validator
+from pydantic import Field, PositiveInt, root_validator, validator
 
 from app.schemas.base import Base
 from app.schemas.font import TitleCase
@@ -128,6 +128,7 @@ class RemoteBlueprintSeries(Base):
     imdb_id: Optional[str]
     tmdb_id: Optional[int]
     tvdb_id: Optional[int]
+    blueprint_count: PositiveInt = 1
 
 class RemoteBlueprint(Base):
     id: int

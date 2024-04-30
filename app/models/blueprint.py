@@ -45,7 +45,9 @@ class BlueprintSeries(BlueprintBase):
     imdb_id: Mapped[Optional[str]]
     tmdb_id: Mapped[Optional[int]]
     tvdb_id: Mapped[Optional[int]]
-    blueprints: Mapped['Blueprint'] = relationship(back_populates='series')
+    blueprints: Mapped[list['Blueprint']] = relationship(
+        back_populates='series',
+    )
 
 
     @hybrid_property
@@ -75,6 +77,13 @@ class BlueprintSeries(BlueprintBase):
         """Class expression of the `letter` property."""
 
         return func.upper(cls.sort_name[0])
+
+
+    @property
+    def blueprint_count(self) -> int:
+        """How many Blueprints are associated with this Series."""
+
+        return len(self.blueprints)
 
 
     @property

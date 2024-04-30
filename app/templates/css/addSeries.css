@@ -13,6 +13,21 @@
   color: #4183c4;
 }
 
+.blueprint.card .content [data-value="count"] {
+  /* Reduce top margin so the bubble is centered */
+  /* margin-top: -0.2em; */
+  /* Add extra space to the actions on the right */
+  margin-right: 0.3em;
+  /* Show as clickable */
+  cursor: pointer;
+  /* Reduce size so it matches size of other icons */
+  min-width: 1.2em;
+  min-height: 1.2em;
+  padding: 0.5em !important;
+  line-height: 0.6em;
+  border-radius: 300rem;
+}
+
 /* Do not allow disabled card description text to be selected */
 .disabled.card {
   user-select: none;

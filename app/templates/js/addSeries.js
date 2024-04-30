@@ -283,6 +283,16 @@ function queryAllBlueprints(page=1, refresh=false) {
           $('input[name="blueprint_series_name"]').val(blueprint.series.name);
           queryAllBlueprints();
         }
+        card.querySelector('[data-value="count"]').onclick = () => {
+          $('input[name="blueprint_series_name"]').val(blueprint.series.name);
+          queryAllBlueprints();
+        }
+
+        if (blueprint.series.blueprint_count > 1) {
+          card.querySelector('[data-value="count"]').innerText = blueprint.series.blueprint_count;
+        } else {
+          card.querySelector('[data-value="count"]').remove();
+        }
 
         // Assign function to import button
         card.querySelector('[data-action="import"]').onclick = () => importBlueprint(blueprint.id, elementId);
