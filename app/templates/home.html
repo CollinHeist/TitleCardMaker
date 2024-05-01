@@ -9,11 +9,15 @@
     {% include "./js/home.js" %}
   </script>
 
-  <link rel="stylesheet" type="text/css" href="/templates/css/home.css"/>
+  <link rel="stylesheet" type="text/css" href="/templates/css/home.css?v={{preferences.current_version}}"/>
 
   <!-- Templates -->
   <template id="series-template">
+    {% if preferences.reduced_animations %}
+    <div class="ui raised card transition">
+    {% else %}
     <div class="ui raised card transition hidden"> <!-- Start hidden so they can be transitioned in -->
+    {% endif %}
       <div class="blurring dimmable image">
         <div class="ui dimmer">
           <div class="content">
