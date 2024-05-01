@@ -84,24 +84,23 @@ class RemoteCardType:
                 self.valid = False
                 return None
 
+            # Validate hash of downloaded file (if present)
+            if file_hash:
+                if file_hash == md5(response.content).hexdigest():
+                    log.trace(f'CardType "{identifier}" has matching MD5 hash '
+                              f'of {file_hash}')
+                # Hash does not match, set invalid
+                else:
+                    log.error(f'CardType "{identifier}" MD5 hash does not '
+                              f'match {file_hash} - not loading CardType')
+                    self.valid = False
+                    return None
+
             # Write identifier file contents to temporary class file
             self.source = 'remote'
             file_name.parent.mkdir(parents=True, exist_ok=True)
             with (file_name).open('wb') as fh:
                 fh.write(response.content)
-
-        # Check file hash to verify contents
-        if file_hash:
-            hash_ = md5(Path(file_name).read_text().encode('utf-8')).hexdigest()
-            if file_hash == hash_:
-                log.trace(f'CardType "{identifier}" has matching MD5 hash of '
-                          f'{file_hash}')
-            # Hash does not match, set invalid
-            else:
-                log.error(f'CardType "{identifier}" MD5 hash does not match '
-                          f'{file_hash} - not loading CardType')
-                self.valid = False
-                return None
 
         # Import new file as module
         try:
