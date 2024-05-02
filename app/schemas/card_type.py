@@ -44,6 +44,9 @@ from modules.cards.ShapeTitleCard import (
 )
 from modules.cards.StandardTitleCard import StandardTitleCard
 from modules.cards.StarWarsTitleCard import StarWarsTitleCard
+from modules.cards.StripedTitleCard import (
+    StripedTitleCard, TextPosition as StripedTextPosition
+)
 from modules.cards.TintedFrameTitleCard import TintedFrameTitleCard
 from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
@@ -708,6 +711,55 @@ class StarWarsCardType(BaseCardModel):
 
         return values
 
+PolygonDefintion = Union[
+    constr(strip_whitespace=True, to_lower=True, regex=r'^random\[[sml]+\]$'), # Type 1
+    constr(strip_whitespace=True, to_lower=True, regex=r'^random\[(\d+,?)+\]$'), # Type 2
+    constr(strip_whitespace=True, to_lower=True, regex=r'^random\[(\d+-\d+,?)+\]$'), # Type 3
+    constr(strip_whitespace=True, to_lower=True, regex=r'^[sml]+\+?$'), # Type 4
+    constr(strip_whitespace=True, to_lower=True, regex=r'^(\d+,?)+\+?$'), # Type 5
+    constr(strip_whitespace=True, to_lower=True, regex=r'^(\d+-\d+,?)+\+?$'), # Type 6
+]
+class StripedCardType(BaseCardTypeAllText):
+    season_text: str
+    episode_text: str
+    font_color: str = StripedTitleCard.TITLE_COLOR
+    font_file: FilePath = StripedTitleCard.TITLE_FONT
+    font_interline_spacing: int = 0
+    font_interword_spacing: int = 0
+    font_kerning: float = 1.0
+    font_size: PositiveFloat = 1.0
+    font_vertical_shift: int = 0
+    angle: confloat(le=135, ge=45) = StripedTitleCard.DEFAULT_ANGLE
+    episode_text_color: str = StripedTitleCard.EPISODE_TEXT_COLOR
+    episode_text_font_size: PositiveFloat = 1.0
+    inset: conint(ge=0, le=1600) = StripedTitleCard.DEFAULT_INSET
+    inter_shape_spacing: conint(ge=0, le=800) = StripedTitleCard.DEFAULT_INTER_SHAPE_SPACING
+    overlay_color: str = StripedTitleCard.DEFAULT_OVERLAY_COLOR
+    polygons: PolygonDefintion = StripedTitleCard.DEFAULT_POLYGON_STRING
+    separator: str = ' - '
+    text_position: StripedTextPosition = StripedTitleCard.DEFAULT_TEXT_POSITION
+
+    @validator('polygons')
+    def validate_size_boundaries(cls, val: str) -> str:
+        # Remove random[] part of string for parsing
+        temp = val
+        if 'random[' in val:
+            temp = val.split('random[')[1].split(']')[0]
+
+        # Parse size range individually
+        for range_ in temp.removesuffix('+').split(','):
+            # Skip non-range definitions
+            if '-' not in range_:
+                continue
+
+            # Verify lower bound is below upper
+            lower, upper = tuple(map(int, range_.split('-', maxsplit=1)))
+            if not lower <= upper:
+                raise ValueError(f'Lower bound of size boundary ({lower}) must '
+                                 f'be below upper bound ({upper})')
+
+        return val
+
 class TextlessCardType(BaseCardModel):
     source_file: Path # Optional source file for importing w/o sources
 
@@ -833,6 +885,7 @@ LocalCardTypeModels: dict[str, Base] = {
     'overline': OverlineCardType,
     'phendrena': CutoutCardType,
     'photo': FrameCardType,
+    'polygon': StripedCardType,
     'polymath': StandardCardType,
     'poster': PosterCardType,
     'reality tv': LogoCardType,
@@ -843,6 +896,7 @@ LocalCardTypeModels: dict[str, Base] = {
     'spotify': MusicCardType,
     'standard': StandardCardType,
     'star wars': StarWarsCardType,
+    'striped': StripedCardType,
     'textless': TextlessCardType,
     'tinted glass': TintedGlassCardType,
     'tinted frame': TintedFrameCardType,
