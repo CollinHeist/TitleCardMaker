@@ -1,7 +1,7 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 # pyright: reportInvalidTypeForm=false
 from pathlib import Path
-from typing import Literal, Optional, Union
+from typing import Annotated, Literal, Optional, Union
 
 from pydantic import validator, root_validator
 
@@ -16,7 +16,7 @@ Models of card types and series extras.
 """
 class Extra(Base):
     name: str
-    identifier: DictKey
+    identifier: Annotated[str, DictKey]
     description: str
     tooltip: Optional[str] = None
 

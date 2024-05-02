@@ -7,7 +7,7 @@ from pydantic import ( # pylint: disable=no-name-in-module
     NonNegativeFloat, PositiveFloat, constr, validator, root_validator
 )
 
-from app.schemas.base import Base, BetterColor, UpdateBase, UNSPECIFIED
+from app.schemas.base import Base, UpdateBase, UNSPECIFIED
 
 
 TitleCase = Literal['blank', 'lower', 'source', 'title', 'upper']
@@ -26,7 +26,7 @@ DefaultFont = {
 Base classes
 """
 class BaseFont(Base):
-    color: Optional[BetterColor] = None
+    color: Optional[str] = None
     interline_spacing: int = 0
     interword_spacing: int = 0
     kerning: float = 1.0
@@ -62,7 +62,7 @@ class NewNamedFont(BaseNamedFont):
         return values
 
 class PreviewFont(Base):
-    color: Optional[BetterColor] = None
+    color: Optional[str] = None
     kerning: Optional[float] = None
     interline_spacing: Optional[int] = None
     interword_spacing: Optional[int] = None
@@ -75,7 +75,7 @@ Update classes
 """
 class UpdateNamedFont(UpdateBase):
     name: constr(min_length=1) = UNSPECIFIED
-    color: Optional[BetterColor] = UNSPECIFIED
+    color: Optional[str] = UNSPECIFIED
     delete_missing: bool = UNSPECIFIED
     interline_spacing: int = UNSPECIFIED
     interword_spacing: int = UNSPECIFIED

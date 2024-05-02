@@ -11,7 +11,7 @@ from pydantic import (
     root_validator, validator,
 )
 
-from app.schemas.base import Base, BetterColor, DictKey
+from app.schemas.base import Base, DictKey
 from modules.FormatString import FormatString
 from modules.cards.AnimeTitleCard import AnimeTitleCard
 from modules.cards.BannerTitleCard import BannerTitleCard
@@ -88,7 +88,7 @@ class BaseCardTypeAllText(BaseCardModel):
         return values
 
 class BaseCardTypeCustomFontNoText(BaseCardModel):
-    font_color: BetterColor
+    font_color: str
     font_file: FilePath
     font_interline_spacing: int = 0
     font_interword_spacing: int = 0
@@ -98,7 +98,7 @@ class BaseCardTypeCustomFontNoText(BaseCardModel):
     font_vertical_shift: int = 0
 
 class BaseCardTypeCustomFontAllText(BaseCardTypeAllText):
-    font_color: BetterColor
+    font_color: str
     font_file: FilePath
     font_interline_spacing: int = 0
     font_interword_spacing: int = 0
@@ -111,7 +111,7 @@ class BaseCardTypeCustomFontAllText(BaseCardTypeAllText):
 Creation classes
 """
 class AnimeCardType(BaseCardTypeCustomFontAllText):
-    font_color: BetterColor = AnimeTitleCard.TITLE_COLOR
+    font_color: str = AnimeTitleCard.TITLE_COLOR
     font_file: FilePath = AnimeTitleCard.TITLE_FONT
     kanji: Optional[str] = None
     require_kanji: bool = False
@@ -124,7 +124,7 @@ class AnimeCardType(BaseCardTypeCustomFontAllText):
     omit_gradient: bool = False
     stroke_color: str = 'black'
     episode_stroke_color: str = AnimeTitleCard.EPISODE_STROKE_COLOR
-    episode_text_color: BetterColor = AnimeTitleCard.SERIES_COUNT_TEXT_COLOR
+    episode_text_color: str = AnimeTitleCard.SERIES_COUNT_TEXT_COLOR
 
     @root_validator(skip_on_failure=True)
     def validate_kanji(cls, values: dict) -> dict:
@@ -141,15 +141,15 @@ class AnimeCardType(BaseCardTypeCustomFontAllText):
         return values
 
 class BannerCardType(BaseCardTypeAllText):
-    font_color: BetterColor = BannerTitleCard.TITLE_COLOR
+    font_color: str = BannerTitleCard.TITLE_COLOR
     font_file: FilePath = BannerTitleCard.TITLE_FONT
     font_interline_spacing: int = 0
     font_interword_spacing: int = 0
     font_kerning: float = 1.0
     font_size: PositiveFloat = 1.0
     font_vertical_shift: int = 0
-    alternate_color: BetterColor = BannerTitleCard.EPISODE_TEXT_COLOR
-    banner_color: Optional[BetterColor] = None
+    alternate_color: str = BannerTitleCard.EPISODE_TEXT_COLOR
+    banner_color: Optional[str] = None
     banner_height: PositiveInt = BannerTitleCard.BANNER_HEIGHT
     episode_text_font_size: PositiveFloat = 1.0
     hide_banner: bool = False
@@ -166,19 +166,19 @@ class BannerCardType(BaseCardTypeAllText):
 class CalligraphyCardType(BaseCardTypeCustomFontAllText):
     season_text: str
     episode_text: str
-    font_color: BetterColor = CalligraphyTitleCard.TITLE_COLOR
+    font_color: str = CalligraphyTitleCard.TITLE_COLOR
     font_file: FilePath = CalligraphyTitleCard.TITLE_FONT
     logo_file: Path
     watched: bool = False
     add_texture: bool = True
     deep_blur_if_unwatched: bool = True
-    episode_text_color: Optional[BetterColor] = None
+    episode_text_color: Optional[str] = None
     episode_text_font_size: PositiveFloat = 1.0
     logo_size: PositiveFloat = 1.0
     offset_titles: bool = True
     randomize_texture: bool = True
     separator: str = '-'
-    shadow_color: BetterColor = 'black'
+    shadow_color: str = 'black'
 
     @root_validator(skip_on_failure=True)
     def assign_unassigned_color(cls, values: dict) -> dict:
@@ -191,15 +191,15 @@ class CalligraphyCardType(BaseCardTypeCustomFontAllText):
 RandomAngleRegex = r'random\[([+-]?\d+.?\d*),\s*([+-]?\d+.?\d*)\]'
 RandomAngle = constr(regex=RandomAngleRegex)
 class ComicBookCardType(BaseCardTypeCustomFontAllText):
-    font_color: BetterColor = ComicBookTitleCard.TITLE_COLOR
+    font_color: str = ComicBookTitleCard.TITLE_COLOR
     font_file: FilePath = ComicBookTitleCard.TITLE_FONT
-    episode_text_color: BetterColor = 'black'
+    episode_text_color: str = 'black'
     index_text_position: Literal['left', 'middle', 'right'] = 'left'
-    text_box_fill_color: BetterColor = 'white'
-    text_box_edge_color: Optional[BetterColor] = None
+    text_box_fill_color: str = 'white'
+    text_box_edge_color: Optional[str] = None
     title_text_rotation_angle: Union[float, RandomAngle] = -4.0
     index_text_rotation_angle: Union[float, RandomAngle] = -4.0
-    banner_fill_color: BetterColor = 'rgba(235,73,69,0.6)'
+    banner_fill_color: str = 'rgba(235,73,69,0.6)'
     title_banner_shift: int = 0
     index_banner_shift: int = 0
     hide_title_banner: bool = None
@@ -231,14 +231,14 @@ class ComicBookCardType(BaseCardTypeCustomFontAllText):
 class CutoutCardType(BaseCardModel):
     title_text: str
     episode_text: constr(to_upper=True)
-    font_color: BetterColor = CutoutTitleCard.TITLE_COLOR
+    font_color: str = CutoutTitleCard.TITLE_COLOR
     font_file: FilePath = CutoutTitleCard.TITLE_FONT
     font_interline_spacing: int = 0
     font_interword_spacing: int = 0
     font_size: PositiveFloat = 1.0
     font_vertical_shift: int = 0
     blur_edges: bool = False
-    overlay_color: BetterColor = 'black'
+    overlay_color: str = 'black'
     overlay_transparency: confloat(ge=0.0, le=1.0) = 0.0
 
 TextPosition = Literal[
@@ -247,10 +247,10 @@ TextPosition = Literal[
 class DividerCardType(BaseCardTypeCustomFontAllText):
     season_text: str
     episode_text: str
-    font_color: BetterColor = DividerTitleCard.TITLE_COLOR
+    font_color: str = DividerTitleCard.TITLE_COLOR
     font_file: FilePath = DividerTitleCard.TITLE_FONT
-    stroke_color: BetterColor = 'black'
-    divider_color: Optional[BetterColor] = None
+    stroke_color: str = 'black'
+    divider_color: Optional[str] = None
     text_gravity: Optional[TextGravity] = None
     title_text_position: Literal['left', 'right'] = 'left'
     text_position: TextPosition = 'lower right'
@@ -264,15 +264,15 @@ class DividerCardType(BaseCardTypeCustomFontAllText):
         return values
 
 class FadeCardType(BaseCardTypeCustomFontAllText):
-    font_color: BetterColor = FadeTitleCard.TITLE_COLOR
+    font_color: str = FadeTitleCard.TITLE_COLOR
     font_file: FilePath = FadeTitleCard.TITLE_FONT
     logo_file: Optional[Path] = None
-    episode_text_color: BetterColor = FadeTitleCard.EPISODE_TEXT_COLOR
+    episode_text_color: str = FadeTitleCard.EPISODE_TEXT_COLOR
     separator: str = '•'
 
 class FormulaOneCardType(BaseCardTypeAllText):
     airdate: Optional[datetime] = None
-    font_color: BetterColor = FormulaOneTitleCard.TITLE_COLOR
+    font_color: str = FormulaOneTitleCard.TITLE_COLOR
     font_file: FilePath = FormulaOneTitleCard.TITLE_FONT
     font_size: PositiveFloat = 1.0
     country: Optional[FormulaOneCountry] = None
@@ -310,9 +310,9 @@ class FormulaOneCardType(BaseCardTypeAllText):
 
 
 class FrameCardType(BaseCardTypeCustomFontAllText):
-    font_color: BetterColor = FrameTitleCard.TITLE_COLOR
+    font_color: str = FrameTitleCard.TITLE_COLOR
     font_file: FilePath = FrameTitleCard.TITLE_FONT
-    episode_text_color: BetterColor = FrameTitleCard.EPISODE_TEXT_COLOR
+    episode_text_color: str = FrameTitleCard.EPISODE_TEXT_COLOR
     episode_text_position: Literal['left', 'right', 'surround'] = 'surround'
 
 _graph_episode_text_regex = re_compile(r'^(\d+)\s*\/\s*(\d+)$')
@@ -320,7 +320,7 @@ class GraphCardType(BaseCardModel):
     title_text: str
     episode_text: constr(to_upper=True)
     hide_episode_text: bool = False
-    font_color: BetterColor
+    font_color: str
     font_file: FilePath
     font_interline_spacing: int = 0
     font_interword_spacing: int = 0
@@ -359,14 +359,14 @@ class GraphCardType(BaseCardModel):
         return values
 
 class InsetCardType(BaseCardTypeAllText):
-    font_color: BetterColor = InsetTitleCard.TITLE_COLOR
+    font_color: str = InsetTitleCard.TITLE_COLOR
     font_file: FilePath = InsetTitleCard.TITLE_FONT
     font_interline_spacing: int = 0
     font_interword_spacing: int = 0
     font_kerning: float = 1.0
     font_size: PositiveFloat = 1.0
     font_vertical_shift: int = 0
-    episode_text_color: BetterColor = InsetTitleCard.EPISODE_TEXT_COLOR
+    episode_text_color: str = InsetTitleCard.EPISODE_TEXT_COLOR
     episode_text_font_size: PositiveFloat = 1.0
     omit_gradient: bool = False
     separator: str = '-'
@@ -376,7 +376,7 @@ BoxAdjustmentRegex = r'^([-+]?\d+)\s+([-+]?\d+)\s+([-+]?\d+)\s+([-+]?\d+)$'
 BoxAdjustments = constr(regex=BoxAdjustmentRegex)
 class LandscapeCardType(BaseCardModel):
     title_text: str
-    font_color: BetterColor = LandscapeTitleCard.TITLE_COLOR
+    font_color: str = LandscapeTitleCard.TITLE_COLOR
     font_file: FilePath = LandscapeTitleCard.TITLE_FONT
     font_interline_spacing: int = 0
     font_interword_spacing: int = 0
@@ -385,7 +385,7 @@ class LandscapeCardType(BaseCardModel):
     font_vertical_shift: int = 0
     add_bounding_box: bool = True
     box_adjustments: BoxAdjustments = (0, 0, 0, 0)
-    box_color: Optional[BetterColor] = None
+    box_color: Optional[str] = None
     box_width: PositiveInt = LandscapeTitleCard.BOX_WIDTH
     darken: Union[Literal['all', 'box'], bool] = 'box'
 
@@ -404,9 +404,9 @@ class LandscapeCardType(BaseCardModel):
 class LogoCardType(BaseCardTypeCustomFontAllText):
     source_file: Optional[Path] = None
     logo_file: FilePath
-    font_color: BetterColor = LogoTitleCard.TITLE_COLOR
+    font_color: str = LogoTitleCard.TITLE_COLOR
     font_file: Path = LogoTitleCard.TITLE_FONT
-    background: BetterColor = 'black'
+    background: str = 'black'
     blur_only_image: bool = False
     episode_text_color: str = LogoTitleCard.SERIES_COUNT_TEXT_COLOR
     episode_text_vertical_shift: int = 0
@@ -414,7 +414,7 @@ class LogoCardType(BaseCardTypeCustomFontAllText):
     logo_vertical_shift: int = 0
     omit_gradient: bool = True
     separator: str = '•'
-    stroke_color: BetterColor = 'black'
+    stroke_color: str = 'black'
     use_background_image: bool = False
 
     @root_validator(skip_on_failure=True)
@@ -428,14 +428,14 @@ class LogoCardType(BaseCardTypeCustomFontAllText):
 
 class MarvelCardType(BaseCardTypeCustomFontAllText):
     font_file: FilePath = MarvelTitleCard.TITLE_FONT
-    font_color: BetterColor = MarvelTitleCard.TITLE_COLOR
-    border_color: BetterColor = MarvelTitleCard.DEFAULT_BORDER_COLOR
+    font_color: str = MarvelTitleCard.TITLE_COLOR
+    border_color: str = MarvelTitleCard.DEFAULT_BORDER_COLOR
     border_size: PositiveInt = MarvelTitleCard.DEFAULT_BORDER_SIZE
-    episode_text_color: BetterColor = MarvelTitleCard.EPISODE_TEXT_COLOR
+    episode_text_color: str = MarvelTitleCard.EPISODE_TEXT_COLOR
     episode_text_location: Literal['compact', 'fixed'] = 'fixed'
     fit_text: bool = True
     hide_border: bool = False
-    text_box_color: BetterColor = MarvelTitleCard.DEFAULT_TEXT_BOX_COLOR
+    text_box_color: str = MarvelTitleCard.DEFAULT_TEXT_BOX_COLOR
     text_box_height: PositiveInt = MarvelTitleCard.DEFAULT_TEXT_BOX_HEIGHT
 
 ControlColorRegex = r'^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)$'
@@ -566,13 +566,13 @@ class OlivierCardType(BaseCardTypeCustomFontNoText):
     title_text: str
     episode_text: constr(to_upper=True)
     hide_episode_text: bool = False
-    font_color: BetterColor = OlivierTitleCard.TITLE_COLOR
+    font_color: str = OlivierTitleCard.TITLE_COLOR
     font_file: FilePath = OlivierTitleCard.TITLE_FONT
-    episode_text_color: BetterColor = OlivierTitleCard.EPISODE_TEXT_COLOR
+    episode_text_color: str = OlivierTitleCard.EPISODE_TEXT_COLOR
     episode_text_font_size: PositiveFloat = 1.0
     episode_text_vertical_shift: int = 0
     omit_gradient: bool = True
-    stroke_color: BetterColor = OlivierTitleCard.STROKE_COLOR
+    stroke_color: str = OlivierTitleCard.STROKE_COLOR
 
     @root_validator(skip_on_failure=True)
     def toggle_text_hiding(cls, values: dict) -> dict:
@@ -581,12 +581,12 @@ class OlivierCardType(BaseCardTypeCustomFontNoText):
         return values
 
 class OverlineCardType(BaseCardTypeCustomFontAllText):
-    font_color: BetterColor = OverlineTitleCard.TITLE_COLOR
+    font_color: str = OverlineTitleCard.TITLE_COLOR
     font_file: FilePath = OverlineTitleCard.TITLE_FONT
-    episode_text_color: Optional[BetterColor] = None
+    episode_text_color: Optional[str] = None
     episode_text_font_size: PositiveFloat = 1.0
     hide_line: bool = False
-    line_color: Optional[BetterColor] = None
+    line_color: Optional[str] = None
     line_position: Literal['top', 'bottom'] = 'top'
     line_width: PositiveInt = OverlineTitleCard.LINE_THICKNESS
     omit_gradient: bool = False
@@ -607,13 +607,13 @@ class OverlineCardType(BaseCardTypeCustomFontAllText):
 class PosterCardType(BaseCardModel):
     title_text: str
     episode_text: constr(to_upper=True)
-    font_color: BetterColor = PosterTitleCard.TITLE_COLOR
+    font_color: str = PosterTitleCard.TITLE_COLOR
     font_file: FilePath = PosterTitleCard.TITLE_FONT
     font_interline_spacing: int = 0
     font_interword_spacing: int = 0
     font_size: PositiveFloat = 1.0
     logo_file: Optional[Path] = None
-    episode_text_color: Optional[BetterColor] = None
+    episode_text_color: Optional[str] = None
 
     @root_validator(skip_on_failure=True)
     def assign_episode_text_color(cls, values: dict) -> dict:
@@ -627,14 +627,14 @@ RomanNumeralValue = conint(gt=0, le=RomanNumeralTitleCard.MAX_ROMAN_NUMERAL)
 class RomanNumeralCardType(BaseCardTypeAllText):
     source_file: Any
     episode_number: RomanNumeralValue
-    font_color: BetterColor = RomanNumeralTitleCard.TITLE_COLOR
+    font_color: str = RomanNumeralTitleCard.TITLE_COLOR
     font_file: FilePath = RomanNumeralTitleCard.TITLE_FONT
     font_interline_spacing: int = 0
     font_interword_spacing: int = 0
     font_size: PositiveFloat = 1.0
-    background: BetterColor = RomanNumeralTitleCard.BACKGROUND_COLOR
-    roman_numeral_color: BetterColor = RomanNumeralTitleCard.ROMAN_NUMERAL_TEXT_COLOR
-    season_text_color: BetterColor = RomanNumeralTitleCard.SEASON_TEXT_COLOR
+    background: str = RomanNumeralTitleCard.BACKGROUND_COLOR
+    roman_numeral_color: str = RomanNumeralTitleCard.ROMAN_NUMERAL_TEXT_COLOR
+    season_text_color: str = RomanNumeralTitleCard.SEASON_TEXT_COLOR
 
 RandomShapeRegex = (
     r'random\[\s*((circle|diamond|square|down triangle|up triangle)'
@@ -644,7 +644,7 @@ RandomShape = constr(regex=RandomShapeRegex)
 class ShapeCardType(BaseCardTypeAllText):
     season_text: str
     episode_text: str
-    font_color: BetterColor = ShapeTitleCard.TITLE_COLOR
+    font_color: str = ShapeTitleCard.TITLE_COLOR
     font_file: FilePath = ShapeTitleCard.TITLE_FONT
     font_interline_spacing: int = 0
     font_interword_spacing: int = 0
@@ -655,17 +655,17 @@ class ShapeCardType(BaseCardTypeAllText):
     hide_shape: bool = False
     italicize_season_text: bool = False
     omit_gradient: bool = False
-    season_text_color: Optional[BetterColor] = None
+    season_text_color: Optional[str] = None
     season_text_font_size: PositiveFloat = 1.0
     season_text_position: Literal['above', 'below'] = 'below'
     shape: Union[Shape, Literal['random'], RandomShape] = ShapeTitleCard.DEFAULT_SHAPE
-    shape_color: BetterColor = ShapeTitleCard.SHAPE_COLOR
+    shape_color: str = ShapeTitleCard.SHAPE_COLOR
     shape_inset: conint(ge=0, le=1800) = ShapeTitleCard.SHAPE_INSET
     shape_size: confloat(gt=0.3) = 1.0
     shape_stroke_color: str = ShapeTitleCard.SHAPE_STROKE_COLOR
     shape_stroke_width: conint(ge=0) = 0
     shape_width: PositiveInt = ShapeTitleCard.SHAPE_WIDTH
-    stroke_color: BetterColor = 'black'
+    stroke_color: str = 'black'
     text_position: ShapeTextPosition = 'lower left'
 
     @root_validator(skip_on_failure=True)
@@ -681,12 +681,12 @@ class ShapeCardType(BaseCardTypeAllText):
         return values
 
 class StandardCardType(BaseCardTypeCustomFontAllText):
-    font_color: BetterColor = StandardTitleCard.TITLE_COLOR
+    font_color: str = StandardTitleCard.TITLE_COLOR
     font_file: FilePath = StandardTitleCard.TITLE_FONT
     omit_gradient: bool = False
     separator: str = '•'
-    stroke_color: BetterColor = 'black'
-    episode_text_color: BetterColor = StandardTitleCard.SERIES_COUNT_TEXT_COLOR
+    stroke_color: str = 'black'
+    episode_text_color: str = StandardTitleCard.SERIES_COUNT_TEXT_COLOR
     episode_text_font_size: PositiveFloat = 1.0
     episode_text_vertical_shift: int = 0
 
@@ -694,13 +694,13 @@ class StarWarsCardType(BaseCardModel):
     title_text: str
     episode_text: constr(to_upper=True)
     hide_episode_text: bool = False
-    font_color: BetterColor = StarWarsTitleCard.TITLE_COLOR
+    font_color: str = StarWarsTitleCard.TITLE_COLOR
     font_file: FilePath = StarWarsTitleCard.TITLE_FONT
     font_interline_spacing: int = 0
     font_interword_spacing: int = 0
     font_size: PositiveFloat = 1.0
     font_vertical_shift: int = 0
-    episode_text_color: BetterColor = StarWarsTitleCard.EPISODE_TEXT_COLOR
+    episode_text_color: str = StarWarsTitleCard.EPISODE_TEXT_COLOR
 
     @root_validator(skip_on_failure=True)
     def toggle_text_hiding(cls, values: dict) -> dict:
@@ -715,7 +715,7 @@ OuterElement = Literal['index', 'logo', 'omit', 'title']
 MiddleElement = Literal['logo', 'omit']
 class TintedFrameCardType(BaseCardTypeAllText):
     logo_file: Path
-    font_color: BetterColor = TintedFrameTitleCard.TITLE_COLOR
+    font_color: str = TintedFrameTitleCard.TITLE_COLOR
     font_file: FilePath = TintedFrameTitleCard.TITLE_FONT
     font_interline_spacing: int = 0
     font_interword_spacing: int = 0
@@ -723,11 +723,11 @@ class TintedFrameCardType(BaseCardTypeAllText):
     font_size: PositiveFloat = 1.0
     font_vertical_shift: int = 0
     separator: str = '-'
-    episode_text_color: Optional[BetterColor] = None
+    episode_text_color: Optional[str] = None
     episode_text_font: Path = TintedFrameTitleCard.EPISODE_TEXT_FONT
     episode_text_font_size: PositiveFloat = 1.0
     episode_text_vertical_shift: int = 0
-    frame_color: Optional[BetterColor] = None
+    frame_color: Optional[str] = None
     frame_width: PositiveInt = TintedFrameTitleCard.BOX_WIDTH
     top_element: OuterElement = 'title'
     middle_element: MiddleElement = 'omit'
@@ -777,12 +777,12 @@ class TintedGlassCardType(BaseCardTypeCustomFontNoText):
     title_text: str
     episode_text: constr(to_upper=True)
     hide_episode_text: bool = False
-    font_color: BetterColor = TintedGlassTitleCard.TITLE_COLOR
+    font_color: str = TintedGlassTitleCard.TITLE_COLOR
     font_file: FilePath = TintedGlassTitleCard.TITLE_FONT
     box_adjustments: BoxAdjustments = (0, 0, 0, 0)
-    episode_text_color: BetterColor = TintedGlassTitleCard.EPISODE_TEXT_COLOR
+    episode_text_color: str = TintedGlassTitleCard.EPISODE_TEXT_COLOR
     episode_text_position: EpisodeTextPosition = 'center'
-    glass_color: BetterColor = TintedGlassTitleCard.DARKEN_COLOR
+    glass_color: str = TintedGlassTitleCard.DARKEN_COLOR
     rounding_radius: conint(ge=1, le=150) = TintedGlassTitleCard.DEFAULT_ROUNDING_RADIUS
     vertical_adjustment: int = 0
 
@@ -797,13 +797,13 @@ class TintedGlassCardType(BaseCardTypeCustomFontNoText):
         return values
 
 class WhiteBorderCardType(BaseCardTypeCustomFontAllText):
-    font_color: BetterColor = WhiteBorderTitleCard.TITLE_COLOR
+    font_color: str = WhiteBorderTitleCard.TITLE_COLOR
     font_file: FilePath = WhiteBorderTitleCard.TITLE_FONT
     omit_gradient: bool = False
     separator: str = '•'
-    border_color: BetterColor = 'white'
-    stroke_color: BetterColor = WhiteBorderTitleCard.STROKE_COLOR
-    episode_text_color: BetterColor = WhiteBorderTitleCard.TITLE_COLOR
+    border_color: str = 'white'
+    stroke_color: str = WhiteBorderTitleCard.STROKE_COLOR
+    episode_text_color: str = WhiteBorderTitleCard.TITLE_COLOR
     episode_text_font_size: PositiveFloat = 1.0
 
 LocalCardTypeModels: dict[str, Base] = {
