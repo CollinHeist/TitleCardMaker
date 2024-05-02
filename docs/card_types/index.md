@@ -49,6 +49,7 @@ TitleCardMaker currently has the following built-in card types:
 | [Anime](./anime.md)               | <img src="./assets/anime.webp" width="400">        |
 | [Music](./music.md)               | <img src="./assets/music.webp" width="400">        |
 | [Notification](./notification.md) | <img src="./assets/notification.webp" width="400"> |
+| [Striped](./striped.md)           | <img src="./assets/striped.webp" width="400">      |
 
 ## User-made Cards
 
