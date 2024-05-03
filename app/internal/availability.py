@@ -40,7 +40,8 @@ def get_latest_version(
             cannot be determined.
     """
 
-    return Version(f'v2.0-alpha.9.1') # TODO remove placeholder when repo is public [pylint: disable=unreachable]
+    # TODO remove placeholder when repo is public [pylint: disable=unreachable]
+    return Version(f'v2.0-alpha.9.1')
 
     try:
         response = req_get(

@@ -81,18 +81,21 @@ class RemoteCardType:
             # Make GET request for the contents of the specified value
             if (response := get(url, timeout=30)).status_code >= 400:
                 log.error(f'Cannot identify Card Type "{identifier}"')
+                log.debug(f'Error querying card from {url} '
+                          f'({response.content.decode()})')
                 self.valid = False
                 return None
 
             # Validate hash of downloaded file (if present)
             if file_hash:
-                if file_hash == md5(response.content).hexdigest():
+                if file_hash == (hash_act := md5(response.content).hexdigest()):
                     log.trace(f'CardType "{identifier}" has matching MD5 hash '
                               f'of {file_hash}')
                 # Hash does not match, set invalid
                 else:
                     log.error(f'CardType "{identifier}" MD5 hash does not '
-                              f'match {file_hash} - not loading CardType')
+                              f'match {file_hash} ({hash_act}) - not loading '
+                              f'CardType')
                     self.valid = False
                     return None
 
