@@ -307,7 +307,7 @@ class StripedTitleCard(BaseCardType):
                 description='Spacing between stripes',
                 tooltip=(
                     'Number between <v>0</v> and <v>800</v>. Default is '
-                    '<v>10</v>. Unit is pixels.'
+                    '<v>8</v>. Unit is pixels.'
                 ),
             ),
             Extra(
@@ -347,10 +347,10 @@ class StripedTitleCard(BaseCardType):
         ],
         description=[
             'Cards featuring a solid color overlay with stripes of rectangles '
-            '"cut" out of to expose the underlying image. By default the '
-            'stripes are randomly placed and sized, but this can be adjusted '
-            'with an extra.', 'The position of the text can also be adjusted '
-            'to any of the four corners.'
+            '"cut" out to expose the underlying image. By default the stripes '
+            'are randomly placed and sized, but this can be adjusted with an '
+            'extra.', 'The position of the text can also be adjusted to any of '
+            'the four corners.'
         ],
     )
 
@@ -385,7 +385,7 @@ class StripedTitleCard(BaseCardType):
     """Implementation details"""
     DEFAULT_ANGLE = 79.5 # Degrees
     DEFAULT_INSET = 50
-    DEFAULT_INTER_SHAPE_SPACING = 10
+    DEFAULT_INTER_SHAPE_SPACING = 8
     DEFAULT_OVERLAY_COLOR = 'white'
     DEFAULT_POLYGON_STRING = 'random[ssmmmlll]'
     DEFAULT_TEXT_POSITION: TextPosition = 'lower left'
@@ -556,7 +556,7 @@ class StripedTitleCard(BaseCardType):
             self.inset, self.inter_shape_spacing
         )
         slope = tan(self.angle * PI / 180)
-        log.trace(f'{slope=}')
+
         def _x_at(y: float, b: float) -> float:
             """
             Get the x-coordinate for the slanted line with the given
