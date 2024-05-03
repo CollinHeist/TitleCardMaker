@@ -4,6 +4,9 @@ description: >
     An overview of the built-in Striped card type.
 ---
 
+<link rel="stylesheet" type="text/css" href="https://unpkg.com/image-compare-viewer/dist/image-compare-viewer.min.css">
+<script src="../../javascripts/imageCompare.js" defer></script>
+
 # Striped Card Type
 
 !!! warning "Under Construction"
