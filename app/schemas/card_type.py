@@ -55,9 +55,9 @@ LocalCardIdentifiers = Literal[
     'anime', 'banner', 'calligraphy', 'comic book', 'cutout', 'divider', 'fade',
     'formula 1', 'frame', 'generic', 'graph', 'gundam', 'inset', 'ishalioh',
     'landscape', 'logo', 'marvel', 'music', 'musikmann', 'notification',
-    'olivier', 'phendrena', 'photo', 'polymath', 'poster', 'reality tv',
-    'roman', 'roman numeral', 'shape', 'sherlock', 'standard', 'star wars',
-    'textless', 'tinted glass', '4x3', 'white border',
+    'olivier', 'phendrena', 'photo', 'polygon', 'polymath', 'poster',
+    'reality tv', 'roman', 'roman numeral', 'shape', 'sherlock', 'standard',
+    'star wars', 'striped', 'textless', 'tinted glass', '4x3', 'white border',
 ]
 
 """

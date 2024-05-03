@@ -234,6 +234,7 @@ nav:
     #   - Roman Numeral: card_types/local/roman_numeral.md
     #   - Standard: card_types/local/standard.md
     #   - Star Wars: card_types/local/star_wars.md
+      - Striped: card_types/striped.md
     #   - Textless: card_types/local/textless.md
     #   - Tinted Frame: card_types/local/tinted_frame.md
     #   - Tinted Glass: card_types/local/tinted_glass.md

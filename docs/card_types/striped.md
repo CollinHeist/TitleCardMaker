@@ -14,8 +14,7 @@ This card design was created by [CollinHeist](https://github.com/CollinHeist),
 and was inspired by some of the official artwork for
 [The Rookie](https://www.themoviedb.org/tv/79744-the-rookie/images/posters).
 
-These cards feature relatively unobtrusive text in the lower left-hand corner of
-the image. The kanji, title, and season/episode text can all be adjusted.
+These ...
 
 <figure markdown="span" style="max-width: 70%">
   ![Example Striped Card](./assets/striped.webp)
