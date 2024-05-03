@@ -626,16 +626,7 @@ class GraphTitleCard(BaseCardType):
                 and extras['graph_color'] != GraphTitleCard.GRAPH_COLOR)
         )
 
-        return (custom_extras
-            or ((font.color != GraphTitleCard.TITLE_COLOR)
-            or (font.file != GraphTitleCard.TITLE_FONT)
-            or (font.interline_spacing != 0)
-            or (font.interword_spacing != 0)
-            or (font.kerning != 1.0)
-            or (font.size != 1.0)
-            or (font.stroke_width != 1.0)
-            or (font.vertical_shift != 0))
-        )
+        return custom_extras or GraphTitleCard._is_custom_font(font)
 
 
     @staticmethod

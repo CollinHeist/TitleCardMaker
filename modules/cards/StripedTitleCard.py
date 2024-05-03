@@ -700,7 +700,6 @@ class StripedTitleCard(BaseCardType):
             or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
-            or (font.stroke_width != 1.0)
             or (font.vertical_shift != 0))
         )
 

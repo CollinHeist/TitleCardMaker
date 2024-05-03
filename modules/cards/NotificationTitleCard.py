@@ -430,16 +430,7 @@ class NotificationTitleCard(BaseCardType):
                 and extras['episode_text_vertical_shift'] != 0)
         )
 
-        return (custom_extras
-            or ((font.color != NotificationTitleCard.TITLE_COLOR)
-            or (font.file != NotificationTitleCard.TITLE_FONT)
-            or (font.interline_spacing != 0)
-            or (font.interword_spacing != 0)
-            or (font.kerning != 1.0)
-            or (font.size != 1.0)
-            or (font.stroke_width != 1.0)
-            or (font.vertical_shift != 0))
-        )
+        return custom_extras or NotificationTitleCard._is_custom_font(font)
 
 
     @staticmethod
