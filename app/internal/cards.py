@@ -112,6 +112,14 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                     failures += 1
                     log.exception(f'Database is busy, sleeping..')
                     sleep(30)
+                except Exception as exc:
+                    if failures > 10:
+                        log.critical(f'Many errors have occurred - exiting')
+                        raise exc 
+
+                    failures += 1
+                    log.exception(f'Error ocurred while processing Series')
+                    sleep(10)
     except Exception:
         log.exception(f'Failed to create title cards')
 
