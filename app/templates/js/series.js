@@ -1998,10 +1998,15 @@ function createTitleCards() {
  * @param {bool} [reload] - Whether to force reload the cards.
  */
 function loadCards(interfaceId, libraryName, reload=false) {
-  const params = `?interface_id=${interfaceId}&library_name=${libraryName}&reload=${reload}`;
+  const params = new URLSearchParams({
+    interface_id: interfaceId,
+    library_name: libraryName,
+    reload: reload,
+  });
+
   $.ajax({
     type: 'PUT',
-    url:`/api/cards/series/{{series.id}}/load/library${params}`,
+    url:`/api/cards/series/{{series.id}}/load/library?${params.toString()}`,
     success: () => {
       showInfoToast('Loaded Title Cards');
       getStatistics();
