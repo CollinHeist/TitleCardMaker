@@ -321,7 +321,7 @@ class StripedTitleCard(BaseCardType):
                 identifier='polygons',
                 description='Format for the size and order of the stripes',
                 tooltip=(
-                    'See <a href="https://titlecardmaker.com/card_types/striped/">'
+                    'See <a href="https://titlecardmaker.com/card_types/striped/#definition">'
                     'the documentation</a> for details. Default is '
                     '<v>random[ssmmmlll]</v>.'
                 ),
