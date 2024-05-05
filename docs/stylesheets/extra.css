@@ -28,6 +28,9 @@
   flex-wrap: nowrap;
   animation: scroll var(--_animation-duration, 55s) linear infinite;
 }
+.reversed.scroller[data-animated=true] > .scroller__inner {
+  animation: scroll var(--_animation-duration, 55s) linear infinite reverse;
+}
 @keyframes scroll {
   to { transform: translate(-50%); }
 }
