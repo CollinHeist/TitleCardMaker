@@ -15,13 +15,11 @@
   display: flex; /* All content should display inline */
 }
 
-.scroller[data-animated=true] {
-  /* overflow: hidden;
-  -webkit-mask: linear-gradient(90deg, transparent, white 5%,
-                                white 95%, transparent);
-  mask: linear-gradient(90deg, transparent, white 5%,
-                      white 95%, transparent); */
+/* Reduce speed of slow scrollers */
+.very-slow.scroller {
+  --_animation-duration: 180s;
 }
+
 .scroller[data-animated=true] > .scroller__inner {
   /* The inner scroller should be the size of all inner content */
   width: max-content;
@@ -34,14 +32,38 @@
 @keyframes scroll {
   to { transform: translate(-50%); }
 }
+
+/* Add inner-item padding to padded scroller content */
+.padded.scroller[data-animated=true] > .scroller__inner > * {
+  margin-right: 0.5em;
+}
+
+/* Round corners of rounded scrollers */
+.rounded.padded.scroller[data-animated=true] > .scroller__inner img {
+  border-radius: 4px;
+}
+
 /* Reduce image height if scroller is enabled */
 .scroller[data-animated=true] img {
   height: 75vh;
+}
+.half-height.scroller[data-animated=true] img {
+  height: 38vh;
+}
+.scroller > .scroller__inner > *::after {
+  content: attr(data-label);
+  position: relative;
+  display: block;
+  text-align: center;
+  font-style: italic;
 }
 /* Reduce height on mobile */
 @media (max-width: 768px) {
   .scroller[data-animated=true] img {
     height: 40vh;
+  }
+  .half-height.scroller[data-animated=true] img {
+    height: 18vh;
   }
 }
 

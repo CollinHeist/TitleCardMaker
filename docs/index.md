@@ -45,7 +45,172 @@ itself, but TCM specializes in creating and customizing "unofficial" Title
 Cards. The following Cards have all been designed by me, and were created with
 TitleCardMaker:
 
-![Tinted Frame](./assets/card_example0.jpg){id="preview0" width="48%"} ![Anime](./assets/card_example1.jpg){id="preview1" width="48%"}
+<div class="reversed randomized half-height very-slow padded rounded scroller">
+  <div class="scroller__inner">
+    <figure data-label="Anime">
+      <a href="./card_types/anime">
+        <img class="no-lightbox" src="./card_types/assets/anime.webp">
+      </a>
+    </figure>
+    <figure data-label="Banner">
+      <a data-label="Banner" href="./card_types/banner">
+        <img class="no-lightbox" src="./card_types/assets/banner.webp">
+      </a>
+    </figure>
+    <figure data-label="Calligraph">
+      <a data-label="Banner" href="./card_types/calligraphy">
+        <img class="no-lightbox" src="./card_types/assets/calligraphy.webp">
+      </a>
+    </figure>
+    <figure data-label="Comic Book">
+      <a data-label="Comic Book" href="./card_types/comic_book">
+        <img class="no-lightbox" src="./card_types/assets/comic_book.webp">
+      </a>
+    </figure>
+    <figure data-label="Cutout">
+      <a data-label="Cutout" href="./card_types/cutout">
+        <img class="no-lightbox" src="./card_types/assets/cutout.webp">
+      </a>
+    </figure>
+    <figure data-label="Divider">
+      <a data-label="Divider" href="./card_types/divider">
+        <img class="no-lightbox" src="./card_types/assets/divider.webp">
+      </a>
+    </figure>
+    <figure data-label="Fade">
+      <a data-label="Fade" href="./card_types/fade">
+        <img class="no-lightbox" src="./card_types/assets/fade.webp">
+      </a>
+    </figure>
+    <figure data-label="Formula 1">
+      <a data-label="Formula 1" href="./card_types/formula">
+        <img class="no-lightbox" src="./card_types/assets/formula.webp">
+      </a>
+    </figure>
+    <figure data-label="Frame">
+      <a data-label="Frame" href="./card_types/frame">
+        <img class="no-lightbox" src="./card_types/assets/frame.webp">
+      </a>
+    </figure>
+    <figure data-label="Graph">
+      <a data-label="Graph" href="./card_types/graph">
+        <img class="no-lightbox" src="./card_types/assets/graph.webp">
+      </a>
+    </figure>
+    <figure data-label="Inset">
+      <a data-label="Inset" href="./card_types/inset">
+        <img class="no-lightbox" src="./card_types/assets/inset.webp">
+      </a>
+    </figure>
+    <figure data-label="Landscape">
+      <a data-label="Landscape" href="./card_types/landscape">
+        <img class="no-lightbox" src="./card_types/assets/landscape.webp">
+      </a>
+    </figure>
+    <figure data-label="Logo">
+      <a data-label="Logo" href="./card_types/logo">
+        <img class="no-lightbox" src="./card_types/assets/logo.webp">
+      </a>
+    </figure>
+    <figure data-label="Marvel">
+      <a data-label="Marvel" href="./card_types/marvel">
+        <img class="no-lightbox" src="./card_types/assets/marvel.webp">
+      </a>
+    </figure>
+    <figure data-label="Music">
+      <a data-label="Music" href="./card_types/music">
+        <img class="no-lightbox" src="./card_types/assets/music.webp">
+      </a>
+    </figure>
+    <figure data-label="Notification">
+      <a data-label="Notification" href="./card_types/notification">
+        <img class="no-lightbox" src="./card_types/assets/notification.webp">
+      </a>
+    </figure>
+    <figure data-label="Olivier">
+      <a data-label="Olivier" href="./card_types/olivier">
+        <img class="no-lightbox" src="./card_types/assets/olivier.webp">
+      </a>
+    </figure>
+    <figure data-label="Overline">
+      <a data-label="Overline" href="./card_types/overline">
+        <img class="no-lightbox" src="./card_types/assets/overline.webp">
+      </a>
+    </figure>
+    <figure data-label="Poster">
+      <a data-label="Poster" href="./card_types/poster">
+        <img class="no-lightbox" src="./card_types/assets/poster.webp">
+      </a>
+    </figure>
+    <figure data-label="Roman Numeral">
+      <a data-label="Roman Numeral" href="./card_types/roman_numeral">
+        <img class="no-lightbox" src="./card_types/assets/roman_numeral.webp">
+      </a>
+    </figure>
+    <figure data-label="Shape">
+      <a data-label="Shape" href="./card_types/shape">
+        <img class="no-lightbox" src="./card_types/assets/shape.webp">
+      </a>
+    </figure>
+    <figure data-label="Standard">
+      <a data-label="Standard" href="./card_types/standard">
+        <img class="no-lightbox" src="./card_types/assets/standard.webp">
+      </a>
+    </figure>
+    <figure data-label="Star Wars">
+      <a data-label="Star Wars" href="./card_types/star_wars">
+        <img class="no-lightbox" src="./card_types/assets/star_wars.webp">
+      </a>
+    </figure>
+    <figure data-label="Striped">
+      <a data-label="Striped" href="./card_types/striped">
+        <img class="no-lightbox" src="./card_types/assets/striped.webp">
+      </a>
+    </figure>
+    <figure data-label="Tinted Frame">
+      <a data-label="Tinted Frame" href="./card_types/tinted_frame">
+        <img class="no-lightbox" src="./card_types/assets/tinted_frame.webp">
+      </a>
+    </figure>
+    <figure data-label="Tinted Glass">
+      <a data-label="Tinted Glass" href="./card_types/tinted_glass">
+        <img class="no-lightbox" src="./card_types/assets/tinted_glass.webp">
+      </a>
+    </figure>
+    <figure data-label="White Border">
+      <a data-label="White Border" href="./card_types/white_border">
+        <img class="no-lightbox" src="./card_types/assets/white_border.webp">
+      </a>
+    </figure>
+    <!-- <a data-label="Anime" href="./card_types/anime"><img class="no-lightbox" src="./card_types/assets/anime.webp"></a>
+    <a data-label="Banner" href="./card_types/banner"><img class="no-lightbox" src="./card_types/assets/banner.webp"></a>
+    <a data-label="Calligraph" href="./card_types/calligraphy"><img class="no-lightbox" src="./card_types/assets/calligraphy.webp"></a>
+    <a data-label="Comic Book" href="./card_types/comic_book"><img class="no-lightbox" src="./card_types/assets/comic_book.webp"></a>
+    <a data-label="Cutout" href="./card_types/cutout"><img class="no-lightbox" src="./card_types/assets/cutout.webp"></a>
+    <a data-label="Divider" href="./card_types/divider"><img class="no-lightbox" src="./card_types/assets/divider.webp"></a>
+    <a data-label="Fade" href="./card_types/fade"><img class="no-lightbox" src="./card_types/assets/fade.webp"></a>
+    <a data-label="Formula 1" href="./card_types/formula"><img class="no-lightbox" src="./card_types/assets/formula.webp"></a>
+    <a data-label="Frame" href="./card_types/frame"><img class="no-lightbox" src="./card_types/assets/frame.webp"></a>
+    <a data-label="Graph" href="./card_types/graph"><img class="no-lightbox" src="./card_types/assets/graph.webp"></a>
+    <a data-label="Inset" href="./card_types/inset"><img class="no-lightbox" src="./card_types/assets/inset.webp"></a>
+    <a data-label="Landscape" href="./card_types/landscape"><img class="no-lightbox" src="./card_types/assets/landscape.webp"></a>
+    <a data-label="Logo" href="./card_types/logo"><img class="no-lightbox" src="./card_types/assets/logo.webp"></a>
+    <a data-label="Marvel" href="./card_types/marvel"><img class="no-lightbox" src="./card_types/assets/marvel.webp"></a>
+    <a data-label="Music" href="./card_types/music"><img class="no-lightbox" src="./card_types/assets/music.webp"></a>
+    <a data-label="Notification" href="./card_types/notification"><img class="no-lightbox" src="./card_types/assets/notification.webp"></a>
+    <a data-label="Olivier" href="./card_types/olivier"><img class="no-lightbox" src="./card_types/assets/olivier.webp"></a>
+    <a data-label="Overline" href="./card_types/overline"><img class="no-lightbox" src="./card_types/assets/overline.webp"></a>
+    <a data-label="Poster" href="./card_types/poster"><img class="no-lightbox" src="./card_types/assets/poster.webp"></a>
+    <a data-label="Roman Numeral" href="./card_types/roman_numeral"><img class="no-lightbox" src="./card_types/assets/roman_numeral.webp"></a>
+    <a data-label="Shape" href="./card_types/shape"><img class="no-lightbox" src="./card_types/assets/shape.webp"></a>
+    <a data-label="Standard" href="./card_types/standard"><img class="no-lightbox" src="./card_types/assets/standard.webp"></a>
+    <a data-label="Star Wars" href="./card_types/star_wars"><img class="no-lightbox" src="./card_types/assets/star_wars.webp"></a>
+    <a data-label="Striped" href="./card_types/striped"><img class="no-lightbox" src="./card_types/assets/striped.webp"></a>
+    <a data-label="Tinted Frame" href="./card_types/tinted_frame"><img class="no-lightbox" src="./card_types/assets/tinted_frame.webp"></a>
+    <a data-label="Tinted Glass" href="./card_types/tinted_glass"><img class="no-lightbox" src="./card_types/assets/tinted_glass.webp"></a>
+    <a data-label="White Border" href="./card_types/white_border"><img class="no-lightbox" src="./card_types/assets/white_border.webp"></a> -->
+  </div>
+</div>
 
 ## Download the Code
 
