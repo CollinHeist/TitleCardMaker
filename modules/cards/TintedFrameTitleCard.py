@@ -47,6 +47,12 @@ class TintedFrameTitleCard(BaseCardType):
                 name='Episode Text Font',
                 identifier='episode_text_font',
                 description='Font to use for the season and episode text',
+                tooltip=(
+                    'This can be just a file name if the font file is in the '
+                    "Series' source directory, <v>{title_font}</v> to match "
+                    'the Font used for the title text, or a full path to the '
+                    'font file.'
+                ),
             ),
             Extra(
                 name='Episode Text Font Size',
