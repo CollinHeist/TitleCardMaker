@@ -666,7 +666,7 @@ class ShapeCardType(BaseCardTypeAllText):
     shape_inset: conint(ge=0, le=1800) = ShapeTitleCard.SHAPE_INSET
     shape_size: confloat(gt=0.3) = 1.0
     shape_stroke_color: str = ShapeTitleCard.SHAPE_STROKE_COLOR
-    shape_stroke_width: conint(ge=0) = 0
+    shape_stroke_width: confloat(ge=0) = 0.0
     shape_width: PositiveInt = ShapeTitleCard.SHAPE_WIDTH
     stroke_color: str = 'black'
     text_position: ShapeTextPosition = 'lower left'
