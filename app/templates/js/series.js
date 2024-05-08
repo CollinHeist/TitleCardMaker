@@ -1063,8 +1063,16 @@ let currentCardPage = 1;
  * @param {boolean} [transition] - Whether to transition the HTMLElements when
  * updating the DOM.
  * @param {boolean} [scroll] - Whether to scroll to the top of the Card display.
+ * @param {boolean} [updateLivePreview] - Whether to update the live preview
+ * with the first returned Card image. Should only be set on first page load.
  */
-function getCardData(page=currentCardPage, transition=false, scroll=false) {
+function getCardData(
+    page=currentCardPage,
+    transition=false,
+    scroll=false,
+    updateLivePreview=false
+  ) {
+
   const pageSize = isSmallScreen() ? 3 : 12;
   $.ajax({
     type: 'GET',
@@ -1075,9 +1083,14 @@ function getCardData(page=currentCardPage, transition=false, scroll=false) {
      */
     success: cards => {
       const previewTemplate = document.getElementById('preview-image-template');
-      const previews = cards.items.map(card => {
-        const preview = previewTemplate.content.cloneNode(true);
+      const previews = cards.items.map((card, index) => {
+        // Update live preview if first element and updating
+        if (updateLivePreview && index === 0) {
+          document.getElementById('live-preview').src = `${card.file_url}?${card.filesize}`;
+        }
+
         // Start hidden if transitioning
+        const preview = previewTemplate.content.cloneNode(true);
         if (!reduced_animations && transition && !isSmallScreen()) {
           preview.querySelector('.image').classList.add('transition', 'hidden');
         }
@@ -1158,7 +1171,7 @@ async function initAll() {
   initalizeSeriesConfig();
   getEpisodeData();
   initStyles();
-  getCardData();
+  getCardData(undefined, undefined, undefined, true);
   getSourceFileData();
   getBlueprintCount();
   refreshTheme();
