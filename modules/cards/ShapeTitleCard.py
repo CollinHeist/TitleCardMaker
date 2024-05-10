@@ -34,30 +34,6 @@ class ShapeTitleCard(BaseCardType):
     an adjustable shape surrounding the text. The shape is intersected
     by the title text. This card allows the text (and shape) to be
     positioned at various points around the image.
-
-    Each shape is drawn as follows:
-    Circle: 1 -> 2; 3 -> 4
-        *  *
-     *        *
-    1          2
-    3          4
-     *        *
-        *  *
-    Diamond: 1 -> 2 -> 3; 1 -> 4 -> 3.
-          2
-        *   *
-      *       *
-    1           3
-      *       *
-        *   *
-          4
-    Square: 1 -> 2 -> 3 -> 4; 1 -> 5 -> 6
-    2 * * * * * 3
-    *           *
-    *           4
-    *           6
-    *           *
-    1 * * * * * 5
     """
 
     """API Parameters"""
@@ -161,7 +137,7 @@ class ShapeTitleCard(BaseCardType):
                 name='Shape Stroke Width',
                 identifier='shape_stroke_width',
                 description='Width of the stroke around the shape',
-                tooltip='Number ≥<v>0</v>. Default is <v>0</v> (no stroke).',
+                tooltip='Number ≥<v>0.0</v>. Default is <v>0.0</v> (no stroke).'
             ),
             Extra(
                 name='Shape Stroke Color',
@@ -313,7 +289,7 @@ class ShapeTitleCard(BaseCardType):
         # Font/card customizations
         self.font_color = font_color
         self.font_file = font_file
-        self.font_interline_spacing = font_interline_spacing
+        self.font_interline_spacing = -30 + font_interline_spacing
         self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_size = font_size
@@ -338,7 +314,7 @@ class ShapeTitleCard(BaseCardType):
         self.text_position: TextPosition = text_position
 
         # Scale side length by for multiline titles
-        self.__line_count = len(title_text.split('\n'))
+        self.__line_count = len(title_text.splitlines())
         if self.__line_count > 1:
             self.shape_side_length *= 1.0 + (0.25 * (self.__line_count - 1))
 
@@ -425,19 +401,20 @@ class ShapeTitleCard(BaseCardType):
             gravity: Gravity to utilize for text annotation.
 
         Returns:
-            List of ImageMagick commands.
+            List of ImageMagick commands. Note that no text is included
+            in the final annotate command, so this output should be
+            concatenated with some text to draw.
         """
 
-        if len(self.title_text) == 0:
+        if not self.title_text:
             return []
 
-        interline_spacing = -20 + self.font_interline_spacing
         size = 125 * self.font_size
         stroke_width = 4.0 * self.font_stroke_width
 
         return [
             f'-font "{self.font_file}"',
-            f'-interline-spacing {interline_spacing}',
+            f'-interline-spacing {self.font_interline_spacing}',
             f'-interword-spacing {self.font_interword_spacing}',
             f'-pointsize {size:.1f}',
             f'-fill "{self.font_color}"',
@@ -454,7 +431,7 @@ class ShapeTitleCard(BaseCardType):
         """The width of the title text. Only calculated once."""
 
         # No title text, width of 0
-        if len(self.title_text) == 0:
+        if not self.title_text:
             return 0
 
         # Value is not computed, calculate in `_title_text_height` call
@@ -469,7 +446,7 @@ class ShapeTitleCard(BaseCardType):
         """The height of the title text. Only calculated once."""
 
         # No title text, height of 0
-        if len(self.title_text) == 0:
+        if not self.title_text:
             return 0
 
         # Use value if already computed
@@ -493,7 +470,7 @@ class ShapeTitleCard(BaseCardType):
         """Subcommands required to add the title text."""
 
         # If no title text, return empty commands
-        if len(self.title_text) == 0:
+        if not self.title_text:
             return []
 
         # Determine text to center around within shape
@@ -632,18 +609,19 @@ class ShapeTitleCard(BaseCardType):
         The coordinate to translate to the starting position of all left
         shapes. This is one of the following positions (based on the
         text position).
-
-        - - -      - - -      - - -
-        - - -      - - -      - - -
-        o - -      - - -      - - -
-
-        - - -      - - -      - - -
-        - - -      - - -      - - -
-        o - -      - - -      - - -
-
-        - - -      - - -      - - -
-        - - -      - - -      - - -
-        o - -      - - -      - - -
+        ┌──────────────────────────────────────────────────┐
+        │ - - -                                      - - - │
+        │ - - -                                      - - - │
+        │ o - -                                      - - - │
+        │                                                  │
+        │ - - -                                      - - - │
+        │ - - -                                      - - - │
+        │ o - -                                      - - - │
+        │                                                  │
+        │ - - -                                      - - - │
+        │ - - -                                      - - - │
+        │ o - -                                      - - - │
+        └──────────────────────────────────────────────────┘
         """
 
         x = self.shape_inset
@@ -662,18 +640,19 @@ class ShapeTitleCard(BaseCardType):
         The coordinate to translate to the starting position of all
         right shapes. This is one of the following positions (based on
         the text position).
-
-        - - -      - - -      - - -
-        - - -      - - -      - - -
-        - - -      - - -      - - o
-
-        - - -      - - -      - - -
-        - - -      - - -      - - -
-        - - -      - - -      - - o
-
-        - - -      - - -      - - -
-        - - -      - - -      - - -
-        - - -      - - -      - - o
+        ┌──────────────────────────────────────────────────┐
+        │ - - -                                      - - - │
+        │ - - -                                      - - - │
+        │ - - -                                      o - - │
+        │                                                  │
+        │ - - -                                      - - - │
+        │ - - -                                      - - - │
+        │ - - -                                      o - - │
+        │                                                  │
+        │ - - -                                      - - - │
+        │ - - -                                      - - - │
+        │ - - -                                      o - - │
+        └──────────────────────────────────────────────────┘
         """
 
         x = self.WIDTH - self.shape_inset
@@ -794,7 +773,13 @@ class ShapeTitleCard(BaseCardType):
 
     @property
     def __left_square(self) -> ImageMagickCommands:
-        """"""
+        """
+           ┌──────┐
+           │      │
+        [text]    │
+           │      │
+           └──────┘
+        """
 
         return [
             # Translate in from left side (y based on text position)
@@ -819,7 +804,13 @@ class ShapeTitleCard(BaseCardType):
 
     @property
     def __right_square(self) -> ImageMagickCommands:
-        """"""
+        """
+        ┌──────┐
+        │      │
+        │   [text]
+        │      │
+        └──────┘
+        """
 
         return [
             # Translate in from left side (y based on text position)
@@ -845,12 +836,13 @@ class ShapeTitleCard(BaseCardType):
     @property
     def __left_down_triangle(self) -> ImageMagickCommands:
         """
-             l
-           +----/
-           |   /
-        2l |  /
-           | /
-           +
+        The text is centered around h/3.
+               l
+          \----+----/
+           \  h|   /
+            \  | [text]
+             \ | /
+               +
         """
 
         # Determine the length of the line
@@ -891,12 +883,13 @@ class ShapeTitleCard(BaseCardType):
     @property
     def __right_down_triangle(self) -> ImageMagickCommands:
         """
-          l
-        \----+
-         \   |
-          \  | 2l
-           \ |
-             +
+        The text is centered around h/3.
+               l
+          \----+----/
+           \   |h  /
+        [text] |  / 2l
+             \ | /
+               +
         """
 
         # Determine the length of the line
@@ -937,11 +930,12 @@ class ShapeTitleCard(BaseCardType):
     @property
     def __left_up_triangle(self) -> ImageMagickCommands:
         """
-           +
-           | \
-        2l |  \
-           |   \
-           +----\
+        The text is centered around h/3.
+              +
+            / | \
+        2l / h|  [text]
+          /   |   \
+         /----+----\
              l
         """
 
@@ -983,12 +977,13 @@ class ShapeTitleCard(BaseCardType):
     @property
     def __right_up_triangle(self) -> ImageMagickCommands:
         """
-           +
-           | \
-        2l |  \
-           |   \
-           +----\
-             l
+        The text is centered around h/3.
+                +
+              / | \
+        [text] h|  \ 2l
+            /   |   \
+           /----+----\
+                l
         """
 
         # Determine the length of the line
@@ -1150,6 +1145,7 @@ class ShapeTitleCard(BaseCardType):
         )
 
         return custom_extras or ShapeTitleCard._is_custom_font(font)
+
 
     @staticmethod
     def is_custom_season_titles(
