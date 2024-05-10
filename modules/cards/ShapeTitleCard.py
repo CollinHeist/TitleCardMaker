@@ -490,7 +490,7 @@ class ShapeTitleCard(BaseCardType):
         # Get width of centering text
         width, _ = self.image_magick.get_text_dimensions(
             self._base_title_text_commands() + [f'"{center_text}"'],
-            width='max', height='sum',
+            interline_spacing=self.font_interline_spacing,
         )
 
         # Determine gravity and x placement
