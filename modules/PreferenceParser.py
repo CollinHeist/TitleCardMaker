@@ -1108,8 +1108,8 @@ class PreferenceParser(YamlReader):
             # Create Path object for this file
             try:
                 file = CleanPath(file_).sanitize()
-            except Exception as e:
-                log.exception(f'Invalid series file "{file_}"', e)
+            except Exception:
+                log.exception(f'Invalid series file "{file_}"')
                 continue
 
             # Update progress bar for this file
@@ -1258,15 +1258,15 @@ class PreferenceParser(YamlReader):
 
     @property
     def plex_interface_kwargs(self) -> dict[str, Union[str, bool, int]]:
-        """Arguments for initializing a PlexInterfa"""
+        """Arguments for initializing a PlexInterface"""
 
         return {
             'url': self.plex_url,
             'x_plex_token': self.plex_token,
             'verify_ssl': self.plex_verify_ssl,
-            'integrate_with_pmm_overlays': self.integrate_with_pmm_overlays,
+            'integrate_with_kometa': self.integrate_with_kometa,
             'filesize_limit': self.plex_filesize_limit,
-            'timeout': self.plex_timeout
+            'plex_timeout': self.plex_timeout
         }
 
     @property

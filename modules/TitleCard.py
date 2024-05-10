@@ -134,7 +134,7 @@ class TitleCard:
                 card.
             title_characteristics: Dictionary of characteristics from
                 the CardType class for this Episode to pass to
-                Title.apply_profile()
+                Title.apply_profile().
             extra_characteristics: Any extra keyword arguments to pass
                 directly to the creation of the CardType object.
         """
