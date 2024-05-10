@@ -368,6 +368,33 @@ class BaseCardType(ImageMaker):
         return None
 
 
+    @classmethod
+    def _is_custom_font(
+            cls: type['BaseCardType'],
+            font: 'Font',
+        ) -> bool:
+        """
+        Whether the given font is custom based on all the standard
+        font definitions of this class.
+
+        Args:
+            font: Font being evaluated.
+
+        Returns:
+            True if the given Font is customized, False otherwise.
+        """
+
+        return ((font.color != cls.TITLE_COLOR)
+            or (font.file != cls.TITLE_FONT)
+            or (font.interline_spacing != 0)
+            or (font.interword_spacing != 0)
+            or (font.kerning != 1.0)
+            or (font.size != 1.0)
+            or (font.stroke_width != 1.0)
+            or (font.vertical_shift != 0)
+        )
+
+
     @staticmethod
     @abstractmethod
     def is_custom_font(font: 'Font', extras: dict) -> bool:

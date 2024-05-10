@@ -270,7 +270,8 @@ class StandardTitleCard(BaseCardType):
 
         custom_extras = (
             ('episode_text_color' in extras
-                and extras['episode_text_color'] != StandardTitleCard.SERIES_COUNT_TEXT_COLOR)
+                and extras['episode_text_color'] != \
+                    StandardTitleCard.SERIES_COUNT_TEXT_COLOR)
             or ('episode_text_font_size' in extras
                 and extras['episode_text_font_size'] != 1.0)
             or ('episode_text_vertical_shift' in extras
@@ -279,16 +280,7 @@ class StandardTitleCard(BaseCardType):
                 and extras['stroke_color'] != 'black')
         )
 
-        return (custom_extras
-            or ((font.color != StandardTitleCard.TITLE_COLOR)
-            or (font.file != StandardTitleCard.TITLE_FONT)
-            or (font.interline_spacing != 0)
-            or (font.interword_spacing != 0)
-            or (font.kerning != 1.0)
-            or (font.size != 1.0)
-            or (font.stroke_width != 1.0)
-            or (font.vertical_shift != 0))
-        )
+        return custom_extras or StandardTitleCard._is_custom_font(font)
 
 
     @staticmethod

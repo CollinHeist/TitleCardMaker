@@ -1,6 +1,6 @@
 from pathlib import Path
 from sys import exit as sys_exit
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, TypeVar
 
 from yaml import safe_load
 from modules.BaseCardType import BaseCardType
@@ -8,6 +8,9 @@ from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 from modules.RemoteCardType import RemoteCardType
 from modules.TitleCard import TitleCard
+
+
+_AttributeType = TypeVar('_AttributeType')
 
 
 class YamlReader:
@@ -54,9 +57,9 @@ class YamlReader:
 
     def get(self,
             *attributes: str,
-            type_: Optional[Callable] = None,
+            type_: Optional[Callable[[str], _AttributeType]] = None,
             default: Any = None,
-        ) -> Any:
+        ) -> Optional[_AttributeType]:
         """
         Get the value specified by the given attributes/sub-attributes
         of YAML, optionally converting to the given type. Log invalidity
@@ -65,8 +68,8 @@ class YamlReader:
 
         Args:
             attributes: Any number of nested attributes to get value of.
-            type_: Optional callable (i.e. type) to call on specified
-                value before returning.
+            type_: Optional function to call on specified value before
+                returning.
             default: Default value to return if unspecified.
 
         Returns:

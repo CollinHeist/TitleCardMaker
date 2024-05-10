@@ -353,16 +353,7 @@ class LogoTitleCard(BaseCardType):
                 and extras['stroke_color'] != 'black')
         )
 
-        return (custom_extras
-            or ((font.color != LogoTitleCard.TITLE_COLOR)
-            or (font.file != LogoTitleCard.TITLE_FONT)
-            or (font.interline_spacing != 0)
-            or (font.interword_spacing != 0)
-            or (font.kerning != 1.0)
-            or (font.size != 1.0)
-            or (font.stroke_width != 1.0)
-            or (font.vertical_shift != 0))
-        )
+        return custom_extras or LogoTitleCard._is_custom_font(font)
 
 
     @staticmethod

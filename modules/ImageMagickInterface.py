@@ -151,8 +151,8 @@ class ImageMagickInterface:
         if os_name == 'nt':
             command = command.replace('\(', '(').replace('\)', ')')
 
-        # If a docker image ID is specified, execute the command in that container
-        # otherwise, execute on the host machine (no docker wrapper)
+        # If a docker image ID is specified, execute the command in that
+        # container otherwise, execute on the host machine (no docker wrapper)
         if self.use_docker:
             command = f'docker exec -t {self.container} {self.prefix}{command}'
         # If an executable was indicated, use as 
@@ -165,7 +165,7 @@ class ImageMagickInterface:
         try:
             cmd = command_split(command)
         except ValueError:
-            log.exception(f'Invalid ImageMagick command')
+            log.exception('Invalid ImageMagick command')
             log.debug(command)
             return b'', b''
 
@@ -175,10 +175,10 @@ class ImageMagickInterface:
             with Popen(cmd, stdout=PIPE, stderr=PIPE) as process:
                 stdout, stderr = process.communicate(timeout=self.timeout)
         except TimeoutExpired:
-            log.error(f'ImageMagick command timed out')
+            log.error('ImageMagick command timed out')
             log.debug(command)
         except FileNotFoundError:
-            log.exception(f'Command error')
+            log.exception('Command error')
             log.debug(command)
 
         # Add command to history and return results
@@ -211,7 +211,7 @@ class ImageMagickInterface:
         Delete all the provided intermediate files.
 
         Args:
-            paths: Any number of files to delete. Must be Path objects.
+            paths: Any number of files to delete.
         """
 
         # Delete (unlink) each image, don't raise FileNotFoundError if DNE

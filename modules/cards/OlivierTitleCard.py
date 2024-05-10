@@ -301,16 +301,7 @@ class OlivierTitleCard(BaseCardType):
                 and extras['stroke_color'] != 'black')
         )
 
-        return (custom_extras
-            or ((font.color != OlivierTitleCard.TITLE_COLOR)
-            or (font.file != OlivierTitleCard.TITLE_FONT)
-            or (font.interline_spacing != 0)
-            or (font.interword_spacing != 0)
-            or (font.kerning != 1.0)
-            or (font.size != 1.0)
-            or (font.stroke_width != 1.0)
-            or (font.vertical_shift != 0))
-        )
+        return custom_extras or OlivierTitleCard._is_custom_font(font)
 
 
     @staticmethod
@@ -331,9 +322,10 @@ class OlivierTitleCard(BaseCardType):
             False otherwise.
         """
 
-        standard_etf = OlivierTitleCard.EPISODE_TEXT_FORMAT.upper()
-
-        return episode_text_format.upper() != standard_etf
+        return (
+            episode_text_format.upper() != \
+                OlivierTitleCard.EPISODE_TEXT_FORMAT.upper()
+        )
 
 
     def create(self) -> None:

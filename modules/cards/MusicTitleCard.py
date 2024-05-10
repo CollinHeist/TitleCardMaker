@@ -825,16 +825,7 @@ class MusicTitleCard(BaseCardType):
                 and extras['timeline_color'] != MusicTitleCard.DEFAULT_TIMELINE_COLOR)
         )
 
-        return (custom_extras
-            or ((font.color != MusicTitleCard.TITLE_COLOR)
-            or (font.file != MusicTitleCard.TITLE_FONT)
-            or (font.interline_spacing != 0)
-            or (font.interword_spacing != 0)
-            or (font.kerning != 1.0)
-            or (font.size != 1.0)
-            or (font.stroke_width != 1.0)
-            or (font.vertical_shift != 0))
-        )
+        return custom_extras or MusicTitleCard._is_custom_font(font)
 
 
     @staticmethod
