@@ -45,7 +45,7 @@ itself, but TCM specializes in creating and customizing "unofficial" Title
 Cards. The following Cards have all been designed by me, and were created with
 TitleCardMaker:
 
-<div class="reversed randomized half-height very-slow padded rounded scroller">
+<div class="reversed randomized half-height very-slow padded rounded stylized scroller">
   <div class="scroller__inner">
     <figure data-label="Anime">
       <a href="./card_types/anime">
@@ -182,33 +182,6 @@ TitleCardMaker:
         <img class="no-lightbox" src="./card_types/assets/white_border.webp" loading="lazy">
       </a>
     </figure>
-    <!-- <a data-label="Anime" href="./card_types/anime"><img class="no-lightbox" src="./card_types/assets/anime.webp"></a>
-    <a data-label="Banner" href="./card_types/banner"><img class="no-lightbox" src="./card_types/assets/banner.webp"></a>
-    <a data-label="Calligraph" href="./card_types/calligraphy"><img class="no-lightbox" src="./card_types/assets/calligraphy.webp"></a>
-    <a data-label="Comic Book" href="./card_types/comic_book"><img class="no-lightbox" src="./card_types/assets/comic_book.webp"></a>
-    <a data-label="Cutout" href="./card_types/cutout"><img class="no-lightbox" src="./card_types/assets/cutout.webp"></a>
-    <a data-label="Divider" href="./card_types/divider"><img class="no-lightbox" src="./card_types/assets/divider.webp"></a>
-    <a data-label="Fade" href="./card_types/fade"><img class="no-lightbox" src="./card_types/assets/fade.webp"></a>
-    <a data-label="Formula 1" href="./card_types/formula"><img class="no-lightbox" src="./card_types/assets/formula.webp"></a>
-    <a data-label="Frame" href="./card_types/frame"><img class="no-lightbox" src="./card_types/assets/frame.webp"></a>
-    <a data-label="Graph" href="./card_types/graph"><img class="no-lightbox" src="./card_types/assets/graph.webp"></a>
-    <a data-label="Inset" href="./card_types/inset"><img class="no-lightbox" src="./card_types/assets/inset.webp"></a>
-    <a data-label="Landscape" href="./card_types/landscape"><img class="no-lightbox" src="./card_types/assets/landscape.webp"></a>
-    <a data-label="Logo" href="./card_types/logo"><img class="no-lightbox" src="./card_types/assets/logo.webp"></a>
-    <a data-label="Marvel" href="./card_types/marvel"><img class="no-lightbox" src="./card_types/assets/marvel.webp"></a>
-    <a data-label="Music" href="./card_types/music"><img class="no-lightbox" src="./card_types/assets/music.webp"></a>
-    <a data-label="Notification" href="./card_types/notification"><img class="no-lightbox" src="./card_types/assets/notification.webp"></a>
-    <a data-label="Olivier" href="./card_types/olivier"><img class="no-lightbox" src="./card_types/assets/olivier.webp"></a>
-    <a data-label="Overline" href="./card_types/overline"><img class="no-lightbox" src="./card_types/assets/overline.webp"></a>
-    <a data-label="Poster" href="./card_types/poster"><img class="no-lightbox" src="./card_types/assets/poster.webp"></a>
-    <a data-label="Roman Numeral" href="./card_types/roman_numeral"><img class="no-lightbox" src="./card_types/assets/roman_numeral.webp"></a>
-    <a data-label="Shape" href="./card_types/shape"><img class="no-lightbox" src="./card_types/assets/shape.webp"></a>
-    <a data-label="Standard" href="./card_types/standard"><img class="no-lightbox" src="./card_types/assets/standard.webp"></a>
-    <a data-label="Star Wars" href="./card_types/star_wars"><img class="no-lightbox" src="./card_types/assets/star_wars.webp"></a>
-    <a data-label="Striped" href="./card_types/striped"><img class="no-lightbox" src="./card_types/assets/striped.webp"></a>
-    <a data-label="Tinted Frame" href="./card_types/tinted_frame"><img class="no-lightbox" src="./card_types/assets/tinted_frame.webp"></a>
-    <a data-label="Tinted Glass" href="./card_types/tinted_glass"><img class="no-lightbox" src="./card_types/assets/tinted_glass.webp"></a>
-    <a data-label="White Border" href="./card_types/white_border"><img class="no-lightbox" src="./card_types/assets/white_border.webp"></a> -->
   </div>
 </div>
 
