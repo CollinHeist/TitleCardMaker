@@ -45,6 +45,22 @@
   border-radius: 4px;
 }
 
+/* Stylized scrollers have images which expand when hovered */
+.stylized.scroller > .scroller__inner > * {
+  transition: all 350ms ease-in-out;
+}
+.stylized.scroller > .scroller__inner > *:hover {
+  transition: all 350ms ease-in-out;
+}
+.stylized.scroller > .scroller__inner > *:hover {
+  scale: 1.25;
+  z-index: 3;
+}
+/* Erase the subtitle text when the image is expanded */
+.stylized.scroller > .scroller__inner > *:hover::after {
+  content: "";
+}
+
 /* Reduce image height if scroller is enabled */
 .scroller[data-animated=true] img {
   height: 75vh;
