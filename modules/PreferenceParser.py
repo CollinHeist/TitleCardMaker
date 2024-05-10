@@ -148,7 +148,7 @@ class PreferenceParser(YamlReader):
         self.plex_url = None
         self.plex_token = 'NA'
         self.plex_verify_ssl = True
-        self.integrate_with_pmm_overlays = False
+        self.integrate_with_kometa = False
         self.plex_filesize_limit = self.filesize_as_bytes(
             PlexInterface.DEFAULT_FILESIZE_LIMIT
         )
@@ -657,9 +657,13 @@ class PreferenceParser(YamlReader):
         if (value := self.get('plex', 'verify_ssl', type_=bool)) is not None:
             self.plex_verify_ssl = value
 
-        if (value := self.get('plex', 'integrate_with_pmm_overlays',
-                               type_=bool)) is not None:
-            self.integrate_with_pmm_overlays = value
+        integrate = self.get(
+            'plex', 'integrate_with_kometa',
+            type_=bool,
+            default=self.get('plex', 'integrate_with_pmm_overlays', type_=bool)
+        )
+        if integrate is not None:
+            self.integrate_with_kometa = value
 
         if (value := self.get('plex', 'filesize_limit',
                                type_=self.filesize_as_bytes)) is not None:
@@ -700,13 +704,15 @@ class PreferenceParser(YamlReader):
                 log.critical(f'Sonarr server must contain "url" and "api_key"')
                 self.valid = False
             else:
-                verify_ssl = reader.get('verify_ssl', type_=bool, default=True)
-                downloaded_only = reader.get(
-                    'downloaded_only', type_=bool, default=False
-                )
                 self.sonarr_kwargs.append({
-                    'url': url, 'api_key': api_key, 'verify_ssl': verify_ssl,
-                    'downloaded_only': downloaded_only,
+                    'url': url,
+                    'api_key': api_key,
+                    'verify_ssl': reader.get(
+                        'verify_ssl', type_=bool, default=True
+                    ),
+                    'downloaded_only': reader.get(
+                        'downloaded_only', type_=bool, default=True
+                    ),
                 })
 
         # If multiple servers were specified, parse all specificiations

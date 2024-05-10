@@ -81,7 +81,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     """How many failed episodes result in skipping a series"""
     SKIP_SERIES_THRESHOLD = 3
 
-    """EXIF data to write to images if PMM integration is enabled"""
+    """EXIF data to write to images if Kometa integration is enabled"""
     EXIF_TAG = {'key': 0x4242, 'data': 'titlecard'}
 
     """How many seconds to allow for a single transaction"""
@@ -95,7 +95,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             url: str,
             x_plex_token: str = 'NA',
             verify_ssl: bool = True,
-            integrate_with_pmm_overlays: bool = False,
+            integrate_with_kometa: bool = False,
             filesize_limit: int = 10485760,
             timeout: int = DEFAULT_TIMEOUT,
         ) -> None:
@@ -107,15 +107,14 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             x_plex_token: X-Plex Token for sending API requests to Plex.
             verify_ssl: Whether to verify SSL requests when querying
                 Plex.
-            integrate_with_pmm_overlays: Whether to integrate with PMM
-                overlays in image uploading.
+            integrate_with_kometa: Whether to integrate with Kometa
+                in image uploads.
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
             timeout: How many seconds to allow for a timeout.
 
         Raises:
-            SystemExit if an Exception is raised while connecting to
-                Plex.
+            SystemExit: An Exception is raised while connecting to Plex.
         """
 
         super().__init__(filesize_limit)
@@ -144,7 +143,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         environ['PLEXAPI_PLEXAPI_TIMEOUT'] = str(timeout)
 
         # Store integration
-        self.integrate_with_pmm = integrate_with_pmm_overlays
+        self.integrate_with_kometa = integrate_with_kometa
 
         # Create/read loaded card database
         self.__posters = PersistentDatabase(self.LOADED_POSTERS_DB)
@@ -762,6 +761,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         # Go through each episode within Plex, set title cards
         error_count, loaded_count = 0, 0
         for pl_episode in (pbar := tqdm(series.episodes(), **TQDM_KWARGS)):
+            pl_episode: PlexEpisode = pl_episode
             # If error count is too high, skip this series
             if error_count >= self.SKIP_SERIES_THRESHOLD:
                 log.error(f'Failed to upload {error_count} episodes, skipping '
@@ -782,15 +782,15 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
             # Upload card to Plex
             try:
-                # If integrating with PMM, add EXIF data
-                if self.integrate_with_pmm:
+                # If integrating with Kometa, add EXIF data
+                if self.integrate_with_kometa:
                     self.__add_exif_tag(card)
 
                 # Upload card
                 self.__retry_upload(pl_episode, card.resolve())
 
-                # If integrating with PMM, remove label
-                if self.integrate_with_pmm:
+                # If integrating with Kometa, remove label
+                if self.integrate_with_kometa:
                     pl_episode.removeLabel(['Overlay'])
             except Exception:
                 error_count += 1
@@ -872,15 +872,15 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
             # Upload this poster
             try:
-                # If integrating with PMM, add EXIF data
-                if self.integrate_with_pmm:
+                # If integrating with Kometa, add EXIF data
+                if self.integrate_with_kometa:
                     self.__add_exif_tag(resized_poster)
 
                 # Upload poster
                 self.__retry_upload(season, resized_poster)
 
-                # If integrating with PMM, remove label
-                if self.integrate_with_pmm:
+                # If integrating with Kometa, remove label
+                if self.integrate_with_kometa:
                     season.removeLabel(['Overlay'])
             except Exception:
                 continue

@@ -141,10 +141,7 @@ class OlivierTitleCard(BaseCardType):
 
     @property
     def title_text_command(self) -> ImageMagickCommands:
-        """
-        Get the ImageMagick commands to add the episode title text to an
-        image.
-        """
+        """ImageMagick commands to add the title text."""
 
         font_size = 124 * self.font_size
         stroke_width = 8.0 * self.font_stroke_width
@@ -172,10 +169,7 @@ class OlivierTitleCard(BaseCardType):
 
     @property
     def episode_prefix_command(self) -> ImageMagickCommands:
-        """
-        Get the ImageMagick commands to add the episode prefix text to
-        an image.
-        """
+        """ImageMagick commands to add the episode prefix text."""
 
         # No episode prefix/text, return empty command
         if self.episode_prefix is None or self.hide_episode_text:
@@ -204,10 +198,7 @@ class OlivierTitleCard(BaseCardType):
 
     @property
     def episode_number_text_command(self) -> ImageMagickCommands:
-        """
-        Get the ImageMagick commands to add the episode number text to
-        an image.
-        """
+        """ImageMagick commands to add the episode number text."""
 
         # No episode text, return empty command
         if self.hide_episode_text:
