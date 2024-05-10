@@ -1168,10 +1168,11 @@ class ShapeTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
-        standard_etf = ShapeTitleCard.EPISODE_TEXT_FORMAT.upper()
-
-        return (custom_episode_map
-                or episode_text_format.upper() != standard_etf)
+        return (
+            custom_episode_map
+            or episode_text_format.upper() != \
+                ShapeTitleCard.EPISODE_TEXT_FORMAT.upper()
+        )
 
 
     def create(self) -> None:
@@ -1187,9 +1188,9 @@ class ShapeTitleCard(BaseCardType):
             # Overlay gradient
             *self.gradient_commands,
             # Add each component of the image
+            *self.shape_commands,
             *self.title_text_commands,
             *self.index_text_commands,
-            *self.shape_commands,
             # Attempt to overlay mask
             *self.add_overlay_mask(self.source_file),
             # Create card
