@@ -33,6 +33,7 @@ from modules.cards.RomanNumeralTitleCard import RomanNumeralTitleCard
 from modules.cards.ShapeTitleCard import ShapeTitleCard
 from modules.cards.StandardTitleCard import StandardTitleCard
 from modules.cards.StarWarsTitleCard import StarWarsTitleCard
+from modules.cards.StripedTitleCard import StripedTitleCard
 from modules.cards.TextlessTitleCard import TextlessTitleCard
 from modules.cards.TintedFrameTitleCard import TintedFrameTitleCard
 from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
