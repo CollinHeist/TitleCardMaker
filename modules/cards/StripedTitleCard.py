@@ -672,7 +672,10 @@ class StripedTitleCard(BaseCardType):
         """
 
         if not custom_font:
-            ...
+            if 'episode_text_color' in extras:
+                extras['episode_text_color'] = StripedTitleCard.EPISODE_TEXT_COLOR
+            if 'episode_text_font_size' in extras:
+                extras['episode_text_font_size'] = 1.0
 
 
     @staticmethod
@@ -690,7 +693,10 @@ class StripedTitleCard(BaseCardType):
         """
 
         custom_extras = (
-            ...
+            ('episode_text_color' in extras
+                and extras['episode_text_color'] != StripedTitleCard.EPISODE_TEXT_COLOR)
+            or ('episode_text_font_size' in extras
+                and extras['episode_text_font_size'] != 1.0)
         )
 
         return (custom_extras
@@ -772,21 +778,17 @@ class StripedTitleCard(BaseCardType):
             f'-density 100',
             # Resize and apply styles to source image
             *self.resize_and_style,
-
             # Create mask
             f'\( -size "{self.TITLE_CARD_SIZE}"',
             f'xc:"{self.overlay_color}" \)',
-
             # Use mask composition
             f'"{mask.resolve()}"',
             f'-composite',
-            
-            # Attempt to overlay mask
-            *self.add_overlay_mask(self.source_file),
-
+            # Add text
             *self.title_text_commands,
             *self.index_text_commands,
-
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
