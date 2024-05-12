@@ -1,5 +1,168 @@
 const changeLog = [
   {
+    version: 'v2.0-alpha.10.0',
+    changelog: `
+<h2>Major Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Completely redesign the Series page
+    <div class="list">
+      <div class="item">New page dedicates much less visual space to the poster and action buttons</div>
+      <div class="item">All the prior functionality is still present (if a bit shifted around)
+    <div class="list">
+      <img width="50%" src="https://titlecardmaker.com/assets/series_light.webp">
+    </div>
+  </div>
+      <div class="item">Includes a live Card preview which can be used to display present Series <i>and</i> Episode-level changes without saving and remaking a Card</div>
+    </div>
+  </div>
+  <div class="item">Perform hash validation on all remote card type Python files before they are loaded into the module space</div>
+  <div class="item">Add functionality to directly import Title Cards as "textless" when uploaded via the Files dialog</div>
+  <div class="item">Performance improvements on the Templates page
+    <div class="list">
+      <div class="item">Hard-code available style list so they do not need to query the availability endpoint</div>
+      <div class="item">Move some asynchronous function calls to <i>after</i> the boilerplate Templates have been added to the page</div>
+      <div class="item">Only query the available Font metadata, not a full query of all Font information</div>
+    </div>
+  </div>
+  <div class="item">Allow filtering Blueprints by Series name</div>
+  <div class="item">Allow specification of a custom ImageMagick <b>.exe</b> executable path (to use <i>instead of</i> the builtin <b>magick</b> or <b>convert</b> call) by defining the <b>TCM_IM_PATH</b> environment variable</div>
+  <div class="item">Create Striped card type
+    <div class="list">
+      <div class="item">I spent <i>way</i> too long creating a very customizable way to adjust the stripe pattern - see <a href="https://titlecardmaker.com/card_types/striped/" target="_blank">the docs</a> for details
+    <div class="list">
+      <img width="50%" src="https://titlecardmaker.com/card_types/assets/striped.webp">
+    </div>
+  </div>
+    </div>
+  </div>
+  <div class="item">Rework <b>up triangle</b> and <b>down triangle</b> shapes in the Shape card
+    <div class="list">
+      <div class="item">Old triangles were the same width and height (i.e. an isosceles triangle) - new triangles are equilateral</div>
+      <div class="item">Old title text was positioned at halfway up the triangle <i>by height</i> - new text is halfway up <i>by area</i> (e.g. one third by height)</div>
+      <div class="item">For example, old vs. new:
+    <div class="list">
+      <img width="25%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/88ae682b-6556-420a-b726-02d6e17bf742"> <img width="25%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/3357565c-dcfd-4be7-aa42-7fbfa96190d7">
+    </div>
+  </div>
+      <div class="item">This was not done originally because the math to determine the placement of the title and season text is significantly more complicated </div>
+      <div class="item">The old style of triangle generation <b>cannot</b> be used anymore (sorry!)</div>
+    </div>
+  </div>
+</div>
+<h2>Major Fixes </h2>
+<div class="ui ordered list">
+  <div class="item">Refresh remote card types after a Blueprint is imported</div>
+  <div class="item">Fix downloading Source Images from Emby via the UI</div>
+  <div class="item">Match existing Fonts and Templates by <i>content</i>, not name, when imported via Blueprints</div>
+  <div class="item">Fix Cards ending up hidden when the refresh button was clicked</div>
+  <div class="item">Do not display a cached logo on the Series page</div>
+  <div class="item">Fix creation of new Sonarr connections when no existing Emby, Jellyfin, or Plex connections exist</div>
+  <div class="item">Correctly utilize per-connection localized image rejection (was being ignored)</div>
+  <div class="item">Use versioned CSS files on the frontend - this should prevent some CSS caching issues caused by switching versions</div>
+  <div class="item">Properly handle library names with special URL query characters like <b>&</b> in library operations done via the UI</div>
+</div>
+<h2>Minor Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Refresh Card previews when the image is clicked on the Font and Template pages</div>
+  <div class="item">Change sidebar text of the add Series page to <b>Add</b> (from <b>Add New</b>)</div>
+  <div class="item">Scroll to the top of the Card preview display when navigating between pages</div>
+  <div class="item">Add click interaction to query available Blueprints when the name is clicked</div>
+  <div class="item">Convert the preview Title Card to <b>.jpg</b> from <b>.webp</b> during Blueprint export (if <b>.webp</b> is the selected card extension)</div>
+  <div class="item">Add the <b>BACKSLASH</b> builtin variable to use <b>\</b> in format strings</div>
+  <div class="item">Add a button to the home page to swap between the table and poster view</div>
+  <div class="item">Remove the x-axis grid lines from the graphs on the Graphs page</div>
+  <div class="item">Add input to the graphs page to modify how many days are displayed</div>
+  <div class="item">Change all in-UI references from PMM to Kometa</div>
+  <div class="item">Return non-English posters from TMDb if they are textless or the language is present in the connection's language priority setting</div>
+  <div class="item">Add count on the number of Blueprints which are available for a given Series to the Add page</div>
+</div>
+<h2>Minor Fixes</h2>
+<div class="ui ordered list">
+  <div class="item">Do not export <b>Series.auto_split_title</b> in Blueprints if default (True)</div>
+  <div class="item">Fix logo and backdrop visual error when first downloading them via the modal</div>
+  <div class="item">Fix table headers overlapping the search results on the Series page</div>
+  <div class="item">Remove the blacklist button from Blueprints displayed as part of a Set</div>
+  <div class="item">Fix some changelog typos</div>
+  <div class="item">Fix some minor display issues when viewing some Blueprint Sets</div>
+  <div class="item">Handle bad types of external IDs (namely IMDb) from Emby and Jellyfin</div>
+  <div class="item">Properly display an in-UI toast for when no posters are found for a Series</div>
+  <div class="item">Improve handling of corrupt posters found when adding a Series</div>
+  <div class="item">Do not hide the Blueprint pagination menu if only one page of results is displayed (could result in the page menu permanently disappearing until reloading)</div>
+  <div class="item">Add vertical margin between home page posters and pagination menu</div>
+  <div class="item">Handle uncaught exceptions raised during Card creation in the scheduled task - should prevent singular bad cards from stopping all Card creation</div>
+</div>
+<h2>Title Card Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Anime
+    <div class="list">
+      <div class="item">Add kanji font size and stroke width extras</div>
+    </div>
+  </div>
+  <div class="item">Banner
+    <div class="list">
+      <div class="item">Adjust the index text placement <i>down</i> 4 pixels</div>
+      <div class="item">Do not adjust the index text placement with the title vertical shift</div>
+    </div>
+  </div>
+  <div class="item">Comic Book
+    <div class="list">
+      <div class="item">Add support for mask images</div>
+    </div>
+  </div>
+  <div class="item">Formula 1
+    <div class="list">
+      <div class="item">Fix frame year extra</div>
+      <div class="item">(v1) Fix custom font evaluation to no longer look at irrelevant font attributes</div>
+    </div>
+  </div>
+  <div class="item">Notification
+    <div class="list">
+      <div class="item">Add the box adjustments extra</div>
+      <div class="item">Make the index text interline spacing, interword spacing, and kerning static (not tied to title characteristics)</div>
+    </div>
+  </div>
+  <div class="item">Overline
+    <div class="list">
+      <div class="item">Fix line width calculation when a custom kerning is specified</div>
+      <div class="item">Add episode text font size extra</div>
+      <div class="item">Fix index text placement when title text is completely hidden</div>
+    </div>
+  </div>
+  <div class="item">Shape
+    <div class="list">
+      <div class="item">Correctly apply custom interword spacing</div>
+      <div class="item">Correctly parse non-integer Shape stroke widths</div>
+      <div class="item">Draw shape <i>below</i> title and season text (not above)</div>
+      <div class="item">Correctly evaluate multi-line title height in the text dimension analysis</div>
+      <div class="item">Completely rework triangle shapes (see Major Changes)</div>
+    </div>
+  </div>
+  <div class="item">Tinted Frame
+    <div class="list">
+      <div class="item">Parse <b>{title_font}</b> within the episode text font file extra to indicate TCM should use the same font file as the title text (saves specifying the full path)</div>
+    </div>
+  </div>
+</div>
+<h2>Documentation Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Add updated scrolling marquee for all available card types to the documentation home page</div>
+  <div class="item">Replace image for the Series page (to reflect new view)</div>
+  <div class="item">Add page on <a href="https://titlecardmaker.com/user_guide/mask_images/" target="_blank">mask images</a></div>
+  <div class="item">Fix keyboard shortcut icons on the Blueprint Set page</div>
+  <div class="item">Begin page on the <a href="https://titlecardmaker.com/card_types/anime" target="_blank">Anime</a> card</div>
+  <div class="item">Add documentation on the Font title split modifier option</div>
+  <div class="item">Add ImageMagick installation instructions to the getting started page</div>
+  <div class="item">Create card type page for the new <a href="https://titlecardmaker.com/card_types/striped/" target="_blank">Striped</a> card</div>
+  <div class="item">Use titlecardmaker.com hosted images for all card previews on the home page </div>
+  <div class="item">Lazy load all card previews on the home page</div>
+</div>
+<h2>API Changes</h2>
+<div class="ui ordered list">
+  <div class="item">Create API endpoint <b>PUT</b> <b>/api/series/series/{series_id}/copy</b> to copy the Series config from one Series to another</div>
+  <div class="item">Make the <b>year</b> argument optional in the <b>GET</b> <b>/api/blueprints/query/series</b> endpoint</div>
+</div>`
+  },
+  {
     version: `v2.0-alpha.9.1`,
     changelog: `
 <h2>Major Changes</h2>

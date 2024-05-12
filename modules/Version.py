@@ -222,7 +222,7 @@ class Changelog:
     """Regex for matching types of content"""
     BOLD_REGEX = re_compile(r'__([^_]+)__')
     CODE_REGEX = re_compile(r'`([^`]+)`')
-    ITALIC_REGEX = re_compile(r'\s+_([^_]+)_\s+')
+    ITALIC_REGEX = re_compile(r'\s+_(.+)_\s*')
     LINK_REGEX = re_compile(r'\[(.+)]\((.+)\)')
     HEADER_REGEX = re_compile(r'^#\s+(.+)$')
     OUTER_BULLET_REGEX = re_compile(r'^-\s+(.+)$')
@@ -335,7 +335,7 @@ class Changelog:
                 self.CODE_REGEX.sub(
                     r'<b>\1</b>',
                     self.ITALIC_REGEX.sub(
-                        r'<i>\1</i>',
+                        r' <i>\1</i> ',
                         text,
                     )
                 )

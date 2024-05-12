@@ -41,7 +41,7 @@ def get_latest_version(
     """
 
     # TODO remove placeholder when repo is public [pylint: disable=unreachable]
-    return Version(f'v2.0-alpha.9.1')
+    return Version(f'v2.0-alpha.10.0')
 
     try:
         response = req_get(
