@@ -284,7 +284,7 @@ class GraphTitleCard(BaseCardType):
 
         # Ensure characters that need to be escaped are
         self.title_text = self.image_magick.escape_chars(title_text)
-        if '/' in episode_text:
+        if not hide_episode_text and '/' in episode_text:
             numerator, denominator = map(
                 str.strip, episode_text.split('/', maxsplit=1)
             )
@@ -399,6 +399,9 @@ class GraphTitleCard(BaseCardType):
         denominator.
         """
 
+        if self.hide_episode_text:
+            return []
+
         # Scale offset from graph sides by graph radius
         internal_offset = 85 * (self.graph_radius / self.GRAPH_RADIUS)
 
@@ -463,6 +466,9 @@ class GraphTitleCard(BaseCardType):
     @property
     def fraction_commands(self) -> ImageMagickCommands:
         """Subcommand to draw the numerator and denominator."""
+
+        if self.hide_episode_text:
+            return []
 
         # Determine gravity
         if (slant_mode := len(self.numerator) < 3 and len(self.denominator) <3):
@@ -544,7 +550,7 @@ class GraphTitleCard(BaseCardType):
         """Subcommands required to add the title text."""
 
         # If no title text, return empty commands
-        if len(self.title_text) == 0:
+        if not self.title_text:
             return []
 
         # Determine coordinates and gravity of the positioning
