@@ -394,8 +394,9 @@ def delete_series(
     # Delete Source directory if necessary
     if get_preferences().completely_delete_series:
         for file in series.source_directory.glob('*'):
-            log.debug(f'Deleting "{file}"')
-            file.unlink(missing_ok=True)
+            if file.is_file():
+                log.debug(f'Deleting "{file}"')
+                file.unlink(missing_ok=True)
 
     # Delete Series; all child objects are deleted on cascade
     log.info(f'Deleting {series}')
