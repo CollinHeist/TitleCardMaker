@@ -9,10 +9,6 @@ description: >
 
 # Striped Card Type
 
-!!! warning "Under Construction"
-
-    This documentation is actively being developed.
-
 This card design was created by [CollinHeist](https://github.com/CollinHeist),
 and was inspired by some of the official artwork for
 [The Rookie](https://www.themoviedb.org/tv/79744-the-rookie/images/posters).

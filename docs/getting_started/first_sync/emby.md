@@ -39,15 +39,14 @@ by using a filter tag within Emby.
 7. In the launched dialog, fill out the following information:
 
     1. Enter the Sync Name as `Test Sync`
-    2. In the "Templates to Apply", select __in order__, the `Tier 1 - Standard`
-    and `Tier 0 - Tinted Frame` Templates from
+    2. In the "Templates to Apply", select `Tinted Frame` Template from
     [earlier](../creating_templates.md) in the tutorial.
 
         !!! tip "Template Order Matters"
 
-            For Templates, the order in which they are listed is critical. TCM
-            will apply the first Template whose Filter conditions are all
-            satisfied.
+            When adding multiple Templates, the order in which they are listed
+            is critical. TCM will apply the first Template whose Filter
+            conditions are all satisfied.
 
     3. Under the Filters section, enter the tag `tcm-test` and hit ++enter++.
     4. Hit the `Create` button.

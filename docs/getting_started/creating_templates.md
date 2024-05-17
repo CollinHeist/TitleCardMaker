@@ -14,9 +14,8 @@ Templates are a critical component of quickly customizing your TitleCardMaker
 setup. A Template contains a set of customized settings, and any number of
 Templates can be assigned to a Sync, Series, or Episode.
 
-For this tutorial we'll be creating two Templates with opposing settings, use
-Filters to control when these Templates are applied, and in a later step we'll
-apply these Templates automatically with a [Sync](./first_sync/index.md).
+For this tutorial we'll be creating a Template, and in a later step we'll apply
+this automatically with a [Sync](./first_sync/index.md).
 
 !!! note "Setting Priority"
         
@@ -32,59 +31,40 @@ apply these Templates automatically with a [Sync](./first_sync/index.md).
 3. Expand the created Template by clicking the accordion called "Blank
 Template".
 
-4. Rename the Template "Tier 0 - Tinted Frame"
-
-    ??? question "Why this name?"
-
-        The name is arbitrary, but since we'll be layering these Templates in
-        tiers, I find it helpful to indicate the tier within the Template name
-        so that it's easier to remember when adding within the UI.
-
-        As for "Tinted Frame", that's because we'll be using the Tinted Frame
-        card type.
+4. Rename the Template "Tinted Frame"
 
 5. Under "Card Settings" change the card type to "Tinted Frame". 
 
-6. Scroll down to "Miscellaneous" and then click the
-<span class="example md-button">:material-plus-box-outline: Add Extra</span>
-button.
+    ??? question "Don't see Tinted Frame?"
 
-7. In the dropdown, scroll down to the "Middle Element" extra under "Tinted
-Frame" - or, start typing "Tinted Frame" to filter all available extras. Hit
-++enter++ and then enter the value (in the right text box) as `logo`.
+        If you added this card type to your global list of
+        [excluded card types](../user_guide/settings.md#excluded-card-types)
+        then it will not appear. I recommend removing it and continuining with
+        the tutorial.
+
+6. Scroll down to "Translations and Extras" and find the tab labeled "Tinted
+Frame".
+
+7. Find the input labeled "Bottom Element" enter the value as `logo`.
 
     ??? question "What are Extras?"
 
         Extras are a way of overriding or customizing specific components of a
-        Title Card. Extras are typically card type-specific - and in this case
+        Title Card. Extras are typically card type specific - and in this case
         the Tinted Frame card allows changing the bottom element to a Logo
-        (from index text).
+        (from the season and episode text).
 
-        Most extras give expanded information - such as what values are
-        allowed - by hovering over the :octicons-question-24: icon.
+        Below most extras is a tooltip which often describes the available
+        options and default value for that extra. If you want more detail, or
+        a specific example, refer to the card's
+        [documentation](https://titlecardmaker.com/card_types/).
 
 8. Hit `Save Changes`.
 
-9. Create another new Template by clicking the
-<span class="example md-button">Create New Template</span> button.
+!!! success "Template Created"
 
-10. Expand the Template, rename it to "Tier 1 - Standard"
+    You have now successfully created a Template. When applied, this will set
+    the card type to the Tinted Frame card, and use a logo in the bottom
+    element.
 
-11. Under "Filters", click the
-<span class="example md-button">:material-plus-box-outline: Add Condition</span>
-button.
-
-12. Select the Filter condition as `Season Number` `is less than` `3`.
-
-13. Under "Card Settings", change the card type to "Standard".
-
-14. Click <span class="example md-button">Save Changes</span>.
-
-!!! success "Templates Created"
-
-    You have now successfully created two Templates. One of which sets the card
-    type to the Tinted Frame card, and sets the bottom element to a logo. The
-    other has a filter for a season number less than 3, and sets the card type
-    to Standard.
-
-    We'll use these later in the tutorial.
+    We'll use this later in the tutorial.

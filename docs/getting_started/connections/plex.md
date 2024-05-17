@@ -36,8 +36,8 @@ X-Plex-Token value.
 4. Back within TitleCardMaker, paste the X-Plex-Token from Step 3 into the Token
 input box.
 
-5. If you use Plex Meta Manager episode overlays, toggle the `Integrate with
-Plex Meta Manager` checkbox.
+5. If you use Kometa (formerly PMM) episode overlays, toggle the `Integrate with
+Kometa` checkbox.
 
 6. Click <span class="example md-button">Create</span>. TCM will reload the
 page.

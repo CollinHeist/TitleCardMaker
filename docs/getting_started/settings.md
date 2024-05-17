@@ -15,7 +15,7 @@ If you'd like to adjust these, additional detail can be found
 
 I also recommend clicking through the various options of the Default Card Type
 dropdown and picking your favorite style. The most popular choices are the
-Standard and Tinted Frame.
+Tinted Frame and Standard.
 
 For the purposes of this tutorial, the following settings are recommended:
 

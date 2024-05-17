@@ -43,9 +43,12 @@ description: >
 
 === ":material-microsoft-windows: Windows (Non-Powershell)"
 
-    ```bash
-    mkdir config
-    ```
+    Download the Windows Binary Release from the
+    [ImageMagick website](https://imagemagick.org/script/download.php#windows).
+
+    During the installation, be sure to check the _Add application directory to
+    your system path_ and _Install legacy utilities (e.g. convert) boxes_. The
+    other options are optional.
 
 ### Downloading the Code
 
@@ -75,8 +78,8 @@ retrieve the TCM code from git. Check the `repo` scope section. Copy this code.
         Keep this access code private, as it can be used to access your GitHub
         account.
 
-3. Open a terminal of your choice, and go to the desired install location. Then
-clone the repository with:
+3. Open a terminal[^1] of your choice, and go to the desired install location.
+Then clone the repository with:
 
     ```bash
     git clone https://github.com/TitleCardMaker/TitleCardMaker-WebUI.git
@@ -226,7 +229,7 @@ to it.
     `America/Los_Angeles` - for the next step.
 
     3. Create (and launch) the Docker container by executing the following
-    command[^1] - make sure to replace `America/Los_Angeles` with _your_
+    command[^2] - make sure to replace `America/Los_Angeles` with _your_
     timezone from the previous step.
 
         === ":material-linux: Linux"
@@ -266,11 +269,14 @@ to it.
 
 === ":material-language-python: Non-Docker"
 
-    Run the following command to install the required Python packages and launch
-    the TCM interface.
+    Run the following commands to install the required Python packages and
+    launch the TCM interface.
 
     ```bash
     pipenv install
+    ```
+
+    ```bash
     pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
     ```
     
@@ -314,7 +320,15 @@ information about specific aspects of TitleCardMaker, look at the
 [User Guide](../user_guide/index.md).
 
 
-[^1]: The exact purpose of this command breaks down as follow:
+
+[^1]:
+    - For Linux, I will assume you know what a Terminal is :wink:.
+    - For Mac users, this is `Terminal` and can be found via the Spotlight
+    - For Windows users, this is `Command Prompt` or `PowerShell`. Both can be
+    accessed from the search menu
+
+[^2]:
+    The exact purpose of this command breaks down as follow:
     ```bash
     docker run -itd ^ # (1)!
         --net="bridge" ^ # (2)!

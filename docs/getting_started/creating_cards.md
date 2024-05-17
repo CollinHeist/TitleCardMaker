@@ -15,7 +15,7 @@ tags:
 
 There has been a lot of preamble, but the core of TitleCardMaker is making
 Title Cards. We'll be creating Title Cards in order to showcase the effects of
-our Templates, as well as show how these Cards can be further customized.
+our Template, as well as show how these Cards can be further customized.
 
 !!! example "Example Series"
 
@@ -28,9 +28,10 @@ our Templates, as well as show how these Cards can be further customized.
 1. Go to the _Breaking Bad_ Series configuration page - you can quickly access
 it by searching for the title in the top left search bar (next to the TCM logo).
 
-2. Just below the poster is a set of action buttons. Click the
-<span class="example md-button">Refresh Episode Data</span> button. TCM will now
-query your global Episode Data Source for new Episodes.
+2. At the top of the page is a set of buttons where _most_ actions can be
+performed. However, in this case, open the `Episode Data` tab in the middle of
+the page and click the <span class="example md-button">Refresh</span> button.
+TCM will now query your global Episode Data Source for new Episodes.
 
     !!! note "Scheduled Task"
 
@@ -38,8 +39,9 @@ query your global Episode Data Source for new Episodes.
         [scheduled task](../user_guide/scheduler.md), __unless__ the Series is
         marked as `Unmonitored`.
 
-3. Open the "Episode Data" tab - there should now be either 62 or 80 Episodes,
-depending on whether you have turned on or off the Specials syncing.
+3. There should now be either 62 or 80 Episodes, depending on whether you have
+turned on or off the Specials syncing. There may be more or less if you used
+your personal server as the Episode Data Source.
 
 ## Source Images
 
@@ -47,9 +49,10 @@ depending on whether you have turned on or off the Specials syncing.
 for each Episode of the Series. Since we just added _Breaking Bad_, all images
 should show as missing.
 
-5. For Season 1 Episode 1, click the small TMDb logo. This will launch a browser
-for all Source Images on TMDb. Clicking any image will request TCM download it
-and store it inside the Source Image directory. Download any image.
+5. Under _Source Images_, for Season 1 Episode 1, click the browse
+:material-grid-large: icon. This will launch a browser for all Source Images on
+TMDb. Clicking any image will request TCM download it and store it inside the
+Source Image directory. Download any image.
 
     ??? tip "Image Resolution"
     
@@ -72,40 +75,37 @@ with Source Image information.
 
 ## Title Cards
 
-8. Click <span class="example md-button">Create Title Cards</span> on the
-left-hand side.
+7. At the top of the page, click
+<span class="example md-button">Create Title Cards</span>.
 
-9. After TCM has created a few Cards, go to _Title Cards_ on the _Files_ tab.
+8. After waiting a small while and TCM has created a few Cards, go to
+_Title Cards_ on the _Files_ tab and expand the _View Images_ section.
 
-10. You should see that Title Cards in Seasons 1 and 2 were created using our
-Standard card type, as this was the higher priority (first) Template "Tier 1 -
-Standard", and these Episodes meet the Filter condition we established of the
-Season Number < 3. All other Title Cards were created with the lower priority
-(second) Template "Tier 0 - Tinted Frame" as they do not meet the Filter
-criteria.
+9. You should see that Title Cards have been created using the Tinted Frame card
+type.
 
-11. Back in the "Episode Data" tab and change the card type of Season 2 Episode
-1 to something else. Save this change by clicking the :material-content-save:
-Save icon in the left-most column.
+10. Back in the _Episode Data_ tab, click the :material-eye-outline: icon
+under the _Extras & Translations_ column for Season 2 Episode 1. In that window,
+change the _Bottom Element_ input to `omit`, hit
+<span class="example md-button">Save</span> and close out the window.
 
-12. Click <span class="example md-button">Create Title Cards</span> again. This
-Card is now made with the the card type you _just_ selected, overriding any
-Template specifications.
+11. Close Click <span class="example md-button">Create Title Cards</span> again.
+This Card should be remade with no logo in the bottom position, overriding what
+was placed in the Template.
 
-    ??? question "Why did the Tier 1 Template not apply?"
+    ??? question "Why did the Template not apply?"
 
-        Even though this Episode meets all the Template Filter criteria, any
-        Episode-level customizations _override_ Series-level customizations.
+        Any Episode-level customizations _override_ Series-level customizations.
 
-        Because we entered this card type override on the Episode-level, the
-        card type of the Templates are completely ignored.
+        Because we entered this extra for the Episode, the extra from the
+        Series' Template is completely ignored.
 
 ## Cleanup
 
 The substantive part of the tutorial is over, and I recommend removing cleaning
 up the artifacts from the tutorial. These are:
 
-- Delete the two Templates
+- Delete the Template
 - Delete (or edit) the Sync
 - Set the scheduler task interval to something sensible
 - If you want to use different Cards, then the Series and Fonts can also be
