@@ -23,7 +23,7 @@ below:
 
 - [Series](./series.md)
 - [Adding Series](./new_series.md)
-- [Tempates](./templates.md)
+- [Templates](./templates.md)
 - [Fonts](./fonts.md)
 - [Sync](./syncs.md)
 - [Settings](./settings.md)
