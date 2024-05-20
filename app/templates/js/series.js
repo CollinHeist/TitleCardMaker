@@ -2139,7 +2139,7 @@ function updateSeries(formName) {
     data = {
       emby_id: $('#series-ids-form input[name="emby_id"]').val() || null,
       imdb_id: $('#series-ids-form input[name="imdb_id"]').val() || null,
-      jellyfin_id: $('#series-ids-form input[name="jellyfinid"]').val() || null,
+      jellyfin_id: $('#series-ids-form input[name="jellyfin_id"]').val() || null,
       sonarr_id: $('#series-ids-form input[name="sonarr_id"]').val() || null,
       tmdb_id: $('#series-ids-form input[name="tmdb_id"]').val() || null,
       tvdb_id: $('#series-ids-form input[name="tvdb_id"]').val() || null,
