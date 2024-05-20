@@ -207,7 +207,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             if response['TotalRecordCount'] == 0:
                 return None
 
-            # Go through all items and match name and type, setting database IDs
+            # Go through all items and match name and type
             for result in response['Items']:
                 if series_info.matches(result['Name']):
                     return result if raw_obj else result['Id']

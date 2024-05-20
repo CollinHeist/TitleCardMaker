@@ -827,15 +827,14 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         # Go through each episode within Plex, set title cards
         loaded = []
         for plex_episode in series.episodes(container_size=100):
-            plex_episode: PlexEpisode = plex_episode
             # Skip episode if no matching episode was provided
+            plex_episode: PlexEpisode = plex_episode
             found = False
             for episode, episode_info, card in infos:
                 if episode_info == plex_episode:
                     found = True
                     break
             if not found:
-                log.trace(f'Not loading {plex_episode} - no Card provided')
                 continue
 
             # Shrink image if necessary, skip if cannot be compressed
@@ -856,7 +855,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 if self.integrate_with_kometa:
                     plex_episode.removeLabel(['Overlay'])
                     log.trace(f'Removed "Overlay" label from {plex_episode}')
-                log.debug(f'{series_info} {plex_episode.seasonEpisode} Loaded '
+                log.debug(f'{series_info} {plex_episode.seasonEpisode} loaded '
                           f'Card into "{library_name}"')
             except Exception:
                 log.exception(f'Unable to upload {image.resolve()} to '
