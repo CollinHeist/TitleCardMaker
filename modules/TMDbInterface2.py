@@ -1403,10 +1403,9 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 lang_score = self.logo_language_priority[::-1].index(
                     poster.iso_639_1
                 )
-
                 return (lang_score * 10) + dimension_score
             # Languages not in the priority list use a negative modifier
             except ValueError:
                 return -10 + dimension_score
 
-        return sorted(series.posters, key=_sort)[0].url
+        return sorted(series.posters, key=_sort, reverse=True)[0].url
