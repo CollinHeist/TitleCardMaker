@@ -182,6 +182,9 @@ def get_all_episode_source_images(
     - episode_id: ID of the Episode to get the Source Images of.
     """
 
+    # Get contextual logger
+    log: Logger = request.state.log
+
     # Get the Episode, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
 
@@ -198,7 +201,7 @@ def get_all_episode_source_images(
             episode.as_episode_info,
             match_title=match_title,
             bypass_blacklist=True,
-            log=request.state.log,
+            log=log,
         )
     except HTTPException:
         images = []
@@ -213,7 +216,7 @@ def get_all_episode_source_images(
                 library['name'],
                 episode.series.as_series_info,
                 episode.as_episode_info,
-                log=request.state.log,
+                log=log,
             )
             if image:
                 # Encode image bytes as Base64 string
@@ -222,6 +225,8 @@ def get_all_episode_source_images(
                     'data': f'data:image/jpg;base64,{image_str}',
                     'interface_type': interface_type,
                 })
+            else:
+                log.debug(f'No Source Image available from "{library["name"]}"')
 
     # Get Source Images from Plex if possible
     for library in episode.series.libraries:
@@ -237,6 +242,8 @@ def get_all_episode_source_images(
         )
         if url:
             images.append({'url': url, 'interface_type': 'Plex'})
+        else:
+            log.debug(f'No Source Image available from "{library["name"]}"')
 
     return images
 
