@@ -123,18 +123,41 @@ class EpisodeInfo(DatabaseInfoContainer):
         return f'S{self.season_number:02}E{self.episode_number:02}'
 
 
-    def __eq__(self, other: 'EpisodeInfo') -> bool:
+    def __eq__(self, other: Union['EpisodeInfo', PlexEpisode]) -> bool:
         """
-        Returns whether the given EpisodeInfo object corresponds to the
-        same entry (has the same season and episode index).
+        Returns whether the given episode info object corresponds to the
+        same entry. This comparison prioritizes ID matches, and gives
+        lower priority to index and title matching.
 
         Args:
-            other: EpisodeInfo object to compare.
+            other: Other info container to compare.
 
         Returns:
-            True if the season and episode number of the two objects
-            match,  False otherwise.
+            True if any database IDs match or there is an exact index
+            and title match. False otherwise.
+
+        Raises:
+            TypeError if `other` is not an `EpisodeInfo` or
+            `plexapi.video.Episode` object.
         """
+
+        # If a PlexEpisode, compare indirectly
+        if isinstance(other, PlexEpisode):
+            # Attempt database ID match
+            for guid in other.guids:
+                if self.imdb_id and 'imdb://' in guid.id:
+                    return self.imdb_id == guid.id[len('imdb://'):]
+                if self.tmdb_id and 'tmdb://' in guid.id:
+                    return self.tmdb_id == int(guid.id[len('tmdb://'):])
+                if self.tvdb_id and 'tvdb://' in guid.id:
+                    return self.tvdb_id == int(guid.id[len('tvdb://'):])
+
+            # Attempt title and index match
+            return (
+                self.season_number == other.parentIndex
+                and self.episode_number == other.index
+                and self.full_title.matches(other.title)
+            )
 
         # Verify the comparison is another EpisodeInfo object
         if not isinstance(other, EpisodeInfo):
@@ -149,7 +172,7 @@ class EpisodeInfo(DatabaseInfoContainer):
                 and getattr(self, id_attr) == getattr(other, id_attr)):
                 return True
 
-        # Require title match
+        # Require title match for index equality
         return (
             self.season_number == other.season_number
             and self.episode_number == other.episode_number
