@@ -147,9 +147,6 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         # Store integration
         self.integrate_with_kometa = integrate_with_kometa
-
-        # List of "not found" warned series
-        self.__warned = set()
         self.activate()
 
 
@@ -160,7 +157,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             library_name: str,
             *,
             log: Logger = log,
-        ) ->  PlexLibrary:
+        ) -> Optional[PlexLibrary]:
         """
         Get the Library object under the given name.
 
@@ -187,7 +184,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             series_info: SeriesInfo,
             *,
             log: Logger = log,
-        ) -> PlexShow:
+        ) -> Optional[PlexShow]:
         """
         Get the Series object from within the given Library associated
         with the given SeriesInfo. This tries to match by TVDb ID,
@@ -235,12 +232,8 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             pass
 
         # Not found, return None
-        key = f'{library.title}-{series_info.full_name}'
-        if key not in self.__warned:
-            log.warning(f'Series "{series_info}" was not found under '
-                        f'library "{library.title}" in Plex')
-            self.__warned.add(key)
-
+        log.warning(f'Series "{series_info}" was not found under '
+                    f'library "{library.title}" in Plex')
         return None
 
 
@@ -436,16 +429,16 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         """
 
         # If no episodes, exit
-        if len(episodes) == 0:
+        if not episodes:
             return False
 
         # If the given library cannot be found, exit
-        if not (library := self.__get_library(library_name, log=log)):
+        if (library := self.__get_library(library_name, log=log)) is None:
             log.warning(f'Cannot find library "{library_name}" of {series_info}')
             return False
 
         # If the given series cannot be found in this library, exit
-        if not (series := self.__get_series(library, series_info, log=log)):
+        if (series := self.__get_series(library, series_info, log=log)) is None:
             log.warning(f'Cannot find {series_info} in library "{library}"')
             return False
 
@@ -458,6 +451,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 )
             )
             for episode in series.episodes(container_size=500)
+            if episode.parentIndex is not None and episode.index is not None
         ]
 
         # Update watched statuses of all Episodes
@@ -549,8 +543,14 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         # Go through all of this Series' Episodes
         for plex_episode in series.episodes(container_size=500):
-            # Find matching EpisodeInfo, skip if not found
+            # Skip Plex episodes without indices
             plex_episode: PlexEpisode
+            if (plex_episode.seasonNumber is None
+                or plex_episode.episodeNumber is None):
+                log.debug(f'Skipping {plex_episode} - no season/episode number')
+                continue
+
+            # Find matching EpisodeInfo, skip if not found
             episode_info = filtered_episode_infos.get(
                 f's{plex_episode.seasonNumber}e{plex_episode.episodeNumber}'
             )
@@ -817,17 +817,25 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         if not (series := self.__get_series(library, series_info, log=log)):
             return []
 
+        # Generate EpisodeInfo of the given Episodes/Cards ahead of time
+        # to avoid re-constructing the EpisodeInfo object for each ep
+        infos = [
+            (episode, episode.as_episode_info, card)
+            for episode, card in episode_and_cards
+        ]
+
         # Go through each episode within Plex, set title cards
         loaded = []
         for plex_episode in series.episodes(container_size=100):
-            # Skip episode if no associated episode was provided
+            plex_episode: PlexEpisode = plex_episode
+            # Skip episode if no matching episode was provided
             found = False
-            for episode, card in episode_and_cards:
-                if (episode.season_number == plex_episode.parentIndex
-                    and episode.episode_number == plex_episode.index):
+            for episode, episode_info, card in infos:
+                if episode_info == plex_episode:
                     found = True
                     break
             if not found:
+                log.trace(f'Not loading {plex_episode} - no Card provided')
                 continue
 
             # Shrink image if necessary, skip if cannot be compressed
@@ -848,9 +856,8 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 if self.integrate_with_kometa:
                     plex_episode.removeLabel(['Overlay'])
                     log.trace(f'Removed "Overlay" label from {plex_episode}')
-                log.debug(f'{series_info} S{plex_episode.seasonNumber:02}E'
-                          f'{plex_episode.episodeNumber:02} Loaded Card into '
-                          f'"{library_name}"')
+                log.debug(f'{series_info} {plex_episode.seasonEpisode} Loaded '
+                          f'Card into "{library_name}"')
             except Exception:
                 log.exception(f'Unable to upload {image.resolve()} to '
                               f'{series_info}')
@@ -966,7 +973,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         """
 
         # Exit if no labels to remove
-        if len(labels) == 0:
+        if not labels:
             return None
 
         # If the given library cannot be found, exit
