@@ -128,6 +128,7 @@ class AnimeCardType(BaseCardTypeCustomFontAllText):
     stroke_color: str = 'black'
     episode_stroke_color: str = AnimeTitleCard.EPISODE_STROKE_COLOR
     episode_text_color: str = AnimeTitleCard.SERIES_COUNT_TEXT_COLOR
+    episode_text_font_size: PositiveFloat = 1.0
 
     @root_validator(skip_on_failure=True)
     def validate_kanji(cls, values: dict) -> dict:
