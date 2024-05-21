@@ -12,6 +12,7 @@ theme:
   logo: ./assets/logo.svg
   favicon: ./assets/favicon.svg
   name: material
+  custom_dir: docs/overrides # Include partial overrides
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -221,23 +222,31 @@ nav:
     - Local Files: card_types/local.md
     - Built-in Card Types:
       - Anime: card_types/anime.md
-    #   - Cutout: card_types/local/cutout.md
-    #   - Divider: card_types/local/divider.md
-    #   - Fade: card_types/local/fade.md
-    #   - Frame: card_types/local/frame.md
-    #   - Landscape: card_types/local/landscape.md
-    #   - Logo: card_types/local/logo.md
-    #   - Olivier: card_types/local/olivier.md
+      - Banner: card_types/banner.md
+      - Comic Book: card_types/comic_book.md
+      - Cutout: card_types/cutout.md
+      - Divider: card_types/divider.md
+      - Fade: card_types/fade.md
+      - Formula 1: card_types/formula1.md
+      - Frame: card_types/frame.md
+      - Graph: card_types/graph.md
+      - Inset: card_types/inset.md
+      - Landscape: card_types/landscape.md
+      - Logo: card_types/logo.md
+      - Olivier: card_types/olivier.md
+      - Marvel: card_types/marvel.md
       - Music: card_types/music.md
       - Notification: card_types/notification.md
-    #   - Poster: card_types/local/poster.md
-    #   - Roman Numeral: card_types/local/roman_numeral.md
-    #   - Standard: card_types/local/standard.md
-    #   - Star Wars: card_types/local/star_wars.md
+      - Poster: card_types/poster.md
+      - Roman Numeral: card_types/roman_numeral.md
+      - Shape: card_types/shape.md
+      - Standard: card_types/standard.md
+      - Star Wars: card_types/star_wars.md
       - Striped: card_types/striped.md
-    #   - Textless: card_types/local/textless.md
-    #   - Tinted Frame: card_types/local/tinted_frame.md
-    #   - Tinted Glass: card_types/local/tinted_glass.md
+      - Textless: card_types/textless.md
+      - Tinted Frame: card_types/tinted_frame.md
+      - Tinted Glass: card_types/tinted_glass.md
+      - White Border: card_types/white_border.md
   - Development:
     - Contributing: development/contributing.md
     - The API: development/api.md

@@ -194,7 +194,7 @@ class AnimeTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             kanji: Optional[str] = None,
-            episode_text_size: float = 1.0,
+            episode_text_font_size: float = 1.0,
             episode_stroke_color: str = EPISODE_STROKE_COLOR,
             episode_text_color: str = SERIES_COUNT_TEXT_COLOR,
             separator: str = '·',
@@ -241,7 +241,7 @@ class AnimeTitleCard(BaseCardType):
         self.font_vertical_shift = font_vertical_shift
 
         # Optional extras
-        self.episode_text_size = episode_text_size
+        self.episode_text_size = episode_text_font_size
         self.episode_stroke_color = episode_stroke_color
         self.episode_text_color = episode_text_color
         self.omit_gradient = omit_gradient
@@ -406,7 +406,7 @@ class AnimeTitleCard(BaseCardType):
             f'label:"{self.season_text} {self.separator}"',
             f'label:"{self.episode_text}"',
             # Combine season and episode text into one "image"
-            f'+smush 30 \)',        # Smush less for stroke
+            f'+smush 30 \)',
             f'-gravity southwest',
             # Overlay stroke "image"
             f'-geometry +73+88',    # Different offset for stroke
@@ -422,7 +422,7 @@ class AnimeTitleCard(BaseCardType):
             # Zero-width stroke for episode text
             f'-strokewidth 0',
             f'label:"{self.episode_text}"',
-            # Combine season+episode text "images"
+            # Combine season+episode text images
             f'+smush 35 \)',
             # Add text to source image
             f'-gravity southwest',
