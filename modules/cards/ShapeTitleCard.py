@@ -43,7 +43,7 @@ class ShapeTitleCard(BaseCardType):
     API_DETAILS = CardDescription(
         name='Shape',
         identifier='shape',
-        example='/internal_assets/cards/shape.jpg',
+        example='/internal_assets/cards/shape.webp',
         creators=['CollinHeist'],
         source='builtin',
         supports_custom_fonts=True,
@@ -53,7 +53,7 @@ class ShapeTitleCard(BaseCardType):
                 name='Season Text Color',
                 identifier='season_text_color',
                 description='Color of the season text',
-                tooltip='Defaults is to match the shape color.',
+                tooltip='Defaults to matching the shape color.',
             ),
             Extra(
                 name='Hide Shape',
@@ -125,7 +125,7 @@ class ShapeTitleCard(BaseCardType):
                 tooltip=(
                     'Number ≥<v>0.3</v>. Values greater than <v>1.0</v> will '
                     'increase the size of the shape; values less than '
-                    '<v>1.0</v> will descrease it. Default is <v>1.0</v>.'
+                    '<v>1.0</v> will decrease it. Default is <v>1.0</v>.'
                 ),
             ),
             Extra(
@@ -133,14 +133,17 @@ class ShapeTitleCard(BaseCardType):
                 identifier='shape_width',
                 description='Width of the shape',
                 tooltip=(
-                    'Number ><v>0.0</v>. Default is <v>10</v>. Unit is pixels.'
+                    'Number ><v>0</v>. Default is <v>10</v>. Unit is pixels.'
                 ),
             ),
             Extra(
                 name='Shape Stroke Width',
                 identifier='shape_stroke_width',
                 description='Width of the stroke around the shape',
-                tooltip='Number ≥<v>0.0</v>. Default is <v>0.0</v> (no stroke).'
+                tooltip=(
+                    'Number ≥<v>0.0</v>. Default is <v>0.0</v> (no stroke). '
+                    'Unit is pixels.'
+                )
             ),
             Extra(
                 name='Shape Stroke Color',
@@ -238,7 +241,7 @@ class ShapeTitleCard(BaseCardType):
         'omit_gradient', 'season_text_position', 'shape', 'shape_color',
         'shape_inset', 'length', 'shape_stroke_color',
         'shape_stroke_width', 'shape_width', 'stroke_color', 'text_position',
-        '__title_width', '__title_height', '__line_count',
+        '__title_width', '__title_height',
     )
 
 
@@ -308,7 +311,7 @@ class ShapeTitleCard(BaseCardType):
         self.season_text_position: SeasonTextPosition = season_text_position
         self.shape: Shape = self.__select_shape(shape)
         self.shape_color = shape_color
-        self.shape_inset = 100 # shape_inset # TODO
+        self.shape_inset = shape_inset
         self.length = self.DEFAULT_LENGTHS[self.shape] * shape_size
         self.shape_stroke_color = shape_stroke_color
         self.shape_stroke_width = shape_stroke_width
@@ -316,11 +319,8 @@ class ShapeTitleCard(BaseCardType):
         self.stroke_color = stroke_color
         self.text_position: TextPosition = text_position
 
-        # Scale side length by for multiline titles
-        self.__line_count = len(title_text.splitlines())
-        if self.__line_count > 1:
-            # shape_scalar = 0.5 if 'triangle' in self.shape else 0.25
-            self.length *= 1.0 + (0.25 * (self.__line_count - 1))
+        # Scale side length by 25% for each additional line in the title
+        self.length *= 1.0 + (0.25 * (len(title_text.splitlines()) - 1))
 
         # Implementation variables
         self.__title_width = None
@@ -501,7 +501,7 @@ class ShapeTitleCard(BaseCardType):
             first_word = self.title_text.split(' ', maxsplit=1)[0]
             if (number := re_match(r'(\d+)\.?', first_word)):
                 center_text = number.group(1)
-            # First word is not number, center around first letter
+            # First word is not number, center around first character
             else:
                 center_text = self.title_text[0]
         # Text is positioned on the right
@@ -574,10 +574,6 @@ class ShapeTitleCard(BaseCardType):
         else:
             y = self.HEIGHT / 2
         # At this point y inner face is aligned to middle of the shape
-        # y += -5 + self.font_vertical_shift + title_height - 10 # 10px margin
-
-        # Adjust y-position to correct side of the title text
-        # y += self.font_vertical_shift + title_height - 25 # Manual adjustment
 
         # Adjust y-position inner boundary to the middle of the title
         # text - only adjust triangles since title text is at 1/3 height
