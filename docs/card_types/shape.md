@@ -269,3 +269,19 @@ Extra. This functions identically to the normal font size adjustment.
         <img src="../assets/shape.webp"/>
         <img src="../assets/shape-sts.webp"/>
     </div>
+
+## Mask Images
+
+This card also natively supports [mask images](../user_guide/mask_images.md).
+Like all mask images, TCM will automatically search for alongside the input
+Source Image in the Series' source directory, and apply this atop all other Card
+effects.
+
+!!! example "Example"
+
+    <div class="image-compare example-card"
+        data-starting-point="12"
+        data-left-label="Mask Image" data-right-label="Resulting Title Card">
+        <img src="../assets/shape-mask-raw.webp"/>
+        <img src="../assets/shape-mask.webp"/>
+    </div>
