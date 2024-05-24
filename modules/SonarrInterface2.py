@@ -393,6 +393,8 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             # Skip permanent placeholder names if title matching is disabled
             if (not series_info.match_titles
                 and self.__ALWAYS_IGNORE_REGEX.match(episode['title'])):
+                log.trace(f'Temporarily ignoring "{episode["title"]}" of '
+                          f'{series_info} - placeholder title')
                 continue
 
             # Get airdate of this episode
@@ -401,6 +403,8 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
                 # If episode hasn't aired, skip
                 air_datetime=datetime.strptime(ep_airdate,self.__AIRDATE_FORMAT)
                 if not episode['hasFile'] and air_datetime > datetime.now():
+                    log.trace(f'Ignoring "{episode["title"]}" of {series_info} '
+                              f'- has not aired yet and is not downloaded')
                     continue
 
                 # Skip temporary placeholder names if aired in the last 48 hours
@@ -408,7 +412,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
                 if (not series_info.match_titles
                     and air_datetime + timedelta(days=2) > datetime.now()
                     and self.__TEMP_IGNORE_REGEX.match(episode['title'])):
-                    log.debug(f'Temporarily ignoring "{episode["title"]}" of '
+                    log.trace(f'Temporarily ignoring "{episode["title"]}" of '
                               f'{series_info} - placeholder title')
                     continue
 
