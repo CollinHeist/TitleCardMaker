@@ -53,7 +53,7 @@ TitleCardMaker currently has the following built-in card types:
 | [Cutout](./cutout.md)               | <img src="./assets/cutout.webp" width="350">        |
 | [Divider](./divider.md)             | <img src="./assets/divider.webp" width="350">       |
 | [Fade](./fade.md)                   | <img src="./assets/fade.webp" width="350">          |
-| [Formula 1](./formula_1.md)         | <img src="./assets/formula_1.webp" width="350">     |
+| [Formula 1](./formula_1.md)         | <img src="./assets/formula.webp" width="350">       |
 | [Frame](./frame.md)                 | <img src="./assets/frame.webp" width="350">         |
 | [Graph](./graph.md)                 | <img src="./assets/graph.webp" width="350">         |
 | [Inset](./inset.md)                 | <img src="./assets/inset.webp" width="350">         |
