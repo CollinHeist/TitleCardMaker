@@ -124,9 +124,9 @@ How large the shape is can be adjusted with the _Shape Size_ Extra. This is
 a scalar applied to the default size for each shape.
 
 For titles which take up multiple lines of text, TCM automatically scales the
-size of the shape by an additional 25% per line of text. This is _in addition
+size of the shape by an additional 30% per line of text. This is _in addition
 to_ the scalar specified here. Meaning a shape with a specified size of 110% and
-a two-line title would be effectively 137.5% (1.25 * 1.10).
+a two-line title would be effectively 143% (1.30 * 1.10).
 
 !!! warning "Potential Sources of Error"
 
