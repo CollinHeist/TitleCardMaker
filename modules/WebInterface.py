@@ -81,7 +81,7 @@ class WebInterface:
            wait=wait_fixed(5)+wait_exponential(min=1, max=16),
            before_sleep=lambda _:log.warning('Failed to submit GET request, retrying..'),
            reraise=True)
-    def __retry_get(self, url: str, params: dict) -> dict:
+    def __retry_get(self, url: str, params: dict) -> Any:
         """
         Retry the given GET request until successful (or really fails).
 
@@ -90,7 +90,7 @@ class WebInterface:
             params: The params of the GET request.
 
         Returns:
-            Dict made from the JSON return of the specified GET request.
+            JSON return of the specified GET request.
         """
 
         return self.session.get(
