@@ -21,12 +21,12 @@
         <div class="meta">
           <span data-value="year">{Year}</span>
           <span data-value="ongoing">{Ongoing}</span>
-          <span class="right floated">
+          <!-- <span class="right floated">
             <button data-action="quick-add" class="ui compact green button">
               <i class="plus icon"></i>
-              Quick-Add
+              Add
             </button>
-          </span>
+          </span> -->
         </div>
         <div data-value="overview" class="description">
           <p>{description}</p>
@@ -65,29 +65,6 @@
             <div class="short line"></div>
           </div>
         </div>
-      </div>
-    </div>
-  </template>
-
-  <template id="blueprint-template">
-    <div class="ui raised blueprint card">
-      <div class="image">
-        <img loading="lazy">
-      </div>
-      <div class="content">
-        <div data-value="creator" class="header">{author}</div>
-        <i data-action="import" class="right floated cloud download alternate icon"></i>
-        <div class="meta">
-          <span data-value="font-count"><b>{x}</b> Named Font</span>
-          <span data-value="template-count"><b>{x}</b> Template</span>
-          <span data-value="episode-count"><b>{x}</b> Episode Overrides</span>
-          <span data-value="file-count"><b>{x}</b> Source Files</span>
-          <div class="ui mini uninvertible popup">
-            <div class="header">Imported Source Files</div>
-            <div class="content"></div>
-          </div>
-        </div>
-        <div data-value="description" class="description"><!-- <p>Description</p> --></div>
       </div>
     </div>
   </template>
@@ -162,11 +139,32 @@
       </div>
       <button id="startSearch" class="ui primary button" onclick="querySeries();">Search</button>
 
+      <form class="ui form" id="new-series">
+        <!-- <h4 class="ui dividing header">Configuration</h4> -->
+        <div class="ui three fields">
+          <div class="ui field">
+            <label>Libraries</label>
+            <div data-value="libraries" class="ui compact clearable search selection multiple dropdown">
+              <input name="libraries" type="hidden">
+              <div class="default text">None</div>
+              <i class="dropdown icon"></i>
+              <div class="menu"><!-- Added asynchronously --></div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Templates</label>
+            <div data-value="template_ids" class="ui compact clearable search selection multiple dropdown">
+              <input data-value="template_ids" name="template_ids" type="hidden">
+              <i class="dropdown icon"></i>
+              <div class="default text">None</div>
+              <div class="menu"><!-- Added asynchronously --></div>
+            </div>
+          </div>
+        </div>
+      </form>
+
       <div id="search-results" class="ui raised segment"><!-- Added asynchronously --></div>
-      <div class="ui info message">
-        <div class="header">Quick-Adding</div>
-        Quick-adding a Series uses the <i>last selected</i> Library and Templates.
-      </div>
 
       <!-- Blueprints -->
       <h4 class="ui horizontal left aligned divider header">
@@ -210,12 +208,12 @@
     </div>
 
     <!-- Modals -->
-    <div id="add-series-modal" class="ui large scrolling modal">
+    <div id="add-series-modal" class="ui scrolling modal">
       <i class="close icon"></i>
       <div data-value="series-name-header" class="header">Add Series</div>
       <div class="scrolling content">
         <form class="ui form">
-          <h4 class="ui dividing header">Configuration</h4>
+          <!-- <h4 class="ui dividing header">Configuration</h4> -->
           <div class="ui two fields">
             <div class="ui field">
               <label>Libraries</label>
@@ -237,21 +235,6 @@
               </div>
             </div>
           </div>
-
-          <h4 class="ui dividing header">Blueprints</h4>
-          <button data-action="search-blueprints" class="ui green tertiary button">
-            <i class="search icon"></i>
-            Search for Blueprints
-          </button>
-          <div class="ui floating hidden warning icon message">
-            <i class="exclamation icon"></i>
-            <div class="content">
-              <div class="header">No Blueprints Available</div>
-              <span>There are no Blueprints available on <a href="https://github.com/TitleCardMaker/Blueprints/" target="_blank">GitHub</a>.</span>
-              <span>Feel free to submit your own.</span>
-            </div>
-          </div>
-          <div id="blueprint-results" class="ui two stackable raised cards"><!-- Added asynchronously --></div>
         </form>
       </div>
       <div class="actions">

@@ -1,7 +1,8 @@
 {% if False %}
 import {
-  AnyConnection, RemoteBlueprint, RemoteBlueprintPage, RemoteBlueprintSet,
-  SearchResult, SearchResultsPage, Series
+  AnyConnection, EpisodeDataSourceToggle, MediaServerLibrary,
+  RemoteBlueprintPage, RemoteBlueprintSet, SearchResult, SearchResultsPage,
+  Series, 
 } from './.types.js';
 {% endif %}
 
@@ -33,11 +34,11 @@ function addPlaceholders(element, amount=10, placeholderElementId='result-placeh
  */
 function generateNewSeriesObject(result) {
   // Comma separate Template IDs
-  const template_string = $('#add-series-modal .dropdown[data-value="template_ids"]').dropdown('get value');
+  const template_string = $('#new-series .dropdown[data-value="template_ids"]').dropdown('get value');
   const template_ids = template_string === '' ? [] : template_string.split(',');
   
   // Parse libraries
-  const library_vals = $('#add-series-modal .dropdown[data-value="libraries"]').dropdown('get value');
+  const library_vals = $('#new-series .dropdown[data-value="libraries"]').dropdown('get value');
   let libraries = [];
   if (library_vals) {
     libraries = library_vals.split(',')
@@ -73,8 +74,9 @@ function generateNewSeriesObject(result) {
  */
 function addSeries(result, resultElementId) {
   // Indicate loading
-  $('#add-series-modal form').toggleClass('loading', true);
-  $('#add-series-modal .actions .button').toggleClass('disabled', false);
+  const resultElement = document.getElementById(resultElementId);
+  resultElement.classList.add('loading');
+  resultElement.classList.remove('transition');
 
   // Wait between calls
   const remainingTime = _lastAdded ? _ADD_INTERVAL_MS - (new Date().getTime() - _lastAdded) : 0;
@@ -85,27 +87,25 @@ function addSeries(result, resultElementId) {
       data: JSON.stringify(generateNewSeriesObject(result)),
       contentType: 'application/json',
       /**
-       * Series added successfully, disable element in DOM and show a success toast.
+       * Series added successfully, disable element in DOM and show sucess.
        * @param {Series} series - Newly added Series.
        */
       success: series => {
-        document.getElementById(resultElementId).classList.add('disabled');
+        resultElement.classList.add('disabled');
         showInfoToast(`Added Series "${series.name}"`);
       },
       error: response => showErrorToast({title: 'Error Adding Series', response}),
       complete: () => {
-        $('#add-series-modal').modal('hide');
-        $('#add-series-modal .actions .button').toggleClass('disabled', false);
+        resultElement.classList.remove('loading');
         _lastAdded = new Date().getTime();
       },
     });
   }, remainingTime);
-
 }
 
 /**
- * Submit an API request to import the given global Blueprint - creating
- * the associated Series if it does not exist.
+ * Submit an API request to import the given global Blueprint - creating the
+ * associated Series if it does not exist.
  * @param {number} blueprintId - ID of the Blueprint to import.
  * @param {string} elementId - ID of the element in the DOM to modify.
  */
@@ -121,63 +121,64 @@ function importBlueprint(blueprintId, elementId) {
     success: series => {
       showInfoToast(`Imported Blueprint to "${series.full_name}"`);
       $(`#${elementId}`).toggleClass('loading', false).toggleClass('disabled', true);
+      $('#add-series-modal').modal('close');
     },
     error: response => showErrorToast({title: 'Error Importing Blueprint', response}),
   });
 }
 
-/**
- * Look for any Blueprints for the given series. Loading the results into
- * the add-Series modal.
- * @param {SearchResult} result - ID of the result whose Blueprints are being
- * queried.
- * @param {string} resultElementId - ID of the element in the DOM to modify.
- */
-function queryBlueprints(result, resultElementId) {
-  // Add placeholder Blueprints while loading
-  addPlaceholders(document.getElementById(resultElementId), 2, 'blueprint-placeholder-template');
+// /**
+//  * Look for any Blueprints for the given series. Loading the results into
+//  * the add-Series modal.
+//  * @param {SearchResult} result - ID of the result whose Blueprints are being
+//  * queried.
+//  * @param {string} resultElementId - ID of the element in the DOM to modify.
+//  */
+// function queryBlueprints(result, resultElementId) {
+//   // Add placeholder Blueprints while loading
+//   addPlaceholders(document.getElementById(resultElementId), 2, 'blueprint-placeholder-template');
 
-  // Generate query URL
-  let query = `name=${result.name}&year=${result.year}`;
-  if (result.imdb_id) { query += `&imdb_id=${result.imdb_id}`; }
-  if (result.tmdb_id) { query += `&tmdb_id=${result.tmdb_id}`; }
-  if (result.tvdb_id) { query += `&tvdb_id=${result.tvdb_id}`; }
+//   // Generate query URL
+//   const query = new URLSearchParams({name: result.name, year: result.year});
+//   if (result.imdb_id) { query.append('imdb_id', result.imdb_id); }
+//   if (result.tmdb_id) { query.append('tmdb_id', result.tmdb_id); }
+//   if (result.tvdb_id) { query.append('tvdb_id', result.tvdb_id); }
 
-  // Query for Blueprints
-  $.ajax({
-    type: 'GET',
-    url: `/api/blueprints/query/series?${query}`,
-    /**
-     * 
-     * @param {RemoteBlueprint[]} blueprints - Blueprints associated with
-     * this search result.
-     */
-    success: blueprints => {
-      // No results, show warning
-      if (!blueprints || blueprints.length === 0) {
-        $('#add-series-modal .warning.message').toggleClass('hidden', false).toggleClass('visible', true);
-        $('#blueprint-results .card').remove();
-        return;
-      }
+//   // Query for Blueprints
+//   $.ajax({
+//     type: 'GET',
+//     url: `/api/blueprints/query/series?${query.toString()}`,
+//     /**
+//      * Blueprints queried, add results to page.
+//      * @param {RemoteBlueprint[]} blueprints - Blueprints associated with
+//      * this search result.
+//      */
+//     success: blueprints => {
+//       // No results, show warning
+//       if (!blueprints || blueprints.length === 0) {
+//         $('#add-series-modal .warning.message').toggleClass('hidden', false).toggleClass('visible', true);
+//         $('#blueprint-results .card').remove();
+//         return;
+//       }
 
-      // Blueprints available, create card elements
-      const blueprintTemplate = document.getElementById('blueprint-template');
-      const blueprintCards = blueprints.map((blueprint, blueprintId) => {
-        // Clone template and populate with info
-        const card = populateBlueprintCard(blueprintTemplate.content.cloneNode(true), blueprint, `series-blueprint-id${blueprintId}`);
+//       // Blueprints available, create card elements
+//       const blueprintTemplate = document.getElementById('blueprint-template');
+//       const blueprintCards = blueprints.map((blueprint, blueprintId) => {
+//         // Clone template and populate with info
+//         const card = populateBlueprintCard(blueprintTemplate.content.cloneNode(true), blueprint, `series-blueprint-id${blueprintId}`);
 
-        // Assign function to import button
-        card.querySelector('[data-action="import"]').onclick = () => importBlueprint(blueprint.id, resultElementId);
-        return card;
-      });
+//         // Assign function to import button
+//         card.querySelector('[data-action="import"]').onclick = () => importBlueprint(blueprint.id, resultElementId);
+//         return card;
+//       });
 
-      // Populate page
-      document.getElementById('blueprint-results').replaceChildren(...blueprintCards);
-      refreshTheme();
-    },
-    error: response => showErrorToast({title: 'Error Querying Blueprints', response}),
-  });
-}
+//       // Populate page
+//       document.getElementById('blueprint-results').replaceChildren(...blueprintCards);
+//       refreshTheme();
+//     },
+//     error: response => showErrorToast({title: 'Error Querying Blueprints', response}),
+//   });
+// }
 
 /**
  * Display the Blueprint Sets associated with the given Blueprint. This submits
@@ -233,24 +234,26 @@ function viewBlueprintSets(blueprintId) {
 }
 
 /**
- * Query for all Blueprints defined for all Series - load the given page
- * number.
+ * Query for all Blueprints defined for all Series and load the given page of
+ * results.
  * @param {number} [page=1] - Page number of Blueprints to query and display.
  * @param {boolean} [refresh=false] - Whether to force refresh the database.
  */
 function queryAllBlueprints(page=1, refresh=false) {
-  // Generate endpoint URL
+  // Generate endpoint query parameters
   const filterName = $('input[name="blueprint_series_name"]').val();
   const orderBy = $('[data-value="order_by"]').val();
   const includeMissing = $('.checkbox[data-value="include_missing_series"]').checkbox('is unchecked');
   const includeImported = $('.checkbox[data-value="included_imported"]').checkbox('is checked');
-  const query = `page=${page}`
-    + `&size=15`
-    + `&order_by=${orderBy}`
-    + `&include_missing_series=${includeMissing}`
-    + `&include_imported=${includeImported}`
-    + `&force_refresh=${refresh}`
-    + `&name=${filterName}`;
+  const query = new URLSearchParams({
+    page: page,
+    size: 15,
+    order_by: orderBy,
+    include_missing_series: includeMissing,
+    include_imported: includeImported,
+    force_refresh: refresh,
+    name: filterName,
+  });
   
   // Only add placeholders if on page 1 (first load)
   const blueprintResults = document.getElementById('all-blueprint-results');
@@ -259,12 +262,12 @@ function queryAllBlueprints(page=1, refresh=false) {
   }
 
   // Query by series name if provided, otherwise query all
-  const apiUrl = filterName ? '/api/blueprints/query/series' : '/api/blueprints/query/all';
+  const endpointUrl = filterName ? '/api/blueprints/query/series' : '/api/blueprints/query/all';
 
   // Submit API request
   $.ajax({
     type: 'GET',
-    url: `${apiUrl}?${query}`,
+    url: `${endpointUrl}?${query.toString()}`,
     /**
      * Query successful, populate page with Blueprint cards.
      * @param {RemoteBlueprintPage} allBlueprints - Page of Blueprints to display.
@@ -278,18 +281,21 @@ function queryAllBlueprints(page=1, refresh=false) {
         const elementId = `blueprint-id${blueprint.id}`;
         const card = populateBlueprintCard(blueprintTemplate.content.cloneNode(true), blueprint, elementId);
 
-        // Assign function to clicking name
+        // When name is clicked, populate and focus to series search bar
         card.querySelector('[data-action="search-series"]').onclick = () => {
-          $('input[name="blueprint_series_name"]').val(blueprint.series.name);
-          queryAllBlueprints();
-        }
-        card.querySelector('[data-value="count"]').onclick = () => {
-          $('input[name="blueprint_series_name"]').val(blueprint.series.name);
-          queryAllBlueprints();
+          $('#search-bar input').val(blueprint.series.name).focus();
         }
 
+        // If multiple Blueprints for this Series, add count and assign click
+        // interaction - otherwise remove the count altogether
         if (blueprint.series.blueprint_count > 1) {
           card.querySelector('[data-value="count"]').innerText = blueprint.series.blueprint_count;
+
+          // When count icon is clicked, filter blueprints by this name
+          card.querySelector('[data-value="count"]').onclick = () => {
+            $('input[name="blueprint_series_name"]').val(blueprint.series.name);
+            queryAllBlueprints();
+          }
         } else {
           card.querySelector('[data-value="count"]').remove();
         }
@@ -344,80 +350,6 @@ function queryAllBlueprints(page=1, refresh=false) {
 }
 
 /**
- * Show the modal to add a Series. Launched by clicking a search result.
- * @param {SearchResult} result - Result whose modal is being displayed.
- * @param {string} resultElementId - ID of the element in the DOM to modify.
- */
-function showAddSeriesModal(result, resultElementId) {
-  // Update the elements of the modal before showing
-  // Update title
-  $('#add-series-modal [data-value="series-name-header"]')[0].innerText = `Add Series "${result.name} (${result.year})"`;
-  // Query for Blueprints when button is pressed
-  $('#add-series-modal button[data-action="search-blueprints"]').off('click').on('click', (event) => {
-    // Do not refresh page
-    event.preventDefault();
-    queryBlueprints(result, 'blueprint-results');
-  });
-  // Add Series when button is pressed
-  $('#add-series-modal button[data-action="add-series"]').off('click').on('click', (event) => {
-    // Do not refresh page
-    event.preventDefault();
-    addSeries(result, resultElementId);
-  });
-
-  // Hide no Blueprints warning message
-  $('#add-series-modal .warning.message').toggleClass('hidden', true).toggleClass('visible', false);
-  // Clear any previously loaded Blueprint cards
-  $('#blueprint-results .card').remove();
-  // Turn off loading status of the form
-  $('#add-series-modal form').toggleClass('loading', false);
-
-  $('#add-series-modal')
-    .modal({blurring: true})
-    .modal('setting', 'transition', 'fade up')
-    .modal('show');
-}
-
-/**
- * Quick-add the indicated result. This uses the last-selected Templates and 
- * libraries.
- * @param {SearchResult} result - Result being added.
- * @param {string} resultElementId - ID of the element in the DOM to modify.
- */
-function quickAddSeries(result, resultElementId) {
-  // Mark element as loading
-  let resultElement = document.getElementById(resultElementId)
-  resultElement.classList.add('loading');
-  resultElement.classList.remove('transition');
-
-  // Wait between calls
-  const remainingTime = _lastAdded ? _ADD_INTERVAL_MS - (new Date().getTime() - _lastAdded) : 0;
-  setTimeout(() => {
-    // Submit API request to add this result
-    $.ajax({
-      type: 'POST',
-      url: '/api/series/new',
-      data: JSON.stringify(generateNewSeriesObject(result)),
-      contentType: 'application/json',
-      /**
-       * Series successfully added; show toast and disable the result.
-       * @param {Series} series - Newly added Series.
-       */
-      success: series => {
-        resultElement.classList.add('disabled');
-        showInfoToast(`Added Series "${series.name}"`);
-      },
-      error: response => showErrorToast({title: 'Error adding Series', response}),
-      complete: () => {
-        resultElement.classList.remove('loading');
-        resultElement.classList.add('transition');
-        _lastAdded = new Date().getTime();
-      }
-    });
-  }, remainingTime);
-}
-
-/**
  * Load the interface search dropdown.
  */
 function initializeSearchSource() {
@@ -426,7 +358,7 @@ function initializeSearchSource() {
     url: '/api/settings/episode-data-source',
     /**
      * Data sources queried, initialize dropdown.
-     * @param {import('./.types.js').EpisodeDataSourceToggle} dataSources - Which data sources are
+     * @param {EpisodeDataSourceToggle} dataSources - Which data sources are
      * enabled.
      */
     success: dataSources => {
@@ -450,8 +382,8 @@ function initializeLibraryDropdowns() {
     url: '/api/connection/all',
     /**
      * Connections queried, store and then query all libraries.
-     * @param {AnyConnection[]} connections - All globally
-     * defined and enabled Connections.
+     * @param {AnyConnection[]} connections - All globally defined and enabled
+     * Connections.
      */
     success: connections => {
       $.ajax({
@@ -459,7 +391,7 @@ function initializeLibraryDropdowns() {
         url: '/api/available/libraries/all',
         /**
          * Libraries queried successfully, populate the library dropdowns.
-         * @param {import('./.types.js').MediaServerLibrary} libraries 
+         * @param {MediaServerLibrary} libraries 
          */
         success: libraries => {
           $('.dropdown[data-value="libraries"]').dropdown({
@@ -540,7 +472,8 @@ function querySeries() {
         const card = resultTemplate.content.cloneNode(true);
 
         // Assign ID
-        card.querySelector('.card').id = `result${index}`;
+        const resultId = `result${index}`
+        card.querySelector('.card').id = resultId;
 
         // Add DB ID to image src string in case a proxy URL is needed
         card.querySelector('img').src = result.poster;
@@ -563,13 +496,7 @@ function querySeries() {
           card.querySelector('.card').classList.add('disabled'); 
         } else {
           // Launch add Series modal when card is clicked
-          card.querySelector('.card').onclick = () => showAddSeriesModal(result, `result${index}`);
-          // Quick-add Series when button is pressed
-          card.querySelector('button[data-action="quick-add"]').onclick = (event) => {
-            // Do not execute parent card onclick function
-            event.stopPropagation();
-            quickAddSeries(result, `result${index}`);
-          }
+          card.querySelector('.card').onclick = () => addSeries(result, resultId);
         }
 
         return card;

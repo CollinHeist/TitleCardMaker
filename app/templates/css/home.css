@@ -23,6 +23,21 @@
   max-width: 150px;
 }
 
+/* #series-list .card > .image {
+  position: relative;
+} */
+
+/* #series-list .card > .image::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  background-color: red;
+  border-radius: 50%;
+} */
+
 /* Force the aspect ratio for all posters */
 .card img {
   aspect-ratio: 1 / 1.5;
