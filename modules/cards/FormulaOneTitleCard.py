@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional
 
@@ -110,7 +111,8 @@ class FormulaOneTitleCard(BaseCardType):
             # font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            country: Country = 'australia',
+            airdate: Optional[datetime] = None,
+            country: Country = 'Australia',
             episode_text_color: str = TITLE_COLOR,
             episode_text_font_size: float = 1.0,
             flag: Optional[Path] = None,
@@ -144,16 +146,19 @@ class FormulaOneTitleCard(BaseCardType):
         # self.font_vertical_shift = font_vertical_shift
 
         # Extras
-        if flag is None or not flag.exists():
+        if flag is None or not Path(flag).exists():
             self.country = self._COUNTRY_FLAGS.get(
                 country, self.REF_DIRECTORY / 'generic.webp'
             )
         else:
-            self.country = flag
+            self.country = Path(flag)
         self.episode_text_color = episode_text_color
         self.episode_text_font_size = episode_text_font_size
         self.race = race
-        self.year = year
+        if airdate is not None and airdate.year:
+            self.year = airdate.year
+        else:
+            self.year = year
 
 
     @property
