@@ -117,7 +117,7 @@ class FormulaOneTitleCard(BaseCardType):
             episode_text_font_size: float = 1.0,
             flag: Optional[Path] = None,
             race: str = 'GRAND PRIX',
-            year: int = 2024,
+            frame_year: int = 2024,
             preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
@@ -158,7 +158,7 @@ class FormulaOneTitleCard(BaseCardType):
         if airdate is not None and airdate.year:
             self.year = airdate.year
         else:
-            self.year = year
+            self.year = frame_year
 
 
     @property
