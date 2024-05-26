@@ -185,7 +185,7 @@ class FormulaOneTitleCard(BaseCardType):
             # font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            country: Country = 'australia',
+            country: Country = 'Australian',
             episode_text_color: str = TITLE_COLOR,
             episode_text_font_size: float = 1.0,
             flag: Optional[Path] = None,
@@ -428,10 +428,9 @@ class FormulaOneTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
-        standard_etf = FormulaOneTitleCard.EPISODE_TEXT_FORMAT.upper()
-
         return (custom_episode_map
-                or episode_text_format.upper() != standard_etf)
+                or episode_text_format.upper() != \
+                    FormulaOneTitleCard.EPISODE_TEXT_FORMAT.upper())
 
 
     def create(self) -> None:
@@ -441,6 +440,7 @@ class FormulaOneTitleCard(BaseCardType):
             f'convert "{self.source_file.resolve()}"',
             # Resize and apply styles to source image
             *self.resize_and_style,
+            # Add all assets, and text
             *self.static_commands,
             *self.race_commands,
             *self.episode_text_commands,

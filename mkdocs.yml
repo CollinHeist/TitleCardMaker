@@ -251,3 +251,6 @@ nav:
     - Contributing: development/contributing.md
     - The API: development/api.md
   - Help & Support: help_and_support.md
+  - Version 1:
+    - Card Types:
+      - Formula 1: v1/card_types/formula_1.md
