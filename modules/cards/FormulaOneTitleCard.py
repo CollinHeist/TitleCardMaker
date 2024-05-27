@@ -112,7 +112,7 @@ class FormulaOneTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             airdate: Optional[datetime] = None,
-            country: Country = 'Australia',
+            country: Optional[Country] = None,
             episode_text_color: str = TITLE_COLOR,
             episode_text_font_size: float = 1.0,
             flag: Optional[Path] = None,
@@ -131,9 +131,9 @@ class FormulaOneTitleCard(BaseCardType):
 
         # Ensure characters that need to be escaped are
         self.title_text = self.image_magick.escape_chars(title_text)
-        self.season_text = self.image_magick.escape_chars(season_text)
+        self.season_text = self.image_magick.escape_chars(season_text.upper())
         self.hide_season_text = hide_season_text
-        self.episode_text = self.image_magick.escape_chars(episode_text)
+        self.episode_text = self.image_magick.escape_chars(episode_text.upper())
         self.hide_episode_text = hide_episode_text
 
         # Font/card customizations
@@ -146,6 +146,12 @@ class FormulaOneTitleCard(BaseCardType):
         # self.font_vertical_shift = font_vertical_shift
 
         # Extras
+        if country is None: # Assign unspecified country from season text
+            if season_text.upper() in self._COUNTRY_FLAGS:
+                country = season_text.upper()
+            else:
+                country = 'GENERIC'
+
         if flag is None or not Path(flag).exists():
             self.country = self._COUNTRY_FLAGS.get(
                 country, self.REF_DIRECTORY / 'generic.webp'
