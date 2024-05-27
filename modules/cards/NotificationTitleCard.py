@@ -84,10 +84,10 @@ class NotificationTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            box_adjustments: tuple[int, int, int, int] = (0, 0, 0, 0),
-            edge_color: str = EDGE_COLOR,
+            box_adjustments: str = '0 0 0 0',
+            edge_color: Optional[str] = None,
             edge_width: int = EDGE_WIDTH,
-            episode_text_color: str = EPISODE_TEXT_COLOR,
+            episode_text_color: Optional[str] = None,
             episode_text_font_size: float = 1.0,
             episode_text_vertical_shift: int = 0,
             glass_color: str = GLASS_COLOR,
@@ -108,8 +108,8 @@ class NotificationTitleCard(BaseCardType):
         self.title_text = self.image_magick.escape_chars(title_text)
         self.season_text = self.image_magick.escape_chars(season_text)
         self.episode_text = self.image_magick.escape_chars(episode_text)
-        self.hide_season_text = hide_season_text
-        self.hide_episode_text = hide_episode_text
+        self.hide_season_text = hide_season_text or not season_text
+        self.hide_episode_text = hide_episode_text or not episode_text
 
         # Font/card customizations
         self.font_color = font_color
@@ -121,15 +121,37 @@ class NotificationTitleCard(BaseCardType):
         self.font_vertical_shift = font_vertical_shift
 
         # Extras
-        self.box_adjustments = box_adjustments
-        self.edge_color = edge_color
+        self.edge_color = edge_color or font_color
         self.edge_width = edge_width
-        self.episode_text_color = episode_text_color
+        if self.edge_width < 0:
+            log.error(f'edge_width must be >0')
+            self.valid = False
+
+        self.episode_text_color = episode_text_color or font_color
         self.episode_text_font_size = episode_text_font_size
+        if self.episode_text_font_size < 0:
+            log.error(f'episode_text_font_size must be ≥0.0')
+            self.valid = False
+
         self.episode_text_vertical_shift = episode_text_vertical_shift
         self.glass_color = glass_color
-        self.position: Position = position
+        self.position: Position = position.lower()
+        if self.position not in ('left', 'right'):
+            log.error(f'position must be "left" or "right')
+            self.valid = False
+
         self.separator = separator
+
+        self.box_adjustments = (0, 0, 0, 0)
+        try:
+            self.box_adjustments = tuple(map(int, box_adjustments.split(' ')))
+            if not len(self.box_adjustments) == 4:
+                raise ValueError
+        except Exception:
+            log.error(f'Invalid box adjustments - must provide integer '
+                      f'adjustments for all sides like "top right bottom left" '
+                      f'- e.g. "20 10 5 0"')
+            self.valid = False
 
 
     @property
@@ -137,7 +159,7 @@ class NotificationTitleCard(BaseCardType):
         """Subcommands required to add the title text."""
 
         # If no title text, return empty commands
-        if len(self.title_text) == 0:
+        if not self.title_text:
             return []
 
         gravity = 'southwest' if self.position == 'left' else 'southeast'
@@ -364,10 +386,9 @@ class NotificationTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
-        standard_etf = NotificationTitleCard.EPISODE_TEXT_FORMAT.upper()
-
         return (custom_episode_map
-                or episode_text_format.upper() != standard_etf)
+                or episode_text_format.upper() \
+                    != NotificationTitleCard.EPISODE_TEXT_FORMAT.upper())
 
 
     def create(self) -> None:
