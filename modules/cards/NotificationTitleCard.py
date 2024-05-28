@@ -15,8 +15,10 @@ Position = Literal['left', 'right']
 
 class NotificationTitleCard(BaseCardType):
     """
-    This class describes a CardType that produces title cards which are
-    
+    This class describes a CardType that produces title cards which
+    feature two compact rectangular frames styled to resemble a
+    notification prompt. These "notifications" can be re-sized,
+    positioned, and colored with extras.
     """
 
     """Directory where all reference files used by this card are stored"""

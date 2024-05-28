@@ -132,7 +132,7 @@ class GraphTitleCard(BaseCardType):
 
     """Implementation details"""
     BACKGROUND_GRAPH_COLOR = 'rgba(140,140,140,0.5)'
-    GRAPH_COLOR = 'SteelBlue1' # 'rgb(77,178,136)'
+    GRAPH_COLOR = 'SteelBlue1'
     GRAPH_FILL_SCALE = 0.6
     GRAPH_INSET = 75
     GRAPH_RADIUS = 175
@@ -171,11 +171,11 @@ class GraphTitleCard(BaseCardType):
             graph_color: str = GRAPH_COLOR,
             graph_inset: int = GRAPH_INSET,
             graph_radius: int = GRAPH_RADIUS,
-            graph_text_font_size: float = 1.0,
+            graph_text_font_size: Optional[float] = None,
             graph_width: int = GRAPH_WIDTH,
             fill_scale: float = GRAPH_FILL_SCALE,
             omit_gradient: bool = False,
-            percentage: float = 0.75,
+            percentage: Optional[float] = None,
             text_position: TextPosition = 'lower left',
             preferences: Optional['Preferences'] = None,
             **unused,
@@ -192,13 +192,15 @@ class GraphTitleCard(BaseCardType):
         self.title_text = self.image_magick.escape_chars(title_text)
         if '/' in episode_text:
             numerator, denominator = map(
-                str.strip, episode_text.split('/', maxsplit=1)
+                str.strip, episode_text.upper().split('/', maxsplit=1)
             )
+            if percentage is None:
+                percentage = float(numerator) / float(denominator)
         else:
-            numerator, denominator = '-', episode_text
+            numerator, denominator = '-', episode_text.upper()
         self.numerator = self.image_magick.escape_chars(numerator)
         self.denominator = self.image_magick.escape_chars(denominator)
-        self.hide_episode_text = hide_episode_text
+        self.hide_episode_text = hide_episode_text or not episode_text
 
         # Font/card customizations
         self.font_color = font_color
@@ -210,16 +212,36 @@ class GraphTitleCard(BaseCardType):
         self.font_vertical_shift = font_vertical_shift
 
         # Extras
-        self.episode_text_font_size = graph_text_font_size
+        if graph_text_font_size is None:
+            self.episode_text_font_size = graph_radius / self.GRAPH_RADIUS
+        else:
+            self.episode_text_font_size = graph_text_font_size
+        if self.episode_text_font_size <= 0:
+            log.error(f'Graph text size must be ≥0.0')
+            self.valid = False
         self.graph_background_color = graph_background_color
         self.graph_color = graph_color
         self.graph_inset = graph_inset
+        if not (0 <= self.graph_inset <= 1800):
+            log.error(f'graph_inset must be between 0 and 1800')
+            self.valid = False
         self.graph_radius = graph_radius
-        self.graph_width = graph_width
+        if not (50 <= self.graph_radius <= 900):
+            log.error(f'graph_radius must be between 50 and 900')
+            self.valid = False
+        self.graph_width = min(graph_width, graph_radius)
+        if self.graph_width <= 0:
+            log.error(f'graph_width must be positive')
+            self.valid = False
         self.fill_scale = fill_scale
         self.omit_gradient = omit_gradient
-        self.percentage = float(percentage)
+        self.percentage = max(0.0, min(1.0, float(percentage))) # Limit [0, 1]
         self.text_position: TextPosition = text_position
+        if self.text_position not in ('upper left', 'upper right', 'left',
+                                      'right', 'lower left', 'lower right'):
+            log.error(f'text_position must be "upper left", "upper right", '
+                      f'"left", "right", "lower left", or "lower right"')
+            self.valid = False
 
 
     @property
@@ -527,7 +549,8 @@ class GraphTitleCard(BaseCardType):
 
         custom_extras = (
             ('graph_background_color' in extras
-                and extras['graph_background_color'] != GraphTitleCard.BACKGROUND_GRAPH_COLOR)
+                and extras['graph_background_color'] != \
+                    GraphTitleCard.BACKGROUND_GRAPH_COLOR)
             or ('graph_color' in extras
                 and extras['graph_color'] != GraphTitleCard.GRAPH_COLOR)
         )
@@ -552,10 +575,9 @@ class GraphTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
-        standard_etf = GraphTitleCard.EPISODE_TEXT_FORMAT.upper()
-
         return (custom_episode_map
-                or episode_text_format.upper() != standard_etf)
+                or episode_text_format.upper() != \
+                    GraphTitleCard.EPISODE_TEXT_FORMAT.upper())
 
 
     def create(self) -> None:
