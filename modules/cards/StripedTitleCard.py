@@ -252,6 +252,26 @@ class PolygonDistribution:
         return coordinates
 
 
+    @staticmethod
+    def is_valid_distrubition(polygons: str, /) -> bool:
+        """Whether the given distribution string is valid"""
+
+        valid_regex = [
+            r'^random\[[sml]+\]$',
+            r'^random\[(\d+,?)+\]$',
+            r'^random\[(\d+-\d+,?)+\]$',
+            r'^[sml]+\+?$',
+            r'^(\d+,?)+\+?$',
+            r'^(\d+-\d+,?)+\+?$)
+        ]
+
+        for reg in valid_regex:
+            if re_compile(reg).match(polygons):
+                return True
+
+        return False
+
+
 class StripedTitleCard(BaseCardType):
     """
     This class describes a CardType that produces title cards which are
@@ -347,9 +367,9 @@ class StripedTitleCard(BaseCardType):
         # Ensure characters that need to be escaped are
         self.title_text = self.image_magick.escape_chars(title_text)
         self.season_text = self.image_magick.escape_chars(season_text)
-        self.hide_season_text = hide_season_text or len(season_text) == 0
         self.episode_text = self.image_magick.escape_chars(episode_text)
-        self.hide_episode_text = hide_episode_text or len(episode_text) == 0
+        self.hide_season_text = hide_season_text or not season_text
+        self.hide_episode_text = hide_episode_text or not episode_text
 
         # Font/card customizations
         self.font_color = font_color
@@ -360,6 +380,22 @@ class StripedTitleCard(BaseCardType):
         self.font_size = font_size
         self.font_vertical_shift = font_vertical_shift
 
+        # Validate polygon distribution
+        polygons = polygons.strip().lower()
+        if not PolygonDistribution.is_valid_distrubition(polygons):
+            log.error(f'polygons specification is incorrect - see documentation')
+            self.valid = False
+        else:
+            for range_ in polygons.removeprefix('random[').removesuffix(']').removesuffix('+').split(','):
+                if '-' not in range_:
+                    continue
+                # Verify lower bound is below upper
+                lower, upper = tuple(map(int, range_.split('-', maxsplit=1)))
+                if not lower <= upper:
+                    log.error(f'polygons size range "{range_}" is invalid - '
+                              f'lower bound cannot be greater than upper bound')
+                    self.valid = False
+
         # Extras
         self.angle = angle
         self.episode_text_color = episode_text_color
@@ -369,7 +405,12 @@ class StripedTitleCard(BaseCardType):
         self.overlay_color = overlay_color
         self.polygon_distribution = PolygonDistribution(polygons)
         self.separator = separator
-        self.text_position: TextPosition = text_position
+        self.text_position: TextPosition = text_position.lower()
+        if self.text_position not in ('upper left', 'upper right', 'lower left',
+                                      'lower right'):
+            log.error(f'text_position must be "upper left", "upper right", '
+                      f'"lower left", or "lower right"')
+            self.valid = False
 
 
     @property
