@@ -252,5 +252,31 @@ nav:
     - The API: development/api.md
   - Help & Support: help_and_support.md
   - Version 1:
+    - v1/index.md
     - Card Types:
+      - Anime: v1/card_types/anime.md
+      - Banner: v1/card_types/banner.md
+      - Comic Book: v1/card_types/comic_book.md
+      - Cutout: v1/card_types/cutout.md
+      - Divider: v1/card_types/divider.md
+      - Fade: v1/card_types/fade.md
       - Formula 1: v1/card_types/formula_1.md
+      - Frame: v1/card_types/frame.md
+      - Graph: v1/card_types/graph.md
+      - Inset: v1/card_types/inset.md
+      - Landscape: v1/card_types/landscape.md
+      - Logo: v1/card_types/logo.md
+      - Olivier: v1/card_types/olivier.md
+      - Marvel: v1/card_types/marvel.md
+      - Music: v1/card_types/music.md
+      - Notification: v1/card_types/notification.md
+      - Poster: v1/card_types/poster.md
+      - Roman Numeral: v1/card_types/roman_numeral.md
+      - Shape: v1/card_types/shape.md
+      - Standard: v1/card_types/standard.md
+      - Star Wars: v1/card_types/star_wars.md
+      - Striped: v1/card_types/striped.md
+      - Textless: v1/card_types/textless.md
+      - Tinted Frame: v1/card_types/tinted_frame.md
+      - Tinted Glass: v1/card_types/tinted_glass.md
+      - White Border: v1/card_types/white_border.md
