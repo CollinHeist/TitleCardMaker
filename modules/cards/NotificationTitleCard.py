@@ -17,8 +17,10 @@ Position = Literal['left', 'right']
 
 class NotificationTitleCard(BaseCardType):
     """
-    This class describes a CardType that produces title cards which are
-    
+    This class describes a CardType that produces title cards which
+    feature two compact rectangular frames styled to resemble a
+    notification prompt. These "notifications" can be re-sized,
+    positioned, and colored with extras.
     """
 
     """API Parameters"""
@@ -99,7 +101,7 @@ class NotificationTitleCard(BaseCardType):
             ),
         ],
         description=[
-            'Card type featuring two compact rectangular frames, styled to '
+            'Card type featuring two compact rectangular frames styled to '
             'resemble a notification prompt.', 'These frames can be resized, '
             'positioned, and colored with extras.'
         ],
