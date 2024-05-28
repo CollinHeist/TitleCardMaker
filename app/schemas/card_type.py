@@ -290,9 +290,9 @@ class FormulaOneCardType(BaseCardTypeAllText):
     def parse_country(cls, values: dict) -> dict:
         if values['country'] is None:
             if values['season_text'].upper() in FormulaOneTitleCard._COUNTRY_FLAGS:
-                values['country'] = values['season_text']
+                values['country'] = values['season_text'].upper()
             else:
-                values['country'] = 'generic'
+                values['country'] = 'GENERIC'
 
         return values
 
@@ -354,7 +354,7 @@ class GraphCardType(BaseCardModel):
         # Scale episode text size by radius if not provided
         if values.get('graph_text_font_size', None) is None:
             values['graph_text_font_size'] = \
-                (values['graph_radius'] - 0) / GraphTitleCard.GRAPH_RADIUS
+                values['graph_radius'] / GraphTitleCard.GRAPH_RADIUS
 
         # Episode text formatted as {nom} / {den}; calculate percentage
         if (_match := _graph_episode_text_regex.match(values['episode_text'])):

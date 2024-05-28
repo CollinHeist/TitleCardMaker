@@ -94,7 +94,25 @@ The full list of supported values is below:
 
 #### Default Behavior
 
-...
+By default, the value of `country` is parsed from the season title. This is done
+so that the value can change for different seasons (i.e. different F1 locations).
+
+??? example "Example"
+
+    The following example would 
+
+    ```yaml hl_lines="4-8"
+    series:
+      F1 (2020):
+        card_type: formula 1
+        seasons:
+          1: Australian
+          2: Chinese
+          3: Las Vegas
+          4: Qatar
+    ```
+
+This will not happen if `country` is explicitly specified.
 
 ### Race (`race`) { data-toc-label="Race" }
 
@@ -107,8 +125,8 @@ The "race text" can be adjusted with the `race` extra. The default value is
 
     ```yaml hl_lines="6"
     series:
-      F1:
-        card_type:  formula 1
+      F1 (2020):
+        card_type: formula 1
         extras:
           country: Japanese
           race: Grand Prix
@@ -127,7 +145,7 @@ adjusted with the `episode_text_color` extra. The default is `white`.
 
     ```yaml hl_lines="6"
     series:
-      F1:
+      F1 (2020):
         card_type: formula 1
         extras:
           country: Japanese
@@ -146,7 +164,7 @@ above `1.0` will increase the size.
 
     ```yaml hl_lines="6"
     series:
-      F1:
+      F1 (2020):
         card_type: formula 1
         extras:
           country: Japanese
@@ -168,14 +186,14 @@ This extra is only required if you wish to use a custom flag file.
 
     ```yaml hl_lines="6"
     series:
-      F1:
+      F1 (2020):
         card_type: formula 1
         extras:
           country: Japanese
           flag: ./modules/ref/formula/british.webp
     ```
 
-### Year (`frame_year`)
+### Year (`frame_year`) { data-toc-label="Year" }
 
 At the bottom of the card is the year in which the race took place. By default,
 this is parsed from the airdate of the Card's episode, but if that info is not
@@ -189,7 +207,7 @@ other than `2024`).
 
     ```yaml hl_lines="6"
     series:
-      F1:
+      F1 (2020):
         card_type: formula 1
         extras:
           country: Japanese
