@@ -160,10 +160,11 @@ class MusicTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
+            watched: Optional[bool] = None,
             add_controls: bool = False,
             album_cover: Optional[Path] = None,
             album_size: float = 1.0,
-            control_colors: tuple[str, str, str, str, str] = DEFAULT_CONTROL_COLORS,
+            control_colors: str = 'white white white white white',
             draw_heart: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
             heart_color: str = 'transparent',
@@ -191,10 +192,10 @@ class MusicTitleCard(BaseCardType):
 
         # Ensure characters that need to be escaped are
         self.title_text = self.image_magick.escape_chars(title_text)
-        self.season_text = self.image_magick.escape_chars(season_text)
-        self.hide_season_text = hide_season_text
-        self.episode_text = self.image_magick.escape_chars(episode_text)
-        self.hide_episode_text = hide_episode_text
+        self.season_text = self.image_magick.escape_chars(season_text.upper())
+        self.episode_text = self.image_magick.escape_chars(episode_text.upper())
+        self.hide_season_text = hide_season_text or not season_text
+        self.hide_episode_text = hide_episode_text or not episode_text
 
         # Font/card customizations
         self.font_color = font_color
@@ -208,23 +209,58 @@ class MusicTitleCard(BaseCardType):
 
         # Extras
         self.add_controls = add_controls
+        if self.add_controls and player_width < 600:
+            log.error(f'Controls can only be added if player_width is at least'
+                      f'600')
+            self.valid = False
         self.album_cover = Path(album_cover) if album_cover else album_cover
         self.album_size = album_size
-        self.control_colors = ControlColors(*control_colors)
+        if len((control_colors := control_colors.split(' '))) == 5:
+            self.control_colors = ControlColors(*control_colors)
+        else:
+            log.error(f'control_colors must be specified as five space-'
+                      f'separated colors - e.g. "red white white white red"')
+            self.valid = False
         self.draw_heart = draw_heart
         self.episode_text_color = episode_text_color
         self.heart_color = heart_color
         self.heart_stroke_color = heart_stroke_color
-        self.pause_or_play = pause_or_play
+        if (pause_or_play := pause_or_play.lower()) == 'watched':
+            if watched is None:
+                self.pause_or_play = self.DEFAULT_PLAYER_ACTION
+            else:
+                self.pause_or_play = 'pause' if watched else 'play'
+        else:
+            self.pause_or_play = pause_or_play
         self.percentage = random() if percentage == 'random' else percentage
         self.player_color = player_color
         self.player_inset = player_inset
-        self.player_position: PlayerPosition = player_position
-        self.player_style: PlayerStyle = player_style
+        if not (0 <= self.player_inset <= 1200):
+            log.error(f'player_inset must be between 0 and 1200')
+            self.valid = False
+        self.player_position: PlayerPosition = player_position.lower()
+        if self.player_position not in ('left', 'middle', 'right'):
+            log.error(f'player_position must be "left", "middle", or "right"')
+            self.valid = False
+        self.player_style: PlayerStyle = player_style.lower()
+        if self.player_style not in ('basic', 'artwork', 'logo', 'poster'):
+            log.error(f'player_style must be "basic", "artwork", "logo", or '
+                      f'"poster"')
+            self.valid = False
         self.player_width = player_width
+        if not (400 <= self.player_width <= 3000):
+            log.error(f'player_width must be between 400 and 3000')
+            self.valid = False
         self.round_corners = round_corners
         self.subtitle = subtitle
         self.timeline_color = timeline_color
+
+        if (self.player_style != 'basic'
+            and (not isinstance(self.album_cover, Path)
+                 or not self.album_cover.exists())):
+            log.error(f'album_cover file must be specified and exist if '
+                      f'player_style is not "basic"')
+            self.valid = False
 
         # Implementation details
         self.__album_dimensions: Optional[Dimensions] = None
@@ -255,7 +291,7 @@ class MusicTitleCard(BaseCardType):
         """Subcommands required to add the title text."""
 
         # If no title text, return empty commands
-        if len(self.title_text) == 0:
+        if not self.title_text:
             return []
 
         # Determine x position of text based on player positon
@@ -845,10 +881,9 @@ class MusicTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
-        standard_etf = MusicTitleCard.EPISODE_TEXT_FORMAT.upper()
-
         return (custom_episode_map
-                or episode_text_format.upper() != standard_etf)
+                or episode_text_format.upper() != \
+                    MusicTitleCard.EPISODE_TEXT_FORMAT.upper())
 
 
     def create(self) -> None:
