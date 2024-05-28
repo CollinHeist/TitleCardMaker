@@ -461,7 +461,7 @@ class MusicCardType(BaseCardTypeCustomFontAllText):
     player_inset: conint(ge=0, le=1200) = MusicTitleCard.DEFAULT_INSET
     player_position: PlayerPosition = MusicTitleCard.DEFAULT_PLAYER_POSITION
     player_style: PlayerStyle = MusicTitleCard.DEFAULT_PLAYER_STYLE
-    player_width: conint(ge=400, le=3200) = MusicTitleCard.DEFAULT_PLAYER_WIDTH
+    player_width: conint(ge=400, le=3000) = MusicTitleCard.DEFAULT_PLAYER_WIDTH
     round_corners: bool = True
     subtitle: str = '{series_name}'
     timeline_color: str = MusicTitleCard.DEFAULT_TIMELINE_COLOR
@@ -485,7 +485,7 @@ class MusicCardType(BaseCardTypeCustomFontAllText):
     @root_validator(skip_on_failure=True)
     def validate_player_width(cls, values: dict) -> dict:
         if values['add_controls'] and values['player_width'] < 600:
-            raise ValueError('Player width must be at least 600')
+            raise ValueError('Player width must be at least 600 to add controls')
         return values
 
     @root_validator(skip_on_failure=True, pre=True)

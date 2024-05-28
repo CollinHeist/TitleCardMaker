@@ -100,7 +100,7 @@ class MusicTitleCard(BaseCardType):
                 description='Width of the player',
                 tooltip=(
                     'Number between <v>400</v> (<v>600</v> if the controls are '
-                    'enabled) and <v>3200</v>. Default is <v>900</v>. Unit is '
+                    'enabled) and <v>3000</v>. Default is <v>900</v>. Unit is '
                     'pixels.'
                 ),
             ),
