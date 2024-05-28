@@ -14,15 +14,15 @@ anime design is the ability to add kanji text above the episode title.
 
 This card type is used whenever `card_type` is specified as `anime`.
 
-# Examples
+## Examples
 
-## Spoiler
+### Spoiler
 
 <figure markdown="span" style="max-width: 70%">
   ![Example Anime Card](https://user-images.githubusercontent.com/17693271/185820454-4e3dca1c-c0df-4fa0-a7a7-81e070aa9e69.jpg)
 </figure>
 
-## Blurred
+### Blurred
 
 <figure markdown="span" style="max-width: 70%">
   ![Example Blurred Anime Card](https://user-images.githubusercontent.com/17693271/174454693-cbb22253-0fb2-4fdb-9729-29c73560baa0.jpgg)
@@ -252,7 +252,7 @@ By default, this card type applys a gradient on top of the source image so that
 the text is more legible on the card. This can be disabled by setting the
 `omit_gradient` extra to `false`.
 
-??? example"
+??? example "Example"
 
     ```yaml hl_lines="5"
     series:
@@ -267,7 +267,7 @@ the text is more legible on the card. This can be disabled by setting the
 The character between the season and episode text (a.k.a. the separator) can
 be customized with the `separator` extra. By default, a `·` character is used.
 
-??? example"
+??? example "Example"
 
     ```yaml hl_lines="5"
     series:
