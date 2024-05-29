@@ -1266,7 +1266,7 @@ class PreferenceParser(YamlReader):
             'verify_ssl': self.plex_verify_ssl,
             'integrate_with_kometa': self.integrate_with_kometa,
             'filesize_limit': self.plex_filesize_limit,
-            'plex_timeout': self.plex_timeout
+            'timeout': self.plex_timeout
         }
 
     @property
