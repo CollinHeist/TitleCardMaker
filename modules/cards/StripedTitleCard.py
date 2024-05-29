@@ -262,7 +262,7 @@ class PolygonDistribution:
             r'^random\[(\d+-\d+,?)+\]$',
             r'^[sml]+\+?$',
             r'^(\d+,?)+\+?$',
-            r'^(\d+-\d+,?)+\+?$)
+            r'^(\d+-\d+,?)+\+?$)'
         ]
 
         for reg in valid_regex:
@@ -675,42 +675,6 @@ class StripedTitleCard(BaseCardType):
         return (custom_episode_map
                 or episode_text_format.upper() != \
                     StripedTitleCard.EPISODE_TEXT_FORMAT.upper())
-
-
-    @staticmethod
-    def get_title_split_characteristics(
-            characteristics: SplitCharacteristics,
-            default_font_file: str,
-            data: dict,
-        ) -> SplitCharacteristics:
-        """
-        Get the title split characteristics for the card defined by the
-        given card data. This modifies the style based on the indicated
-        text position.
-
-        Args:
-            characteristics: Base split characteristics being modified
-                for this card.
-            default_font_file: Default font file for font size
-                evaluation.
-            data: Dictionary of card data to evaluate for any changes
-                to the split characteristics.
-
-        Returns:
-            SplitCharacteristics object which defines how to split
-            titles.
-        """
-
-        if 'text_position' in data:
-            if 'upper' in data['text_position']:
-                characteristics['style'] = 'top'
-            else:
-                characteristics['style'] = 'bottom'
-
-        # Apply defaults
-        return BaseCardType.get_title_split_characteristics(
-            characteristics, default_font_file, data
-        )
 
 
     def create(self) -> None:
