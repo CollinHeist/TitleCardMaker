@@ -15,19 +15,14 @@ colored with extras.
 
 This card type is used whenever `card_type` is specified as `notification`.
 
-## Examples
+## Example
 
-### Spoiler
-
-<figure markdown="span" style="max-width: 70%">
-  ![Example Notification Card](../../card_types/assets/notification.webp)
-</figure>
-
-### Blurred
-
-<figure markdown="span" style="max-width: 70%">
-  ![Example Blurred Notification Card](./assets/notification_blurred.webp)
-</figure>
+<div class="image-compare example-card"
+    data-starting-point="80"
+    data-left-label="Standard" data-right-label="Blurred">
+    <img src="../../card_types/assets/notification.webp"/>
+    <img src="./assets/notification_blurred.webp"/>
+</div>
 
 ## Valid `extras` { data-toc-label="Valid Extras" }
 
@@ -68,8 +63,8 @@ extra. This matches the font color by default.
     <div class="image-compare example-card"
         data-starting-point="75.87"
         data-left-label="white" data-right-label="crimson">
-        <img src="../../card_types/assets/notification.webp"/>
-        <img src="../../card_types/assets/notification-edge-color.webp"/>
+        <img src="../../../card_types/assets/notification.webp"/>
+        <img src="../../../card_types/assets/notification-edge-color.webp"/>
     </div>
 
 #### Width (`edge_width`) { data-toc-label="Width" }
