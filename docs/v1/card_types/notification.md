@@ -5,7 +5,7 @@ description: >
 ---
 
 <link rel="stylesheet" type="text/css" href="https://unpkg.com/image-compare-viewer/dist/image-compare-viewer.min.css">
-<script src="../../javascripts/imageCompare.js" defer></script>
+<script src="../../../javascripts/imageCompare.js" defer></script>
 
 # Notification Card Type
 
@@ -20,7 +20,7 @@ This card type is used whenever `card_type` is specified as `notification`.
 <div class="image-compare example-card"
     data-starting-point="80"
     data-left-label="Standard" data-right-label="Blurred">
-    <img src="../../card_types/assets/notification.webp"/>
+    <img src="../../../card_types/assets/notification.webp"/>
     <img src="./assets/notification_blurred.webp"/>
 </div>
 
@@ -63,8 +63,8 @@ extra. This matches the font color by default.
     <div class="image-compare example-card"
         data-starting-point="75.87"
         data-left-label="white" data-right-label="crimson">
-        <img src="../../../card_types/assets/notification.webp"/>
-        <img src="../../../card_types/assets/notification-edge-color.webp"/>
+        <img src="../../../../card_types/assets/notification.webp"/>
+        <img src="../../../../card_types/assets/notification-edge-color.webp"/>
     </div>
 
 #### Width (`edge_width`) { data-toc-label="Width" }
@@ -85,8 +85,8 @@ extra. This defaults to `5`, and is in pixels.
     <div class="image-compare example-card"
         data-starting-point="75.87"
         data-left-label="5" data-right-label="15">
-        <img src="../../card_types/assets/notification.webp"/>
-        <img src="../../card_types/assets/notification-edge-width.webp"/>
+        <img src="../../../card_types/assets/notification.webp"/>
+        <img src="../../../card_types/assets/notification-edge-width.webp"/>
     </div>
 
 ### Episode Text
@@ -109,8 +109,8 @@ extra. This matches the font color by default.
     <div class="image-compare example-card"
         data-starting-point="88.91"
         data-left-label="white" data-right-label="crimson">
-        <img src="../../card_types/assets/notification.webp"/>
-        <img src="../../card_types/assets/notification-etc.webp"/>
+        <img src="../../../card_types/assets/notification.webp"/>
+        <img src="../../../card_types/assets/notification-etc.webp"/>
     </div>
 
 #### Size (`episode_text_font_size`) { data-toc-label="Size" }
@@ -131,8 +131,8 @@ extra. This defaults to `1.0`.
     <div class="image-compare example-card"
         data-starting-point="88.91"
         data-left-label="1.0" data-right-label="1.5">
-        <img src="../../card_types/assets/notification.webp"/>
-        <img src="../../card_types/assets/notification-etfs.webp"/>
+        <img src="../../../card_types/assets/notification.webp"/>
+        <img src="../../../card_types/assets/notification-etfs.webp"/>
     </div>
 
 #### Vertical Shift (`episode_text_vertical_shift`) { data-toc-label="Vertical Shift" }
@@ -154,8 +154,8 @@ shift the box (and text) up, negative values down.
     <div class="image-compare example-card"
         data-starting-point="88.91"
         data-left-label="0" data-right-label="-30">
-        <img src="../../card_types/assets/notification.webp"/>
-        <img src="../../card_types/assets/notification-etvs.webp"/>
+        <img src="../../../card_types/assets/notification.webp"/>
+        <img src="../../../card_types/assets/notification-etvs.webp"/>
     </div>
 
 ### Notification
@@ -203,8 +203,8 @@ black at 50% opacity. A transparent color can be specified.
     <div class="image-compare example-card"
         data-starting-point="88.91"
         data-left-label="rgba(0,0,0,0.50)" data-right-label="rgba(5, 122, 246, 0.5)">
-        <img src="../../card_types/assets/notification.webp"/>
-        <img src="../../card_types/assets/notification-background-color.webp"/>
+        <img src="../../../card_types/assets/notification.webp"/>
+        <img src="../../../card_types/assets/notification-background-color.webp"/>
     </div>
 
 #### Position (`position`) { data-toc-label="Position" }
@@ -225,8 +225,8 @@ extra. This can be either `left` or `right`, and defaults to `right`.
     <div class="image-compare example-card"
         data-starting-point="50"
         data-left-label="left" data-right-label="right">
-        <img src="../../card_types/assets/notification-position-left.webp"/>
-        <img src="../../card_types/assets/notification.webp"/>
+        <img src="../../../card_types/assets/notification-position-left.webp"/>
+        <img src="../../../card_types/assets/notification.webp"/>
     </div>
 
 *[Index Text]: Season and episode text
@@ -250,8 +250,8 @@ character is added between them. This character can be adjusted with the
     <div class="image-compare example-card"
         data-starting-point="90"
         data-left-label="/" data-right-label="||">
-        <img src="../../card_types/assets/notification.webp"/>
-        <img src="../../card_types/assets/notification-separator.webp"/>
+        <img src="../../../card_types/assets/notification.webp"/>
+        <img src="../../../card_types/assets/notification-separator.webp"/>
     </div>
 
 *[Index Text]: Season and episode text
