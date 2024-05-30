@@ -36,7 +36,7 @@ class NotificationTitleCard(BaseCardType):
             Extra(
                 name='Edge Color',
                 identifier='edge_color',
-                description='Color of the edge of the text box',
+                description='Color of the edge of each notification box',
                 tooltip='Default is <c>white</c>.'
             ),
             Extra(
@@ -62,8 +62,9 @@ class NotificationTitleCard(BaseCardType):
                 identifier='episode_text_vertical_shift',
                 description=(
                     'Additional vertical shift to apply to the season and '
-                    'episode text. Default is <v>0</v>.'
+                    'episode text.'
                 ),
+                tooltip='Default is <v>0</v>.',
             ),
             Extra(
                 name='Notification Background Color',
@@ -74,7 +75,7 @@ class NotificationTitleCard(BaseCardType):
             Extra(
                 name='Notification Position',
                 identifier='position',
-                description='Where to position the notification',
+                description='Where to position the notifications',
                 tooltip=(
                     'Either <v>left</v> or <v>right</v>. Default is '
                     '<v>right</v>.'
