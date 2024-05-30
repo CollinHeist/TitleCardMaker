@@ -19,13 +19,13 @@ This card type is used whenever `card_type` is specified as `anime`.
 ### Spoiler
 
 <figure markdown="span" style="max-width: 70%">
-  ![Example Anime Card](https://user-images.githubusercontent.com/17693271/185820454-4e3dca1c-c0df-4fa0-a7a7-81e070aa9e69.jpg)
+  ![Example Anime Card](../../card_types/assets/anime.webp)
 </figure>
 
 ### Blurred
 
 <figure markdown="span" style="max-width: 70%">
-  ![Example Blurred Anime Card](https://user-images.githubusercontent.com/17693271/174454693-cbb22253-0fb2-4fdb-9729-29c73560baa0.jpgg)
+  ![Example Blurred Anime Card](./assets/anime_blurred.webp)
 </figure>
 
 ## Valid `extras` { data-toc-label="Valid Extras" }
@@ -47,6 +47,8 @@ described in greater detail below.
 | `episode_stroke_color` | `black`   | Color of the stroke for the episode text |
 | `omit_gradient`        | `false`   | Whether to omit the gradient overlay from the card |
 | `separator`            | `·`       | Character to separate season and episode text |
+
+## Customization
 
 ### Adding Kanji
 
@@ -123,7 +125,7 @@ this template.
 
 ### Kanji 
 
-#### Color (`kanji_color`)  { data-toc-label="Color" }
+#### Color (`kanji_color`) { data-toc-label="Color" }
 
 The color of the kanji text can be adjusted with the `kanji_color` extra. This
 defaults to `white` (to match the default font color of the title text).
@@ -231,7 +233,7 @@ ones move it down.
 The color of the episode text can be adjusted with the `episode_text_color`
 extra. This defaults to `#CFCFCF`.
 
-??? example"
+??? example "Example"
 
     ```yaml hl_lines="5"
     series:
