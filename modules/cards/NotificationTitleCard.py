@@ -359,7 +359,7 @@ class NotificationTitleCard(BaseCardType):
             )
 
         return [
-            # Blur rectangle in the given bounds
+            # Duplicate image to blur rectangle in the given bounds
             f'\( -clone 0',
             f'-fill white',
             f'-colorize 100',
@@ -369,7 +369,8 @@ class NotificationTitleCard(BaseCardType):
             f'-write mpr:mask',
             f'+delete \)',
             f'-mask mpr:mask',
-            f'-blur {self._GLASS_BLUR_PROFILE}',
+            # Do not blur if whole image is being blurred
+            f'' if self.blur else f'-blur {self._GLASS_BLUR_PROFILE}',
             f'+mask',
             # Draw glass shape
             f'-fill "{self.glass_color}"',
@@ -426,7 +427,8 @@ class NotificationTitleCard(BaseCardType):
             ('edge_color' in extras
                 and extras['edge_color'] != NotificationTitleCard.EDGE_COLOR)
             or ('episode_text_color' in extras
-                and extras['episode_text_color'] != NotificationTitleCard.EPISODE_TEXT_COLOR)
+                and extras['episode_text_color'] != \
+                    NotificationTitleCard.EPISODE_TEXT_COLOR)
             or ('episode_text_font_size' in extras
                 and extras['episode_text_font_size'] != 1.0)
             or ('episode_text_vertical_shift' in extras
@@ -453,10 +455,9 @@ class NotificationTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
-        standard_etf = NotificationTitleCard.EPISODE_TEXT_FORMAT.upper()
-
         return (custom_episode_map
-                or episode_text_format.upper() != standard_etf)
+                or episode_text_format.upper() != \
+                    NotificationTitleCard.EPISODE_TEXT_FORMAT.upper())
 
 
     def create(self) -> None:
