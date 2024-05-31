@@ -770,7 +770,7 @@ class MusicTitleCard(BaseCardType):
             + self._title_margin_height \
             + self._album_dimensions.height \
             + (25 if self.player_style == 'basic' else 60)
-        # Controls / timeline / subtitle / text diff / title / margin / album / margin
+        # Controls, timeline, subtitle, text diff, title, margin, album, margin
 
         start = Coordinate(start_x, self.HEIGHT - self.player_inset - height)
         end = start + (self.player_width, height)
@@ -786,7 +786,7 @@ class MusicTitleCard(BaseCardType):
             f'-write mpr:mask',
             f'+delete \)',
             f'-mask mpr:mask',
-            f'-blur {self.GLASS_BLUR_PROFILE}',
+            f'' if self.blur else f'-blur {self.GLASS_BLUR_PROFILE}',
             f'+mask',
             # Draw glass shape
             f'-fill "{self.player_color}"',
@@ -1014,11 +1014,14 @@ class MusicTitleCard(BaseCardType):
 
         custom_extras = (
             ('control_colors' in extras
-                and extras['control_colors'] != MusicTitleCard.DEFAULT_CONTROL_COLORS)
+                and extras['control_colors'] != \
+                    MusicTitleCard.DEFAULT_CONTROL_COLORS)
             or ('episode_text_color' in extras
-                and extras['episode_text_color'] != MusicTitleCard.EPISODE_TEXT_COLOR)
+                and extras['episode_text_color'] != \
+                    MusicTitleCard.EPISODE_TEXT_COLOR)
             or ('timeline_color' in extras
-                and extras['timeline_color'] != MusicTitleCard.DEFAULT_TIMELINE_COLOR)
+                and extras['timeline_color'] != \
+                    MusicTitleCard.DEFAULT_TIMELINE_COLOR)
         )
 
         return custom_extras or MusicTitleCard._is_custom_font(font)
@@ -1041,10 +1044,9 @@ class MusicTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
-        standard_etf = MusicTitleCard.EPISODE_TEXT_FORMAT.upper()
-
         return (custom_episode_map
-                or episode_text_format.upper() != standard_etf)
+                or episode_text_format.upper() != \
+                    MusicTitleCard.EPISODE_TEXT_FORMAT.upper())
 
 
     @staticmethod
@@ -1071,6 +1073,7 @@ class MusicTitleCard(BaseCardType):
             titles.
         """
 
+        # Scale line width by player width
         if 'player_width' in data:
             characteristics['max_line_width'] = int(
                 characteristics['max_line_width']
