@@ -234,6 +234,9 @@ class GraphTitleCard(BaseCardType):
             log.error(f'graph_width must be positive')
             self.valid = False
         self.fill_scale = fill_scale
+        if not (0.0 <= self.fill_scale <= 1.0):
+            log.error(f'fill_scale must be between 0.0 and 1.0')
+            self.valid = False
         self.omit_gradient = omit_gradient
         self.percentage = max(0.0, min(1.0, float(percentage))) # Limit [0, 1]
         self.text_position: TextPosition = text_position
