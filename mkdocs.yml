@@ -253,7 +253,9 @@ nav:
   - Help & Support: help_and_support.md
   - Version 1:
     - v1/index.md
+    - Sync: v1/sync.md
     - Card Types:
+      - v1/card_types/index.md
       - Anime: v1/card_types/anime.md
       - Banner: v1/card_types/banner.md
       - Comic Book: v1/card_types/comic_book.md

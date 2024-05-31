@@ -68,6 +68,7 @@ TitleCardMaker currently has the following built-in card types:
 | [Roman Numeral](./roman_numeral.md) | <img src="./assets/roman_numeral.webp" width="350"> |
 | [Shape](./shape.md)                 | <img src="./assets/shape.webp" width="350">         |
 | [Star Wars](./star_wars.md)         | <img src="./assets/star_wars.webp" width="350">     |
+| [Standard](./standard.md)           | <img src="./assets/standard.webp" width="350">      |
 | [Striped](./striped.md)             | <img src="./assets/striped.webp" width="350">       |
 | [Textless](./textless.md)           | <img src="./assets/textless.webp" width="350">      |
 | [Tinted Frame](./tinted_frame.md)   | <img src="./assets/tinted_frame.webp" width="350">  |

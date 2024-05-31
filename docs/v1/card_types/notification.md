@@ -21,7 +21,7 @@ This card type is used whenever `card_type` is specified as `notification`.
     data-starting-point="80"
     data-left-label="Standard" data-right-label="Blurred">
     <img src="../../../card_types/assets/notification.webp"/>
-    <img src="./assets/notification_blurred.webp"/>
+    <img src="../assets/notification_blurred.webp"/>
 </div>
 
 ## Valid `extras` { data-toc-label="Valid Extras" }
