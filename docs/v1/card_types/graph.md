@@ -4,6 +4,9 @@ description: >
     An overview of the built-in Graph card type.
 ---
 
+<link rel="stylesheet" type="text/css" href="https://unpkg.com/image-compare-viewer/dist/image-compare-viewer.min.css">
+<script src="../../../javascripts/imageCompare.js" defer></script>
+
 # Graph Card Type
 
 This card type features a bar graph progress bar which can be used to indicate

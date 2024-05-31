@@ -4,6 +4,9 @@ description: >
     An overview of the built-in Formula 1 card type.
 ---
 
+<link rel="stylesheet" type="text/css" href="https://unpkg.com/image-compare-viewer/dist/image-compare-viewer.min.css">
+<script src="../../../javascripts/imageCompare.js" defer></script>
+
 # Formula 1 Card Type
 
 !!! warning "Applicability"
