@@ -175,13 +175,14 @@ class GraphTitleCard(BaseCardType):
                 description='Whether to omit the gradient overlay',
                 tooltip=(
                     'Either <v>True</v> or <v>False</v>. If <v>True</v>, text '
-                    'may appear less legible on brighter images.'
+                    'may appear less legible on brighter images. Default is '
+                    '<v>False</v>.'
                 ),
             ),
             Extra(
                 name='Text Position',
                 identifier='text_position',
-                description='Where on the image to position the text',
+                description='Where on the image to position the graph and text',
                 tooltip=(
                     'Either <v>upper left</v>, <v>upper right</v>, <v>left</v>,'
                     ' <v>right</v>, <v>lower left</v>, or <v>lower right</v>. '
@@ -192,7 +193,7 @@ class GraphTitleCard(BaseCardType):
         description=[
             'A title card similiar to the Shape card, but features a bar '
             '"graph" or progress bar which can be used to indicate total series'
-            'progress.', 'The progress is parsed from the Episode Text, which '
+            ' progress.', 'The progress is parsed from the Episode Text, which '
             'defaults to "{episode_number} / {season_episode_max}" to display '
             'the progress within each season.',
         ],
