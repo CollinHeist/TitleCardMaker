@@ -109,15 +109,15 @@ Below is a showcase of all the user-submitted types available:
 
 | Creator   | `card_type` Value | Example |
 | :-------: | :---------------: | :---: |
-| azuravian | `azuravian/TitleColorMatch`         | <img src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/azuravian/preview.webp" height="175"/> |
-| KHthe8th  | `KHthe8th/TintedFramePlusTitleCard` | <img src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/KHthe8th/preview.webp" height="175"> |
-| lyonza    | `lyonza/WhiteTextBroadcast`         | <img src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/lyonza/preview.webp" height="175"/> |
-| Wdvh      | `Wdvh/StarWarsTitleOnly`            | <img src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/Wdvh/StarWarsTitleOnly.preview.jpg" height="175"/> |
-| Wdvh      | `Wdvh/WhiteTextStandard`            | <img src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/Wdvh/WhiteTextStandard.preview.jpg" height="175"/> |
-| Wdvh      | `Wdvh/WhiteTextAbsolute`            | <img src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/Wdvh/WhiteTextAbsolute.preview.jpg" height="175"/> |
-| Wdvh      | `Wdvh/WhiteTextTitleOnly`           | <img src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/Wdvh/WhiteTextTitleOnly.preview.jpg" height="175"/> |
-| Yozora    | `Yozora/RetroTitleCard`             | <img src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/Yozora/RetroTitleCard.preview.jpg" height="175"/> |
-| Yozora    | `Yozora/SlimTitleCard`              | <img src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/Yozora/SlimTitleCard.preview.jpg" height="175"/> |
+| azuravian | `azuravian/TitleColorMatch`         | <img src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/azuravian/preview.webp" width="350"/> |
+| KHthe8th  | `KHthe8th/TintedFramePlusTitleCard` | <img src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/KHthe8th/preview.webp" width="350"> |
+| lyonza    | `lyonza/WhiteTextBroadcast`         | <img src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/lyonza/preview.webp" width="350"/> |
+| Wdvh      | `Wdvh/StarWarsTitleOnly`            | <img src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/Wdvh/StarWarsTitleOnly.preview.jpg" width="350"/> |
+| Wdvh      | `Wdvh/WhiteTextStandard`            | <img src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/Wdvh/WhiteTextStandard.preview.jpg" width="350"/> |
+| Wdvh      | `Wdvh/WhiteTextAbsolute`            | <img src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/Wdvh/WhiteTextAbsolute.preview.jpg" width="350"/> |
+| Wdvh      | `Wdvh/WhiteTextTitleOnly`           | <img src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/Wdvh/WhiteTextTitleOnly.preview.jpg" width="350"/> |
+| Yozora    | `Yozora/RetroTitleCard`             | <img src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/Yozora/RetroTitleCard.preview.jpg" width="350"/> |
+| Yozora    | `Yozora/SlimTitleCard`              | <img src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/Yozora/SlimTitleCard.preview.jpg" width="350"/> |
 
 ## Local Cards
 
@@ -140,6 +140,7 @@ can be simplified to the following:
 
 1. Identify the look of the desired card - this is less _programming_ and more
 _graphic design_.
+
    - If you're playing around with ideas, I recommend getting a basic outline
    completed in a GUI-based editing program (so **not ImageMagick**) such as
    Photopea, Photoshop, GIMP, etc., as the visual feedback is immediate and less
@@ -147,9 +148,12 @@ _graphic design_.
 
 2. With a basic layout finalized, identify which elements of the card you'd like
 customizable by each series/show. Think about such questions as:
+
    - Does the card's style only really work with a fixed font/color/size, or do
    you want to allow for customization?
+
    - If there are season titles on the image, do you use custom season titles?
+
    - What "data" does the card use? For example, all title cards probably use
    the episode title itself, but does your design also use the show title? Or
    perhaps the air-date? 
@@ -157,9 +161,11 @@ customizable by each series/show. Think about such questions as:
 3. Develop the set of ImageMagick commands necessary for creating your title
 card. This can involve a lot of searching "how to...", but looking through
 existing card classes might help.
+
    - Try and create the cards in steps (that will eventually become methods in
    the `CardType` class) such as "resize the source image" then "add _ overlay"
    and finally "add some title text"
+
    - I usually have a "reference" card created in a GUI-editor that I am pull up
    alongside my "working" card created by ImageMagick, viewing them side-by-side
    can help make the minor text size and positioning modifications a lot easier.
@@ -167,6 +173,7 @@ existing card classes might help.
 4. Create the Python class that implements these identified features. This class
 **must** be a subclass of `CardType`, and as such must implement the properties
 and methods described in that class:
+
    - `TITLE_CHARACTERISTICS`: Dictionary with keys `max_line_width`,
    `max_line_count`, and `top_heavy`
    - `ARCHIVE_NAME`: String to append to all archives associated with this type

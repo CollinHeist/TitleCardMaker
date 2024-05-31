@@ -16,17 +16,12 @@ This card type is used whenever `card_type` is specified as `anime`.
 
 ## Examples
 
-### Spoiler
-
-<figure markdown="span" style="max-width: 70%">
-  ![Example Anime Card](../../card_types/assets/anime.webp)
-</figure>
-
-### Blurred
-
-<figure markdown="span" style="max-width: 70%">
-  ![Example Blurred Anime Card](./assets/anime_blurred.webp)
-</figure>
+<div class="image-compare example-card"
+    data-starting-point="80"
+    data-left-label="Standard" data-right-label="Blurred">
+    <img src="../../card_types/assets/anime.webp"/>
+    <img src="./assets/anime_blurred.webp"/>
+</div>
 
 ## Valid `extras` { data-toc-label="Valid Extras" }
 

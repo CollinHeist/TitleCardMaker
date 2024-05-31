@@ -9,7 +9,7 @@ description: >
 
 # Notification Card Type
 
-Card type featuring two compact rectangular frames, styled to resemble a
+This card type features two compact rectangular frames, styled to resemble a
 notification prompt. These "notifications" can be resized, positioned, and
 colored with extras.
 

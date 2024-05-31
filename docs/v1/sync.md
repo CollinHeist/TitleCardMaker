@@ -156,12 +156,12 @@ and library names to match your setup.
     !!! note "Window Paths"
 
         All paths shown below use the Unix-type pathing (e.g. forward slashes
-        `/`) - this should work on Windows machines, but I strongly recommend
-        Windows users use the Windows-type pathing (e.g. backslashes `\`).
+        `/`). I strongly recommend Windows users use this type of path
+        specification __instead of__ the Windows style back slashes (`\`).
 
     === "Emby"
 
-        ```yaml title="preferences.yml" hl_lines="5-12"
+        ```yaml title="preferences.yml" hl_lines="11-18"
         options:
           source: ./config/source/
           series: # (4)!
@@ -292,8 +292,7 @@ anything.
         - ./config/sync_file_2.yaml
 
     sync:
-      # (1)!
-      - mode: append
+      - mode: append # (1)!
         volumes:
           /docker/tv/: /tcm/tv/
 
@@ -335,7 +334,7 @@ anything.
 
 Each of these options is explained in greater detail below.
 
-### YAML File (`file`) { data-toc-label="YAML File" }
+### File (`file`) { data-toc-label="File" }
 
 The filepath that the Maker should create/modify with series YAML.
 
@@ -355,10 +354,10 @@ below for details).
 
 ??? example "Example"
 
-    If syncing to Plex and `match` mode is indicated, if a series is _deleted_
-    from Plex, the entry in the synced file will also be removed. The same will
-    happen if syncing to Sonarr, and a series is removed from Sonarr, untagged,
-    or otherwise changed to no longer be in the sync.
+    If syncing to Plex and `#!yaml mode: match` mode is indicated, if a series
+    is _deleted_ from Plex, the entry in the synced file will also be removed.
+    The same will happen if syncing to Sonarr, and a series is removed from
+    Sonarr, untagged, or otherwise changed to no longer be in the sync.
 
 ### Compact Mode (`compact_mode`) { data-toc-label="Compact Mode" }
 

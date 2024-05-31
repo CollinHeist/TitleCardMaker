@@ -21,17 +21,12 @@ This card type is used whenever `card_type` is specified as `f1` or `formula 1`.
 
 ## Example
 
-### Spoiler
-
-<figure markdown="span" style="max-width: 70%">
-  ![Example Formula 1 Card](../../card_types/assets/formula.webp)
-</figure>
-
-### Blurred
-
-<figure markdown="span" style="max-width: 70%">
-  ![Example Blurred Formula 1 Card](./assets/f1_blurred.webp)
-</figure>
+<div class="image-compare example-card"
+    data-starting-point="80"
+    data-left-label="Standard" data-right-label="Blurred">
+    <img src="../../card_types/assets/formula.webp"/>
+    <img src="./assets/f1_blurred.webp"/>
+</div>
 
 ## Valid `extras` { data-toc-label="Valid Extras" }
 
@@ -152,7 +147,7 @@ adjusted with the `episode_text_color` extra. The default is `white`.
           episode_text_color: red
     ```
 
-#### Size { data-toc-label="Episode Text Size" }
+#### Size (`episode_text_font_size`) { data-toc-label="Episode Text Size" }
 
 The size of the episode text can also be adjusted. The default is `1.0` means no
 adjustment. Values below `1.0` will reduce the size of the text, and values
