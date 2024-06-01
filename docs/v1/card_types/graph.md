@@ -43,9 +43,9 @@ described in greater detail below.
 | `graph_color`            | `rgb(99,184,255)`       | Color of the filled-in portion of the graph coloring |
 | `graph_inset`            | `75`                    | How far to inset the graph from the edges            |
 | `graph_radius`           | `175`                   | Radius of the graph                                  |
-| `graph_text_font_size`   | `1.0`                   | Size adjustment for the graph text                   |
-| `graph_width`            | `25`                    | The width of the graph                               |
-| `fill_scale`             | `0.6`                   | Scale for how wide the filled graph should appear    |
+| `graph_text_font_size`   | `#!yaml 1.0`            | Size adjustment for the graph text                   |
+| `graph_width`            | `#!yaml 25`             | The width of the graph                               |
+| `fill_scale`             | `#!yaml 0.6`            | Scale for how wide the filled graph should appear    |
 | `omit_gradient`          | `#!yaml false`          | Whether to omit the gradient overlay                 |
 | `percentage`             | -                       | Manual fill percentage of the graph                  |
 | `text_position`          | `lower left`            | Where on the image to position the graph and text    |
@@ -72,7 +72,7 @@ image behind the graph can be seen. This defaults to `rgba(140,140,140,0.5)`
     ```
 
     <div class="image-compare example-card"
-        data-starting-point="12.5"
+        data-starting-point="7.68"
         data-left-label="rgba(140,140,140,0.5)" data-right-label="rgba(232,232,232,0.2)">
         <img src="../../../../card_types/assets/graph.webp"/>
         <img src="../../../../card_types/assets/graph-background.webp"/>
@@ -99,14 +99,14 @@ is 100% (see the example below).
     ```
 
     <div class="image-compare example-card"
-        data-starting-point="12.5"
+        data-starting-point="7.68"
         data-left-label="rgb(99,184,255)" data-right-label="SpringGreen1">
         <img src="../../../../card_types/assets/graph.webp"/>
         <img src="../../../../card_types/assets/graph-color.webp"/>
     </div>
 
     <div class="image-compare example-card"
-        data-starting-point="12.5"
+        data-starting-point="7.68"
         data-left-label="rgb(99,184,255)" data-right-label="SpringGreen1">
         <img src="../../../../card_types/assets/graph.webp"/>
         <img src="../../../../card_types/assets/graph-color-filled.webp"/>
@@ -172,7 +172,7 @@ value between `0.0` (no fill at all) and `1.0` (completely filled).
     ```
 
     <div class="image-compare example-card"
-        data-starting-point="12.5"
+        data-starting-point="11"
         data-left-label="0.6" data-right-label="0.2">
         <img src="../../../../card_types/assets/graph.webp"/>
         <img src="../../../../card_types/assets/graph-fill_scale.webp"/>
@@ -201,7 +201,7 @@ default.
     ```
 
     <div class="image-compare example-card"
-        data-starting-point="12.5"
+        data-starting-point="7.68"
         data-left-label="1.0" data-right-label="1.35">
         <img src="../../../../card_types/assets/graph.webp"/>
         <img src="../../../../card_types/assets/graph-font_size.webp"/>
@@ -235,7 +235,7 @@ The position will also adjust the orientation of the gradient overlay, if
     ```
 
     <div class="image-compare example-card"
-        data-starting-point="12.5"
+        data-starting-point="50"
         data-left-label="lower left" data-right-label="right">
         <img src="../../../../card_types/assets/graph.webp"/>
         <img src="../../../../card_types/assets/graph-position.webp"/>

@@ -27,8 +27,8 @@ This card type is used whenever `card_type` is specified as `f1` or `formula 1`.
 <div class="image-compare example-card"
     data-starting-point="80"
     data-left-label="Standard" data-right-label="Blurred">
-    <img src="../../card_types/assets/formula.webp"/>
-    <img src="./assets/f1_blurred.webp"/>
+    <img src="../../../card_types/assets/formula.webp"/>
+    <img src="../assets/f1_blurred.webp"/>
 </div>
 
 ## Valid `extras` { data-toc-label="Valid Extras" }
