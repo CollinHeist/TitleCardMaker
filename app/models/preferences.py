@@ -42,6 +42,11 @@ class Preferences:
     """Directory for all temporary file operations"""
     TEMPORARY_DIRECTORY = TCM_ROOT / 'modules' / '.objects'
 
+    """All environment variables which might be applicable to TCM, for boot"""
+    __ENVIRONMENT_VARIABLES = (
+        'TCM_IS_DOCKER', 'TCM_IM_DOCKER', 'TCM_LOG', 'TCM_IM_PATH', 'TZ'
+    )
+
     """Attributes whose values should be ignored when loading from file"""
     __read_only = (
         'is_docker', 'file', 'asset_directory', 'card_type_directory',
@@ -212,6 +217,26 @@ class Preferences:
         self.reduced_animations = False
 
 
+    def log_startup(self, *, log: Logger = log) -> None:
+        """
+        Log the startup details of TCM. This is just a "starting"
+        message and all relevant environment variables.
+
+        Args:
+            log: Logger for all log messages.
+        """
+
+        log.info(f'Starting TitleCardMaker ({self.current_version})')
+
+        log.debug(f'{"-" * 15} Environment Variables {"-" * 15}')
+        padding = max(map(len, self.__ENVIRONMENT_VARIABLES))
+        for var_name in self.__ENVIRONMENT_VARIABLES:
+            if (var := environ.get(var_name, None)) is None:
+                var = '[Unspecified]'
+            log.debug(f'  {var_name:>{padding}} : {var}')
+        log.debug(f'{"-" * 53}')
+
+
     def read_file(self) -> Optional[object]:
         """
         Read this object's file, returning the loaded object.
@@ -272,6 +297,7 @@ class Preferences:
         afterwards.
 
         Args:
+            log: Logger for all log messages.
             update_kwargs: Dictionary of values to update.
         """
 
