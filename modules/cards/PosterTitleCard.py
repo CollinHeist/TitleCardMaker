@@ -6,6 +6,7 @@ from modules.CleanPath import CleanPath
 from modules.Debug import log
 
 if TYPE_CHECKING:
+    from modules.PreferenceParser import PreferenceParser
     from modules.Font import Font
 
 SeriesExtra = Optional
@@ -40,9 +41,6 @@ class PosterTitleCard(BaseCardType):
     """Whether this class uses season titles for the purpose of archives"""
     USES_SEASON_TITLE = False
 
-    """This card doesn't use unique sources (uses posters)"""
-    USES_UNIQUE_SOURCES = False
-
     """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Poster Style'
 
@@ -75,7 +73,7 @@ class PosterTitleCard(BaseCardType):
             episode_number: int = 1,
             logo: SeriesExtra[str] = None,
             episode_text_color: Optional[str] = None,
-            preferences: 'Preferences' = None, # type: ignore
+            preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
         """

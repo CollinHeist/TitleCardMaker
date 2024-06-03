@@ -1,12 +1,16 @@
 from pathlib import Path
 from sys import exit as sys_exit
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, TypeVar
 
 from yaml import safe_load
+from modules.BaseCardType import BaseCardType
 
 from modules.Debug import log
 from modules.RemoteCardType import RemoteCardType
 from modules.TitleCard import TitleCard
+
+
+_AttributeType = TypeVar('_AttributeType')
 
 
 class YamlReader:
@@ -18,7 +22,7 @@ class YamlReader:
 
 
     def __init__(self,
-            yaml: dict[str, Any] = {},
+            yaml: dict = {},
             *,
             log_function: Callable[[str], None] = log.error
         ) -> None:
@@ -53,9 +57,9 @@ class YamlReader:
 
     def get(self,
             *attributes: str,
-            type_: Optional[Callable] = None,
+            type_: Optional[Callable[[str], _AttributeType]] = None,
             default: Any = None,
-        ):
+        ) -> Optional[_AttributeType]:
         """
         Get the value specified by the given attributes/sub-attributes
         of YAML, optionally converting to the given type. Log invalidity
@@ -64,8 +68,8 @@ class YamlReader:
 
         Args:
             attributes: Any number of nested attributes to get value of.
-            type_: Optional callable (i.e. type) to call on specified
-                value before returning.
+            type_: Optional function to call on specified value before
+                returning.
             default: Default value to return if unspecified.
 
         Returns:
@@ -131,28 +135,33 @@ class YamlReader:
         return True
 
 
-    def _parse_card_type(self, card_type: str) -> None:
+    def _parse_card_type(self, card_type: str, /) -> Optional[BaseCardType]:
         """
         Read the card_type specification for this object. This first
         looks at the locally implemented types in the TitleCard class,
         then attempts to create a RemoteCardType from the specification.
         This can be either a local file to inject, or a GitHub-hosted
-        remote file to download and inject. This updates the card_type,
-        valid, and episode_text_format attributes of this object.
+        remote file to download and inject. This updates this object's
+        `valid` attribute (if invalid).
 
         Args:
             card_type: The value of card_type to read/parse.
+
+        Returns:
+            Subclass of `BaseCardType` which is indicated by the given
+            card type identifier string.
         """
 
         # If known card type, use class from hard-coded dict
         if card_type in TitleCard.CARD_TYPES:
-            self.card_class = TitleCard.CARD_TYPES[card_type]
+            return TitleCard.CARD_TYPES[card_type]
         # Try as RemoteCardtype
-        elif (remote_card_type := RemoteCardType(card_type)).valid:
-            self.card_class = remote_card_type.card_class
-        else:
-            log.error(f'Invalid card type "{card_type}"')
-            self.valid = False
+        if (remote_card_type := RemoteCardType(card_type)).valid:
+            return remote_card_type.card_class
+
+        log.error(f'Invalid card type "{card_type}"')
+        self.valid = False
+        return None
 
 
     @staticmethod
@@ -178,13 +187,13 @@ class YamlReader:
         with file.open('r', encoding='utf-8') as file_handle:
             try:
                 return safe_load(file_handle)
-            except Exception as e:
+            except Exception:
                 # Log error, if critical then exit with error code
                 if critical:
-                    log.exception(f'Error encountered while reading file', e)
+                    log.exception(f'Error encountered while reading file')
                     log.critical(f'Error reading "{file.resolve()}"')
                     sys_exit(1)
                 else:
-                    log.exception(f'Error reading "{file.resolve}"', e)
+                    log.exception(f'Error reading "{file.resolve()}"')
 
         return {}

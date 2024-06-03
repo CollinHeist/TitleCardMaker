@@ -91,7 +91,7 @@ title_card_group.add_argument(
     nargs='+',
     default='',
     metavar=('TITLE_LINE'),
-    help="The title text for this card")
+    help="The title text for this card, each value is a new line")
 title_card_group.add_argument(
     '--logo',
     type=Path,
@@ -319,7 +319,8 @@ show_summary_group.add_argument(
     type=str,
     default='default',
     metavar='SUMMARY_TYPE',
-    help='Summary type to create - must be "standard" or "sylized"')
+    choices=('default', 'standard', 'stylized'),
+    help='Type of summary image to create')
 
 # Argument group for season posters
 season_poster_group = parser.add_argument_group(
@@ -341,8 +342,9 @@ season_poster_group.add_argument(
 season_poster_group.add_argument(
     '--season-text',
     type=str,
-    default='SEASON ONE',
-    metavar='SEASON_TEXT',
+    nargs='+',
+    default=['SEASON ONE'],
+    metavar=('SEASON_TEXT'),
     help='Season text for the created season poster')
 season_poster_group.add_argument(
     '--season-font',
@@ -400,8 +402,7 @@ set_preference_parser(pp)
 # Execute title card related options
 if hasattr(args, 'title_card'):
     # Attempt to get local card type, if not, try RemoteCardType
-    pp._parse_card_type(args.card_type)
-    CardClass = pp.card_class
+    CardClass = pp._parse_card_type(args.card_type)
     RemoteFile.reset_loaded_database()
 
     # Override unspecified defaults with their class specific defaults
@@ -583,7 +584,7 @@ if hasattr(args, 'season_poster'):
         source=args.season_poster[0],
         destination=args.season_poster[1],
         logo=logo,
-        season_text=args.season_text,
+        season_text='\n'.join(args.season_text),
         font=args.season_font,
         font_color=args.season_font_color,
         font_size=float(args.season_font_size[:-1])/100.0,

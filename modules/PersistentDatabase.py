@@ -38,11 +38,11 @@ class PersistentDatabase:
         # Initialize TinyDB from file
         try:
             self.db = TinyDB(self.file)
-        except JSONDecodeError as e:
-            log.exception(f'Database {self.file.resolve()} is corrupted', e)
+        except JSONDecodeError:
+            log.exception(f'Database {self.file.resolve()} is corrupted')
             self.reset()
-        except Exception as e:
-            log.exception(f'Uncaught exception on Database initialization', e)
+        except Exception:
+            log.exception(f'Uncaught exception on Database initialization')
             self.reset()
 
 
@@ -73,7 +73,7 @@ class PersistentDatabase:
                     raise e
 
                 # Log conflict, sleep, reset database, and try function again
-                log.exception(f'Database {self.file.resolve()} has conflict', e)
+                log.exception(f'Database {self.file.resolve()} has conflict')
                 sleep(3)
                 self.reset()
                 return wrapper(*args, **kwargs, __retries=__retries+1)

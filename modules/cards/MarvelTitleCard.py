@@ -7,6 +7,7 @@ from modules.BaseCardType import (
 from modules.ImageMagickInterface import Dimensions
 
 if TYPE_CHECKING:
+    from modules.PreferenceParser import PreferenceParser
     from modules.Font import Font
 
 
@@ -92,7 +93,7 @@ class MarvelTitleCard(BaseCardType):
             hide_border: bool = False,
             text_box_color: str = DEFAULT_TEXT_BOX_COLOR,
             text_box_height: int = DEFAULT_TEXT_BOX_HEIGHT,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
         """Construct a new instance of this Card."""
@@ -272,11 +273,11 @@ class MarvelTitleCard(BaseCardType):
             return title_text_dimensions
 
         # Get dimensions of season and episode text
-        season_text_dimensions = self.get_text_dimensions(
+        season_text_dimensions = self.image_magick.get_text_dimensions(
             self.season_text_commands(title_text_dimensions),
             width='sum', height='sum',
         )
-        episode_text_dimensions = self.get_text_dimensions(
+        episode_text_dimensions = self.image_magick.get_text_dimensions(
             self.episode_text_commands(title_text_dimensions),
             width='sum', height='sum',
         )
@@ -300,7 +301,7 @@ class MarvelTitleCard(BaseCardType):
 
         # If font scalar was modified, recalculate+return text dimensions
         if self.font_size_modifier < 1.0:
-            return self.get_text_dimensions(
+            return self.image_magick.get_text_dimensions(
                 self.title_text_commands, width='max', height='sum',
             )
 
@@ -444,8 +445,17 @@ class MarvelTitleCard(BaseCardType):
         object's defined title card.
         """
 
+        border_size = 0 if self.hide_border else self.border_size
+        processing = [
+            # Resize and apply styles to source image
+            *self.resize_and_style,
+            # Resize to only fit in the bounds of the border
+            f'-resize {self.WIDTH - (border_size)}x',
+            f'-extent {self.TITLE_CARD_SIZE}',
+        ]
+
         # Get the dimensions of the title and index text
-        title_text_dimensions = self.get_text_dimensions(
+        title_text_dimensions = self.image_magick.get_text_dimensions(
             self.title_text_commands, width='max', height='sum',
         )
 
@@ -454,11 +464,7 @@ class MarvelTitleCard(BaseCardType):
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
-            # Resize and apply styles to source image
-            *self.resize_and_style,
-            # Resize to only fit in the bounds of the border
-            f'-resize {self.WIDTH - (2 * self.border_size)}x',
-            f'-extent {self.TITLE_CARD_SIZE}',
+            *processing,
             # Add borders
             *self.border_commands,
             *self.bottom_border_commands,
@@ -466,6 +472,8 @@ class MarvelTitleCard(BaseCardType):
             *self.title_text_commands,
             *self.season_text_commands(title_text_dimensions),
             *self.episode_text_commands(title_text_dimensions),
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file, pre_processing=processing),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

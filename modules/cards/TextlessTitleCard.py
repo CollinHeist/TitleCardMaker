@@ -35,6 +35,9 @@ class TextlessTitleCard(BaseCardType):
     """Whether this CardType uses season titles for archival purposes"""
     USES_SEASON_TITLE = False
 
+    """Don't require source images to work w/ importing"""
+    USES_SOURCE_IMAGES = False # Set as False; if required then caught by model
+
     """Label to archive cards under"""
     ARCHIVE_NAME = 'Textless Version'
 
@@ -104,8 +107,18 @@ class TextlessTitleCard(BaseCardType):
         object's defined title card.
         """
 
+        if (self.source_file and isinstance(self.source_file, Path)
+            and self.source_file.exists()):
+            add_source = [f'"{self.source_file.resolve()}"']
+        else:
+            add_source = [
+                f'-size {self.TITLE_CARD_SIZE}',
+                f'xc:None',
+            ]
+
         command = ' '.join([
-            f'convert "{self.source_file.resolve()}"',
+            f'convert',
+            *add_source,
             *self.resize_and_style,
             # Create card
             *self.resize_output,

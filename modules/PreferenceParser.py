@@ -68,7 +68,7 @@ class PreferenceParser(YamlReader):
 
         Raises:
             SystemExit (1): Any required YAML options are missing from
-            `file`.
+                `file`.
         """
 
         # Initialize parent YamlReader object - errors are critical
@@ -99,7 +99,7 @@ class PreferenceParser(YamlReader):
         # Setup default values that can be overwritten by YAML
         self.series_files = []
         self.execution_mode = Manager.DEFAULT_EXECUTION_MODE
-        self._parse_card_type(TitleCard.DEFAULT_CARD_TYPE) # Sets self.card_type
+        self.card_class = self._parse_card_type(TitleCard.DEFAULT_CARD_TYPE)
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.card_extension = TitleCard.DEFAULT_CARD_EXTENSION
         self.card_dimensions = TitleCard.DEFAULT_CARD_DIMENSIONS
@@ -148,10 +148,11 @@ class PreferenceParser(YamlReader):
         self.plex_url = None
         self.plex_token = 'NA'
         self.plex_verify_ssl = True
-        self.integrate_with_pmm_overlays = False
+        self.integrate_with_kometa = False
         self.plex_filesize_limit = self.filesize_as_bytes(
             PlexInterface.DEFAULT_FILESIZE_LIMIT
         )
+        self.plex_timeout = PlexInterface.DEFAULT_TIMEOUT
         self.plex_style_set = StyleSet()
         self.plex_yaml_writers = []
         self.plex_yaml_update_args = []
@@ -212,9 +213,10 @@ class PreferenceParser(YamlReader):
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        attributes = ', '.join(f'{attr}={getattr(self, attr)!r}'
-                               for attr in self.__dict__
-                               if not attr.startswith('_'))
+        attributes = ', '.join(
+            f'{attr}={getattr(self, attr)!r}' for attr in self.__dict__
+            if not attr.startswith('_')
+        )
 
         return f'<PreferenceParser {attributes}>'
 
@@ -239,6 +241,7 @@ class PreferenceParser(YamlReader):
 
         # If none of the font commands worked, IM might not be installed
         log.critical(f"ImageMagick doesn't appear to be installed")
+        interface.print_command_history()
         self.valid = False
         return None
 
@@ -423,7 +426,7 @@ class PreferenceParser(YamlReader):
                         f'created')
 
         if (value := self.get('options', 'card_type', type_=str)) is not None:
-            self._parse_card_type(value)
+            self.card_class = self._parse_card_type(value)
 
         if (value := self.get('options', 'card_extension', type_=str)) is not None:
             extension = ('' if value[0] == '.' else '.') + value
@@ -654,9 +657,13 @@ class PreferenceParser(YamlReader):
         if (value := self.get('plex', 'verify_ssl', type_=bool)) is not None:
             self.plex_verify_ssl = value
 
-        if (value := self.get('plex', 'integrate_with_pmm_overlays',
-                               type_=bool)) is not None:
-            self.integrate_with_pmm_overlays = value
+        integrate = self.get(
+            'plex', 'integrate_with_kometa',
+            type_=bool,
+            default=self.get('plex', 'integrate_with_pmm_overlays', type_=bool)
+        )
+        if integrate is not None:
+            self.integrate_with_kometa = value
 
         if (value := self.get('plex', 'filesize_limit',
                                type_=self.filesize_as_bytes)) is not None:
@@ -664,6 +671,9 @@ class PreferenceParser(YamlReader):
 
             if value > self.filesize_as_bytes('10 MB'):
                 log.warning(f'Plex will reject all images larger than 10 MB')
+
+        if (value := self.get('plex', 'timeout', type_=int)) is not None:
+            self.plex_timeout = value
 
         self.plex_style_set = StyleSet(
             self.get('plex', 'watched_style', type_=str, default='unique'),
@@ -694,13 +704,15 @@ class PreferenceParser(YamlReader):
                 log.critical(f'Sonarr server must contain "url" and "api_key"')
                 self.valid = False
             else:
-                verify_ssl = reader.get('verify_ssl', type_=bool, default=True)
-                downloaded_only = reader.get(
-                    'downloaded_only', type_=bool, default=False
-                )
                 self.sonarr_kwargs.append({
-                    'url': url, 'api_key': api_key, 'verify_ssl': verify_ssl,
-                    'downloaded_only': downloaded_only,
+                    'url': url,
+                    'api_key': api_key,
+                    'verify_ssl': reader.get(
+                        'verify_ssl', type_=bool, default=True
+                    ),
+                    'downloaded_only': reader.get(
+                        'downloaded_only', type_=bool, default=True
+                    ),
                 })
 
         # If multiple servers were specified, parse all specificiations
@@ -1096,8 +1108,8 @@ class PreferenceParser(YamlReader):
             # Create Path object for this file
             try:
                 file = CleanPath(file_).sanitize()
-            except Exception as e:
-                log.exception(f'Invalid series file "{file_}"', e)
+            except Exception:
+                log.exception(f'Invalid series file "{file_}"')
                 continue
 
             # Update progress bar for this file
@@ -1246,14 +1258,15 @@ class PreferenceParser(YamlReader):
 
     @property
     def plex_interface_kwargs(self) -> dict[str, Union[str, bool, int]]:
-        """Arguments for initializing a PlexInterfa"""
+        """Arguments for initializing a PlexInterface"""
 
         return {
             'url': self.plex_url,
             'x_plex_token': self.plex_token,
             'verify_ssl': self.plex_verify_ssl,
-            'integrate_with_pmm_overlays': self.integrate_with_pmm_overlays,
+            'integrate_with_kometa': self.integrate_with_kometa,
             'filesize_limit': self.plex_filesize_limit,
+            'timeout': self.plex_timeout
         }
 
     @property

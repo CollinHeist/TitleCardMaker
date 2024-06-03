@@ -66,7 +66,7 @@ class StarWarsTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
         """
@@ -250,6 +250,8 @@ class StarWarsTitleCard(BaseCardType):
             *self.title_text_command,
             # Add episode text
             *self.episode_text_command,
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

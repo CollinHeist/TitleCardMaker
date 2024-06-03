@@ -27,7 +27,7 @@ class TintedFrameTitleCard(BaseCardType):
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
-        'max_line_width': 35,
+        'max_line_width': 42,
         'max_line_count': 2,
         'top_heavy': 'even',
     }
@@ -50,7 +50,7 @@ class TintedFrameTitleCard(BaseCardType):
 
     """Implementation details"""
     BOX_OFFSET = 185
-    BOX_WIDTH = 3
+    BOX_WIDTH = 5
     SHADOW_COLOR = 'black'
 
 
@@ -104,9 +104,7 @@ class TintedFrameTitleCard(BaseCardType):
             preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this Card.
-        """
+        """Construct a new instance of this Card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -337,13 +335,15 @@ class TintedFrameTitleCard(BaseCardType):
         else:
             resize_command = [f'-resize x{logo_height}']
 
-        return [
-            f'\( "{self.logo.resolve()}"',
-            *resize_command,
-            f'\) -gravity center',
-            f'-geometry +0{vertical_shift:+}',
-            f'-composite',
-        ]
+        return self.add_drop_shadow(
+            [
+                f'\( "{self.logo.resolve()}"',
+                *resize_command,
+                f'\) -gravity center',
+            ],
+            shadow=Shadow(opacity=85, sigma=4),
+            x=0, y=vertical_shift,
+        )
 
 
     @property
@@ -371,8 +371,8 @@ class TintedFrameTitleCard(BaseCardType):
 
         # Element is index text
         if self.top_element == 'index':
-            element_width, _ = self.get_text_dimensions(
-                self.index_text_commands, width='max', height='max',
+            element_width, _ = self.image_magick.get_text_dimensions(
+                self.index_text_commands, width='max',
             )
             margin = 25
         # Element is logo
@@ -385,8 +385,8 @@ class TintedFrameTitleCard(BaseCardType):
             margin = 25
         # Element is title text
         elif self.top_element == 'title':
-            element_width, _ = self.get_text_dimensions(
-                self.title_text_commands, width='max', height='max',
+            element_width, _ = self.image_magick.get_text_dimensions(
+                self.title_text_commands, width='max',
             )
             margin = 10
 
@@ -444,8 +444,8 @@ class TintedFrameTitleCard(BaseCardType):
 
         # Element is index text
         if self.bottom_element == 'index':
-            element_width, _ = self.get_text_dimensions(
-                self.index_text_commands, width='max', height='max',
+            element_width, _ = self.image_magick.get_text_dimensions(
+                self.index_text_commands, width='max',
             )
             margin = 25
         # Element is logo
@@ -458,8 +458,8 @@ class TintedFrameTitleCard(BaseCardType):
             margin = 25
         # Element is title
         elif self.bottom_element == 'title':
-            element_width, _ = self.get_text_dimensions(
-                self.title_text_commands, width='max', height='max',
+            element_width, _ = self.image_magick.get_text_dimensions(
+                self.title_text_commands, width='max',
             )
             margin = 10
 
@@ -527,32 +527,6 @@ class TintedFrameTitleCard(BaseCardType):
             x=0, y=0,
             shadow_color=self.shadow_color,
         )
-
-
-    @property
-    def mask_commands(self) -> ImageMagickCommands:
-        """
-        Subcommands to add the top-level mask which overlays all other
-        elements of the image, even the frame. This mask can be used to
-        have parts of the image appear to "pop out" of the frame.
-        """
-
-        # Do not apply mask if stylized
-        if self.blur or self.grayscale:
-            return []
-
-        # Look for mask file corresponding to this source image
-        mask = self.source_file.parent / f'{self.source_file.stem}-mask.png'
-
-        # Mask exists, return commands to compose atop image
-        if mask.exists():
-            return [
-                f'\( "{mask.resolve()}"',
-                *self.resize_and_style,
-                f'\) -composite',
-            ]
-
-        return []
 
 
     @staticmethod
@@ -668,12 +642,12 @@ class TintedFrameTitleCard(BaseCardType):
             # Add blurred edges (if indicated)
             *self.blur_commands,
             # Add remaining sub-components
+            *self.logo_commands,
             *self.title_text_commands,
             *self.index_text_commands,
-            *self.logo_commands,
             *self.frame_commands,
             # Attempt to overlay mask
-            *self.mask_commands,
+            *self.add_overlay_mask(self.source_file),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

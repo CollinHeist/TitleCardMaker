@@ -2,10 +2,13 @@ from pathlib import Path
 from random import random
 from typing import TYPE_CHECKING, Optional
 
-from modules.BaseCardType import BaseCardType, Dimensions, ImageMagickCommands
+from modules.BaseCardType import (
+    BaseCardType, Dimensions, ImageMagickCommands, Shadow,
+)
 from modules.EpisodeInfo import EpisodeInfo
 
 if TYPE_CHECKING:
+    from modules.PreferenceParser import PreferenceParser
     from modules.Font import Font
 
 
@@ -87,7 +90,7 @@ class CalligraphyTitleCard(BaseCardType):
             randomize_texture: bool = True,
             separator: str = '-',
             shadow_color: str = 'black',
-            preferences: Optional['Preferences'] = None,
+            preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
         """Construct a new instance of this Card."""
@@ -253,7 +256,7 @@ class CalligraphyTitleCard(BaseCardType):
         if not self.logo_file or not self.logo_file.exists():
             return []
 
-        logo_height = 750 * self.logo_size
+        logo_height = 725 * self.logo_size
 
         base_command = [
             f'"{self.logo_file.resolve()}"',
@@ -289,7 +292,9 @@ class CalligraphyTitleCard(BaseCardType):
         ]
 
         return self.add_drop_shadow(
-            base_commands, '95x2+0+17', 0, vertical_shift,
+            base_commands,
+            Shadow(opacity=95, sigma=2, x=0, y=17),
+            x=0, y=vertical_shift,
             shadow_color=self.shadow_color,
         )
 
@@ -446,6 +451,8 @@ class CalligraphyTitleCard(BaseCardType):
             *self.logo_commands,
             *self.title_text_commands,
             *self.index_text_commands,
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

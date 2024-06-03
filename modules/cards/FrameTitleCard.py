@@ -80,9 +80,7 @@ class FrameTitleCard(BaseCardType):
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this Card.
-        """
+        """Construct a new instance of this Card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -172,10 +170,10 @@ class FrameTitleCard(BaseCardType):
 
         # If adding season and/or episode text and title..
         # Get width of title text for positioning
-        width, _ = self.get_text_dimensions(
+        width, _ = self.image_magick.get_text_dimensions(
             title_only_command, width='max', height='sum'
         )
-        offset = 3200/2 + width/2 + 25
+        offset = (self.WIDTH + width) / 2 + 25
 
         # Add index text to left or right
         if self.episode_text_position in ('left', 'right'):
@@ -306,8 +304,7 @@ class FrameTitleCard(BaseCardType):
     def create(self) -> None:
         """Create this object's defined Title Card."""
 
-        command = ' '.join([
-            f'convert "{self.source_file.resolve()}"',
+        processing = [
             # Apply any defined styles
             *self.style,
             # Resize to fit within frame
@@ -315,6 +312,11 @@ class FrameTitleCard(BaseCardType):
             f'-resize x1275\<',
             # Increase contrast of source image
             f'-modulate 100,125',
+        ]
+
+        command = ' '.join([
+            f'convert "{self.source_file.resolve()}"',
+            *processing,
             # Fill in background
             f'-background "{self.BACKGROUND_COLOR}"',
             # Extend canvas to card size
@@ -325,6 +327,8 @@ class FrameTitleCard(BaseCardType):
             f'-composite',
             # Add all index/title text
             *self.text_commands,
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file, pre_processing=processing),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

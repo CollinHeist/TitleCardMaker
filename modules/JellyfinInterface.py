@@ -84,7 +84,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 raise ConnectionError(f'Unable to authenticate with server')
         except Exception as exc:
             log.critical(f'Cannot connect to Jellyfin - returned error {exc}')
-            log.exception(f'Bad Jellyfin connection', exc)
+            log.exception(f'Bad Jellyfin connection')
             sys_exit(1)
 
         # Get user ID if indicated
@@ -394,8 +394,8 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     airdate = datetime.strptime(
                         episode['PremiereDate'], self.AIRDATE_FORMAT
                     )
-                except Exception as e:
-                    log.exception(f'Cannot parse airdate', e)
+                except Exception:
+                    log.exception(f'Cannot parse airdate')
                     log.debug(f'Episode data: {episode}')
 
             # Create new EpisodeInfo via global MediaInfoSet object
@@ -585,9 +585,9 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 loaded_count += 1
                 log.debug(f'Loaded "{series_info}" Episode '
                           f'{episode.episode_info} into Jellyfin')
-            except Exception as e:
+            except Exception:
                 log.exception(f'Unable to upload {card.resolve()} to '
-                              f'"{series_info}"', e)
+                              f'"{series_info}"')
                 continue
 
             # Update loaded database for this episode

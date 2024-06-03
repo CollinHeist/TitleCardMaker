@@ -15,7 +15,9 @@ class SeasonPoster(ImageMaker):
     """
 
     """Default size of all season posters"""
-    SEASON_POSTER_SIZE = '2000x3000'
+    POSTER_WIDTH = 2000
+    POSTER_HEIGHT = 3000
+    SEASON_POSTER_SIZE = f'{POSTER_WIDTH}x{POSTER_HEIGHT}'
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = Path(__file__).parent / 'ref' /'season_poster'
@@ -174,17 +176,16 @@ class SeasonPoster(ImageMaker):
         kerning = 30 * self.font_kerning
 
         # Determine season text offset depending on orientation
-        gravity = 'north' if self.text_placement == 'top' else 'south'
         if self.text_placement == 'top':
             if self.logo is None or self.logo_placement != 'top':
                 text_offset = 212
             else:
                 text_offset = 212 + self.__get_logo_height() + 60
         else:
-            text_offset = 212
+            text_offset = self.POSTER_HEIGHT - 295
 
         return [
-            f'-gravity {gravity}',
+            f'-gravity north',
             f'-font "{self.font.resolve()}"',
             f'-fill "{self.font_color}"',
             f'-pointsize {font_size}',

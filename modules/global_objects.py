@@ -1,4 +1,11 @@
 from pathlib import Path
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from modules.FontValidator import FontValidator
+    from modules.MediaInfoSet import MediaInfoSet
+    from modules.PreferenceParser import PreferenceParser
+    from modules.ShowRecordKeeper import ShowRecordKeeper
 
 
 class TemporaryPreferenceParser:
@@ -13,8 +20,10 @@ class TemporaryPreferenceParser:
         """Fake initialize this object"""
 
         self.card_dimensions = '3200x1800'
+        self.card_quality = 95
         self.database_directory = Path(database_directory)
         self.imagemagick_container = None
+        self.use_magick_prefix = False
 
 # pylint: disable=global-statement
 pp = TemporaryPreferenceParser(Path(__file__).parent / '.objects')
@@ -31,7 +40,7 @@ def set_font_validator(to: 'FontValidator') -> None: # type: ignore
     global fv
     fv = to
 
-info_set = None
+info_set: Optional['MediaInfoSet'] = None
 def set_media_info_set(to: 'MediaInfoSet') -> None: # type: ignore
     """Update the global MediaInfoSet `info_set` object."""
 

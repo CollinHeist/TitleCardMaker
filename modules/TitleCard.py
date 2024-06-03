@@ -17,11 +17,15 @@ from modules.cards.ComicBookTitleCard import ComicBookTitleCard
 from modules.cards.CutoutTitleCard import CutoutTitleCard
 from modules.cards.DividerTitleCard import DividerTitleCard
 from modules.cards.FadeTitleCard import FadeTitleCard
+from modules.cards.FormulaOneTitleCard import FormulaOneTitleCard
 from modules.cards.FrameTitleCard import FrameTitleCard
+from modules.cards.GraphTitleCard import GraphTitleCard
 from modules.cards.InsetTitleCard import InsetTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
 from modules.cards.MarvelTitleCard import MarvelTitleCard
+from modules.cards.MusicTitleCard import MusicTitleCard
+from modules.cards.NotificationTitleCard import NotificationTitleCard
 from modules.cards.OlivierTitleCard import OlivierTitleCard
 from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
@@ -29,6 +33,7 @@ from modules.cards.RomanNumeralTitleCard import RomanNumeralTitleCard
 from modules.cards.ShapeTitleCard import ShapeTitleCard
 from modules.cards.StandardTitleCard import StandardTitleCard
 from modules.cards.StarWarsTitleCard import StarWarsTitleCard
+from modules.cards.StripedTitleCard import StripedTitleCard
 from modules.cards.TextlessTitleCard import TextlessTitleCard
 from modules.cards.TintedFrameTitleCard import TintedFrameTitleCard
 from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
@@ -78,8 +83,10 @@ class TitleCard:
         'cutout': CutoutTitleCard,
         'divider': DividerTitleCard,
         'fade': FadeTitleCard,
+        'formula 1': FormulaOneTitleCard,
         'frame': FrameTitleCard,
         'generic': StandardTitleCard,
+        'graph': GraphTitleCard,
         'gundam': PosterTitleCard,
         'import': TextlessTitleCard,
         'inset': InsetTitleCard,
@@ -87,11 +94,14 @@ class TitleCard:
         'landscape': LandscapeTitleCard,
         'logo': LogoTitleCard,
         'marvel': MarvelTitleCard,
+        'music': MusicTitleCard,
         'musikmann': WhiteBorderTitleCard,
+        'notification': NotificationTitleCard,
         'olivier': OlivierTitleCard,
         'overline': OverlineTitleCard,
         'phendrena': CutoutTitleCard,
         'photo': FrameTitleCard,
+        'polygon': StripedTitleCard,
         'polymath': StandardTitleCard,
         'poster': PosterTitleCard,
         'reality tv': LogoTitleCard,
@@ -99,8 +109,10 @@ class TitleCard:
         'roman numeral': RomanNumeralTitleCard,
         'shape': ShapeTitleCard,
         'sherlock': TintedGlassTitleCard,
+        'spotify': MusicTitleCard,
         'standard': StandardTitleCard,
         'star wars': StarWarsTitleCard,
+        'striped': StripedTitleCard,
         'textless': TextlessTitleCard,
         'tinted frame': TintedFrameTitleCard,
         'tinted glass': TintedGlassTitleCard,
@@ -125,7 +137,7 @@ class TitleCard:
                 card.
             title_characteristics: Dictionary of characteristics from
                 the CardType class for this Episode to pass to
-                Title.apply_profile()
+                Title.apply_profile().
             extra_characteristics: Any extra keyword arguments to pass
                 directly to the creation of the CardType object.
         """
@@ -164,14 +176,14 @@ class TitleCard:
             'blur': episode.blur,
             'grayscale': episode.grayscale,
             'watched': episode.watched,
-        } | profile.font.get_attributes() \
+        } | profile.font.attributes \
           | self.episode.episode_info.indices \
           | extra_characteristics
 
         try:
             self.maker = self.episode.card_class(**kwargs)
         except Exception as e:
-            log.exception(f'Cannot initialize Card for {self.episode} - {e}', e)
+            log.exception(f'Cannot initialize Card for {self.episode} - {e}')
             self.maker = None
 
         # File associated with this card is the episode's destination
@@ -349,7 +361,7 @@ class TitleCard:
             self.maker.create()
         except Exception as e:
             log.exception(f'Error encountered while creating card for '
-                          f'{self.episode} - {e}', e)
+                          f'{self.episode} - {e}')
 
         # Return whether card creation was successful or not
         if self.file.exists():

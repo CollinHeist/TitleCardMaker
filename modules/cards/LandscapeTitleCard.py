@@ -56,6 +56,8 @@ class LandscapeTitleCard(BaseCardType):
 
     """Additional spacing (in pixels) between bounding box and title text"""
     BOUNDING_BOX_SPACING = 150
+    """Default box width (in pixels)"""
+    BOX_WIDTH = 10
     """Color for darkening is black at 30% transparency"""
     DARKEN_COLOR = '#00000030'
     """Color of the drop shadow"""
@@ -65,7 +67,7 @@ class LandscapeTitleCard(BaseCardType):
         'source_file', 'output_file', 'title_text', 'font_color', 'font_file',
         'font_interline_spacing', 'font_interword_spacing', 'font_kerning',
         'font_size', 'font_vertical_shift', 'add_bounding_box',
-        'box_adjustments', 'box_color', 'darken', 'shadow_color',
+        'box_adjustments', 'box_color', 'box_width', 'darken', 'shadow_color',
     )
 
     def __init__(self,
@@ -84,14 +86,13 @@ class LandscapeTitleCard(BaseCardType):
             add_bounding_box: bool = True,
             box_adjustments: Optional[str] = None,
             box_color: str = TITLE_COLOR,
+            box_width: int = BOX_WIDTH,
             darken: DarkenOption = 'box',
             shadow_color: str = SHADOW_COLOR,
             preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) ->None:
-        """
-        Construct a new instance of this Card.
-        """
+        """Construct a new instance of this Card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -128,6 +129,7 @@ class LandscapeTitleCard(BaseCardType):
         # Parse box extras
         self.box_color = box_color
         self.box_adjustments = (0, 0, 0, 0)
+        self.box_width = box_width
         self.shadow_color = shadow_color
         if box_adjustments:
             # Verify adjustments are properly provided
@@ -220,14 +222,17 @@ class LandscapeTitleCard(BaseCardType):
         ]
 
         # Get dimensions of text - since text is stacked, do max/sum operations
-        width, height = self.get_text_dimensions(
-            text_command, width='max', height='sum'
+        width, height = self.image_magick.get_text_dimensions(
+            text_command,
+            interline_spacing=interline_spacing,
+            line_count=len(self.title_text.splitlines()),
+            width='max', height='sum'
         )
 
         # Get start coordinates of the bounding box
-        x_start, x_end = 3200/2 - width/2, 3200/2 + width/2
-        y_start, y_end = 1800/2 - height/2, 1800/2 + height/2
-        y_end -= 35     # Additional offset necessary for things to work out
+        x_start, x_end = (self.WIDTH - width) / 2, (self.WIDTH + width) / 2
+        y_start, y_end = (self.HEIGHT - height) / 2, (self.HEIGHT + height) / 2
+        y_end -= 35 # Additional offset necessary for asymmetrical text bounds
 
         # Shift y coordinates by vertical shift
         y_start += self.font_vertical_shift
@@ -235,9 +240,9 @@ class LandscapeTitleCard(BaseCardType):
 
         # Adjust corodinates by spacing and manual adjustments
         x_start -= self.BOUNDING_BOX_SPACING + self.box_adjustments[3]
-        x_end += self.BOUNDING_BOX_SPACING + self.box_adjustments[1]
-        y_start -= self.BOUNDING_BOX_SPACING  + self.box_adjustments[0]
-        y_end += self.BOUNDING_BOX_SPACING + self.box_adjustments[2]
+        x_end   += self.BOUNDING_BOX_SPACING + self.box_adjustments[1]
+        y_start -= self.BOUNDING_BOX_SPACING + self.box_adjustments[0]
+        y_end   += self.BOUNDING_BOX_SPACING + self.box_adjustments[2]
 
         return BoxCoordinates(x_start, y_start, x_end, y_end)
 
@@ -267,7 +272,7 @@ class LandscapeTitleCard(BaseCardType):
                 f'-size {self.TITLE_CARD_SIZE}',
                 f'xc:None',
                 f'-fill transparent',
-                f'-strokewidth 10',
+                f'-strokewidth {self.box_width}',
                 f'-stroke "{self.box_color}"',
                 f'-draw "rectangle {x_start},{y_start},{x_end},{y_end}"',
             ],
@@ -400,6 +405,8 @@ class LandscapeTitleCard(BaseCardType):
             *self.title_text_commands,
             # Optionally add bounding box
             *self.add_bounding_box_commands(bounding_box),
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

@@ -27,9 +27,8 @@ class BetterExceptionLogger(Logger):
     `Logger.error`, and then print the traceback at the debug level.
     """
 
-    def exception(self, msg: object, excpt: Exception, *args, **kwargs) -> None:
-        super().error(msg, *args, **kwargs)
-        super().debug(excpt, exc_info=True)
+    def exception(self, msg: object, *args, **kwargs) -> None:
+        super().exception(msg, *args, exc_info=True, **kwargs)
 setLoggerClass(BetterExceptionLogger)
 
 

@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from os import environ
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
 from sys import exit as sys_exit
@@ -6,6 +7,7 @@ from typing import Any, Callable, Optional, Union
 
 from PIL import Image
 from plexapi.exceptions import PlexApiException
+import plexapi.server
 from plexapi.server import PlexServer, NotFound, Unauthorized
 from plexapi.library import Library as PlexLibrary
 from plexapi.video import (
@@ -51,15 +53,15 @@ def catch_and_log(message: str, *, default: Any = None) -> Callable:
         def inner(*args, **kwargs):
             try:
                 return function(*args, **kwargs)
-            except PlexApiException as e:
-                log.exception(message, e)
+            except PlexApiException:
+                log.exception(message)
                 return default
-            except (ReadTimeout, PlexConnectionError) as e:
-                log.exception(f'Plex API has timed out, DB might be busy',e)
-                raise e
-            except Exception as e:
-                log.exception(f'Uncaught exception', e)
-                raise e
+            except (ReadTimeout, PlexConnectionError) as exc:
+                log.exception(f'Plex API has timed out, DB might be busy')
+                raise exc
+            except Exception as exc:
+                log.exception(f'Uncaught exception')
+                raise exc
         return inner
     return decorator
 
@@ -79,8 +81,11 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     """How many failed episodes result in skipping a series"""
     SKIP_SERIES_THRESHOLD = 3
 
-    """EXIF data to write to images if PMM integration is enabled"""
+    """EXIF data to write to images if Kometa integration is enabled"""
     EXIF_TAG = {'key': 0x4242, 'data': 'titlecard'}
+
+    """How many seconds to allow for a single transaction"""
+    DEFAULT_TIMEOUT = 30 # seconds
 
     """Episode titles that indicate a placeholder and are to be ignored"""
     __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
@@ -90,8 +95,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             url: str,
             x_plex_token: str = 'NA',
             verify_ssl: bool = True,
-            integrate_with_pmm_overlays: bool = False,
+            integrate_with_kometa: bool = False,
             filesize_limit: int = 10485760,
+            timeout: int = DEFAULT_TIMEOUT,
         ) -> None:
         """
         Constructs a new instance of a Plex Interface.
@@ -101,14 +107,14 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             x_plex_token: X-Plex Token for sending API requests to Plex.
             verify_ssl: Whether to verify SSL requests when querying
                 Plex.
-            integrate_with_pmm_overlays: Whether to integrate with PMM
-                overlays in image uploading.
+            integrate_with_kometa: Whether to integrate with Kometa
+                in image uploads.
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
+            timeout: How many seconds to allow for a timeout.
 
         Raises:
-            SystemExit if an Exception is raised while connecting to
-                Plex.
+            SystemExit: An Exception is raised while connecting to Plex.
         """
 
         super().__init__(filesize_limit)
@@ -122,16 +128,22 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         # Create PlexServer object with these arguments
         try:
             self.__token = x_plex_token
-            self.__server = PlexServer(url, x_plex_token, self.__session)
+            self.__server = PlexServer(
+                url, x_plex_token, self.__session, timeout
+            )
         except Unauthorized:
             log.critical(f'Invalid Plex Token "{x_plex_token}"')
             sys_exit(1)
-        except Exception as e:
+        except Exception:
             log.critical(f'Cannot connect to Plex - returned error: "{e}"')
             sys_exit(1)
 
+        # Adjust timeout for PlexServer object and environment variable
+        plexapi.server.TIMEOUT = timeout
+        environ['PLEXAPI_PLEXAPI_TIMEOUT'] = str(timeout)
+
         # Store integration
-        self.integrate_with_pmm = integrate_with_pmm_overlays
+        self.integrate_with_kometa = integrate_with_kometa
 
         # Create/read loaded card database
         self.__posters = PersistentDatabase(self.LOADED_POSTERS_DB)
@@ -749,6 +761,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         # Go through each episode within Plex, set title cards
         error_count, loaded_count = 0, 0
         for pl_episode in (pbar := tqdm(series.episodes(), **TQDM_KWARGS)):
+            pl_episode: PlexEpisode = pl_episode
             # If error count is too high, skip this series
             if error_count >= self.SKIP_SERIES_THRESHOLD:
                 log.error(f'Failed to upload {error_count} episodes, skipping '
@@ -769,20 +782,20 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
             # Upload card to Plex
             try:
-                # If integrating with PMM, add EXIF data
-                if self.integrate_with_pmm:
+                # If integrating with Kometa, add EXIF data
+                if self.integrate_with_kometa:
                     self.__add_exif_tag(card)
 
                 # Upload card
                 self.__retry_upload(pl_episode, card.resolve())
 
-                # If integrating with PMM, remove label
-                if self.integrate_with_pmm:
+                # If integrating with Kometa, remove label
+                if self.integrate_with_kometa:
                     pl_episode.removeLabel(['Overlay'])
-            except Exception as e:
+            except Exception:
                 error_count += 1
                 log.exception(f'Unable to upload {card.resolve()} to '
-                              f'{series_info}', e)
+                              f'{series_info}')
                 continue
             else:
                 loaded_count += 1
@@ -859,15 +872,15 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
             # Upload this poster
             try:
-                # If integrating with PMM, add EXIF data
-                if self.integrate_with_pmm:
+                # If integrating with Kometa, add EXIF data
+                if self.integrate_with_kometa:
                     self.__add_exif_tag(resized_poster)
 
                 # Upload poster
                 self.__retry_upload(season, resized_poster)
 
-                # If integrating with PMM, remove label
-                if self.integrate_with_pmm:
+                # If integrating with Kometa, remove label
+                if self.integrate_with_kometa:
                     season.removeLabel(['Overlay'])
             except Exception:
                 continue
@@ -964,8 +977,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             log.error(f'No item with rating key {rating_key} exists')
         except ValueError:
             log.warning(f'Item with rating key {rating_key} has no year')
-        except Exception as e:
-            log.exception(f'Rating key {rating_key} has some error', e)
+        except Exception:
+            log.exception(f'Rating key {rating_key} has some error')
 
         # Error occurred, return empty list
         return []

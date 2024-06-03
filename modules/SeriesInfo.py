@@ -1,5 +1,7 @@
-from re import match, compile as re_compile
+from re import compile as re_compile, match, sub as re_sub, IGNORECASE
 from typing import Optional, Union
+
+from plexapi.video import Show as PlexShow
 
 from modules.CleanPath import CleanPath
 from modules.DatabaseInfoContainer import DatabaseInfoContainer
@@ -113,6 +115,34 @@ class SeriesInfo(DatabaseInfoContainer):
         return self.full_name
 
 
+    @staticmethod
+    def from_plex_show(plex_show: PlexShow) -> 'SeriesInfo':
+        """
+        Create a SeriesInfo object from a plexapi Show object.
+
+        Args:
+            plex_show: Show to create an object from. Any available
+                GUID's are utilized.
+
+        Returns:
+            SeriesInfo object encapsulating the given show.
+        """
+
+        # Create SeriesInfo for this show
+        series_info = SeriesInfo(plex_show.title, plex_show.year)
+
+        # Add any GUIDs as database ID's
+        for guid in plex_show.guids:
+            if 'imdb://' in guid.id:
+                series_info.set_imdb_id(guid.id[len('imdb://'):])
+            elif 'tmdb://' in guid.id:
+                series_info.set_tmdb_id(int(guid.id[len('tmdb://'):]))
+            elif 'tvdb://' in guid.id:
+                series_info.set_tvdb_id(int(guid.id[len('tvdb://'):]))
+
+        return series_info
+
+
     @property
     def characteristics(self) -> dict[str, Union[str, int]]:
         """Characteristics of this info to be used in Card creation."""
@@ -167,15 +197,15 @@ class SeriesInfo(DatabaseInfoContainer):
 
     def set_emby_id(self, emby_id: int) -> None:
         """Set this object's Emby ID - see `_update_attribute()`."""
-        self._update_attribute('emby_id', emby_id, int)
+        self._update_attribute('emby_id', emby_id, type_=int)
 
     def set_imdb_id(self, imdb_id: str) -> None:
         """Set this object's IMDb ID - see `_update_attribute()`."""
-        self._update_attribute('imdb_id', imdb_id, str)
+        self._update_attribute('imdb_id', imdb_id, type_=str)
 
     def set_jellyfin_id(self, jellyfin_id: str) -> None:
         """Set this object's Jellyfin ID - see `_update_attribute()`."""
-        self._update_attribute('jellyfin_id', jellyfin_id, str)
+        self._update_attribute('jellyfin_id', jellyfin_id, type_=str)
 
     def set_sonarr_id(self, sonarr_id: str) -> None:
         """Set this object's Sonarr ID - see `_update_attribute()`."""
@@ -183,15 +213,15 @@ class SeriesInfo(DatabaseInfoContainer):
 
     def set_tmdb_id(self, tmdb_id: int) -> None:
         """Set this object's TMDb ID - see `_update_attribute()`."""
-        self._update_attribute('tmdb_id', tmdb_id, int)
+        self._update_attribute('tmdb_id', tmdb_id, type_=int)
 
     def set_tvdb_id(self, tvdb_id: int) -> None:
         """Set this object's TVDb ID - see `_update_attribute()`."""
-        self._update_attribute('tvdb_id', tvdb_id, int)
+        self._update_attribute('tvdb_id', tvdb_id, type_=int)
 
     def set_tvrage_id(self, tvrage_id: int) -> None:
         """Set this object's TVRage ID - see `_update_attribute()`."""
-        self._update_attribute('tvrage_id', tvrage_id, int)
+        self._update_attribute('tvrage_id', tvrage_id, type_=int)
 
 
     @staticmethod
@@ -207,6 +237,13 @@ class SeriesInfo(DatabaseInfoContainer):
         """
 
         return ''.join(filter(str.isalnum, text)).lower()
+
+
+    @property
+    def sort_name(self) -> str:
+        """The sort-friendly name of this Series."""
+
+        return re_sub(r'^(a|an|the)(\s)', '', self.name.lower(), IGNORECASE)
 
 
     def matches(self, *names: tuple[str]) -> bool:

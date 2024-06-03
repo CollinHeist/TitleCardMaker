@@ -1,8 +1,10 @@
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, Callable, Optional, Union
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, Union
 
 from titlecase import titlecase
 
+from modules.Debug import log
 from modules.ImageMaker import ImageMaker, Dimensions
 
 if TYPE_CHECKING:
@@ -24,7 +26,40 @@ class Coordinate:
         self.y = y
 
 
-    def __iadd__(self, other: 'Coordinate') -> 'Coordinate':
+    def __iter__(self) -> Iterable[tuple[float, float]]:
+        """
+        Iterate through this object. This can be used to unpack the
+        Coordinate, for example:
+
+        >>> x, y = Coordinate(1, 2) # x=1, y=2
+        """
+
+        return iter((self.x, self.y))
+
+
+    def __add__(self,
+            other: Union['Coordinate', tuple[float, float]],
+        ) -> 'Coordinate':
+        """
+        Add the given coordinates to this object, returning a new
+        combination of the two.
+
+        Args:
+            other: The Coordinate to add.
+
+        Returns:
+            Newly constructed Coordinate object of these coordinates.
+        """
+
+        if isinstance(other, Coordinate):
+            return Coordinate(self.x + other.x, self.y + other.y)
+
+        return Coordinate(self.x + other[0], self.y + other[1])
+
+
+    def __iadd__(self,
+            other: Union['Coordinate', tuple[float, float]],
+        ) -> 'Coordinate':
         """
         Add the given Coordinate to this one. This adds the x/y
         positions individually.
@@ -36,10 +71,24 @@ class Coordinate:
             This object.
         """
 
-        self.x += other.x
-        self.y += other.y
+        if isinstance(other, Coordinate):
+            self.x += other.x
+            self.y += other.y
+        else:
+            self.x += other[0]
+            self.y += other[1]
 
         return self
+
+
+    def __repr__(self) -> str:
+        """
+        Detailed object representation.
+        
+        >>> repr(Coordinate(2, 3))
+        'Coordinate(2, 3)'
+        """
+        return f'Coordinate({self.x}, {self.y})'
 
 
     def __str__(self) -> str:
@@ -59,6 +108,37 @@ class Coordinate:
         return f'{self.x:.1f} {self.y:.1f}'
 
 
+class Line:
+    """Class that defines a drawable SVG line."""
+
+    __slots__ = ('start', 'end')
+
+    def __init__(self, start: Coordinate, end: Coordinate) -> None:
+        """
+        Initialize a Line which spans between the given start and end
+        Coordinates.
+
+        Args:
+            start: Coordinate which defines one end of this line.
+            end: Coordinate which defines the other end of this line.
+        """
+
+        self.start = start
+        self.end = end
+
+
+    def __str__(self) -> str:
+        """Represent this Line as a string. This is a SVG-command."""
+
+        return f'M {str(self.start)} L {str(self.end)}'
+
+
+    def draw(self) -> str:
+        """Draw this line."""
+
+        return f'-draw "path \'{str(self)}\'"'
+
+
 class Rectangle:
     """Class that defines movable SVG rectangle."""
 
@@ -66,13 +146,25 @@ class Rectangle:
 
     def __init__(self, start: Coordinate, end: Coordinate) -> None:
         """
-        Initialize this Rectangle that encompasses the two given start
-        and end Coordinates. These Coordinates are the opposite corners
-        of the rectangle.
+        Initialize this Rectangle that encompasses the given start and
+        end Coordinates. These Coordinates are the opposite corners of
+        the rectangle.
+
+        Args:
+            start: Coordinate which defines one starting corner of the
+                rectangle.
+            end: Coordinate which opposites the `start` coordinate of
+                this rectangle.
         """
 
         self.start = start
         self.end = end
+
+
+    def __repr__(self) -> str:
+        """Unambigious representation of this object."""
+
+        return f'Rectangle({self.start!r}, {self.end!r})'
 
 
     def __str__(self) -> str:
@@ -82,6 +174,20 @@ class Rectangle:
         """
 
         return f'{str(self.start)},{str(self.end)}'
+
+
+    @property
+    def width(self) -> float:
+        """Width of this Rectangle."""
+
+        return abs(self.start.x - self.end.x)
+
+    @property
+    def height(self) -> float:
+        """Height of this Rectangle."""
+
+        return abs(self.start.y - self.end.y)
+
 
     def draw(self) -> str:
         """Draw this Rectangle."""
@@ -130,11 +236,7 @@ class BaseCardType(ImageMaker):
     custom type of title card.
 
     All implementations of BaseCardType must implement this class's
-    abstract properties and methods in order to work with the
-    TitleCardMaker. However, not all CardTypes need to use every
-    argument of these methods. For example, the StandardTitleCard
-    utilizes most all customizations for a title card, while a
-    StarWarsTitleCard hardly uses anything.
+    abstract properties and methods in order to work with TCM.
     """
 
     """Default case string for all title text"""
@@ -158,6 +260,9 @@ class BaseCardType(ImageMaker):
     """Whether this class uses unique source images for card creation"""
     USES_UNIQUE_SOURCES = True
 
+    """Whether this class uses Source Images at all"""
+    USES_SOURCE_IMAGES = True
+
     """Standard size for all title cards"""
     WIDTH = 3200
     HEIGHT = 1800
@@ -165,16 +270,6 @@ class BaseCardType(ImageMaker):
 
     """Standard blur effect to apply to spoiler-free images"""
     BLUR_PROFILE = '0x60'
-
-    @property
-    @abstractmethod
-    def TITLE_CHARACTERISTICS(self) -> dict[str, Union[int, bool]]:
-        """
-        Characteristics of title splitting for this card type. Must have
-        keys for max_line_width, max_line_count, and top_heavy. See
-        `Title` class for details.
-        """
-        raise NotImplementedError
 
 
     @property
@@ -245,9 +340,10 @@ class BaseCardType(ImageMaker):
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        attributes = ', '.join(f'{attr}={getattr(self, attr)!r}'
-                               for attr in self.__slots__
-                               if not attr.startswith('__'))
+        attributes = ', '.join(
+            f'{attr}={getattr(self, attr)!r}' for attr in self.__slots__
+            if not attr.startswith('__')
+        )
 
         return f'<{self.__class__.__name__} {attributes}>'
 
@@ -272,6 +368,33 @@ class BaseCardType(ImageMaker):
         return None
 
 
+    @classmethod
+    def _is_custom_font(
+            cls: type['BaseCardType'],
+            font: 'Font',
+        ) -> bool:
+        """
+        Whether the given font is custom based on all the standard
+        font definitions of this class.
+
+        Args:
+            font: Font being evaluated.
+
+        Returns:
+            True if the given Font is customized, False otherwise.
+        """
+
+        return ((font.color != cls.TITLE_COLOR)
+            or (font.file != cls.TITLE_FONT)
+            or (font.interline_spacing != 0)
+            or (font.interword_spacing != 0)
+            or (font.kerning != 1.0)
+            or (font.size != 1.0)
+            or (font.stroke_width != 1.0)
+            or (font.vertical_shift != 0)
+        )
+
+
     @staticmethod
     @abstractmethod
     def is_custom_font(font: 'Font', extras: dict) -> bool:
@@ -282,6 +405,7 @@ class BaseCardType(ImageMaker):
         Returns:
             True if a custom font is indicated, False otherwise.
         """
+
         raise NotImplementedError
 
 
@@ -298,6 +422,7 @@ class BaseCardType(ImageMaker):
         Returns:
             True if a custom season title is indicated, False otherwise.
         """
+
         raise NotImplementedError
 
 
@@ -306,9 +431,6 @@ class BaseCardType(ImageMaker):
         """
         ImageMagick commands to only resize an image to the output title
         card size.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         return [
@@ -331,9 +453,6 @@ class BaseCardType(ImageMaker):
     def style(self) -> ImageMagickCommands:
         """
         ImageMagick commands to apply any style modifiers to an image.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         return [
@@ -357,9 +476,6 @@ class BaseCardType(ImageMaker):
         """
         ImageMagick commands to resize and apply any style modifiers to
         an image.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         return [
@@ -384,14 +500,62 @@ class BaseCardType(ImageMaker):
         ]
 
 
+    def add_overlay_mask(self,
+            file: Path,
+            /,
+            *,
+            pre_processing: Optional[ImageMagickCommands] = None,
+            x: int = 0,
+            y: int = 0,
+        ) -> ImageMagickCommands:
+        """
+        ImageMagick commands to add a top-level mask to the image.
+        
+        Args:
+            file: Path to the file to search for the mask image
+                alongside.
+            pre_processing: Any ImageMagick commands to apply to the
+                mask before it is overlaid.
+            x: Offset X-coordinate to use when compositing the mask.
+            y: Offset Y-coordinate to use when compositing the mask.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        # Do not apply any masks for stylized cards
+        if self.blur or self.grayscale:
+            return []
+
+        # Look for mask file corresponding to this source image
+        # Prioritize episode-specific mask, then general mask
+        if (mask := list(file.parent.glob(f'{file.stem}-mask.*'))):
+            mask = mask[0]
+        elif (mask := list(file.parent.glob(f'{file.stem}_mask.*'))):
+            mask = mask[0]
+        elif (mask := list(file.parent.glob(f'mask.*'))):
+            mask = mask[0]
+        else:
+            return []
+
+        log.debug(f'Identified mask image "{mask.resolve()}"')
+        if pre_processing is None:
+            pre_processing = self.resize_and_style
+
+        return [
+            f'\( "{mask.resolve()}"',
+            *self.resize,
+            *pre_processing,
+            f'\) -geometry {x:+}{y:+}',
+            f'-composite',
+        ]
+
+
     @property
     def resize_output(self) -> ImageMagickCommands:
         """
         ImageMagick commands to resize the card to the global card
         dimensions.
-
-        Returns:
-            List of ImageMagick commands.
         """
 
         return [

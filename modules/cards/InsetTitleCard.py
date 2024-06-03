@@ -1,10 +1,11 @@
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional
 
-from modules.BaseCardType import BaseCardType, ImageMagickCommands
+from modules.BaseCardType import BaseCardType, ImageMagickCommands, Shadow
 from modules.Debug import log
 
 if TYPE_CHECKING:
+    from modules.PreferenceParser import PreferenceParser
     from modules.Font import Font
 
 
@@ -81,7 +82,7 @@ class InsetTitleCard(BaseCardType):
             omit_gradient: bool = False,
             separator: str = '-',
             transparency: float = 1.0,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
         """Construct a new instance of this Card."""
@@ -102,7 +103,7 @@ class InsetTitleCard(BaseCardType):
         # Font/card customizations
         self.font_color = font_color
         self.font_file = font_file
-        self.font_interline_spacing = font_interline_spacing
+        self.font_interline_spacing = -100 + font_interline_spacing
         self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_size = font_size
@@ -127,19 +128,15 @@ class InsetTitleCard(BaseCardType):
         if not self.title_text:
             return []
 
-        # Font characteristics
-        interline_spacing = -100
-        interword_spacing = 0
-        kerning = 1.0 * self.font_kerning
         size = 250 * self.font_size
 
         return [
             f'\( -background none',
             f'-pointsize {size}',
             f'-font "{self.font_file}"',
-            f'-interline-spacing {interline_spacing}',
-            f'-interword-spacing {interword_spacing}',
-            f'-kerning {kerning}',
+            f'-interline-spacing {self.font_interline_spacing}',
+            f'-interword-spacing {self.font_interword_spacing}',
+            f'-kerning {self.font_kerning}',
             f'-fill "{self.font_color}"',
             f'label:"{self.title_text}" \)',
             f'-gravity south',
@@ -157,11 +154,15 @@ class InsetTitleCard(BaseCardType):
         # Determine the height of the text
         if self._title_height is None:
             # Utilize only the bottom line of text for the line height
-            bottom_line = self.title_text.rsplit('\n', maxsplit=1)[-1]
+            bottom_line = self.title_text.splitlines()[-1]
             modified_commands = self.title_text_commands
             modified_commands[-2] = f'label:"{bottom_line}"'
 
-            _, self._title_height = self.get_text_dimensions(modified_commands)
+            _, self._title_height = self.image_magick.get_text_dimensions(
+                modified_commands,
+                interline_spacing=self.font_interline_spacing,
+                line_count=1,
+            )
 
         return self._title_height
 
@@ -188,12 +189,15 @@ class InsetTitleCard(BaseCardType):
         index_text_commands = [
             f'\( -background none',
             f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
+            f'+interline-spacing',
             f'-fill "{self.episode_text_color}"',
             f'-pointsize {size}',
             f'-gravity south',
             f'label:"{index_text}" \)',
         ]
-        index_width, index_height =self.get_text_dimensions(index_text_commands)
+        index_width, index_height = self.image_magick.get_text_dimensions(
+            index_text_commands
+        )
         crop_width = index_width + 40 # Increase margin
         crop_height = index_height - 20 # Reduce margin
         crop_y = self.font_vertical_shift + (self.title_height / 2) \
@@ -331,11 +335,13 @@ class InsetTitleCard(BaseCardType):
             # Add title text with a drop shadow
             *self.add_drop_shadow(
                 self.title_text_commands,
-                '95x6-12+12',
+                Shadow(opacity=95, sigma=6, x=-12, y=12),
                 x=0, y=self.font_vertical_shift,
             ),
             # Add index text
             *self.index_text_commands,
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

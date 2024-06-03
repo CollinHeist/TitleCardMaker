@@ -31,7 +31,7 @@ class SvgRectangle:
         self.offset = Coordinate(0, 0)
 
 
-    def rotate(self, angle_degrees: float=0.0) -> 'SvgRectangle':
+    def rotate(self, angle_degrees: float = 0.0) -> 'SvgRectangle':
         """
         Set the rotation of this rectangle.
 
@@ -124,6 +124,7 @@ class ComicBookTitleCard(BaseCardType):
     ARCHIVE_NAME = 'Comic Book Style'
 
     """Implementation details"""
+    BANNER_FILL_COLOR = 'rgba(235,73,69,0.6)'
     TEXT_BOX_WIDTH_MARGIN = 50
     TEXT_BOX_HEIGHT_MARGIN = 50
     TITLE_TEXT_VERTICAL_OFFSET = 125
@@ -282,17 +283,17 @@ class ComicBookTitleCard(BaseCardType):
             return []
 
         # Get dimensions of the title text
-        title_text_width, title_text_height = self.get_text_dimensions(
+        title_width, title_height = self.image_magick.get_text_dimensions(
             self.title_text_commands,
+            interline_spacing=self.font_interline_spacing,
+            line_count=len(self.title_text.splitlines()),
             width='max',
-            height='sum',
         )
-        title_text_height += self.font_interline_spacing
 
         # Create the rectangle that will border the title text
         title_text_rectangle = SvgRectangle(
-            title_text_width + self.TEXT_BOX_WIDTH_MARGIN,
-            title_text_height + self.TEXT_BOX_HEIGHT_MARGIN,
+            title_width + self.TEXT_BOX_WIDTH_MARGIN,
+            title_height + self.TEXT_BOX_HEIGHT_MARGIN,
         )
 
         # Rotate by given angle
@@ -304,7 +305,7 @@ class ComicBookTitleCard(BaseCardType):
                 self.WIDTH / 2,
                 self.HEIGHT
                 - self.TITLE_TEXT_VERTICAL_OFFSET
-                - (title_text_height / 2)
+                - (title_height / 2)
             )
         )
 
@@ -329,7 +330,7 @@ class ComicBookTitleCard(BaseCardType):
                 self.WIDTH / 2,
                 self.HEIGHT
                 - self.TITLE_TEXT_VERTICAL_OFFSET
-                - (title_text_height / 2)
+                - (title_height / 2)
                 + (self.TITLE_TEXT_VERTICAL_OFFSET+500)/2
             )
         )
@@ -410,30 +411,29 @@ class ComicBookTitleCard(BaseCardType):
             return []
 
         # Get dimensions of the index text
-        index_text_width, index_text_height = self.get_text_dimensions(
+        index_width, index_height = self.image_magick.get_text_dimensions(
             self.index_text_commands,
             width='max',
-            height='sum',
         )
 
         # Create the rectangle that will border the index text
         index_text_rectangle = SvgRectangle(
-            index_text_width + (self.TEXT_BOX_WIDTH_MARGIN / 2),
-            index_text_height + (self.TEXT_BOX_HEIGHT_MARGIN / 2),
+            index_width + (self.TEXT_BOX_WIDTH_MARGIN / 2),
+            index_height + (self.TEXT_BOX_HEIGHT_MARGIN / 2),
         )
 
         # Apply indicated rotation
         index_text_rectangle.rotate(self.index_text_rotation_angle)
 
         # Determine new origin of the index text based on placement location
-        y_coordinate = 75 + (index_text_height / 2)
+        y_coordinate = 75 + (index_height / 2)
         if self.index_text_position == 'left':
             # The index text origin is 35px from the left of the image
             index_text_origin = Coordinate(35, y_coordinate)
 
             # Determine the offset to the center of the rotated index text
             angle = self.index_text_rotation_angle * PI / 180
-            x = index_text_width / 2
+            x = index_width / 2
             y = 0
             index_text_rectangle.offset = Coordinate(
                 x * cos(angle) - y * sin(angle),
@@ -446,15 +446,12 @@ class ComicBookTitleCard(BaseCardType):
 
             # Determine the offset to the center of the rotated index text
             angle = self.index_text_rotation_angle * PI / 180
-            x = -index_text_width / 2
+            x = -index_width / 2
             y = 0
             index_text_rectangle.offset = Coordinate(
                 x * cos(angle) - y * sin(angle),
                 (x * sin(angle) + y * cos(angle))/abs(self.index_text_rotation_angle),
             )
-
-        # Adjust offset by manually indicated shift
-        index_text_rectangle.offset += Coordinate(0, self.index_banner_shift)
 
         # Shift rectangle to placement of index text
         index_text_rectangle.shift_origin(index_text_origin)
@@ -475,7 +472,8 @@ class ComicBookTitleCard(BaseCardType):
         )
         index_fill_rectangle.rotate(self.index_text_rotation_angle)
 
-        y_coordinate = 75 + (index_text_height / 2) - (75 + 500)/2
+        y_coordinate = 75 + (index_height / 2) - (75 + 500) / 2 \
+            + self.index_banner_shift
         if self.index_text_position == 'left':
             index_fill_rectangle.shift_origin(Coordinate(
                 35,
@@ -493,12 +491,12 @@ class ComicBookTitleCard(BaseCardType):
             ))
 
         return [
-            # Draw border rectangle
+            # Draw banner
             f'-fill "{self.banner_fill_color}"',
             f'-stroke "{self.text_box_edge_color}"',
             f'-strokewidth 5',
             *index_fill_rectangle.draw_commands,
-            # Draw text rectangle
+            # Draw text
             f'-fill "{self.text_box_fill_color}"',
             *index_text_rectangle.draw_commands,
         ]
@@ -529,29 +527,41 @@ class ComicBookTitleCard(BaseCardType):
             if 'text_box_edge_color' in extras:
                 extras['text_box_edge_color'] = 'white'
             if 'border_fill_color' in extras:
-                extras['border_fill_color'] = 'rgba(235,73,69,0.6)'
+                extras['border_fill_color'] = \
+                    ComicBookTitleCard.BANNER_FILL_COLOR
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font', extras: dict) -> bool:
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
 
         Args:
             font: The Font being evaluated.
+            extras: Dictionary of extras for evaluation.
 
         Returns:
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.color != ComicBookTitleCard.TITLE_COLOR)
+        custom_extras = (
+            ('text_box_fill_color' in extras
+                and extras['text_box_fill_color'] != 'black')
+            or ('text_box_fill_color' in extras
+                and extras['text_box_fill_color'] != 'white')
+            or ('banner_fill_color' in extras
+                and extras['banner_fill_color'] != ComicBookTitleCard.BANNER_FILL_COLOR)
+        )
+
+        return (custom_extras
+            or ((font.color != ComicBookTitleCard.TITLE_COLOR)
             or (font.file != ComicBookTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
-            or (font.vertical_shift != 0)
+            or (font.vertical_shift != 0))
         )
 
 
@@ -594,6 +604,8 @@ class ComicBookTitleCard(BaseCardType):
             *self.title_text_commands,
             # Add index text
             *self.index_text_commands,
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

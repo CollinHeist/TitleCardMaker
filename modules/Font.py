@@ -1,12 +1,24 @@
 from pathlib import Path
 from re import compile as re_compile
-from typing import Any, Optional
+from typing import Optional, TypedDict
 from modules.BaseCardType import BaseCardType
 
 from modules import global_objects
 from modules.Debug import log
 from modules.SeriesInfo import SeriesInfo
 from modules.YamlReader import YamlReader
+
+
+class FontAttributes(TypedDict): # pylint: disable=missing-class-docstring
+    font_color: str
+    font: str
+    font_file: str
+    font_interline_spacing: int
+    font_interword_spacing: int
+    font_kerning: float
+    font_size: float
+    font_stroke_width: float
+    font_vertical_shift: int
 
 
 class Font(YamlReader):
@@ -215,13 +227,9 @@ class Font(YamlReader):
         self.vertical_shift = 0
 
 
-    def get_attributes(self) -> dict[str, Any]:
-        """
-        Return a dictionary of attributes for this font to be unpacked.
-
-        Returns:
-            Dictionary of attributes.
-        """
+    @property
+    def attributes(self) -> FontAttributes:
+        """Attributes that define this Font."""
 
         return {
             'font_color': self.color,

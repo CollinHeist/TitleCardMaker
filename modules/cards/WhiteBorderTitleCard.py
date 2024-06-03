@@ -253,24 +253,15 @@ class WhiteBorderTitleCard(BaseCardType):
             ('border_color' in extras
                 and extras['border_color'] != 'white')
             or ('episode_text_color' in extras
-                and extras['episode_text_color'] != WhiteBorderTitleCard.EPISODE_TEXT_COLOR)
+                and extras['episode_text_color'] != \
+                    WhiteBorderTitleCard.EPISODE_TEXT_COLOR)
             or ('episode_text_font_size' in extras
                 and extras['episode_text_font_size'] != 1.0)
             or ('stroke_color' in extras
                 and extras['stroke_color'] != WhiteBorderTitleCard.STROKE_COLOR)
         )
 
-        return (custom_extras
-            or ((font.color != WhiteBorderTitleCard.TITLE_COLOR)
-            or (font.file != WhiteBorderTitleCard.TITLE_FONT)
-            or (font.interline_spacing != 0)
-            or (font.interword_spacing != 0)
-            or (font.kerning != 1.0)
-            or (font.size != 1.0)
-            or (font.stroke_width != 1.0)
-            or (font.vertical_shift != 0))
-        )
-
+        return custom_extras or WhiteBorderTitleCard._is_custom_font(font)
 
     @staticmethod
     def is_custom_season_titles(
@@ -301,6 +292,15 @@ class WhiteBorderTitleCard(BaseCardType):
         object's defined title card.
         """
 
+        processing = [
+            # Resize and apply styles to source image
+            *self.resize_and_style,
+            # Fit within frame
+            f'-gravity center',
+            f'-resize "{self.WIDTH-(25 * 2)}x{self.HEIGHT - (25 * 2)}^"',
+            f'-extent "{self.TITLE_CARD_SIZE}"',
+        ]
+
         # Command to add the gradient overlay if indicated
         gradient_command = []
         if not self.omit_gradient:
@@ -311,12 +311,7 @@ class WhiteBorderTitleCard(BaseCardType):
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
-            # Resize and apply styles to source image
-            *self.resize_and_style,
-            # Fit within frame
-            f'-gravity center',
-            f'-resize "{self.WIDTH-(25 * 2)}x{self.HEIGHT - (25 * 2)}^"',
-            f'-extent "{self.TITLE_CARD_SIZE}"',
+            *processing,
             # Overlay gradient
             *gradient_command,
             # Add remaining sub-components
@@ -327,6 +322,8 @@ class WhiteBorderTitleCard(BaseCardType):
             f'-composite',
             # Recolor frame
             *self.border_color_commands,
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file, pre_processing=processing),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

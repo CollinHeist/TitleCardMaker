@@ -57,7 +57,7 @@ class Show(YamlReader):
         'logo', 'backdrop', 'file_interface', 'profile', 'season_poster_set',
         'episodes', 'emby_interface', 'jellyfin_interface', 'plex_interface',
         'sonarr_interface', 'tmdb_interface', '__is_archive', 'media_server',
-        'image_source_priority',
+        'image_source_priority', '_auto_hide_seasons',
     )
 
     def __init__(self,
@@ -96,8 +96,8 @@ class Show(YamlReader):
                 self.get('name', type_=str, default=name),
                 self.get('year', type_=int)
             )
-        except ValueError as e:
-            log.exception(f'Series "{name}" is missing the required "year"', e)
+        except ValueError:
+            log.exception(f'Series "{name}" is missing the required "year"')
             self.valid = False
             return None
 
@@ -105,8 +105,8 @@ class Show(YamlReader):
         self.card_filename_format = preferences.card_filename_format
         self.card_class = preferences.card_class
         self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
-        self.library_name = None
-        self.library = None
+        self.library_name: Optional[str] = None
+        self.library: Optional[str] = None
         self.media_directory = None
         self.media_server: MediaServer = preferences.default_media_server
         self.image_source_priority = preferences.image_source_priority
@@ -120,7 +120,7 @@ class Show(YamlReader):
         self.tmdb_sync = preferences.use_tmdb
         self.tmdb_skip_localized_images = preferences.tmdb_skip_localized_images
         self.hide_seasons = False
-        self.title_languages = {}
+        self.title_languages: list[dict] = []
         self.extras = {}
         if self.media_server == 'emby':
             self.style_set = copy(preferences.emby_style_set)
@@ -164,7 +164,10 @@ class Show(YamlReader):
         # Create DataFileInterface for this show
         self.file_interface = DataFileInterface(
             self.series_info,
-            self.source_directory / DataFileInterface.GENERIC_DATA_FILE_NAME
+            self.source_directory / DataFileInterface.GENERIC_DATA_FILE_NAME,
+            ignore_preferred_titles=self.get(
+                'ignore_preferred_titles', default=False
+            ),
         )
 
         # Create the profile
@@ -191,6 +194,7 @@ class Show(YamlReader):
         self.plex_interface = None
         self.sonarr_interface = None
         self.tmdb_interface = None
+        self._auto_hide_seasons = False
         self.__is_archive = False
 
         return None
@@ -247,17 +251,17 @@ class Show(YamlReader):
         """
 
         if (value := self.get('library', type_=dict)) is not None:
-            self.library_name = value['name']
-            self.library = value['path']
+            self.library_name: str = value['name']
+            self.library: str = value['path']
             self.media_directory = self.library/self.series_info.full_clean_name
-            self.media_server = value['media_server']
+            self.media_server: str = value['media_server']
 
         if (value := self.get('media_directory', type_=str)) is not None:
             self.media_directory = CleanPath(value).sanitize()
 
         if (value := self.get('filename_format', type_=str)) is not None:
             if TitleCard.validate_card_format_string(value):
-                self.card_filename_format = value
+                self.card_filename_format: str = value
             else:
                 self.valid = False
 
@@ -285,7 +289,8 @@ class Show(YamlReader):
             self.info_set.set_tvrage_id(self.series_info, value)
 
         if (value := self.get('card_type', type_=str)) is not None:
-            self._parse_card_type(value)
+            self.card_class = self._parse_card_type(value) \
+                or self._parse_card_type('standard')
             self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
 
         if (value := self.get('episode_text_format', type_=str)) is not None:
@@ -294,7 +299,7 @@ class Show(YamlReader):
         if (value := self.get('archive', type_=bool)) is not None:
             self.archive = value
 
-        if (value :=self.get('archive_all_variations',type_=bool)) is not None:
+        if (value :=self.get('archive_all_variations', type_=bool)) is not None:
             self.archive_all_variations = value
 
         if (value := self.get('archive_name', type_=str)) is not None:
@@ -339,7 +344,7 @@ class Show(YamlReader):
             if isinstance(value, bool):
                 self.hide_seasons = value
             elif isinstance(value, str) and value.lower() == 'auto':
-                self.__auto_hide_seasons = True
+                self._auto_hide_seasons = True
             else:
                 log.error(f'Season hiding must be "true", "false" or "auto"')
                 self.valid = False
@@ -506,15 +511,62 @@ class Show(YamlReader):
         self.episodes = {}
 
         # Go through each entry in the file interface
+        seasons, episodes = set(), []
         for entry, given_keys in self.file_interface.read():
+            # Add season number to set
+            episode_info: EpisodeInfo = entry['episode_info']
+            seasons.add(episode_info.season_number)
+
+            # Update episode list(s) for maxima addition
+            episodes.append((
+                episode_info.season_number,
+                episode_info.episode_number,
+                episode_info.abs_number,
+            ))
+
             # Create Episode object for this entry, store under key
-            self.episodes[entry['episode_info'].key] = Episode(
+            self.episodes[episode_info.key] = Episode(
                 base_source=self.source_directory,
-                destination=self.__get_destination(entry['episode_info']),
+                destination=self.__get_destination(episode_info),
                 card_class=self.card_class,
                 given_keys=given_keys,
                 **entry,
             )
+
+        for episode in self.episodes.values():
+            episode.add_maxima(
+                # season_episode_count is the number of episodes in the season
+                season_episode_count=len([
+                    e for e in episodes
+                    if e[0] == episode.episode_info.season_number
+                ]),
+                # season_episode_max is the maximum episode number in the season
+                season_episode_max=max(
+                    e[1] for e in episodes
+                    if e[0] == episode.episode_info.season_number
+                ),
+                # season_absolute_max is the maximum absolute number in the season
+                season_absolute_max=max(
+                    (e[2] for e in episodes
+                    if (e[0] == episode.episode_info.season_number
+                        and e[2] is not None)),
+                    default=0,
+                ),
+                # series_episode_count is the total number of episodes in the series
+                series_episode_count=len(episodes),
+                # series_episode_max is the maximum episode number in the series
+                series_episode_max=max(e[1] for e in episodes),
+                # series_absolute_max is the maximum absolute number in the series
+                series_absolute_max=max(
+                    (e[2] for e in episodes if e[2] is not None),
+                    default=0,
+                )
+            )
+
+        if (self._auto_hide_seasons
+            and not self.__is_archive
+            and (seasons - set({0, 1}))):
+            self.hide_seasons = True
 
 
     def add_new_episodes(self) -> None:
@@ -531,8 +583,8 @@ class Show(YamlReader):
             'plex': self.plex_interface,
             'sonarr': self.sonarr_interface,
             'tmdb': self.tmdb_interface,
-        }.get(self.episode_data_source, None)
-        if not interface :
+        }.get(self.episode_data_source)
+        if not interface:
             log.warning(f'Cannot source episodes for {self} from '
                         f'{self.episode_data_source}')
             return None
@@ -565,8 +617,7 @@ class Show(YamlReader):
             return True
 
         # Apply filter formula to list of Episodes from data source
-        new_episodes = tuple(filter(include_episode, all_episodes))
-        if len(new_episodes) == 0:
+        if not (new_episodes := list(filter(include_episode, all_episodes))):
             return None
 
         # If any new episodes remain, add to datafile and create Episode object
@@ -587,7 +638,7 @@ class Show(YamlReader):
             return None
 
         # Filter episodes needing ID's - i.e. missing card or translation
-        def episode_needs_id(episode) -> bool:
+        def episode_needs_id(episode: Episode) -> bool:
             # Episodes with all ID's or no card do not need ID's
             if episode.episode_info.has_all_ids or episode.destination is None:
                 return False
@@ -649,7 +700,7 @@ class Show(YamlReader):
         """
 
         # If no translations were specified, or TMDb syncing isn't enabled, skip
-        if not self.tmdb_interface or len(self.title_languages) == 0:
+        if not self.tmdb_interface or not self.title_languages:
             return None
 
         # Go through every episode and look for translations
@@ -684,8 +735,8 @@ class Show(YamlReader):
                 )
 
                 # Adding translated title, log it
-                log.debug(f'Added "{language_title}" to '
-                          f'"{translation["key"]}" for {self} {episode}')
+                log.debug(f'Added "{language_title}" to "{translation["key"]}" '
+                          f'for {self} {episode}')
 
                 # Delete old card
                 episode.delete_card(reason='adding translation')
@@ -725,6 +776,7 @@ class Show(YamlReader):
                 logo = self.card_class.convert_svg_to_png(
                     self.card_class.TEMPORARY_SVG_FILE, self.logo,
                 )
+
                 if logo is None:
                     log.warning(f'SVG to PNG conversion failed for {self}')
                 else:

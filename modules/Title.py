@@ -1,3 +1,4 @@
+from functools import lru_cache
 from re import compile as re_compile, IGNORECASE
 from typing import TYPE_CHECKING, Literal, Optional, Union
 
@@ -98,6 +99,12 @@ class Title:
         """Returns an unambiguous string representation of the object."""
 
         return f'<Title title="{self.full_title}", lines={self.__title_lines}>'
+
+
+    def __len__(self) -> int:
+        """Length of this title (without splitting)."""
+
+        return len(self.full_title)
 
 
     def get_partless_title(self) -> str:
@@ -325,6 +332,7 @@ class Title:
 
 
     @staticmethod
+    @lru_cache(maxsize=256)
     def get_matching_title(text: str) -> str:
         """
         Remove all non A-Z characters from the given title.
@@ -339,7 +347,7 @@ class Title:
         return ''.join(filter(str.isalnum, text)).lower()
 
 
-    def matches(self, *titles: tuple[Union[str, 'Title']]) -> bool:
+    def matches(self, *titles: Union[str, 'Title']) -> bool:
         """
         Get whether any of the given titles match this object.
 

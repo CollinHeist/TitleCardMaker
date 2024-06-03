@@ -34,7 +34,8 @@ class WebInterface:
 
     def __init__(self,
             name: str,
-            verify_ssl: bool = True, *,
+            verify_ssl: bool = True,
+            *,
             cache: bool = True,
         ) -> None:
         """
@@ -46,8 +47,8 @@ class WebInterface:
             name: Name (for logging) of this interface.
             verify_ssl: Whether to verify SSL requests with this
                 interface.
-            cache: (Keyword only) Whether to cache requests with this
-                interface.
+            cache: Whether to cache requests with this interface.
+            log: Logger for all log messages.
         """
 
         # Store name of this interface
@@ -84,7 +85,7 @@ class WebInterface:
 
         Args:
             url: The URL of the GET request.
-            params: The params of  the GET request.
+            params: The params of the GET request.
 
         Returns:
             Dict made from the JSON return of the specified GET request.
@@ -169,6 +170,6 @@ class WebInterface:
             # Write content to file, return success
             destination.write_bytes(image)
             return True
-        except Exception as e:
-            log.exception(f'Cannot download image, returned error', e)
+        except Exception: # pylint: disable=broad-except
+            log.exception(f'Cannot download image, returned error')
             return False

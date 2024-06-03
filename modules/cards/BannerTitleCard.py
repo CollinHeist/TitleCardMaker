@@ -23,7 +23,7 @@ class BannerTitleCard(BaseCardType):
     TITLE_CHARACTERISTICS = {
         'max_line_width': 19,
         'max_line_count': 3,
-        'top_heavy': False,
+        'top_heavy': 'forced even',
     }
 
     """Characteristics of the default title font"""
@@ -128,7 +128,7 @@ class BannerTitleCard(BaseCardType):
             return []
 
         # Draw from bottom left to top right
-        height = self.HEIGHT - self.banner_height - self.font_vertical_shift
+        height = self.HEIGHT - self.banner_height
 
         return [
             f'-fill "{self.banner_color}"',
@@ -154,7 +154,7 @@ class BannerTitleCard(BaseCardType):
 
         # Determine placement
         x = self.x_offset
-        y = self.HEIGHT - self.banner_height - self.font_vertical_shift - 43
+        y = self.HEIGHT - self.banner_height - 43
 
         return [
             f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
@@ -192,7 +192,8 @@ class BannerTitleCard(BaseCardType):
         # Return width of the longest text
         modified_commands = self.index_text_commands
         modified_commands[-1] = f'"{text}"'
-        return self.get_text_dimensions(modified_commands)[0]
+
+        return self.image_magick.get_text_dimensions(modified_commands)[0]
 
 
     @property
@@ -227,7 +228,7 @@ class BannerTitleCard(BaseCardType):
             f'-gravity southwest',
             f'label:"{self.top_title_text}" \)',
         ]
-        top_width, _ = self.get_text_dimensions(top_text_commands)
+        top_width, _ = self.image_magick.get_text_dimensions(top_text_commands)
 
         # Determine commands for the bottom line of text
         if self.bottom_title_text:
@@ -242,15 +243,17 @@ class BannerTitleCard(BaseCardType):
             # Positioning the bottom line of text 300px within from end of top
             bottom_x = self.x_offset + top_width - 300
             bottom_y = self.HEIGHT - self.banner_height \
-                - self.font_vertical_shift - 90
+                - self.font_vertical_shift - 90 + self.font_interline_spacing
 
             # Determine the width of the text to avoid overlap
             left_boundary = self.x_offset + self.index_text_width
-            bottom_width, _ = self.get_text_dimensions(bottom_text_commands)
+            bottom_width, _ = self.image_magick.get_text_dimensions(
+                bottom_text_commands,
+            )
 
-            # If within 20px of edge of index text, move right
-            if bottom_x < left_boundary + 20:
-                bottom_x = left_boundary + 40 # 20px spacing
+            # If within 35px of edge of index text, move right
+            if bottom_x < left_boundary + 35:
+                bottom_x = left_boundary + 35 + 40 # 40px spacing
             # If would overlap from right edge, move left
             if bottom_x + bottom_width > self.WIDTH - self.x_offset:
                 bottom_x = self.WIDTH - self.x_offset - bottom_width
@@ -368,6 +371,8 @@ class BannerTitleCard(BaseCardType):
             # Add text and banner
             *self.title_text_commands,
             *self.index_text_commands,
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

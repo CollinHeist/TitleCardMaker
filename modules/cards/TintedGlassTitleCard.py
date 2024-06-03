@@ -55,15 +55,17 @@ class TintedGlassTitleCard(BaseCardType):
     """Darkened area behind title/episode text is nearly black and 70% opaque"""
     DARKEN_COLOR = 'rgba(25, 25, 25, 0.7)'
 
-    """Blur profile for darkened area behind title/episod text"""
+    """Blur profile for darkened area behind title/episode text"""
     TEXT_BLUR_PROFILE = '0x6'
+    DEFAULT_ROUNDING_RADIUS = 40
 
     __slots__ = (
         'source', 'output_file', 'title_text', '__line_count', 'episode_text',
         'hide_episode_text', 'font_file', 'font_size', 'font_color',
         'font_interline_spacing', 'font_interword_spacing', 'font_kerning',
         'font_vertical_shift', 'episode_text_color', 'episode_text_position',
-        'box_adjustments', 'glass_color',
+        'box_adjustments', 'glass_color', 'rounding_radius',
+        'vertical_adjustment',
     )
 
     def __init__(self,
@@ -86,6 +88,8 @@ class TintedGlassTitleCard(BaseCardType):
             box_adjustments: Optional[str] = None,
             glass_color: str = DARKEN_COLOR,
             preferences: Optional['Preferences'] = None, # type: ignore
+            rounding_radius: int = DEFAULT_ROUNDING_RADIUS,
+            vertical_adjustment: int = 0,
             **unused,
         ) -> None:
 
@@ -97,14 +101,14 @@ class TintedGlassTitleCard(BaseCardType):
         self.output_file = card_file
 
         self.title_text = self.image_magick.escape_chars(title_text)
-        self.__line_count = len(title_text.split('\n'))
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
         self.hide_episode_text = hide_episode_text or len(episode_text) == 0
+        self.__line_count = len(title_text.splitlines())
 
         self.font_file = font_file
         self.font_size = font_size
         self.font_color = font_color
-        self.font_interline_spacing = font_interline_spacing
+        self.font_interline_spacing = -50 + font_interline_spacing
         self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_vertical_shift = font_vertical_shift
@@ -137,6 +141,8 @@ class TintedGlassTitleCard(BaseCardType):
                 self.box_adjustments = (0, 0, 0, 0)
                 self.valid = False
         self.glass_color = glass_color
+        self.rounding_radius = rounding_radius
+        self.vertical_adjustment = vertical_adjustment - 50
 
 
     def blur_rectangle_command(self,
@@ -181,7 +187,7 @@ class TintedGlassTitleCard(BaseCardType):
 
 
     @property
-    def add_title_text_command(self) -> ImageMagickCommands:
+    def title_text_commands(self) -> ImageMagickCommands:
         """
         Get the ImageMagick commands necessary to add the title text
         described by this card.
@@ -189,15 +195,15 @@ class TintedGlassTitleCard(BaseCardType):
 
         font_size = 200 * self.font_size
         kerning = -5 * self.font_kerning
-        interline_spacing = -50 + self.font_interline_spacing
         interword_spacing = 40 + self.font_interword_spacing
-        vertical_shift = 300 + self.font_vertical_shift
+        vertical_shift = 300 + self.font_vertical_shift \
+            + self.vertical_adjustment
 
         return [
             f'-gravity south',
             f'-font "{self.font_file}"',
             f'-pointsize {font_size}',
-            f'-interline-spacing {interline_spacing}',
+            f'-interline-spacing {self.font_interline_spacing}',
             f'-interword-spacing {interword_spacing}',
             f'-kerning {kerning}',
             f'-fill "{self.font_color}"',
@@ -213,26 +219,25 @@ class TintedGlassTitleCard(BaseCardType):
             BoxCoordinates of the bounding box.
         """
 
-        # Get dimensions of text - since text is stacked, do max/sum operations
-        width, height = self.get_text_dimensions(
-            self.add_title_text_command, width='max', height='sum'
+        # Get dimensions of title text
+        width, height = self.image_magick.get_text_dimensions(
+            self.title_text_commands,
+            interline_spacing=self.font_interline_spacing,
+            line_count=self.__line_count,
         )
 
         # Get start coordinates of the bounding box
-        x_start, x_end = self.WIDTH/2 - width/2, self.WIDTH/2 + width/2
+        x_start, x_end = (self.WIDTH - width) / 2, (self.WIDTH + width) / 2
         y_start, y_end = self.HEIGHT - 300 - height, self.HEIGHT - 300
 
         # Additional offsets necessary for equal padding
-        x_start -= 50
-        x_end += 50
+        x_start -= 40
+        x_end += 28
         y_start += 12
 
         # Shift y coordinates by vertical shift
-        y_start -= self.font_vertical_shift
-        y_end -= self.font_vertical_shift
-
-        # Adjust upper bounds of box if title is multi-line
-        y_start += (65 * (self.__line_count-1)) if self.__line_count > 1 else 0
+        y_start -= self.font_vertical_shift + self.vertical_adjustment
+        y_end -= self.font_vertical_shift + self.vertical_adjustment
 
         # Adjust bounds by any manual box adjustments
         x_start -= self.box_adjustments[3]
@@ -243,7 +248,7 @@ class TintedGlassTitleCard(BaseCardType):
         return BoxCoordinates(x_start, y_start, x_end, y_end)
 
 
-    def add_episode_text_command(self,
+    def episode_text_commands(self,
             title_coordinates: BoxCoordinates,
         ) -> ImageMagickCommands:
         """
@@ -264,13 +269,15 @@ class TintedGlassTitleCard(BaseCardType):
         # Determine text position
         if self.episode_text_position == 'center':
             gravity = 'south'
-            position = '+0+150'
+            x, y = 0, 150
         elif self.episode_text_position == 'left':
             gravity = 'southwest'
-            position = f'+{title_coordinates.x0+30}+150'
+            x, y = title_coordinates.x0 + 30, 150
         elif self.episode_text_position == 'right':
             gravity = 'southeast'
-            position = f'+{self.WIDTH-(title_coordinates.x1-20)}+150'
+            x, y = self.WIDTH - title_coordinates.x1 - 20, 150
+        y += self.vertical_adjustment
+        position = f'{x:+.1f}{y:+.1f}'
 
         command = [
             f'-gravity {gravity}',
@@ -282,8 +289,8 @@ class TintedGlassTitleCard(BaseCardType):
             f'-annotate {position} "{self.episode_text}"',
         ]
 
-        width, height = self.get_text_dimensions(
-            command, width='max', height='max'
+        width, height = self.image_magick.get_text_dimensions(
+            command, width='max', height='sum'
         )
 
         # Center positioning requires padding adjustment
@@ -303,6 +310,9 @@ class TintedGlassTitleCard(BaseCardType):
 
         # Additional y offset necessary for equal padding
         y_start, y_end = y_start - 7, y_end + 10
+
+        y_start -= self.vertical_adjustment
+        y_end -= self.vertical_adjustment
 
         coordinates = BoxCoordinates(x_start, y_start, x_end, y_end)
 
@@ -412,11 +422,16 @@ class TintedGlassTitleCard(BaseCardType):
             # Resize and apply any style modifiers
             *self.resize_and_style,
             # Blur area behind title text
-            *self.blur_rectangle_command(title_box_coordinates, 40),
+            *self.blur_rectangle_command(
+                title_box_coordinates,
+                self.rounding_radius
+            ),
             # Add title text
-            *self.add_title_text_command,
+            *self.title_text_commands,
             # Add episode text
-            *self.add_episode_text_command(title_box_coordinates),
+            *self.episode_text_commands(title_box_coordinates),
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

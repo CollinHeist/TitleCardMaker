@@ -4,24 +4,24 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-regex = "==2023.10.3"
-num2words = "==0.5.12"
+regex = "==2024.5.15"
+num2words = "==0.5.13"
 pyyaml = "==6.0.1"
-requests = "==2.31.0"
-titlecase = "==2.4"
-tqdm = "==4.66.1"
-fonttools = "==4.43.0"
-plexapi = "==4.15.4"
-tenacity = "==8.2.3"
+requests = "==2.32.3"
+titlecase = "==2.4.1"
+tqdm = "==4.66.4"
+fonttools = "==4.53.0"
+plexapi = "==4.15.13"
+tenacity = "==8.3.0"
 tinydb = "==4.8.0"
-schedule = "==1.2.1"
-tmdbapis = "==1.2.0"
-"ruamel.yaml" = "==0.17.21"
+schedule = "==1.2.2"
+tmdbapis = "==1.2.16"
+"ruamel.yaml" = "==0.17.40"
 imagesize = "==1.4.1"
-pillow = "==10.0.1"
+pillow = "==10.3.0"
 
 [dev-packages]
 ruff = "*"
 
 [requires]
-python_version = "3.9"
+python_version = "3.11"

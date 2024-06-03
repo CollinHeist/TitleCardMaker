@@ -13,8 +13,8 @@ if TYPE_CHECKING:
 class OverlineTitleCard(BaseCardType):
     """
     This class describes a CardType that produces title cards featuring
-    a thin line over (or under) the title text. This line is
-    interesected by the episode text, and can be recolored.
+    a thin line over (or under) the title text. This line is intersected
+    by the episode text, and can be recolored.
     """
 
     """Directory where all reference files used by this card are stored"""
@@ -46,7 +46,7 @@ class OverlineTitleCard(BaseCardType):
     ARCHIVE_NAME = 'Overline Style'
 
     """How thick the line is (in pixels)"""
-    LINE_THICKNESS = 7
+    LINE_THICKNESS = 9
 
     """Gradient to overlay"""
     GRADIENT_IMAGE = REF_DIRECTORY / 'small_gradient.png'
@@ -56,8 +56,9 @@ class OverlineTitleCard(BaseCardType):
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_file',
         'font_size', 'font_color', 'font_interline_spacing',
         'font_interword_spacing', 'font_kerning', 'font_stroke_width',
-        'font_vertical_shift', 'episode_text_color', 'line_color', 'hide_line',
-        'line_position', 'line_width', 'omit_gradient', 'separator',
+        'font_vertical_shift', 'episode_text_color', 'episode_text_font_size',
+        'line_color', 'hide_line', 'line_position', 'line_width',
+        'omit_gradient', 'separator',
     )
 
     def __init__(self, *,
@@ -79,6 +80,7 @@ class OverlineTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
+            episode_text_font_size: float = 1.0,
             hide_line: bool = False,
             line_color: str = TITLE_COLOR,
             line_position: Literal['top', 'bottom'] = 'top',
@@ -115,6 +117,7 @@ class OverlineTitleCard(BaseCardType):
 
         # Optional extras
         self.episode_text_color = episode_text_color
+        self.episode_text_font_size = episode_text_font_size
         self.hide_line = hide_line
         self.line_color = line_color
         self.line_position = line_position
@@ -203,12 +206,14 @@ class OverlineTitleCard(BaseCardType):
 
         return [
             f'-density 200',
+            f'-gravity south',
             # f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
             f'-font "{self.REF_DIRECTORY.parent / "Proxima Nova Semibold.otf"}"',
             f'-fill "{self.episode_text_color}"',
             f'-strokewidth 2',
-            f'-pointsize 22',
+            f'-pointsize {22 * self.episode_text_font_size:.1f}',
             f'-interword-spacing 18',
+            f'-kerning -2',
             f'-annotate +0+{vertical_shift} "{index_text}"'
         ]
 
@@ -245,11 +250,11 @@ class OverlineTitleCard(BaseCardType):
             right_rectangle = Rectangle(Coordinate(0, 0), Coordinate(0, 0))
             left_rectangle = Rectangle(
                 Coordinate(
-                    (self.WIDTH / 2) - (title_text_dimensions.width / 2) + 30,
+                    (self.WIDTH - title_text_dimensions.width) / 2 + 30,
                     vertical_position - (self.line_width / 2)
                 ),
                 Coordinate(
-                    (self.WIDTH / 2) + (title_text_dimensions.width / 2) - 30,
+                    (self.WIDTH + title_text_dimensions.width) / 2 - 30,
                     vertical_position + (self.line_width / 2),
                 )
             )
@@ -257,11 +262,11 @@ class OverlineTitleCard(BaseCardType):
             # Create left rectangle
             left_rectangle = Rectangle(
                 Coordinate(
-                    (self.WIDTH / 2) - (title_text_dimensions.width / 2) + 30,
+                    (self.WIDTH - title_text_dimensions.width) / 2 + 30,
                     vertical_position - (self.line_width / 2),
                 ),
                 Coordinate(
-                    (self.WIDTH / 2) - (index_text_dimensions.width / 2),
+                    (self.WIDTH - index_text_dimensions.width) / 2 - 10,
                     vertical_position + (self.line_width / 2),
                 )
             )
@@ -269,11 +274,11 @@ class OverlineTitleCard(BaseCardType):
             # Create right rectangle
             right_rectangle = Rectangle(
                 Coordinate(
-                    (self.WIDTH / 2) + (index_text_dimensions.width / 2),
+                    (self.WIDTH + index_text_dimensions.width) / 2 + 10,
                     vertical_position - (self.line_width / 2),
                 ),
                 Coordinate(
-                    (self.WIDTH / 2) + (title_text_dimensions.width / 2) - 30,
+                    (self.WIDTH + title_text_dimensions.width) / 2 - 30,
                     vertical_position + (self.line_width / 2),
                 )
             )
@@ -381,10 +386,10 @@ class OverlineTitleCard(BaseCardType):
         """
 
         # Get the dimensions of the title and index text
-        title_text_dimensions = self.get_text_dimensions(
+        title_text_dimensions = self.image_magick.get_text_dimensions(
             self.title_text_commands, width='max', height='sum',
         )
-        index_text_dimensions = self.get_text_dimensions(
+        index_text_dimensions = self.image_magick.get_text_dimensions(
             self.index_text_commands, width='max', height='sum',
         )
 
@@ -399,6 +404,8 @@ class OverlineTitleCard(BaseCardType):
             *self.index_text_commands,
             # Add line
             *self.line_commands(title_text_dimensions, index_text_dimensions),
+            # Attempt to overlay mask
+            *self.add_overlay_mask(self.source_file),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

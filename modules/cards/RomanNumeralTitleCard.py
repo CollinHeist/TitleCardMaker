@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING, Optional
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
-
 if TYPE_CHECKING:
+    from modules.PreferenceParser import PreferenceParser
     from modules.Font import Font
 
 
@@ -134,7 +134,8 @@ POSITIONS: dict[str, list[Position]] = {
         Position('Upper', Offset('+0-250'), '0x0'),
         Position('Left', Offset('-75+0'), '-90x-90'),
         Position('Right', Offset('+75+0'), '90x90'),
-    ], 'V': [
+    ],
+    'V': [
         Position('Inside', Offset('+0-275'), '0x0'),
         Position('Above', Offset('+0-365'), '0x0'),
         Position('Lower', Offset('+0+315'), '0x0'),
@@ -144,24 +145,28 @@ POSITIONS: dict[str, list[Position]] = {
         Position('Lower Left Rotated', Offset('-120+260'), '67x67'),
         Position('Upper Left', Offset('-270-370'), '0x0'),
         Position('Upper Right', Offset('+280-370'), '0x0'),
-    ], 'X': [
+    ],
+    'X': [
         Position('Upper Right', Offset('+230-360'), '0x0'),
         Position('Upper Left', Offset('-230-360'), '0x0'),
         Position('Lower Right', Offset('+240+425'), '0x0'),
         Position('Lower Left', Offset('-240+425'), '0x0'),
         Position('Lower Middle', Offset('+0+325'), '0x0'),
         Position('Right Rotated', Offset('+175+150'), '55x55'),
-    ], 'L': [
+    ],
+    'L': [
         Position('Below', Offset('+0+425'), '0x0'),
         Position('Top Left', Offset('-110-365'), '0x0'),
         Position('Left', Offset('-190+0'), '-90x-90'),
         Position('Right', Offset('-45+0'), '90x90'),
-    ], 'C': [
+    ],
+    'C': [
         Position('Above', Offset('+0-375'), '0x0'),
         Position('Below', Offset('+0+425'), '0x0'),
         Position('Left', Offset('-365+0'), '-90x-90'),
         Position('Center', Offset('+0+0'), '0x0'),
-    ], 'D': [
+    ],
+    'D': [
         Position('Above', Offset('+0-375'), '0x0'),
         Position('Below', Offset('+0+425'), '0x0'),
         Position('Left', Offset('-325+0'), '-90x-90'),
@@ -169,7 +174,8 @@ POSITIONS: dict[str, list[Position]] = {
         Position('Center', Offset('+0+0'), '0x0'),
         Position('Above Left', Offset('-240-355'), '0x0'),
         Position('Below Left', Offset('-240+425'), '0x0'),
-    ], 'M': [
+    ],
+    'M': [
         Position('Above', Offset('+0-300'), '0x0'),
         Position('Below', Offset('+0+300'), '0x0'),
         Position('Below Left', Offset('-350+425'), '0x0'),
@@ -219,6 +225,7 @@ class RomanNumeralTitleCard(BaseCardType):
 
     """Whether this CardType uses unique source images"""
     USES_UNIQUE_SOURCES = False
+    USES_SOURCE_IMAGES = False
 
     """Standard class has standard archive name"""
     ARCHIVE_NAME = 'Roman Numeral Style'
@@ -242,7 +249,7 @@ class RomanNumeralTitleCard(BaseCardType):
         'output_file', 'title_text', 'season_text', 'hide_season_text',
         'hide_episode_text', 'font_color', 'font_interline_spacing',
         'font_interword_spacing', 'font_size', 'background',
-        'roman_numeral_color', 'roman_numeral', '__roman_text_scalar',
+        'roman_numeral_color', 'roman_numeral', '_roman_text_scalar',
         '__roman_numeral_lines', 'rotation', 'offset', 'season_text_color',
         'font_file',
     )
@@ -265,12 +272,10 @@ class RomanNumeralTitleCard(BaseCardType):
             background: str = BACKGROUND_COLOR,
             roman_numeral_color: str = ROMAN_NUMERAL_TEXT_COLOR,
             season_text_color: str = SEASON_TEXT_COLOR,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this Card.
-        """
+        """Construct a new instance of this Card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -342,7 +347,7 @@ class RomanNumeralTitleCard(BaseCardType):
             roman_text = [numeral]
 
         # Update scalar for this text
-        self.__roman_text_scalar = 1.0
+        self._roman_text_scalar = 1.0
         self.__assign_roman_scalar(roman_text)
 
         # Assign combined roman numeral text
@@ -373,7 +378,7 @@ class RomanNumeralTitleCard(BaseCardType):
 
         # Scale roman numeral text if line width is larger than card (+margin)
         if max_width > (card_width - 100):
-            self.__roman_text_scalar = (card_width - 100) / max_width
+            self._roman_text_scalar = (card_width - 100) / max_width
 
 
     def create_roman_numeral_command(self,
@@ -390,8 +395,8 @@ class RomanNumeralTitleCard(BaseCardType):
             return []
 
         # Scale font size and interline spacing of roman text
-        font_size = 1250 * self.__roman_text_scalar
-        interline_spacing = -400 * self.__roman_text_scalar
+        font_size = 1250 * self._roman_text_scalar
+        interline_spacing = -400 * self._roman_text_scalar
 
         return [
             f'-font "{self.ROMAN_NUMERAL_FONT.resolve()}"',
@@ -489,7 +494,7 @@ class RomanNumeralTitleCard(BaseCardType):
             line = top if on_top else bottom
 
             # Shift offset down/up if on top/bottom
-            amount = (425 * self.__roman_text_scalar) * (-1 if on_top else 1)
+            amount = (425 * self._roman_text_scalar) * (-1 if on_top else 1)
             offset += Offset(x=0, y=amount)
 
             # Calculate widths only against relevant line
@@ -506,24 +511,24 @@ class RomanNumeralTitleCard(BaseCardType):
             )
 
         # Get width of whole line
-        total_width, _ = self.get_text_dimensions(
-            numeral_command, width='sum', height='max'
+        total_width, _ = self.image_magick.get_text_dimensions(
+            numeral_command, width='sum',
         )
 
         # Get width of line to the left of the selected numeral
         left_width = 0
         if len(left_text) > 0:
-            left_width, _ = self.get_text_dimensions(
+            left_width, _ = self.image_magick.get_text_dimensions(
                 self.create_roman_numeral_command(left_text),
-                width='sum', height='max'
+                width='sum',
             )
 
         # Get width of line to the right of the selected numeral
         right_width = 0
         if len(right_text) > 0:
-            right_width, _ = self.get_text_dimensions(
+            right_width, _ = self.image_magick.get_text_dimensions(
                 self.create_roman_numeral_command(right_text),
-                width='sum', height='max'
+                width='sum',
             )
 
         # Determine necesary offset by position within the line
@@ -537,7 +542,7 @@ class RomanNumeralTitleCard(BaseCardType):
         offset += Offset(x=amount, y=0)
 
         # Adjust offset from center of letter to randomly selected position
-        offset += (random_position.offset * self.__roman_text_scalar)
+        offset += (random_position.offset * self._roman_text_scalar)
 
         return random_position.rotation, offset
 
@@ -558,14 +563,14 @@ class RomanNumeralTitleCard(BaseCardType):
             return None
 
         # Get boundaries of title text
-        width, height = self.get_text_dimensions(
+        width, height = self.image_magick.get_text_dimensions(
             self.title_text_command, width='width', height='sum'
         )
         box0 = {
-            'start_x': -width/2  + 3200/2,
-            'start_y': -height/2 + 1800/2,
-            'end_x':    width/2  + 3200/2,
-            'end_y':    height/2 + 1800/2,
+            'start_x': (-width  + self.WIDTH)  / 2,
+            'start_y': (-height + self.HEIGHT) / 2,
+            'end_x':   (+width  + self.WIDTH)  / 2,
+            'end_y':   (+height + self.HEIGHT) / 2,
         }
 
         # Inner function to randomize position and determine if overlapping
@@ -584,9 +589,9 @@ class RomanNumeralTitleCard(BaseCardType):
             self.rotation, self.offset = rotation, offset
 
             # Get dimensions of season text
-            season_width, season_height = self.get_text_dimensions(
+            season_width, season_height = self.image_magick.get_text_dimensions(
                 self.create_season_text_command(rotation, offset),
-                width='max', height='max'
+                width='max', height='sum'
             )
 
             # Modify dimensions or add margin based on rotation of text
@@ -733,6 +738,7 @@ class RomanNumeralTitleCard(BaseCardType):
             # Create fixed color background
             f'-size "{self.TITLE_CARD_SIZE}"',
             f'xc:"{self.background}"',
+            f'-alpha on',
             # Overlay roman numerals
             *self.create_roman_numeral_command(self.roman_numeral),
             # Overlay season text

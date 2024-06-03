@@ -36,6 +36,7 @@ class Profile:
         'episode_text_format', '__use_custom_seasons', '__use_custom_font',
     )
 
+
     def __init__(self,
             series_info: SeriesInfo,
             font: Font,
