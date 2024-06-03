@@ -60,8 +60,8 @@ This color does support transparency.
 
 How far from the edge of the image the shape is drawn can be adjusted with the
 _Shape Inset_ Extra. This affects the vertical and horizontal spacing if the
-[Text Position](...) is set to anything other than `left` or `right`, in which
-case this only affects the horizontal spacing.
+[Text Position](#position) is set to anything other than `left` or `right`, in
+which case this only affects the horizontal spacing.
 
 ??? example "Examples"
 

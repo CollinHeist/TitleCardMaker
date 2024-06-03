@@ -14,7 +14,7 @@ from pydantic import Field
 from sqlalchemy import create_engine
 from sqlalchemy.event import listens_for
 from sqlalchemy.orm import declarative_base, sessionmaker
-from thefuzz.fuzz import partial_token_sort_ratio as partial_ratio # partial_ratio
+from thefuzz.fuzz import partial_token_sort_ratio as partial_ratio
 
 from app.models.preferences import Preferences
 
@@ -219,7 +219,7 @@ Scheduler = BackgroundScheduler(
 )
 
 # Config file/object
-preferences_file =\
+preferences_file = \
     Path(__file__).parent.parent.parent / 'config' / 'config.pickle'
 if IS_DOCKER:
     preferences_file = Path('/config/config.pickle')

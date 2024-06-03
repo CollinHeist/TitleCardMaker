@@ -41,8 +41,8 @@ described in greater detail below.
 | :----------------------: | :---------------------: | :--------------------------------------------------- |
 | `graph_background_color` | `rgba(140,140,140,0.5)` | Background color of the graph                        |
 | `graph_color`            | `rgb(99,184,255)`       | Color of the filled-in portion of the graph coloring |
-| `graph_inset`            | `75`                    | How far to inset the graph from the edges            |
-| `graph_radius`           | `175`                   | Radius of the graph                                  |
+| `graph_inset`            | `#!yaml 75`             | How far to inset the graph from the edges            |
+| `graph_radius`           | `#!yaml 175`            | Radius of the graph                                  |
 | `graph_text_font_size`   | `#!yaml 1.0`            | Size adjustment for the graph text                   |
 | `graph_width`            | `#!yaml 25`             | The width of the graph                               |
 | `fill_scale`             | `#!yaml 0.6`            | Scale for how wide the filled graph should appear    |
@@ -63,7 +63,7 @@ image behind the graph can be seen. This defaults to `rgba(140,140,140,0.5)`
 
 ??? example "Example"
 
-    ```yaml hl_lines="5"
+    ```yaml title="tv.yml" hl_lines="5"
     series:
       Reacher (2022):
         card_type: graph
@@ -90,7 +90,7 @@ is 100% (see the example below).
 
 ??? example "Example"
 
-    ```yaml hl_lines="5"
+    ```yaml title="tv.yml" hl_lines="5"
     series:
       Reacher (2022):
         card_type: graph
@@ -163,7 +163,7 @@ value between `0.0` (no fill at all) and `1.0` (completely filled).
 
 ??? example "Example"
 
-    ```yaml hl_lines="5"
+    ```yaml title="tv.yml" hl_lines="5"
     series:
       Reacher (2022):
         card_type: graph
@@ -192,7 +192,7 @@ default.
 
 ??? example "Example"
 
-    ```yaml hl_lines="5"
+    ```yaml title="tv.yml" hl_lines="5"
     series:
       Reacher (2022):
         card_type: graph
@@ -209,11 +209,106 @@ default.
 
 #### Inset (`graph_inset`) { data-toc-label="Inset" }
 
+How far from the edge of the image the shape is drawn can be adjusted with the
+`graph_inset` Extra. This affects the vertical and horizontal spacing of the
+graph.
+
+The default value is `#!yaml 75`, but can be any value between 0 and 1800. This
+is a unit in pixels.
+
+??? example "Example"
+
+    ```yaml title="tv.yml" hl_lines="5"
+    series:
+      Reacher (2022):
+        card_type: graph
+        extras:
+          graph_inset: 30
+    ```
+
+    <div class="image-compare example-card"
+        data-starting-point="7.68"
+        data-left-label="75" data-right-label="30">
+        <img src="../../../../card_types/assets/graph.webp"/>
+        <img src="../../../../card_types/assets/graph-inset.webp"/>
+    </div>
+
 #### Radius (`graph_radius`) { data-toc-label="Radius" }
+
+The radius of the graph can be adjusted with the `graph_radius`. The default
+value is `#!yaml 175`, but can be any value between `#!yaml 50` and
+`#!yaml 900`. This is a unit in pixels.
+
+!!! note "Note"
+
+    Adjusting this value will also scale the size of the graph text _unless_ the
+    [`graph_text_font_size`](#font-size-graph_text_font_size) is manually set.
+
+??? example "Example"
+
+    ```yaml title="tv.yml" hl_lines="5"
+    series:
+      Reacher (2022):
+        card_type: graph
+        extras:
+          graph_radius: 125
+    ```
+
+    <div class="image-compare example-card"
+        data-starting-point="7.68"
+        data-left-label="175" data-right-label="125">
+        <img src="../../../../card_types/assets/graph.webp"/>
+        <img src="../../../../card_types/assets/graph-radius.webp"/>
+    </div>
 
 #### Width (`graph_width`) { data-toc-label="Width" }
 
+The width of the graph can be adjusted with the `graph_width` extra. This
+is different than the [`fill_scale`](#fill-scale-fill_scale) extra because this
+affects how wide _all_ parts of the graph appear, instead of just the filled-in
+portions.
+
+The default value is `#!yaml 25`. This can be any non-negative value.
+
+??? example "Example"
+
+    ```yaml title="tv.yml" hl_lines="5"
+    series:
+      Reacher (2022):
+        card_type: graph
+        extras:
+          graph_width: 40
+    ```
+
+    <div class="image-compare example-card"
+        data-starting-point="7.68"
+        data-left-label="25" data-right-label="40">
+        <img src="../../../../card_types/assets/graph.webp"/>
+        <img src="../../../../card_types/assets/graph-width.webp"/>
+    </div>
+
 ### Gradient Overlay (`omit_gradient`) { data-toc-label="Gradient Overlay" }
+
+By default, TCM adds a subtle gradient overlay on the outer edge of the image in
+the orientation of the indicated [`text_position`](#position-text_position).
+This can be disabled by setting `#!yaml omit_gradient: true`.
+
+??? example "Example"
+
+    ```yaml title="tv.yml" hl_lines="5"
+    series:
+      Reacher (2022):
+        card_type: graph
+        extras:
+          omit_gradient: true
+    ```
+
+    <div class="image-compare example-card"
+        data-starting-point="7.68"
+        data-left-label="false" data-right-label="true">
+        <img src="../../../../card_types/assets/graph.webp"/>
+        <img src="../../../../card_types/assets/graph-gradient.webp"/>
+    </div>
 
 ### Position (`text_position`) { data-toc-label="Position" }
 
@@ -226,7 +321,7 @@ The position will also adjust the orientation of the gradient overlay, if
 
 ??? example "Example"
 
-    ```yaml hl_lines="5"
+    ```yaml title="tv.yml" hl_lines="5"
     series:
       Reacher (2022):
         card_type: graph
