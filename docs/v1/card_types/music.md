@@ -18,9 +18,12 @@ This card type is used whenever `card_type` is specified as `music` or
 
 ## Example
 
-<figure markdown="span" style="max-width: 70%">
-  ![Example Music Card](./assets/music.webp)
-</figure>
+<div class="image-compare example-card"
+    data-starting-point="80"
+    data-left-label="Standard" data-right-label="Blurred">
+    <img src="../../../card_types/assets/music.webp"/>
+    <img src="../assets/music_blurred.webp"/>
+</div>
 
 ??? note "Labeled Card Elements"
 
