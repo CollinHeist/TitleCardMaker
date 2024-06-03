@@ -213,7 +213,16 @@ class MusicTitleCard(BaseCardType):
             log.error(f'Controls can only be added if player_width is at least'
                       f'600')
             self.valid = False
-        self.album_cover = Path(album_cover) if album_cover else album_cover
+
+        self.album_cover = None
+        if album_cover and isinstance(album_cover, str):
+            if Path(album_cover).exists():
+                self.album_cover = Path(album_cover)
+            elif (cover := (self.source_file.parent / str(album_cover))).exists():
+                self.album_cover = album_cover
+        elif isinstance(album_cover, Path):
+            self.album_cover = album_cover
+
         self.album_size = album_size
         if len((control_colors := control_colors.split(' '))) == 5:
             self.control_colors = ControlColors(*control_colors)
