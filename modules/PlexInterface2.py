@@ -825,7 +825,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         ]
 
         # Go through each episode within Plex, set title cards
-        loaded = []
+        skipped, loaded = [], []
         for plex_episode in series.episodes(container_size=100):
             # Skip episode if no matching episode was provided
             plex_episode: PlexEpisode = plex_episode
@@ -835,6 +835,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                     found = True
                     break
             if not found:
+                skipped.append(plex_episode.seasonEpisode)
                 continue
 
             # Shrink image if necessary, skip if cannot be compressed
@@ -864,6 +865,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             else:
                 loaded.append((episode, card))
 
+        log.trace(f'Not loading Card into {", ".join(skipped)} for {series_info}')
         return loaded
 
 
