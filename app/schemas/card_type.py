@@ -339,6 +339,7 @@ class GraphCardType(BaseCardModel):
     graph_radius: conint(ge=50, le=900) = GraphTitleCard.GRAPH_RADIUS
     graph_width: PositiveInt = GraphTitleCard.GRAPH_WIDTH
     fill_scale: confloat(gt=0.0, le=1.0) = GraphTitleCard.GRAPH_FILL_SCALE
+    omit_gradient: bool = False
     percentage: confloat(ge=0.0, le=1.0) = 0.75
     text_position: GraphTextPosition = 'lower left'
 

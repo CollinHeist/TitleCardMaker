@@ -390,7 +390,7 @@ def load_series_title_cards_into_library(
     series = get_series(db, series_id, raise_exc=True)
     interface = get_interface(interface_id, raise_exc=True)
 
-    # Load this Library's Cards
+    # Load Cards
     load_series_title_cards(
         series, library_name, interface_id, db, interface,
         reload, log=request.state.log,
