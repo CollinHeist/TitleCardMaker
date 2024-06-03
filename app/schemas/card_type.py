@@ -735,7 +735,7 @@ class StripedCardType(BaseCardTypeAllText):
     episode_text_color: str = StripedTitleCard.EPISODE_TEXT_COLOR
     episode_text_font_size: PositiveFloat = 1.0
     inset: conint(ge=0, le=1600) = StripedTitleCard.DEFAULT_INSET
-    inter_shape_spacing: conint(ge=0, le=800) = StripedTitleCard.DEFAULT_INTER_SHAPE_SPACING
+    inter_stripe_spacing: conint(ge=0, le=800) = StripedTitleCard.DEFAULT_INTER_STRIPE_SPACING
     overlay_color: str = StripedTitleCard.DEFAULT_OVERLAY_COLOR
     polygons: PolygonDefintion = StripedTitleCard.DEFAULT_POLYGON_STRING
     separator: str = ' - '
