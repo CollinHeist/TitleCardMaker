@@ -100,7 +100,7 @@ const changeLog = [
   </div>
   <div class="item">Banner
     <div class="list">
-      <div class="item">Adjust the index text placement <i>down</i> 4 pixels</div>
+      <div class="item">Adjust the index text placement down 4 pixels</div>
       <div class="item">Do not adjust the index text placement with the title vertical shift</div>
     </div>
   </div>
@@ -146,7 +146,7 @@ const changeLog = [
 <h2>Documentation Changes</h2>
 <div class="ui ordered list">
   <div class="item">Add updated scrolling marquee for all available card types to the documentation home page</div>
-  <div class="item">Replace image for the Series page (to reflect new view)</div>
+  <div class="item">Replace image for the Series page to reflect new view</div>
   <div class="item">Add page on <a href="https://titlecardmaker.com/user_guide/mask_images/" target="_blank">mask images</a></div>
   <div class="item">Fix keyboard shortcut icons on the Blueprint Set page</div>
   <div class="item">Begin page on the <a href="https://titlecardmaker.com/card_types/anime" target="_blank">Anime</a> card</div>
@@ -1075,7 +1075,7 @@ const changeLog = [
 </div>
 <h2>Minor Changes</h2>
 <div class="ui ordered list">
-  <div class="item">Do not refresh ImageMagickInterfaces after updating global Settings</div>
+  <div class="item">Do not refresh ImageMagick interface(s) after updating global settings</div>
   <div class="item">Reduce remote card type API endpoint queries on the Series page (improves loading time)</div>
   <div class="item">Globally query available data on the Series page to significantly improve Episode table loading times</div>
   <div class="item">Add blank Templates at the top of the Templates list</div>
@@ -1094,10 +1094,10 @@ const changeLog = [
   <div class="item">Handle SQL errors in load all Title Cards task</div>
   <div class="item">Display more pagination elements by default</div>
   <div class="item">Properly detect contextual Loggers in decorated functions</div>
-  <div class="item">Do not invert modal un-invertible subconten</div>
+  <div class="item">Do not invert modal un-invertible subcontent</div>
   <div class="item">Correct CreateTitleCards Task description</div>
   <div class="item">Correct plural of Episode override count when browsing the Blueprints on the Series page</div>
-  <div class="item">Use contextual logger in Remote card type initialization</div>
+  <div class="item">Use contextual logger in remote card type initialization</div>
   <div class="item">Explicitly sanitize card filenames (should handle explicit \n in card filenames)</div>
   <div class="item">Correctly detect hidden episode text in Olivier card</div>
   <div class="item">Refer to the web-ui branch of the CardTypes repository for all RemoteFile objects</div>
@@ -1141,8 +1141,8 @@ const changeLog = [
 </div>
 <h2>Minor Changes</h2>
 <div class="ui ordered list">
-  <div class="item">Automatically open and start populating Issue when the "Export Blueprint" button is pressed</div>
-  <div class="item">Allow ordering Blueprints by creation or Series name</div>
+  <div class="item">Automatically open and start populating a GitHub issue when the "Export Blueprint" button is pressed</div>
+  <div class="item">Allow ordering Blueprints by creation time or Series name</div>
   <div class="item">Log "missing" Series triggers by Tautulli endpoint as info, not errors</div>
   <div class="item">Remove deleted row from Episode data table without re-querying all Episodes</div>
   <div class="item">Sequentially transition in Posters on home page, and search results on the new Series page</div>
@@ -1217,7 +1217,7 @@ const changeLog = [
           <img width="50%" src="https://titlecardmaker.com/assets/blueprint_series_light.jpg">
         </div>
       </div>
-      <div class="item">These Blueprints can then be imported _directly_, without explicitly searching for the Series - this will import the Series if it does not exist, as well as the Blueprint</div>
+      <div class="item">These Blueprints can then be imported directly, without explicitly searching for the Series - this will import the Series if it does not exist, as well as the Blueprint</div>
       <div class="item">Any Blueprints you aren't interested in (or have already imported) can be permanently hidden from this part of the UI, but will still appear when searching for that Series explicitly.</div>
     </div>
   </div>
@@ -1303,7 +1303,7 @@ const changeLog = [
     </div>
   </div>
   <div class="item">Prevent TCM from grabbing source images of previously loaded Title Cards</div>
-  <div class="item">Require Series match when creating Cards via Tautulli/rating key - it was possible to remake the Card for the wrong Series if the two had the exact same Episode index + title (i.e.<i>Pilot</i>for S01E01)</div>
+  <div class="item">Require Series match when creating Cards via Tautulli/rating key - it was possible to remake the Card for the wrong Series if the two had the exact same Episode index + title (i.e. <i>Pilot</i> for S01E01)</div>
   <div class="item">Fix Emby/Jellyfin Syncs</div>
 </div>
 <h2>Minor Changes</h2>
@@ -1333,9 +1333,9 @@ const changeLog = [
   <div class="item">Raise 404 if requesting Statistics for a Series, or deleting a Template that DNE via the API</div>
   <div class="item">Use updated image size methods in AspectRatioFixer and StandardSummary creation via fixer</div>
   <div class="item">No longer use deprecated <b>ABC.abstractproperty</b> decorator</div>
-  <div class="item">Use correct <b><b>slots</b></b> iterable in <b>SeasonTitleRanges</b> class</div>
-  <div class="item">Correct<i>Process Series</i>button tooltip to not reference Card loading</div>
-  <div class="item">Explicitly pass connection URLs to <b><b>init</b></b> methods</div>
+  <div class="item">Use correct <b>__slots__</b> iterable in <b>SeasonTitleRanges</b> class</div>
+  <div class="item">Correct <i>Process Series</i> button tooltip to not reference Card loading</div>
+  <div class="item">Explicitly pass connection URLs to <b>__init__</b> methods</div>
   <div class="item">Correct language in the delete Sync toast </div>
 </div>`
   }, {
@@ -1405,7 +1405,7 @@ const changeLog = [
   <div class="item">Add "progress bar" to show percentage of Title Cards created below Series poster</div>
   <div class="item">Do not show Sync sections for disabled interfaces</div>
   <div class="item">Change maximum ImageMagick thread count to 12</div>
-  <div class="item">Use <b>magick</b> IM prefix _by default_</div>
+  <div class="item">Use <b>magick</b> IM prefix by default</div>
   <div class="item">Disable various buttons on the Series page after clicking to prevent making duplicate requests</div>
   <div class="item">Use orange icons on<i>Force Reload ..</i>buttons</div>
 </div>
@@ -1463,7 +1463,7 @@ const changeLog = [
 <h2>Minor Fixes</h2>
 <div class="ui ordered list">
   <div class="item">Remove double <b>magick</b> ImageMagick prefix from TintedFrame card </div>
-  <div class="item">Add slight shadow to separate page header from dark themed page contenxt</div>
+  <div class="item">Add slight shadow to separate page header from dark themed page content</div>
   <div class="item">Remove blank toast from Title Card creation response handler</div>
   <div class="item">Include fake Series name and Episode indices in Card preview generation</div>
   <div class="item">Log the correct number of identified entries from a Plex Rating Key</div>
@@ -1538,7 +1538,7 @@ const changeLog = [
 <h2>Major Changes</h2>
 <div class="ui ordered list">
   <div class="item">Add scheduled Task to download any missing Series posters</div>
-  <div class="item">Download Series posters from associated Media Server (e.g. Plex, Emby, Jellyfin)<i>before</i>trying TMDb</div>
+  <div class="item">Download Series posters from associated Media Server (e.g. Plex, Emby, Jellyfin) <i>before</i> trying TMDb</div>
   <div class="item">Add functionality for TCM to "guess" and auto-fill the Libraries setting based on your Sonarr root folders</div>
   <div class="item">Simplify HTML/CSS on all pages so that the header and sidebar are non-sticky elements (reducing weird scrolling oddities)</div>
   <div class="item">Fix background "image" gradient not filling the page on some pages in Chrome</div>
