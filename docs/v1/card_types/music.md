@@ -27,7 +27,7 @@ This card type is used whenever `card_type` is specified as `music` or
 
 ??? note "Labeled Card Elements"
 
-    ![Labeled Music Card Elements](./assets/music-labeled.webp)
+    ![Labeled Music Card Elements](../../../card_types/assets/music-labeled.webp)
 
 ## Valid `extras` { data-toc-label="Valid Extras" }
 
@@ -427,7 +427,7 @@ included in a template to dynamically add to each series.
 
     <div class="image-compare example-card"
         data-starting-point="15"
-        data-left-label="<<title>>" data-right-label="<<title>> (<<year>>)">
+        data-left-label="Atlanta" data-right-label="Atlanta (2016)">
         <img src="../../../../card_types/assets/music-control.webp"/>
         <img src="../../../../card_types/assets/music-subtitle.webp"/>
     </div>
