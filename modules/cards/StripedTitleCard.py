@@ -309,7 +309,7 @@ class StripedTitleCard(BaseCardType):
     """Implementation details"""
     DEFAULT_ANGLE = 79.5 # Degrees
     DEFAULT_INSET = 50
-    DEFAULT_INTER_SHAPE_SPACING = 8
+    DEFAULT_INTER_STRIPE_SPACING = 8
     DEFAULT_OVERLAY_COLOR = 'white'
     DEFAULT_POLYGON_STRING = 'random[ssmmmlll]'
     DEFAULT_TEXT_POSITION: TextPosition = 'lower left'
@@ -348,7 +348,7 @@ class StripedTitleCard(BaseCardType):
             episode_text_color: str = EPISODE_TEXT_COLOR,
             episode_text_font_size: float = 1.0,
             inset: int = DEFAULT_INSET,
-            inter_shape_spacing: int = DEFAULT_INTER_SHAPE_SPACING,
+            inter_stripe_spacing: int = DEFAULT_INTER_STRIPE_SPACING,
             overlay_color: str = DEFAULT_OVERLAY_COLOR,
             polygons: str = DEFAULT_POLYGON_STRING,
             separator: str = ' - ',
@@ -401,7 +401,7 @@ class StripedTitleCard(BaseCardType):
         self.episode_text_color = episode_text_color
         self.episode_text_font_size = episode_text_font_size
         self.inset = inset
-        self.inter_shape_spacing = inter_shape_spacing
+        self.inter_shape_spacing = inter_stripe_spacing
         self.overlay_color = overlay_color
         self.polygon_distribution = PolygonDistribution(polygons)
         self.separator = separator
