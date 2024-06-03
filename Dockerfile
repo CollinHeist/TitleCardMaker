@@ -23,7 +23,7 @@ RUN apt-get update && \
 FROM python:3.11-slim
 LABEL maintainer="CollinHeist" \
       description="Automated Title card maker for Emby, Jellyfin, and Plex" \
-      version="v2.0-alpha.5.2"
+      version="v2.0-alpha.10.0"
 
 # Set working directory, copy source into container
 WORKDIR /maker
@@ -33,8 +33,7 @@ COPY . /maker
 COPY --from=python-reqs /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 
 # Script environment variables
-ENV TCM_PREFERENCES=/config/preferences.yml \
-    TCM_IS_DOCKER=TRUE \
+ENV TCM_IS_DOCKER=TRUE \
     TZ=UTC
 
 # Finalize setup
