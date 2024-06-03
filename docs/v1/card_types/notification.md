@@ -32,10 +32,10 @@ described in greater detail below.
 | Label                         | Default Value      | Description                                          |
 | :---------------------------: | :----------------: | :--------------------------------------------------- |
 | `edge_color`                  | _Matches the font_ | Color of the edge of each notification box           |
-| `edge_width`                  | `5`                | How wide to make the edge coloring                   |
+| `edge_width`                  | `#!yaml 5`         | How wide to make the edge coloring                   |
 | `episode_text_color`          | _Matches the font_ | Color of the index text                              |
-| `episode_text_font_size`      | `1.0`              | Size adjustment for the index text                   |
-| `episode_text_vertical_shift` | `0`                | Additional vertical shift to index text              |
+| `episode_text_font_size`      | `#!yaml 1.0`       | Size adjustment for the index text                   |
+| `episode_text_vertical_shift` | `#!yaml 0`         | Additional vertical shift to index text              |
 | `glass_color`                 | `rgba(0,0,0,0.50)` | Background color of both text boxes                  |
 | `position`                    | `right`            | Where to position the notifications                  |
 | `box_adjustments`             | `0 0 0 0`          | Adjustments to the bounds of the notification boxes  |
@@ -52,7 +52,7 @@ extra. This matches the font color by default.
 
 ??? example "Example"
 
-    ```yaml hl_lines="5"
+    ```yaml title="tv.yml" hl_lines="5"
     series:
       Succession (2018):
         card_type: notification
@@ -70,11 +70,11 @@ extra. This matches the font color by default.
 #### Width (`edge_width`) { data-toc-label="Width" }
 
 The width of each notification's edge can be adjusted with the `edge_width`
-extra. This defaults to `5`, and is in pixels.
+extra. This defaults to `#!yaml 5`, and is in pixels.
 
 ??? example "Example"
 
-    ```yaml hl_lines="5"
+    ```yaml title="tv.yml" hl_lines="5"
     series:
       Succession (2018):
         card_type: notification
@@ -98,7 +98,7 @@ extra. This matches the font color by default.
 
 ??? example "Example"
 
-    ```yaml hl_lines="5"
+    ```yaml title="tv.yml" hl_lines="5"
     series:
       Succession (2018):
         card_type: notification
@@ -116,11 +116,11 @@ extra. This matches the font color by default.
 #### Size (`episode_text_font_size`) { data-toc-label="Size" }
 
 The size of the episode text can be adjusted with the `episode_text_font_size`
-extra. This defaults to `1.0`.
+extra. This defaults to `#!yaml 1.0`.
 
 ??? example "Example"
 
-    ```yaml hl_lines="5"
+    ```yaml title="tv.yml" hl_lines="5"
     series:
       Succession (2018):
         card_type: notification
@@ -143,7 +143,7 @@ shift the box (and text) up, negative values down.
 
 ??? example "Example"
 
-    ```yaml hl_lines="5"
+    ```yaml title="tv.yml" hl_lines="5"
     series:
       Succession (2018):
         card_type: notification
@@ -168,7 +168,8 @@ font), then the `box_adjustments` extra can be used to individually adjust the
 boundaries of each of the box's faces.
 
 This is specified in clockwise order, like so `{top} {right} {bottom} {left}`,
-with positive values moving the face _in_, negative _out_.
+with positive values moving the face _in_, negative _out_. The default is
+`0 0 0 0`, meaning no adjustments are made.
 
 ??? example "Example"
 
@@ -176,7 +177,7 @@ with positive values moving the face _in_, negative _out_.
     the top, 10 pixels out on the right, 5 pixels in on the botton, and make no
     adjustment on the left.
 
-    ```yaml hl_lines="5"
+    ```yaml title="tv.yml" hl_lines="5"
     series:
       Succession (2018):
         card_type: notification
@@ -192,7 +193,7 @@ black at 50% opacity. A transparent color can be specified.
 
 ??? example "Example"
 
-    ```yaml hl_lines="5"
+    ```yaml title="tv.yml" hl_lines="5"
     series:
       Succession (2018):
         card_type: notification
@@ -214,7 +215,7 @@ extra. This can be either `left` or `right`, and defaults to `right`.
 
 ??? example "Example"
 
-    ```yaml hl_lines="5"
+    ```yaml title="tv.yml" hl_lines="5"
     series:
       Succession (2018):
         card_type: notification
@@ -229,8 +230,6 @@ extra. This can be either `left` or `right`, and defaults to `right`.
         <img src="../../../card_types/assets/notification.webp"/>
     </div>
 
-*[Index Text]: Season and episode text
-
 ### Separator Character (`separator`) { data-toc-label="Separator Character" }
 
 If both the season and episode text are displayed on the Card, then a separator
@@ -239,7 +238,7 @@ character is added between them. This character can be adjusted with the
 
 ??? example "Example"
 
-    ```yaml hl_lines="5"
+    ```yaml title="tv.yml" hl_lines="5"
     series:
       Succession (2018):
         card_type: notification
@@ -252,6 +251,23 @@ character is added between them. This character can be adjusted with the
         data-left-label="/" data-right-label="||">
         <img src="../../../card_types/assets/notification.webp"/>
         <img src="../../../card_types/assets/notification-separator.webp"/>
+    </div>
+
+## Mask Images
+
+This card also natively supports [mask images](../../user_guide/mask_images.md).
+Like all mask images, TCM will automatically search for alongside the input
+Source Image in the Series' source directory, and apply this atop all other Card
+effects.
+
+!!! example "Example"
+
+    <div class="image-compare example-card"
+        data-starting-point="83"
+        data-left-label="Mask Image"
+        data-right-label="Resulting Title Card">
+        <img src="../../../../card_types/assets/notification-mask-raw.webp"/>
+        <img src="../../../../card_types/assets/notification-mask.webp"/>
     </div>
 
 *[Index Text]: Season and episode text

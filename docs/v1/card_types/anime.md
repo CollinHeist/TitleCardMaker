@@ -28,20 +28,20 @@ This card type is used whenever `card_type` is specified as `anime`.
 Below is a table of all valid series extras parsed by this card. These are
 described in greater detail below.
 
-| Label                  | Default Value | Description                         |
-| :--------------------: | :-------: | :-------------------------------------- |
-| `kanji`                | -         | Optional kanji (Japanese) text to place above the title - should be a [translation](https://github.com/CollinHeist/TitleCardMaker/wiki/TMDb-Attributes#title-translation) |
-| `require_kanji`        | `false`   | Whether to require `kanji` to be provided before a card is created |
-| `kanji_color`          | `white`   | Color of the kanji text                 |
-| `kanji_font_size`      | `1.0`     | Scalar for the size of the kanji text   |
-| `kanji_stroke_color`   | `black`   | Color of the stroke for the kanji text  |
-| `kanji_stroke_width`   | `1.0`     | Stroke width of the kanji text          |
-| `kanji_vertical_shift` | `0`       | Additional vertical offset to apply to the kanji text |
-| `stroke_color`         | `black`   | Custom color to use for the stroke on the title and kanji text |
-| `episode_text_color`   | `#CFCFCF` | Color to utilize for the episode text   |
-| `episode_stroke_color` | `black`   | Color of the stroke for the episode text |
-| `omit_gradient`        | `false`   | Whether to omit the gradient overlay from the card |
-| `separator`            | `·`       | Character to separate season and episode text |
+| Label                  | Default Value    | Description                         |
+| :--------------------: | :--------------: | :-------------------------------------- |
+| `kanji`                | -                | Optional kanji (Japanese) text to place above the title - should be a [translation](https://github.com/CollinHeist/TitleCardMaker/wiki/TMDb-Attributes#title-translation) |
+| `require_kanji`        | `#!yaml false`   | Whether to require `kanji` to be provided before a card is created |
+| `kanji_color`          | `white`          | Color of the kanji text                 |
+| `kanji_font_size`      | `#!yaml 1.0`     | Scalar for the size of the kanji text   |
+| `kanji_stroke_color`   | `black`          | Color of the stroke for the kanji text  |
+| `kanji_stroke_width`   | `#!yaml 1.0`     | Stroke width of the kanji text          |
+| `kanji_vertical_shift` | `#!yaml 0`       | Additional vertical offset to apply to the kanji text |
+| `stroke_color`         | `black`          | Custom color to use for the stroke on the title and kanji text |
+| `episode_text_color`   | `#CFCFCF`        | Color to utilize for the episode text   |
+| `episode_stroke_color` | `black`          | Color of the stroke for the episode text |
+| `omit_gradient`        | `#!yaml false`   | Whether to omit the gradient overlay from the card |
+| `separator`            | `·`              | Character to separate season and episode text |
 
 ## Customization
 
@@ -57,7 +57,7 @@ feature of the Maker. The ISO code for Japanese is `ja`, and these titles should
 be stored under the `kanji` key, so the YAML must would look something like
 this:
 
-```yaml hl_lines="4-6"
+```yaml title="tv.yml" hl_lines="4-6"
 series:
   "Demon Slayer: Kimetsu no Yaiba (2019)":
     card_type: anime
@@ -73,7 +73,7 @@ series:
     enabled, then this data must be entered manually. Within a given datafile,
     add the kanji text like so (for the given example):
 
-    ```yaml hl_lines="4"
+    ```yaml title="data.yml" hl_lines="4"
     data:
       Season 3:
         10:
@@ -87,7 +87,7 @@ To save repeating this translation syntax for every anime you want Kanji added
 to, it's recommended to use a template. An _example_ of which is shown below - 
 but feel free to modify for your needs.
 
-```yaml
+```yaml title="tv.yml"
 templates:
   anime_with_kanji:
     card_type: anime
@@ -99,7 +99,7 @@ templates:
 
 This can then be used like so:
 
-```yaml hl_lines="11"
+```yaml title="tv.yml" hl_lines="2 11"
 templates:
   anime_with_kanji:
     card_type: anime
@@ -127,7 +127,7 @@ defaults to `white` (to match the default font color of the title text).
 
 ??? example "Example"
 
-    ```yaml hl_lines="8"
+    ```yaml title="tv.yml" hl_lines="8"
     series:
       Pokémon (1997):
         card_type: anime
@@ -147,7 +147,7 @@ Kanji present. This defaults to `false`.
 
 ??? example "Example"
 
-    ```yaml hl_lines="8"
+    ```yaml title="tv.yml" hl_lines="8"
     series:
       "Demon Slayer: Kimetsu no Yaiba (2019)":
         card_type: anime
@@ -172,7 +172,7 @@ the size, values below `1.0` will decrease it.
 
     The following would reduce the size of the kanji text by 20% (to 80%).
 
-    ```yaml hl_lines="8"
+    ```yaml title="tv.yml" hl_lines="8"
     series:
       "Demon Slayer: Kimetsu no Yaiba (2019)":
         card_type: anime
@@ -190,7 +190,7 @@ The stroke of the color for the kanji text can be adjusted with the
 
 ??? example "Example"
 
-    ```yaml hl_lines="8"
+    ```yaml title="tv.yml" hl_lines="8"
     series:
       "Demon Slayer: Kimetsu no Yaiba (2019)":
         card_type: anime
@@ -210,7 +210,7 @@ ones move it down.
 
 ??? example "Example"
 
-    ```yaml hl_lines="8"
+    ```yaml title="tv.yml" hl_lines="8"
     series:
       "Demon Slayer: Kimetsu no Yaiba (2019)":
         card_type: anime
@@ -230,7 +230,7 @@ extra. This defaults to `#CFCFCF`.
 
 ??? example "Example"
 
-    ```yaml hl_lines="5"
+    ```yaml title="tv.yml" hl_lines="5"
     series:
       "Mushoku Tensei: Jobless Reincarnation (2021)":
         card_type: anime
@@ -251,7 +251,7 @@ the text is more legible on the card. This can be disabled by setting the
 
 ??? example "Example"
 
-    ```yaml hl_lines="5"
+    ```yaml title="tv.yml" hl_lines="5"
     series:
       "Mushoku Tensei: Jobless Reincarnation (2021)":
         card_type: anime
@@ -266,7 +266,7 @@ be customized with the `separator` extra. By default, a `·` character is used.
 
 ??? example "Example"
 
-    ```yaml hl_lines="5"
+    ```yaml title="tv.yml" hl_lines="5"
     series:
       "Mushoku Tensei: Jobless Reincarnation (2021)":
         card_type: anime
@@ -281,7 +281,7 @@ The color of the stroke used for the title text can be adjusted with the
 
 ??? example "Example"
 
-    ```yaml hl_lines="12"
+    ```yaml title="tv.yml" hl_lines="12"
     series:
       Pokémon (1997):
         card_type: anime

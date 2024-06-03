@@ -15,8 +15,8 @@ description: >
 
 Title Card designed for displaying race details for Formula 1. The original
 design was created by Reddit User
-[/u/heeisenbeerg](https://www.reddit.com/u/heeisenbeerg). Sponsor
-isaacolsen94 requested its implementation into TCM as a
+[/u/heeisenbeerg](https://www.reddit.com/u/heeisenbeerg). Sponsor isaacolsen94
+requested its implementation into TCM as a
 [Sponsor Reward](https://github.com/sponsors/CollinHeist?frequency=one-time),
 which was then created by [CollinHeist](https://github.com/CollinHeist).
 
@@ -36,14 +36,14 @@ This card type is used whenever `card_type` is specified as `f1` or `formula 1`.
 Below is a table of all valid series extras parsed by this card. These are
 described in greater detail below.
 
-| Label | Default Value | Description |
-| :---: | :-----------: | :---------- |
-| `country` | _Parsed from the season title_ | Which country flag to use |
-| `race` | `Grand Prix` | Name of the race to display on the Card |
-| `episode_text_color` | `white` | Color of the episode text |
-| `episode_text_font_size` | `1.0` | Scalar of the size of the episode text |
-| `flag` | _Parsed from `country`_ | Flag file to use on the left frame of the card |
-| `frame_year` | _Airdate of the episode, or `2024`_ | Which frame year to utilize |
+| Label                    | Default Value                       | Description                                    |
+| :----------------------: | :---------------------------------: | :--------------------------------------------- |
+| `country`                | _Parsed from the season title_      | Which country flag to use                      |
+| `episode_text_color`     | `white`                             | Color of the episode text                      |
+| `episode_text_font_size` | `#!yaml 1.0`                        | Scalar of the size of the episode text         |
+| `flag`                   | _Parsed from `country`_             | Flag file to use on the left frame of the card |
+| `frame_year`             | _Airdate of the episode, or `2024`_ | Which frame year to utilize                    |
+| `race`                   | `Grand Prix`                        | Name of the race to display on the Card        |
 
 ## Customization
 
@@ -99,7 +99,7 @@ so that the value can change for different seasons (i.e. different F1 locations)
 
     The following example would 
 
-    ```yaml hl_lines="4-8"
+    ```yaml title="tv.yml" hl_lines="4-8"
     series:
       F1 (2020):
         card_type: formula 1
@@ -121,7 +121,7 @@ The "race text" can be adjusted with the `race` extra. The default value is
 
     The following with use the default race text of "Grand Prix"
 
-    ```yaml hl_lines="6"
+    ```yaml title="tv.yml" hl_lines="6"
     series:
       F1 (2020):
         card_type: formula 1
@@ -141,7 +141,7 @@ adjusted with the `episode_text_color` extra. The default is `white`.
 
     The following will set the color of the episode text to red.
 
-    ```yaml hl_lines="6"
+    ```yaml title="tv.yml" hl_lines="6"
     series:
       F1 (2020):
         card_type: formula 1
@@ -160,7 +160,7 @@ above `1.0` will increase the size.
 
     The following will result in a 10% increase in the size of the text.
 
-    ```yaml hl_lines="6"
+    ```yaml title="tv.yml" hl_lines="6"
     series:
       F1 (2020):
         card_type: formula 1
@@ -182,7 +182,7 @@ This extra is only required if you wish to use a custom flag file.
     This will use the British flag, even though the default flag would be the
     Japanese one.
 
-    ```yaml hl_lines="6"
+    ```yaml title="tv.yml" hl_lines="6"
     series:
       F1 (2020):
         card_type: formula 1
@@ -203,7 +203,7 @@ other than `2024`).
     The following will set the frame year to `2023` __only if__ there is no
     airdate available for the episode.
 
-    ```yaml hl_lines="6"
+    ```yaml title="tv.yml" hl_lines="6"
     series:
       F1 (2020):
         card_type: formula 1
