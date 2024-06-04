@@ -414,7 +414,8 @@ class ImageMagickInterface:
         return None
 
 
-    def get_random_filename(self, base: Path, extension: str = 'webp') -> Path:
+    @staticmethod
+    def get_random_filename(base: Path, extension: str = 'webp') -> Path:
         """
         Get the path to a randomly named image.
 
