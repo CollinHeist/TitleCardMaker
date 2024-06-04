@@ -5,6 +5,7 @@
 
   --theme-light-color: rgba(152, 152, 152, 0.3);
   --tcm-blue-color: rgb(99,145,210);
+  --mediux-color: #945af2;
 
   /* Same as fomantic ui red */
   --support-button-color: #db2828;
@@ -18,6 +19,11 @@
 
 body {
   background-color: #1b1c1d;
+}
+
+/* Mediux button styling */
+.mediux.button {
+  color: var(--mediux-color);
 }
 
 /* Accessibility coloring */
