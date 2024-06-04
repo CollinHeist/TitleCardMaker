@@ -260,6 +260,11 @@ def initialize_scheduler(override: bool = False) -> None:
             if bad_job:
                 log.warning(f'Fixing schedule for Task[{job.id}]')
 
+            try:
+                scheduler.remove_job(job.id)
+            except Exception: # JobLookupError
+                log.debug(f'Task[{job.id}] does not exist in the scheduler')
+
             if preferences.advanced_scheduling:
                 changed = True
                 # Store crontab in Preferences
