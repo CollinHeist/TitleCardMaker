@@ -1,5 +1,7 @@
+from logging import Logger
+from pathlib import Path
 from shutil import copyfile
-from typing import Literal
+from typing import Any, Literal, Optional
 
 from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Request,
@@ -7,16 +9,18 @@ from fastapi import (
 )
 from pydantic.error_wrappers import ValidationError
 from sqlalchemy.orm import Session
+from yaml import safe_load
+from yaml.parser import ParserError
 
-from app.database.query import get_all_templates, get_series
+from app.database.query import get_all_templates, get_interface, get_series
 from app.dependencies import get_database, get_preferences
 from app.internal.auth import get_current_user
 from app.internal.imports import (
-    import_card_files, import_cards, parse_emby, parse_fonts, parse_jellyfin,
-    parse_plex, parse_preferences, parse_raw_yaml, parse_series, parse_sonarr,
-    parse_syncs, parse_templates, parse_tmdb
+    import_card_content, import_card_files, import_cards, parse_emby,
+    parse_fonts, parse_jellyfin, parse_plex, parse_preferences, parse_raw_yaml,
+    parse_series, parse_sonarr, parse_syncs, parse_templates, parse_tmdb
 )
-from app.internal.series import download_series_poster, set_series_database_ids
+from app.internal.series import download_series_poster, load_series_title_cards, set_series_database_ids
 from app.internal.sources import download_series_logo
 from app import models
 from app.schemas.font import NamedFont
@@ -24,6 +28,7 @@ from app.schemas.imports import ImportCardDirectory, ImportYaml, MultiCardImport
 from app.schemas.preferences import Preferences
 from app.schemas.series import Series, Template
 from app.schemas.sync import Sync
+from modules.WebInterface import WebInterface
 
 
 import_router = APIRouter(
@@ -340,7 +345,8 @@ async def import_card_files_for_series(
         cards: list[UploadFile] = [],
         force_reload: bool = Query(default=True),
         textless: bool = Query(default=True),
-        db: Session = Depends(get_database)
+        library_name: Optional[str] = Query(default=None),
+        db: Session = Depends(get_database),
     ) -> None:
     """
     Import any existing Title Cards for the given Series. This finds
@@ -354,13 +360,90 @@ async def import_card_files_for_series(
     # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    # Cards
     if (card_files := [(card.filename, await card.read()) for card in cards]):
-        import_card_files(
-            db, series, card_files, force_reload=force_reload,
-            as_textless=textless, log=request.state.log
+        import_card_content(
+            db, series, card_files, series.get_library(library_name),
+            force_reload=force_reload, as_textless=textless,
+            log=request.state.log
         )
-    
+
+
+@import_router.post('/series/{series_id}/cards/mediux')
+async def import_mediux_yaml_for_series(
+        request: Request,
+        series_id: int,
+        yaml_str: str = Body(..., alias='yaml'),
+        import_poster: bool = Query(default=False),
+        import_backdrop: bool = Query(default=False),
+        import_season_posters: bool = Query(default=True),
+        force_reload: bool = Query(default=True),
+        textless: bool = Query(default=True),
+        library_name: Optional[str] = Query(default=None),
+        db: Session = Depends(get_database),
+    ) -> None:
+    """
+    """
+
+    # Get contextual logger
+    log: Logger = request.state.log
+
+    # Get this Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    images: list[Path] = []
+    def _download_image(url: str, /) -> Path:
+        images.append(WebInterface.get_random_filename(
+            WebInterface._TEMP_DIR / 'temp', 'jpg'
+        ))
+        if not WebInterface.download_image(url, images[-1], log=log):
+            log.error(f'Error downloading image {url}')
+
+        return images[-1]
+
+    # Parse YAML into dictionary; raise 422 if invalid
+    try:
+        full_yaml: dict[int, dict[str, Any]] = safe_load(yaml_str)
+    except ParserError:
+        raise HTTPException(
+            status_code=422,
+            detail='Invalid YAML',
+        )
+
+    # Download all indicated files
+    cards: list[tuple[int, int, Path]] = []
+    for _, yaml in full_yaml.items():
+        # if import_poster and (url := yaml.get('url_poster')):
+        #     image = _download_image(url)
+        # if import_backdrop and (url := yaml.get('url_background')):
+        #     image = _download_image(url)
+        for season_number, season_yaml in yaml.get('seasons', {}).items():
+            # if import_season_posters and (url := yaml.get('url_poster')):
+            #     image = _download_image(url)
+            for episode_number, episode_yaml in \
+                    season_yaml.get('episodes', {}).items():
+                card = _download_image(episode_yaml['url_poster'])
+                cards.append((season_number, episode_number, card))
+
+    # Import into Series
+    library = series.get_library(library_name)
+    import_card_files(
+        db, series, cards, library,
+        force_reload=force_reload, as_textless=textless, log=log
+    )
+
+    # Load Cards if a library was provided
+    if library:
+        load_series_title_cards(
+            series, library['name'], library['interface_id'], db,
+            get_interface(library['interface_id'], raise_exc=True),
+            force_reload=force_reload,
+        )
+
+    # Delete any downloaded images after they've been uploaded
+    for image in images:
+        image.unlink(missing_ok=True)
+        log.trace(f'Deleted temporary image ({image})')
+
 
 @import_router.post('/series/{series_id}/cards/directory',
                     tags=['Title Cards', 'Series'])

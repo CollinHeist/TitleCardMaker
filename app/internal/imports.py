@@ -19,7 +19,7 @@ from app import models
 from app.models.connection import Connection
 from app.models.episode import Episode
 from app.models.preferences import Preferences
-from app.models.series import Series
+from app.models.series import Library, Series
 from app.schemas.base import UNSPECIFIED
 from app.schemas.card import NewTitleCard
 from app.schemas.connection import (
@@ -1418,7 +1418,6 @@ def import_cards(
 
         # Get finalized Card settings for this Episode, override card file
         try:
-            # TODO eval w/ library?
             card_settings = resolve_card_settings(episode, log=log)
         except (HTTPException, InvalidCardSettings) as exc:
             log.exception(f'{episode} Cannot import Card - settings '
@@ -1444,10 +1443,11 @@ def import_cards(
     return None
 
 
-def import_card_files(
+def import_card_content(
         db: Session,
         series: Series,
-        files: list[tuple[str, bytes]], # Filename, bytes
+        files: list[tuple[str, bytes]],
+        library: Optional[Library] = None,
         force_reload: bool = True,
         as_textless: bool = False,
         *,
@@ -1497,9 +1497,11 @@ def import_card_files(
         # Episode has card, delete if reloading
         if episode.cards and force_reload:
             for card in episode.cards:
-                log.debug(f'{card} deleting record')
-                db.query(models.card.Card).filter_by(id=card.id).delete()
-                log.debug(f'{episode} has associated Card - reloading')
+                if (not library
+                    or (library and card.library_name == library['name'])):
+                    log.debug(f'{card} deleting record')
+                    db.query(models.card.Card).filter_by(id=card.id).delete()
+                    log.debug(f'{episode} has associated Card - reloading')
 
         # If setting textless, change card type
         if as_textless:
@@ -1508,7 +1510,7 @@ def import_card_files(
 
         # Get finalized Card settings for this Episode, override card file
         try:
-            card_settings = resolve_card_settings(episode, log=log)
+            card_settings = resolve_card_settings(episode, library, log=log)
         except (HTTPException, InvalidCardSettings) as exc:
             log.exception(f'{episode} Cannot import Card - settings are '
                           f'invalid {exc}')
@@ -1529,6 +1531,93 @@ def import_card_files(
         )
 
         card = add_card_to_database(
-            db, title_card, CardTypeModel, card_settings['card_file'], None
+            db, title_card, CardTypeModel, card_settings['card_file'], library,
         )
         log.debug(f'{episode} Imported {filename}')
+
+
+def import_card_files(
+        db: Session,
+        series: Series,
+        files: list[tuple[int, int, Path]],
+        library: Optional[Library] = None,
+        force_reload: bool = True,
+        as_textless: bool = False,
+        *,
+        log: Logger = log,
+    ) -> None:
+    """
+    Import the Title Card files to the given Series.
+
+    Args:
+        db: Database to query for existing Cards.
+        series: Series whose Cards are being imported.
+        files: List of tuples of the season number, episode number, and
+            card files to import.
+        force_reload: Whether to replace any existing Card entries for
+            Episodes identified while importing.
+        as_textless: Whether to set the imported Episode's card type to
+            textless.
+        log: Logger for all log messages.
+    """
+
+    # For each image, identify associated Episode
+    for season_number, episode_number, file in files:
+        # Find associated Episode
+        episode = db.query(Episode)\
+            .filter_by(series_id=series.id,
+                       season_number=season_number,
+                       episode_number=episode_number)\
+            .first()
+
+        # No associated Episode, skip
+        if episode is None:
+            log.warning(f'{series} No associated Episode for '
+                        f'S{season_number:02}E{episode_number:02} - skipping')
+            continue
+
+        # Episode has an existing Card, skip if not forced
+        if episode.cards and not force_reload:
+            log.debug(f'{episode} has an associated Card - skipping')
+            continue
+
+        # Episode has card, delete if reloading
+        if episode.cards and force_reload:
+            for card in episode.cards:
+                if (not library
+                    or (library and card.library_name == library['name'])):
+                    log.debug(f'{card} deleting record')
+                    db.query(models.card.Card).filter_by(id=card.id).delete()
+                    log.debug(f'{episode} has associated Card - reloading')
+
+        # If setting textless, change card type
+        if as_textless:
+            episode.card_type = 'textless'
+            log.debug(f'{episode}.card_type = textless')
+
+        # Get finalized Card settings for this Episode, override card file
+        try:
+            card_settings = resolve_card_settings(episode, library, log=log)
+        except (HTTPException, InvalidCardSettings) as exc:
+            log.exception(f'{episode} Cannot import Card - settings are '
+                          f'invalid {exc}')
+            continue
+
+        # Get a validated card class, and card type Pydantic model
+        _, CardTypeModel = validate_card_type_model(card_settings, log=log)
+
+        # Rename existing Card to expected card location
+        card_settings['card_file'].parent.mkdir(exist_ok=True, parents=True)
+        file.rename(card_settings['card_file'])
+
+        # Card is valid, create and add to Database
+        title_card = NewTitleCard(
+            **card_settings,
+            series_id=series.id,
+            episode_id=episode.id,
+        )
+
+        card = add_card_to_database(
+            db, title_card, CardTypeModel, card_settings['card_file'], library,
+        )
+        log.debug(f'{episode} Imported S{season_number:02}E{episode_number:02}')
