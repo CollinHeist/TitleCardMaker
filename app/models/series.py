@@ -670,6 +670,24 @@ class Series(Base):
                 yield library['interface_id'], library['name']
 
 
+    def get_library(self, name: str, /) -> Optional[Library]:
+        """
+        Get the Library with the given name.
+
+        Args:
+            name: Name of the library to search for.
+
+        Returns:
+            Library with the given name. None if there is no match.
+        """
+
+        for library in self.libraries:
+            if library['name'] == name:
+                return library
+
+        return None
+
+
     def reset_card_config(self) -> None:
         """
         Reset this Series to a "default" un-customized state. This only
