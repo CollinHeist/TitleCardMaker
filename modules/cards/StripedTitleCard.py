@@ -399,7 +399,7 @@ class StripedTitleCard(BaseCardType):
         'font_interline_spacing', 'font_interword_spacing', 'font_file',
         'font_kerning', 'font_size', 'font_vertical_shift', 'angle',
         'episode_text_color', 'episode_text_font_size', 'inset',
-        'inter_stripe_spacing', 'overlay_color', 'polygon_distribution',
+        'inter_shape_spacing', 'overlay_color', 'polygon_distribution',
         'separator', 'text_position',
     )
 
