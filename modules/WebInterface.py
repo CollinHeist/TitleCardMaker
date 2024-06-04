@@ -1,6 +1,9 @@
+from datetime import datetime, timedelta
 from logging import Logger
 from pathlib import Path
-from typing import Any, Union
+from random import choices as random_choices
+from string import hexdigits
+from typing import Any, Optional, TypedDict, Union
 
 from re import IGNORECASE, compile as re_compile
 from requests import get, Session
@@ -8,6 +11,11 @@ from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 import urllib3
 
 from modules.Debug import log
+
+
+class CachedResult(TypedDict):
+    expiration: datetime
+    result: Any
 
 
 class WebInterface:
@@ -20,8 +28,8 @@ class WebInterface:
     """Maximum time allowed for a single GET request"""
     REQUEST_TIMEOUT = 15
 
-    """How many requests to cache"""
-    CACHE_LENGTH = 10
+    """Directory for all temporary images created during image creation"""
+    _TEMP_DIR = Path(__file__).parent / '.objects'
 
     """Regex to match URL's"""
     _URL_REGEX = re_compile(r'^((?:https?:\/\/)?.+)(?=\/)', IGNORECASE)
@@ -38,6 +46,7 @@ class WebInterface:
             verify_ssl: bool = True,
             *,
             cache: bool = True,
+            cache_age: timedelta = timedelta(minutes=20),
             log: Logger = log,
         ) -> None:
         """
@@ -50,6 +59,8 @@ class WebInterface:
             verify_ssl: Whether to verify SSL requests with this
                 interface.
             cache: Whether to cache requests with this interface.
+            cache_age: Maximum duration to cache an individual request
+                (if enabled).
             log: Logger for all log messages.
         """
 
@@ -65,10 +76,12 @@ class WebInterface:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             log.debug(f'Not verifying SSL connections for {name}')
 
-        # Cache of the last requests to speed up identical sequential requests
+        # Cache details
         self.__do_cache = cache
-        self.__cache = []
-        self.__cached_results = []
+        # Cache maps URLS to dicts of string-params to results
+        self.__cache: dict[str, dict[str, CachedResult]] = {}
+        self.__max_cache_age = cache_age
+        self.__last_request: Optional[datetime] = None
 
 
     def __repr__(self) -> str:
@@ -100,6 +113,31 @@ class WebInterface:
         ).json()
 
 
+    def __clear_outdated_cache(self) -> None:
+        """
+        Clear the cache of all requests whose expiration has passed.
+        """
+
+        # Only need to evaluate cache if the last request was too long ago
+        now = datetime.now()
+        if (not self.__last_request
+            or not self.__last_request + self.__max_cache_age < now):
+            return None
+
+        # Identify which elements need to be removed
+        to_remove: list[tuple[str, str]] = []
+        for url, sub in self.__cache.items():
+            for params, expiration in sub.items():
+                if expiration['expiration'] < now:
+                    to_remove.append((url, params))
+
+        # Remove elements from queries and results
+        for url, params in to_remove:
+            self.__cache.get(url, {}).pop(params, None)
+
+        return None
+
+
     def get(self, url: str, params: dict, *, cache: bool = True) -> Any:
         """
         Wrapper for getting the JSON return of the specified GET
@@ -117,27 +155,50 @@ class WebInterface:
         """
 
         # If not caching, just query and return
-        if not self.__do_cache:
+        if not self.__do_cache or not cache:
             return self.__retry_get(url=url, params=params)
 
-        # Look through all cached results for this exact URL+params; if found,
-        # skip the request and return that result - if caching
+        # Look through all cached results for this exact URL+params; if
+        # found, skip the request and return that result - if caching
         if cache:
-            for cached, result in zip(self.__cache, self.__cached_results):
-                if cached['url'] == url and cached['params'] == str(params):
-                    return result
+            self.__clear_outdated_cache()
+            result = self.__cache.get(url, {}).get(str(params), None)
+            if result is not None:
+                return result['result']
 
-        # Make new request, add to cache
-        self.__cached_results.append(self.__retry_get(url=url, params=params))
-        self.__cache.append({'url': url, 'params': str(params)})
+        # Make new request
+        result = self.__retry_get(url=url,params=params)
+        self.__last_request = datetime.now()
 
-        # Delete element from cache if length has been exceeded
-        if len(self.__cache) > self.CACHE_LENGTH:
-            self.__cache.pop(0)
-            self.__cached_results.pop(0)
+        # Add to cache
+        if url not in self.__cache:
+            self.__cache[url] = {}
+        self.__cache[url][str(params)] = {
+            'result': result,
+            'expiration': self.__last_request + self.__max_cache_age
+        }
 
-        # Return latest result
-        return self.__cached_results[-1]
+        # Return result
+        return result
+
+
+    @staticmethod
+    def get_random_filename(base: Path, extension: str = 'webp') -> Path:
+        """
+        Get the path to a randomly named image.
+
+        Args:
+            base: Base image used for the randomized path.
+            extension: Extension of randomized file to create.
+
+        Returns:
+            Path to the randomized file. This file LIKELY DOES NOT
+            exist.
+        """
+
+        random_chars = ''.join(random_choices(hexdigits, k=8))
+
+        return base.parent / f'{base.stem}.{random_chars}.{extension}'
 
 
     @staticmethod
@@ -166,19 +227,22 @@ class WebInterface:
         # If content of image, just write directly to file
         if isinstance(image, bytes):
             destination.write_bytes(image)
+            log.trace(f'Downloaded {len(image):,} bytes')
             return True
 
-        # Attempt to download the image, if an error happens log to user
+        # Attempt download
+        url = image
         try:
-            # Get content from URL
-            image = get(image, timeout=30).content
+            # Download from URL
+            image = get(url, timeout=30).content
             if len(image) == 0:
-                raise ValueError(f'URL {image} returned no content error')
-            if any(bad_content in image for bad_content in WebInterface.BAD_CONTENT):
-                raise ValueError(f'URL {image} returned malformed content')
+                raise ValueError(f'URL {url} returned no content error')
+            if any(bc in image for bc in WebInterface.BAD_CONTENT):
+                raise ValueError(f'URL {url} returned malformed content')
 
             # Write content to file, return success
             destination.write_bytes(image)
+            log.trace(f'Downloaded {len(image):,} bytes from {url}')
             return True
         except Exception: # pylint: disable=broad-except
             log.exception(f'Cannot download image, returned error')
