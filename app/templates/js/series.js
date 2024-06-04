@@ -2423,19 +2423,20 @@ function getEpisodeOverviews() {
 
   // Custom comparison function
   function compareEpisodes(a, b) {
+    // Season 0 comes after all other seasons
     if (a.season_number === 0 && b.season_number !== 0) {
-      // Season 0 comes after all other seasons
       return 1;
-    } else if (a.season_number !== 0 && b.season_number === 0) {
-      // All other seasons come before season 0
-      return -1;
-    } else if (a.season_number !== b.season_number) {
-      // Sort by season number
-      return a.season_number - b.season_number; 
-    } else {
-      // If seasons are equal, sort by episode number
-      return a.episode_number - b.episode_number; 
     }
+    // All other seasons come before season 0
+    if (a.season_number !== 0 && b.season_number === 0) {
+      return -1;
+    }
+    // Sort by season number
+    if (a.season_number !== b.season_number) {
+      return a.season_number - b.season_number;
+    }
+    // If seasons are equal, sort by episode number
+    return a.episode_number - b.episode_number;
   }
 
   $.ajax({
