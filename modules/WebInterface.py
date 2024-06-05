@@ -138,7 +138,12 @@ class WebInterface:
         return None
 
 
-    def get(self, url: str, params: dict, *, cache: bool = True) -> Any:
+    def get(self,
+            url: str,
+            params: dict = {},
+            *,
+            cache: bool = True,
+        ) -> Union[dict, Any]:
         """
         Wrapper for getting the JSON return of the specified GET
         request. If the provided URL and parameters are identical to the
