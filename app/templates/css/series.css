@@ -98,6 +98,11 @@
   text-align: right;
 }
 
+/* Stylize the font in code text inputs to monospace */
+.code.text.input > textarea {
+  font-family: monospace;
+}
+
 /* Position table header below page header drop shadow */
 .table thead {
   z-index: 3;

@@ -23,6 +23,7 @@ from app.internal.imports import (
 from app.internal.series import download_series_poster, load_series_title_cards, set_series_database_ids
 from app.internal.sources import download_series_logo
 from app import models
+from app.models.episode import Episode
 from app.schemas.font import NamedFont
 from app.schemas.imports import ImportCardDirectory, ImportYaml, MultiCardImport
 from app.schemas.preferences import Preferences
@@ -378,7 +379,7 @@ async def import_mediux_yaml_for_series(
         import_season_posters: bool = Query(default=True),
         force_reload: bool = Query(default=True),
         textless: bool = Query(default=True),
-        library_name: Optional[str] = Query(default=None),
+        library_names: list[str] = Query(default=[]),
         db: Session = Depends(get_database),
     ) -> None:
     """
@@ -386,19 +387,6 @@ async def import_mediux_yaml_for_series(
 
     # Get contextual logger
     log: Logger = request.state.log
-
-    # Get this Series, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
-
-    images: list[Path] = []
-    def _download_image(url: str, /) -> Path:
-        images.append(WebInterface.get_random_filename(
-            WebInterface._TEMP_DIR / 'temp', 'jpg'
-        ))
-        if not WebInterface.download_image(url, images[-1], log=log):
-            log.error(f'Error downloading image {url}')
-
-        return images[-1]
 
     # Parse YAML into dictionary; raise 422 if invalid
     try:
@@ -408,6 +396,29 @@ async def import_mediux_yaml_for_series(
             status_code=422,
             detail='Invalid YAML',
         )
+
+    # Get this Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    images: list[Path] = []
+    def _download_image(url: str, /) -> Path:
+        """
+        Download the image at the given URL.
+
+        Args:
+            url: URL of the image to download
+
+        Returns:
+            Path to the image download
+        """
+
+        images.append(WebInterface.get_random_filename(
+            WebInterface._TEMP_DIR / 'temp', 'jpg'
+        ))
+        if not WebInterface.download_image(url, images[-1], log=log):
+            log.error(f'Error downloading image {url}')
+
+        return images[-1]
 
     # Download all indicated files
     cards: list[tuple[int, int, Path]] = []
@@ -421,22 +432,39 @@ async def import_mediux_yaml_for_series(
             #     image = _download_image(url)
             for episode_number, episode_yaml in \
                     season_yaml.get('episodes', {}).items():
+                # Skip download if there is no matching Episode
+                episode = db.query(Episode)\
+                    .filter_by(series_id=series_id,
+                               season_number=season_number,
+                               episode_number=episode_number)\
+                    .first()
+                if not episode:
+                    log.debug(f'No associated Episode for S{season_number:02}'
+                              f'E{episode_number:02}')
+                    continue
+
+                # Episode exists, download and add to card list
                 card = _download_image(episode_yaml['url_poster'])
                 cards.append((season_number, episode_number, card))
 
-    # Import into Series
-    library = series.get_library(library_name)
-    import_card_files(
-        db, series, cards, library,
-        force_reload=force_reload, as_textless=textless, log=log
-    )
+    # Import into all specified libraries
+    for library_name in library_names:
+        library = series.get_library(library_name)
+        import_card_files(
+            db, series, cards, library,
+            force_reload=force_reload, as_textless=textless, log=log
+        )
 
-    # Load Cards if a library was provided
-    if library:
+        # Load cards into library
         load_series_title_cards(
             series, library['name'], library['interface_id'], db,
             get_interface(library['interface_id'], raise_exc=True),
             force_reload=force_reload,
+        )
+    else:
+        import_card_files(
+            db, series, cards, library=None,
+            force_reload=force_reload, as_textless=textless, log=log
         )
 
     # Delete any downloaded images after they've been uploaded

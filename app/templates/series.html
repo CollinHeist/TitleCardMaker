@@ -1054,7 +1054,7 @@
             Upload
           </button>
 
-          <button onclick="showMediuxImport();" class="ui mediux tertiary button">
+          <button onclick="$('#import-mediux-modal').modal('show');" class="ui mediux tertiary button">
             <i class="code icon"></i>
             MediUX Import
           </button>
@@ -1485,6 +1485,39 @@
             <i class="right arrow icon"></i>
           </div>
         </button>
+      </div>
+    </div>
+
+    <div id="import-mediux-modal" class="ui modal"> <!-- uninvertible -->
+      <i class="close icon"></i>
+      <div class="header">Import from MediUX</div>
+      <div class="content">
+        <form id="import-mediux-form" class="ui form">
+          <div class="ui field">
+            <label>Libraries</label>
+            <div data-value="libraries" class="ui compact multiple selection dropdown">
+              <input name="libraries" type="hidden">
+              <i class="dropdown icon"></i>
+              <div class="default text">None</div>
+              <div class="menu"><!-- Added asynchronousely --></div>
+            </div>
+          </div>
+
+          <div class="ui left aligned checkbox field">
+            <label>Replace existing Cards</label>
+            <input name="force_reload" type="checkbox" checked="">
+          </div>
+
+          <div class="ui field">
+            <label>Kometa YAML</label>
+            <div class="ui code text input">
+              <textarea name="yaml" minlength="1" wrap="soft"></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="actions">
+        <button class="ui primary button" type="submit" form="import-mediux-form" onclick="importMediuxYaml(event);">Import</button>
       </div>
     </div>
 

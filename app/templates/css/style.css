@@ -22,8 +22,11 @@ body {
 }
 
 /* Mediux button styling */
-.mediux.button {
-  color: var(--mediux-color);
+.ui.mediux.button {
+  color: var(--mediux-color) !important;
+}
+.ui.mediux.button:hover {
+  box-shadow: inset 0 -0.2em 0 var(--mediux-color);
 }
 
 /* Accessibility coloring */

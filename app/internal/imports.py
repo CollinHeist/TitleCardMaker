@@ -1608,7 +1608,10 @@ def import_card_files(
 
         # Rename existing Card to expected card location
         card_settings['card_file'].parent.mkdir(exist_ok=True, parents=True)
-        file.rename(card_settings['card_file'])
+        try:
+            file.rename(card_settings['card_file'])
+        except FileNotFoundError:
+            pass
 
         # Card is valid, create and add to Database
         title_card = NewTitleCard(

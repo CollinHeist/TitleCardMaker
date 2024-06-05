@@ -2376,6 +2376,38 @@ function dropHandler(event) {
 }
 
 /**
+ * Submit an API request to parse, download, and import the cards from the
+ * indicated Kometa YAML.
+ * @param {Event} event 
+ */
+function importMediuxYaml(event) {
+  event.preventDefault();
+
+  // Generate data and query params
+  const data = $('#import-mediux-modal textarea[name="yaml"]').val() || '';
+  const libraryNames = $('#import-mediux-modal input[name="libraries"]').val().split(',').filter(v => v).map(entry => entry.split('::').pop());
+  const libraryParamStr = libraryNames.map(val => `library_names=${encodeURIComponent(val)}`).join('&');
+  const forceReload = $('#import-mediux-modal input[name="force_reload"]').is(':checked');
+
+  // Mark button as loading
+  $('#import-mediux-modal .button[type="submit"]').toggleClass('loading', true);
+
+  // Submit API request
+  $.ajax({
+    type: 'POST',
+    url: `/api/import/series/{{series.id}}/cards/mediux?force_reload=${forceReload}&${libraryParamStr}`,
+    data: JSON.stringify(data),
+    contentType: 'application/json',
+    success: () => {
+      showInfoToast('Cards imported - reloading page..');
+      setTimeout(() => location.reload(), 2000);
+    },
+    error: response => showErrorToast({title: 'Error Importing YAML', response}),
+    complete: () => $('#import-mediux-modal .button[type="submit"]').toggleClass('loading', false),
+  });
+}
+
+/**
  * Submit an API request to upload and import the cards which are currently
  * loaded. After the request is finished, all series-data is re-queried.
  * @param {boolean} setTextless - Whether to set the Episodes as textless on
@@ -2412,6 +2444,10 @@ function uploadCards(setTextless=false) {
   });
 }
 
+/**
+ * Submit an API reuest to get the overview data for all episodes of this
+ * Series. These overviews are then populated into the preview episode dropdown.
+ */
 function getEpisodeOverviews() {
   const disableDropdown = () => {
     $('.dropdown[data-value="episode_id"]').dropdown({
@@ -2466,6 +2502,9 @@ function getEpisodeOverviews() {
   });
 }
 
+/**
+ * Submit an API request to generate a preview card and update the preview card.
+ */
 function refreshPreview() {
   // Get Episode ID to generate preview of
   const episodeId = $('#preview-episode-dropdown input[name="episode_id"]').val();
