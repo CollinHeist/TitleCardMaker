@@ -2333,7 +2333,7 @@ function dropHandler(event) {
   const parseFilename = (name) => name.match(/.*s(\d+).*e(\d+)/i)?.slice(1).map(Number);
 
   /**
-   * 
+   * Create a new row in the file table and add it to the DOM.
    * @param {File} file - File to create an entry out of.
    */
   const newFile = (file) => {
@@ -2367,11 +2367,18 @@ function dropHandler(event) {
   $('#upload-cards-modal table').css('display', 'table');
 
   // Iterate through all uploaded files, add a table row for each valid upload
-  [...event.dataTransfer.items || event.dataTransfer.files].forEach((item) => {
-    if (item.kind === 'file' && item.type !== '') {
-      newFile(item.getAsFile() || item);
-    }
-  });
+  if (event.type === 'change') {
+    [...event.target.files].forEach((item) => {
+      if (item.type !== '') { newFile(item); }
+    });
+  } else if (event.type === 'drop') {
+    [...event.dataTransfer.items || event.dataTransfer.files].forEach((item) => {
+      if ((!item.kind || item.kind === 'file') && item.type !== '') {
+        newFile(item.getAsFile() || item);
+      }
+    });
+  }
+
   refreshTheme();
 }
 

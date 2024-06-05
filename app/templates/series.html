@@ -1453,7 +1453,7 @@
     <div id="upload-cards-modal" class="ui small modal" ondragover="event.preventDefault();" ondrop="dropHandler(event);">
       <div class="center aligned header">Upload Title Cards</div>
       <div class="center aligned scrolling content" >
-        <input type="file" name="cards[]" multiple id="card-upload" class="ui invisible file input" data-multiple-caption="{count} files selected">
+        <input type="file" name="cards[]" multiple id="card-upload" class="ui invisible file input" data-multiple-caption="{count} files selected" onchange="dropHandler(event);">
         <label for="card-upload" class="ui placeholder segment">
           <div class="ui icon header">
             <i class="upload icon"></i>
