@@ -28,20 +28,17 @@ our Template, as well as show how these Cards can be further customized.
 1. Go to the _Breaking Bad_ Series configuration page - you can quickly access
 it by searching for the title in the top left search bar (next to the TCM logo).
 
-2. At the top of the page is a set of buttons where _most_ actions can be
+2. At the top of the page is a set of buttons where many global actions can be
 performed. However, in this case, open the `Episode Data` tab in the middle of
 the page and click the <span class="example md-button">Refresh</span> button.
-TCM will now query your global Episode Data Source for new Episodes.
+TCM will now query your global Episode Data Source for any new Episodes
+(although this is also done when you first add a Series to TCM).
 
     !!! note "Scheduled Task"
 
         Refreshing Episode data happens automatically as a
         [scheduled task](../user_guide/scheduler.md), __unless__ the Series is
-        marked as `Unmonitored`.
-
-3. There should now be either 62 or 80 Episodes, depending on whether you have
-turned on or off the Specials syncing. There may be more or less if you used
-your personal server as the Episode Data Source.
+        marked as Unmonitored.
 
 ## Source Images
 
@@ -71,15 +68,15 @@ with Source Image information.
 
         Downloading Source Images happens automatically as a
         [scheduled task](../user_guide/scheduler.md), __unless__ the Series is
-        marked as `Unmonitored`.
+        marked as Unmonitored.
 
 ## Title Cards
 
 7. At the top of the page, click
 <span class="example md-button">Create Title Cards</span>.
 
-8. After waiting a small while and TCM has created a few Cards, go to
-_Title Cards_ on the _Files_ tab and expand the _View Images_ section.
+8. After waiting a small while for TCM to have created a few Cards, go to the
+_Title Cards_ section on the _Files_ tab and expand the _View Images_ accordion.
 
 9. You should see that Title Cards have been created using the Tinted Frame card
 type.

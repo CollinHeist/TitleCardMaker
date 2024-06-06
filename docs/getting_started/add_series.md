@@ -30,15 +30,14 @@ Series that have been added - this step is to showcase how to do this manually.
 :fontawesome-solid-tv: `Series` from the side navigation bar, or hitting
 ++shift++ + ++h++ (when a text box is not selected).
 
-2. In the top right (below the search bar), click the
-<span class="example md-button">+ New Series</span> button. This will take you
-to a separate page where you can browse both Series and Blueprints.
+2. On the left-hand side bar, a navigation menu labeled
+:material-magnify-plus-outline: `Add` should appear. Click this to go to the
+"Add Series" page where you can add both Series and Blueprints.
 
 3. For this tutorial, we'll be adding and customizing
-[Better Call Saul](https://www.themoviedb.org/tv/60059-better-call-saul).
-Depending on which connections you've enabled, select one (the default being
-whatever your default Episode data source is), and then then type _Better Call
-Saul_ in the top search bar and click `Search`.
+[Better Call Saul](https://www.themoviedb.org/tv/60059-better-call-saul). Under
+`Browse Series`, type _Better Call Saul_ in the search bar and click
+<span class="example md-button">Search</span>.
 
     !!! note "Search Source"
 
@@ -53,25 +52,28 @@ Saul_ in the top search bar and click `Search`.
         You can either disable authentication for local addresses within Sonarr
         (if using TCM locally), or just ignore this.
 
-4. TCM will now query your selected connection for all Series that match that
-name. _Better Call Saul_ should be the first result. There are now two ways to
-add this to TCM:
+4. TCM will now query your selected connection for all Series which match that
+name. _Better Call Saul_ should be the first result. Before you click anything,
+you may select any media server libraries you want associated with this Series.
 
-    1. Click the Series search result - this launches a popup dialog where you
-    can assign any libraries or Templates to the Series, as well as search for
-    any existing Blueprints.
+    !!! example "Example Libraries"
 
-    2. Click the <span class="example md-button">+ Quick-Add</span> button on
-    the right of the result. This adds the Series to TCM using the last-selected
-    library and Template settings. This makes it easy to quickly add multiple
-    Series in succession.
+        If I had _Better Call Saul_ in a server under two libraries, then I
+        could select either or both libraries in the dropdown so that TCM knows
+        to load Cards into those libraries.
 
-5. Click the search result (option 1 above). If you'd like, assign the
-appropriate media server library from the dropdown (if available). At the bottom
-of the dialog, click the <span class="example md-button">:octicons-search-16:
-Search for Blueprints</span> button. If you like the look of any these, you can
-import them (and the Series) here. Otherwise, click
-<span class="example md-button">Add +</span>.
+        If I did not have _Better Call Saul_ in any of my servers, then I can
+        leave this blank. This can always be changed later.
+
+5. Click the search result and TCM will begin processing it. While you are on
+this page, scroll down to `Browse Blueprints` section at the bottom of the page.
+
+6. Type _Better Call Saul_ in the Blueprint search field and click
+<span class="example md-button">Browse Blueprints</span>. TCM will display all
+available Blueprints for this Series - at the time of writing, there are 3. For
+the purposes of this tutorial we will _not_ be importing these, instead we'll be
+customizing the Cards ourselves. But keep in mind this is _one way_ to find
+Blueprints.
 
     ??? question "What are Blueprints?"
 
@@ -80,7 +82,7 @@ import them (and the Series) here. Otherwise, click
         everything needed to made Cards in a given style. This includes Fonts,
         Templates, Series customizations, etc.
 
-6. After TCM has finished processing the Series, go to the _Better Call Saul_
+7. Once TCM has finished processing the Series, go to the _Better Call Saul_
 Series page in one of a few ways:
 
     1. Click the Search box in the top left corner, then search for and select
@@ -95,11 +97,10 @@ Series page in one of a few ways:
     button on the left navigation bar, find _Better Call Saul_ and click either
     the <span class="example md-button">View</span> button or the Series name.
 
-7. Click the `Card Configuration` tab, then in the "Font" dropdown select the
-`Better Call Saul` font we created earlier. This _assigns_ this custom font (and
-all of it's associated customizations) to BCS. Scroll down and click
-<span class="example md-button">Save</span>. If you imported a Blueprint back in
-Step 5, a custom Font will already have been assigned.
+8. Click the `Card Configuration` tab. In the `Font` dropdown, select the
+`Better Call Saul` font we created earlier. This assigns this custom font (and
+all of it's associated settings) to _Better Call Saul_. Scroll down and click
+<span class="example md-button">Save</span>.
 
 !!! success "Success"
 

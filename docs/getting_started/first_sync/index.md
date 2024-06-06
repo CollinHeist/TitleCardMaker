@@ -19,3 +19,4 @@ through [Templates](../creating_templates.md).
 
 For most users, I recommend Syncing from [Sonarr](./sonarr.md). However, if you
 are not using Sonarr, then your primary Media Server is the next-best option.
+You can use the sidebar to navigate to the instructions which suit you.
