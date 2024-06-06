@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from logging import Logger
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Literal, Optional, Union, overload
 
 from modules.Debug import log
 
@@ -436,6 +436,27 @@ class DatabaseInfoContainer(ABC):
         return None
 
 
+    @overload
+    def has_id(self,
+            id_: Literal['sonarr_id', 'sonarr'],
+            /,
+            interface_id: int,
+            library_name: Literal[None] = None
+        ) -> bool:
+        ...
+
+    @overload
+    def has_id(self,
+            id_: Literal[
+                'imdb_id', 'imdb', 'tmdb_id', 'tmdb', 'tvdb_id', 'tvdb',
+                'tvrage_id', 'tvrage',
+            ],
+            /,
+            interface_id: Literal[None] = None,
+            library_name: Literal[None] = None,
+        ) -> bool:
+        ...
+
     def has_id(self,
             id_: str,
             /,
@@ -454,6 +475,11 @@ class DatabaseInfoContainer(ABC):
         Returns:
             True if the given ID is defined (i.e. not None) for this
             object. False otherwise.
+
+        Raises:
+            ValueError if the indicated ID type is an InterfaceID object
+            which requires an interface_id and/or library name, but one
+            is not provided.
         """
 
         id_name = id_ if id_.endswith('_id') else f'{id_}_id'
@@ -461,13 +487,26 @@ class DatabaseInfoContainer(ABC):
         if isinstance((val := getattr(self, id_name)), InterfaceID):
             if interface_id is None:
                 raise ValueError(f'InterfaceID objects require an interface_id')
-            
+
             if library_name:
                 return val[interface_id, library_name] is not None
+
             return val[interface_id] is not None
 
         return val is not None
 
+
+    @overload
+    def has_ids(self, *ids: str, interface_id: int, library_name: str) -> bool:
+        ...
+
+    @overload
+    def has_ids(self,
+            *ids: str,
+            interface_id: Literal[None] = None,
+            library_name: Literal[None] = None,
+        ) -> bool:
+        ...
 
     def has_ids(self,
             *ids: str,

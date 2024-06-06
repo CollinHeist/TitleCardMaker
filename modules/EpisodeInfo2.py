@@ -419,19 +419,19 @@ class EpisodeInfo(DatabaseInfoContainer):
         )
 
 
-    def set_tmdb_id(self, tmdb_id) -> None:
+    def set_tmdb_id(self, tmdb_id: int) -> None:
         """Set the TMDb ID of this object. See `_update_attribute()`."""
 
         self._update_attribute('tmdb_id', tmdb_id, int)
 
 
-    def set_tvdb_id(self, tvdb_id) -> None:
+    def set_tvdb_id(self, tvdb_id: int) -> None:
         """Set the TVDb ID of this object. See `_update_attribute()`."""
 
         self._update_attribute('tvdb_id', tvdb_id, int)
 
 
-    def set_tvrage_id(self, tvrage_id) -> None:
+    def set_tvrage_id(self, tvrage_id: int) -> None:
         """Set the TVRage ID of this object. See `_update_attribute()`."""
 
         self._update_attribute('tvrage_id', tvrage_id, int)
