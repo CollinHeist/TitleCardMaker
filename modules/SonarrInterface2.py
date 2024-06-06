@@ -469,11 +469,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
         for old_episode_info in episode_infos:
             for new_episode_info, _ in new_episode_infos:
                 if old_episode_info == new_episode_info:
-                    # For each ID of this new EpisodeInfo, update old if upgrade
-                    for id_type, id_ in new_episode_info.ids.items():
-                        if (getattr(old_episode_info, id_type) is None
-                            and id_ is not None):
-                            setattr(old_episode_info, id_type, id_)
+                    old_episode_info.copy_ids(new_episode_info, log=log)
                     break
 
         return None
