@@ -1,9 +1,10 @@
+from logging import Logger
 from string import printable, punctuation, whitespace
 from typing import Literal
-from unicodedata import category as unicode_category, normalize
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, UploadFile
 from sqlalchemy.orm import Session
+from unidecode import unidecode
 
 from app.database.query import get_font
 from app.dependencies import get_database, get_preferences
@@ -308,9 +309,7 @@ def get_suggested_font_replacements(
     bad, replacements = [], {}
     for char in missing:
         # Remove any unicode non-spacing combining marks - e.g. é -> ´e -> e
-        replacement = ''.join(
-            ch for ch in normalize('NFD', char) if unicode_category(ch) != 'Mn'
-        )
+        replacement = unidecode(char, errors='preserve')
 
         # See if there is a common replacement for this
         if (replacement in missing
