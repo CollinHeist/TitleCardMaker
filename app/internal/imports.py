@@ -1,6 +1,7 @@
 from logging import Logger
 from pathlib import Path
 from re import match, IGNORECASE
+from shutil import move as move_file
 from typing import Any, Callable, Optional, TypeVar, Union
 
 from fastapi import HTTPException
@@ -1610,8 +1611,10 @@ def import_card_files(
         card_settings['card_file'].parent.mkdir(exist_ok=True, parents=True)
         try:
             file.rename(card_settings['card_file'])
+        except OSError: # Can be caused by cross-platform move on Linux/Docker
+            move_file(file, card_settings['card_file'])
         except FileNotFoundError:
-            pass
+            log.debug(f'Cannot move Card file - OS raised FileNotFound')
 
         # Card is valid, create and add to Database
         title_card = NewTitleCard(
