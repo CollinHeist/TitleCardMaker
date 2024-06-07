@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Release Notification
-        uses: meisnate12/discord-notifications@master
+        uses: Kometa-Team/discord-notifications@master
         with:
           webhook_id: ${{ secrets.RELEASE_WEBHOOK_ID }}
           webhook_token: ${{ secrets.RELEASE_WEBHOOK_TOKEN }}
