@@ -13,3 +13,11 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
       DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+  docker-develop-armv7:
+    uses: ./.github/workflows/docker_build_armv7.yml
+    with:
+      tag: develop-armv7
+    secrets:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+      DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
