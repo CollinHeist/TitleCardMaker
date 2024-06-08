@@ -192,8 +192,7 @@ def download_series_logo(
         log: Logger for all log messages.
 
     Returns:
-        The URI to the Series logo. If one cannot be downloaded, None is
-        returned instead.
+        The URI to the Series logo. None if one cannot be downloaded.
 
     Raises:
         HTTPException (409): An SVG image was returned but cannot be
@@ -216,8 +215,8 @@ def download_series_logo(
         if interface.INTERFACE_TYPE in ('Plex', 'Sonarr'):
             continue
 
-        # Handle TMDb separately
-        if interface.INTERFACE_TYPE == 'TMDb':
+        # Handle TMDb and TVDb separately
+        if interface.INTERFACE_TYPE in ('TMDb', 'TVDb'):
             logo = interface.get_series_logo(series.as_series_info)
 
         # Go through each library of this interface
@@ -303,9 +302,8 @@ def download_episode_source_image(
             continue
         connection = get_connection(db, interface_id, raise_exc=raise_exc)
 
-        # Skip if sourcing art from a media server
-        if (interface.INTERFACE_TYPE in ('Emby', 'Jellyfin', 'Plex')
-            and 'art' in style):
+        # Art can only be sourced from TMDb and TVDb; skip servers
+        if ('art' in style and interface.INTERFACE_TYPE not in ('TMDb', 'TVDb')):
             log.debug(f'Cannot source Art images from '
                       f'{interface.INTERFACE_TYPE} - skipping')
             continue
@@ -345,6 +343,20 @@ def download_episode_source_image(
                     episode.as_episode_info,
                     skip_localized_images=skip_localized_images,
                     raise_exc=raise_exc,
+                    log=log,
+                )
+        elif interface.INTERFACE_TYPE == 'TVDb':
+            # Get art backdrop
+            if 'art' in style:
+                source_image = interface.get_series_backdrop(
+                    series.as_series_info,
+                    log=log,
+                )
+            # Get source image
+            else:
+                source_image = interface.get_source_image(
+                    series.as_series_info,
+                    episode.as_episode_info,
                     log=log,
                 )
 
