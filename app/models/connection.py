@@ -95,7 +95,8 @@ class Connection(Base):
         The minimum width dimension of this Connection (in pixels).
         """
 
-        if self.minimum_dimensions is None or self.interface_type != 'TMDb':
+        if (self.minimum_dimensions is None
+            or (self.interface_type not in ('TMDb', 'TVDb'))):
             return None
 
         return int(self.minimum_dimensions.split('x')[0])
@@ -107,14 +108,15 @@ class Connection(Base):
         The minimum width dimension of this Connection (in pixels).
         """
 
-        if self.minimum_dimensions is None or self.interface_type != 'TMDb':
+        if (self.minimum_dimensions is None
+            or (self.interface_type not in ('TMDb', 'TVDb'))):
             return None
 
         return int(self.minimum_dimensions.split('x')[1])
 
 
     @property
-    def interface_kwargs(self) -> dict:
+    def interface_kwargs(self) -> dict[str, Any]:
         """
         The dictionary of keyword arguments required to initialize an
         Interface of this Connection's type. For example:
@@ -158,6 +160,16 @@ class Connection(Base):
         if self.interface_type == 'TMDb':
             return {
                 'api_key': self.api_key,
+                'minimum_source_width': self.minimum_width,
+                'minimum_source_height': self.minimum_height,
+                'language_priority': self.language_priority,
+            }
+
+        if self.interface_type == 'TVDb':
+            return {
+                'api_key': self.api_key,
+                'episode_ordering': self.episode_ordering,
+                'include_movies': self.include_movies,
                 'minimum_source_width': self.minimum_width,
                 'minimum_source_height': self.minimum_height,
                 'language_priority': self.language_priority,
