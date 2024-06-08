@@ -16,14 +16,16 @@ from app.database.session import Page
 from app.dependencies import (
     get_database, get_emby_interfaces, get_jellyfin_interfaces,
     get_plex_interfaces, get_preferences, get_tmdb_interfaces,
-    require_tmdb_interface, EmbyInterface, JellyfinInterface, PlexInterface,
-    TMDbInterface
+    get_tvdb_interfaces, require_tmdb_interface, require_tvdb_interface,
+    EmbyInterface, JellyfinInterface, PlexInterface, TMDbInterface,
+    TVDbInterface,
 )
 from app.internal.auth import get_current_user
 from app.internal.cards import delete_cards
 from app.internal.sources import (
     get_source_image, download_episode_source_images, download_series_logo,
-    process_svg_logo, resolve_all_source_settings, resolve_source_settings,
+    process_svg_logo, read_series_backdrops, resolve_all_source_settings,
+    resolve_source_settings,
 )
 from app import models
 from app.models.preferences import Preferences
@@ -205,7 +207,6 @@ def download_series_backdrop(
 def download_series_logo_(
         series_id: int,
         request: Request,
-        # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
     ) -> Optional[str]:
     """
@@ -214,8 +215,6 @@ def download_series_logo_(
     attrbute.
 
     - series_id: ID of the Series to download a logo for.
-    - ignore_blacklist: Whether to force a download from TMDb, even if
-    the associated Series logo has been internally blacklisted.
     """
 
     # Get this Series, raise 404 if DNE
@@ -228,18 +227,14 @@ def download_series_logo_(
 def download_episode_source_images_(
         episode_id: int,
         request: Request,
-        # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
     ) -> list[str]:
     """
     Download the Source Images for the given Episode. This uses the most
-    relevant image source indicated by the appropriate
-    image_source_priority attrbute. Returns URIs to the source image
-    resource.
+    relevant image source indicated by the global image source priority.
+    Returns URIs to the source image resources.
 
     - episode_id: ID of the Episode to download a Source image of.
-    - ignore_blacklist: Whether to force a download from TMDb, even if
-    the Episode has been internally blacklisted.
     """
 
     # Get the Episode with this ID, raise 404 if DNE
