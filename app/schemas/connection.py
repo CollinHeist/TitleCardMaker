@@ -93,7 +93,7 @@ class NewPlexConnection(BaseNewMediaServer):
     name: str = 'Plex Server'
     api_key: str
     interface_type: Literal['Plex'] = 'Plex'
-    integrate_with_pmm: bool = False
+    integrate_with_kometa: bool = False
 
 class NewSonarrConnection(BaseNewServer):
     name: str = 'Sonarr Server'
@@ -115,7 +115,7 @@ class NewTMDbConnection(Base):
     api_key: Hexstring
     minimum_dimensions: constr(regex=r'^\d+x\d+$') = '0x0'
     skip_localized: bool = True
-    logo_language_priority: list[TMDbLanguageCode] = ['en']
+    language_priority: list[TMDbLanguageCode] = ['en']
 
     @validator('minimum_dimensions')
     def validate_dimensions(cls, v):
@@ -124,11 +124,21 @@ class NewTMDbConnection(Base):
             raise ValueError(f'Minimum dimensions must be positive')
         return v
 
-    @validator('logo_language_priority', pre=True)
+    @validator('language_priority', pre=True)
     def comma_separate_language_codes(cls, v):
         if v == '':
             return ['en']
         return [str(s).lower().strip() for s in v.split(',') if str(s).strip()]
+
+class NewTVDbConnection(Base):
+    name: str = 'TVDb'
+    interface_type: Literal['TVDb'] = 'TVDb'
+    enabled: bool = True
+    api_key: str
+    episode_ordering: TVDbOrderType = 'default'
+    include_movies: bool = False
+    minimum_dimensions: constr(regex=r'^\d+x\d+$') = '0x0'
+    language_priority: list[str] = ['eng']
 
 """
 Update classes
@@ -143,7 +153,7 @@ class UpdateJellyfin(BaseUpdateMediaServer):
 
 class UpdatePlex(BaseUpdateMediaServer):
     api_key: str = UNSPECIFIED
-    integrate_with_pmm: bool = UNSPECIFIED
+    integrate_with_kometa: bool = UNSPECIFIED
 
 class UpdateSonarr(BaseUpdateServer):
     api_key: Hexstring = UNSPECIFIED
@@ -159,16 +169,34 @@ class UpdateTMDb(UpdateBase):
     api_key: Hexstring = UNSPECIFIED
     minimum_dimensions: constr(regex=r'^\d+x\d+$') = UNSPECIFIED
     skip_localized: bool = UNSPECIFIED
-    logo_language_priority: list[TMDbLanguageCode] = UNSPECIFIED
+    language_priority: list[TMDbLanguageCode] = UNSPECIFIED
 
     @validator('minimum_dimensions')
     def validate_dimensions(cls, v):
         width, height = str(v).split('x')
         if int(width) < 0 or int(height) < 0:
-            raise ValueError(f'Dimensions must be positive')
+            raise ValueError('Dimensions must be positive')
         return v
 
-    @validator('logo_language_priority', pre=True)
+    @validator('language_priority', pre=True)
+    def comma_separate_language_codes(cls, v):
+        return list(map(lambda s: str(s).strip(), v.split(',')))
+
+class UpdateTVDb(UpdateBase):
+    api_key: str = UNSPECIFIED
+    episode_ordering: TVDbOrderType = UNSPECIFIED
+    include_movies: bool = UNSPECIFIED
+    minimum_dimensions: constr(regex=r'^\d+x\d+$') = UNSPECIFIED
+    language_priority: list[str] = UNSPECIFIED
+
+    @validator('minimum_dimensions')
+    def validate_dimensions(cls, v):
+        width, height = str(v).split('x')
+        if int(width) < 0 or int(height) < 0:
+            raise ValueError('Dimensions must be positive')
+        return v
+
+    @validator('language_priority', pre=True)
     def comma_separate_language_codes(cls, v):
         return list(map(lambda s: str(s).strip(), v.split(',')))
 
@@ -184,7 +212,7 @@ class JellyfinConnection(BaseServer):
     filesize_limit: FilesizeLimit
 
 class PlexConnection(BaseServer):
-    integrate_with_pmm: bool
+    integrate_with_kometa: bool
     filesize_limit: FilesizeLimit
 
 class SonarrConnection(BaseServer):
@@ -199,11 +227,22 @@ class TMDbConnection(Base):
     api_key: str
     minimum_dimensions: str
     skip_localized: bool
-    logo_language_priority: list[TMDbLanguageCode]
+    language_priority: list[TMDbLanguageCode]
+
+class TVDbConnection(Base):
+    id: int
+    interface_type: Literal['TVDb'] = 'TVDb'
+    enabled: bool
+    name: str
+    api_key: str
+    episode_ordering: OrderType
+    include_movies: bool
+    minimum_dimensions: str
+    language_priority: list[str]
 
 AnyConnection = Union[
     EmbyConnection, JellyfinConnection, PlexConnection, SonarrConnection,
-    TMDbConnection,
+    TMDbConnection, TVDbConnection,
 ]
 
 """

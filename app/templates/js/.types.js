@@ -1,5 +1,5 @@
 /**
- * @typedef {'Emby' | 'Jellyfin' | 'Plex' | 'Sonarr'| 'TMDb'} InterfaceType
+ * @typedef {'Emby' | 'Jellyfin' | 'Plex' | 'Sonarr'| 'TMDb' | "TVDb"} InterfaceType
  */
 
 /**
@@ -222,8 +222,22 @@
  */
 
 /**
+ * @typedef {Object} TVDbConnection
+ * @property {number} id
+ * @property {"TMDb"} interface_type 
+ * @property {boolean} enabled
+ * @property {string} name
+ * @property {string} api_key
+ * @property {"absolute" | "dvd" | "official"} episode_ordering
+ * @property {boolean} include_movies
+ * @property {string} minimum_dimensions
+ * @property {boolean} skip_localized
+ * @property {string[]} language_priority
+ */
+
+/**
  * @typedef {EmbyConnection | JellyfinConnection | PlexConnection |
- *           SonarrConnection | TMDbConnection} AnyConnection
+ *           SonarrConnection | TMDbConnection | TVDbConnection} AnyConnection
  */
 
 // Episodes --------------------------------------------------------------------
