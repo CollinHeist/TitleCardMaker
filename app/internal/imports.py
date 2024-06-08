@@ -1610,11 +1610,9 @@ def import_card_files(
         # Rename existing Card to expected card location
         card_settings['card_file'].parent.mkdir(exist_ok=True, parents=True)
         try:
-            file.rename(card_settings['card_file'])
-        except OSError: # Can be caused by cross-platform move on Linux/Docker
             move_file(file, card_settings['card_file'])
-        except FileNotFoundError:
-            log.debug(f'Cannot move Card file - OS raised FileNotFound')
+        except OSError: # Can be caused by cross-platform move on Linux/Docker
+            pass
 
         # Card is valid, create and add to Database
         title_card = NewTitleCard(
