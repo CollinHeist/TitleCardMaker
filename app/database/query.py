@@ -7,7 +7,7 @@ from app.database.session import Base
 from app.dependencies import (
     EmbyInterface, EmbyInterfaces, JellyfinInterface, JellyfinInterfaces,
     PlexInterface, PlexInterfaces, SonarrInterface, SonarrInterfaces,
-    TMDbInterface, TMDbInterfaces,
+    TMDbInterface, TMDbInterfaces, TVDbInterface, TVDbInterfaces
 )
 from app.models.blueprint import Blueprint, BlueprintSet
 from app.models.card import Card
@@ -306,7 +306,7 @@ def get_all_templates(
 def get_interface(
         interface_id: int, *, raise_exc: Literal[True] = True,
     ) -> Union[EmbyInterface, JellyfinInterface, PlexInterface, SonarrInterface,
-               TMDbInterface]:
+               TMDbInterface, TVDbInterface]:
     ...
 
 def get_interface(
@@ -314,7 +314,7 @@ def get_interface(
         *,
         raise_exc: bool = True,
     ) -> Optional[Union[EmbyInterface, JellyfinInterface, PlexInterface,
-                        SonarrInterface, TMDbInterface]]:
+                        SonarrInterface, TMDbInterface, TVDbInterface]]:
     """
     Get the `Interface` to communicate with the service with the given
     ID. This searches all the global `InterfaceGroup` for each service.
@@ -345,6 +345,8 @@ def get_interface(
         interface = SonarrInterfaces[interface_id]
     if not interface and interface_id in TMDbInterfaces:
         interface = TMDbInterfaces[interface_id]
+    if not interface and interface_id in TVDbInterfaces:
+        interface = TVDbInterfaces[interface_id]
 
     # If defined (and activated), return
     if interface:

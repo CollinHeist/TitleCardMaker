@@ -26,6 +26,7 @@ from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
+from modules.TVDbInterface import TVDbInterface
 
 
 # Whether a Docker execution or not
@@ -244,3 +245,4 @@ JellyfinInterfaces: InterfaceGroup[int, JellyfinInterface] = InterfaceGroup(Jell
 PlexInterfaces: InterfaceGroup[int, PlexInterface] = InterfaceGroup(PlexInterface)
 SonarrInterfaces: InterfaceGroup[int, SonarrInterface] = InterfaceGroup(SonarrInterface)
 TMDbInterfaces: InterfaceGroup[int, TMDbInterface] = InterfaceGroup(TMDbInterface)
+TVDbInterfaces: InterfaceGroup[int, TVDbInterface] = InterfaceGroup(TVDbInterface)

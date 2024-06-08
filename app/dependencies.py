@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 
 from app.database.session import (
     BlueprintSessionMaker, EmbyInterfaces, ImageMagickInterfaceLocal,
-    JellyfinInterfaces, PreferencesLocal, Scheduler, SessionLocal,
-    TMDbInterfaces, PlexInterfaces, SonarrInterfaces
+    JellyfinInterfaces, PlexInterfaces, PreferencesLocal, Scheduler,
+    SessionLocal, SonarrInterfaces, TMDbInterfaces, TVDbInterfaces,
 )
 from app.models.preferences import Preferences
 
@@ -23,17 +23,21 @@ from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
+from modules.TVDbInterface import TVDbInterface
 
 
 __all__ = [
     'Preferences', 'Session', 'EmbyInterface', 'ImageMagickInterface',
     'InterfaceGroup',  'JellyfinInterface', 'PlexInterface', 'SonarrInterface',
-    'TMDbInterface', 'get_database', 'get_blueprint_database', 'get_scheduler',
-    'get_preferences', 'get_emby_interfaces', 'require_emby_interface',
+    'TMDbInterface', 'TVDbInterface', 'get_database', 'get_blueprint_database',
+    'get_scheduler', 'get_preferences',
+    'get_emby_interfaces', 'require_emby_interface',
     'refresh_imagemagick_interface', 'get_imagemagick_interface',
     'get_jellyfin_interfaces', 'require_jellyfin_interface',
-    'get_plex_interfaces', 'require_plex_interface', 'get_sonarr_interfaces',
-    'require_sonarr_interface', 'get_tmdb_interfaces', 'require_tmdb_interface',
+    'get_plex_interfaces', 'require_plex_interface',
+    'get_sonarr_interfaces', 'require_sonarr_interface',
+    'get_tmdb_interfaces', 'require_tmdb_interface',
+    'get_tvdb_interfaces', 'require_tvdb_interface',
     'require_interface',
 ]
 
@@ -41,7 +45,7 @@ __all__ = [
 """Type for any generic interface"""
 AnyInterface = Union[
     EmbyInterface, JellyfinInterface, PlexInterface, SonarrInterface,
-    TMDbInterface
+    TMDbInterface, TVDbInterface
 ]
 
 """Where to download the Blueprint SQL Database from"""
@@ -392,6 +396,46 @@ def require_tmdb_interface(
     return _require_interface(TMDbInterfaces, interface_id, 'tmdb')
 
 
+def get_tvdb_interfaces() -> InterfaceGroup[int, TVDbInterface]:
+    """
+    Dependency to get all interfaces to TVDb.
+
+    Returns:
+        Global `InterfaceGroup` of `TVDbInterface` objects.
+    """
+
+    return TVDbInterfaces
+
+
+def require_tvdb_interface(
+        interface_id: Optional[int] = Query(default=None)
+    ) -> TVDbInterface:
+    """
+    Dependency to get the `TVDbInterface` with the given ID. This adds
+    `interface_id` as a Query parameter. If the parameter is omitted,
+    then the first TVDbInterface is used.
+
+    Args:
+        interface_id: ID of the interface to get.
+
+    Returns:
+        `TVDbInterface` with the given ID (or the first one if
+        `interface_id` is None) as defined in the global
+        `InterfaceGroup`.
+
+    Raises:
+        HTTPException (400): The interface cannot be communicated with.
+        HTTPException (404): There is no interface with the given ID.
+    """
+
+    # If no ID was provided, get the first available TVDb interface
+    if interface_id is None:
+        for _, interface in TVDbInterfaces:
+            return interface
+
+    return _require_interface(TVDbInterfaces, interface_id, 'tvdb')
+
+
 def require_interface(interface_id: int = Query(...)) -> AnyInterface:
     """
     Dependency to get the interface with the given ID. This adds
@@ -412,7 +456,7 @@ def require_interface(interface_id: int = Query(...)) -> AnyInterface:
     groups = (
         (EmbyInterfaces, 'Emby'), (JellyfinInterfaces, 'Jellyfin'),
         (PlexInterfaces, 'Plex'), (SonarrInterfaces, 'Sonarr'),
-        (TMDbInterfaces, 'TMDb'),
+        (TMDbInterfaces, 'TMDb'), (TVDbInterfaces, 'TVDb')
     )
 
     for interface_group, name in groups:

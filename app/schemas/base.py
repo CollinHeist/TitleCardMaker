@@ -10,8 +10,8 @@ UNSPECIFIED: Literal['__unspecified_'] = '__unspecified_'
 # String that can be used as key in a dictionary
 DictKey = constr(regex=r'^[a-zA-Z]+[^ -]*$', min_length=1)
 
-InterfaceType = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr', 'TMDb']
-ImageSource = Literal['Emby', 'Jellyfin', 'Plex', 'TMDb']
+InterfaceType = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr', 'TMDb', 'TVDb']
+ImageSource = Literal['Emby', 'Jellyfin', 'Plex', 'TMDb', 'TVDb']
 MediaServer = Literal['Emby', 'Jellyfin', 'Plex']
 
 # Pydantic base class

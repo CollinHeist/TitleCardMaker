@@ -7,14 +7,15 @@ from app.database.query import get_connection
 from app.dependencies import (
     get_emby_interfaces, get_jellyfin_interfaces, get_plex_interfaces,
     get_preferences, get_sonarr_interfaces, get_tmdb_interfaces,
+    get_tvdb_interfaces,
 )
 from app.models.connection import Connection
 from app.models.preferences import Preferences
 from app.schemas.base import UNSPECIFIED
 from app.schemas.connection import (
     NewEmbyConnection, NewJellyfinConnection, NewPlexConnection,
-    NewSonarrConnection, NewTMDbConnection,
-    UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb
+    NewSonarrConnection, NewTMDbConnection, NewTVDbConnection,
+    UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb, UpdateTVDb
 )
 from modules.Debug import log
 from modules.Debug2 import SECRETS
@@ -23,10 +24,10 @@ from modules.InterfaceGroup import InterfaceGroup
 
 _NewConnection = Union[
     NewEmbyConnection, NewJellyfinConnection, NewPlexConnection,
-    NewSonarrConnection, NewTMDbConnection,
+    NewSonarrConnection, NewTMDbConnection, NewTVDbConnection,
 ]
 _UpdateConnection = Union[
-    UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb
+    UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb, UpdateTVDb
 ]
 
 
@@ -53,7 +54,8 @@ def initialize_connections(
             (get_jellyfin_interfaces(), 'Jellyfin'),
             (get_plex_interfaces(), 'Plex'),
             (get_sonarr_interfaces(), 'Sonarr'),
-            (get_tmdb_interfaces(), 'TMDb')
+            (get_tmdb_interfaces(), 'TMDb'),
+            (get_tvdb_interfaces(), 'TVDb'),
         ):
 
         # Get all Connections of this interface type
