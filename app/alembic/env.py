@@ -30,6 +30,7 @@ Schema Version History (oldest to newest):
 - 3122c0553b1e | Separate Font replacements, migrate cardinal and ordinal formatting
 - f1692007cf8a | Add Series level title split toggle
 - 1be1951acc40 | Add Font.line_split_modifier column
+- 2c1f9a3de797 | Added TVDb as a valid Connection type
 """
 
 # this is the Alembic Config object, which provides
@@ -101,7 +102,7 @@ def run_migrations_online() -> None:
         poolclass=pool.NullPool,
     )
 
-    url = config.get_main_option("sqlalchemy.url")
+    url = config.get_main_option('sqlalchemy.url')
     if IS_DOCKER:
         url = '/config/db.sqlite'
 

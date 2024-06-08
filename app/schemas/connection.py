@@ -10,6 +10,7 @@ from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
+from modules.TVDbInterface import OrderType
 
 
 # Names of acceptable server types
@@ -30,6 +31,9 @@ FilesizeLimit = constr(regex=r'\d+\s+(Bytes|Kilobytes|Megabytes)')
 
 # Accepted TMDb 2-letter language codes
 TMDbLanguageCode = Literal[TMDbInterface.LANGUAGE_CODES]
+
+# Order types for TVDb seasons
+TVDbOrderType = OrderType
 
 """
 Base classes

@@ -1,11 +1,11 @@
-from typing import Literal, Optional, Union, TYPE_CHECKING
+from typing import Any, Literal, Optional, Union, TYPE_CHECKING
 
 from sqlalchemy import String, JSON
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.session import Base
-from app.schemas.connection import InterfaceType
+from app.schemas.connection import InterfaceType, TVDbOrderType
 
 if TYPE_CHECKING:
     from app.models.card import Card
@@ -44,7 +44,7 @@ class Connection(Base):
 
     username: Mapped[Optional[str]]
     filesize_limit: Mapped[str] = mapped_column(default='5 Megabytes')
-    integrate_with_pmm: Mapped[bool] = mapped_column(default=False)
+    integrate_with_kometa: Mapped[bool] = mapped_column(default=False)
     downloaded_only: Mapped[bool] = mapped_column(default=True)
     libraries: Mapped[list[SonarrLibraries]] = mapped_column(
         MutableList.as_mutable(JSON),
@@ -54,11 +54,13 @@ class Connection(Base):
 
     minimum_dimensions: Mapped[Optional[str]]
     skip_localized: Mapped[bool] = mapped_column(default=True)
-    logo_language_priority: Mapped[list[str]] = mapped_column(
+    language_priority: Mapped[list[str]] = mapped_column(
         MutableList.as_mutable(JSON),
         default=[],
         nullable=False
     )
+    episode_ordering: Mapped[TVDbOrderType] = mapped_column(String, default='default')
+    include_movies: Mapped[bool] = mapped_column(default=False)
 
 
     def __repr__(self) -> str:
@@ -140,8 +142,7 @@ class Connection(Base):
                 'api_key': self.api_key,
                 'use_ssl': self.use_ssl,
                 'filesize_limit': self.filesize_limit_value,
-                # PMM rebranded to Kometa; not worth Schema migration
-                'integrate_with_kometa': self.integrate_with_pmm,
+                'integrate_with_kometa': self.integrate_with_kometa,
             }
 
         if self.interface_type == 'Sonarr':
@@ -159,7 +160,7 @@ class Connection(Base):
                 'api_key': self.api_key,
                 'minimum_source_width': self.minimum_width,
                 'minimum_source_height': self.minimum_height,
-                'logo_language_priority': self.logo_language_priority,
+                'language_priority': self.language_priority,
             }
 
         return {}
