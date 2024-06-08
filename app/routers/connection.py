@@ -16,10 +16,11 @@ from app.models.sync import Sync
 from app.models.template import Template
 from app.schemas.connection import (
     AnyConnection, EmbyConnection, JellyfinConnection, NewEmbyConnection,
-    NewJellyfinConnection, NewPlexConnection, NewSonarrConnection, NewTMDbConnection,
-    NewTautulliConnection, PlexConnection, PotentialSonarrLibrary,
-    SonarrConnection, TMDbConnection, UpdateEmby,
-    UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb,
+    NewJellyfinConnection, NewPlexConnection, NewSonarrConnection,
+    NewTautulliConnection, NewTMDbConnection, NewTVDbConnection, PlexConnection,
+    PotentialSonarrLibrary, SonarrConnection, TMDbConnection, TVDbConnection,
+    UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb,
+    UpdateTVDb,
 )
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TautulliInterface2 import TautulliInterface
@@ -128,6 +129,25 @@ def add_tmdb_connection(
     )
 
 
+@connection_router.post('/tvdb/new', status_code=201)
+def add_tvdb_connection(
+        request: Request,
+        new_connection: NewTVDbConnection = Body(...),
+        db: Session = Depends(get_database),
+        interface_group: InterfaceGroup[int, TVDbInterface] = Depends(get_tvdb_interfaces),
+    ) -> TVDbConnection:
+    """
+    Create a new Connection to TVDb; adding it to the Database and
+    adding an initialized Interface to the InterfaceGroup.
+
+    - new_connection: Details of the new Connection to add and create.
+    """
+
+    return add_connection(
+        db, new_connection, interface_group, log=request.state.log,
+    )
+
+
 @connection_router.put('/{connection}/{interface_id}/{status}')
 def enable_or_disable_connection_by_id(
         request: Request,
@@ -140,6 +160,7 @@ def enable_or_disable_connection_by_id(
         plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
         sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
         tmdb_interfaces: InterfaceGroup[int, TMDbInterface] = Depends(get_tmdb_interfaces),
+        tvdb_interfaces: InterfaceGroup[int, TVDbInterface] = Depends(get_tvdb_interfaces),
     ) -> AnyConnection:
     """
     Set the enabled/disabled status of the given connection.
@@ -160,7 +181,7 @@ def enable_or_disable_connection_by_id(
     group: InterfaceGroup = {
         'emby': emby_interfaces, 'jellyfin': jellyfin_interfaces,
         'plex': plex_interfaces, 'sonarr': sonarr_interfaces,
-        'tmdb': tmdb_interfaces,
+        'tmdb': tmdb_interfaces, 'tvdb': tvdb_interfaces,
     }[connection]
 
     # Refresh or disable interface within group
@@ -178,9 +199,7 @@ def enable_or_disable_connection_by_id(
 def get_all_connection_details(
         db: Session = Depends(get_database),
     ) -> list[AnyConnection]:
-    """
-    Get details for all defined Connections (of all types).
-    """
+    """Get details for all defined Connections (of all types)."""
 
     return db.query(Connection).all()
 
@@ -189,9 +208,7 @@ def get_all_connection_details(
 def get_all_emby_connection_details(
         db: Session = Depends(get_database),
     ) -> list[EmbyConnection]:
-    """
-    Get details for all defined Emby Connections.
-    """
+    """Get details for all defined Emby Connections."""
 
     return db.query(Connection)\
         .filter_by(interface_type='Emby')\
@@ -320,6 +337,33 @@ def get_tmdb_connection_details_by_id(
     return get_connection(db, interface_id, raise_exc=True)
 
 
+@connection_router.get('/tvdb/all', status_code=200)
+def get_all_tvdb_connection_details(
+        db: Session = Depends(get_database),
+    ) -> list[TVDbConnection]:
+    """
+    Get details for all defined TVDb Connections.
+    """
+
+    return db.query(Connection)\
+        .filter_by(interface_type='TVDb')\
+        .all()
+
+
+@connection_router.get('/tvdb/{interface_id}', status_code=200)
+def get_tvdb_connection_details_by_id(
+        interface_id: int,
+        db: Session = Depends(get_database),
+    ) -> TVDbConnection:
+    """
+    Get the details for the TVDb connection with the given ID.
+
+    - interface_id: ID of the Interface whose connection details to get.
+    """
+
+    return get_connection(db, interface_id, raise_exc=True)
+
+
 @connection_router.patch('/emby/{interface_id}', status_code=200)
 def update_emby_connection(
         request: Request,
@@ -423,6 +467,27 @@ def update_tmdb_connection(
     )
 
 
+@connection_router.patch('/tvdb/{interface_id}', status_code=200)
+def update_tvdb_connection(
+        request: Request,
+        interface_id: int,
+        update_object: UpdateTVDb = Body(...),
+        db: Session = Depends(get_database),
+        tvdb_interfaces: InterfaceGroup[int, TVDbInterface] = Depends(get_tvdb_interfaces),
+    ) -> TVDbConnection:
+    """
+    Update the Connection details for the given TVDb connection.
+
+    - interface_id: ID of the TVDb Connection being modified.
+    - update_object: Connection details to modify.
+    """
+
+    return update_connection(
+        db, interface_id, tvdb_interfaces, update_object,
+        log=request.state.log
+    )
+
+
 @connection_router.delete('/{interface_id}')
 def delete_connection(
         request: Request,
@@ -435,6 +500,7 @@ def delete_connection(
         plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
         sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
         tmdb_interfaces: InterfaceGroup[int, TMDbInterface] = Depends(get_tmdb_interfaces),
+        tvdb_interfaces: InterfaceGroup[int, TVDbInterface] = Depends(get_tvdb_interfaces),
     ) -> None:
     """
     Delete the Connection with the given ID. This also disables and
@@ -468,6 +534,8 @@ def delete_connection(
             sonarr_interfaces.disable(interface_id)
         elif connection.interface_type == 'TMDb':
             tmdb_interfaces.disable(interface_id)
+        elif connection.interface_type == 'TVDb':
+            tvdb_interfaces.disable(interface_id)
     except KeyError:
         pass
 
