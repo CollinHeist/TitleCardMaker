@@ -39,7 +39,6 @@ source_router = APIRouter(
 )
 
 
-# TODO implement blacklist bypassing all over?
 @source_router.post('/series/{series_id}')
 def download_series_source_images(
         background_tasks: BackgroundTasks,
@@ -72,7 +71,7 @@ def download_series_source_images(
         )
 
 
-@source_router.post('/series/{series_id}/backdrop')
+@source_router.post('/series/{series_id}/backdrop', deprecated=True)
 def download_series_backdrop(
         series_id: int,
         request: Request,
