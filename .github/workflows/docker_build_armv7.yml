@@ -59,6 +59,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           platforms: linux/arm/v7 # edit this if you want to build more architectures
+          file: Dockerfile.armv7
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/titlecardmaker:${{ inputs.tag }},ghcr.io/collinheist/titlecardmaker:${{ inputs.tag }}
           cache-from: type=gha
