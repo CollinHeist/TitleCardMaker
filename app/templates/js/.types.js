@@ -77,7 +77,7 @@
 /**
  * @typedef {Object} PreviewTitleCard
  * @property {string} card_type - The type of the card.
- * @property {string} title_text - The text for the title. Default is 'Example Title'.
+ * @property {string} title_text - The text for the title.
  * @property {?string} season_text - The text for the season.
  * @property {boolean} hide_season_text - Whether to hide the season text or not.
  * @property {?string} episode_text - The text for the episode.
@@ -86,9 +86,9 @@
  * @property {boolean} blur - Whether to apply blur effect or not.
  * @property {boolean} grayscale - Whether to apply grayscale effect or not.
  * @property {boolean} watched - Whether the episode has been watched or not.
- * @property {number} season_number - The number of the season. Default is 1.
- * @property {number} episode_number - The number of the episode. Default is 1.
- * @property {number} absolute_number - The absolute number of the episode. Default is 1.
+ * @property {number} season_number - The number of the season.
+ * @property {number} episode_number - The number of the episode.
+ * @property {number} absolute_number - The absolute number of the episode.
  * @property {Style} style - The style of the card.
  * @property {?number} font_id - The ID of the Font to be used.
  * @property {?string} font_color - The color of the font to be used.
@@ -218,7 +218,7 @@
  * @property {string} api_key
  * @property {string} minimum_dimensions
  * @property {boolean} skip_localized
- * @property {string[]} logo_language_priority
+ * @property {string[]} language_priority
  */
 
 /**

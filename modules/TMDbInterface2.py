@@ -258,7 +258,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             minimum_source_width: int = 0,
             minimum_source_height: int = 0,
             blacklist_threshold: int = BLACKLIST_THRESHOLD,
-            logo_language_priority: list[str] = ['en'],
+            language_priority: list[str] = ['en'],
             *,
             interface_id: int = 0,
             log: Logger = log,
@@ -274,7 +274,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 for source images.
             blacklist_threshold: Threshold for permanently blacklisting
                 a request.
-            logo_language_priority: Priority which logos should be
+            language_priority: Priority which localized should be
                 evaluated at.
             log: Logger for all log messages.
 
@@ -288,7 +288,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         self.minimum_source_width = minimum_source_width
         self.minimum_source_height = minimum_source_height
         self.blacklist_threshold = blacklist_threshold
-        self.logo_language_priority = logo_language_priority
+        self.language_priority = language_priority
         self._interface_id = interface_id
 
         # Create API object, validate key
@@ -1115,7 +1115,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             return None
 
         # Exit if no images for this Episode
-        if len(all_images) == 0:
+        if not all_images:
             log.debug(f'TMDb has no images for "{series_info}" {episode_info}')
             self.__update_blacklist(series_info, episode_info, 'image')
             return None
@@ -1268,11 +1268,11 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         best, best_priority = None, 999
         for logo in series.logos:
             # Skip logos with unindicated languages
-            if logo.iso_639_1 not in self.logo_language_priority:
+            if logo.iso_639_1 not in self.language_priority:
                 continue
 
             # Get relative priority of this logo's language
-            priority = self.logo_language_priority.index(logo.iso_639_1)
+            priority = self.language_priority.index(logo.iso_639_1)
 
             # Skip this logo if the language priority is less than the current
             # best. Highest priority is index 0, so use > for lower priority
@@ -1400,7 +1400,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             # Give priority scoring to languages in the priority list
             try:
                 # Reverse list so first elements get higher index
-                lang_score = self.logo_language_priority[::-1].index(
+                lang_score = self.language_priority[::-1].index(
                     poster.iso_639_1
                 )
                 return (lang_score * 10) + dimension_score
