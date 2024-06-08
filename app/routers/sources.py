@@ -256,9 +256,10 @@ def get_all_episode_source_images(
         episode_id: int,
         db: Session = Depends(get_database),
         emby_interfaces: InterfaceGroup[int, EmbyInterface] = Depends(get_emby_interfaces),
-        tmdb_interface: TMDbInterface = Depends(require_tmdb_interface),
         jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
         plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
+        tmdb_interface: TMDbInterface = Depends(require_tmdb_interface),
+        tvdb_interface: TVDbInterface = Depends(require_tvdb_interface),
     ) -> list[ExternalSourceImage]:
     """
     Get all Source Images on all interfaces for the given Episode.
@@ -278,9 +279,10 @@ def get_all_episode_source_images(
     else:
         match_title = episode.series.match_titles
 
-    # Get all Source Images from TMDb
+    # Get all Source Images from TMDb and TVDb
+    images = []
     try:
-        images = tmdb_interface.get_all_source_images(
+        images += tmdb_interface.get_all_source_images(
             episode.series.as_series_info,
             episode.as_episode_info,
             match_title=match_title,
@@ -288,8 +290,17 @@ def get_all_episode_source_images(
             log=log,
         )
     except HTTPException:
-        images = []
+        pass
 
+    tvdb_image = tvdb_interface.get_source_image(
+        episode.series.as_series_info,
+        episode.as_episode_info,
+        log=log,
+    )
+    if tvdb_image:
+        images.append({'url': tvdb_image, 'interface_type': 'TVDb'})
+
+    # Grab raw image bytes from Emby and Jellyfin
     for interface_type, interface_group in (('Emby', emby_interfaces),
                                             ('Jellyfin', jellyfin_interfaces)):
         for library in episode.series.libraries:
@@ -349,7 +360,6 @@ def get_all_series_logos_on_tmdb(
     # Get the Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    # Get all logos
     logos = tmdb_interface.get_all_logos(
         series.as_series_info,
         bypass_blacklist=True,
@@ -418,7 +428,7 @@ def delete_series_source_images(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Get Series with this ID, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
