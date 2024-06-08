@@ -1,3 +1,45 @@
+{% if False %}
+import {
+  EmbyConnection, InterfaceType, JellyfinConnection, PlexConnection,
+  SonarrConnection, TMDbConnection, TVDbConnection
+} from './.types.js';
+{% endif %}
+
+/** @type {number[]} ID's of all invalid Connections. */
+const invalidConnectionIDs = {{preferences.invalid_connections|safe}};
+
+// TVDb ordering types
+const tvdbOrderingTypes = [
+  {name: 'Absolute', value: 'absolute'},
+  {name: 'Alternate (Story)', value: 'alternate'},
+  {name: 'Default', value: 'default'},
+  {name: 'DVD', value: 'dvd'},
+  {name: 'Official', value: 'official'},
+  {name: 'Regional', value: 'regional'}
+];
+
+const availableTVDbLanguages = [
+  { value: "ara", name: "Arabic" },
+  { value: "ces", name: "Czech" },
+  { value: "dan", name: "Danish" },
+  { value: "deu", name: "German" },
+  { value: "ell", name: "Greek" },
+  { value: "eng", name: "English" },
+  { value: "fra", name: "French" },
+  { value: "ita", name: "Italian" },
+  { value: "kor", name: "Korean" },
+  { value: "nld", name: "Dutch" },
+  { value: "pol", name: "Polish" },
+  { value: "por", name: "Portuguese" },
+  { value: "pt", name: "Portuguese (Portugal)" },
+  { value: "rus", name: "Russian" },
+  { value: "spa", name: "Spanish" },
+  { value: "swe", name: "Swedish" },
+  { value: "tur", name: "Turkish" },
+  { value: "zho", name: "Chinese" },
+  { value: "zhtw", name: "Chinese (Traditional)" }
+];
+
 /**
 * Get all the defined non-Sonarr Connections and update the allConnections
 * list.
@@ -187,14 +229,14 @@ function addFormValidation() {
       api_key: ['empty'],
     },
   });
-  $('form[form-type="tmdb"]').form({
+  $('form[form-type="tmdb"],form[form-type="tvdb"]').form({
     on: 'blur',
     inline: true,
     fields: {
       name: ['empty'],
       api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
       minimum_dimensions: ['empty', 'regExp[/^\d+x\d+$/gi]'],
-      logo_language_priority: ['empty', 'minLength[1]'],
+      language_priority: ['empty', 'minLength[1]'],
     },
   });
 }
@@ -282,8 +324,7 @@ function addSonarrLibraryField(connectionId) {
  * form, and adds any checkboxes or given jsonData to the submitted JSON object.
  * @param {HTMLFormElement} form - Form with Connection details to parse.
  * @param {number} connectionId - ID of the Connection being updated.
- * @param {import("./.types").InterfaceType} connectionType -
- * Type of Connection being modified.
+ * @param {InterfaceType} connectionType - Type of Connection being modified.
  * @param {Object} jsonData - Extra JSON data to include in the API request
  * payload.
  */
@@ -308,6 +349,12 @@ function updateConnection(form, connectionId, connectionType, jsonData) {
   });
 }
 
+/**
+ * Submit an API request to delete the Connection object with the given ID.
+ * @param {number} connectionId - ID of the Connection being deleted.
+ * @param {boolean} deleteCards - Whether to delete Cards associated with the
+ * Connection.
+ */
 function _deleteConnectionRequest(connectionId, deleteCards=false) {
   $.ajax({
     type: 'DELETE',
@@ -385,8 +432,8 @@ function initializeEmby() {
     type: 'GET',
     url: '/api/connection/emby/all',
     /**
-     * 
-     * @param {Array<import("./.types").EmbyConnection>} connections 
+     * Connections queried. Add to page.
+     * @param {EmbyConnection[]} connections 
      */
     success: connections => {
       const embyTemplate = document.getElementById('emby-connection-template');
@@ -396,7 +443,7 @@ function initializeEmby() {
         const embyForm = embyTemplate.content.cloneNode(true);
 
         // @ts-ignore
-        if ({{preferences.invalid_connections|safe}}.includes(connection.id)) {
+        if (invalidConnectionIDs.includes(connection.id)) {
           embyForm.querySelector('.title').classList.add('invalid');
         }
         
@@ -477,13 +524,17 @@ function initializeJellyfin() {
   $.ajax({
     type: 'GET',
     url: '/api/connection/jellyfin/all',
+    /**
+     * Connections queried. Add to page.
+     * @param {JellyfinConnection[]} connections 
+     */
     success: connections => {
       const jellyfinTemplate = document.getElementById('emby-connection-template');
       
       // Add accordions for each Connection
       const jellyfinForms = connections.map(connection => {
         const jellyfinForm = jellyfinTemplate.content.cloneNode(true);
-        if ({{preferences.invalid_connections|safe}}.includes(connection.id)) {
+        if (invalidConnectionIDs.includes(connection.id)) {
           jellyfinForm.querySelector('.title').classList.add('invalid');
         }
         jellyfinForm.querySelector('.title').id = `connection${connection.id}-title`;
@@ -562,6 +613,10 @@ function initializePlex() {
   $.ajax({
     type: 'GET',
     url: '/api/connection/plex/all',
+    /**
+     * Connections queried. Add to page.
+     * @param {PlexConnection[]} connections 
+     */
     success: connections => {
       const plexTemplate = document.getElementById('plex-connection-template');
       const plexSection = document.getElementById('plex-connections');
@@ -569,7 +624,7 @@ function initializePlex() {
       // Add accordions for each Connection
       const plexForms = connections.map(connection => {
         const plexForm = plexTemplate.content.cloneNode(true);
-        if ({{preferences.invalid_connections|safe}}.includes(connection.id)) {
+        if (invalidConnectionIDs.includes(connection.id)) {
           plexForm.querySelector('.title').classList.add('invalid');
         }
         plexForm.querySelector('.title').id = `connection${connection.id}-title`;
@@ -635,6 +690,10 @@ function initializeSonarr() {
   $.ajax({
     type: 'GET',
     url: '/api/connection/sonarr/all',
+    /**
+     * Connections queried. Add to page.
+     * @param {SonarrConnection[]} connections 
+     */
     success: connections => {
       const sonarrTemplate = document.getElementById('sonarr-connection-template');
       const sonarrSection = document.getElementById('sonarr-connections');
@@ -643,7 +702,7 @@ function initializeSonarr() {
       // Add accordions for each Connection
       const sonarrForms = connections.map(connection => {
         const sonarrForm = sonarrTemplate.content.cloneNode(true);
-        if ({{preferences.invalid_connections|safe}}.includes(connection.id)) {
+        if (invalidConnectionIDs.includes(connection.id)) {
           sonarrForm.querySelector('.title').classList.add('invalid');
         }
         // Remove warning
@@ -756,6 +815,10 @@ function initializeTMDb() {
   $.ajax({
     type: 'GET',
     url: '/api/connection/tmdb/all',
+    /**
+     * Connections queried. Add to page.
+     * @param {TMDbConnection[]} connections 
+     */
     success: connections => {
       const tmdbTemplate = document.getElementById('tmdb-connection-template');
       const tmdbSection = document.getElementById('tmdb-connections');
@@ -763,7 +826,7 @@ function initializeTMDb() {
       // Add accordions for each Connection
       const tmdbForms = connections.map(connection => {
         const tmdbForm = tmdbTemplate.content.cloneNode(true);
-        if ({{preferences.invalid_connections|safe}}.includes(connection.id)) {
+        if (invalidConnectionIDs.includes(connection.id)) {
           tmdbForm.querySelector('.title').classList.add('invalid');
         }
         tmdbForm.querySelector('.title').id = `connection${connection.id}-title`;
@@ -789,12 +852,12 @@ function initializeTMDb() {
           connection.skip_localized ? 'check' : 'uncheck'
         );
         // Initialize logo language priority dropdown
-        $(`#connection${connection.id} .dropdown[data-value="logo_language_priority"]`).dropdown({
+        $(`#connection${connection.id} .dropdown[data-value="language_priority"]`).dropdown({
           values: availableLanguages.map(language => {
             return {
               name: language.name,
               value: language.value,
-              selected: connection.logo_language_priority.includes(language.value),
+              selected: connection.language_priority.includes(language.value),
             };
           }),
         });
@@ -819,10 +882,97 @@ function initializeTMDb() {
 }
 
 /*
+ * Initialize the TVDb portion of the page with all TMDb Connections.
+ */
+function initializeTVDb() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/connection/tvdb/all',
+    /**
+     * Connections queried. Add to page.
+     * @param {TVDbConnection[]} connections 
+     */
+    success: connections => {
+      const tvdbTemplate = document.getElementById('tvdb-connection-template');
+      const tvdbSection = document.getElementById('tvdb-connections');
+
+      // Add accordions for each Connection
+      const tvdbForms = connections.map(connection => {
+        const tvdbForm = tvdbTemplate.content.cloneNode(true);
+        if (invalidConnectionIDs.includes(connection.id)) {
+          tvdbForm.querySelector('.title').classList.add('invalid');
+        }
+        tvdbForm.querySelector('.title').id = `connection${connection.id}-title`;
+        tvdbForm.querySelector('.content').id = `connection${connection.id}`;
+        // Enable later
+        tvdbForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name} <span class="right floated">${connection.id}</span>`;
+        tvdbForm.querySelector('input[name="name"]').value = connection.name;
+        tvdbForm.querySelector('input[name="api_key"]').value = connection.api_key;
+        tvdbForm.querySelector('input[name="minimum_dimensions"]').value = connection.minimum_dimensions;
+        // Language priority later
+        // Ordering later
+        // Include movies later
+        return tvdbForm;
+      });
+      tvdbSection.replaceChildren(...tvdbForms);
+
+      // Initialize elements of Form
+      connections.forEach(connection => {
+        // Enabled
+        $(`#connection${connection.id} .checkbox[data-value="enabled"]`).checkbox(
+          connection.enabled ? 'check' : 'uncheck'
+        );
+        // Ignore movies
+        $(`#connection${connection.id} .checkbox[data-value="include_movies"]`).checkbox(
+          connection.include_movies ? 'check' : 'uncheck'
+        );
+        // Initialize language priority dropdown
+        $(`#connection${connection.id} .dropdown[data-value="language_priority"]`).dropdown({
+          values: availableTVDbLanguages.map(language => {
+            return {
+              name: language.name,
+              value: language.value,
+              selected: connection.language_priority.includes(language.value),
+            };
+          }),
+        });
+        // Initialize episode ordering dropdown
+        $(`#connection${connection.id} .dropdown[data-value="episode_ordering"]`).dropdown({
+          values: tvdbOrderingTypes.map(ordering => {
+            return {
+              name: ordering.name,
+              value: ordering.value,
+              selected: connection.episode_ordering === ordering.value,
+            };
+          }),
+        });
+        // Assign save function to button
+        $(`#connection${connection.id} form`).on('submit', (event) => {
+          event.preventDefault();
+          if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
+          updateConnection(new FormData(event.target), connection.id, 'TVDb');
+        });
+        // Assign delete function to button
+        $(`#connection${connection.id} button[data-action="delete"]`).on('click', (event) => {
+          event.preventDefault();
+          deleteConnection(connection.id);
+        });
+      });
+    },
+    error: response => showErrorToast({title: 'Error Querying TVDb Connections', response}),
+    complete: () => {
+      addFormValidation();
+      refreshTheme();
+    },
+  });
+}
+
+let tempFormId = 0;
+/**
  * Add a new (blank) Connection of the given type to the UI. This adjusts the
  * save button to submit a POST request instead of PATCH. 
+ * @param {"emby" | "jellyfin" | "plex" | "sonarr" | "tmdb" | "tvdb"} connectionType
  */
-let tempFormId = 0;
 function addConnection(connectionType) {
   // Get the template for this Connection - Jellyfin uses Emby template
   let template;
@@ -849,8 +999,12 @@ function addConnection(connectionType) {
     // Disable Tautulli button
     template.querySelector('.button[data-action="tautulli"]').classList.add('disabled');
   } else if (connectionType === 'tmdb') {
-    // Disable dropdown until added
-    template.querySelector('.field[data-value="logo_language_priority"]').classList.add('disabled');
+    // Disable language dropdowns until added
+    template.querySelector('.field[data-value="language_priority"]').classList.add('disabled');
+  } else if (connectionType === 'tvdb') {
+    // Remove dropdowns until Connection is added
+    template.querySelector('.field[data-value="language_priority"]').remove();
+    template.querySelector('.field[data-value="episode_ordering"]').remove();
   } else if (connectionType === 'emby' || connectionType === 'jellyfin') {
     // Remove username dropdown until added
     template.querySelector('.field[data-value="username"]').remove();
@@ -871,6 +1025,7 @@ function addConnection(connectionType) {
     $.each($(`#${formId}`).find('input[type=checkbox]'), (key, val) => {
       form.append($(val).attr('name'), $(val).is(':checked'));
     });
+
     $.ajax({
       type: 'POST',
       url: `/api/connection/${connectionType}/new`,
@@ -907,6 +1062,7 @@ async function initAll() {
   initializeSonarr();
   await getAvailableLanguages();
   initializeTMDb();
+  initializeTVDb();
 
   // Enable elements
   $('.ui.dropdown').dropdown();

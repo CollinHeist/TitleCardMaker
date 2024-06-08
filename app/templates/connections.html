@@ -321,7 +321,7 @@
           <label>Minimum Image Dimensions</label>
           <input name="minimum_dimensions" type="text" value="800x400">
           <p class="help">
-            Minimum image resolution for source images from TMDb (in pixels) - enter as <b>width</b>x<b>height</b>.
+            Minimum image resolution for Source Images from TMDb (in pixels) - enter as <b>width</b>x<b>height</b>.
           </p>
         </div>
 
@@ -335,15 +335,15 @@
           </p>
         </div>
 
-        <div data-value="logo_language_priority" class="ui required field">
-          <label>Logo Language Priority</label>
-          <div data-value="logo_language_priority" class="ui compact multiple search selection dropdown">
-            <input type="hidden" name="logo_language_priority">
+        <div data-value="language_priority" class="ui required field">
+          <label>Language Priority</label>
+          <div data-value="language_priority" class="ui compact multiple search selection dropdown">
+            <input type="hidden" name="language_priority">
             <i class="dropdown icon"></i>
             <div class="default text"></div>
             <div class="menu"></div>
           </div>
-          <p class="help">Order of languages to search for logos in.</p>
+          <p class="help">Order of languages to search for posters and logos.</p>
         </div>
 
         <div class="ui error message"></div>
@@ -353,6 +353,112 @@
             <i class="right arrow icon"></i>
           </div>
         </button>
+        <button class="ui negative animated button" data-action="delete">
+          <div class="visible content">Delete</div>
+          <div class="hidden content">
+            <i class="trash icon"></i>
+          </div>
+        </button>
+      </form>
+    </div>
+  </template>
+
+  <template id="tvdb-connection-template">
+    <div class="title">
+      <i class="dropdown icon"></i>
+      New Connection
+      <span class="right floated">New</span>
+    </div>
+    <div class="content">
+      <form class="ui fluid form" form-type="plex">
+        <div data-value="enabled" class="ui left aligned checkbox field">
+          <label>Enabled</label>
+          <input name="enabled" type="checkbox" checked="">
+        </div>
+
+        <div data-value="name" class="ui required eight wide field">
+          <label>Connection Name</label>
+          <input name="name" type="text" value="TVDb">
+          <p class="help">Name of this Connection within TCM.</p>
+        </div>
+
+        <div data-value="api_key" class="ui required eight wide field">
+          <label>API Key <a href="https://thetvdb.com/api-information" target="_blank"><i class="external alternate small icon"></i></a></label>
+          <input name="api_key" type="text" class="private">
+          <p class="help">Key to submit API requests to TVDb.</p>
+        </div>
+
+        <div data-value="include_movies" class="ui left aligned checkbox field">
+          <label>Include Movies</label>
+          <input name="include_movies" type="checkbox">
+          <p class="help">Whether to include Episodes which are marked as movies.</p>
+        </div>
+
+        <div data-value="minimum_dimensions" class="ui required four wide field">
+          <label>Minimum Image Dimensions</label>
+          <input name="minimum_dimensions" type="text" value="800x400">
+          <p class="help">
+            Minimum image resolution for Source Images from TVDb (in pixels) - enter as <b>width</b>x<b>height</b>.
+          </p>
+        </div>
+
+        <div data-value="language_priority" class="ui required field">
+          <label>Language Priority</label>
+          <div data-value="language_priority" class="ui compact multiple search selection dropdown">
+            <input type="hidden" name="language_priority">
+            <i class="dropdown icon"></i>
+            <div class="default text"></div>
+            <div class="menu">
+              <div class="item" data-value="ara">Arabic</div>
+              <div class="item" data-value="ces">Czech</div>
+              <div class="item" data-value="dan">Danish</div>
+              <div class="item" data-value="deu">German</div>
+              <div class="item" data-value="ell">Greek</div>
+              <div class="item" data-value="eng">English</div>
+              <div class="item" data-value="fra">French</div>
+              <div class="item" data-value="ita">Italian</div>
+              <div class="item" data-value="kor">Korean</div>
+              <div class="item" data-value="nld">Dutch</div>
+              <div class="item" data-value="pol">Polish</div>
+              <div class="item" data-value="por">Portuguese</div>
+              <div class="item" data-value="pt">Portuguese (Portugal)</div>
+              <div class="item" data-value="rus">Russian</div>
+              <div class="item" data-value="spa">Spanish</div>
+              <div class="item" data-value="swe">Swedish</div>
+              <div class="item" data-value="tur">Turkish</div>
+              <div class="item" data-value="zho">Chinese</div>
+              <div class="item" data-value="zhtw">Chinese (Traditional)</div>
+            </div>
+          </div>
+          <p class="help">Order of languages to search for posters and logos.</p>
+        </div>
+
+        <div class="ui required field" data-value="episode_ordering">
+          <label>Episode Ordering</label>
+          <div data-value="episode_ordering" class="ui compact selection dropdown">
+            <input type="hidden" name="episode_ordering">
+            <i class="dropdown icon"></i>
+            <div class="default text"></div>
+            <div class="menu">
+              <div class="item" data-value="absolute">Absolute</div>
+              <div class="item" data-value="alternate">Alternate (Story)</div>
+              <div class="item" data-value="default">Default</div>
+              <div class="item" data-value="dvd">DVD</div>
+              <div class="item" data-value="official">Official</div>
+              <div class="item" data-value="regional">Regional</div>
+            </div>
+          </div>
+          <p class="help">Which order of episodes to utilize. Not all Series have all orderings.</p>
+        </div>
+
+        <div class="ui error message"></div>
+        <button class="ui primary animated button" type="submit" data-action="save">
+          <div class="visible content">Save Changes</div>
+          <div class="hidden content">
+            <i class="right arrow icon"></i>
+          </div>
+        </button>
+
         <button class="ui negative animated button" data-action="delete">
           <div class="visible content">Delete</div>
           <div class="hidden content">
@@ -424,45 +530,43 @@
       <button class="ui blue tertiary add-connection button" onclick="addConnection('emby');">
         Add Connection
       </button>
-      <div id="emby-connections" class="ui styled fluid accordion">
-        <!-- Added later -->
-      </div>
+      <div id="emby-connections" class="ui styled fluid accordion"><!-- Added later --></div>
 
       <!-- Jellyfin Connections -->
       <h2 class="ui dividing header">Jellyfin</h2>
       <button class="ui blue tertiary add-connection button" onclick="addConnection('jellyfin');">
         Add Connection
       </button>
-      <div id="jellyfin-connections" class="ui styled fluid accordion">
-        <!-- Added later -->
-      </div>
+      <div id="jellyfin-connections" class="ui styled fluid accordion"><!-- Added later --></div>
 
       <!-- Plex Connections -->
       <h2 class="ui dividing header">Plex</h2>
       <button class="ui blue tertiary add-connection button" onclick="addConnection('plex');">
         Add Connection
       </button>
-      <div id="plex-connections" class="ui styled fluid accordion">
-        <!-- Added later -->
-      </div>
+      <div id="plex-connections" class="ui styled fluid accordion"><!-- Added later --></div>
 
       <!-- Sonarr Connections -->
       <h2 class="ui dividing header">Sonarr</h2>
       <button class="ui blue tertiary add-connection button" onclick="addConnection('sonarr');">
         Add Connection
       </button>
-      <div id="sonarr-connections" class="ui styled fluid accordion">
-        <!-- Added later -->
-      </div>
+      <div id="sonarr-connections" class="ui styled fluid accordion"><!-- Added later --></div>
 
       <!-- TMDb Connections -->
       <h2 class="ui dividing header">TheMovieDatabase</h2>
       <button class="ui blue tertiary add-connection button" onclick="addConnection('tmdb');">
         Add Connection
       </button>
-      <div id="tmdb-connections" class="ui styled fluid accordion">
-        <!-- Added later -->
-      </div>
+      <div id="tmdb-connections" class="ui styled fluid accordion"><!-- Added later --></div>
+
+      <!-- TVDb Connections -->
+      <h2 class="ui dividing header">TVDb</h2>
+      <button class="ui blue tertiary add-connection button" onclick="addConnection('tvdb');">
+        Add Connection
+      </button>
+      <div id="tvdb-connections" class="ui styled fluid accordion"><!-- Added later --></div>
+
     </div>
 
     <!-- Modals -->
