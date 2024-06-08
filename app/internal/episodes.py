@@ -7,7 +7,8 @@ from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_font, get_interface
 from app.dependencies import (
-    get_preferences, get_sonarr_interfaces, get_tmdb_interfaces
+    get_preferences, get_sonarr_interfaces, get_tmdb_interfaces,
+    get_tvdb_interfaces
 )
 from app.internal.templates import get_effective_templates
 from app.models.card import Card
@@ -42,7 +43,7 @@ def set_episode_ids(
     # Get corresponding EpisodeInfo object for this Episode
     episode_infos = [episode.as_episode_info for episode in episodes]
 
-    # Set ID's from all possible interfaces
+    # Set ID's from all library interfaces
     for library in series.libraries:
         if (interface := get_interface(library['interface_id'], raise_exc=False)):
             interface.set_episode_ids(
@@ -52,12 +53,16 @@ def set_episode_ids(
             log.debug(f'Skipping Library "{library["name"]}" - no applicable '
                       f'interface')
 
-    # Set from Sonarr and TMDb
+    # Set from Connections which don't require libraries
     for _, interface in get_sonarr_interfaces():
         interface.set_episode_ids(
             None, series.as_series_info, episode_infos, log=log
-        )
+    )
     for _, interface in get_tmdb_interfaces():
+        interface.set_episode_ids(
+            None, series.as_series_info, episode_infos, log=log
+        )
+    for _, interface in get_tvdb_interfaces():
         interface.set_episode_ids(
             None, series.as_series_info, episode_infos, log=log
         )
@@ -95,7 +100,7 @@ def get_all_episode_data(
         is returned.
 
     Raises:
-        HTTPException (404): A Series Template does not exist.
+        HTTPException (404): A Series' Template does not exist.
         HTTPException (409): The indicated Episode Data Source cannot be
             communicated with.
     """
@@ -119,13 +124,14 @@ def get_all_episode_data(
             )
         return []
 
-    # Sonarr and TMDb do not have libraries, query separately
-    if interface.INTERFACE_TYPE in ('Sonarr', 'TMDb'):
+    # Query Connections which do not have libraries
+    if interface.INTERFACE_TYPE in ('Sonarr', 'TMDb', 'TVDb'):
         return interface.get_all_episodes(None, series.as_series_info, log=log)
 
     # Verify Series has an associated Library if EDS is a media server
     if not (libraries := list(series.get_libraries(interface_id))):
-        log.error(f'Series does not have a Library for the assigned Episode Data Source')
+        log.error(f'Series does not have a Library for the assigned Episode '
+                  f'Data Source')
         if raise_exc:
             raise HTTPException(
                 status_code=409,
