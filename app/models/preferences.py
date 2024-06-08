@@ -453,7 +453,8 @@ class Preferences:
         return '0', 'Bytes'
 
 
-    def standardize_style(self, style: str) -> str:
+    @staticmethod
+    def standardize_style(style: str) -> str:
         """
         Standardize the given style string so that style modifiers are
         not order dependent.
@@ -497,6 +498,7 @@ class Preferences:
             self.season_folder_format
         )
 
+        # Only return first 254 characters to handle the Windows path limit
         return FormatString(fstring, data=episode_info.indices).result[:254]
 
 
@@ -513,8 +515,8 @@ class Preferences:
             log: Logger for all log messages.
 
         Returns:
-            CardType subclass of the given identifier. If this is an
-            unknown identifier, None is returned instead.
+            CardType subclass of the given identifier. None if this is
+            an unknown identifier.
         """
 
         # Get the effective card class
