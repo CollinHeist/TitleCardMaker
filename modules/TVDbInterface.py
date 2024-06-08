@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from logging import Logger
 from typing import Any, Literal, Optional, TypedDict, Union
-from urllib.parse import urlencode
+from urllib.parse import quote as url_quote, urlencode
 
 from modules.Debug import log
 from modules.EpisodeDataSource2 import (
@@ -154,7 +154,7 @@ class TVDbInterface(EpisodeDataSource, WebInterface, Interface):
             include_movies: bool = False,
             minimum_source_width: int = 0,
             minimum_source_height: int = 0,
-            language_priority: list[str] = ['eng'],
+            language_priority: list[LanguageCode] = ['eng'],
             *,
             interface_id: int = 0,
             log: Logger = log,
@@ -191,7 +191,7 @@ class TVDbInterface(EpisodeDataSource, WebInterface, Interface):
         # Authenticate with TVDb, generate session token
         self.__api_key = api_key
         self.__token_expiration: Optional[datetime] = None
-        self.__initialize_token()
+        self.__initialize_token() # This will initialize the interface
 
 
     def __generate_login_token(self, api_key: str) -> str:
@@ -251,8 +251,10 @@ class TVDbInterface(EpisodeDataSource, WebInterface, Interface):
         try:
             token = self.__generate_login_token(self.__api_key)
             self.__token_expiration = datetime.now() + self.__TOKEN_DURATION
+            self.activate()
         except ValueError:
             log.exception('Failed to authenticate with TVDb')
+            self.active = False
             return None
 
         # Set default headers on this object's session with new token
@@ -515,7 +517,7 @@ class TVDbInterface(EpisodeDataSource, WebInterface, Interface):
         """
 
         results: list[TVDbSearchResult] = self.get(
-            f'{self.__ROOT_API_URL}/search?query={urlencode(query)}'
+            f'{self.__ROOT_API_URL}/search?query={url_quote(query)}'
         ).get('data', [])
 
         def _get_id(ids: list[TVDbRemoteID], source_name: str) -> Optional[str]:
@@ -530,8 +532,8 @@ class TVDbInterface(EpisodeDataSource, WebInterface, Interface):
                 year=result['year'],
                 poster=result['image_url'],
                 overview=result.get('overview', 'No Overview'),
-                ongoing=result['status'] == 'Continuing',
-                imdb_id=_get_id(result['remote_ids'], 'IMDB'),
+                ongoing=result.get('status') == 'Continuing',
+                imdb_id=_get_id(result.get('remote_ids', []), 'IMDB'),
                 tmdb_id=result['tvdb_id'],
             )
             for result in results
