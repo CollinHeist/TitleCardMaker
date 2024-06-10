@@ -14,9 +14,9 @@ From the left-hand navigation menu, Global Settings can be accessed and set.
 ![](../assets/settings_dark.webp#only-dark){.no-lightbox}
 
 Settings listed here are the _global_ defaults for TitleCardMaker, but many can
-be overwritten within an Episode, Series, or Template. If a specific setting
-can be overwritten, then some variation of this badge will be displayed next
-to the Setting (here, not within the UI).
+be overwritten within an Episode, Series, or Template. If a specific setting can
+be overwritten, then some variation of this badge will be displayed next to the
+Setting (here, not within the UI).
 
 <!-- md:overwritable Episode, Series, Template -->
 
@@ -32,51 +32,54 @@ below.
 
     === "Docker"
 
-        | Setting | Recommended Value |
-        | ---: | :--- |
-        | Card Directory | /config/cards/ |
-        | Source Directory | /config/source/ |
-        | Delete Series Source Images | Unchecked |
-        | Episode Data Source | Sonarr | 
-        | Image Source Priority | `TMDb` `Plex` `Emby` `Jellyfin` |
-        | Sync Specials | Unchecked |
-        | Delete Missing Episodes | Checked |
-        | Default Card Type | _Personal Preference_ |
-        | Excluded Card Types | _Personal Preference_ |
-        | Watched Episode Style | Unique |
-        | Unwatched Episode Style | _Personal Preference_ |
-        | Card Dimensions | 3200x1800 |
-        | Card Quality | 95 |
-        | Card Extension | .jpg |
-        | Filename Format | {series_full_name} - S{season_number:02}E{episode_number:02} |
-        | Specials Folder Format | Specials |
-        | Season Folder Format | Season {season_number} |
-        | Multi-Library Filename Support | _Unchecked_ |
+        | Setting                        | Recommended Value                                            |
+        | -----------------------------: | :----------------------------------------------------------- |
+        | Card Directory                 | /config/cards/                                               |
+        | Source Directory               | /config/source/                                              |
+        | Delete Series Source Images    | :fontawesome-regular-circle-xmark:{.red}                     |
+        | Episode Data Source            | Sonarr                                                       |
+        | Image Source Priority          | `TMDb` `Plex` `Emby` `Jellyfin`                              |
+        | Enable Specials                | :fontawesome-regular-circle-xmark:{.red}                     |
+        | Delete Missing Episodes        | :fontawesome-regular-circle-check:{.green}                   |
+        | Default Card Type              | _Personal Preference_                                        |
+        | Excluded Card Types            | _Personal Preference_                                        |
+        | Watched Episode Style          | Unique                                                       |
+        | Unwatched Episode Style        | _Personal Preference_                                        |
+        | Default Templates              | _Blank_                                                      |
+        | Card Dimensions                | 3200x1800                                                    |
+        | Card Quality                   | 95                                                           |
+        | Card Extension                 | .jpg                                                         |
+        | Filename Format                | {series_full_name} - S{season_number:02}E{episode_number:02} |
+        | Specials Folder Format         | Specials                                                     |
+        | Season Folder Format           | Season {season_number}                                       |
+        | Multi-Library Filename Support | :fontawesome-regular-circle-xmark:{.red}                     |
 
     === "Non-Docker"
 
-        | Setting | Recommended Value |
-        | ---: | :--- |
-        | Card Directory | ./config/cards/ |
-        | Source Directory | ./config/source/ |
-        | Delete Series Source Images | Unchecked |
-        | Episode Data Source | Sonarr |
-        | Image Source Priority | `TMDb` `Plex` `Emby` `Jellyfin` |
-        | Sync Specials | Unchecked |
-        | Delete Missing Episodes | Checked |
-        | Default Card Type | _Personal Preference_ |
-        | Excluded Card Types | _Personal Preference_ |
-        | Watched Episode Style | Unique |
-        | Unwatched Episode Style | _Personal Preference_ |
-        | Card Dimensions | 3200x1800 |
-        | Card Quality | 95 |
-        | Card Extension | .jpg |
-        | Filename Format | {series_full_name} - S{season_number:02}E{episode_number:02} |
-        | Specials Folder Format | Specials |
-        | Season Folder Format | Season {season_number} |
-        | Multi-Library Filename Support | _Unchecked_ |
+        | Setting                        | Recommended Value                                            |
+        | -----------------------------: | :----------------------------------------------------------- |
+        | Card Directory                 | ./config/cards/                                              |
+        | Source Directory               | ./config/source/                                             |
+        | Delete Series Source Images    | :fontawesome-regular-circle-xmark:{.red}                     |
+        | Episode Data Source            | Sonarr                                                       |
+        | Image Source Priority          | `TMDb` `Plex` `Emby` `Jellyfin`                              |
+        | Enable Specials                | :fontawesome-regular-circle-xmark:{.red}                     |
+        | Delete Missing Episodes        | :fontawesome-regular-circle-check:{.green}                   |
+        | Default Card Type              | _Personal Preference_                                        |
+        | Excluded Card Types            | _Personal Preference_                                        |
+        | Watched Episode Style          | Unique                                                       |
+        | Unwatched Episode Style        | _Personal Preference_                                        |
+        | Default Templates              | _Blank_                                                      |
+        | Card Dimensions                | 3200x1800                                                    |
+        | Card Quality                   | 95                                                           |
+        | Card Extension                 | .jpg                                                         |
+        | Filename Format                | {series_full_name} - S{season_number:02}E{episode_number:02} |
+        | Specials Folder Format         | Specials                                                     |
+        | Season Folder Format           | Season {season_number}                                       |
+        | Multi-Library Filename Support | :fontawesome-regular-circle-xmark:{.red}                     |
 
 ## Root Folders
+
 The root folders listed here serve as the primary asset directories for both
 Title Card and Source images. If using Docker, it is importan that both of these
 directories are accessible _outside_ of the Container.
@@ -262,8 +265,8 @@ increased for the opposite effect.
 ??? warning "16:9 Aspect Ratio"
 
     TCM will not stop you from setting a non-standard (non-16:9) aspect ratio,
-    but your created Title Cards __will__ be cropped when loaded into your
-    Media Server.
+    but your created Title Cards __will__ be cropped when loaded into your Media
+    Server.
 
 ### Card Quality
 
