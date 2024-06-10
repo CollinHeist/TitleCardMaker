@@ -108,6 +108,8 @@ def upgrade() -> None:
         connection.integrate_with_kometa = connection.integrate_with_pmm
         connection.language_priority = connection.logo_language_priority
 
+    session.commit()
+
     # Remove old columns post-migration
     with op.batch_alter_table('connection', schema=None) as batch_op:
         batch_op.drop_column('integrate_with_pmm')
