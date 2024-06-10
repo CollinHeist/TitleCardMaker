@@ -27,6 +27,10 @@
   line-height: 0.6em;
   border-radius: 300rem;
 }
+.blueprint.card .content [data-value="creator"] {
+  /* Show as clickable */
+  cursor: pointer;
+}
 
 /* Do not allow disabled card description text to be selected */
 .disabled.card {

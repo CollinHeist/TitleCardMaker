@@ -127,59 +127,6 @@ function importBlueprint(blueprintId, elementId) {
   });
 }
 
-// /**
-//  * Look for any Blueprints for the given series. Loading the results into
-//  * the add-Series modal.
-//  * @param {SearchResult} result - ID of the result whose Blueprints are being
-//  * queried.
-//  * @param {string} resultElementId - ID of the element in the DOM to modify.
-//  */
-// function queryBlueprints(result, resultElementId) {
-//   // Add placeholder Blueprints while loading
-//   addPlaceholders(document.getElementById(resultElementId), 2, 'blueprint-placeholder-template');
-
-//   // Generate query URL
-//   const query = new URLSearchParams({name: result.name, year: result.year});
-//   if (result.imdb_id) { query.append('imdb_id', result.imdb_id); }
-//   if (result.tmdb_id) { query.append('tmdb_id', result.tmdb_id); }
-//   if (result.tvdb_id) { query.append('tvdb_id', result.tvdb_id); }
-
-//   // Query for Blueprints
-//   $.ajax({
-//     type: 'GET',
-//     url: `/api/blueprints/query/series?${query.toString()}`,
-//     /**
-//      * Blueprints queried, add results to page.
-//      * @param {RemoteBlueprint[]} blueprints - Blueprints associated with
-//      * this search result.
-//      */
-//     success: blueprints => {
-//       // No results, show warning
-//       if (!blueprints || blueprints.length === 0) {
-//         $('#add-series-modal .warning.message').toggleClass('hidden', false).toggleClass('visible', true);
-//         $('#blueprint-results .card').remove();
-//         return;
-//       }
-
-//       // Blueprints available, create card elements
-//       const blueprintTemplate = document.getElementById('blueprint-template');
-//       const blueprintCards = blueprints.map((blueprint, blueprintId) => {
-//         // Clone template and populate with info
-//         const card = populateBlueprintCard(blueprintTemplate.content.cloneNode(true), blueprint, `series-blueprint-id${blueprintId}`);
-
-//         // Assign function to import button
-//         card.querySelector('[data-action="import"]').onclick = () => importBlueprint(blueprint.id, resultElementId);
-//         return card;
-//       });
-
-//       // Populate page
-//       document.getElementById('blueprint-results').replaceChildren(...blueprintCards);
-//       refreshTheme();
-//     },
-//     error: response => showErrorToast({title: 'Error Querying Blueprints', response}),
-//   });
-// }
-
 /**
  * Display the Blueprint Sets associated with the given Blueprint. This submits
  * an API request to query these, and then populates the appropiate element on
@@ -234,6 +181,27 @@ function viewBlueprintSets(blueprintId) {
 }
 
 /**
+ * Parse the Blueprint search input for a creator name.
+ * @returns Object of the filter name and creator.
+ */
+function parseBlueprintSearchName() {
+  let name = $('input[name="blueprint_series_name"]').val();
+  let creator = null;
+
+  let colonIndex = name.indexOf('creator:');
+  if (colonIndex !== -1) {
+    creator = name.substring(colonIndex + 8).trim();
+    name = name.substring(0, colonIndex).trim();
+  } else if (name.indexOf('by:') !== -1) {
+    colonIndex = name.indexOf('by:');
+    creator = name.substring(colonIndex + 3).trim();
+    name = name.substring(0, colonIndex).trim();
+  }
+
+  return {filterName: name || null, filterCreator: creator || null};
+}
+
+/**
  * Query for all Blueprints defined for all Series and load the given page of
  * results.
  * @param {number} [page=1] - Page number of Blueprints to query and display.
@@ -241,7 +209,7 @@ function viewBlueprintSets(blueprintId) {
  */
 function queryAllBlueprints(page=1, refresh=false) {
   // Generate endpoint query parameters
-  const filterName = $('input[name="blueprint_series_name"]').val();
+  const {filterName, filterCreator} = parseBlueprintSearchName();
   const orderBy = $('[data-value="order_by"]').val();
   const includeMissing = $('.checkbox[data-value="include_missing_series"]').checkbox('is unchecked');
   const includeImported = $('.checkbox[data-value="included_imported"]').checkbox('is checked');
@@ -253,7 +221,10 @@ function queryAllBlueprints(page=1, refresh=false) {
     include_imported: includeImported,
     force_refresh: refresh,
     name: filterName,
+    creator: filterCreator,
   });
+  if (filterName === null) { query.delete('name'); }
+  if (filterCreator === null) { query.delete('creator'); }
   
   // Only add placeholders if on page 1 (first load)
   const blueprintResults = document.getElementById('all-blueprint-results');
@@ -284,6 +255,12 @@ function queryAllBlueprints(page=1, refresh=false) {
         // When name is clicked, populate and focus to series search bar
         card.querySelector('[data-action="search-series"]').onclick = () => {
           $('#search-bar input').val(blueprint.series.name).focus();
+        }
+
+        // When creator is clicked, populate input and click
+        card.querySelector('[data-value="creator"]').onclick = () => {
+          $('input[name="blueprint_series_name"]').val(`by:${blueprint.creator}`).focus();
+          queryAllBlueprints();
         }
 
         // If multiple Blueprints for this Series, add count and assign click
