@@ -185,7 +185,7 @@
  * @property {string} url
  * @property {string} api_key
  * @property {boolean} use_ssl
- * @property {boolean} integrate_with_pmm
+ * @property {boolean} integrate_with_kometa
  * @property {string} filesize_limit
  */
 

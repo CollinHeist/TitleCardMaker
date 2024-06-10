@@ -166,6 +166,7 @@ class UpdateSonarr(BaseUpdateServer):
         return [library for library in v if library.name and library.path]
 
 class UpdateTMDb(UpdateBase):
+    enabled: bool = UNSPECIFIED
     api_key: Hexstring = UNSPECIFIED
     minimum_dimensions: constr(regex=r'^\d+x\d+$') = UNSPECIFIED
     skip_localized: bool = UNSPECIFIED
@@ -183,6 +184,7 @@ class UpdateTMDb(UpdateBase):
         return list(map(lambda s: str(s).strip(), v.split(',')))
 
 class UpdateTVDb(UpdateBase):
+    enabled: bool = UNSPECIFIED
     api_key: str = UNSPECIFIED
     episode_ordering: TVDbOrderType = UNSPECIFIED
     include_movies: bool = UNSPECIFIED
