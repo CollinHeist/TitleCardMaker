@@ -2,14 +2,14 @@
 title: Configuring Connections
 description: >
     Add connections to external services like Emby, Jellyfin, Plex, Sonarr,
-    Tautulli, and TMDb.
+    Tautulli, TMDb, and TVDb.
 ---
 
 # Configuring Connections
 
 TitleCardMaker can communicate directly with Emby, Jellyfin, Plex, Sonarr,
-Tautulli, and TMDb to automate all aspects of Card creation. Although not
-'required' to run TCM, enabling whichever connections that are applicable to
+Tautulli, TMDb, and TVDb to automate all aspects of Card creation. Although not
+'required' to run TCM, enabling whichever Connections that are applicable to
 your setup will vastly improve TCM's operation.
 
 All Connection information should be entered on the Connections page (the

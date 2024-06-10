@@ -21,8 +21,8 @@ Plex) and is generally the recommended option for most users.
 
 ## Connecting
 
-1. Click the <span class="example md-button">Add Connection</span> button to
-create a blank Connection.
+1. Under the Sonarr section, click the
+<span class="example md-button">Add Connection</span> button.
 
 2. Give this Connection some descriptive name - e.g. `Sonarr 4K` - and enter the
 _root_ URL to your Sonarr server __including the port__.

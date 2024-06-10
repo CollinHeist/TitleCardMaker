@@ -19,8 +19,8 @@ As a Media Server, Jellyfin can serve as an
 [Image Source](../../user_guide/settings.md#image-source-priority), and as a
 location where Title Cards are uploaded to.
 
-1. Click the <span class="example md-button">Add Connection</span> button to
-create a blank Connection.
+1. Under the Jellyfin section, click the
+<span class="example md-button">Add Connection</span> button.
 
 2. Give this Connection some descriptive name - e.g. `Jellyfin` - and enter the
 _root_ URL to your Jellyfin server __including the port__.

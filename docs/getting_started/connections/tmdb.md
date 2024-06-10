@@ -1,7 +1,7 @@
 ---
 title: Connecting to TMDb
 description: >
-    How to connect TitleCardMaker to The Movie Database.
+    How to connect TitleCardMaker to The Movie Database (TMDb).
 tags:
     - Tutorial
     - TMDb
@@ -23,8 +23,8 @@ much higher quality (and wider selection) of images compared to the Media
 Servers. It is also the only Connection which can provided Episode translations,
 Series logos[^1], backdrops, and posters.
 
-1. Click the <span class="example md-button">Add Connection</span> button to
-create a blank Connection.
+1. Under the TMDb section, click the
+<span class="example md-button">Add Connection</span> button.
 
 2. Click the external link :octicons-link-external-16: icon next to _API Key_
 and open the TMDb
