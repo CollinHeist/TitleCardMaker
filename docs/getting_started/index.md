@@ -55,77 +55,14 @@ any long commands.
                 cd 'C:\Your\Install\Directory\TitleCardMaker'
                 ```
 
-    2. In this directory, create a subfolder called `config` by executing the
-    following command:
-
-        === ":material-linux: Linux"
-
-            ```bash
-            mkdir config
-            ```
-
-        === ":material-apple: MacOS"
-
-            ```bash
-            mkdir config
-            ```
-
-        === ":material-powershell: Windows (Powershell)"
-
-            ```bash
-            mkdir config
-            ```
-
-        === ":material-microsoft-windows: Windows (Non-Powershell)"
-
-            ```bash
-            mkdir config
-            ```
-
-    3. We now need to make sure this directory has the correct permissions
-    assigned to it.
-
-        === ":material-linux: Linux"
-
-            With the Group and User ID that you would like TCM to execute with,
-            run the following command:
-
-            ```bash
-            sudo chown -R {group}:{user} ./config # (1)!
-            ```
-
-            1. Replace `{group}` and `{user}` with the actual group and user (or
-            their ID's) - e.g. `99:100`.
-
-        === ":material-apple: MacOS"
-
-            With the Group and User ID that you would like TCM to execute with,
-            run the following command:
-
-            ```bash
-            sudo chown -R {group}:{user} ./config # (1)!
-            ```
-
-            1. Replace `{group}` and `{user}` with the actual group and user (or
-            their ID's) - e.g. `99:100`.
-
-        === ":material-powershell: Windows (Powershell)"
-
-            Changing the permissions is (generally) not necessary on Windows.
-
-        === ":material-microsoft-windows: Windows (Non-Powershell)"
-
-            Changing the permissions is (generally) not necessary on Windows.
-
-    4. Follow [these](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-personal-access-token-classic)
+    2. Follow [these](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-personal-access-token-classic)
     instructions to get a __classic__ personal access token (PAT). Check the
     `read:packages` checkbox in the third section from the top.
 
         ??? question "Why is this necessary?"
 
             Because the repository is private, accessing the Docker container
-            requires authentication. You _can_ download the zipped code from the
-            website, but this makes getting updates difficult.
+            requires authentication.
 
             A PAT is required instead of a password because GitHub does not
             allow passwords to be used from the command line.
@@ -135,12 +72,12 @@ any long commands.
             Keep this access code private, as it can be used to access your
             GitHub account.
 
-    5. Store these login credentials in Docker with the following command. Type
+    3. Store these login credentials in Docker with the following command. Type
     your GitHub username, and enter the PAT from Step 4 as the password.
 
         === ":material-linux: Linux"
 
-            ```console
+            ```bash
             docker login ghcr.io
             ```
 
@@ -162,37 +99,35 @@ any long commands.
             docker login ghcr.io
             ```
 
-    6. Determine your timezone, a full list is available
+    4. Determine your timezone, a full list is available
     [here](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). You
     will want to take note of the text in the _TZ Identifer_ column - e.g.
     `America/Los_Angeles` - for the next step.
 
-    7. Write the following contents to a file named `docker-compose.yml`:
+    5. Write the following contents to a file named `docker-compose.yml`:
 
         ```yaml title="docker-compose.yml" hl_lines="8 10"
-        version: "3"
-          services:
-            tcm:
-              image: "ghcr.io/titlecardmaker/titlecardmaker-webui:latest"
-              container_name: titlecardmaker
-              restart: unless-stopped
-              environment:
-                - TZ=America/Los_Angeles # (1)!
-              volumes:
-                - ~/Your/Install/Directory/TitleCardMaker/config:/config # (2)!
-              ports:
-                - 4242:4242
-              networks:
-                - docker
-        networks:
-          docker:
-            external: true
+        services:
+          tcm:
+            image: "ghcr.io/titlecardmaker/titlecardmaker-webui:latest"
+            container_name: titlecardmaker
+            restart: unless-stopped
+            environment:
+              - TZ=America/Los_Angeles # (1)!
+            # (3)
+            volumes:
+              - ~/Your/Install/Directory/TitleCardMaker/config:/config # (2)!
+            ports:
+              - 4242:4242
+            network_mode: bridge
         ```
 
         1. Replace this with your timezone.
         2. Replace this with your install directory.
+        3. You may also add add `PGID`, `PUID`, and `UMASK` here as environment
+        variables if you want to control the permissions of TCM.
 
-    8. Create (and launch) the Docker container by executing the following
+    6. Create (and launch) the Docker container by executing the following
     command.
 
         === ":material-linux: Linux"
@@ -218,6 +153,12 @@ any long commands.
             ```bash
             docker compose up -d
             ```
+
+    ??? error "Permission Denied?"
+
+        If you get an error saying any variation of permission denied - then you
+        should check the PAT you genered in Step 2 has `read:packages`
+        permission; and that you typed `docker login ghcr.io` __exactly__.
 
 === ":material-docker: Docker"
 
@@ -250,77 +191,14 @@ any long commands.
                 cd 'C:\Your\Install\Directory\TitleCardMaker'
                 ```
 
-    2. In this directory, create a subfolder called `config` by executing the
-    following command:
-
-        === ":material-linux: Linux"
-
-            ```bash
-            mkdir config
-            ```
-
-        === ":material-apple: MacOS"
-
-            ```bash
-            mkdir config
-            ```
-
-        === ":material-powershell: Windows (Powershell)"
-
-            ```bash
-            mkdir config
-            ```
-
-        === ":material-microsoft-windows: Windows (Non-Powershell)"
-
-            ```bash
-            mkdir config
-            ```
-
-    3. We now need to make sure this directory has the correct permissions
-    assigned to it.
-
-        === ":material-linux: Linux"
-
-            With the Group and User ID that you would like TCM to execute with,
-            run the following command:
-
-            ```bash
-            sudo chown -R {group}:{user} ./config # (1)!
-            ```
-
-            1. Replace `{group}` and `{user}` with the actual group and user (or
-            their ID's) - e.g. `99:100`.
-
-        === ":material-apple: MacOS"
-
-            With the Group and User ID that you would like TCM to execute with,
-            run the following command:
-
-            ```bash
-            sudo chown -R {group}:{user} ./config # (1)!
-            ```
-
-            1. Replace `{group}` and `{user}` with the actual group and user (or
-            their ID's) - e.g. `99:100`.
-
-        === ":material-powershell: Windows (Powershell)"
-
-            Changing the permissions is (generally) not necessary on Windows.
-
-        === ":material-microsoft-windows: Windows (Non-Powershell)"
-
-            Changing the permissions is (generally) not necessary on Windows.
-
-    4. Follow [these](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-personal-access-token-classic)
+    2. Follow [these](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-personal-access-token-classic)
     instructions to get a __classic__ personal access token (PAT). Check the
     `read:packages` checkbox in the third section from the top.
 
         ??? question "Why is this necessary?"
 
             Because the repository is private, accessing the Docker container
-            requires authentication. You _can_ download the zipped code from the
-            website, but this makes getting updates difficult.
+            requires authentication.
 
             A PAT is required instead of a password because GitHub does not
             allow passwords to be used from the command line.
@@ -330,7 +208,7 @@ any long commands.
             Keep this access code private, as it can be used to access your
             GitHub account.
 
-    5. Store these login credentials in Docker with the following command. Type
+    3. Store these login credentials in Docker with the following command. Type
     your GitHub username, and enter the PAT from Step 4 as the password.
 
         === ":material-linux: Linux"
@@ -357,38 +235,50 @@ any long commands.
             docker login ghcr.io
             ```
 
-    6. Determine your timezone, a full list is available
+    4. Determine your timezone, a full list is available
     [here](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). You
     will want to take note of the text in the _TZ Identifer_ column - e.g.
     `America/Los_Angeles` - for the next step.
 
-    3. Create (and launch) the Docker container by executing the following
+    5. Create (and launch) the Docker container by executing the following
     command[^2] - make sure to replace the install directory and timezone with
     _your_ directory (from Step 2) and timezone (from Step 6).
 
         === ":material-linux: Linux"
 
             ```bash
-            docker run -itd --net="bridge" -v "~/Your/Install/Directory/TitleCardMaker/config/":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" "ghcr.io/collinheist/titlecardmaker-webui:latest"
+            docker run -itd --net="bridge" -v "~/Your/Install/Directory/TitleCardMaker/config/":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" "ghcr.io/titlecardmaker/titlecardmaker-webui:latest"
             ```
 
         === ":material-apple: MacOS"
 
             ```bash
-            docker run -itd --net="bridge" -v "~/Your/Install/Directory/TitleCardMaker/config/":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" "ghcr.io/collinheist/titlecardmaker-webui:latest"
+            docker run -itd --net="bridge" -v "~/Your/Install/Directory/TitleCardMaker/config/":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" "ghcr.io/titlecardmaker/titlecardmaker-webui:latest"
             ```
 
         === ":material-powershell: Windows (Powershell)"
 
             ```bash
-            docker run -itd --net="bridge" -v "C:/Your/Install/Directory/TitleCardMaker/config":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" "ghcr.io/collinheist/titlecardmaker-webui:latest"
+            docker run -itd --net="bridge" -v "C:/Your/Install/Directory/TitleCardMaker/config":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" "ghcr.io/titlecardmaker/titlecardmaker-webui:latest"
             ```
 
         === ":material-microsoft-windows: Windows (Non-Powershell)"
 
             ```bash
-            docker run -itd --net="bridge" -v "C:/Your/Install/Directory/TitleCardMaker/config":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" ""ghcr.io/collinheist/titlecardmaker-webui:latest"
+            docker run -itd --net="bridge" -v "C:/Your/Install/Directory/TitleCardMaker/config":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" ""ghcr.io/titlecardmaker/titlecardmaker-webui:latest"
             ```
+
+        ??? note "User ID, Group ID, and UMASK"
+
+            If you want to set the user and group which TCM is running under,
+            then you may define the `PUID`, `PGID`, and `UMASK` environment
+            variables as needed.
+
+        ??? error "Permission Denied?"
+
+            If you get an error saying any variation of permission denied - then
+            you should check the PAT you genered in Step 2 has `read:packages`
+            permission; and that you typed `docker login ghcr.io` __exactly__.
 
 === ":material-language-python: Non-Docker"
 
