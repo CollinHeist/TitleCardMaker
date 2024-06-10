@@ -14,9 +14,9 @@ FROM python:3.11-slim as python-reqs
 # Copy requirements.txt from pipenv stage
 COPY --from=pipenv /requirements.txt requirements.txt
 
-# Install build-essential for building python dependencies; install TCM dependencies
+# Install gcc for building python dependencies; install TCM dependencies
 RUN apt-get update && \
-    apt-get install -y build-essential && \
+    apt-get install -y gcc && \
     pip3 install --no-cache-dir -r requirements.txt
 
 # Set base image for running TCM
