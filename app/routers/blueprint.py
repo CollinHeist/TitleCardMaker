@@ -33,7 +33,6 @@ from app.schemas.blueprint import (
 )
 from app.schemas.series import Series
 from modules.Debug import generate_context_id
-from modules.SeriesInfo2 import SeriesInfo
 
 
 # Create sub router for all /blueprints API requests
@@ -381,20 +380,23 @@ def query_blueprints_by_info(
 
     - name: Name of the Series to look up Blueprints for.
     - year: Year of the Series to look up Blueprints for.
+    - *_id: Database ID's filter by.
     """
 
-    # Year provided, do normal query
-    if year is not None:
-        series_info = SeriesInfo(
-            name=name, year=year,
-            imdb_id=imdb_id, tmdb_id=tmdb_id, tvdb_id=tvdb_id,
-        )
+    # Generate filter conditions for Blueprint / BlueprintSeries objects
+    filters = [BlueprintSeries.name.contains(name)]
+    if year:
+        filters.append(BlueprintSeries.year == year)
+    if imdb_id:
+        filters.append(BlueprintSeries.imdb_id == imdb_id)
+    if tmdb_id:
+        filters.append(BlueprintSeries.tmdb_id == tmdb_id)
+    if tvdb_id:
+        filters.append(BlueprintSeries.tvdb_id == tvdb_id)
 
-        return query_series_blueprints(blueprint_db, series_info)
-
-    # No year provided, filter by name alone
+    # If there series conditions; filter by those
     blueprint_series = blueprint_db.query(BlueprintSeries)\
-        .filter(BlueprintSeries.name.contains(name))\
+        .filter(*filters)\
         .all()
 
     return blueprint_db.query(Blueprint)\
