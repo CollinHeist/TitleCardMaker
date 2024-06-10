@@ -274,6 +274,7 @@ def remove_blueprint_from_blacklist(
 def query_all_blueprints_(
         db: Session = Depends(get_database),
         blueprint_db: Session = Depends(get_blueprint_database),
+        creator: Optional[str] = Query(default=None),
         order_by: Literal['date', 'name'] = Query(default='date'),
         include_blacklisted: bool = Query(default=False),
         include_imported: bool = Query(default=False),
@@ -284,6 +285,7 @@ def query_all_blueprints_(
     Query for all available Blueprints for all Series. Blacklisted
     Blueprints are excluded from the return.
 
+    - creator: Blueprint creator to filter by.
     - order_by: How to order the returned Blueprints.
     - include_blacklisted: Whether to include Blacklisted Blueprints in
     the return.
@@ -312,6 +314,10 @@ def query_all_blueprints_(
         # Exclude if previously imported (and filtering)
         if (not include_imported
             and blueprint.id in preferences.imported_blueprints):
+            return False
+
+        # Exclude if creator does not match (and filtering)
+        if creator and blueprint.creator != creator:
             return False
 
         # Exclude if Series is not present
