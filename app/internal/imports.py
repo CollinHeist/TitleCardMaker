@@ -1540,7 +1540,7 @@ def import_card_content(
 def import_card_files(
         db: Session,
         series: Series,
-        files: list[tuple[int, int, Path]],
+        files: list[tuple[Episode, Path]],
         library: Optional[Library] = None,
         force_reload: bool = True,
         as_textless: bool = False,
@@ -1553,8 +1553,7 @@ def import_card_files(
     Args:
         db: Database to query for existing Cards.
         series: Series whose Cards are being imported.
-        files: List of tuples of the season number, episode number, and
-            card files to import.
+        files: List of tuples of the Episode, and card files to import.
         force_reload: Whether to replace any existing Card entries for
             Episodes identified while importing.
         as_textless: Whether to set the imported Episode's card type to
@@ -1563,27 +1562,14 @@ def import_card_files(
     """
 
     # For each image, identify associated Episode
-    for season_number, episode_number, file in files:
-        # Find associated Episode
-        episode = db.query(Episode)\
-            .filter_by(series_id=series.id,
-                       season_number=season_number,
-                       episode_number=episode_number)\
-            .first()
-
-        # No associated Episode, skip
-        if episode is None:
-            log.warning(f'{series} No associated Episode for '
-                        f'S{season_number:02}E{episode_number:02} - skipping')
-            continue
-
+    for episode, file in files:
         # Episode has an existing Card, skip if not forced
-        if episode.cards and not force_reload:
+        if not force_reload and episode.cards:
             log.debug(f'{episode} has an associated Card - skipping')
             continue
 
-        # Episode has card, delete if reloading
-        if episode.cards and force_reload:
+        # Episode has Card, delete if reloading
+        if force_reload and episode.cards:
             for card in episode.cards:
                 if (not library
                     or (library and card.library_name == library['name'])):
@@ -1612,7 +1598,7 @@ def import_card_files(
         try:
             move_file(file, card_settings['card_file'])
         except OSError: # Can be caused by cross-platform move on Linux/Docker
-            pass
+            return None
 
         # Card is valid, create and add to Database
         title_card = NewTitleCard(
