@@ -28,7 +28,7 @@ hypothetical TCM customizations.
     | ------------------------- | ----------------------- | ---------------------- |
     | `series_name`             | Name of the Series      | `Breaking Bad`         |
     | `series_full_name`        | Full name of the Series | `Breaking Bad (2008)`  |
-    | `year`                    | Series Release year     | `2008`              |
+    | `year`                    | Series Release year     | `2008`                 |
     | `season_number`           | Season number           | `2`                    |
     | `episode_number`          | Episode number          | `6`                    |
     | `absolute_number`         | Absolute episode number | `13`                   |
@@ -141,17 +141,17 @@ hypothetical TCM customizations.
 In addition to defining many variables which can be used, TCM also implements
 many functions which allow for more customization. Each is described below.
 
-| Function Name        | Description                                       | Example Format String                      | Example Output  |
-| -------------------- | ------------------------------------------------- | ------------------------------------------ | --------------- |
-| `titlecase()`        | Write the number in "titlecase" - e.g. "Season"   | `{titlecase(to_cardinal(season_number))}`  | `Two`           |
-| `to_cardinal()`      | Convert the given number to its cardinal spelling | `{to_cardinal(episode_number)}`            | `two`           |
-| `to_cardinal()`      | _See above_, but in another language[^2]          | `{to_cardinal(episode_number, 'fr')}`      | `deux`          |
-| `to_ordinal()`       | Convert the given number to its ordinal spelling  | `{to_ordinal(episode_number)}`             | `sixth`         |
-| `to_ordinal()`       | _See above_, but in another language[^2]          | `{to_cardinal(episode_number, 'es')}`      | `sexto`         |
-| `to_short_ordinal()` | Convert the given number to a shorthand ordinal spelling | `{to_short_ordinal(season_number)}` | `2nd`           |
-| `to_short_ordinal()` | _See above_, but in another language[^2]          | `{to_short_ordinal(season_number, 'ja')}`  | `13番目`         |
-| `to_roman_numeral()` | Convert the given number to a roman numeral[^4]   | `{to_roman_numeral(episode_number)}`       | `VI`            |
-| `format_date()`      | Write the given date in some specific format[^3]  | `{format_date(airdate, 'Week %-U of 52')}` | `Week 02 of 52` |
+| Function Name        | Description                                              | Example Format String                      | Example Output  |
+| -------------------- | -------------------------------------------------------- | ------------------------------------------ | --------------- |
+| `titlecase()`        | Write the number in "titlecase" - e.g. "Season"          | `{titlecase(to_cardinal(season_number))}`  | `Two`           |
+| `to_cardinal()`      | Convert the given number to its cardinal spelling        | `{to_cardinal(episode_number)}`            | `two`           |
+| `to_cardinal()`      | _See above_, but in another language[^2]                 | `{to_cardinal(episode_number, 'fr')}`      | `deux`          |
+| `to_ordinal()`       | Convert the given number to its ordinal spelling         | `{to_ordinal(episode_number)}`             | `sixth`         |
+| `to_ordinal()`       | _See above_, but in another language[^2]                 | `{to_cardinal(episode_number, 'es')}`      | `sexto`         |
+| `to_short_ordinal()` | Convert the given number to a shorthand ordinal spelling | `{to_short_ordinal(season_number)}`        | `2nd`           |
+| `to_short_ordinal()` | _See above_, but in another language[^2]                 | `{to_short_ordinal(season_number, 'ja')}`  | `13番目`         |
+| `to_roman_numeral()` | Convert the given number to a roman numeral[^4]          | `{to_roman_numeral(episode_number)}`       | `VI`            |
+| `format_date()`      | Write the given date in some specific format[^3]         | `{format_date(airdate, 'Week %-U of 52')}` | `Week 02 of 52` |
 
 ??? note "Support Language Codes"
 

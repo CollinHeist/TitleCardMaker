@@ -106,7 +106,7 @@ any long commands.
 
     5. Write the following contents to a file named `docker-compose.yml`:
 
-        ```yaml title="docker-compose.yml" hl_lines="8 10"
+        ```yaml title="docker-compose.yml" hl_lines="8 9 10"
         services:
           tcm:
             image: "ghcr.io/titlecardmaker/titlecardmaker-webui:latest"
@@ -154,11 +154,11 @@ any long commands.
             docker compose up -d
             ```
 
-    ??? error "Permission Denied?"
+        ??? failure "Permission Denied?"
 
-        If you get an error saying any variation of permission denied - then you
-        should check the PAT you genered in Step 2 has `read:packages`
-        permission; and that you typed `docker login ghcr.io` __exactly__.
+            If you get an error saying any variation of permission denied - then
+            you should check the PAT you genered in Step 2 has `read:packages`
+            permission; and that you typed `docker login ghcr.io` __exactly__.
 
 === ":material-docker: Docker"
 
@@ -274,7 +274,7 @@ any long commands.
             then you may define the `PUID`, `PGID`, and `UMASK` environment
             variables as needed.
 
-        ??? error "Permission Denied?"
+        ??? failure "Permission Denied?"
 
             If you get an error saying any variation of permission denied - then
             you should check the PAT you genered in Step 2 has `read:packages`
