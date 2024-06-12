@@ -11,6 +11,7 @@ from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy.orm import Mapped, mapped_column, object_session, relationship
 from thefuzz.fuzz import partial_token_sort_ratio as partial_ratio
+from unidecode import unidecode
 
 from app.database.session import Base
 from app.dependencies import get_preferences
@@ -210,6 +211,19 @@ class Series(Base):
         """
 
         return [template.id for template in self.templates]
+
+
+    @hybrid_property
+    def clean_name(self) -> str:
+        """The 'clean' name of this Series"""
+
+        return unidecode(self.name, errors='preserve')
+
+    @clean_name.expression
+    def clean_name(cls: 'Series') -> ColumnElement[str]:
+        """Class expression of the `clean_name` property"""
+
+        return func.unidecode(cls.name)
 
 
     @hybrid_property
