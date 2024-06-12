@@ -52,20 +52,23 @@
             </h3>
             <section>
               <p class="help">Restart TitleCardMaker for changes to either of these directories to take effect.</p>
-              <div class="field">
-                <label>Title Card Directory</label>
-                <input type="text" name="card_directory" placeholder="{{preferences.card_directory}}" value="{{preferences.card_directory}}">
-                <p class="help">
-                  Directory to store all Title Cards.
-                  <br>
-                  Can be overrwitten per-Series.
-                </p>
-              </div>
-
-              <div class="field">
-                <label>Source Directory</label>
-                <input type="text" name="source_directory" placeholder="{{preferences.source_directory}}" value="{{preferences.source_directory}}">
-                <p class="help">Directory to store all textless source images.</p>
+              
+              <div class="ui two fields">
+                <div class="field">
+                  <label>Title Card Directory</label>
+                  <input type="text" name="card_directory" placeholder="{{preferences.card_directory}}" value="{{preferences.card_directory}}">
+                  <p class="help">
+                    Directory to store all Title Cards.
+                    <br>
+                    Can be overrwitten per-Series.
+                  </p>
+                </div>
+  
+                <div class="field">
+                  <label>Source Directory</label>
+                  <input type="text" name="source_directory" placeholder="{{preferences.source_directory}}" value="{{preferences.source_directory}}">
+                  <p class="help">Directory to store all textless source images.</p>
+                </div>
               </div>
 
               <div class="ui checkbox field">
