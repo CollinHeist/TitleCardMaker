@@ -401,7 +401,7 @@ async def import_mediux_yaml_for_series(
     series = get_series(db, series_id, raise_exc=True)
 
     images: list[Path] = []
-    def _download_image(url: str, /) -> Path:
+    def _download_image(url: str, /) -> Optional[Path]:
         """
         Download the image at the given URL.
 
@@ -409,16 +409,18 @@ async def import_mediux_yaml_for_series(
             url: URL of the image to download
 
         Returns:
-            Path to the image download
+            Path to the downloaded image. None if the download failed.
         """
 
-        images.append(WebInterface.get_random_filename(
-            WebInterface._TEMP_DIR / 'temp', 'jpg'
-        ))
-        if not WebInterface.download_image(url, images[-1], log=log):
+        filename = WebInterface.get_random_filename(
+            WebInterface._TEMP_DIR / f'temp.{url[:5]}', 'jpg'
+        )
+        if not WebInterface.download_image(url, filename, log=log):
             log.error(f'Error downloading image {url}')
+            return None
 
-        return images[-1]
+        images.append(filename)
+        return filename
 
     # Download all indicated files
     cards: list[tuple[int, int, Path]] = []
@@ -444,10 +446,11 @@ async def import_mediux_yaml_for_series(
                     continue
 
                 # Episode exists, download and add to card list
-                card = _download_image(episode_yaml['url_poster'])
-                cards.append((season_number, episode_number, card))
+                if (card := _download_image(episode_yaml['url_poster'])):
+                    cards.append((episode, card))
 
     # Import into all specified libraries
+    log.debug(f'Identified {len(cards)} Cards to import')
     for library_name in library_names:
         library = series.get_library(library_name)
         import_card_files(
