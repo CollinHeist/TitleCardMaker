@@ -10,6 +10,7 @@ from PIL import Image
 from requests import get
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
+from unidecode import unidecode
 
 from app.dependencies import (
     get_database, get_preferences, require_interface, require_tmdb_interface,
@@ -277,6 +278,7 @@ def search_existing_series(
         conditions.append(or_(
             SeriesModel.name.contains(name),
             SeriesModel.fuzzy_matches(name),
+            SeriesModel.clean_name.contains(unidecode(name, errors='preserve')),
         ))
     if year is not None:
         conditions.append(SeriesModel.year==year)
