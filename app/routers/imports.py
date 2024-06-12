@@ -423,7 +423,7 @@ async def import_mediux_yaml_for_series(
         return filename
 
     # Download all indicated files
-    cards: list[tuple[int, int, Path]] = []
+    cards: list[tuple[Episode, Path]] = []
     for _, yaml in full_yaml.items():
         # if import_poster and (url := yaml.get('url_poster')):
         #     image = _download_image(url)
@@ -443,6 +443,11 @@ async def import_mediux_yaml_for_series(
                 if not episode:
                     log.debug(f'No associated Episode for S{season_number:02}'
                               f'E{episode_number:02}')
+                    continue
+
+                # Skip if not forcing and has Cards
+                if not force_reload and episode.cards:
+                    log.debug(f'Skipping {episode.index_str} - has Cards')
                     continue
 
                 # Episode exists, download and add to card list
