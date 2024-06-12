@@ -25,7 +25,7 @@ from app.internal.sources import download_series_logo
 from app import models
 from app.models.episode import Episode
 from app.schemas.font import NamedFont
-from app.schemas.imports import ImportCardDirectory, ImportYaml, MultiCardImport
+from app.schemas.imports import ImportCardDirectory, ImportYaml, KometaYaml, MultiCardImport
 from app.schemas.preferences import Preferences
 from app.schemas.series import Series, Template
 from app.schemas.sync import Sync
@@ -390,8 +390,8 @@ async def import_mediux_yaml_for_series(
 
     # Parse YAML into dictionary; raise 422 if invalid
     try:
-        full_yaml: dict[int, dict[str, Any]] = safe_load(yaml_str)
-    except ParserError:
+        full_yaml = KometaYaml(yaml=safe_load(yaml_str))
+    except (ParserError, ValidationError):
         raise HTTPException(
             status_code=422,
             detail='Invalid YAML',

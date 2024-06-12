@@ -1,7 +1,7 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from typing import Optional
 
-from pydantic import DirectoryPath
+from pydantic import AnyUrl, DirectoryPath, conint
 
 from app.schemas.base import Base
 from app.schemas.preferences import CardExtension
@@ -9,8 +9,24 @@ from app.schemas.preferences import CardExtension
 """
 Base classes
 """
+SeasonNumber = conint(ge=0)
+
 class ImportBase(Base):
     yaml: str
+
+class _KometaEpisode(Base):
+    url_poster: Optional[AnyUrl] = None
+
+class _KometaSeason(Base):
+    url_poster: Optional[AnyUrl] = None
+    episodes: dict[SeasonNumber, _KometaEpisode] = {}
+
+class _KometaSeries(Base):
+    url_poster: Optional[AnyUrl] = None
+    seasons: dict[SeasonNumber, _KometaSeason] = {}
+
+class KometaYaml(Base):
+    yaml: dict[int, _KometaSeries]
 
 """
 Return classes
