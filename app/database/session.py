@@ -15,9 +15,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.event import listens_for
 from sqlalchemy.orm import declarative_base, sessionmaker
 from thefuzz.fuzz import partial_token_sort_ratio as partial_ratio
+from unidecode import unidecode
 
 from app.models.preferences import Preferences
-
 from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
 from modules.ImageMagickInterface import ImageMagickInterface
@@ -175,6 +175,9 @@ def register_custom_functions(
     dbapi_connection.create_function('regex_replace', 3, regex_replace)
     dbapi_connection.create_function('regex_match', 2, regex_match)
     dbapi_connection.create_function('partial_ratio', 2, partial_ratio)
+    dbapi_connection.create_function(
+        'unidecode', 1, lambda s: unidecode(s, errors='preserve')
+    )
 
 @listens_for(blueprint_engine, 'connect')
 def register_custom_functions_blueprints(
