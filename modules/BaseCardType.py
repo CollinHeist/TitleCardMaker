@@ -508,15 +508,14 @@ class BaseCardType(ImageMaker):
         Get the title split characteristics for the card defined by the
         given card data. By default this modifies the max line width
         by the `font_size` (if the default Font is used), and adds the
-        `line_split_modifier` (if specified).
+        `font_line_split_modifier` (if specified).
 
         Args:
             characteristics: Base split characteristics being modified
                 for this card.
-            default_font_file: Default font file for font size
-                evaluation.
-            data: Dictionary of card data to evaluate for any changes
-                to the split characteristics.
+            default_font_file: Default font file for size evaluation.
+            data: Card data to evaluate for any changes to the split
+                characteristics.
 
         Returns:
             SplitCharacteristics object which defines how to split

@@ -1509,13 +1509,17 @@ def import_card_content(
             episode.card_type = 'textless'
             log.debug(f'{episode}.card_type = textless')
 
-        # Get finalized Card settings for this Episode, override card file
+        # Get finalized Card settings for this Episode
         try:
             card_settings = resolve_card_settings(episode, library, log=log)
         except (HTTPException, InvalidCardSettings) as exc:
             log.exception(f'{episode} Cannot import Card - settings are '
                           f'invalid {exc}')
             continue
+
+        # If textless, override source file; otherwise override card
+        if as_textless:
+            card_settings['source_file'].write_bytes()
 
         # Get a validated card class, and card type Pydantic model
         _, CardTypeModel = validate_card_type_model(card_settings, log=log)
