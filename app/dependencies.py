@@ -407,6 +407,34 @@ def get_tvdb_interfaces() -> InterfaceGroup[int, TVDbInterface]:
     return TVDbInterfaces
 
 
+def get_first_tvdb_interface(
+        tvdb_interface_id: Optional[int] = Query(default=None)
+    ) -> Optional[TVDbInterface]:
+    """
+    Dependency to get the `TVDbInterface` with the given ID. This adds
+    `tvdb_interface_id` as a Query parameter. If the parameter is
+    omitted, then the first TVDbInterface is used.
+
+    Args:
+        tvdb_interface_id: ID of the interface to get.
+
+    Returns:
+        `TVDbInterface` with the given ID (or the first one if
+        `tvdb_interface_id` is None) as defined in the global
+        `InterfaceGroup`. None otherwise.
+    """
+
+    # If no ID was provided, get the first available TVDb interface
+    if tvdb_interface_id is None:
+        for _, interface in TVDbInterfaces:
+            return interface
+
+    try:
+        return _require_interface(TVDbInterfaces, tvdb_interface_id, 'tvdb')
+    except HTTPException:
+        return None
+
+
 def require_tvdb_interface(
         tvdb_interface_id: Optional[int] = Query(default=None)
     ) -> TVDbInterface:
