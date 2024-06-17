@@ -73,7 +73,7 @@ any long commands.
             GitHub account.
 
     3. Store these login credentials in Docker with the following command. Type
-    your GitHub username, and enter the PAT from Step 4 as the password.
+    your GitHub username, and enter the PAT from Step 2 as the password.
 
         === ":material-linux: Linux"
 
@@ -106,26 +106,37 @@ any long commands.
 
     5. Write the following contents to a file named `docker-compose.yml`:
 
-        ```yaml title="docker-compose.yml" hl_lines="8 9 10"
+        ```yaml title="docker-compose.yml" hl_lines="11 12 14"
+        name: TitleCardMaker
         services:
           tcm:
             image: "ghcr.io/titlecardmaker/titlecardmaker-webui:latest"
             container_name: titlecardmaker
             restart: unless-stopped
+            network_mode: bridge
+            ports:
+              - 4242:4242
             environment:
               - TZ=America/Los_Angeles # (1)!
             # (3)
             volumes:
               - ~/Your/Install/Directory/TitleCardMaker/config:/config # (2)!
-            ports:
-              - 4242:4242
-            network_mode: bridge
         ```
 
         1. Replace this with your timezone.
         2. Replace this with your install directory.
         3. You may also add add `PGID`, `PUID`, and `UMASK` here as environment
         variables if you want to control the permissions of TCM.
+
+        ??? tip "Unraid Icon"
+
+            If you are on Unraid and would like an icon to appear in for the
+            container, add the following lines below `volumes`:
+
+            ```yaml title="docker-compose.yml"
+                labels:
+                  - net.unraid.docker.icon="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker/web-ui/.github/logo.png"
+            ```
 
     6. Create (and launch) the Docker container by executing the following
     command.
@@ -209,7 +220,7 @@ any long commands.
             GitHub account.
 
     3. Store these login credentials in Docker with the following command. Type
-    your GitHub username, and enter the PAT from Step 4 as the password.
+    your GitHub username, and enter the PAT from Step 2 as the password.
 
         === ":material-linux: Linux"
 
@@ -268,7 +279,17 @@ any long commands.
             docker run -itd --net="bridge" -v "C:/Your/Install/Directory/TitleCardMaker/config":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" ""ghcr.io/titlecardmaker/titlecardmaker-webui:latest"
             ```
 
-        ??? note "User ID, Group ID, and UMASK"
+        ??? tip "Unraid Icon"
+
+            If you are on Unraid and would like an icon to appear in for the
+            container, add the following line to the command after
+            `--name "TitleCardMaker"`:
+
+            ```bash
+            -l net.unraid.docker.icon="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker/web-ui/.github/logo.png"
+            ```
+
+        ??? tip "User ID, Group ID, and UMASK"
 
             If you want to set the user and group which TCM is running under,
             then you may define the `PUID`, `PGID`, and `UMASK` environment
