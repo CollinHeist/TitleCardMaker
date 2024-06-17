@@ -1,5 +1,5 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring
-from pydantic import constr # pylint: disable=no-name-in-module
+from pydantic import constr
 
 from app.schemas.base import Base
 
