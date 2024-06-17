@@ -189,6 +189,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         params = {
             'recursive': True,
             'includeItemTypes': 'Series',
+            # isSeries search filter DOES NOT work
             'searchTerm': series_info.name,
             'fields': 'ProviderIds',
             'enableImages': False,
@@ -200,7 +201,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             # Look for this series in this library
             response = self.session.get(
                 f'{self.url}/Items',
-                params=(params | {'years': f'{year}'}),
+                params=(params | {'years': str(year)}),
             )
 
             # If no responses, return
@@ -691,7 +692,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             card_base64 = b64encode(image.read_bytes())
             try:
                 self.session.session.post(
-                    url=f'{self.url}/Items/{episode_id}/Images/Primary',
+                    url=f'{self.url}/Items/{episode_id}/Images/Primary', # Change Primary to Backdrop
                     headers={'Content-Type': 'image/jpeg'},
                     params=self.__params,
                     data=card_base64,

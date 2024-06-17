@@ -176,9 +176,7 @@ def get_all_fonts(
         order: Literal['id', 'name'] = 'name',
         db: Session = Depends(get_database),
     ) -> list[NamedFont]:
-    """
-    Get all defined Fonts.
-    """
+    """Get all defined Fonts."""
 
     if order == 'id':
         return db.query(Font).all()

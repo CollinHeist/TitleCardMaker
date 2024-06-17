@@ -161,7 +161,7 @@ def generate_series_blueprint(
 
     # Add list of exported Templates
     export_obj['templates'] = [
-        {key: value for key, value in template.export_properties.items() if value}
+        {k: v for k, v in template.export_properties.items() if v}
         for template in templates
     ]
 
@@ -418,9 +418,7 @@ def import_blueprint(
     preferences.imported_blueprints.add(blueprint.id)
     preferences.commit()
 
-    # Commit changes to Database
+    # Commit changes to Database; refesh card types
     if changed:
         db.commit()
-
-        # Refresh card types
         refresh_remote_card_types(db, reset=False, log=log)

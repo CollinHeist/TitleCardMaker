@@ -14,9 +14,9 @@ from sqlalchemy.orm import Session
 from app.database.query import get_connection, get_episode, get_series
 from app.database.session import Page
 from app.dependencies import (
-    get_database, get_emby_interfaces, get_jellyfin_interfaces,
-    get_plex_interfaces, get_preferences, get_tmdb_interfaces,
-    get_tvdb_interfaces, require_tmdb_interface, require_tvdb_interface,
+    get_database, get_emby_interfaces, get_first_tvdb_interface,
+    get_jellyfin_interfaces, get_plex_interfaces, get_preferences,
+    get_tmdb_interfaces, get_tvdb_interfaces, require_tmdb_interface,
     EmbyInterface, JellyfinInterface, PlexInterface, TMDbInterface,
     TVDbInterface,
 )
@@ -254,7 +254,7 @@ def get_all_episode_source_images(
         jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
         plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
         tmdb_interface: TMDbInterface = Depends(require_tmdb_interface),
-        tvdb_interface: TVDbInterface = Depends(require_tvdb_interface),
+        tvdb_interface: Optional[TVDbInterface] = Depends(get_first_tvdb_interface),
     ) -> list[ExternalSourceImage]:
     """
     Get all Source Images on all interfaces for the given Episode.
@@ -287,13 +287,14 @@ def get_all_episode_source_images(
     except HTTPException:
         pass
 
-    tvdb_image = tvdb_interface.get_source_image(
-        episode.series.as_series_info,
-        episode.as_episode_info,
-        log=log,
-    )
-    if tvdb_image:
-        images.append({'url': tvdb_image, 'interface_type': 'TVDb'})
+    if tvdb_interface:
+        tvdb_image = tvdb_interface.get_source_image(
+            episode.series.as_series_info,
+            episode.as_episode_info,
+            log=log,
+        )
+        if tvdb_image:
+            images.append({'url': tvdb_image, 'interface_type': 'TVDb'})
 
     # Grab raw image bytes from Emby and Jellyfin
     for interface_type, interface_group in (('Emby', emby_interfaces),

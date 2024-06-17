@@ -163,9 +163,7 @@ def delete_user(
 
 @auth_router.get('/all', dependencies=[Depends(get_current_user)])
 def get_all_usernames(db: Session = Depends(get_database)) -> list[str]:
-    """
-    Get the usernames of all Users in the database.
-    """
+    """Get the usernames of all Users in the database."""
 
     return [user.username for user in db.query(models.user.User).all()]
 
@@ -174,9 +172,7 @@ def get_all_usernames(db: Session = Depends(get_database)) -> list[str]:
 def get_active_username(
         user: User = Depends(get_current_user),
     ) -> Optional[str]:
-    """
-    Get the username of the active User.
-    """
+    """Get the username of the active User."""
 
     return None if user is True else user.username
 
@@ -249,7 +245,9 @@ def login_for_access_token(
         data={'sub': user.username, 'uid': user.hashed_password},
         expires_delta=EXPIRATION_TIME,
     )
-    request.state.log.info(f'Authenticated User({user.username}) for {EXPIRATION_TIME}')
+    request.state.log.info(
+        f'Authenticated User({user.username}) for {EXPIRATION_TIME}'
+    )
 
     return {
         'access_token': access_token,

@@ -226,7 +226,7 @@ class TintedGlassTitleCard(BaseCardType):
             f'-write mpr:mask',
             f'+delete \)',
             f'-mask mpr:mask',
-            f'-blur {self.TEXT_BLUR_PROFILE}',
+            f'-blur {self.TEXT_BLUR_PROFILE}' if not self.blur else '',
             f'+mask',
             # Darken area behind title text
             f'-fill "{self.glass_color}"',
@@ -343,7 +343,7 @@ class TintedGlassTitleCard(BaseCardType):
 
         # Center positioning requires padding adjustment
         if self.episode_text_position == 'center':
-            x_start, x_end = self.WIDTH/2 - width/2, self.WIDTH/2 + width/2
+            x_start, x_end = (self.WIDTH - width) / 2, (self.WIDTH + width) / 2
             x_start, x_end = x_start - 30, x_end + 20
         # Left positioning requires padding right bounds
         elif self.episode_text_position == 'left':
@@ -413,7 +413,8 @@ class TintedGlassTitleCard(BaseCardType):
             ('box_adjustments' in extras
                 and extras['box_adjustments'] != '0 0 0 0')
             or ('episode_text_color' in extras
-                and extras['episode_text_color'] != TintedGlassTitleCard.EPISODE_TEXT_COLOR)
+                and extras['episode_text_color'] != \
+                    TintedGlassTitleCard.EPISODE_TEXT_COLOR)
             or ('glass_color' in extras
                 and extras['glass_color'] != TintedGlassTitleCard.DARKEN_COLOR)
         )
