@@ -612,6 +612,7 @@ class OverlineCardType(BaseCardTypeCustomFontAllText):
 class PosterCardType(BaseCardModel):
     title_text: str
     episode_text: constr(to_upper=True)
+    hide_episode_text: bool = False
     font_color: str = PosterTitleCard.TITLE_COLOR
     font_file: FilePath = PosterTitleCard.TITLE_FONT
     font_interline_spacing: int = 0
@@ -619,6 +620,12 @@ class PosterCardType(BaseCardModel):
     font_size: PositiveFloat = 1.0
     logo_file: Optional[Path] = None
     episode_text_color: Optional[str] = None
+
+    @root_validator(skip_on_failure=True)
+    def toggle_text_hiding(cls, values: dict) -> dict:
+        values['hide_episode_text'] |= (len(values['episode_text']) == 0)
+
+        return values
 
     @root_validator(skip_on_failure=True)
     def assign_episode_text_color(cls, values: dict) -> dict:
