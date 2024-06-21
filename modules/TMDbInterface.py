@@ -83,6 +83,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         'es-MX': 'Spanish (Mexico)',
         'fa': 'Persian',
         'fi': 'Finnish',
+        'fr': 'French',
         'fr-CA': 'French (Canada)',
         'fr-FR': 'French (France)',
         'he': 'Hebrew',
