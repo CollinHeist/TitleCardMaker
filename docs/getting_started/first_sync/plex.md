@@ -53,8 +53,8 @@ open the :busts_in_silhouette: `Sharing` section from the sidebar.
     !!! success "Sync Created"
 
         You have successfully created a Sync that automatically adds all Series
-        in Plex that are tagged with `tcm-test`, and assigns our two Templates
-        to them.
+        in Plex that are tagged with `tcm-test`, and assigns our Template to
+        them.
 
 8. At the top of the page is an indication of when all your Syncs will next
 run - we'll adjust this [next](../scheduler.md) - but to run a Sync

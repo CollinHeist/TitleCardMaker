@@ -107,7 +107,7 @@ any long commands.
     5. Write the following contents to a file named `docker-compose.yml`:
 
         ```yaml title="docker-compose.yml" hl_lines="11 12 14"
-        name: TitleCardMaker
+        name: titlecardmaker
         services:
           tcm:
             image: "ghcr.io/titlecardmaker/titlecardmaker-webui:latest"

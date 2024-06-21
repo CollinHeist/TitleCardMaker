@@ -54,8 +54,8 @@ by using a filter tag within Emby.
     !!! success "Sync Created"
 
         You have successfully created a Sync that automatically adds all Series
-        in Emby that are tagged with `tcm-test`, and assigns our two Templates
-        to them.
+        in Emby that are tagged with `tcm-test`, and assigns our Template to
+        them.
 
 8. At the top of the page is an indication of when all your Syncs will next
 run - we'll adjust this [next](../scheduler.md) - but to run a Sync
