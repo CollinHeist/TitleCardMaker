@@ -59,7 +59,7 @@ class TextlessTitleCard(BaseCardType):
     """Don't require source images to work w/ importing"""
     USES_SOURCE_IMAGES = False # Set as False; if required then caught by model
 
-    """Label to archive cards under"""
+    """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Textless Version'
 
     __slots__ = ('source_file', 'output_file')

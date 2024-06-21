@@ -294,8 +294,13 @@ class PreferenceParser(YamlReader):
                 if (value := sync_yaml.get('libraries', type_=list)) is not None:
                     update_args['filter_libraries'] = value
             elif sync_type == 'sonarr':
-                if (value := sync_yaml.get('plex_libraries', type_=dict)) is not None:
-                    update_args['plex_libraries'] = value
+                value = sync_yaml.get(
+                    'libraries',
+                    type_=dict,
+                    default=sync_yaml.get('plex_libraries', type_=dict),
+                )
+                if value is not None:
+                    update_args['libraries'] = value
                 if (value := sync_yaml.get('monitored_only', type_=bool)) is not None:
                     update_args['monitored_only'] = value
                 if (value := sync_yaml.get('downloaded_only', type_=bool)) is not None:

@@ -120,7 +120,7 @@ class TintedGlassTitleCard(BaseCardType):
     """Whether this CardType uses unique source images"""
     USES_UNIQUE_SOURCES = True
 
-    """Standard class has standard archive name"""
+    """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Tinted Glass Style'
 
     """Darkened area behind title/episode text is nearly black and 70% opaque"""
