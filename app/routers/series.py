@@ -578,7 +578,7 @@ async def set_series_poster(
 
     # Create resized poster for preview
     img = Image.open(poster_path)
-    img.resize(
+    img.convert('RGB').resize(
         (750, int(750 / img.width * img.height)),
         Image.Resampling.LANCZOS
     ).save(poster_path.parent / 'poster-750.jpg')
