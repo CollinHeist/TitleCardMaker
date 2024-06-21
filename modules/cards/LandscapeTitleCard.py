@@ -124,7 +124,7 @@ class LandscapeTitleCard(BaseCardType):
     """Whether this CardType uses unique source images"""
     USES_UNIQUE_SOURCES = True
 
-    """Standard class has standard archive name"""
+    """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Landscape Style'
 
     """Additional spacing (in pixels) between bounding box and title text"""

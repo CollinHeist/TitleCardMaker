@@ -94,7 +94,7 @@ class CutoutTitleCard(BaseCardType):
     """Whether this CardType uses season titles for archival purposes"""
     USES_SEASON_TITLE = False
 
-    """Standard class has standard archive name"""
+    """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Cutout Style'
 
     """Default fonts and color for series count text"""

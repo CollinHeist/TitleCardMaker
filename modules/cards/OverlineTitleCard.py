@@ -124,7 +124,7 @@ class OverlineTitleCard(BaseCardType):
     """Whether this CardType uses season titles for archival purposes"""
     USES_SEASON_TITLE = True
 
-    """Standard class has standard archive name"""
+    """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Overline Style'
 
     """How thick the line is (in pixels)"""

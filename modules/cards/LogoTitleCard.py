@@ -18,7 +18,6 @@ class LogoTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    # pylint: disable=line-too-long
     API_DETAILS = CardDescription(
         name='Logo',
         identifier='logo',
@@ -115,7 +114,6 @@ class LogoTitleCard(BaseCardType):
             ' is recommended to use an Art Un/Watched Style.',
         ]
     )
-    # pylint: enable=line-too-long
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY
@@ -143,16 +141,13 @@ class LogoTitleCard(BaseCardType):
     """Whether this class uses Source Images at all"""
     USES_SOURCE_IMAGES = False # Set as False; if required then caught by model
 
-    """Standard class has standard archive name"""
+    """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Logo Style'
 
     """Default fonts and color for series count text"""
     SEASON_COUNT_FONT = REF_DIRECTORY / 'Proxima Nova Semibold.otf'
     EPISODE_COUNT_FONT = REF_DIRECTORY / 'Proxima Nova Regular.otf'
     SERIES_COUNT_TEXT_COLOR = '#CFCFCF'
-
-    """Paths to intermediate files that are deleted after the card is created"""
-    __RESIZED_LOGO = BaseCardType.TEMP_DIR / 'resized_logo.png'
 
     """Source path for the gradient image overlayed over all title cards"""
     __GRADIENT_IMAGE = REF_DIRECTORY / 'GRADIENT.png'
