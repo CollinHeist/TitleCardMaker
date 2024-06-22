@@ -21,7 +21,6 @@
 <script type="text/javascript" src="/templates/js/messages.js?v={{preferences.current_version}}"></script>
 <script type="text/javascript" src="/templates/js/helper.js?v={{preferences.current_version}}"></script>
 <script type="text/javascript" src="/templates/js/tablesort.js?v={{preferences.current_version}}"></script>
-<script type="text/javascript" src="/templates/js/changelog.js?v={{preferences.current_version}}"></script>
 <script type="text/javascript">
   $(document).ready(function() {
     // Error icon if a Connection is invalid
@@ -33,9 +32,6 @@
     }
     {% endif %}
 
-    // Show changelog if necessary
-    notifyChanges('{{preferences.current_version}}');
-
     // Turn on accessible colormode if enabled
     {% if preferences.colorblind_mode %}
     $('body').toggleClass('accessible', true);
@@ -46,9 +42,9 @@
     if      (location.pathname === '/') { }
     else if (location.pathname.startsWith('/series')) { docSite = 'user_guide/series/'; }
     else if (location.pathname === '/add')  { docSite = 'user_guide/new_series'; }
-    else if (location.pathname === '/card-templates') { }
+    else if (location.pathname === '/card-templates') { docSite = 'user_guide/templates'; }
     else if (location.pathname === '/fonts') { docSite = 'user_guide/fonts'; }
-    else if (location.pathname === '/sync') { }
+    else if (location.pathname === '/sync') { docSite = 'user_guide/syncs'; }
     else if (location.pathname === '/settings') { docSite = 'user_guide/settings/'; }
     else if (location.pathname === '/connections') { docSite = 'user_guide/connections/'; }
     else if (location.pathname === '/scheduler') { }

@@ -517,7 +517,9 @@
   
             <div class="ui blue label">
               Available Version
-              <div class="detail">{{preferences.available_version}}</div>
+              <a class="detail" href="https://github.com/TitleCardMaker/TitleCardMaker-WebUI/releases" target="_blank">
+                {{preferences.available_version}}
+              </a>
             </div>
   
             <div class="ui blue label">
@@ -533,7 +535,7 @@
   
             <div class="ui blue label">
               Changelog
-              <a onclick="notifyChanges('{{preferences.current_version}}', true);">View</a>
+              <a class="detail" href="/changelog">View</a>
             </div>
           </div>
         </div>
