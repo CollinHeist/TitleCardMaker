@@ -59,6 +59,7 @@ table td[data-row="name"] {
 table td[data-row="name"] .content {
   white-space: normal;
   word-break: break-word;
+  max-width: calc(100% - 30px - 0.1em);
 }
 /* When in select mode, highlight selected rows */
 #series-table tr.selected {
