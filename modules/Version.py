@@ -1,7 +1,8 @@
 from argparse import ArgumentParser
+from datetime import datetime
 from pathlib import Path
 from re import compile as re_compile
-from typing import Union
+from typing import Optional, Union
 
 try:
     from modules.Debug import log
@@ -228,22 +229,40 @@ class Changelog:
     OUTER_BULLET_REGEX = re_compile(r'^-\s+(.+)$')
     INNER_BULLET_REGEX = re_compile(r'^(\s+)-\s+(.+)$')
     IMAGE_REGEX = re_compile(r'^\s+<img.*src="(.+)".*\/?>$')
+    V1_REGEX = re_compile(r'(\(v1\))')
 
 
-    def __init__(self, file: Union[Path, str], /) -> None:
+    def __init__(self,
+            file: Union[Path, str],
+            /,
+            version: Union[str, Version],
+            date: Optional[datetime] = None,
+        ) -> None:
         """
         Parse the Changelog (Markdown) in the given file.
         
         Args:
             file: Path to the file to parse.
+            version: Version of the release. e.g. `v2.0-alpha.10.0`.
+            date: Date of the release. If omitted, the current date is
+                used.
         """
 
+        # Default date is today
+        date = date or datetime.now()
+
         i_1, i_2, i_3 = self._indent(1), self._indent(2), self._indent(3)
-        html: list[str] = []
         _prev_indent = 0
+        html: list[str] = [
+            f'<h2 id="{version}" class="ui top attached header">',
+            f'  {version}',
+            f'  <div class="sub header">Released {date.strftime("%B %d, %Y")}</div>',
+            f'</h2>',
+            f'<div data-version="{version}" class="ui bottom attached segment">'
+        ]
 
         for line in Path(file).read_text().splitlines():
-            # Header -> <h2>
+            # Header -> <h3>
             if (match := self.HEADER_REGEX.match(line)):
                 # Close previous indented list
                 if _prev_indent:
@@ -253,7 +272,7 @@ class Changelog:
                 if html:
                     html.append(f'</div>')
                 # Start new list
-                html.append(f'<h2>{match.group(1)}</h2>')
+                html.append(f'<h3>{match.group(1)}</h3>')
                 html.append(f'<div class="ui ordered list">')
                 _prev_indent = 0
             # Outer-level bullet
@@ -290,8 +309,8 @@ class Changelog:
                 html.append(f'{i_2}</div>')
                 html.append(f'{i_1}</div>')
 
-        # Close final list
-        html.append(f'</div>')
+        html.append(f'</div>') # Close final list
+        html.append(f'</div>') # Close final segment
 
         # Store resulting HTML string
         self.html = '\n'.join(html)
@@ -336,7 +355,10 @@ class Changelog:
                     r'<b>\1</b>',
                     self.ITALIC_REGEX.sub(
                         r' <i>\1</i> ',
-                        text,
+                        self.V1_REGEX.sub(
+                            r'<div class="ui mini circular green label">v1</div>',
+                            text,
+                        )
                     )
                 )
             )

@@ -1271,21 +1271,67 @@ class ShapeTitleCard(BaseCardType):
         object's defined title card.
         """
 
-        command = ' '.join([
-            f'convert "{self.source_file.resolve()}"',
-            # Resize and apply styles to source image
-            *self.resize_and_style,
-            # Overlay gradient
-            *self.gradient_commands,
-            # Add each component of the image
-            *self.shape_commands,
-            *self.title_text_commands,
-            *self.index_text_commands,
-            # Attempt to overlay mask
-            *self.add_overlay_mask(self.source_file),
-            # Create card
-            *self.resize_output,
-            f'"{self.output_file.resolve()}"',
-        ])
+        from os import environ
+        from modules.ImageMagickInterface import ImageMagickInterface
+        class Command:
+            def __init__(self,
+                    *commands: list[str],
+                    command_sequence: list[int],
+                    # mask_commands: list[str] = [],
+                    # mask_index: int = -3,
+                    valid_indices: list[int] = [],
+                ) -> None:
 
-        self.image_magick.run(command)
+                sequence = [commands[index] for index in command_sequence]
+                # sequence = list(commands)
+                # if mask_index in valid_indices:
+                # sequence.insert(mask_index, mask_commands)
+
+                self.command = ' '.join([
+                    command
+                    for commands in
+                    sequence
+                    for command in commands
+                ])
+
+            def run(self, image_magick: ImageMagickInterface) -> tuple[bytes, bytes]:
+                return image_magick.run(self.command)
+
+        Command(
+            # Base commands
+            [
+                f'convert "{self.source_file.resolve()}"',
+                *self.resize_and_style,
+            ],
+            self.gradient_commands,
+            self.shape_commands,
+            self.title_text_commands,
+            self.index_text_commands,
+            self.add_overlay_mask(self.source_file),
+            self.resize_output,
+            [f'"{self.output_file.resolve()}"'],
+            command_sequence=list(map(int, environ.get('COMMAND_SEQUENCE').split(','))),
+            # Mask indexing
+            # mask_commands=self.add_overlay_mask(self.source_file),
+            # mask_index=int(environ.get('MASK_INDEX', -3)),
+            # valid_indices=[1, ]
+        ).run(self.image_magick)
+
+        # command = ' '.join([
+        #     f'convert "{self.source_file.resolve()}"',
+        #     # Resize and apply styles to source image
+        #     *self.resize_and_style,
+        #     # Overlay gradient
+        #     *self.gradient_commands,
+        #     # Add each component of the image
+        #     *self.shape_commands,
+        #     *self.title_text_commands,
+        #     *self.index_text_commands,
+        #     # Attempt to overlay mask
+        #     *self.add_overlay_mask(self.source_file),
+        #     # Create card
+        #     *self.resize_output,
+        #     f'"{self.output_file.resolve()}"',
+        # ])
+
+        # self.image_magick.run(command)

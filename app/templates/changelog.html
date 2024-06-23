@@ -2,18 +2,13 @@
 <html lang="en">
 
 <head>
-  <title>Settings - TitleCardMaker</title>
+  <title>Changelog - TitleCardMaker</title>
   {% include "./html_boilerplate.html" %}
-  <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.3/dist/semantic.min.js"></script>
-
-  <!-- <script type="text/javascript">
-    {% include "./js/changelog.js" %}
-  </script> -->
-  
+  <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.3/dist/semantic.min.js"></script>  
   <link rel="stylesheet" type="text/css" href="/templates/css/settings.css?v={{preferences.current_version}}"/>
 </head>
 
-<body onload="initAll();">
+<body>
   <div class="pusher">
     <!-- Static header and sidebar -->
     <div id="page-header">
@@ -71,8 +66,9 @@
               <div class="item">You can also type <b>by:{creator}</b> or <b>creator:{creator}</b> in the search field - e.g. <b>by:CollinHeist</b></div>
             </div>
           </div>
-          <div class="item">Also search by the Series "clean" name via the search box - e.g. <b>Shōgun</b> can be found by typing <b>Shogun</b></div>
+          <div class="item">Also search by the Series "clean" name via the search box - e.g. 'Shōgun' can be found by typing 'Shogun'</div>
           <div class="item">Publish <b>ghcr.io</b> Docker images for the <b>linux/arm64</b> and <b>linux/arm/v7</b> architectures - huge thanks to mchangrh for putting in the work to make the ARMv7 image possible</div>
+          <div class="item">Reformat changelog - remove "popup" and create new dedicated changelog page which can accessed from the bottom of the settings page</div>
         </div>
         <h3>Major Fixes </h3>
         <div class="ui ordered list">
@@ -103,6 +99,7 @@
           <div class="item">Handle sub directories in the source folder during Source Image deletion</div>
           <div class="item">Fix some typos in extra tooltips</div>
           <div class="item">Remove tasks from the scheduler before they are re-initialized</div>
+          <div class="item">Fix text overflow which could occur for some very long series names on the home page in tabular view</div>
         </div>
         <h3>Title Card Changes</h3>
         <div class="ui ordered list">
