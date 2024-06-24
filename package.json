@@ -4,7 +4,8 @@
   "description": "Instructions are hosted on the new documentation site https://titlecardmaker.com/.",
   "main": "index.js",
   "scripts": {
-    "cy:run": "cypress run"
+    "cy:run": "cypress run",
+    "cy:open": "cypress open"
   },
   "author": "",
   "license": "ISC",
