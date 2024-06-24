@@ -60,19 +60,20 @@
           <div class="item">Add import from MediUX (i.e. Kometa) button to the Series page</div>
           <div class="item">Allow connecting to TVDb
             <div class="list">
-              <div class="item">TVDb can be used as an Episode Data Source (similar to Sonarr), but different episode orderings can be used (such as Official, Absolute, etc.)</div>
-              <div class="item">TVDb can also be used as an Image Source, but this is not recommended as they only provide a single (generally low quality) image per-Episode</div>
+              <div class="item">Can be used as an Episode Data Source. This will be similar to Sonarr, but different episode orderings can be used (such as Official, Absolute, etc.)</div>
+              <div class="item">Can also be used as an Image Source, but this is not recommended as they only provide a single (generally low quality) image per-Episode</div>
               <div class="item">Add SQL schema migration <b>2c1f9a3de797</b> to implement required database changes</div>
             </div>
           </div>
           <div class="item">Add ability to filter Blueprints by the creator name on the Add page
             <div class="list">
-              <div class="item">Clicking a given Blueprint's creator name will auto-fill and search by that creator</div>
+              <div class="item">Clicking a given Blueprint's creator will auto-fill and search by that creator</div>
               <div class="item">You can also type <b>by:{creator}</b> or <b>creator:{creator}</b> in the search field - e.g. <b>by:CollinHeist</b></div>
             </div>
           </div>
-          <div class="item">Also search by the Series "clean" name via the search box - e.g. <b>Shōgun</b> can be found by typing <b>Shogun</b></div>
+          <div class="item">Also search by the Series "clean" name via the search box - e.g. 'Shōgun' can be found by typing 'Shogun'</div>
           <div class="item">Publish <b>ghcr.io</b> Docker images for the <b>linux/arm64</b> and <b>linux/arm/v7</b> architectures - huge thanks to mchangrh for putting in the work to make the ARMv7 image possible</div>
+          <div class="item">Reformat changelog - remove "popup" and create new dedicated changelog page which can accessed from the bottom of the settings page</div>
         </div>
         <h3>Major Fixes </h3>
         <div class="ui ordered list">
@@ -103,6 +104,7 @@
           <div class="item">Handle sub directories in the source folder during Source Image deletion</div>
           <div class="item">Fix some typos in extra tooltips</div>
           <div class="item">Remove tasks from the scheduler before they are re-initialized</div>
+          <div class="item">Fix text overflow which could occur for some very long series names on the home page in tabular view</div>
         </div>
         <h3>Title Card Changes</h3>
         <div class="ui ordered list">
