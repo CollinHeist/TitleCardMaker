@@ -18,6 +18,7 @@ front/
 frontend/
 front_nui/
 modules/.objects/
+node_modules/
 yml/
 *._*
 *.prof
