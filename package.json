@@ -1,0 +1,14 @@
+{
+  "name": "titlecardmaker-webui",
+  "version": "1.0.0",
+  "description": "Instructions are hosted on the new documentation site https://titlecardmaker.com/.",
+  "main": "index.js",
+  "scripts": {
+    "cy:run": "cypress run"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "cypress": "^13.12.0"
+  }
+}
