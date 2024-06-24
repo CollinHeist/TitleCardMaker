@@ -424,16 +424,15 @@ async def import_mediux_yaml_for_series(
 
     # Download all indicated files
     cards: list[tuple[Episode, Path]] = []
-    for _, yaml in full_yaml.items():
+    for _, yaml in full_yaml.yaml.items():
         # if import_poster and (url := yaml.get('url_poster')):
         #     image = _download_image(url)
         # if import_backdrop and (url := yaml.get('url_background')):
         #     image = _download_image(url)
-        for season_number, season_yaml in yaml.get('seasons', {}).items():
+        for season_number, season_yaml in yaml.seasons.items():
             # if import_season_posters and (url := yaml.get('url_poster')):
             #     image = _download_image(url)
-            for episode_number, episode_yaml in \
-                    season_yaml.get('episodes', {}).items():
+            for episode_number, episode_yaml in season_yaml.episodes.items():
                 # Skip download if there is no matching Episode
                 episode = db.query(Episode)\
                     .filter_by(series_id=series_id,
@@ -451,7 +450,7 @@ async def import_mediux_yaml_for_series(
                     continue
 
                 # Episode exists, download and add to card list
-                if (card := _download_image(episode_yaml['url_poster'])):
+                if (card := _download_image(episode_yaml.url_poster)):
                     cards.append((episode, card))
 
     # Import into all specified libraries
@@ -460,7 +459,7 @@ async def import_mediux_yaml_for_series(
         library = series.get_library(library_name)
         import_card_files(
             db, series, cards, library,
-            force_reload=force_reload, as_textless=textless, log=log
+            force_reload=force_reload, as_textless=textless, log=log,
         )
 
         # Load cards into library
@@ -472,7 +471,7 @@ async def import_mediux_yaml_for_series(
     else:
         import_card_files(
             db, series, cards, library=None,
-            force_reload=force_reload, as_textless=textless, log=log
+            force_reload=force_reload, as_textless=textless, log=log,
         )
 
     # Delete any downloaded images after they've been uploaded

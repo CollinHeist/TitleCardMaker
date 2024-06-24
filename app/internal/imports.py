@@ -1614,4 +1614,4 @@ def import_card_files(
         card = add_card_to_database(
             db, title_card, CardTypeModel, card_settings['card_file'], library,
         )
-        log.debug(f'{episode} Imported S{season_number:02}E{episode_number:02}')
+        log.debug(f'{episode} Imported {episode.index_str}')
