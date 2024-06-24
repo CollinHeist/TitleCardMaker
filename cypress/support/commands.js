@@ -23,3 +23,14 @@
 //
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
+
+Cypress.Commands.add('createObjectAndGetId', (url, body) => {
+  cy.request('POST', url, body).then((resp) => {
+    // Require passing status code
+    expect(resp.status).to.be.lessThan(400);
+    // Reload page
+    cy.reload();
+
+    return cy.wrap(resp.body.id);
+  });
+});
