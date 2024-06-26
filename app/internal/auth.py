@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from logging import getLogger, ERROR
 from secrets import token_hex
 from typing import Literal, Optional, Union
 
@@ -15,9 +16,16 @@ from app.schemas.auth import User
 from modules.Debug import log
 
 
-ALGORITHM = 'HS256'
-SECRET_KEY = '360f8406f24d5bdd0ff24693e71e025f'
+__all__ = (
+    'generate_secret_key', 'verify_password', 'get_password_hash', 'get_user',
+    'get_current_user', 'authenticate_user', 'create_access_token',
+)
 
+
+ALGORITHM = 'HS256'
+__SECRET_KEY = '360f8406f24d5bdd0ff24693e71e025f'
+
+getLogger('passlib').setLevel(ERROR)
 oath2_scheme = OAuth2PasswordBearer(tokenUrl='/api/auth/authenticate')
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
@@ -42,7 +50,7 @@ def verify_password(plaintext: str, hashed: str) -> bool:
         hashed: Hashstring to compare to.
 
     Returns:
-        True if the hash of `plaintext` matches `hatched`; False
+        True if the hash of `plaintext` matches `hatched`. False
         otherwise.
     """
 
@@ -57,7 +65,7 @@ def get_password_hash(password: str) -> str:
         password: The plaintext password to hash.
 
     Returns:
-        The hashed `password`.
+        The hash of `password`.
     """
 
     return pwd_context.hash(password)
@@ -84,7 +92,7 @@ def get_current_user(
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
         token: str = Depends(oath2_scheme),
-    ) -> Union[User, Literal[True]]:
+    ) -> Optional[User]:
     """
     Dependency to get the User whose username matches the given token.
     If Authorization is globally disabled, then no validation is
@@ -97,17 +105,17 @@ def get_current_user(
             active User.
 
     Returns:
-        True if Authorization is disabled. Otherwise, the User with the
+        None if Authorization is disabled. Otherwise, the User with the
         encoded username.
 
     Raises:
-        HTTPException (401) if the credentials encoded in `token` do not
+        HTTPException (401): The credentials encoded in `token` do not
         correspond to a valid User.
     """
 
     # Do not authenticate if globally disabled
     if not preferences.require_auth:
-        return True
+        return None
 
     credential_exception = HTTPException(
         status_code=401,
@@ -117,7 +125,7 @@ def get_current_user(
 
     # Decode JWT, get encoded username
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, __SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get('sub')
         uid: str = payload.get('uid')
     except JWTError as exc:
@@ -195,4 +203,4 @@ def create_access_token(
     to_encode = data.copy()
     to_encode.update({'exp': expires})
 
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, __SECRET_KEY, algorithm=ALGORITHM)
