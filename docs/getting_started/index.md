@@ -128,16 +128,6 @@ Unraid users can directly add the container as a "template" within the UI.
         3. You may also add add `PGID`, `PUID`, and `UMASK` here as environment
         variables if you want to control the permissions of TCM.
 
-        ??? tip "Unraid Icon"
-
-            If you are on Unraid and would like an icon to appear in for the
-            container, add the following lines below `volumes`:
-
-            ```yaml title="docker-compose.yml"
-                labels:
-                  - net.unraid.docker.icon="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker/web-ui/.github/logo.png"
-            ```
-
     6. Create (and launch) the Docker container by executing the following
     command.
 
@@ -273,17 +263,7 @@ Unraid users can directly add the container as a "template" within the UI.
         === ":material-microsoft-windows: Windows (Non-Powershell)"
 
             ```bash
-            docker run -itd --net="bridge" -v "C:/Your/Install/Directory/TitleCardMaker/config":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" ""ghcr.io/titlecardmaker/titlecardmaker-webui:latest"
-            ```
-
-        ??? tip "Unraid Icon"
-
-            If you are on Unraid and would like an icon to appear in for the
-            container, add the following line to the command after
-            `--name "TitleCardMaker"`:
-
-            ```bash
-            -l net.unraid.docker.icon="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker/web-ui/.github/logo.png"
+            docker run -itd --net="bridge" -v "C:/Your/Install/Directory/TitleCardMaker/config":"/config/" -e TZ="America/Los_Angeles" -p 4242:4242 --name "TitleCardMaker" "ghcr.io/titlecardmaker/titlecardmaker-webui:latest"
             ```
 
         ??? tip "User ID, Group ID, and UMASK"
@@ -537,7 +517,7 @@ Unraid users can directly add the container as a "template" within the UI.
         | WebUI      | `http://[IP]:[PORT:4242]/`                                                             |
 
     5. At the bottom of the page, click `Add another Path, Port, Variable, Label
-    or Device` and enter each of the following (hitting `Save` after each one):
+    or Device` and enter each of the following (hitting `Add` after each one):
 
         | Option         | Value                       |
         | -------------: | :-------------------------- |
