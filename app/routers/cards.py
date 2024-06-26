@@ -644,12 +644,12 @@ def create_cards_for_sonarr_webhook(
     create the Title Cards of.
     """
 
-    # Get contextual logger
-    log = request.state.log
-
     # Skip if payload has no Episodes to create Cards for
-    if len(webhook.episodes) == 0:
+    if not webhook.episodes:
         return None
+
+    # Get contextual logger
+    log: Logger = request.state.log
 
     # Create SeriesInfo for this payload's series
     series_info = SeriesInfo(

@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Optional
+from typing import Literal, Optional, Union
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from fastapi.security import OAuth2PasswordRequestForm
@@ -170,11 +170,11 @@ def get_all_usernames(db: Session = Depends(get_database)) -> list[str]:
 
 @auth_router.get('/active')
 def get_active_username(
-        user: User = Depends(get_current_user),
+        user: Optional[User] = Depends(get_current_user),
     ) -> Optional[str]:
     """Get the username of the active User."""
 
-    return None if user is True else user.username
+    return None if user is None else user.username
 
 
 @auth_router.post('/edit')
@@ -182,7 +182,7 @@ def update_user_credentials(
         request: Request,
         update_user: UpdateUser = Body(...),
         db: Session = Depends(get_database),
-        user: User = Depends(get_current_user),
+        user: Optional[User] = Depends(get_current_user),
     ) -> User:
     """
     Update the credentials of the current User.
@@ -190,7 +190,7 @@ def update_user_credentials(
     """
 
     # Authorization is disabled, cannot edit credentials
-    if user is True:
+    if user is None:
         raise HTTPException(
             status_code=401,
             detail='Cannot edit credentials while unauthorized'
