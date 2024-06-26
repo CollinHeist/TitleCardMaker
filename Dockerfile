@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Create pipenv image to convert Pipfile to requirements.txt
-FROM python:3.11-slim as pipenv
+FROM python:3.11-slim AS pipenv
 
 # Copy Pipfile and Pipfile.lock
 COPY Pipfile Pipfile.lock ./
@@ -9,7 +9,7 @@ COPY Pipfile Pipfile.lock ./
 RUN pip3 install --no-cache-dir --upgrade pipenv; \
     pipenv requirements > requirements.txt
 
-FROM python:3.11-slim as python-reqs
+FROM python:3.11-slim AS python-reqs
 
 # Copy requirements.txt from pipenv stage
 COPY --from=pipenv /requirements.txt requirements.txt
