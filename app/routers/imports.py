@@ -388,14 +388,14 @@ async def import_mediux_yaml_for_series(
     # Get contextual logger
     log: Logger = request.state.log
 
-    # Parse YAML into dictionary; raise 422 if invalid
     try:
         full_yaml = KometaYaml(yaml=safe_load(yaml_str))
-    except (ParserError, ValidationError):
+    except (ParserError, ValidationError) as exc:
+        log.exception(f'Kometa YAML is invalid')
         raise HTTPException(
             status_code=422,
-            detail='Invalid YAML',
-        )
+            detail='YAML is invalid',
+        ) from exc
 
     # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
