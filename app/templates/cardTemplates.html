@@ -83,7 +83,7 @@
 
               <h4 class="ui horizontal middle aligned divider header">Filters</h4>
 
-              <div class="ui field">
+              <div>
                 <div class="ui floating visible info small message">
                   <span class="ui text">Filters restrict when a Template is active for a Series or Episode.</span>
                   <ul class="list">
@@ -93,9 +93,7 @@
                     <li class="ui text">Airdate reference values should be entered as <code>YYYY-MM-DD</code>, e.g. <code>2023-01-01</code>.</li>
                   </ul>
                 </div>
-                <div data-value="conditions">
-                  
-                </div>
+                <div data-value="conditions"></div>
                 <div data-add-field="condition" class="ui circular mini icon add-field button">
                   <i class="plus square outline icon"></i>
                   Add Condition
@@ -117,7 +115,7 @@
   
                 <div class="field">
                   <label>Font <a data-value="font-link"><i class="external alternate small icon"></i></a></label>
-                  <div data-value="font-dropdown" class="ui long selection search clearable dropdown">
+                  <div data-value="font_id" class="ui long selection search clearable dropdown">
                     <input name="font_id" type="hidden">
                     <i class="dropdown icon"></i>
                     <div class="default text">Card Default</div>
@@ -129,7 +127,7 @@
               <div class="two fluid fields">
                 <div class="field">
                   <label>Watched Episode Style</label>
-                  <div data-value="watched-style" class="ui long selection clearable dropdown">
+                  <div data-value="watched_style" class="ui long selection clearable dropdown">
                     <span class="default text">Server Default</span>
                     <input name="watched_style" type="hidden">
                     <i class="dropdown icon"></i>
@@ -139,7 +137,7 @@
 
                 <div class="field">
                   <label>Unwatched Episode Style</label>
-                  <div data-value="unwatched-style" class="ui long  selection clearable dropdown">
+                  <div data-value="unwatched_style" class="ui long selection clearable dropdown">
                     <span class="default text">Server Default</span>
                     <input name="unwatched_style" type="hidden">
                     <i class="dropdown icon"></i>
@@ -354,7 +352,7 @@
         <span class="ui blue text">This Template is linked to the following Series:</span>
         <ul class="ui list" data-value="series-list"></ul>
       <div class="center aligned actions">
-        <div class="ui green ok basic inverted button">
+        <div data-action="reject-deletion" class="ui green ok basic inverted button">
           <i class="remove icon"></i>
           No
         </div>

@@ -371,7 +371,7 @@ async function getAllTemplates() {
       }
     });
     // Font
-    $(`#template-id${templateObj.id} .dropdown[data-value="font-dropdown"]`).dropdown({
+    $(`#template-id${templateObj.id} .dropdown[data-value="font_id"]`).dropdown({
       placeholder: 'Card Default',
       values: allFonts.map(({id, name}) => {
         return {name: name, value: id, selected: id === templateObj.font_id};
@@ -384,7 +384,7 @@ async function getAllTemplates() {
       $(`#template-id${templateObj.id} a[data-value="font-link"]`)[0].href = `/fonts#font-id${templateObj.font_id}`;
     }
     // Watched style
-    $(`#template-id${templateObj.id} .dropdown[data-value="watched-style"]`).dropdown({
+    $(`#template-id${templateObj.id} .dropdown[data-value="watched_style"]`).dropdown({
       placeholder: 'Global Default',
       values: [
         {name: 'Art Variations', type: 'header'},
@@ -398,7 +398,7 @@ async function getAllTemplates() {
       ],
     });
     // Unwatched style
-    $(`#template-id${templateObj.id} .dropdown[data-value="unwatched-style"]`).dropdown({
+    $(`#template-id${templateObj.id} .dropdown[data-value="unwatched_style"]`).dropdown({
       placeholder: 'Global Default',
       values: [
         {name: 'Art Variations', type: 'header'},
