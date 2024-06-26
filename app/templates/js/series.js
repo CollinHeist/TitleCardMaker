@@ -2397,7 +2397,7 @@ function importMediuxYaml(event) {
   const forceReload = $('#import-mediux-modal input[name="force_reload"]').is(':checked');
 
   // Mark button as loading
-  $('#import-mediux-modal .button[type="submit"]').toggleClass('loading', true);
+  $('#import-mediux-modal .button[type="submit"], #import-mediux-form').toggleClass('loading', true);
 
   // Submit API request
   $.ajax({
@@ -2410,7 +2410,7 @@ function importMediuxYaml(event) {
       setTimeout(() => location.reload(), 2000);
     },
     error: response => showErrorToast({title: 'Error Importing YAML', response}),
-    complete: () => $('#import-mediux-modal .button[type="submit"]').toggleClass('loading', false),
+    complete: () => $('#import-mediux-modal .button[type="submit"], #import-mediux-form').toggleClass('loading', false),
   });
 }
 

@@ -580,11 +580,6 @@ function timeDiffString(previousRun) {
  * Convert a string to title case.
  * @param {string} str - The input string to convert to title case.
  * @returns {string} The input string converted to title case.
- * 
- * @example
- * // returns "Hello World"
- * toTitleCase("hello world");
- * 
  * @example
  * // returns "I Love JavaScript"
  * toTitleCase("i love JavaScript");
