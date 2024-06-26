@@ -1,0 +1,12 @@
+{
+  "series": {
+    "id": 0,
+    "title": "string",
+    "year": 0,
+    "imdbId": "string",
+    "tvdbId": "string",
+    "tvRageId": "string"
+  },
+  "episodes": [],
+  "eventType": "string"
+}

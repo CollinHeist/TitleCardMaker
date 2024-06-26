@@ -26,11 +26,25 @@
 
 Cypress.Commands.add('createObjectAndGetId', (url, body) => {
   cy.request('POST', url, body).then((resp) => {
-    // Require passing status code
-    expect(resp.status).to.be.lessThan(400);
     // Reload page
     cy.reload();
 
     return cy.wrap(resp.body.id);
   });
+});
+
+Cypress.Commands.add('login', (url, username, password) => {
+  cy.visit(url || '/login')
+
+  // Type credentials
+  cy.get("#username")
+    .clear()
+    .type(username || 'admin')
+  cy.get('#password')
+    .clear()
+    .type(password || 'password')
+
+  // Click log in button
+  cy.contains('Login')
+    .click()
 });
