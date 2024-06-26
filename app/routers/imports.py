@@ -413,7 +413,7 @@ async def import_mediux_yaml_for_series(
         """
 
         filename = WebInterface.get_random_filename(
-            WebInterface._TEMP_DIR / f'temp.{url[:5]}', 'jpg'
+            WebInterface._TEMP_DIR / f'temp_{url[-5:]}', 'jpg'
         )
         if not WebInterface.download_image(url, filename, log=log):
             log.error(f'Error downloading image {url}')
