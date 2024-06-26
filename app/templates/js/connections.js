@@ -7,12 +7,8 @@ import {
 
 /** @type {number[]} ID's of all invalid Connections. */
 const invalidConnectionIDs = {{preferences.invalid_connections|safe}};
-/** @type {?string} */
-{% if active_username is none %}
-const activeUsername = null;
-{% else %}
-const activeUsername = '{{active_username}}';
-{% endif %}
+/** @type {boolean} Whether authentication is required */
+const requireAuth = {{preferences.require_auth | lower}};
 
 // TVDb ordering types
 const tvdbOrderingTypes = [
@@ -115,9 +111,9 @@ function disableAuthentication() {
 }
 
 /**
- * Submit the API request to edit the current active User's credentials.
- * If successful, the TCM token cookie is cleared, and the page is
- * redirected to the login page with a callback to redirect back here.
+ * Submit the API request to edit the current active User's credentials. If
+ * successful, the TCM token cookie is cleared, and the page is redirected to
+ * the login page with a callback to redirect back here.
  */
 function editUserAuth() {
   $.ajax({
@@ -147,25 +143,18 @@ function editUserAuth() {
 }
 
 /**
- * Initialize the Authorization form/section. This populates the current
- * User's username (if applicable), enabled/disables fields, and assigns
- * functions to all events/presses.
+ * Initialize the Authorization form/section. This enabled/disables fields, and
+ * assigns functions to all events/presses.
  */
 function initializeAuthForm() {
-  // Initialize username field with current user
-  if (activeUsername !== null) {
-    $('#auth-settings input[name="username"]')[0].value = activeUsername;
-    // $('#auth-settings input[name="password"]')[0].value = 'fake password';
-  }
-
   // Enable/disable auth fields based on initial state
-  {% if preferences.require_auth %}
-  $('.checkbox[data-value="require_auth"]').checkbox('check');
-  $('#auth-settings .field').toggleClass('disabled', false);
-  {% else %}
-  $('.checkbox[data-value="require_auth"]').checkbox('uncheck');
-  $('#auth-settings .field').toggleClass('disabled', true);
-  {% endif %}
+  if (requireAuth) {
+    $('.checkbox[data-value="require_auth"]').checkbox('check');
+    $('#auth-settings .field').toggleClass('disabled', false);
+  } else {
+    $('.checkbox[data-value="require_auth"]').checkbox('uncheck');
+    $('#auth-settings .field').toggleClass('disabled', true);
+  }
 
   // Assign checked/unchecked functions
   $('.checkbox[data-value="require_auth"]').checkbox({

@@ -505,7 +505,11 @@
           <div class="ui two fields">
             <div class="ui four wide field">
               <label>Username</label>
+              {% if active_username is none %}
               <input name="username" type="text">
+              {% else %}
+              <input name="username" type="text" value="{{active_username}}">
+              {% endif %}
             </div>
 
             <div class="ui four wide field">
