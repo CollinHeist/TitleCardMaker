@@ -194,43 +194,6 @@ project Sponsors. If you are interested, sponsor on
 
 Installation and startup instructions are [here](./getting_started/index.md).
 
-## Updating 
-
-After the initial install, if you would like to update to the latest version of
-TCM, then you need to do the following:
-
-1. Navigate to your original install directory - like so:
-
-    ```bash
-    cd ~/My/Install/Diretory/TitleCardMaker-WebUI
-    ```
-
-2. Switch to the branch you would like to be on - this is `main` or `develop`:
-
-    ```bash
-    git checkout main
-    ```
-
-3. Pull in the newest changes:
-
-    ```bash
-    git pull
-    ```
-
-4. If you are using Docker, then remove the old container, before re-building
-and running (see [here](./getting_started/index.md#launching-the-interface)).
-
-    ```bash
-    docker container rm TitleCardMaker
-    ```
-
-5. If you are _not_ using Docker, just re-launch the container.
-
-    ```bash
-    pipenv install
-    pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
-    ```
-
 ## Getting Started
 
 !!! info "Detailed Tutorial"
@@ -244,12 +207,75 @@ steps are as follows:
 
 1. Install TitleCardMaker (via Docker or locally).
 
-2. Set up your Connections to your other services - such as Sonarr, TMDb, Plex,
-Emby, Jellyfin, or Tautulli.
+2. Set up your Connections to your other services - such as Sonarr, TMDb, TVDB,
+Plex, Emby, Jellyfin, or Tautulli.
 
 3. Start adding Series to TitleCardMaker - this can be done manually, or with
 [Syncs](./getting_started/first_sync/index.md).
 
 4. Customize the look and style of Title Cards to your liking.
+
+## Updating 
+
+After the initial install, if you would like to update to the latest version of
+TCM, then you need to do the following:
+
+=== ":material-docker: :fontawesome-solid-file-code: Docker Compose"
+
+    1. Navigate to your original install directory - like so:
+
+        ```bash
+        cd ~/My/Install/Diretory/TitleCardMaker-WebUI
+        ```
+
+    2. Pull and relaunch the container:
+
+        ```bash
+        docker compose up --pull -d
+        ```
+
+=== ":material-docker: Docker"
+
+    1. Navigate to your original install directory - like so:
+
+        ```bash
+        cd ~/My/Install/Diretory/TitleCardMaker-WebUI
+        ```
+
+    2. Remove the old container.
+
+        ```bash
+        docker container rm TitleCardMaker
+        ```
+
+    3. Recreate the container by running your original `docker run` command
+    (see [here](./getting_started/index.md#__tabbed_1_2)).
+
+=== ":material-language-python: Non-Docker"
+
+    1. Navigate to your original install directory - like so:
+
+        ```bash
+        cd ~/My/Install/Diretory/TitleCardMaker-WebUI
+        ```
+
+    2. Switch to the branch you would like to be on - this is `main` or `develop`:
+
+        ```bash
+        git checkout main
+        ```
+
+    3. Pull in the newest changes:
+
+        ```bash
+        git pull
+        ```
+
+    4. Re-launch TitleCardMaker.
+
+        ```bash
+        pipenv install
+        pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
+        ```
 
 *[PAT]: Personal Access Token

@@ -24,6 +24,8 @@ and non-Docker. Docker Compose is generally recommended because it comes with
 all the requirements (Python, ImageMagick, etc.), and does not require copying
 any long commands.
 
+Unraid users can directly add the container as a "template" within the UI.
+
 === ":material-docker: :fontawesome-solid-file-code: Docker Compose"
 
     1. Open a terminal[^1] of your choice, and go to your desired install
@@ -64,9 +66,6 @@ any long commands.
             Because the repository is private, accessing the Docker container
             requires authentication.
 
-            A PAT is required instead of a password because GitHub does not
-            allow passwords to be used from the command line.
-
         ??? warning "Security Warning"
 
             Keep this access code private, as it can be used to access your
@@ -104,7 +103,8 @@ any long commands.
     will want to take note of the text in the _TZ Identifer_ column - e.g.
     `America/Los_Angeles` - for the next step.
 
-    5. Write the following contents to a file named `docker-compose.yml`:
+    5. Write the following contents to a file named `docker-compose.yml` in your
+    desired install directory (from Step 1):
 
         ```yaml title="docker-compose.yml" hl_lines="11 12 14"
         name: titlecardmaker
@@ -210,9 +210,6 @@ any long commands.
 
             Because the repository is private, accessing the Docker container
             requires authentication.
-
-            A PAT is required instead of a password because GitHub does not
-            allow passwords to be used from the command line.
 
         ??? warning "Security Warning"
 
@@ -520,6 +517,51 @@ any long commands.
         part of the previous command with your _local_ IP address - e.g.
         `192.168.0.10`. If you still have issues, reach out on the Discord.
 
+=== ":simple-unraid: Unraid"
+
+    1. Follow steps 1-4 of the [Docker](#__tabbed_1_2) instructions.
+
+    2. At the bottom of the _Docker_ tab of the Unraid interface, click `Add
+    Container`.
+
+    3. Make sure _Advanced View_ is toggled in the top-right corner.
+
+    4. Enter the following information - leaving all other options blank or
+    default.
+
+        | Option     | Value                                                                                  |
+        | :--------: | :------------------------------------------------------------------------------------- |
+        | Name       | `TitleCardMaker`                                                                       |
+        | Repository | `ghcr.io/titlecardmaker/titlecardmaker-webui:latest`                                   |
+        | Icon URL   | `https://raw.githubusercontent.com/CollinHeist/TitleCardMaker/web-ui/.github/logo.png` |
+        | WebUI      | `http://[IP]:[PORT:4242]/`                                                             |
+
+    5. At the bottom of the page, click `Add another Path, Port, Variable, Label
+    or Device` and enter each of the following (hitting `Save` after each one):
+
+        | Option         | Value                       |
+        | -------------: | :-------------------------- |
+        | Config Type    | `Path`                      |
+        | Name           | `Config`                    |
+        | Container Path | `/config`                   |
+        | Host Path      | _The directory from Step 1_ |
+
+        | Option         | Value   |
+        | -------------: | :------ |
+        | Config Type    | `Port`  |
+        | Name           | `UI`    |
+        | Container Port | `4242`  |
+        | Host Port      | `4242`  |
+
+        | Option      | Value                      |
+        | ----------: | :------------------------- |
+        | Config Type | `Variable`                 |
+        | Name        | `Timezone`                 |
+        | Key         | `TZ`                       |
+        | Value       | _The timezone from Step 1_ |
+
+    6. Hit `Apply`.
+
 !!! success "Success"
 
     TitleCardMaker is now accessible at the `http://0.0.0.0:4242` or
@@ -539,7 +581,7 @@ information about specific aspects of TitleCardMaker, look at the
 
 
 [^1]:
-    - For Linux, I will assume you know what a Terminal is :wink:.
+    - For Linux, I will assume you know what a Terminal is :wink:
     - For Mac users, this is `Terminal` and can be found via the Spotlight
     - For Windows users, this is `Command Prompt` or `PowerShell`. Both can be
     accessed from the search menu
