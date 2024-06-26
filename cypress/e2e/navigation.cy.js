@@ -18,9 +18,23 @@ describe('Page Navigation', () => {
 
   pages.forEach(({ path, name, expectRoot }) => {
     it(`Visits the ${name} page`, () => {
-      cy.visit(path);
-      cy.url().should('contain', Cypress.config('baseUrl') + (expectRoot ? '/' : path));
+      cy.visit(path)
+      cy.url().should('contain', Cypress.config('baseUrl') + (expectRoot ? '/' : path))
     });
+  });
+
+  // Visit the series page
+  it('Visits the Series page', () => {
+    // Create new Series so the page can be visited
+    cy.createObjectAndGetId('/api/series/new', {'name': '_', 'year': 2024}).then((seriesId) => {
+      cy.visit(`/series/${seriesId}`)
+      cy.url().should('contain', Cypress.config('baseUrl') + `/series/${seriesId}`)
+    });
+  });
+
+  it('Visits a non-existent Series page', () => {
+    cy.visit('/series/999')
+    cy.url().should('contain', Cypress.config('baseUrl') + '/')
   });
 
   // Navigate via the sidebar to all possible pages
