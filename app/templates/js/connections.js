@@ -7,6 +7,12 @@ import {
 
 /** @type {number[]} ID's of all invalid Connections. */
 const invalidConnectionIDs = {{preferences.invalid_connections|safe}};
+/** @type {?string} */
+{% if active_username is none %}
+const activeUsername = null;
+{% else %}
+const activeUsername = '{{active_username}}';
+{% endif %}
 
 // TVDb ordering types
 const tvdbOrderingTypes = [
@@ -147,17 +153,10 @@ function editUserAuth() {
  */
 function initializeAuthForm() {
   // Initialize username field with current user
-  $.ajax({
-    type: 'GET',
-    url: '/api/auth/active',
-    success: username => {
-      if (username !== null) {
-        $('#auth-settings input[name="username"]')[0].value = username;
-        $('#auth-settings input[name="password"]')[0].value = 'fake password';
-      }
-    },
-    error: response => showErrorToast({title: 'Error Querying Authorized Users', response}),
-  })
+  if (activeUsername !== null) {
+    $('#auth-settings input[name="username"]')[0].value = activeUsername;
+    // $('#auth-settings input[name="password"]')[0].value = 'fake password';
+  }
 
   // Enable/disable auth fields based on initial state
   {% if preferences.require_auth %}
