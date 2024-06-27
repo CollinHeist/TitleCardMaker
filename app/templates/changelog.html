@@ -4,12 +4,7 @@
 <head>
   <title>Changelog - TitleCardMaker</title>
   {% include "./html_boilerplate.html" %}
-  <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.3/dist/semantic.min.js"></script>
-
-  <!-- <script type="text/javascript">
-    {% include "./js/changelog.js" %}
-  </script> -->
-  
+  <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.3/dist/semantic.min.js"></script>  
   <link rel="stylesheet" type="text/css" href="/templates/css/settings.css?v={{preferences.current_version}}"/>
 </head>
 
@@ -28,25 +23,14 @@
       <h1 class="ui header">Changelog</h1>
 
       <div class="ui small blue labels">
-        <a class="ui label" href="#v2.0-alpha.10.1">v2.0-alpha.10.1</a>
-        <a class="ui label" href="#v2.0-alpha.10.0">v2.0-alpha.10.0</a>
-        <a class="ui label" href="#2.0-alpha.9.1">2.0-alpha.9.1</a>
-        <a class="ui label" href="#v2.0-alpha.9.0">v2.0-alpha.9.0</a>
-        <a class="ui label" href="#v2.0-alpha.8.1">v2.0-alpha.8.1</a>
-        <a class="ui label" href="#v2.0-alpha.8.0">v2.0-alpha.8.0</a>
-        <a class="ui label" href="#v2.0-alpha.7.0">v2.0-alpha.7.0</a>
-        <a class="ui label" href="#v2.0-alpha.6.0">v2.0-alpha.6.0</a>
-        <a class="ui label" href="#v2.0-alpha.5.2">v2.0-alpha.5.2</a>
-        <a class="ui label" href="#v2.0-alpha.5.1">v2.0-alpha.5.1</a>
-        <a class="ui label" href="#v2.0-alpha.5.0">v2.0-alpha.5.0</a>
-        <a class="ui label" href="#v2.0-alpha.4.1">v2.0-alpha.4.1</a>
-        <a class="ui label" href="#v2.0-alpha.4.0">v2.0-alpha.4.0</a>
-        <a class="ui label" href="#v2.0-alpha.3.0">v2.0-alpha.3.0</a>
-        <a class="ui label" href="#v2.0-alpha.2.2">v2.0-alpha.2.2</a>
-        <a class="ui label" href="#v2.0-alpha.2.1">v2.0-alpha.2.1</a>
-        <a class="ui label" href="#v2.0-alpha.2.0">v2.0-alpha.2.0</a>
-        <a class="ui label" href="#v2.0-alpha.1.0">v2.0-alpha.1.0</a>
-
+        {% set versions = ["v2.0-alpha.10.1", "v2.0-alpha.10.0", "2.0-alpha.9.1", "v2.0-alpha.9.0",
+                           "v2.0-alpha.8.1", "v2.0-alpha.8.0", "v2.0-alpha.7.0", "v2.0-alpha.6.0",
+                           "v2.0-alpha.5.2", "v2.0-alpha.5.1", "v2.0-alpha.5.0", "v2.0-alpha.4.1",
+                           "v2.0-alpha.4.0", "v2.0-alpha.3.0", "v2.0-alpha.2.2", "v2.0-alpha.2.1",
+                           "v2.0-alpha.2.0", "v2.0-alpha.1.0"] %}
+        {% for version in versions %}
+          <a class="ui label" href="#{{version}}">{{version}}</a>
+        {% endfor %}
       </div>
 
       <h2 id="v2.0-alpha.10.1" class="ui top attached header">
