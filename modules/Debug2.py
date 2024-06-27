@@ -65,54 +65,6 @@ def reduced_serializer(record: 'Record') -> str:
 # Remove builtin logger to stderr
 # logger.remove()
 
-logger_id = None
-def set_primary_logger(level: str = 'INFO') -> int:
-    """
-    """
-    ...
-#     if logger_id is not None:
-#         logger.remove(logger_id)
-#     handler_id = logger.add(
-#         sys.stdout,
-#         level=environ.get('TCM_LOG', level),
-#         # See https://github.com/Delgan/loguru/issues/150
-#         format='<level>[<bold>{level}</bold>] {message}</level>',
-#         colorize=True,
-#         backtrace=True,
-#         diagnose=True,
-#         enqueue=True,
-#     )
-#     logger.level('TRACE', color='<dim><fg #6d6d6d>')
-#     logger.level('DEBUG', color='<dim><white>')
-#     logger.level('INFO', color='<light-cyan>')
-#     logger.level('WARNING', color='<yellow>')
-#     logger.level('ERROR', color='<fg 237,112,46>')
-#     logger.level('CRITICAL', color='<red><bold>')
-#     return handler_id
-# logger_id = set_primary_logger()
-
-# logger.add(
-#     LOG_FILE,
-#     # Debug level for log file
-#     level='TRACE',
-#     # Format messages
-#     format=reduced_serializer,
-#     # Rotate every 12 hours
-#     rotation='12h',
-#     # Keep logs for two weeks
-#     retention='2 weeks',
-#     # Zip log files
-#     # compression='zip',
-#     # Better exception printing
-#     backtrace=True,
-#     diagnose=True,
-#     # Serialize each log entry as JSON; !this is handled by the formatter!
-#     # See https://loguru.readthedocs.io/en/latest/resources/recipes.html
-#     # serialize=True,
-#     # Make log calls non-blocking
-#     enqueue=True,
-# )
-
 logger.configure(
     handlers=[
         dict(

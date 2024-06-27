@@ -10,7 +10,6 @@ try:
     from modules.CleanPath import CleanPath
     from modules.CollectionPosterMaker import CollectionPosterMaker
     from modules.Debug import log
-    from modules.Debug2 import set_primary_logger
     from modules.GenreMaker import GenreMaker
     from modules.MoviePosterMaker import MoviePosterMaker
     from modules.PreferenceParser import PreferenceParser
@@ -384,7 +383,6 @@ season_poster_group.add_argument(
 # Parse given arguments
 args, unknown = parser.parse_known_args()
 is_docker = environ.get(ENV_IS_DOCKER, 'false').lower() == 'true'
-set_primary_logger('DEBUG')
 
 # Create dictionary of unknown arguments
 arbitrary_data = {}

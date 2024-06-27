@@ -13,7 +13,6 @@ try:
     import schedule
 
     from modules.Debug import log
-    from modules.Debug2 import set_primary_logger
     from modules.FontValidator import FontValidator
     from modules.PreferenceParser import PreferenceParser
     from modules.RemoteFile import RemoteFile
@@ -141,9 +140,6 @@ parser.add_argument(
 # Parse given arguments
 args = parser.parse_args()
 is_docker = environ.get(ENV_IS_DOCKER, 'false').lower() == 'true'
-
-# Set log level
-set_primary_logger(args.log)
 
 # Log parsed arguments
 log.debug('Runtime arguments  :')
