@@ -228,6 +228,7 @@ class Changelog:
     OUTER_BULLET_REGEX = re_compile(r'^-\s+(.+)$')
     INNER_BULLET_REGEX = re_compile(r'^(\s+)-\s+(.+)$')
     IMAGE_REGEX = re_compile(r'^\s+<img.*src="(.+)".*\/?>$')
+    V1_REGEX = re_compile(r'(\(v1\))')
 
 
     def __init__(self, file: Union[Path, str], /) -> None:
@@ -336,7 +337,10 @@ class Changelog:
                     r'<b>\1</b>',
                     self.ITALIC_REGEX.sub(
                         r' <i>\1</i> ',
-                        text,
+                        self.V1_REGEX.sub(
+                            r'<div class="ui mini circular green label">v1</div>',
+                            text,
+                        )
                     )
                 )
             )
