@@ -25,3 +25,4 @@ yml/
 .DS_Store
 missing.yml
 preferences.yml
+temp*.jpg
