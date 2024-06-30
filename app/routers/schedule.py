@@ -354,7 +354,31 @@ def toggle_schedule_type(
     initialize_scheduler(override=True)
 
 
-@schedule_router.get('/scheduled', status_code=200)
+@schedule_router.post('/type/{mode}')
+def set_the_scheduler_type(
+        request: Request,
+        mode: Literal['advanced', 'basic'],
+        preferences: Preferences = Depends(get_preferences),
+    ) -> None:
+    """
+    Set the scheduler mode to the given mode.
+    
+    - mode: Which mode to set.
+    """
+
+    # Toggle scheduling method
+    if mode == 'advanced':
+        request.state.log.info('Enabling advanced Task scheduling')
+    else:
+        request.state.log.info('Disabling advanced Task scheduling')
+    preferences.advanced_scheduling = mode == 'advanced'
+    preferences.commit()
+
+    # Reset Scheduler
+    initialize_scheduler(override=True)
+
+
+@schedule_router.get('/scheduled')
 def get_scheduled_tasks(
         show_internal: bool = Query(default=False),
         preferences: Preferences = Depends(get_preferences),
