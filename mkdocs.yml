@@ -188,6 +188,7 @@ nav:
       - Sonarr: getting_started/connections/sonarr.md
       - Tautulli: getting_started/connections/tautulli.md
       - TMDb: getting_started/connections/tmdb.md
+      - TVDb: getting_started/connections/tvdb.md
     - Global Settings: getting_started/settings.md
     - Creating a Font: getting_started/custom_font.md
     - Creating Templates: getting_started/creating_templates.md
