@@ -331,7 +331,7 @@ def _scheduled_task_from_job(job: Job,) -> ScheduledTask:
     )
 
 
-@schedule_router.post('/type/toggle', status_code=201)
+@schedule_router.post('/type/toggle')
 def toggle_schedule_type(
         request: Request,
         preferences: Preferences = Depends(get_preferences),
@@ -342,14 +342,11 @@ def toggle_schedule_type(
     uses Cron schedule expressions.
     """
 
-    # Get contextual logger
-    log = request.state.log
-
     # Toggle scheduling method
     if preferences.advanced_scheduling:
-        log.info('Disabling advanced Task scheduling')
+        request.state.log.info('Disabling advanced Task scheduling')
     else:
-        log.info('Enabling advanced Task scheduling')
+        request.state.log.info('Enabling advanced Task scheduling')
     preferences.advanced_scheduling = not preferences.advanced_scheduling
     preferences.commit()
 
@@ -378,7 +375,7 @@ def get_scheduled_tasks(
     ]
 
 
-@schedule_router.get('/{task_id}', status_code=200)
+@schedule_router.get('/{task_id}')
 def get_scheduled_task(
         task_id: TaskID,
         scheduler: BackgroundScheduler = Depends(get_scheduler),
@@ -398,7 +395,7 @@ def get_scheduled_task(
     return _scheduled_task_from_job(job)
 
 
-@schedule_router.put('/update/{task_id}', status_code=200)
+@schedule_router.put('/update/{task_id}')
 def reschedule_task(
         request: Request,
         task_id: TaskID,
@@ -414,7 +411,7 @@ def reschedule_task(
     """
 
     # Get contextual logger
-    log = request.state.log # pylint: disable=redefined-outer-name
+    log: Logger = request.state.log # pylint: disable=redefined-outer-name
 
     # Verify job exists, raise 404 if DNE
     if (job := scheduler.get_job(task_id)) is None:
@@ -465,6 +462,7 @@ def reschedule_task(
         if new_interval < MINIMUM_TASK_INTERVAL:
             log.warning(f'Task[{job.id}] Cannot schedule Task more frequently '
                         f'than 10 minutes')
+            update_schedule.seconds = 0
             update_schedule.minutes = 10
 
         # Reschedule with modified interval
@@ -480,7 +478,7 @@ def reschedule_task(
     return _scheduled_task_from_job(job)
 
 
-@schedule_router.post('/{task_id}', status_code=200)
+@schedule_router.post('/{task_id}')
 def run_task(
         request: Request,
         task_id: TaskID,
