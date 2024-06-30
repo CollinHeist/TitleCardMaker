@@ -69,6 +69,28 @@ class Connection(Base):
         return f'{self.interface_type}Connection[{self.id}]'
 
 
+    def __json__(self) -> dict:
+        return {
+            'id': self.id,
+            'interface_type': self.interface_type,
+            'enabled': self.enabled,
+            'name': self.name,
+            'api_key': self.api_key,
+            'url': self.url,
+            'use_ssl': self.use_ssl,
+            'username': self.username,
+            'filesize_limit': self.filesize_limit,
+            'integrate_with_kometa': self.integrate_with_kometa,
+            'downloaded_only': self.downloaded_only,
+            'libraries': self.libraries,
+            'minimum_dimensions': self.minimum_dimensions,
+            'skip_localized': self.skip_localized,
+            'language_priority': self.language_priority,
+            'episode_ordering': self.episode_ordering,
+            'include_movies': self.include_movies,
+        }
+
+
     @property
     def filesize_limit_value(self) -> Optional[int]:
         """

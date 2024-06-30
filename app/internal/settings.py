@@ -17,7 +17,7 @@ def get_episode_data_sources(db: Session) -> list[EpisodeDataSourceToggle]:
     """
 
     return [
-        EpisodeDataSourceToggle(
+        dict(
             interface=connection.interface_type,
             interface_id=connection.id,
             name=connection.name,
