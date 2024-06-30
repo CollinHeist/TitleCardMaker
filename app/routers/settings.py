@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.database.query import get_template
 from app.dependencies import get_database, get_preferences
 from app.internal.auth import get_current_user
+from app.internal.settings import get_episode_data_sources
 from app.models.connection import Connection
 from app.models.preferences import Preferences as PreferencesModel
 from app.schemas.base import UNSPECIFIED
@@ -65,16 +66,10 @@ def update_global_settings(
 @settings_router.get('/episode-data-source')
 def get_global_episode_data_source(
         db: Session = Depends(get_database),
-        preferences: PreferencesModel = Depends(get_preferences),
     ) -> list[EpisodeDataSourceToggle]:
     """Get the list of Episode data sources."""
 
-    return [{
-        'interface': connection.interface_type,
-        'interface_id': connection.id,
-        'name': connection.name,
-        'selected': preferences.episode_data_source == connection.id,
-    } for connection in db.query(Connection).all()]
+    return get_episode_data_sources(db)
 
 
 @settings_router.get('/image-source-priority')
