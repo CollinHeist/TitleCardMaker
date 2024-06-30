@@ -343,7 +343,10 @@ def validate_card_type_model(
     if CardClass is None:
         raise HTTPException(
             status_code=400,
-            detail=f'Cannot create Card - invalid card type {card_settings["card_type"]}',
+            detail=(
+                f'Cannot create Card - invalid card type '
+                f'{card_settings["card_type"]}'
+            ),
         )
 
     # Get Pydantic model for this card type
