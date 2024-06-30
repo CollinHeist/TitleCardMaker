@@ -6,6 +6,10 @@ import {
 } from './.types.js';
 {% endif %}
 
+/** @type {EpisodeDataSourceToggle} Which data sources are enabled*/
+const episodeDataSources = {{episode_data_sources|tojson}};
+/** @type {AnyConnection[]} All globally defined and enabled Connections */
+const allConnections = {{all_connections|tojson}};
 /** @type {number} Minimum interval between calls to add a new series */
 const _ADD_INTERVAL_MS = 5000;
 /** @type {number} Last execution time (from `Date().getTime()`) of adding a Series */
@@ -330,23 +334,11 @@ function queryAllBlueprints(page=1, refresh=false) {
  * Load the interface search dropdown.
  */
 function initializeSearchSource() {
-  $.ajax({
-    type: 'GET',
-    url: '/api/settings/episode-data-source',
-    /**
-     * Data sources queried, initialize dropdown.
-     * @param {EpisodeDataSourceToggle} dataSources - Which data sources are
-     * enabled.
-     */
-    success: dataSources => {
-      $('.dropdown[data-value="interface_id"]').dropdown({
-        placeholder: 'Default',
-        values: dataSources.map(({name, interface_id, selected}) => {
-          return {name, value: interface_id, selected};
-        }),
-      });
-    },
-    error: response => showErrorToast({title: 'Error Querying Episode Data Sources', response}),
+  $('.dropdown[data-value="interface_id"]').dropdown({
+    placeholder: 'Default',
+    values: episodeDataSources.map(({name, interface_id, selected}) => {
+      return {name, value: interface_id, selected};
+    }),
   });
 }
 
@@ -356,41 +348,29 @@ function initializeSearchSource() {
 function initializeLibraryDropdowns() {
   $.ajax({
     type: 'GET',
-    url: '/api/connection/all',
+    url: '/api/available/libraries/all',
     /**
-     * Connections queried, store and then query all libraries.
-     * @param {AnyConnection[]} connections - All globally defined and enabled
-     * Connections.
+     * Libraries queried successfully, populate the library dropdowns.
+     * @param {MediaServerLibrary} libraries 
      */
-    success: connections => {
-      $.ajax({
-        type: 'GET',
-        url: '/api/available/libraries/all',
-        /**
-         * Libraries queried successfully, populate the library dropdowns.
-         * @param {MediaServerLibrary} libraries 
-         */
-        success: libraries => {
-          $('.dropdown[data-value="libraries"]').dropdown({
-            placeholder: 'None',
-            values: libraries.map(({interface, interface_id, name}) => {
-              const serverName = connections.filter(connection => connection.id === interface_id)[0].name || interface;
-              return {
-                name: name,
-                text: `${name} (${serverName})`,
-                value: `${interface}::${interface_id}::${name}`,
-                description: serverName,
-                descriptionVertical: true,
-                selected: false,
-              };
-            }),
-          });
-        },
-        error: response => showErrorToast({title: 'Error Querying Libraries', response}),
+    success: libraries => {
+      $('.dropdown[data-value="libraries"]').dropdown({
+        placeholder: 'None',
+        values: libraries.map(({interface, interface_id, name}) => {
+          const serverName = allConnections.filter(connection => connection.id === interface_id)[0].name || interface;
+          return {
+            name: name,
+            text: `${name} (${serverName})`,
+            value: `${interface}::${interface_id}::${name}`,
+            description: serverName,
+            descriptionVertical: true,
+            selected: false,
+          };
+        }),
       });
     },
-    error: response => showErrorToast({title: 'Error Querying Connections', response}),
-  }); 
+    error: response => showErrorToast({title: 'Error Querying Libraries', response}),
+  });
 }
 
 /** Initialize the page. */
