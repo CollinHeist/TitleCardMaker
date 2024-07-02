@@ -47,7 +47,7 @@ from modules.TieredSettings import TieredSettings
 # pylint: disable=missing-function-docstring
 def Extension(s: str) -> str:
     return str(s) if s.startswith('.') else f'.{s}'
-def Percentage(s: str) -> str:
+def Percentage(s: str) -> float:
     return float(str(s).split('%', maxsplit=1)[0]) / 100.0
 def Width(dims: str) -> int:
     return int(str(dims).lower().split('x', maxsplit=1)[0])
@@ -55,8 +55,9 @@ def Height(dims: str) -> int:
     return int(str(dims).lower().split('x')[1])
 # pylint: enable=missing-function-docstring
 
+YamlDict = dict[str, Any]
 
-def parse_raw_yaml(yaml: str) -> dict[str, Any]:
+def parse_raw_yaml(yaml: str) -> YamlDict:
     """
     Parse the raw YAML string into a Python dictionary (ordereddict).
 
@@ -83,7 +84,7 @@ def parse_raw_yaml(yaml: str) -> dict[str, Any]:
 
 
 _AttributeType = TypeVar('_AttributeType')
-def _get(yaml_dict: dict[str, Any],
+def _get(yaml_dict: YamlDict,
         *keys: str,
         type_: Optional[Callable[..., _AttributeType]] = None,
         default: Any = None,
@@ -134,7 +135,7 @@ def _get(yaml_dict: dict[str, Any],
 
 
 def _parse_translations(
-        yaml_dict: dict[str, Any],
+        yaml_dict: YamlDict,
         default: Any = None
     ) -> list[Translation]:
     """
@@ -155,7 +156,7 @@ def _parse_translations(
     if (translations := yaml_dict.get('translation', None)) is None:
         return default
 
-    def _parse_single_translation(translation: dict[str, Any]) -> dict[str, str]:
+    def _parse_single_translation(translation: YamlDict) -> dict[str, str]:
         if (not isinstance(translation, dict)
             or set(translation.keys()) > {'language', 'key'}):
             raise HTTPException(
@@ -187,7 +188,7 @@ def _parse_translations(
 
 
 def _parse_episode_data_source(
-        yaml_dict: dict[str, Any]
+        yaml_dict: YamlDict
     ) -> Optional[EpisodeDataSource]:
     """
     Parse the episode data source from the given YAML.
@@ -227,9 +228,7 @@ def _parse_episode_data_source(
         ) from e
 
 
-def _parse_filesize_limit(
-        yaml_dict: dict[str, Any]
-    ) -> str:
+def _parse_filesize_limit(yaml_dict: YamlDict) -> str:
     """
     Parse the filesize limit from the given YAML.
 
@@ -261,7 +260,7 @@ def _parse_filesize_limit(
         ) from exc
 
 
-def _parse_filename_format(yaml_dict: dict[str, Any]) -> str:
+def _parse_filename_format(yaml_dict: YamlDict) -> str:
     """
     Parse the card filename format from the given YAML. This converts
     any "old" filename variables (e.g. {season} or {episode}) into their
@@ -300,7 +299,7 @@ def _parse_filename_format(yaml_dict: dict[str, Any]) -> str:
         .replace('{abs_number:02}', '{absolute_number:02}')
 
 
-def _parse_season_folder_format(yaml_dict: dict[str, Any]) -> str:
+def _parse_season_folder_format(yaml_dict: YamlDict) -> str:
     """
     Parse the season folder format from the given YAML. This converts
     any "old" variables (e.g. {season} or {episode}) into their new
@@ -339,7 +338,7 @@ def _parse_season_folder_format(yaml_dict: dict[str, Any]) -> str:
         .replace('{abs_number:02}', '{absolute_number:02}')
 
 
-def _remove_unspecifed_args(**dict_kwargs: dict) -> dict:
+def _remove_unspecifed_args(**dict_kwargs: Any) -> dict:
     """
     Remove unspecified arguments.
 
@@ -359,7 +358,7 @@ def _remove_unspecifed_args(**dict_kwargs: dict) -> dict:
 
 def parse_preferences(
         preferences: Preferences,
-        yaml_dict: dict,
+        yaml_dict: YamlDict,
         *,
         log: Logger = log,
     ) -> Preferences:
@@ -446,7 +445,7 @@ def parse_preferences(
 
 def parse_emby(
         db: Session,
-        yaml_dict: dict,
+        yaml_dict: YamlDict,
         *,
         log: Logger = log,
     ) -> None:
@@ -505,7 +504,7 @@ def parse_emby(
 
 def parse_jellyfin(
         db: Session,
-        yaml_dict: dict,
+        yaml_dict: YamlDict,
         *,
         log: Logger = log,
     ) -> None:
@@ -565,7 +564,7 @@ def parse_jellyfin(
 
 def parse_plex(
         db: Session,
-        yaml_dict: dict,
+        yaml_dict: YamlDict,
         *,
         log: Logger = log,
     ) -> None:
@@ -629,7 +628,7 @@ def parse_plex(
 
 def parse_sonarr(
         db: Session,
-        yaml_dict: dict,
+        yaml_dict: YamlDict,
         *,
         log: Logger = log,
     ) -> None:
@@ -692,7 +691,7 @@ def parse_sonarr(
 
 def parse_tmdb(
         db: Session,
-        yaml_dict: dict,
+        yaml_dict: YamlDict,
         *,
         log: Logger = log,
     ) -> None:
@@ -765,7 +764,7 @@ def parse_tmdb(
 
 def parse_syncs(
         db: Session,
-        yaml_dict: dict[str, Any],
+        yaml_dict: YamlDict,
     ) -> list[Union[NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync]]:
     """
     Create NewSync objects for all defined syncs in the given YAML.
@@ -786,7 +785,7 @@ def parse_syncs(
             given YAML.
     """
 
-    def _get_templates(sync: dict[str, Any]) -> list[int]:
+    def _get_templates(sync: YamlDict) -> list[int]:
         if 'add_template' not in sync:
             return []
 
@@ -801,7 +800,7 @@ def parse_syncs(
         return [template.id]
 
     def _parse_media_server_sync(
-            yaml_dict: dict[str, Any],
+            yaml_dict: YamlDict,
             connection: Connection,
             NewSyncClass: Union[NewEmbySync, NewJellyfinSync, NewPlexSync]
         ) -> Union[list[NewEmbySync], list[NewJellyfinSync], list[NewPlexSync]]:
@@ -922,7 +921,9 @@ def parse_syncs(
     return all_syncs
 
 
-def parse_fonts(yaml_dict: dict) -> list[tuple[NewNamedFont, Optional[Path]]]:
+def parse_fonts(
+        yaml_dict: YamlDict
+    ) -> list[tuple[NewNamedFont, Optional[Path]]]:
     """
     Create NewNamedFont objects for any defined fonts in the given
     YAML.
@@ -989,7 +990,7 @@ def parse_fonts(yaml_dict: dict) -> list[tuple[NewNamedFont, Optional[Path]]]:
 def parse_templates(
         db: Session,
         preferences: Preferences,
-        yaml_dict: dict[str, Any]
+        yaml_dict: YamlDict
     ) -> list[NewTemplate]:
     """
     Create NewTemplate objects for any defined templates in the given
@@ -1114,7 +1115,7 @@ def parse_templates(
 def parse_series(
         db: Session,
         preferences: Preferences,
-        yaml_dict: dict[str, Any],
+        yaml_dict: YamlDict,
         *,
         log: Logger = log,
     ) -> list[NewSeries]:
@@ -1143,9 +1144,8 @@ def parse_series(
     """
 
     # Return empty list if no header
-    if 'series' not in yaml_dict:
+    if not (all_series := yaml_dict.get('series')):
         return []
-    all_series = yaml_dict['series']
 
     # If not a dictionary of series, return empty list
     if not isinstance(all_series, dict):
@@ -1306,7 +1306,8 @@ def parse_series(
                 series_dict,
                 'unwatched_style',
                 type_=preferences.standardize_style
-            ), watched_style=_get(
+            ),
+            watched_style=_get(
                 series_dict,
                 'watched_style',
                 type_=preferences.standardize_style
@@ -1320,23 +1321,28 @@ def parse_series(
                 series_dict,
                 'font', 'size',
                 type_=Percentage
-            ), font_kerning=_get(
+            ),
+            font_kerning=_get(
                 series_dict,
                 'font', 'kerning',
                 type_=Percentage
-            ), font_stroke_width=_get(
+            ),
+            font_stroke_width=_get(
                 series_dict,
                 'font', 'stroke_width',
                 type_=Percentage
-            ), font_interline_spacing=_get(
+            ),
+            font_interline_spacing=_get(
                 series_dict,
                 'font', 'interline_spacing',
                 type_=int
-            ), font_vertical_shift=_get(
+            ),
+            font_vertical_shift=_get(
                 series_dict,
                 'font', 'vertical_shift',
                 type_=int
-            ), directory=_get(series_dict, 'media_directory'),
+            ),
+            directory=_get(series_dict, 'media_directory'),
             libraries=libraries,
             **series_info.ids,
             season_title_ranges=list(season_titles.keys()),
