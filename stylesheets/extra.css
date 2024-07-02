@@ -1,0 +1,175 @@
+:root {
+  --badge-color: #526cfe1a;
+}
+
+/* Change the z-index of the header */
+.md-header {
+  z-index: 13;
+}
+
+/* Stylize horizontal marquee / scrollers */
+.scroller {
+  max-width: 100%;
+}
+.scroller > .scroller__inner {
+  display: flex; /* All content should display inline */
+}
+
+/* Reduce speed of slow scrollers */
+.very-slow.scroller {
+  --_animation-duration: 200s;
+}
+
+.scroller[data-animated=true] > .scroller__inner {
+  /* The inner scroller should be the size of all inner content */
+  width: max-content;
+  flex-wrap: nowrap;
+  animation: scroll var(--_animation-duration, 55s) linear infinite;
+}
+.reversed.scroller[data-animated=true] > .scroller__inner {
+  animation-direction: reverse;
+}
+@keyframes scroll {
+  to {
+    transform: translate(-50%);
+  }
+}
+
+/* Add inner-item padding to padded scroller content */
+.padded.scroller[data-animated=true] > .scroller__inner > * {
+  margin-right: 0.5em;
+}
+
+/* Round corners of rounded scrollers */
+.rounded.padded.scroller[data-animated=true] > .scroller__inner img {
+  border-radius: 4px;
+}
+
+/* Stylized scrollers have images which expand when hovered */
+.stylized.scroller > .scroller__inner > * {
+  transition: all 350ms ease-in-out;
+}
+.stylized.scroller > .scroller__inner > *:hover {
+  transition: all 350ms ease-in-out;
+}
+.stylized.scroller > .scroller__inner > *:hover {
+  scale: 1.25;
+  z-index: 3;
+}
+/* Erase the subtitle text when the image is expanded */
+.stylized.scroller > .scroller__inner > *:hover::after {
+  content: "";
+}
+
+/* Reduce image height if scroller is enabled */
+.scroller[data-animated=true] img {
+  height: 75vh;
+}
+.half-height.scroller[data-animated=true] img {
+  height: 38vh;
+}
+.scroller > .scroller__inner > *::after {
+  content: attr(data-label);
+  position: relative;
+  display: block;
+  text-align: center;
+  font-style: italic;
+}
+/* Reduce height on mobile */
+@media (max-width: 768px) {
+  .scroller[data-animated=true] img {
+    height: 40vh;
+  }
+  .half-height.scroller[data-animated=true] img {
+    height: 18vh;
+  }
+}
+
+/* Inline header icons */
+h2 > img {
+  height: 1.125em !important;
+}
+
+/* Logo colors */
+.emby {
+  color: #4CAF50
+}
+.jellyfin {
+  color: rgb(108,119,199);
+}
+.plex {
+  color: rgb(226,179,61);
+}
+.tmdb {
+  color: rgb(1, 180, 228);
+}
+
+/* Generic icon colors */
+.green {
+  color: #4cae4f
+}
+.red {
+  color: #ef5552
+}
+
+/* Stylize footer donate link */
+.md-social__link[title="Become a Sponsor"] > svg {
+  fill: crimson;
+}
+
+/* Reduce padding on inline buttons */
+.md-typeset .example.md-button {
+  padding: 0.05em 0.5em;
+}
+
+/* Resize termynal windows */
+[data-termynal] {
+  padding: 40px 35px 35px !important;
+}
+
+.md-typeset .mdx-badge {
+  font-size: 1.0em;
+}
+
+.md-typeset .mdx-badge--right {
+  float: right;
+  margin-left: 0.35em;
+}
+.md-typeset .mdx-badge__icon {
+  padding: 4px;
+  background: var(--badge-color, var(--md-accent-fg-color--transparent));
+  border-start-start-radius: 2px;
+  border-end-start-radius: 2px;
+}
+.md-typeset .mdx-badge__icon:last-child {
+  border-radius: 2px;
+}
+.md-typeset .mdx-badge__text {
+  padding: 4px 6px;
+  border-start-end-radius: 2px;
+  border-end-end-radius: 2px;
+  box-shadow: 0 0 0 1px inset var(--badge-color, var(--md-accent-fg-color--transparent));
+}
+
+.example-card {
+  max-width: 75%;
+}
+
+/* Fix image sizing within image comparisons */
+/* https://image-compare-viewer.netlify.app/ */
+.image-compare img {
+  height: 100%;
+  max-width: unset !important;
+}
+/* Keep image comparison slider below the docs toolbar */
+/* .image-compare .icv__control {
+  z-index: 3 !important;
+} */
+/* Move the image compare labels to the top of the image; adjust background */
+.image-compare .icv__label {
+  bottom: unset;
+  top: 1rem;
+  background: rgba(0, 0, 0, 0.50);
+  /* Reduce font size */
+  font-size: 0.65rem;
+}
