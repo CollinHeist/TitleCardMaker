@@ -19,7 +19,7 @@ class MediaServer(ABC):
     """
     This class describes an abstract base class for all MediaServer
     classes. MediaServer objects are servers like Plex, Emby, and
-    JellyFin that can have title cards loaded into them, as well as
+    Jellyfin that can have title cards loaded into them, as well as
     source images retrieved from them.
     """
 
@@ -114,6 +114,50 @@ class MediaServer(ABC):
         ) -> list[tuple[_Episode, _Card]]:
         """
         Abstract method to load title cards within this MediaServer.
+        """
+        raise NotImplementedError
+
+
+    @abstractmethod
+    def load_season_posters(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            posters: dict[int, Union[str, Path]],
+            *,
+            log: Logger = log,
+        ) -> None:
+        """
+        Abstract method to load season posters within this MediaServer.
+        """
+        raise NotImplementedError
+
+
+    @abstractmethod
+    def load_series_poster(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            image: Union[str, Path],
+            *,
+            log: Logger = log
+        ) -> None:
+        """
+        Abstract method to load the given poster image within this
+        MediaServer.
+        """
+        raise NotImplementedError
+
+
+    @abstractmethod
+    def load_series_background(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            image: Union[str, Path],
+            *,
+            log: Logger = log
+        ) -> None:
+        """
+        Abstract method to load the given background image within this
+        MediaServer.
         """
         raise NotImplementedError
 
