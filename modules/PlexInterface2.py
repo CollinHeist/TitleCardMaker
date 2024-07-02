@@ -880,6 +880,161 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         return loaded
 
 
+    @catch_and_log('Error uploading season posters')
+    def load_season_posters(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            posters: dict[int, Union[str, Path]],
+            *,
+            log: Logger = log,
+        ) -> None:
+        """
+        Load the given season posters into Plex.
+
+        Args:
+            library_name: Name of the library containing the series to
+                update.
+            series_info: The series to update.
+            posters: Dictionary of season numbers to poster URLs or
+                files to upload.
+            log: Logger for all log messages.
+        """
+
+        if (not posters
+            or not (library := self.__get_library(library_name))
+            or not (series := self.__get_series(library, series_info))):
+            return None
+
+        for season in series.seasons():
+            season: PlexSeason = season
+            # Skip if there is no poster for this season
+            if not (poster := posters.get(season.index)):
+                continue
+
+            # Shrink image if necessary
+            if (isinstance(poster, Path)
+                and (image := self.compress_image(poster)) is None):
+                continue
+
+            # Upload this poster
+            try:
+                # If integrating with Kometa, add EXIF data
+                if isinstance(poster, Path) and self.integrate_with_kometa:
+                    self.__add_exif_tag(image)
+
+                # Upload poster
+                self.__retry_upload(season, image)
+
+                # If integrating with Kometa, remove label
+                if self.integrate_with_kometa:
+                    season.removeLabel(['Overlay'])
+                    log.trace(f'Removed "Overlay" label from {season}')
+                log.debug(f'{series_info} loaded poster into season '
+                          f'{season.index}')
+            except Exception:
+                log.exception(f'Failed to upload {image.resolve()} to season '
+                              f'{season.index}')
+                continue
+
+        return None
+
+
+    @catch_and_log('Error loading the series poster')
+    def load_series_poster(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            image: Union[str, Path],
+            *,
+            log: Logger = log
+        ) -> None:
+        """
+        Load the given series poster into Plex.
+
+        Args:
+            library_name: Name of the library containing the series to
+                update.
+            series_info: The series to update.
+            image: URL or Path to the file to upload.
+            log: Logger for all log messages.
+        """
+
+        if (not (library := self.__get_library(library_name))
+            or not (series := self.__get_series(library, series_info))):
+            return None
+
+        # Shrink image if necessary
+        if (isinstance(image, Path)
+            and (image := self.compress_image(image)) is None):
+            return None
+
+        # Upload this poster
+        try:
+            # If integrating with Kometa, add EXIF data
+            if isinstance(image, Path) and self.integrate_with_kometa:
+                self.__add_exif_tag(image)
+
+            # Upload poster
+            self.__retry_upload(series, image)
+
+            # If integrating with Kometa, remove label
+            if self.integrate_with_kometa:
+                series.removeLabel(['Overlay'])
+                log.trace(f'Removed "Overlay" label from {series}')
+            log.debug(f'{series_info} loaded poster')
+        except Exception:
+            log.exception(f'Failed to upload {image.resolve()} to {series_info}')
+
+        return None
+
+
+    @catch_and_log('Error loading series background')
+    def load_series_background(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            image: Union[str, Path],
+            *,
+            log: Logger = log
+        ) -> None:
+        """
+        Load the given series background image into Plex.
+
+        Args:
+            library_name: Name of the library containing the series to
+                update.
+            series_info: The series to update.
+            image: URL or Path to the file to upload.
+            log: Logger for all log messages.
+        """
+
+        if (not (library := self.__get_library(library_name))
+            or not (series := self.__get_series(library, series_info))):
+            return None
+
+        # Shrink image if necessary
+        if (isinstance(image, Path)
+            and (image := self.compress_image(image)) is None):
+            return None
+
+        # Upload this poster
+        try:
+            # If integrating with Kometa, add EXIF data
+            if isinstance(image, Path) and self.integrate_with_kometa:
+                self.__add_exif_tag(image)
+
+            # Upload poster
+            self.__retry_upload(series, image, kind='art')
+
+            # If integrating with Kometa, remove label
+            if self.integrate_with_kometa:
+                series.removeLabel(['Overlay'])
+                log.trace(f'Removed "Overlay" label from {series}')
+            log.debug(f'{series_info} loaded background')
+        except Exception:
+            log.exception(f'Failed to upload {image.resolve()} to {series_info}')
+
+        return None
+
+
     @catch_and_log('Error getting rating key details')
     def get_episode_details(self,
             rating_key: int,
