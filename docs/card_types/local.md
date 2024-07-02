@@ -483,7 +483,7 @@ validation.
             )
 
             class CardModel(BaseCardModel):
-                extra_val: str
+                extra_val: str # (1)! This is an __example__. More fields will be required.
 
             REF_DIRECTORY = Path(__file__).parent / 'fancy_files'
 
