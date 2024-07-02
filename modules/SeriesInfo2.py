@@ -32,8 +32,7 @@ class SeriesIds(TypedDict):
 
 class SeriesInfo(DatabaseInfoContainer):
     """
-    This class encapsulates static information that is tied to a single
-    Series.
+    Static information that is tied to a single Series.
     """
 
     """Regex to match name + year from given full name"""
@@ -139,17 +138,17 @@ class SeriesInfo(DatabaseInfoContainer):
         """
         Construct a SeriesInfo object from all the given objects. This
         takes `primary` as the base info (name, year, etc.), and then
-        adds the IDs from the other infos.
+        adds the ID's from the other infos.
 
         Args:
             primary: Base info.
-            series_infos: Any number of infos whose IDs to utilize in
+            series_infos: Any number of infos whose ID's to utilize in
                 the construction of the resulting SeriesInfo object.
-                IDs are taken in priority sequentially.
+                ID's are taken in priority sequentially.
 
         Returns:
             SeriesInfo object with the name/year of `primary`, but the
-            combined IDs of all infos. 
+            combined ID's of all infos. 
         """
 
         series_info = cls(

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from logging import Logger
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
-from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Literal, NamedTuple, Optional, Union
 
 from fastapi import HTTPException
 from PIL import Image
@@ -742,33 +742,44 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
            before_sleep=lambda _:log.warning('Cannot upload image, retrying..'),
            reraise=True)
     def __retry_upload(self,
-            plex_object: Union[PlexEpisode, PlexSeason],
-            filepath: Path,
+            plex_object: Union[PlexShow, PlexSeason, PlexEpisode],
+            image: Union[str, Path],
+            kind: Literal['art', 'poster'] = 'poster',
         ) -> None:
         """
-        Upload the given poster to the given Episode, retrying if it fails.
+        Upload the given image to the given object, retrying if it
+        fails.
 
         Args:
             plex_object: The plexapi object to upload the file to.
-            filepath: Filepath to the poster to upload.
+            image: URL or Path to the file to upload.
         """
 
-        plex_object.uploadPoster(filepath=filepath)
+        if kind == 'art':
+            if isinstance(image, str):
+                plex_object.uploadArt(url=image)
+            else:
+                plex_object.uploadArt(filepath=image)
+        else:
+            if isinstance(image, str):
+                plex_object.uploadArt(url=image)
+            else:
+                plex_object.uploadPoster(filepath=image)
         plex_object.addLabel(['TCM'])
 
 
-    def __add_exif_tag(self, card: Path, *, log: Logger = log) -> None:
+    def __add_exif_tag(self, image: Path, *, log: Logger = log) -> None:
         """
-        Add an EXIF tag to the given Card file. This adds "titlecard" at
-        0x4242, and overwrites the existing file.
+        Add an EXIF tag to the given image file. This adds "titlecard"
+        at 0x4242, and overwrites the existing file.
 
         Args:
-            card: Path to the Card file to modify.
+            image: Path to the Card file to modify.
             log: Logger for all log messages.
         """
 
         # Create Image object, read EXIF data
-        card_image = Image.open(card)
+        card_image = Image.open(image)
         exif = card_image.getexif()
 
         # Add EXIF data
@@ -778,11 +789,11 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         # that implies image has an alpha channel that is not supported
         # by file extension - convert and try again
         try:
-            card_image.save(card.resolve(), exif=exif)
+            card_image.save(image.resolve(), exif=exif)
         except OSError:
-            card_image.convert('RGB').save(card.resolve(), exif=exif)
+            card_image.convert('RGB').save(image.resolve(), exif=exif)
 
-        log.trace(f'Added EXIF data {self.EXIF_TAG} to {card}')
+        log.trace(f'Added EXIF data {self.EXIF_TAG} to {image}')
 
 
     @catch_and_log('Error uploading title cards')

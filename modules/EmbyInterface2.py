@@ -386,6 +386,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                     if old_episode_info == new_episode_info:
                         old_episode_info.copy_ids(new_episode_info, log=log)
 
+
     def query_series(self,
             query: str,
             *,
