@@ -174,10 +174,8 @@ class ShapeTitleCard(BaseCardType):
         self.stroke_color = stroke_color
         self.text_position: TextPosition = text_position
 
-        # Scale side length by for multiline titles
-        self.__line_count = len(title_text.splitlines())
-        if self.__line_count > 1:
-            self.length *= 1.0 + (0.25 * (self.__line_count - 1))
+        # Scale side length by 30% for each additional line in the title
+        self.length *= 1.0 + (0.30 * (len(title_text.splitlines()) - 1))
 
         # Implementation variables
         self.__title_width = None
