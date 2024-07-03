@@ -678,6 +678,9 @@ class PreferenceParser(YamlReader):
                 log.warning(f'Plex will reject all images larger than 10 MB')
 
         if (value := self.get('plex', 'timeout', type_=int)) is not None:
+            if value < 1:
+                log.critical(f'Plex timeout must be at least 1')
+                self.valid = False
             self.plex_timeout = value
 
         self.plex_style_set = StyleSet(
