@@ -9,13 +9,17 @@ __pycache__/
 # PEP 582
 __pypackages__/
 
+app/
 config/
-yaml/
-yml/
+docs/
 source/
 logs/
 fonts/
 modules/.objects/
+node_modules/
+yaml/
+yml/
 *._*
+*2.py
 *.prof
 .DS_Store
