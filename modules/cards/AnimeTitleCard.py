@@ -53,7 +53,7 @@ class AnimeTitleCard(BaseCardType):
         'source_file', 'output_file', 'title_text', 'season_text',
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
         'font_file', 'font_kerning', 'font_size', 'font_stroke_width',
-        'font_interline_spacing', 'font_interword_spacing',
+        'font_interline_spacing', 'font_interword_spacing', 'episode_text_size',
         'font_vertical_shift', 'omit_gradient', 'stroke_color', 'separator',
         'kanji', 'use_kanji', 'require_kanji', 'kanji_vertical_shift',
         'episode_text_color', 'kanji_color', 'episode_stroke_color',
@@ -79,6 +79,7 @@ class AnimeTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             kanji: Optional[str] = None,
+            episode_text_font_size: float = 1.0,
             episode_stroke_color: str = EPISODE_STROKE_COLOR,
             episode_text_color: str = SERIES_COUNT_TEXT_COLOR,
             separator: str = '·',
@@ -125,6 +126,7 @@ class AnimeTitleCard(BaseCardType):
         self.font_vertical_shift = font_vertical_shift
 
         # Optional extras
+        self.episode_text_size = episode_text_font_size
         self.episode_stroke_color = episode_stroke_color
         self.episode_text_color = episode_text_color
         self.omit_gradient = omit_gradient
@@ -193,10 +195,12 @@ class AnimeTitleCard(BaseCardType):
         text (season/episode count and dot).
         """
 
+        size = 67 * self.episode_text_size
+
         return [
             f'-font "{self.SERIES_COUNT_FONT.resolve()}"',
             f'-kerning 2',
-            f'-pointsize 67',
+            f'-pointsize {size}',
             f'-interword-spacing 25',
             f'-gravity southwest',
         ]
@@ -287,7 +291,7 @@ class AnimeTitleCard(BaseCardType):
             f'label:"{self.season_text} {self.separator}"',
             f'label:"{self.episode_text}"',
             # Combine season and episode text into one "image"
-            f'+smush 30 \)',        # Smush less for stroke
+            f'+smush 30 \)',
             f'-gravity southwest',
             # Overlay stroke "image"
             f'-geometry +73+88',    # Different offset for stroke
@@ -303,7 +307,7 @@ class AnimeTitleCard(BaseCardType):
             # Zero-width stroke for episode text
             f'-strokewidth 0',
             f'label:"{self.episode_text}"',
-            # Combine season+episode text "images"
+            # Combine season+episode text images
             f'+smush 35 \)',
             # Add text to source image
             f'-gravity southwest',
@@ -336,6 +340,8 @@ class AnimeTitleCard(BaseCardType):
             if 'episode_text_color' in extras:
                 extras['episode_text_color'] =\
                     AnimeTitleCard.SERIES_COUNT_TEXT_COLOR
+            if 'episode_text_size' in extras:
+                extras['episode_text_size'] = 1.0
             if 'kanji_font_size' in extras:
                 extras['kanji_font_size'] = 1.0
             if 'kanji_stroke_width' in extras:
@@ -367,6 +373,8 @@ class AnimeTitleCard(BaseCardType):
                 and extras['episode_stroke_color'] != AnimeTitleCard.EPISODE_STROKE_COLOR)
             or ('episode_text_color' in extras
                 and extras['episode_text_color'] != AnimeTitleCard.SERIES_COUNT_TEXT_COLOR)
+            or ('episode_text_size' in extras
+                and extras['episode_text_size'] != 1.0)
             or ('kanji_color' in extras
                 and extras['kanji_color'] != AnimeTitleCard.TITLE_COLOR)
             or ('kanji_font_size' in extras and extras['kanji_font_size'] !=1.0)
@@ -400,10 +408,9 @@ class AnimeTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
-        standard_etf = AnimeTitleCard.EPISODE_TEXT_FORMAT.upper()
-
         return (custom_episode_map
-                or episode_text_format.upper() != standard_etf)
+                or episode_text_format.upper() != \
+                    AnimeTitleCard.EPISODE_TEXT_FORMAT.upper())
 
 
     def create(self) -> None:
