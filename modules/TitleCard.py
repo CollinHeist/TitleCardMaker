@@ -82,6 +82,7 @@ class TitleCard:
         'comic book': ComicBookTitleCard,
         'cutout': CutoutTitleCard,
         'divider': DividerTitleCard,
+        'f1': FormulaOneTitleCard,
         'fade': FadeTitleCard,
         'formula 1': FormulaOneTitleCard,
         'frame': FrameTitleCard,
