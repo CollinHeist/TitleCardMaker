@@ -330,6 +330,9 @@ class GraphTitleCard(BaseCardType):
         denominator.
         """
 
+        if self.hide_episode_text:
+            return []
+
         # Scale offset from graph sides by graph radius
         internal_offset = 85 * (self.graph_radius / self.GRAPH_RADIUS)
 
@@ -394,6 +397,9 @@ class GraphTitleCard(BaseCardType):
     @property
     def fraction_commands(self) -> ImageMagickCommands:
         """Subcommand to draw the numerator and denominator."""
+
+        if self.hide_episode_text:
+            return []
 
         # Determine gravity
         if (slant_mode := len(self.numerator) < 3 and len(self.denominator) <3):
@@ -475,7 +481,7 @@ class GraphTitleCard(BaseCardType):
         """Subcommands required to add the title text."""
 
         # If no title text, return empty commands
-        if len(self.title_text) == 0:
+        if not self.title_text:
             return []
 
         # Determine coordinates and gravity of the positioning
@@ -552,8 +558,7 @@ class GraphTitleCard(BaseCardType):
 
         custom_extras = (
             ('graph_background_color' in extras
-                and extras['graph_background_color'] != \
-                    GraphTitleCard.BACKGROUND_GRAPH_COLOR)
+                and extras['graph_background_color'] != GraphTitleCard.BACKGROUND_GRAPH_COLOR)
             or ('graph_color' in extras
                 and extras['graph_color'] != GraphTitleCard.GRAPH_COLOR)
         )
@@ -578,9 +583,10 @@ class GraphTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
+        standard_etf = GraphTitleCard.EPISODE_TEXT_FORMAT.upper()
+
         return (custom_episode_map
-                or episode_text_format.upper() != \
-                    GraphTitleCard.EPISODE_TEXT_FORMAT.upper())
+                or episode_text_format.upper() != standard_etf)
 
 
     def create(self) -> None:
