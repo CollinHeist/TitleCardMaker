@@ -5,6 +5,7 @@ from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
 if TYPE_CHECKING:
+    from modules.PreferenceParser import PreferenceParser
     from modules.Font import Font
 
 
@@ -77,7 +78,7 @@ class FrameTitleCard(BaseCardType):
             grayscale: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
             episode_text_position: Position = 'surround',
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
         """Construct a new instance of this Card."""

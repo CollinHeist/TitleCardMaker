@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Optional
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 
 if TYPE_CHECKING:
+    from modules.PreferenceParser import PreferenceParser
     from modules.Font import Font
 
 
@@ -66,12 +67,10 @@ class StarWarsTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
-            preferences: Optional['Preferences'] = None,
+            preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
-        """
-        Initialize the CardType object.
-        """
+        """Initialize the CardType object."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)

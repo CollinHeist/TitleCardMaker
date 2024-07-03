@@ -49,7 +49,7 @@ class FormulaOneTitleCard(BaseCardType):
     """Whether this CardType uses season titles for archival purposes"""
     USES_SEASON_TITLE = True
 
-    """Standard class has standard archive name"""
+    """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Formula 1 Style'
 
     """Implementation details"""
@@ -364,10 +364,9 @@ class FormulaOneTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
-        standard_etf = FormulaOneTitleCard.EPISODE_TEXT_FORMAT.upper()
-
         return (custom_episode_map
-                or episode_text_format.upper() != standard_etf)
+                or episode_text_format.upper() != \
+                    FormulaOneTitleCard.EPISODE_TEXT_FORMAT.upper())
 
 
     def create(self) -> None:
@@ -377,6 +376,7 @@ class FormulaOneTitleCard(BaseCardType):
             f'convert "{self.source_file.resolve()}"',
             # Resize and apply styles to source image
             *self.resize_and_style,
+            # Add all assets, and text
             *self.static_commands,
             *self.race_commands,
             *self.episode_text_commands,

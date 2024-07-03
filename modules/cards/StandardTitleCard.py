@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Optional
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 
 if TYPE_CHECKING:
+    from modules.PreferenceParser import PreferenceParser
     from modules.Font import Font
 
 
@@ -79,7 +80,7 @@ class StandardTitleCard(BaseCardType):
             episode_text_font_size: float = 1.0,
             episode_text_vertical_shift: int = 0,
             omit_gradient: bool = False,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
         """Construct a new instance of this card."""

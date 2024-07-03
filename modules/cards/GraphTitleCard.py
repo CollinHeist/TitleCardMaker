@@ -127,12 +127,12 @@ class GraphTitleCard(BaseCardType):
     """Whether this CardType uses season titles for archival purposes"""
     USES_SEASON_TITLE = False
 
-    """Standard class has standard archive name"""
+    """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Graph Style'
 
     """Implementation details"""
     BACKGROUND_GRAPH_COLOR = 'rgba(140,140,140,0.5)'
-    GRAPH_COLOR = 'SteelBlue1'
+    GRAPH_COLOR = 'SteelBlue1' # 'rgb(77,178,136)'
     GRAPH_FILL_SCALE = 0.6
     GRAPH_INSET = 75
     GRAPH_RADIUS = 175

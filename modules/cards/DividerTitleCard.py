@@ -5,6 +5,7 @@ from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
 if TYPE_CHECKING:
+    from modules.PreferenceParser import PreferenceParser
     from modules.Font import Font
 
 
@@ -48,7 +49,7 @@ class DividerTitleCard(BaseCardType):
     """Whether this CardType uses season titles for archival purposes"""
     USES_SEASON_TITLE = True
 
-    """Standard class has standard archive name"""
+    """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Divider Style'
 
     __slots__ = (
@@ -83,7 +84,7 @@ class DividerTitleCard(BaseCardType):
             text_gravity: Optional[TextGravity] = None,
             title_text_position: TitleTextPosition = 'left',
             text_position: TextPosition = 'lower right',
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
         """Construct a new instance of this Card."""

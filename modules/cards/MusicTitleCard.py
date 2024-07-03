@@ -12,7 +12,6 @@ if TYPE_CHECKING:
     from app.models.preferences import Preferences
     from modules.Font import Font
 
-
 class ControlColors(NamedTuple): # pylint: disable=missing-class-docstring
     shuffle: str
     previous: str
@@ -56,7 +55,7 @@ class MusicTitleCard(BaseCardType):
     """Whether this CardType uses season titles for archival purposes"""
     USES_SEASON_TITLE = True
 
-    """Standard class has standard archive name"""
+    """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Music Style'
 
     """Implementation details"""

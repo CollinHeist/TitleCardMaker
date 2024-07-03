@@ -6,6 +6,7 @@ from modules.CleanPath import CleanPath
 from modules.Debug import log
 
 if TYPE_CHECKING:
+    from modules.PreferenceParser import PreferenceParser
     from modules.Font import Font
 
 
@@ -76,7 +77,7 @@ class FadeTitleCard(BaseCardType):
             logo: Optional[Path] = None,
             episode_text_color: str = EPISODE_TEXT_COLOR,
             separator: str = '•',
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
         """

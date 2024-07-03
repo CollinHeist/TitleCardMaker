@@ -274,8 +274,9 @@ class PolygonDistribution:
 
 class StripedTitleCard(BaseCardType):
     """
-    This class describes a CardType that produces title cards which are
-    ...
+    This class describes a CardType that produces title cards which
+    feature a solid color overlay with stripes of rectangles "cut" out
+    to expose the underlying Source Image.
     """
 
     """Directory where all reference files used by this card are stored"""
@@ -303,7 +304,7 @@ class StripedTitleCard(BaseCardType):
     """Whether this CardType uses season titles for archival purposes"""
     USES_SEASON_TITLE = True
 
-    """Standard class has standard archive name"""
+    """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Striped Style'
 
     """Implementation details"""

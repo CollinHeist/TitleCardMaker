@@ -227,7 +227,7 @@ class RomanNumeralTitleCard(BaseCardType):
     USES_UNIQUE_SOURCES = False
     USES_SOURCE_IMAGES = False
 
-    """Standard class has standard archive name"""
+    """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Roman Numeral Style'
 
     """Blur profile for this card is 1/3 the radius of the standard blur"""

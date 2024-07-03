@@ -6,6 +6,7 @@ from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
 if TYPE_CHECKING:
+    from modules.PreferenceParser import PreferenceParser
     from modules.Font import Font
 
 
@@ -49,7 +50,7 @@ class TintedGlassTitleCard(BaseCardType):
     """Whether this CardType uses unique source images"""
     USES_UNIQUE_SOURCES = True
 
-    """Standard class has standard archive name"""
+    """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Tinted Glass Style'
 
     """Darkened area behind title/episode text is nearly black and 70% opaque"""
@@ -87,9 +88,9 @@ class TintedGlassTitleCard(BaseCardType):
             episode_text_position: Position = 'center',
             box_adjustments: Optional[str] = None,
             glass_color: str = DARKEN_COLOR,
-            preferences: Optional['Preferences'] = None, # type: ignore
             rounding_radius: int = DEFAULT_ROUNDING_RADIUS,
             vertical_adjustment: int = 0,
+            preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
 

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Literal, Optional
 from modules.BaseCardType import BaseCardType
 
 if TYPE_CHECKING:
+    from modules.PreferenceParser import PreferenceParser
     from modules.Font import Font
 
 
@@ -38,7 +39,7 @@ class TextlessTitleCard(BaseCardType):
     """Don't require source images to work w/ importing"""
     USES_SOURCE_IMAGES = False # Set as False; if required then caught by model
 
-    """Label to archive cards under"""
+    """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Textless Version'
 
     __slots__ = ('source_file', 'output_file')
@@ -49,12 +50,10 @@ class TextlessTitleCard(BaseCardType):
             card_file: Path,
             blur: bool = False,
             grayscale: bool = False,
-            preferences: Optional['Preferences'] = None, # type: ignore
+            preferences: Optional['PreferenceParser'] = None,
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this card.
-        """
+        """Construct a new instance of this card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
