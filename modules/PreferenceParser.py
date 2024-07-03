@@ -1,7 +1,7 @@
 from collections import namedtuple
 from pathlib import Path
 from sys import exit as sys_exit
-from typing import Any, Iterator, Optional, Union
+from typing import Any, Iterator, Literal, Optional, Union, overload
 
 from num2words import CONVERTER_CLASSES as SUPPORTED_LANGUAGE_CODES
 from tqdm import tqdm
