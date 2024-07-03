@@ -56,7 +56,8 @@ class ImageMagickInterface:
     __REQUIRED_VERSION_SUBSTRINGS = ('Version','Copyright','License','Features')
 
     __slots__ = (
-        'executable', 'container', 'use_docker', 'prefix', 'timeout', '__history'
+        'executable', 'container', 'use_docker', 'prefix', 'timeout',
+        '__history'
     )
 
 
@@ -79,6 +80,8 @@ class ImageMagickInterface:
         self.container = container
         self.use_docker = bool(container)
         self.executable = environ.get('TCM_IM_PATH', None)
+        if self.executable:
+            self.executable =self.executable.removeprefix('"').removesuffix('"')
 
         # Whether to prefix commands with "magick" or not
         self.prefix = 'magick ' if use_magick_prefix else ''
@@ -98,9 +101,10 @@ class ImageMagickInterface:
             True if the connection is valid, False otherwise.
         """
 
-        output = self.run_get_output('convert --version')
-
-        return all(_ in output for _ in self.__REQUIRED_VERSION_SUBSTRINGS)
+        return all(
+            sub in self.run_get_output('convert --version')
+            for sub in self.__REQUIRED_VERSION_SUBSTRINGS
+        )
 
 
     @overload
@@ -157,7 +161,7 @@ class ImageMagickInterface:
             command = f'docker exec -t {self.container} {self.prefix}{command}'
         # If an executable was indicated, use as 
         elif self.executable:
-            command = f'{self.executable} {command}'
+            command = f'"{self.executable}" {command}'
         else:
             command = f'{self.prefix}{command}'
 
@@ -236,10 +240,10 @@ class ImageMagickInterface:
             image: Path to the image to get the dimensions of.
 
         Returns:
-            Namedtuple of dimensions.
+            Namedtuple of dimensions. (0, 0) is returned if the image
+            does not exist.
         """
 
-        # Return dimenions of zero if image DNE
         if not image.exists():
             return Dimensions(0, 0)
 
@@ -281,7 +285,6 @@ class ImageMagickInterface:
             Dimensions namedtuple.
         """
 
-        # No text
         if not text_command:
             return Dimensions(0, 0)
 
@@ -309,7 +312,7 @@ class ImageMagickInterface:
             # Process according to given methods
             height_adjustment = interline_spacing * (line_count - 1)
             return Dimensions(
-                sum_(widths)  if width  == 'sum' else max(widths),
+                sum_(widths) if width  == 'sum' else max(widths),
                 (sum_(ascents) + sum_(descents)) + height_adjustment,
             )
         except ValueError as e:
@@ -354,7 +357,7 @@ class ImageMagickInterface:
 
         command = ' '.join([
             f'convert "{input_image.resolve()}"',
-            f'-sampling-factor 4:4:4',
+            f'-sampling-factor "4:4:4"',
             f'-set colorspace sRGB',
             f'+profile "*"',
             f'-background transparent',
@@ -408,7 +411,8 @@ class ImageMagickInterface:
         return None
 
 
-    def get_random_filename(self, base: Path, extension: str = 'webp') -> Path:
+    @staticmethod
+    def get_random_filename(base: Path, extension: str = 'webp') -> Path:
         """
         Get the path to a randomly named image.
 
