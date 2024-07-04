@@ -302,6 +302,7 @@ async function initalizeSeriesConfig() {
   });
   // Styles
   $('#card-config-form .dropdown[data-value="watched-style"]').dropdown({
+    placeholder: 'Default',
     values: [
       {name: 'Art Variations', type: 'header'},
       ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
@@ -315,6 +316,7 @@ async function initalizeSeriesConfig() {
   });
   // Unwatched style
   $('#card-config-form .dropdown[data-value="unwatched-style"]').dropdown({
+    placeholder: 'Default',
     values: [
       {name: 'Art Variations', type: 'header'},
       ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
@@ -328,9 +330,10 @@ async function initalizeSeriesConfig() {
   });
   // Fonts
   $('#card-config-form .dropdown[data-value="fonts"]').dropdown({
+    placeholder: 'Default',
     values: availableFonts.map(({id, name}) => {
       return {name, value: id, selected: `${id}` === '{{series.font_id}}'};
-    })
+    }),
   });
   if ('{{series.font_id}}' === 'None') {
     $('.field a[data-value="font-link"]').remove();
@@ -420,6 +423,7 @@ async function initalizeSeriesConfig() {
     $('#card-config-form .field[data-value="season-title-range"]').append(newRange);
     $('#card-config-form .field[data-value="season-title-value"]').append(newTitle);
   });
+
   // Add translation on button press
   $(`#card-config-form .button[data-add-field="translation"]`).on('click', () => {
     const newTranslation = document.querySelector('#translation-template').content.cloneNode(true);
@@ -978,6 +982,7 @@ async function getEpisodeData(page=1) {
     });
     // Unwatched style
     $(`#${getEpisodeElementId(episode.id)} .dropdown[data-value="unwatched_style"]`).dropdown({
+      placeholder: 'Default',
       values: [
         {name: 'Art Variations', type: 'header'},
         ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
@@ -991,6 +996,7 @@ async function getEpisodeData(page=1) {
     });
     // Watched style
     $(`#${getEpisodeElementId(episode.id)} .dropdown[data-value="watched_style"]`).dropdown({
+      placeholder: 'Default',
       values: [
         {name: 'Art Variations', type: 'header'},
         ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
@@ -2535,9 +2541,7 @@ function refreshPreview() {
     url: `/api/cards/preview/episode/${episodeId}`,
     data: JSON.stringify(data),
     contentType: 'application/json',
-    success: preview_uri => {
-      document.getElementById('live-preview').src = `${preview_uri}?${new Date().getTime()}`;
-    },
+    success: preview_uri => document.getElementById('live-preview').src = `${preview_uri}?${new Date().getTime()}`,
     error: response => showErrorToast({title: 'Error Updating Preview', response}),
     complete: () => $('#preview-episode-dropdown .dropdown').toggleClass('loading', false),
   });
