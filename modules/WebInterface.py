@@ -167,8 +167,8 @@ class WebInterface:
         # found, skip the request and return that result - if caching
         if cache:
             self.__clear_outdated_cache()
-            result = self.__cache.get(url, {}).get(str(params), None)
-            if result is not None:
+            result = self.__cache.get(url, {}).get(str(params), '_None')
+            if result != '_None':
                 return result['result']
 
         # Make new request
@@ -241,7 +241,7 @@ class WebInterface:
             # Download from URL
             image = get(url, timeout=30).content
             if len(image) == 0:
-                raise ValueError(f'URL {url} returned no content error')
+                raise ValueError(f'URL {url} returned no content')
             if any(bc in image for bc in WebInterface.BAD_CONTENT):
                 raise ValueError(f'URL {url} returned malformed content')
 
@@ -250,5 +250,41 @@ class WebInterface:
             log.trace(f'Downloaded {len(image):,} bytes from {url}')
             return True
         except Exception: # pylint: disable=broad-except
-            log.exception(f'Cannot download image, returned error')
+            log.exception('Cannot download image, returned error')
             return False
+
+
+    @staticmethod
+    def download_image_raw(
+            image: str,
+            *,
+            log: Logger = log,
+        ) -> Optional[bytes]:
+        """
+        Download and return the provided image URL.
+
+        Args:
+            image: URL to the image to download.
+            log: Logger for all log messages.
+
+        Returns:
+            The bytes of the downloaded image. None if the image could
+            not be downloaded.
+        """
+
+        url = image
+        try:
+            # Download from URL
+            content = get(url, timeout=30).content
+
+            # Verify content is valid
+            if len(content) == 0:
+                raise ValueError(f'URL {url} returned no content')
+            if any(bc in content for bc in WebInterface.BAD_CONTENT):
+                raise ValueError(f'URL {url} returned malformed content')
+        except Exception: # pylint: disable=broad-except
+            log.exception('Cannot download image, returned error')
+            return None
+
+        log.trace(f'Downloaded {len(content):,} bytes from {url}')
+        return content
