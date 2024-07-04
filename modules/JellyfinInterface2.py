@@ -1,6 +1,7 @@
 from base64 import b64encode
 from logging import Logger
-from typing import TYPE_CHECKING, Optional, Union
+from pathlib import Path
+from typing import TYPE_CHECKING, Literal, Optional, Union, overload
 
 from fastapi import HTTPException
 
@@ -152,6 +153,26 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         }
 
 
+    @overload
+    def __get_series_id(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            *,
+            raw_obj: Literal[False] = False,
+            log: Logger = log,
+        ) -> Optional[str]:
+        ...
+
+    @overload
+    def __get_series_id(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            *,
+            raw_obj: Literal[True] = False,
+            log: Logger = log,
+        ) -> Optional[dict]:
+        ...
+
     def __get_series_id(self,
             library_name: str,
             series_info: SeriesInfo,
@@ -220,6 +241,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             if (jellyfin_id := _query_series(year)) is not None:
                 return jellyfin_id
 
+        log.warning(f'Series not found in Jellyfin {series_info!r}')
         return None
 
 
@@ -256,11 +278,29 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             } | self.__params,
         )
 
-        if len(response['Items']) == 0:
+        if 'Items' not in response or not response['Items']:
             return None
 
         return response['Items'][0]['Id']
 
+
+    @overload
+    def __find_ids(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_info: Literal[None],
+        ) -> Union[tuple[Literal[None], Literal[None]],
+                   tuple[str, Literal[None]]]:
+        ...
+
+    @overload
+    def __find_ids(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_info: EpisodeInfo,
+        ) -> Union[tuple[Literal[None], Literal[None]],
+                   tuple[str, str]]:
+        ...
 
     def __find_ids(self,
             library_name: str,
@@ -599,7 +639,6 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         # Find this series
         series_id = self.__get_series_id(library_name, series_info, log=log)
         if series_id is None:
-            log.warning(f'Series not found in Jellyfin {series_info!r}')
             return False
 
         # Query for all episodes of this series
@@ -671,7 +710,6 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         # Find this series
         series_id = self.__get_series_id(library_name, series_info, log=log)
         if series_id is None:
-            log.warning(f'Series not found in Jellyfin {series_info!r}')
             return []
 
         # Load each episode and card
@@ -782,7 +820,6 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         # Find this series
         series_id = self.__get_series_id(library_name, series_info, log=log)
         if series_id is None:
-            log.warning(f'Series not found in Jellyfin {series_info!r}')
             return None
 
         # Get the poster image for this Series
@@ -821,7 +858,6 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         # Find this series
         series_id = self.__get_series_id(library_name, series_info, log=log)
         if series_id is None:
-            log.warning(f'Series not found in Jellyfin {series_info!r}')
             return None
 
         # Get the source image for this episode

@@ -2,7 +2,9 @@ from datetime import datetime, timedelta
 from logging import Logger
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
-from typing import TYPE_CHECKING, Any, Callable, Literal, NamedTuple, Optional, Union
+from typing import (
+    TYPE_CHECKING, Any, Callable, Literal, NamedTuple, Optional, Union
+)
 
 from fastapi import HTTPException
 from PIL import Image
@@ -83,7 +85,10 @@ def catch_and_log(
 
 
 class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
-    """This class describes an interface to Plex."""
+    """
+    An interface to Plex. This allows loading assets, querying series
+    and episode data, along with other attributes
+    """
 
     INTERFACE_TYPE = 'Plex'
 
@@ -762,7 +767,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 plex_object.uploadArt(filepath=image)
         else:
             if isinstance(image, str):
-                plex_object.uploadArt(url=image)
+                plex_object.uploadPoster(url=image)
             else:
                 plex_object.uploadPoster(filepath=image)
         plex_object.addLabel(['TCM'])
@@ -913,17 +918,17 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
             # Shrink image if necessary
             if (isinstance(poster, Path)
-                and (image := self.compress_image(poster)) is None):
+                and (poster := self.compress_image(poster)) is None):
                 continue
 
             # Upload this poster
             try:
                 # If integrating with Kometa, add EXIF data
                 if isinstance(poster, Path) and self.integrate_with_kometa:
-                    self.__add_exif_tag(image)
+                    self.__add_exif_tag(poster)
 
                 # Upload poster
-                self.__retry_upload(season, image)
+                self.__retry_upload(season, poster)
 
                 # If integrating with Kometa, remove label
                 if self.integrate_with_kometa:
@@ -932,7 +937,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 log.debug(f'{series_info} loaded poster into season '
                           f'{season.index}')
             except Exception:
-                log.exception(f'Failed to upload {image.resolve()} to season '
+                log.exception(f'Failed to upload {poster.resolve()} to season '
                               f'{season.index}')
                 continue
 
