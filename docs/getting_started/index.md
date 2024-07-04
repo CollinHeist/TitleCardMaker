@@ -74,29 +74,9 @@ Unraid users can directly add the container as a "template" within the UI.
     3. Store these login credentials in Docker with the following command. Type
     your GitHub username, and enter the PAT from Step 2 as the password.
 
-        === ":material-linux: Linux"
-
-            ```bash
-            docker login ghcr.io
-            ```
-
-        === ":material-apple: MacOS"
-
-            ```bash
-            docker login ghcr.io
-            ```
-
-        === ":material-powershell: Windows (Powershell)"
-
-            ```bash
-            docker login ghcr.io
-            ```
-
-        === ":material-microsoft-windows: Windows (Non-Powershell)"
-
-            ```bash
-            docker login ghcr.io
-            ```
+        ```bash
+        docker login ghcr.io
+        ```
 
     4. Determine your timezone, a full list is available
     [here](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). You
@@ -131,29 +111,9 @@ Unraid users can directly add the container as a "template" within the UI.
     6. Create (and launch) the Docker container by executing the following
     command.
 
-        === ":material-linux: Linux"
-
-            ```bash
-            docker compose up -d
-            ```
-
-        === ":material-apple: MacOS"
-
-            ```bash
-            docker compose up -d
-            ```
-
-        === ":material-powershell: Windows (Powershell)"
-
-            ```bash
-            docker compose up -d
-            ```
-
-        === ":material-microsoft-windows: Windows (Non-Powershell)"
-
-            ```bash
-            docker compose up -d
-            ```
+        ```bash
+        docker compose up -d
+        ```
 
         ??? failure "Permission Denied?"
 
@@ -209,29 +169,9 @@ Unraid users can directly add the container as a "template" within the UI.
     3. Store these login credentials in Docker with the following command. Type
     your GitHub username, and enter the PAT from Step 2 as the password.
 
-        === ":material-linux: Linux"
-
-            ```bash
-            docker login ghcr.io
-            ```
-
-        === ":material-apple: MacOS"
-
-            ```bash
-            docker login ghcr.io
-            ```
-
-        === ":material-powershell: Windows (Powershell)"
-
-            ```bash
-            docker login ghcr.io
-            ```
-
-        === ":material-microsoft-windows: Windows (Non-Powershell)"
-
-            ```bash
-            docker login ghcr.io
-            ```
+        ```bash
+        docker login ghcr.io
+        ```
 
     4. Determine your timezone, a full list is available
     [here](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). You
@@ -408,29 +348,9 @@ Unraid users can directly add the container as a "template" within the UI.
 
     2. Create a subfolder named `config`.
 
-        === ":material-linux: Linux"
-
-            ```bash
-            mkdir config
-            ```
-
-        === ":material-apple: MacOS"
-
-            ```bash
-            mkdir config
-            ```
-
-        === ":material-powershell: Windows (Powershell)"
-
-            ```bash
-            mkdir config
-            ```
-
-        === ":material-microsoft-windows: Windows (Non-Powershell)"
-
-            ```bash
-            mkdir config
-            ```
+        ```bash
+        mkdir config
+        ```
 
     3. Run the following commands to install the required Python packages and
     launch the TCM interface.
