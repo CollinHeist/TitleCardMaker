@@ -9,7 +9,7 @@ from app.schemas.preferences import CardExtension
 """
 Base classes
 """
-SeasonNumber = conint(ge=0)
+SeasonNumber: int = conint(ge=0)
 
 class ImportBase(Base):
     yaml: str
@@ -23,6 +23,7 @@ class _KometaSeason(Base):
 
 class _KometaSeries(Base):
     url_poster: Optional[AnyUrl] = None
+    url_background: Optional[AnyUrl] = None
     seasons: dict[SeasonNumber, _KometaSeason] = {}
 
 class KometaYaml(Base):

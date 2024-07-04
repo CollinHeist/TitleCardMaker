@@ -245,6 +245,38 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         return None
 
 
+    def __get_season_id(self,
+            series_id: str,
+            season_number: int,
+        ) -> Optional[str]:
+        """
+        Get the Jellyfin ID of the given season.
+
+        Args:
+            series_id: Jellyfin ID of the associated series.
+            season_number: Season number whose ID is being queried.
+
+        Returns:
+            The Jellyfin ID of the season, if found. None otherwise.
+        """
+
+        response = self.session.get(
+            f'{self.url}/Items',
+            params={
+                'recursive': True,
+                'includeItemTypes': 'Season',
+                'parentId': series_id,
+                'startIndex': season_number-1,
+                'limit': 1,
+            } | self.__params,
+        )
+
+        if 'Items' not in response or not response['Items']:
+            return None
+
+        return response['Items'][0]['Id']
+
+
     def __get_episode_id(self,
             library_name: str,
             series_jellyfin_id: str,
@@ -746,6 +778,170 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             log.info(f'Loaded {len(loaded)} cards for "{series_info}"')
 
         return loaded
+
+
+    def load_season_posters(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            posters: dict[int, Union[str, Path]],
+            *,
+            log: Logger = log,
+        ) -> None:
+        """
+        Load the given season posters into Jellyfin.
+
+        Args:
+            library_name: Name of the library containing the series to
+                update.
+            series_info: The series to update.
+            posters: Dictionary of season numbers to poster URLs or
+                files to upload.
+            log: Logger for all log messages.
+        """
+
+        # Find this series
+        series_id = self.__get_series_id(library_name, series_info, log=log)
+        if series_id is None:
+            return None
+
+        # Load each episode and card
+        for season_number, image in posters.items():
+            if (sid := self.__get_season_id(series_id, season_number)) is None:
+                continue
+
+            # Shrink image if necessary, skip if cannot be compressed
+            if (isinstance(image, Path)
+                and (image := self.compress_image(image, log=log)) is None):
+                continue
+
+            # Download or read image
+            if isinstance(image, str):
+                image_bytes = WebInterface.download_image_raw(image, log=log)
+                if image_bytes is None:
+                    continue
+            else:
+                image_bytes = image.read_bytes()
+            image_base64 = b64encode(image_bytes)
+
+            # Submit POST request for image upload on Base64 encoded image
+            try:
+                self.session.session.post(
+                    url=f'{self.url}/Items/{sid}/Images/Primary',
+                    headers={'Content-Type': 'image/jpeg'},
+                    params=self.__params,
+                    data=image_base64,
+                )
+                log.debug(f'{series_info} loaded poster into season '
+                          f'{season_number}')
+            except Exception:
+                log.exception(f'Unable to upload {image} to {series_info}')
+                continue
+
+        return None
+
+
+    def load_series_poster(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            image: Union[str, Path],
+            *,
+            log: Logger = log
+        ) -> None:
+        """
+        Load the given series poster into Jellyfin.
+
+        Args:
+            library_name: Name of the library containing the series to
+                update.
+            series_info: The series to update.
+            image: URL or Path to the file to upload.
+            log: Logger for all log messages.
+        """
+
+        # Find this series
+        series_id = self.__get_series_id(library_name, series_info, log=log)
+        if series_id is None:
+            return None
+
+        # Shrink image if necessary, skip if cannot be compressed
+        if (isinstance(image, Path)
+            and (image := self.compress_image(image, log=log)) is None):
+            return None
+
+        # Download or read image
+        if isinstance(image, str):
+            image_bytes = WebInterface.download_image_raw(image, log=log)
+            if image_bytes is None:
+                return None
+        else:
+            image_bytes = image.read_bytes()
+        image_base64 = b64encode(image_bytes)
+
+        # Submit POST request for image upload on Base64 encoded image
+        try:
+            self.session.session.post(
+                url=f'{self.url}/Items/{series_id}/Images/Primary',
+                headers={'Content-Type': 'image/jpeg'},
+                params=self.__params,
+                data=image_base64,
+            )
+            log.debug(f'{series_info} loaded poster')
+        except Exception:
+            log.exception(f'Unable to upload {image} to {series_info}')
+
+        return None
+
+
+    def load_series_background(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            image: Union[str, Path],
+            *,
+            log: Logger = log
+        ) -> None:
+        """
+        Load the given series background image into Jellyfin.
+
+        Args:
+            library_name: Name of the library containing the series to
+                update.
+            series_info: The series to update.
+            image: URL or Path to the file to upload.
+            log: Logger for all log messages.
+        """
+
+        # Find this series
+        series_id = self.__get_series_id(library_name, series_info, log=log)
+        if series_id is None:
+            return None
+
+        # Shrink image if necessary, skip if cannot be compressed
+        if (isinstance(image, Path)
+            and (image := self.compress_image(image, log=log)) is None):
+            return None
+
+        # Download or read image
+        if isinstance(image, str):
+            image_bytes = WebInterface.download_image_raw(image, log=log)
+            if image_bytes is None:
+                return None
+        else:
+            image_bytes = image.read_bytes()
+        image_base64 = b64encode(image_bytes)
+
+        # Submit POST request for image upload on Base64 encoded image
+        try:
+            self.session.session.post(
+                url=f'{self.url}/Items/{series_id}/Images/Backdrop',
+                headers={'Content-Type': 'image/jpeg'},
+                params=self.__params,
+                data=image_base64,
+            )
+            log.debug(f'{series_info} loaded backdrop')
+        except Exception:
+            log.exception(f'Unable to upload {image} to {series_info}')
+
+        return None
 
 
     def get_source_image(self,

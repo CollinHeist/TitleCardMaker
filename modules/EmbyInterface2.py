@@ -1,6 +1,7 @@
 from base64 import b64encode
 from datetime import datetime
 from logging import Logger
+from pathlib import Path
 from typing import TYPE_CHECKING, Iterator, Literal, Optional, Union, overload
 
 from fastapi import HTTPException
@@ -714,6 +715,70 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             log.info(f'Loaded {len(loaded)} cards for "{series_info}"')
 
         return loaded
+
+
+    def load_season_posters(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            posters: dict[int, Union[str, Path]],
+            *,
+            log: Logger = log,
+        ) -> None:
+        """
+        Load the given season posters into Plex.
+
+        Args:
+            library_name: Name of the library containing the series to
+                update.
+            series_info: The series to update.
+            posters: Dictionary of season numbers to poster URLs or
+                files to upload.
+            log: Logger for all log messages.
+        """
+
+        ...
+
+
+    def load_series_poster(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            image: Union[str, Path],
+            *,
+            log: Logger = log
+        ) -> None:
+        """
+        Load the given series poster into Plex.
+
+        Args:
+            library_name: Name of the library containing the series to
+                update.
+            series_info: The series to update.
+            image: URL or Path to the file to upload.
+            log: Logger for all log messages.
+        """
+
+        ...
+
+
+    def load_series_background(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            image: Union[str, Path],
+            *,
+            log: Logger = log
+        ) -> None:
+        """
+        Load the given series background image into Plex.
+
+        Args:
+            library_name: Name of the library containing the series to
+                update.
+            series_info: The series to update.
+            image: URL or Path to the file to upload.
+            log: Logger for all log messages.
+        """
+
+        ...
 
 
     def get_source_image(self,

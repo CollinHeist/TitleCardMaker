@@ -371,6 +371,7 @@ async def import_card_files_for_series(
 
 @import_router.post('/series/{series_id}/cards/mediux')
 async def import_mediux_yaml_for_series(
+        # background_tasks: BackgroundTasks,
         request: Request,
         series_id: int,
         yaml_str: str = Body(..., alias='yaml'),
@@ -388,6 +389,7 @@ async def import_mediux_yaml_for_series(
     # Get contextual logger
     log: Logger = request.state.log
 
+    # Validate provided string as YAML
     try:
         full_yaml = KometaYaml(yaml=safe_load(yaml_str))
     except (ParserError, ValidationError) as exc:
@@ -396,6 +398,11 @@ async def import_mediux_yaml_for_series(
             status_code=422,
             detail='YAML is invalid',
         ) from exc
+
+    # Get just the YAML after the TVDb ID
+    if not full_yaml.yaml:
+        return None
+    yaml = list(full_yaml.yaml.values())[0]
 
     # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
@@ -422,41 +429,49 @@ async def import_mediux_yaml_for_series(
         images.append(filename)
         return filename
 
-    # Download all indicated files
+    # Parse all indicated files
+    background: Optional[str] = yaml.url_background if import_backdrop else None
+    poster: Optional[str] = yaml.url_poster if import_poster else None
     cards: list[tuple[Episode, Path]] = []
-    for _, yaml in full_yaml.yaml.items():
-        # if import_poster and (url := yaml.get('url_poster')):
-        #     image = _download_image(url)
-        # if import_backdrop and (url := yaml.get('url_background')):
-        #     image = _download_image(url)
-        for season_number, season_yaml in yaml.seasons.items():
-            # if import_season_posters and (url := yaml.get('url_poster')):
-            #     image = _download_image(url)
-            for episode_number, episode_yaml in season_yaml.episodes.items():
-                # Skip download if there is no matching Episode
-                episode = db.query(Episode)\
-                    .filter_by(series_id=series_id,
-                               season_number=season_number,
-                               episode_number=episode_number)\
-                    .first()
-                if not episode:
-                    log.debug(f'No associated Episode for S{season_number:02}'
-                              f'E{episode_number:02}')
-                    continue
+    season_posters: dict[int, str] = []
 
-                # Skip if not forcing and has Cards
-                if not force_reload and episode.cards:
-                    log.debug(f'Skipping {episode.index_str} - has Cards')
-                    continue
+    # Parse each season
+    for season_number, season_yaml in yaml.seasons.items():
+        # Parse season posters if a library was provided and specified
+        if library_names and import_season_posters:
+            season_posters[season_number] = season_yaml.url_poster
 
-                # Episode exists, download and add to card list
-                if (card := _download_image(episode_yaml.url_poster)):
-                    cards.append((episode, card))
+        # Parse all episodes of this season
+        for episode_number, episode_yaml in season_yaml.episodes.items():
+            # Skip download if there is no matching Episode
+            episode = db.query(Episode)\
+                .filter_by(series_id=series_id,
+                            season_number=season_number,
+                            episode_number=episode_number)\
+                .first()
+            if not episode:
+                log.debug(f'No associated Episode for S{season_number:02}'
+                          f'E{episode_number:02}')
+                continue
 
-    # Import into all specified libraries
+            # Skip if not forcing and has Cards
+            if not force_reload and episode.cards:
+                log.debug(f'Skipping {episode.index_str} - has Cards')
+                continue
+
+            # Episode exists, download and add to card list
+            if (card := _download_image(episode_yaml.url_poster)):
+                cards.append((episode, card))
+
+    # Import content into all specified libraries
     log.debug(f'Identified {len(cards)} Cards to import')
     for library_name in library_names:
-        library = series.get_library(library_name)
+        # If the library cannot be found, skip
+        if (not (library := series.get_library(library_name)) or not
+            (iface := get_interface(library['interface_id'], raise_exc=False))):
+            log.warning(f'Cannot import to library "{library_name}"')
+            continue
+
         import_card_files(
             db, series, cards, library,
             force_reload=force_reload, as_textless=textless, log=log,
@@ -468,11 +483,29 @@ async def import_mediux_yaml_for_series(
             get_interface(library['interface_id'], raise_exc=True),
             force_reload=force_reload,
         )
+
+        # Load series backgrounds/poster, or season posters
+        if background:
+            iface.load_series_background(
+                library_name, series.as_series_info, background, log=log,                         
+            )
+        if poster:
+            iface.load_series_poster(
+                library_name, series.as_series_info, poster, log=log,
+            )
+        if season_posters:
+            iface.load_season_posters(
+                library_name, series.as_series_info, season_posters,
+                log=log,
+            )
+    # No libraries specified import Cards without a library
     else:
         import_card_files(
             db, series, cards, library=None,
             force_reload=force_reload, as_textless=textless, log=log,
         )
+        if season_posters or poster or background:
+            log.warning('Cannot import non-Card images without a library')
 
     # Delete any downloaded images after they've been uploaded
     for image in images:
