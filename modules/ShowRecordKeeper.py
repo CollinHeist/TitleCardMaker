@@ -56,7 +56,11 @@ class ShowRecordKeeper:
         # Read version of record database
         version_file = database_directory / self.DATABASE_VERSION
         if version_file.exists():
-            self.version = Version(version_file.read_text())
+            try:
+                self.version = Version(version_file.read_text())
+            except ValueError:
+                log.exception(f'Unable to read database version')
+                self.version = global_objects.pp.version
         else:
             self.version = global_objects.pp.version
 
@@ -67,6 +71,7 @@ class ShowRecordKeeper:
 
         # Write current version to file
         version_file.write_text(str(global_objects.pp.version))
+        self.version = global_objects.pp.version
 
         # Read and log length
         log.info(f'Read {len(self.records)} show records')
