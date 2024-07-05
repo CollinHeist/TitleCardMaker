@@ -32,51 +32,51 @@ below.
 
     === "Docker"
 
-        | Setting                        | Recommended Value                                            |
-        | -----------------------------: | :----------------------------------------------------------- |
-        | Card Directory                 | /config/cards/                                               |
-        | Source Directory               | /config/source/                                              |
-        | Delete Series Source Images    | :fontawesome-regular-circle-xmark:{.red}                     |
-        | Episode Data Source            | Sonarr                                                       |
-        | Image Source Priority          | `TMDb` `Plex` `Emby` `Jellyfin`                              |
-        | Enable Specials                | :fontawesome-regular-circle-xmark:{.red}                     |
-        | Delete Missing Episodes        | :fontawesome-regular-circle-check:{.green}                   |
-        | Default Card Type              | _Personal Preference_                                        |
-        | Excluded Card Types            | _Personal Preference_                                        |
-        | Watched Episode Style          | Unique                                                       |
-        | Unwatched Episode Style        | _Personal Preference_                                        |
-        | Default Templates              | _Blank_                                                      |
-        | Card Dimensions                | 3200x1800                                                    |
-        | Card Quality                   | 95                                                           |
-        | Card Extension                 | .jpg                                                         |
-        | Filename Format                | {series_full_name} - S{season_number:02}E{episode_number:02} |
-        | Specials Folder Format         | Specials                                                     |
-        | Season Folder Format           | Season {season_number}                                       |
-        | Multi-Library Filename Support | :fontawesome-regular-circle-xmark:{.red}                     |
+        | Setting                     | Recommended Value                                            |
+        | --------------------------: | :----------------------------------------------------------- |
+        | Card Directory              | /config/cards/                                               |
+        | Source Directory            | /config/source/                                              |
+        | Delete Series Source Images | :fontawesome-regular-circle-xmark:{.red}                     |
+        | Episode Data Source         | Sonarr                                                       |
+        | Image Source Priority       | `TMDb` `Plex` `Emby` `Jellyfin`                              |
+        | Enable Specials             | :fontawesome-regular-circle-xmark:{.red}                     |
+        | Delete Missing Episodes     | :fontawesome-regular-circle-check:{.green}                   |
+        | Default Card Type           | _Personal Preference_                                        |
+        | Excluded Card Types         | _Personal Preference_                                        |
+        | Watched Episode Style       | Unique                                                       |
+        | Unwatched Episode Style     | _Personal Preference_                                        |
+        | Default Templates           | _Blank_                                                      |
+        | Card Dimensions             | 3200x1800                                                    |
+        | Card Quality                | 95                                                           |
+        | Card Extension              | .jpg                                                         |
+        | Filename Format             | {series_full_name} - S{season_number:02}E{episode_number:02} |
+        | Specials Folder Format      | Specials                                                     |
+        | Season Folder Format        | Season {season_number}                                       |
+        | Multi-Library File Naming   | :fontawesome-regular-circle-xmark:{.red}                     |
 
     === "Non-Docker"
 
-        | Setting                        | Recommended Value                                            |
-        | -----------------------------: | :----------------------------------------------------------- |
-        | Card Directory                 | ./config/cards/                                              |
-        | Source Directory               | ./config/source/                                             |
-        | Delete Series Source Images    | :fontawesome-regular-circle-xmark:{.red}                     |
-        | Episode Data Source            | Sonarr                                                       |
-        | Image Source Priority          | `TMDb` `Plex` `Emby` `Jellyfin`                              |
-        | Enable Specials                | :fontawesome-regular-circle-xmark:{.red}                     |
-        | Delete Missing Episodes        | :fontawesome-regular-circle-check:{.green}                   |
-        | Default Card Type              | _Personal Preference_                                        |
-        | Excluded Card Types            | _Personal Preference_                                        |
-        | Watched Episode Style          | Unique                                                       |
-        | Unwatched Episode Style        | _Personal Preference_                                        |
-        | Default Templates              | _Blank_                                                      |
-        | Card Dimensions                | 3200x1800                                                    |
-        | Card Quality                   | 95                                                           |
-        | Card Extension                 | .jpg                                                         |
-        | Filename Format                | {series_full_name} - S{season_number:02}E{episode_number:02} |
-        | Specials Folder Format         | Specials                                                     |
-        | Season Folder Format           | Season {season_number}                                       |
-        | Multi-Library Filename Support | :fontawesome-regular-circle-xmark:{.red}                     |
+        | Setting                     | Recommended Value                                            |
+        | --------------------------: | :----------------------------------------------------------- |
+        | Card Directory              | ./config/cards/                                              |
+        | Source Directory            | ./config/source/                                             |
+        | Delete Series Source Images | :fontawesome-regular-circle-xmark:{.red}                     |
+        | Episode Data Source         | Sonarr                                                       |
+        | Image Source Priority       | `TMDb` `Plex` `Emby` `Jellyfin`                              |
+        | Enable Specials             | :fontawesome-regular-circle-xmark:{.red}                     |
+        | Delete Missing Episodes     | :fontawesome-regular-circle-check:{.green}                   |
+        | Default Card Type           | _Personal Preference_                                        |
+        | Excluded Card Types         | _Personal Preference_                                        |
+        | Watched Episode Style       | Unique                                                       |
+        | Unwatched Episode Style     | _Personal Preference_                                        |
+        | Default Templates           | _Blank_                                                      |
+        | Card Dimensions             | 3200x1800                                                    |
+        | Card Quality                | 95                                                           |
+        | Card Extension              | .jpg                                                         |
+        | Filename Format             | {series_full_name} - S{season_number:02}E{episode_number:02} |
+        | Specials Folder Format      | Specials                                                     |
+        | Season Folder Format        | Season {season_number}                                       |
+        | Multi-Library File Naming   | :fontawesome-regular-circle-xmark:{.red}                     |
 
 ## Root Folders
 
@@ -390,7 +390,7 @@ variable data, see a complete list of the available variables is listed
     {''}
     ```
 
-### Multi-Library Filename Support
+### Multi-Library File Naming
 
 !!! warning "Warning"
 
