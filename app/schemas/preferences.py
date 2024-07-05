@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Literal, Optional
 
-from pydantic import DirectoryPath, PositiveInt, conint, constr, validator # pylint: disable=no-name-in-module
+from pydantic import DirectoryPath, PositiveInt, conint, constr, validator
 
 from app.schemas.base import (
     Base, InterfaceType, ImageSource, UpdateBase, UNSPECIFIED
@@ -79,6 +79,7 @@ class UpdatePreferences(UpdateBase):
     season_folder_format: str = UNSPECIFIED
     sync_specials: bool = UNSPECIFIED
     delete_missing_episodes: bool = UNSPECIFIED
+    delete_unsynced_series: bool = UNSPECIFIED
     simplified_data_table: bool = UNSPECIFIED
     default_card_type: CardTypeIdentifier = UNSPECIFIED
     excluded_card_types: list[CardTypeIdentifier] = UNSPECIFIED
@@ -157,6 +158,7 @@ class Preferences(Base):
     season_folder_format: str
     sync_specials: bool
     delete_missing_episodes: bool
+    delete_unsynced_series: bool
     simplified_data_table: bool
     is_docker: bool
     default_card_type: CardTypeIdentifier

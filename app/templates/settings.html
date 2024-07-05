@@ -84,8 +84,8 @@
 
             <!-- Episode Data Settings -->
             <h3 class="ui horizontal divider header">
-              <i class="layer group icon"></i>
-              Episode Data
+              <i class="database icon"></i>
+              Series and Episode Data
             </h3>
             <section>
               <div class="two fields">
@@ -143,6 +143,22 @@
                   <p class="help">Whether to delete Episodes no longer present in the assigned Episode Data Source.</p>
                 </div>
               </div>
+
+              <div class="two fields">
+                <div class="ui checkbox field">
+                  <label>Delete Un-Synced Series</label>
+                  {% if preferences.delete_unsynced_series %}
+                  <input name="delete_unsynced_series" type="checkbox" checked="checked">
+                  {% else %}
+                  <input name="delete_unsynced_series" type="checkbox">
+                  {% endif %}
+                  <p class="help">
+                    Whether to delete Series which no longer appear in any Syncs.
+                    <br>
+                    <b>This will delete all Title Cards and manually added Series (if they are not in any Sync).</b>
+                  </p>
+                </div>
+              </div>
             </section>
 
             <!-- Title Card Settings -->
@@ -189,7 +205,7 @@
                   <label>Watched Episode Style</label>
                   <div class="ui long compact selection dropdown">
                     <span class="default text">{{preferences.default_watched_style.title()}}</span>
-                    <input name="default_watched_style" type="hidden">
+                    <input name="default_watched_style" type="hidden" value="{{preferences.default_watched_style}}">
                     <i class="dropdown icon"></i>
                     <div class="menu">
                       <div class="header">Art Variations</div>
@@ -198,6 +214,7 @@
                       <div class="item" data-value="art blur">Blurred Art</div>
                       <div class="item" data-value="art grayscale">Grayscale Art</div>
                       <div class="item" data-value="art blur grayscale">Blurred Grayscale Art</div>
+
                       <div class="header">Unique Variations</div>
                       <div class="divider"></div>
                       <div class="item" data-value="unique">Unique</div>
@@ -220,7 +237,7 @@
                   <label>Unwatched Episode Style</label>
                   <div class="ui long compact selection dropdown">
                     <span class="default text">{{preferences.default_unwatched_style.title()}}</span>
-                    <input name="default_unwatched_style" type="hidden">
+                    <input name="default_unwatched_style" type="hidden" value="{{preferences.default_unwatched_style}}">
                     <i class="dropdown icon"></i>
                     <div class="menu">
                       <div class="header">Art</div>

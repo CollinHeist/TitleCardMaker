@@ -76,6 +76,7 @@ class Preferences:
         'imported_blueprints', 'colorblind_mode', 'library_unique_cards',
         'invalid_connections', 'home_page_table_view', 'reduced_animations',
         'currently_running_sync', 'interactive_card_previews',
+        'home_page_order', 'delete_unsynced_series',
     )
 
 
@@ -186,6 +187,7 @@ class Preferences:
         self.completely_delete_series = False
         self.sync_specials = True
         self.delete_missing_episodes = True
+        self.delete_unsynced_series = False
         self.simplified_data_table = True
         self.interactive_card_previews = True
         self.remote_card_types = {}
@@ -197,7 +199,7 @@ class Preferences:
         self.default_templates: list[int] = []
         self.global_extras: dict[str, dict[str, str]] = {}
 
-        self.currently_running_sync = None
+        self.currently_running_sync: Optional[int] = None
         self.invalid_connections: list[int] = []
         self.use_emby = False
         self.use_jellyfin = False

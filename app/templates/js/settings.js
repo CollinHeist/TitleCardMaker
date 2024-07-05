@@ -171,11 +171,12 @@ function updateGlobalSettings() {
     card_directory: $('input[name="card_directory"]').val(),
     source_directory: $('input[name="source_directory"]').val(),
     completely_delete_series: $('input[name="completely_delete_series"]').is(':checked'),
-    // Episode Data
+    // Series and Episode Data
     episode_data_source: $('input[name="episode_data_source"]').val(),
     image_source_priority: $('input[name="image_source_priority"]').val().split(','),
     sync_specials: $('input[name="sync_specials"]').is(':checked'),
     delete_missing_episodes: $('input[name="delete_missing_episodes"]').is(':checked'),
+    delete_unsynced_series: $('input[name="delete_unsynced_series"]').is(':checked'),
     // Title Cards
     default_card_type: $('input[name="default_card_type"]').val(),
     excluded_card_types: parseListString($('input[name="excluded_card_types"]').val()),
