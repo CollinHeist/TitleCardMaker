@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 from logging import Logger
-from typing import Any, Callable, Literal, Optional, Union, overload
+from typing import Any, Callable, Literal, Optional, TypeVar, Union, overload
 
 from modules.Debug import log
 
 
 ConnectionID = Union[int, tuple[int, str]]
+DatabaseID = TypeVar('DatabaseID')
 
 
 class InterfaceID:
@@ -59,7 +60,7 @@ class InterfaceID:
             /,
             id_: Optional[str] = None,
             *,
-            type_: Callable[[str], Any] = str,
+            type_: Callable[[str], DatabaseID] = str,
             libraries: bool = False,
         ) -> None:
         """
@@ -76,7 +77,10 @@ class InterfaceID:
         self._libraries = libraries
 
         # No ID provided
-        self._ids = {}
+        if libraries:
+            self._ids: dict[int, dict[str, DatabaseID]] = {}
+        else:
+            self._ids: dict[int, DatabaseID] = {}
         if not id_:
             return None
 
@@ -96,7 +100,11 @@ class InterfaceID:
         return None
 
 
-    def __setitem__(self, connection_id: ConnectionID, id_: Any, /) -> None:
+    def __setitem__(self,
+            connection_id: ConnectionID,
+            id_: DatabaseID,
+            /,
+        ) -> None:
         """
         Set the ID for the given interface to the given value. This
         performs any assigned type conversions if this object was
@@ -110,7 +118,7 @@ class InterfaceID:
         # Apply type conversion
         typed_id = id_ if self._type is None else self._type(id_)
 
-        if self._libraries:
+        if self._libraries and isinstance(connection_id, tuple):
             connection_id, library = connection_id
             if connection_id in self._ids:
                 self._ids[connection_id][library] = typed_id
@@ -120,7 +128,7 @@ class InterfaceID:
             self._ids[connection_id] = typed_id
 
 
-    def __getitem__(self, connection_id: ConnectionID, /) -> Optional[Any]:
+    def __getitem__(self, connection_id: ConnectionID, /) -> Optional[DatabaseID]:
         """
         Get the ID for the given interface.
 
@@ -136,6 +144,24 @@ class InterfaceID:
             return self._ids.get(connection_id, {}).get(library)
 
         return self._ids.get(connection_id)
+
+
+    def __delitem__(self, connection_id: ConnectionID, /) -> None:
+        """
+        Delete the ID for the given interface location.
+
+        >>> del iid[1, 'TV Shows'] # Delete library-accessed InterfaceID
+        >>> del iid[2]             # Delete non-library-accessed IDs
+
+        Args:
+            connection_id: ID of the interface to reset.
+        """
+
+        if self._libraries and isinstance(connection_id, tuple):
+            connection_id, library = connection_id
+            del self._ids[connection_id][library]
+        else:
+            del self._ids[connection_id]
 
 
     def __eq__(self, other: Union[str, 'InterfaceID']) -> bool:
@@ -300,11 +326,13 @@ class InterfaceID:
         if not isinstance(other, (str, InterfaceID)):
             raise TypeError('Can only add IDs from a str or InterfaceID')
 
+        # Convert other to an InterfaceID if provided as a string
         if isinstance(other, str):
             other = InterfaceID(
                 other, type_=self._type, libraries=self._libraries
             )
 
+        # Create new object for storing finalized attributes in 
         return_id = InterfaceID(
             str(self), type_=self._type, libraries=self._libraries
         )
@@ -338,6 +366,12 @@ class InterfaceID:
             return True
 
         return False
+
+
+    def reset(self) -> None:
+        """Reset this object."""
+
+        self._ids = {}
 
 
 class DatabaseInfoContainer(ABC):
@@ -574,3 +608,18 @@ class DatabaseInfoContainer(ABC):
                 setattr(self, attr, getattr(other, attr))
 
         return None
+
+
+    def reset_id(self, id_: str) -> None:
+        """
+        Reset the ID definition of the given type.
+
+        Args:
+            id_: ID name being reset.
+        """
+
+        id_ = id_ if id_.endswith('_id') else f'{id_}_id'
+        if isinstance(getattr(self, id_), InterfaceID):
+            getattr(self, id_).reset()
+        else:
+            setattr(self, id_, None)
