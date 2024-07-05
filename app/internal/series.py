@@ -13,9 +13,13 @@ from app.database.query import (
     get_all_templates, get_font, get_interface, get_sync
 )
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
-from app.internal.cards import create_episode_cards, get_watched_statuses, refresh_remote_card_types
+from app.internal.cards import (
+    create_episode_cards, get_watched_statuses, refresh_remote_card_types
+)
 from app.internal.episodes import refresh_episode_data
-from app.internal.sources import download_episode_source_images, download_series_logo
+from app.internal.sources import (
+    download_episode_source_images, download_series_logo
+)
 from app.internal.translate import translate_episode
 from app.models.card import Card
 from app.models.episode import Episode
@@ -150,7 +154,7 @@ def set_series_database_ids(
         interface.set_series_ids(None, series_info, log=log)
 
     # Update Series with new IDs
-    if (changed := series.update_from_series_info(series_info)) and commit:
+    if (changed := series.set_ids_from_series_info(series_info)) and commit:
         db.commit()
 
     return changed
