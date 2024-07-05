@@ -162,7 +162,6 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             log: Logger = log,
         ) -> Optional[str]:
         ...
-
     @overload
     def __get_series_id(self,
             library_name: str,
@@ -170,7 +169,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             *,
             raw_obj: Literal[True] = False,
             log: Logger = log,
-        ) -> Optional[dict]:
+        ) -> Optional[SeriesInfo]:
         ...
 
     def __get_series_id(self,
@@ -179,9 +178,9 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             *,
             raw_obj: bool = False,
             log: Logger = log,
-        ) -> Optional[Union[str, dict]]:
+        ) -> Optional[Union[str, SeriesInfo]]:
         """
-        Get the Jellyfin ID for the given series.
+        Get the Jellyfin ID (or entire SeriesInfo) for the given series.
 
         Args:
             library_name: Name of the library containing the series.
@@ -192,14 +191,28 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
 
         Returns:
             None if the series is not found. The Jellyfin ID of the
-            series if `raw_obj` is False, otherwise the series
-            dictionary itself.
+            series if `raw_obj` is False, otherwise the SeriesInfo of
+            the found series.
         """
 
-        # If Series has Jellyfin ID, and not returning raw object, return
+        # If Series has Jellyfin ID, and not returning raw object, evaluate
         if (not raw_obj
             and series_info.has_id('jellyfin', self._interface_id,library_name)):
-            return series_info.jellyfin_id[self._interface_id, library_name]
+            # Query for this item within Jellyfin
+            id_ = series_info.jellyfin_id[self._interface_id, library_name]
+            resp = self.session.get(
+                f'{self.url}/Items/{id_}',
+                params=self.__params,
+            )
+
+            # If one item was returned, ID is still valid
+            if 'TotalRecordCount' in resp and resp['TotalRecordCount'] == 1:
+                return id_
+
+            # No item found, ID must be invalid - reset and re-query
+            log.warning(f'Jellyfin ID ({id_}) has been dynamically re-assigned.'
+                        f' Querying for new one..')
+            del series_info.jellyfin_id[self._interface_id, library_name]
 
         # Get ID of this library
         if (library_id := self.libraries.get(library_name)) is None:
@@ -217,27 +230,42 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             'parentId': library_id,
         } | self.__params
 
-        # Inner function to look for the Series in a specific year
         def _query_series(year: int) -> Optional[str]:
-            # Look for this series in this library
+            """Look up the series in the specified year"""
+
             response = self.session.get(
                 f'{self.url}/Items',
-                params=(params | {'years': str(year)}),
+                params=params | ({'years': str(year)} if year else {}),
             )
 
             # If no responses, return
             if response['TotalRecordCount'] == 0:
                 return None
 
-            # Go through all items and match name and type
-            for result in response['Items']:
-                if series_info.matches(result['Name']):
-                    return result if raw_obj else result['Id']
+            # Parse all results into SeriesInfo objects
+            results = [
+                (result, SeriesInfo.from_jellyfin_info(
+                    result, self._interface_id, library_name
+                ))
+                for result in response['Items']
+            ]
 
+            # Attempt to "smart" match by ID first
+            for result, result_series in results:
+                if series_info == result_series:
+                    return result_series if raw_obj else result['Id']
+            # Attempt to match by name alone
+            for result, result_series in results:
+                if series_info.matches(result['Name']):
+                    return result_series if raw_obj else result['Id']
+
+            # No match
             return None
 
-        # Look for series in this year, then surrounding years
-        for year in (series_info.year, series_info.year-1, series_info.year+1):
+        # Look for series in this year, then surrounding years, then no year
+        for year in (
+            series_info.year, series_info.year-1, series_info.year+1, None
+        ):
             if (jellyfin_id := _query_series(year)) is not None:
                 return jellyfin_id
 
@@ -324,7 +352,6 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         ) -> Union[tuple[Literal[None], Literal[None]],
                    tuple[str, Literal[None]]]:
         ...
-
     @overload
     def __find_ids(self,
             library_name: str,
@@ -395,31 +422,17 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             log: Logger for all log messages.
         """
 
-        # If all possible ID's are defined
-        if series_info.has_ids(*self.SERIES_IDS, interface_id=self._interface_id,
-                               library_name=library_name):
-            return None
-
         # Find series
-        series = self.__get_series_id(
+        result = self.__get_series_id(
             library_name, series_info, raw_obj=True, log=log
         )
-        if series is None:
+        if result is None:
             log.warning(f'Series "{series_info}" was not found under library '
                         f'"{library_name}" in Jellyfin')
             return None
 
-        # Assign ID's
-        series_info.set_jellyfin_id(
-            series['Id'], self._interface_id, library_name
-        )
-        if (imdb_id := series['ProviderIds'].get('Imdb')):
-            series_info.set_imdb_id(imdb_id)
-        if (tmdb_id := series['ProviderIds'].get('Tmdb')):
-            series_info.set_tmdb_id(tmdb_id)
-        if (tvdb_id := series['ProviderIds'].get('Tvdb')):
-            series_info.set_tvdb_id(tvdb_id)
-
+        del series_info[self._interface_id, library_name]
+        series_info.copy_ids(result, log=log)
         return None
 
 

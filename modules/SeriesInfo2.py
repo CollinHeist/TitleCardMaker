@@ -20,7 +20,7 @@ class SeriesCharacteristics(TypedDict):
     series_name: str
     series_year: int
 
-class SeriesIds(TypedDict):
+class SeriesIDs(TypedDict):
     emby_id: str
     imdb_id:str
     jellyfin_id: str
@@ -34,6 +34,9 @@ class SeriesInfo(DatabaseInfoContainer):
     """
     Static information that is tied to a single Series.
     """
+
+    """How Emby and Jellyfin store datetimes"""
+    AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f000000Z'
 
     """Regex to match name + year from given full name"""
     __FULL_NAME_REGEX = re_compile(r'^(.*?)\s+\((\d{4})\)$')
@@ -222,11 +225,9 @@ class SeriesInfo(DatabaseInfoContainer):
             SeriesInfo object defining the given data.
         """
 
-        AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f000000Z'
-
         return cls(
             info['Name'],
-            datetime.strptime(info['PremiereDate'], AIRDATE_FORMAT).year,
+            datetime.strptime(info['PremiereDate'], cls.AIRDATE_FORMAT).year,
             jellyfin_id=f'{interface_id}:{library_name}:{info["Id"]}',
             imdb_id=info.get('ProviderIds', {}).get('Imdb'),
             tmdb_id=info.get('ProviderIds', {}).get('Tmdb'),
@@ -274,7 +275,7 @@ class SeriesInfo(DatabaseInfoContainer):
 
 
     @property
-    def ids(self) -> SeriesIds:
+    def ids(self) -> SeriesIDs:
         """Dictionary of IDs for this object."""
 
         return {
