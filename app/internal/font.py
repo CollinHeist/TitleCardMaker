@@ -1,7 +1,11 @@
 from typing import Optional, Union
 
+from sqlalchemy.orm import Session
+
 from app.models.episode import Episode
+from app.models.font import Font
 from app.models.series import Series
+from app.schemas.availability import AvailableFont
 from app.schemas.font import NamedFont
 
 
@@ -32,3 +36,21 @@ def get_effective_fonts(
 
     # Episode defines Font, return None and Episode Font
     return None, episode.font
+
+
+def get_available_fonts(db: Session) -> list[AvailableFont]:
+    """
+    Get a list of all available Font information.
+
+    Args:
+        db: SQL database to query for the given object.
+
+    Returns:
+        List of dictionaries with the keys `id` and `name` for all
+        defined Fonts.
+    """
+
+    return [
+        {'id': font.id, 'name': font.name}
+        for font in db.query(Font).order_by(Font.name).all()
+    ]

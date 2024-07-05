@@ -8,6 +8,7 @@ from app.models.episode import Episode
 from app.models.preferences import Preferences
 from app.models.series import Library, Series
 from app.models.template import Template
+from app.schemas.availability import AvailableTemplate
 
 
 @overload
@@ -142,3 +143,21 @@ def get_effective_templates(
         None,
         None,
     )
+
+
+def get_available_templates(db: Session) -> list[AvailableTemplate]:
+    """
+    Get a list of all available template information.
+
+    Args:
+        db: SQL database to query for the given object.
+
+    Returns:
+        List of dictionaries with the keys `id` and `name` for all
+        defined Templates.
+    """
+
+    return [
+        {'id': template.id, 'name': template.name}
+        for template in db.query(Template).order_by(Template.name).all()
+    ]

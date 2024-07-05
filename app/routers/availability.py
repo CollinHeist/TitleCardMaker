@@ -1,4 +1,3 @@
-from logging import Logger
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -14,6 +13,8 @@ from app.internal.availability import (
     get_latest_version, get_local_cards, get_remote_cards
 )
 from app import models
+from app.internal.font import get_available_fonts
+from app.internal.templates import get_available_templates
 from app.models.preferences import Preferences
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.availability import (
@@ -95,6 +96,7 @@ def get_all_available_card_types(
     all_cards = LocalCards \
         + get_local_cards(preferences) \
         + get_remote_cards(log=getattr(request.state, 'log', log))
+
     if show_excluded:
         return all_cards
 
@@ -262,7 +264,7 @@ def get_server_libraries(
     for interface_id, interface in emby_interfaces:
         libraries += [
             MediaServerLibrary(
-                interface='Emby',
+                interface=interface.INTERFACE_TYPE,
                 interface_id=interface_id,
                 name=library
             ) for library in interface.get_libraries()
@@ -311,23 +313,20 @@ def get_sonarr_tags(
     ) -> list[Tag]:
     """Get all tags defined in all Sonarr interfaces."""
 
-    tags = []
-    for interface_id, interface in sonarr_interfaces:
-        tags += [
-            tag | {'interface_id': interface_id}
-            for tag in interface.get_all_tags()
-        ]
-
-    return tags
+    return [
+        tag | {'interface_id': interface_id}
+        for interface_id, interface in sonarr_interfaces
+        for tag in interface.get_all_tags()
+    ]
 
 
 @availablility_router.get('/fonts', tags=['Fonts'])
-def get_available_fonts(
+def get_available_fonts_(
         db: Session = Depends(get_database),
     ) -> list[AvailableFont]:
     """Get all the available Font base data."""
 
-    return db.query(models.font.Font).order_by(models.font.Font.sort_name).all()
+    return get_available_fonts(db)
 
 
 @availablility_router.get('/series', tags=['Series'])
@@ -343,14 +342,12 @@ def get_available_series(
 
 
 @availablility_router.get('/templates', tags=['Templates'])
-def get_available_templates(
+def get_available_templates_(
         db: Session = Depends(get_database),
     ) -> list[AvailableTemplate]:
     """Get the names of all the available Templates."""
 
-    return db.query(models.template.Template)\
-        .order_by(models.template.Template.name)\
-        .all()
+    return get_available_templates(db)
 
 
 @availablility_router.get('/styles')
