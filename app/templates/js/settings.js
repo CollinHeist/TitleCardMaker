@@ -216,26 +216,46 @@ function updateGlobalSettings() {
   });
 }
 
-async function initAll() {
-  // Enable dropdowns, checkboxes, etc.
-  $('.ui.dropdown').dropdown();
-  $('.ui.checkbox').checkbox();
+/** @type {number} Global card quality */
+const cardQuality = {{preferences.card_quality}};
+
+/**
+ * Initialie the card quality slider. This makes the slider interactible,
+ * adds labels, sets the start value and color to the current global value.
+ */
+function initializeCardQualitySlider() {
+  /**
+   * Update the color of the card quality slider based on the given value.
+   * @param {number} newValue - New card quality.
+   */
+  const updateSliderColor = (newValue) => {
+    $('.slider[data-value="card_quality"]')
+      .toggleClass('blue', newValue > 80)
+      .toggleClass('yellow', newValue > 70 && newValue <= 80)
+      .toggleClass('orange', newValue > 50 && newValue <= 70)
+      .toggleClass('red', newValue <= 50)
+    ;
+  }
+
   $('.slider[data-value="card_quality"]').slider({
     restrictedLabels: [10, 20, 30, 40, 50, 60, 70, 80, 90],
     autoAdjustLabels: false,
     showThumbTooltip: true,
     min: 1,
     max: 100,
-    start: {{preferences.card_quality}},
-    onMove: function(newValue) {
-      $('.slider[data-value="card_quality"]')
-        .toggleClass('blue', newValue > 80)
-        .toggleClass('yellow', newValue > 70 && newValue <= 80)
-        .toggleClass('orange', newValue > 50 && newValue <= 70)
-        .toggleClass('red', newValue <= 50)
-      ;
-    },
+    start: cardQuality,
+    onMove: updateSliderColor,
   });
+
+  // Initialize starting color
+  updateSliderColor(cardQuality);
+}
+
+async function initAll() {
+  // Enable dropdowns, checkboxes, etc.
+  $('.ui.dropdown').dropdown();
+  $('.ui.checkbox').checkbox();
+  initializeCardQualitySlider();
 
   await getAllConnections();
   getEpisodeDataSources();
