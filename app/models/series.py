@@ -530,7 +530,11 @@ class Series(Base):
         )
 
 
-    def update_from_series_info(self, other: SeriesInfo) -> bool:
+    def update_from_series_info(self,
+            other: SeriesInfo,
+            *,
+            log: Logger = log,
+        ) -> bool:
         """
         Update this Series' database IDs from the given SeriesInfo.
 
@@ -543,19 +547,44 @@ class Series(Base):
 
         Args:
             other: Other set of Series info to merge into this.
+            log: Logger for all log messages.
 
         Returns:
-            Whether this object was changed.
+            True if any of this Series' underlying ID's were changed.
+            False otherwise.
         """
 
         info = self.as_series_info
-        info.copy_ids(other)
+        info.copy_ids(other, log=log)
 
         changed = False
         for id_type, id_ in info.ids.items():
             if id_ and getattr(self, id_type) != id_:
                 setattr(self, id_type, id_)
                 changed = True
+
+        return changed
+
+
+    def set_ids_from_series_info(self, info: SeriesInfo) -> bool:
+        """
+        Set all ID attributes of this object from the given SeriesInfo.
+        This WILL override any existing ID information of this object,
+        unless that entire ID within `info` is empty.
+
+        Args:
+            info: SeriesInfo containing ID information to set.
+
+        Returns:
+            True if any of this Series' underlying ID's were changed.
+            False otherwise.
+        """
+
+        changed = False
+        for id_type, id_ in info.ids.items():
+            if id_:
+                changed |= (getattr(self, id_type) != id_)
+                setattr(self, id_type, id_)
 
         return changed
 
