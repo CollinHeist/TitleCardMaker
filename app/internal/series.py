@@ -125,19 +125,19 @@ def set_series_database_ids(
         log: Logger = log,
     ) -> bool:
     """
-    Set the database IDs of the given Series.
+    Set the database ID's of the given Series.
 
     Args:
-        series: Series to set the IDs of.
+        series: Series to set the ID's of.
         db: Database to commit changes to.
-        commit: Whether to commit changes after setting any IDs.
+        commit: Whether to commit changes after setting any ID's.
         log: Logger for all log messages.
 
     Returns:
         Whether the Series was modified.
     """
 
-    # Create SeriesInfo object for this entry, query all interfaces
+    # Query all interfaces for potential ID's
     series_info = series.as_series_info
     for library in series.libraries:
         if (interface := get_interface(library['interface_id'])):
@@ -145,6 +145,8 @@ def set_series_database_ids(
     for _, interface in get_sonarr_interfaces():
         interface.set_series_ids(None, series_info, log=log)
     for _, interface in get_tmdb_interfaces():
+        interface.set_series_ids(None, series_info, log=log)
+    for _, interface in get_tvdb_interfaces():
         interface.set_series_ids(None, series_info, log=log)
 
     # Update Series with new IDs
