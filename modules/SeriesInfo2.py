@@ -172,7 +172,6 @@ class SeriesInfo(DatabaseInfoContainer):
     def from_emby_info(
             cls,
             info: dict,
-            year: int,
             interface_id: int,
             library_name: str,
         ) -> 'SeriesInfo':
@@ -182,7 +181,6 @@ class SeriesInfo(DatabaseInfoContainer):
 
         Args:
             info: Dictionary of series info.
-            year: Year of this Series.
             interface_id: ID of the Emby interface whose data is being
                 parsed.
             library_name: Name of the library associated with this
@@ -193,8 +191,8 @@ class SeriesInfo(DatabaseInfoContainer):
         """
 
         return cls(
-            name=info['Name'],
-            year=year,
+            info['Name'],
+            datetime.strptime(info['PremiereDate'], cls.AIRDATE_FORMAT).year,
             emby_id=f'{interface_id}:{library_name}:{info["Id"]}',
             imdb_id=info.get('ProviderIds', {}).get('Imdb'),
             tmdb_id=info.get('ProviderIds', {}).get('Tmdb'),

@@ -169,10 +169,20 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
     @overload
     def __get_series_id(self,
-            library_name: str, series_info: SeriesInfo, *,
-            raw_obj: Literal[True] = True, log: Logger = log
-        ) -> Optional[dict]:
-        ...
+            library_name: str,
+            series_info: SeriesInfo,
+            *,
+            raw_obj: Literal[False] = False,
+            log: Logger = log
+        ) -> Optional[str]: ...
+    @overload
+    def __get_series_id(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            *,
+            raw_obj: Literal[True] = True,
+            log: Logger = log
+        ) -> Optional[SeriesInfo]: ...
 
     def __get_series_id(self,
             library_name: str,
@@ -180,7 +190,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             *,
             raw_obj: bool = False,
             log: Logger = log,
-        ) -> Optional[Union[str, dict]]:
+        ) -> Optional[Union[str, SeriesInfo]]:
         """
         Get the Jellyfin ID for the given series.
 
@@ -193,12 +203,27 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         Returns:
             None if the series is not found. The Jellyfin ID of the
-            series if raw_obj is False, otherwise the series dictionary
-            itself.
+            series if raw_obj is False, otherwise the SeriesInfo of the
+            found series.
         """
 
-        if series_info.has_id('emby_id', self._interface_id, library_name):
-            return series_info.emby_id[self._interface_id, library_name]
+        if (not raw_obj
+            and series_info.has_id('emby_id', self._interface_id, library_name)):
+            # Query for this item within Jellyfin
+            id_ = series_info.emby_id[self._interface_id, library_name]
+            resp = self.session.get(
+                f'{self.url}/Items/{id_}',
+                params=self.__params,
+            )
+
+            # If one item was returned, ID is still valid
+            if 'TotalRecordCount' in resp and resp['TotalRecordCount'] == 1:
+                return id_
+
+            # No item found, ID must be invalid - reset and re-query
+            log.warning(f'Emby ID ({id_}) has been dynamically re-assigned. '
+                        f'Querying for new one..')
+            del series_info.emby_id[self._interface_id, library_name]
 
         # Get ID of this library
         if (library_ids := self.libraries.get(library_name, None)) is None:
@@ -227,7 +252,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         # Look for this series in each library subfolder
         for parent_id in library_ids:
-            response = self.session.get(
+            response: dict = self.session.get(
                 f'{self.url}/Items',
                 params=params | {'ParentId': parent_id}
             )
@@ -239,21 +264,51 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             # Go through all items and match name and type, setting database IDs
             for result in response['Items']:
                 if result['Type'] == 'Series':
-                    if (premiere_date := result.get('PremiereDate')) is None:
-                        log.error(f'Series {result["Name"]} has no premiere date')
+                    # Skip results w/o premiere dates
+                    if result.get('PremiereDate') is None:
+                        log.debug(f'Series {result["Name"]} has no premiere date')
                         continue
-                    year = datetime.strptime(
-                        premiere_date, self.AIRDATE_FORMAT
-                    ).year
 
                     this_series = SeriesInfo.from_emby_info(
-                        result, year, self._interface_id, library_name,
+                        result, self._interface_id, library_name,
                     )
                     if series_info == this_series:
-                        return result if raw_obj else result['Id']
+                        return this_series if raw_obj else result['Id']
 
-        # Not found on server
+        log.warning(f'Series "{series_info}" was not found in Emby')
         return None
+
+
+    def __get_season_id(self,
+            series_id: str,
+            season_number: int,
+        ) -> Optional[str]:
+        """
+        Get the Emby ID of the given season.
+
+        Args:
+            series_id: Emby ID of the associated series.
+            season_number: Season number whose ID is being queried.
+
+        Returns:
+            The Emby ID of the season, if found. None otherwise.
+        """
+
+        response = self.session.get(
+            f'{self.url}/Items',
+            params={
+                'recursive': True,
+                'includeItemTypes': 'Season',
+                'parentId': series_id,
+                'startIndex': season_number-1,
+                'limit': 1,
+            } | self.__params,
+        )
+
+        if 'Items' not in response or not response['Items']:
+            return None
+
+        return response['Items'][0]['Id']
 
 
     def __get_episodes(self,
@@ -278,7 +333,6 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         # Find series
         emby_id = self.__get_series_id(library_name, series_info, log=log)
         if emby_id is None:
-            log.warning(f'Series not found in Emby {series_info!r}')
             return None
 
         # Get all episodes for this series
@@ -331,29 +385,18 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             series_info: Series to set the ID of.
             log: Logger for all log messages.
         """
-        # If all possible ID's are defined
-        if series_info.has_ids(*self.SERIES_IDS, interface_id=self._interface_id,
-                               library_name=library_name):
-            return None
 
         # Find series
         series = self.__get_series_id(
             library_name, series_info, raw_obj=True, log=log
         )
-        if series is None or not isinstance(series, dict):
+        if not series:
             log.warning(f'Series "{series_info}" was not found under library '
                         f'"{library_name}" in Emby')
             return None
 
-        # Set database ID's
-        series_info.set_emby_id(series['Id'], self._interface_id, library_name)
-        if (imdb_id := series['ProviderIds'].get('Imdb')):
-            series_info.set_imdb_id(imdb_id)
-        if (tmdb_id := series['ProviderIds'].get('Tmdb')):
-            series_info.set_tmdb_id(tmdb_id)
-        if (tvdb_id := series['ProviderIds'].get('Tvdb')):
-            series_info.set_tvdb_id(tvdb_id)
-
+        del series_info[self._interface_id, library_name]
+        series_info.copy_ids(series)
         return None
 
 
@@ -676,7 +719,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         """
 
         # If series has no Emby ID, or no episodes, exit
-        if len(episode_and_cards) == 0:
+        if not episode_and_cards:
             return []
 
         # Load each episode and card
@@ -725,7 +768,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             log: Logger = log,
         ) -> None:
         """
-        Load the given season posters into Plex.
+        Load the given season posters into Emby.
 
         Args:
             library_name: Name of the library containing the series to
@@ -736,7 +779,45 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             log: Logger for all log messages.
         """
 
-        ...
+        # Find this series
+        series_id = self.__get_series_id(library_name, series_info, log=log)
+        if series_id is None:
+            return None
+
+        # Load each episode and card
+        for season_number, image in posters.items():
+            if (sid := self.__get_season_id(series_id, season_number)) is None:
+                continue
+
+            # Shrink image if necessary, skip if cannot be compressed
+            if (isinstance(image, Path)
+                and (image := self.compress_image(image, log=log)) is None):
+                continue
+
+            # Download or read image
+            if isinstance(image, str):
+                image_bytes = WebInterface.download_image_raw(image, log=log)
+                if image_bytes is None:
+                    continue
+            else:
+                image_bytes = image.read_bytes()
+            image_base64 = b64encode(image_bytes)
+
+            # Submit POST request for image upload on Base64 encoded image
+            try:
+                self.session.session.post(
+                    url=f'{self.url}/Items/{sid}/Images/Primary',
+                    headers={'Content-Type': 'image/jpeg'},
+                    params=self.__params,
+                    data=image_base64,
+                )
+                log.debug(f'{series_info} loaded poster into season '
+                          f'{season_number}')
+            except Exception:
+                log.exception(f'Unable to upload {image} to {series_info}')
+                continue
+
+        return None
 
 
     def load_series_poster(self,
@@ -747,7 +828,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             log: Logger = log
         ) -> None:
         """
-        Load the given series poster into Plex.
+        Load the given series poster into Emby.
 
         Args:
             library_name: Name of the library containing the series to
@@ -757,7 +838,38 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             log: Logger for all log messages.
         """
 
-        ...
+        # Find this series
+        series_id = self.__get_series_id(library_name, series_info, log=log)
+        if series_id is None:
+            return None
+
+        # Shrink image if necessary, skip if cannot be compressed
+        if (isinstance(image, Path)
+            and (image := self.compress_image(image, log=log)) is None):
+            return None
+
+        # Download or read image
+        if isinstance(image, str):
+            image_bytes = WebInterface.download_image_raw(image, log=log)
+            if image_bytes is None:
+                return None
+        else:
+            image_bytes = image.read_bytes()
+        image_base64 = b64encode(image_bytes)
+
+        # Submit POST request for image upload on Base64 encoded image
+        try:
+            self.session.session.post(
+                url=f'{self.url}/Items/{series_id}/Images/Primary',
+                headers={'Content-Type': 'image/jpeg'},
+                params=self.__params,
+                data=image_base64,
+            )
+            log.debug(f'{series_info} loaded poster')
+        except Exception:
+            log.exception(f'Unable to upload {image} to {series_info}')
+
+        return None
 
 
     def load_series_background(self,
@@ -768,7 +880,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             log: Logger = log
         ) -> None:
         """
-        Load the given series background image into Plex.
+        Load the given series background image into Emby.
 
         Args:
             library_name: Name of the library containing the series to
@@ -778,7 +890,38 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             log: Logger for all log messages.
         """
 
-        ...
+        # Find this series
+        series_id = self.__get_series_id(library_name, series_info, log=log)
+        if series_id is None:
+            return None
+
+        # Shrink image if necessary, skip if cannot be compressed
+        if (isinstance(image, Path)
+            and (image := self.compress_image(image, log=log)) is None):
+            return None
+
+        # Download or read image
+        if isinstance(image, str):
+            image_bytes = WebInterface.download_image_raw(image, log=log)
+            if image_bytes is None:
+                return None
+        else:
+            image_bytes = image.read_bytes()
+        image_base64 = b64encode(image_bytes)
+
+        # Submit POST request for image upload on Base64 encoded image
+        try:
+            self.session.session.post(
+                url=f'{self.url}/Items/{series_id}/Images/Backdrop',
+                headers={'Content-Type': 'image/jpeg'},
+                params=self.__params,
+                data=image_base64,
+            )
+            log.debug(f'{series_info} loaded backdrop')
+        except Exception:
+            log.exception(f'Unable to upload {image} to {series_info}')
+
+        return None
 
 
     def get_source_image(self,
@@ -845,10 +988,8 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             series, or thumbnail cannot be found.
         """
 
-        # Find series, exit if not found
         emby_id = self.__get_series_id(library_name, series_info, log=log)
         if emby_id is None:
-            log.warning(f'Series not found in Emby {series_info!r}')
             return None
 
         # Get the poster image for this Series
@@ -884,10 +1025,8 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             not exist in Emby, or no valid image was returned.
         """
 
-        # Find series, exit if not found
         emby_id = self.__get_series_id(library_name, series_info, log=log)
         if emby_id is None:
-            log.warning(f'Series not found in Emby {series_info!r}')
             return None
 
         # Get the source image for this episode
