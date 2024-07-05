@@ -365,6 +365,28 @@ def update_series_config(
     return changed
 
 
+def _delete_folder(folder: Path, *, log: Logger = log) -> None:
+    """
+    Recursively delete all subcontent of the provided folder.
+
+    Args:
+        folder: Folder to iterate through and delete.
+        log: Logger for all log messages.
+    """
+
+    if folder.is_file():
+        return None
+
+    for item in folder.iterdir():
+        if item.is_dir():
+            _delete_folder(item, log=log)
+        else:
+            item.unlink(missing_ok=True)
+            log.trace(f'Deleting "{item}"')
+
+    return None
+
+
 def delete_series(
         db: Session,
         series: Series,
@@ -389,20 +411,17 @@ def delete_series(
         series_poster.unlink(missing_ok=True)
         small_poster = series_poster.parent / 'poster-750.jpg'
         small_poster.unlink(missing_ok=True)
-        log.debug(f'{series} Deleted posters')
+        log.trace(f'{series} Deleted posters')
 
-    # Delete Source directory if necessary
+    # Delete Source directory (and files) if necessary
     if get_preferences().completely_delete_series:
-        for file in series.source_directory.glob('*'):
-            if file.is_file():
-                log.debug(f'Deleting "{file}"')
-                file.unlink(missing_ok=True)
+        _delete_folder(series.source_directory, log=log)
 
     # Delete Series; all child objects are deleted on cascade
     log.info(f'Deleting {series}')
     db.delete(series)
 
-    # Commit changes if indicated
+    # Commit if indicated
     if commit_changes:
         db.commit()
 
