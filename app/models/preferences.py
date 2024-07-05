@@ -7,7 +7,6 @@ from typing import Any, Optional, TYPE_CHECKING
 from fastapi import BackgroundTasks
 
 from app.schemas.base import UNSPECIFIED
-from app.schemas.preferences import CardExtension
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
@@ -18,6 +17,8 @@ from modules.RemoteCardType2 import RemoteCardType
 from modules.TitleCard import TitleCard
 from modules.Version import Version
 
+if TYPE_CHECKING:
+    from app.schemas.preferences import CardExtension
 
 TCM_ROOT = Path(__file__).parent.parent.parent
 CONFIG_ROOT = TCM_ROOT / 'config'
@@ -35,7 +36,7 @@ class Preferences:
     DEFAULT_CARD_FILENAME_FORMAT = (
         '{series_full_name} - S{season_number:02}E{episode_number:02}'
     )
-    DEFAULT_CARD_EXTENSION: CardExtension = '.jpg'
+    DEFAULT_CARD_EXTENSION: 'CardExtension' = '.jpg'
     VALID_IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp')
 
     """Directory to all internal assets"""
