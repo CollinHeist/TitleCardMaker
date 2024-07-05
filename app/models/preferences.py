@@ -2,7 +2,9 @@ from logging import Logger
 from os import environ
 from pathlib import Path
 from pickle import dump, load
-from typing import Any, Optional
+from typing import Any, Optional, TYPE_CHECKING
+
+from fastapi import BackgroundTasks
 
 from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import CardExtension
@@ -238,6 +240,8 @@ class Preferences:
             log.debug(f'  {var_name:>{padding}} : {var}')
         log.debug(f'{"-" * 53}')
 
+        self.determine_imagemagick_prefix(log=log)
+
 
     def read_file(self) -> Optional[object]:
         """
@@ -313,7 +317,10 @@ class Preferences:
         self.commit()
 
 
-    def determine_imagemagick_prefix(self, *, log: Logger = log) -> None:
+    def determine_imagemagick_prefix(self,
+            *,
+            log: Logger = log,
+        ) -> None:
         """
         Determine whether to use the "magick " prefix for ImageMagick
         commands.
@@ -322,18 +329,33 @@ class Preferences:
             log: Logger for all log messages.
         """
 
-        # Try variations of the font list command with/out the "magick " prefix
-        for prefix, use_magick in zip(('magick ', ''), (True, False)):
-            # Create ImageMagickInterface and verify validity
-            interface = ImageMagickInterface(use_magick_prefix=use_magick)
-            if interface.validate_interface():
-                self.use_magick_prefix = use_magick # pylint: disable=W0201
-                log.debug(f'Using "{prefix}" ImageMagick command prefix')
-                return None
+        def _detect_imagemagick(threaded: bool) -> None:
+            """Detect if ImageMagick is installed."""
 
-        # If none of the font commands worked, IM might not be installed
-        log.critical("ImageMagick doesn't appear to be installed")
-        return None
+            # Try to initialize with/out the "magick " prefix
+            for prefix, use_magick in (('magick', True), ('', False)):
+                # Create ImageMagickInterface and verify validity
+                interface = ImageMagickInterface(use_magick_prefix=use_magick)
+                if interface.validate_interface():
+                    # Since cards are typically created in the background
+                    # thread; assign prefix only for threaded eval
+                    if threaded:
+                        self.use_magick_prefix = use_magick
+                    log.debug(f'Using "{prefix}" ImageMagick command prefix '
+                              + ('in background threads'
+                                 if threaded else 'in the primary thread'))
+                    return None
+
+            # If neither variation worked, IM might not be installed
+            log.critical("ImageMagick doesn't appear to be installed")
+            return None
+
+        # Try normally (i.e. using main server process)
+        _detect_imagemagick(threaded=False)
+
+        # Try using spawned background thread
+        tasks = BackgroundTasks()
+        tasks.add_task(_detect_imagemagick, threaded=True)
 
 
     def parse_local_card_types(self, *, log: Logger = log) -> None:
