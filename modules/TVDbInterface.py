@@ -229,7 +229,7 @@ class TVDbInterface(EpisodeDataSource, WebInterface, Interface):
             or json.get('status') != 'success'
             or not json.get('data', {}).get('token')):
             log.debug(f'Authentication failed [{resp.status_code}] - {json}')
-            raise ValueError(f'Unable to generate TVDb API token')
+            raise ValueError('Unable to generate TVDb API token')
 
         return json['data']['token']
 

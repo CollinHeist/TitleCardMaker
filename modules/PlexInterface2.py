@@ -137,14 +137,14 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         try:
             self.__token = api_key
             self.__server = PlexServer(url, api_key, self.__session)
-        except Unauthorized as e:
-            log.critical(f'Invalid Plex Token "{api_key}"')
+        except Unauthorized as exc:
+            log.critical(f'Invalid Plex Token')
             raise HTTPException(
                 status_code=401,
                 detail=f'Invalid Plex Token',
-            ) from e
+            ) from exc
         except Exception as exc:
-            log.critical(f'Cannot connect to Plex - returned error: "{exc}"')
+            log.exception(f'Cannot connect to Plex')
             raise HTTPException(
                 status_code=400,
                 detail=f'Cannot connect to Plex - {exc}',
