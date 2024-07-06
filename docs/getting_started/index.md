@@ -78,6 +78,17 @@ Unraid users can directly add the container as a "template" within the UI.
         docker login ghcr.io
         ```
 
+        ??? tip "Use a Docker Manager like Portainer, or Watchtower?"
+
+            Some non-standard Docker managers require a different way of
+            authenticating with private registries.
+            
+            See [here](https://docs.portainer.io/admin/registries/add/custom)
+            for Portainer, and
+            [here](https://containrrr.dev/watchtower/private-registries/) for
+            Watchtower. You will need to follow the instructions specific to
+            your system.
+
     4. Determine your timezone, a full list is available
     [here](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). You
     will want to take note of the text in the _TZ Identifer_ column - e.g.
@@ -172,6 +183,17 @@ Unraid users can directly add the container as a "template" within the UI.
         ```bash
         docker login ghcr.io
         ```
+
+        ??? tip "Use a Docker Manager like Portainer, or Watchtower?"
+
+            Some non-standard Docker managers require a different way of
+            authenticating with private registries.
+            
+            See [here](https://docs.portainer.io/admin/registries/add/custom)
+            for Portainer, and
+            [here](https://containrrr.dev/watchtower/private-registries/) for
+            Watchtower. You will need to follow the instructions specific to
+            your system.
 
     4. Determine your timezone, a full list is available
     [here](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). You
