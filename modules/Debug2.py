@@ -26,9 +26,9 @@ better_exceptions.MAX_LENGTH = None
 """
 Logging filters and formatters
 """
-SECRETS = set()
+SECRETS: set[str] = set()
 def redact_secrets(message: str) -> str:
-    """Redact all secrets from the given message"""
+    """Redact all secrets from the given message."""
 
     for secret in SECRETS:
         message = message.replace(secret, '[REDACTED]')
@@ -37,21 +37,20 @@ def redact_secrets(message: str) -> str:
 
 
 def reduced_serializer(record: 'Record') -> str:
-    """Formatter which serializes a subset of the record"""
+    """Formatter which serializes a subset of the record."""
 
     exc = None
     if (record['exception']) is not None:
         exc = {
             'type': str(record['exception'].type),
             'value': str(record['exception'].value),
-            'traceback': format_exception(*record['exception']),
+            'traceback': redact_secrets(format_exception(*record['exception'])),
         }
 
     record['extra']['serialized'] = dumps({
         'message': record['message'],
         'context_id': record['extra'].get('context_id', None),
         'level': getattr(record.get('level', {}), 'name', 'UNSET'),
-        # 'YYYY-MM-DD HH:mm:ss Z'),
         'time': record['time'].strftime(DATETIME_FORMAT),
         'execution': {
             'file': getattr(record.get('file', {}), 'path', None),
@@ -61,12 +60,9 @@ def reduced_serializer(record: 'Record') -> str:
     })
     return '{extra[serialized]}\n'
 
-
-# Remove builtin logger to stderr
-# logger.remove()
-
 logger.configure(
     handlers=[
+        # WARNING: The sys.stdout print WILL NOT have secrets redacted
         dict(
             sink=sys.stdout,
             level=environ.get('TCM_LOG', 'INFO'),
@@ -95,6 +91,7 @@ logger.configure(
             # Make log calls non-blocking
             enqueue=True,
         ),
+        # Uncomment to capture SQLAlchemy logging
         # dict(
         #     sink='sqlalchemy.engine',
         #     level='DEBUG',
