@@ -148,6 +148,7 @@ def run_sync(
     # Query interface for the indicated subset of Series
     log.debug(f'{sync} starting to query {sync.interface}[{sync.interface_id}]')
     all_series = interface.get_all_series(**sync.sync_kwargs, log=log)
+    log.trace(f'{sync} returned {len(all_series)} Series')
 
     # Process all Series returned by Sync
     added: list[Series] = []
