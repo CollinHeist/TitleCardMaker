@@ -20,6 +20,7 @@ from modules.Version import Version
 if TYPE_CHECKING:
     from app.schemas.preferences import CardExtension
 
+
 TCM_ROOT = Path(__file__).parent.parent.parent
 CONFIG_ROOT = TCM_ROOT / 'config'
 
@@ -76,7 +77,7 @@ class Preferences:
         'imported_blueprints', 'colorblind_mode', 'library_unique_cards',
         'invalid_connections', 'home_page_table_view', 'reduced_animations',
         'currently_running_sync', 'interactive_card_previews',
-        'home_page_order', 'delete_unsynced_series',
+        'delete_unsynced_series',
     )
 
 
