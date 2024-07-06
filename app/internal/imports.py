@@ -1524,7 +1524,7 @@ def import_card_content(
 
         # If textless, override source file; otherwise override card
         if as_textless:
-            card_settings['source_file'].write_bytes()
+            card_settings['source_file'].write_bytes(file)
 
         # Get a validated card class, and card type Pydantic model
         try:
