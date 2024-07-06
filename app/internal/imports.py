@@ -1518,9 +1518,8 @@ def import_card_content(
         # Get finalized Card settings for this Episode
         try:
             card_settings = resolve_card_settings(episode, library, log=log)
-        except (HTTPException, InvalidCardSettings) as exc:
-            log.exception(f'{episode} Cannot import Card - settings are '
-                          f'invalid {exc}')
+        except (HTTPException, InvalidCardSettings):
+            log.exception(f'{episode} Cannot import Card - settings are invalid')
             continue
 
         # If textless, override source file; otherwise override card
@@ -1528,7 +1527,11 @@ def import_card_content(
             card_settings['source_file'].write_bytes()
 
         # Get a validated card class, and card type Pydantic model
-        _, CardTypeModel = validate_card_type_model(card_settings, log=log)
+        try:
+            _, CardTypeModel = validate_card_type_model(card_settings, log=log)
+        except HTTPException:
+            log.exception(f'{episode} Cannot import Card - settings are invalid')
+            continue
 
         # Write card file to file
         card_settings['card_file'].parent.mkdir(exist_ok=True, parents=True)
