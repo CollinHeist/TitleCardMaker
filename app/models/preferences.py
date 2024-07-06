@@ -332,6 +332,11 @@ class Preferences:
             log: Logger for all log messages.
         """
 
+        # Do not need to determine in Docker; always omit prefix
+        if self.is_docker:
+            self.use_magick_prefix = False
+            return None
+
         def _detect_imagemagick(threaded: bool) -> None:
             """Detect if ImageMagick is installed."""
 
