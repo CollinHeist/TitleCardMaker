@@ -4,6 +4,9 @@ import {
 } from './.types.js';
 {% endif %}
 
+/** @type {?number} ID of the Sync which is currently running */
+const currentlyRunningSync = {{preferences.currently_running_sync|tojson}};
+
 /**
  * Submit an API request to get all defined Connections. The dropdowns for each
  * connection type are initialized with the servers for that connection. Any
@@ -305,6 +308,7 @@ async function showDeleteSyncModal(syncId) {
 function runSync(syncId, name) {
   // Add loading indicator, show toast
   $(`#sync${syncId} >* i.sync`).toggleClass('loading blue', true);
+  $(`.card >* i.sync`).toggleClass('disabled', true);
   showInfoToast(`Started Syncing "${name}"..`);
 
   // Submit API request, show toast of results
@@ -333,7 +337,10 @@ function runSync(syncId, name) {
       }
     },
     error: response => showErrorToast({title: 'Error Syncing', response}),
-    complete: () => $(`#sync${syncId} >* i.sync`).toggleClass('loading blue', false),
+    complete: () => {
+      $(`#sync${syncId} >* i.sync`).toggleClass('loading blue', false);
+      $(`.card >* i.sync`).toggleClass('disabled', false);
+    },
   });
 }
 
@@ -379,8 +386,17 @@ function getAllSyncs() {
           // Launch delete sync modal on click of the delete icon
           clone.querySelector('i.trash').onclick = () => showDeleteSyncModal(sync.id);
 
-          // Add sync API request to sync icon
-          clone.querySelector('i.sync').onclick = () => runSync(sync.id, sync.name);
+          // Add sync API request to sync icon if there is no sync running
+          if (currentlyRunningSync == null) {
+            clone.querySelector('i.sync').onclick = () => runSync(sync.id, sync.name);
+          }
+
+          // Mark icon as loading if this Sync is running
+          if (sync.id === currentlyRunningSync) {
+            clone.querySelector('i.sync').classList.add('disabled', 'loading', 'blue');
+          } else if (currentlyRunningSync !== null) {
+            clone.querySelector('i.sync').classList.add('disabled');
+          }
 
           return clone;
         });
@@ -394,10 +410,18 @@ function getAllSyncs() {
   });
 }
 
+/**
+ * Query when the next scheduled run for the Sync task is run and update the
+ * text.
+ */
 function getSyncSchedule() {
   $.ajax({
     type: 'GET',
     url: '/api/schedule/SyncInterfaces',
+    /**
+     * 
+     * @param {string} _.next_run - Datetime representation of the next run.
+     */
     success: ({next_run}) => {
       const nextRun = new Date(next_run);
       const nextRunStr = nextRun.toLocaleString();
