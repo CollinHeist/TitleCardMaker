@@ -364,7 +364,7 @@ async function getAllTemplates() {
     });
     // Card type
     loadCardTypes({
-      element: `#template-id${templateObj.id} .dropdown[data-value="card-types"]`,
+      element: `#template-id${templateObj.id} .dropdown[data-value="card_type"]`,
       isSelected: (identifier) => identifier === templateObj.card_type,
       dropdownArgs: {
         placeholder: 'Global Default',
