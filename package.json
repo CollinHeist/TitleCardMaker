@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "cy:run": "cypress run",
-    "cy:run:report": "cypress run ; npx mochawesome-merge cypress/results/*.json > cypress/results/output.json",
+    "cy:run:report": "cypress run --record ; npx mochawesome-merge cypress/results/*.json > cypress/results/output.json",
     "cy:run:report:html": "cypress run ; npx mochawesome-merge cypress/results/*.json > cypress/results/output.json && npx marge cypress/results/output.json --reportDir cypress/results/ --inline",
     "cy:open": "cypress open"
   },
