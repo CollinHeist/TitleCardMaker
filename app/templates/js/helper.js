@@ -653,6 +653,7 @@ async function initializeExtras(
     extras.forEach((extra, index) => {
       const newInput = inputTemplateElement.content.cloneNode(true);
       newInput.querySelector('label').innerText = extra.name;
+      newInput.querySelector('.field').dataset.label = extra.name;
       newInput.querySelector('input').name = extra.identifier;
       newInput.querySelector('.help').innerHTML = `<b>${extra.description}</b><br>`
         + (extra.tooltip

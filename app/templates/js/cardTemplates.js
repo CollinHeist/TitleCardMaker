@@ -249,8 +249,9 @@ async function getAllTemplates() {
 
     // Clone template
     const base = document.querySelector('#template').content.cloneNode(true);
-    const templateElementId = `template-id${templateObj.id}`
+    const templateElementId = `template-id${templateObj.id}`;
     base.querySelector('.accordion').id = templateElementId;
+    base.querySelector('.accordion').dataset.name = templateObj.name;
     // Set accordion title and title input
     base.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${templateObj.name}`;
     const nameElem = base.querySelector('input[name="name"]');
