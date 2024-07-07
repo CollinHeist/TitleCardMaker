@@ -1,19 +1,19 @@
 describe('Page Navigation', () => {
   // Navigate directly via URLs
   const pages = [
-    { path: '/', name: 'Home' },
-    { path: '/add', name: 'Add Series' },
-    { path: '/missing', name: 'Missing' },
+    { path: '/',               name: 'Home' },
+    { path: '/add',            name: 'Add Series' },
+    { path: '/missing',        name: 'Missing' },
     { path: '/card-templates', name: 'Templates' },
-    { path: '/fonts', name: 'Fonts' },
-    { path: '/sync', name: 'Sync' },
-    { path: '/settings', name: 'Settings' },
-    { path: '/connections', name: 'Connections' },
-    { path: '/scheduler', name: 'Scheduler' },
-    { path: '/import', name: 'Importer' },
-    { path: '/logs', name: 'Logs' },
-    { path: '/graphs', name: 'Graphs'},
-    { path: '/non-existent', name: 'Non-existent', expectRoot: true },
+    { path: '/fonts',          name: 'Fonts' },
+    { path: '/sync',           name: 'Sync' },
+    { path: '/settings',       name: 'Settings' },
+    { path: '/connections',    name: 'Connections' },
+    { path: '/scheduler',      name: 'Scheduler' },
+    { path: '/import',         name: 'Importer' },
+    { path: '/logs',           name: 'Logs' },
+    { path: '/graphs',         name: 'Graphs'},
+    { path: '/non-existent',   name: 'Non-existent', expectRoot: true },
   ];
 
   pages.forEach(({ path, name, expectRoot }) => {
@@ -59,8 +59,8 @@ describe('Page Navigation', () => {
         { selector: '#nav-menu [href="/"]',               name: 'home',          expectedUrl: '/'               },
         { selector: '#nav-menu [href="/missing"]',        name: 'missing cards', expectedUrl: '/missing'        },
         { selector: '#nav-menu [href="/card-templates"]', name: 'templates',     expectedUrl: '/card-templates' },
-        { selector: '#nav-menu [href="/fonts"]',          name: 'fonts',         expectedUrl: '/fonts'          },
-        { selector: '#nav-menu [href="/sync"]',           name: 'sync',          expectedUrl: '/sync'           },
+        { selector: '#nav-menu [href="/fonts"]',          name: 'fonts',         expectedUrl: '/fonts'          },
+        { selector: '#nav-menu [href="/sync"]',           name: 'sync',          expectedUrl: '/sync'           },
         { selector: '#nav-menu [href="/settings"]',       name: 'settings',      expectedUrl: '/settings'       },
         { selector: '#page-header [href="/logs"]',        name: 'logs',          expectedUrl: '/logs'           },
       ]
@@ -159,7 +159,7 @@ describe('Page Navigation', () => {
 
   sidebarNavigation.forEach(({fromUrl, fromName, navs}) => {
     navs.forEach(({selector, name, expectedUrl}) => {
-      it(`Visits the ${name} page from the sidebar while on the ${fromName} page`, () => {
+      it(`Visits the ${name} page while on the ${fromName} page`, () => {
         cy.visit(fromUrl);
         cy.get(selector).should('exist').click();
         cy.url().should('contain', Cypress.config('baseUrl') + expectedUrl);
