@@ -107,18 +107,18 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                                 log.exception(f'{episode} - skipping Card')
                 except (PendingRollbackError, OperationalError):
                     if failures > 10:
-                        log.exception(f'Database is extremely busy, stopping Task')
+                        log.exception('Database is extremely busy, stopping Task')
                         break
                     failures += 1
-                    log.exception(f'Database is busy, sleeping..')
+                    log.exception('Database is busy, sleeping..')
                     sleep(30)
                 except Exception as exc:
                     if failures > 10:
-                        log.critical(f'Many errors have occurred - exiting')
+                        log.critical('Many errors have occurred - exiting')
                         raise exc 
 
                     failures += 1
-                    log.exception(f'Error ocurred while processing Series')
+                    log.exception('Error ocurred while processing Series')
                     sleep(10)
     except Exception:
         log.exception(f'Failed to create title cards')
@@ -178,8 +178,8 @@ def clean_database(*, log: Logger = log) -> None:
                             card.file.unlink(missing_ok=True)
                             db.delete(card)
             db.commit()
-    except Exception as exc:
-        log.exception(f'Failed to clean the database', exc)
+    except Exception:
+        log.exception('Failed to clean the database')
 
 
 def refresh_all_remote_card_types(*, log: Logger = log) -> None:
@@ -196,7 +196,7 @@ def refresh_all_remote_card_types(*, log: Logger = log) -> None:
         with next(get_database()) as db:
             refresh_remote_card_types(db, reset=True, log=log)
     except Exception:
-        log.exception(f'Failed to refresh RemoteCardTypes')
+        log.exception('Failed to refresh RemoteCardTypes')
 
 
 def refresh_remote_card_types(

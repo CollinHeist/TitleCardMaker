@@ -1,4 +1,5 @@
 from datetime import timedelta
+from logging import Logger
 from typing import Literal, Optional, Union
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
@@ -37,7 +38,7 @@ def enable_authentication(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Enable auth globally
     preferences.require_auth = True
@@ -75,7 +76,7 @@ def disable_authentication(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Disable authentication requirement
     preferences.require_auth = False

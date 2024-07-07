@@ -123,7 +123,7 @@ def delete_font_file(
     try:
         font.file.unlink()
     except Exception as exc:
-        log.exception(f'Error deleting {font.file}', exc)
+        log.exception(f'Error deleting {font.file}')
         raise HTTPException(
             status_code=500,
             detail=f'Error deleting Font file - {exc}',
@@ -223,7 +223,7 @@ def delete_font(
             font_file.unlink(missing_ok=True)
             font_file.parent.rmdir()
         except Exception as exc:
-            log.exception(f'Error deleting {font_file}', exc)
+            log.exception(f'Error deleting {font_file}')
             raise HTTPException(
                 status_code=500,
                 detail=f'Error deleting font file - {exc}',

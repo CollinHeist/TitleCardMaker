@@ -45,7 +45,6 @@ api_router.include_router(sync_router)
 api_router.include_router(template_router)
 api_router.include_router(translation_router)
 
-# Create ping API endpoint
 @api_router.get('/healthcheck')
 def health_check(
         request: Request,
@@ -60,7 +59,7 @@ def health_check(
     try:
         db.execute(text('SELECT 1'))
     except Exception as exc:
-        request.state.log.exception(f'Health check failed - {exc}', exc)
+        request.state.log.exception(f'Health check failed - {exc}')
         raise HTTPException(
             status_code=500,
             detail=f'Database returned some error - {exc}'

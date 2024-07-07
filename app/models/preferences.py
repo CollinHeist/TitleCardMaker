@@ -266,7 +266,7 @@ class Preferences:
             with self.file.open('rb') as file_handle:
                 return load(file_handle)
         except Exception as exc:
-            log.exception(f'Error occured while loading Preferences', exc)
+            log.exception('Error occured while loading Preferences')
 
         return None
 

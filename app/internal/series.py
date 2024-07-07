@@ -58,8 +58,8 @@ def set_all_series_ids(*, log: Logger = log) -> None:
             # Commit changes if any were made
             if changed:
                 db.commit()
-    except Exception as e:
-        log.exception(f'Failed to set Series IDs', e)
+    except Exception:
+        log.exception('Failed to set Series IDs')
 
 
 def load_all_media_servers(*, log: Logger = log) -> None:
@@ -90,12 +90,12 @@ def load_all_media_servers(*, log: Logger = log) -> None:
                     continue
                 except OperationalError:
                     if (retries := retries + 1) > 10:
-                        log.warning(f'Database is very busy - stopping Task')
+                        log.warning('Database is very busy - stopping Task')
                         break
-                    log.debug(f'Database is busy, sleeping..')
+                    log.debug('Database is busy, sleeping..')
                     sleep(30)
     except Exception as e:
-        log.exception(f'Failed to load Title Cards', e)
+        log.exception('Failed to load Title Cards')
 
 
 def download_all_series_posters(*, log: Logger = log) -> None:
@@ -117,8 +117,8 @@ def download_all_series_posters(*, log: Logger = log) -> None:
                 except HTTPException:
                     log.warning(f'{series} Skipping poster selection')
                     continue
-    except Exception as e:
-        log.exception(f'Failed to download Series posters', e)
+    except Exception:
+        log.exception('Failed to download Series posters')
 
 
 def set_series_database_ids(
@@ -194,7 +194,7 @@ def download_series_poster(
                     library['name'], series_info, log=log
                 )
             except Exception:
-                log.exception(f'Error downloading poster')
+                log.exception('Error downloading poster')
                 continue
 
         # Stop if poster was found

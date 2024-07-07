@@ -23,8 +23,8 @@ def snapshot_database(*, log: Logger = log) -> None:
     try:
         with next(get_database()) as db:
             take_snapshot(db, log=log)
-    except Exception as exc:
-        log.exception(f'Failed to take snapshot', exc)
+    except Exception:
+        log.exception('Failed to take snapshot')
 
 
 def take_snapshot(db: Session, *, log: Logger = log) -> None:

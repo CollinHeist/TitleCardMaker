@@ -477,7 +477,7 @@ def delete_episode_source_images(
     return None
 
 
-@source_router.put('/episode/{episode_id}/upload', status_code=201)
+@source_router.put('/episode/{episode_id}/upload')
 async def set_episode_source_image(
         request: Request,
         episode_id: int,
@@ -619,7 +619,7 @@ def mirror_episode_source_image(
     return get_source_image(episode)
 
 
-@source_router.put('/series/{series_id}/logo/upload', status_code=201)
+@source_router.put('/series/{series_id}/logo/upload')
 async def set_series_logo(
         request: Request,
         series_id: int,
@@ -651,7 +651,7 @@ async def set_series_logo(
     if url and uploaded_file:
         raise HTTPException(
             status_code=422,
-            detail='Cannot provide multiple images'
+            detail='Cannot provide multiple images',
         )
 
     # Send error if neither were provided
@@ -678,12 +678,12 @@ async def set_series_logo(
         try:
             content = get(url, timeout=30).content
             log.debug(f'Downloaded {len(content)} bytes from {url}')
-        except Exception as e:
-            log.exception(f'Download failed', e)
+        except Exception as exc:
+            log.exception('Download failed')
             raise HTTPException(
                 status_code=400,
-                detail=f'Unable to download image - {e}'
-            ) from e
+                detail=f'Unable to download image - {exc}'
+            ) from exc
     # Use uploaded file if provided
     else:
         content = uploaded_file
@@ -693,7 +693,7 @@ async def set_series_logo(
     return None
 
 
-@source_router.put('/series/{series_id}/backdrop/upload', status_code=201)
+@source_router.put('/series/{series_id}/backdrop/upload')
 async def set_series_backdrop(
         request: Request,
         series_id: int,
@@ -748,7 +748,7 @@ async def set_series_backdrop(
             content = get(url, timeout=30).content
             log.debug(f'Downloaded {len(content)} bytes from {url}')
         except Exception as exc:
-            log.exception(f'Download failed')
+            log.exception('Download failed')
             raise HTTPException(
                 status_code=400,
                 detail=f'Unable to download image - {exc}'

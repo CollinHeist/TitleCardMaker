@@ -53,22 +53,21 @@ def import_global_options_yaml(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Parse raw YAML into dictionary
-    yaml_dict = parse_raw_yaml(import_yaml.yaml)
-    if len(yaml_dict) == 0:
-        return preferences
+    if not (yaml_dict := parse_raw_yaml(import_yaml.yaml)):
+        return []
 
     # Modify the preferences  from the YAML dictionary
     try:
         return parse_preferences(preferences, yaml_dict, log=log)
-    except ValidationError as e:
-        log.exception(f'Invalid YAML', e)
+    except ValidationError as exc:
+        log.exception('Invalid YAML')
         raise HTTPException(
             status_code=422,
-            detail=f'YAML is invalid - {e}'
-        ) from e
+            detail=f'YAML is invalid - {exc}'
+        ) from exc
 
 
 @import_router.post('/preferences/connection/{connection}')
@@ -87,12 +86,11 @@ def import_connection_yaml(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Parse raw YAML into dictionary
-    yaml_dict = parse_raw_yaml(import_yaml.yaml)
-    if len(yaml_dict) == 0:
-        return None
+    if not (yaml_dict := parse_raw_yaml(import_yaml.yaml)):
+        return []
 
     try:
         if connection in ('all', 'emby'):
@@ -106,7 +104,7 @@ def import_connection_yaml(
         if connection in ('all', 'tmdb'):
             parse_tmdb(db, yaml_dict, log=log)
     except ValidationError as exc:
-        log.exception(f'Invalid YAML', exc)
+        log.exception('Invalid YAML')
         raise HTTPException(
             status_code=422,
             detail=f'YAML is invalid - {exc}'
@@ -126,22 +124,21 @@ def import_sync_yaml(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Parse raw YAML into dictionary
-    yaml_dict = parse_raw_yaml(import_yaml.yaml)
-    if len(yaml_dict) == 0:
+    if not (yaml_dict := parse_raw_yaml(import_yaml.yaml)):
         return []
 
     # Create New*Sync objects from the YAML dictionary
     try:
         new_syncs = parse_syncs(db, yaml_dict)
-    except ValidationError as e:
-        log.exception(f'Invalid YAML', e)
+    except ValidationError as exc:
+        log.exception('Invalid YAML')
         raise HTTPException(
             status_code=422,
-            detail=f'YAML is invalid - {e}'
-        ) from e
+            detail=f'YAML is invalid - {exc}'
+        ) from exc
 
     # Add each defined Sync to the database
     all_syncs = []
@@ -177,22 +174,21 @@ def import_fonts_yaml(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Parse raw YAML into dictionary
-    yaml_dict = parse_raw_yaml(import_yaml.yaml)
-    if len(yaml_dict) == 0:
+    if not (yaml_dict := parse_raw_yaml(import_yaml.yaml)):
         return []
 
     # Create NewNamedFont objects from the YAML dictionary
     try:
         new_fonts = parse_fonts(yaml_dict)
-    except ValidationError as e:
-        log.exception(f'Invalid YAML', e)
+    except ValidationError as exc:
+        log.exception('Invalid YAML')
         raise HTTPException(
             status_code=422,
-            detail=f'YAML is invalid - {e}'
-        ) from e
+            detail=f'YAML is invalid - {exc}'
+        ) from exc
 
     # Add each defined Font to the database
     all_fonts = []
@@ -233,22 +229,21 @@ def import_template_yaml(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Parse raw YAML into dictionary
-    yaml_dict = parse_raw_yaml(import_yaml.yaml)
-    if len(yaml_dict) == 0:
+    if not (yaml_dict := parse_raw_yaml(import_yaml.yaml)):
         return []
 
     # Create NewTemplate objects from the YAML dictionary
     try:
         new_templates = parse_templates(db, preferences, yaml_dict)
-    except ValidationError as e:
-        log.exception(f'Invalid YAML', e)
+    except ValidationError as exc:
+        log.exception('Invalid YAML')
         raise HTTPException(
             status_code=422,
-            detail=f'YAML is invalid - {e}'
-        ) from e
+            detail=f'YAML is invalid - {exc}'
+        ) from exc
 
     # Add each defined Template to the database
     all_templates = []
@@ -277,22 +272,21 @@ def import_series_yaml(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Parse raw YAML into dictionary
-    yaml_dict = parse_raw_yaml(import_yaml.yaml)
-    if len(yaml_dict) == 0:
+    if not (yaml_dict := parse_raw_yaml(import_yaml.yaml)):
         return []
 
     # Create NewSeries objects from the YAML dictionary
     try:
         new_series = parse_series(db, preferences, yaml_dict, log=log)
-    except ValidationError as e:
-        log.exception(f'Invalid YAML', e)
+    except ValidationError as exc:
+        log.exception('Invalid YAML')
         raise HTTPException(
             status_code=422,
-            detail=f'YAML is invalid - {e}'
-        ) from e
+            detail=f'YAML is invalid - {exc}'
+        ) from exc
 
     # Add each defined Series to the database
     all_series = []
@@ -393,7 +387,7 @@ async def import_mediux_yaml_for_series(
     try:
         full_yaml = KometaYaml(yaml=safe_load(yaml_str))
     except (ParserError, ValidationError) as exc:
-        log.exception(f'Kometa YAML is invalid')
+        log.exception('Kometa YAML is invalid')
         raise HTTPException(
             status_code=422,
             detail='YAML is invalid',

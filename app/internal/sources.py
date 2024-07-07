@@ -42,8 +42,8 @@ def download_all_series_logos(*, log: Logger = log) -> None:
                 except HTTPException:
                     log.warning(f'{series} Skipping logo selection')
                     continue
-    except Exception as exc:
-        log.exception(f'Failed to download series logos', exc)
+    except Exception:
+        log.exception('Failed to download series logos')
 
 
 def resolve_source_settings(

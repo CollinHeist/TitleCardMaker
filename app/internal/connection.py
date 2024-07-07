@@ -81,9 +81,9 @@ def initialize_connections(
                 interface_group.initialize_interface(
                     connection.id, connection.interface_kwargs, log=log,
                 )
-            except Exception as exc:
+            except Exception:
                 preferences.invalid_connections.append(connection.id)
-                log.exception(f'Error initializing {connection}', exc)
+                log.exception(f'Error initializing {connection}')
 
     # Log any invalid Connections
     if preferences.invalid_connections:
