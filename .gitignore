@@ -12,6 +12,8 @@ __pypackages__/
 app/assets/preview/card*
 backups/
 config/
+cypress/results/
+cypress/screenshots/
 fonts/
 front/node_modules/
 front/

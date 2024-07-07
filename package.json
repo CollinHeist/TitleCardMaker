@@ -1,15 +1,19 @@
 {
   "name": "titlecardmaker-webui",
   "version": "1.0.0",
-  "description": "Instructions are hosted on the new documentation site https://titlecardmaker.com/.",
+  "description": "Automated Title Card creator for Plex, Jellyfin, and Emby.",
   "main": "index.js",
   "scripts": {
     "cy:run": "cypress run",
+    "cy:run:report": "cypress run ; npx mochawesome-merge cypress/results/*.json > cypress/results/output.json",
+    "cy:run:report:html": "cypress run ; npx mochawesome-merge cypress/results/*.json > cypress/results/output.json && npx marge cypress/results/output.json --reportDir cypress/results/ --inline",
     "cy:open": "cypress open"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Collin Heist",
   "devDependencies": {
-    "cypress": "^13.12.0"
+    "cypress": "^13.12.0",
+    "mocha": "^10.6.0",
+    "mochawesome": "^7.1.3",
+    "mochawesome-merge": "^4.3.0"
   }
 }
