@@ -1,5 +1,6 @@
 from datetime import timedelta
 from logging import Logger
+from os import environ
 from typing import Literal, Optional, Union
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
@@ -254,3 +255,32 @@ def login_for_access_token(
         'access_token': access_token,
         'token_type': 'bearer',
     }
+
+
+@auth_router.post('/reset')
+def reset_all_authentication(
+        request: Request,
+        db: Session = Depends(get_database),
+        preferences: Preferences = Depends(get_preferences),
+    ) -> None:
+    """
+    Reset all authentication of the current server. This requires the
+    appropriate environment variable to be set in order to function.
+
+    Intended only for testing setup and teardown.
+    """
+
+    if environ.get('TCM_TESTING', 'false') == 'TRUE':
+        # Delete all Users from the database
+        request.state.log.warning('Resetting all authentication')
+        db.query(User).delete()
+        db.commit()
+
+        # Do not require authentication
+        preferences.require_auth = False
+        preferences.commit()
+    else:
+        raise HTTPException(
+            status_code=401,
+            detail='Unauthorized',
+        )
