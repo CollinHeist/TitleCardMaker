@@ -165,6 +165,7 @@ describe('Authentication', () => {
   it('Disables authentication', () => {
     cy.login('/login?redirect=/connections', 'new username', 'new password')
 
+    cy.wait(500)
     cy.get('.checkbox[data-value="require_auth"] label')
       .should('exist')
       .click('left')
