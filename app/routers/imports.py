@@ -355,12 +355,17 @@ async def import_card_files_for_series(
     # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    if (card_files := [(card.filename, await card.read()) for card in cards]):
-        import_card_content(
-            db, series, card_files, series.get_library(library_name),
-            force_reload=force_reload, as_textless=textless,
-            log=request.state.log
-        )
+    # Download all files
+    card_files = [
+        (card.filename, await card.read())
+        for card in cards
+    ]
+
+    import_card_content(
+        db, series, card_files, series.get_library(library_name),
+        force_reload=force_reload, as_textless=textless,
+        log=request.state.log
+    )
 
 
 @import_router.post('/series/{series_id}/cards/mediux')
