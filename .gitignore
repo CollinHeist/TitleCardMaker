@@ -23,6 +23,7 @@ yml/
 *._*
 *.prof
 .DS_Store
+.env
 missing.yml
 preferences.yml
 temp*.jpg
