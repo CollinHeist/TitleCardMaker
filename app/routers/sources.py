@@ -24,8 +24,7 @@ from app.internal.auth import get_current_user
 from app.internal.cards import delete_cards
 from app.internal.sources import (
     get_source_image, download_episode_source_images, download_series_logo,
-    process_svg_logo, read_series_backdrops, resolve_all_source_settings,
-    resolve_source_settings,
+    process_svg_logo, resolve_all_source_settings, resolve_source_settings,
 )
 from app import models
 from app.models.preferences import Preferences
