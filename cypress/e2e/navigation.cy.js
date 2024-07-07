@@ -1,18 +1,19 @@
 describe('Page Navigation', () => {
   // Navigate directly via URLs
   const pages = [
-    { path: '/',               name: 'Home' },
-    { path: '/add',            name: 'Add Series' },
-    { path: '/missing',        name: 'Missing' },
-    { path: '/card-templates', name: 'Templates' },
-    { path: '/fonts',          name: 'Fonts' },
-    { path: '/sync',           name: 'Sync' },
-    { path: '/settings',       name: 'Settings' },
-    { path: '/connections',    name: 'Connections' },
-    { path: '/scheduler',      name: 'Scheduler' },
-    { path: '/import',         name: 'Importer' },
-    { path: '/logs',           name: 'Logs' },
-    { path: '/graphs',         name: 'Graphs'},
+    { path: '/',               name: 'Home'                           },
+    { path: '/add',            name: 'Add Series'                     },
+    { path: '/missing',        name: 'Missing'                        },
+    { path: '/card-templates', name: 'Templates'                      },
+    { path: '/fonts',          name: 'Fonts'                          },
+    { path: '/sync',           name: 'Sync'                           },
+    { path: '/settings',       name: 'Settings'                       },
+    { path: '/connections',    name: 'Connections'                    },
+    { path: '/scheduler',      name: 'Scheduler'                      },
+    { path: '/import',         name: 'Importer'                       },
+    { path: '/logs',           name: 'Logs'                           },
+    { path: '/graphs',         name: 'Graphs'                         },
+    { path: '/changelog',      name: 'Changelog'                      },
     { path: '/non-existent',   name: 'Non-existent', expectRoot: true },
   ];
 
@@ -46,13 +47,14 @@ describe('Page Navigation', () => {
         { selector: '#nav-menu [href="/add"]',            name: 'add series',    expectedUrl: '/add'            },
         { selector: '#nav-menu [href="/missing"]',        name: 'missing cards', expectedUrl: '/missing'        },
         { selector: '#nav-menu [href="/card-templates"]', name: 'templates',     expectedUrl: '/card-templates' },
-        { selector: '#nav-menu [href="/fonts"]',          name: 'fonts',         expectedUrl: '/fonts'          },
-        { selector: '#nav-menu [href="/sync"]',           name: 'sync',          expectedUrl: '/sync'           },
+        { selector: '#nav-menu [href="/fonts"]',          name: 'fonts',         expectedUrl: '/fonts'          },
+        { selector: '#nav-menu [href="/sync"]',           name: 'sync',          expectedUrl: '/sync'           },
         { selector: '#nav-menu [href="/settings"]',       name: 'settings',      expectedUrl: '/settings'       },
         { selector: '#page-header [href="/logs"]',        name: 'logs',          expectedUrl: '/logs'           },
         { selector: '#main-content [href="/graphs"]',     name: 'graph',         expectedUrl: '/graphs'         },
       ]
-    }, {
+    },
+    {
       fromUrl: '/add',
       fromName: 'add series',
       navs: [
@@ -64,96 +66,123 @@ describe('Page Navigation', () => {
         { selector: '#nav-menu [href="/settings"]',       name: 'settings',      expectedUrl: '/settings'       },
         { selector: '#page-header [href="/logs"]',        name: 'logs',          expectedUrl: '/logs'           },
       ]
-    }, {
+    },
+    {
       fromUrl: '/missing',
       fromName: 'missing cards',
       navs: [
         { selector: '#nav-menu [href="/"]',               name: 'home',       expectedUrl: '/'               },
         { selector: '#nav-menu [href="/add"]',            name: 'add series', expectedUrl: '/add'            },
         { selector: '#nav-menu [href="/card-templates"]', name: 'templates',  expectedUrl: '/card-templates' },
-        { selector: '#nav-menu [href="/fonts"]',          name: 'fonts',      expectedUrl: '/fonts'          },
-        { selector: '#nav-menu [href="/sync"]',           name: 'sync',       expectedUrl: '/sync'           },
+        { selector: '#nav-menu [href="/fonts"]',          name: 'fonts',      expectedUrl: '/fonts'          },
+        { selector: '#nav-menu [href="/sync"]',           name: 'sync',       expectedUrl: '/sync'           },
         { selector: '#nav-menu [href="/settings"]',       name: 'settings',   expectedUrl: '/settings'       },
         { selector: '#page-header [href="/logs"]',        name: 'logs',       expectedUrl: '/logs'           },
       ]
-    }, {
+    },
+    {
       fromUrl: '/card-templates',
       fromName: 'templates',
       navs: [
         { selector: '#nav-menu [href="/"]',         name: 'home',     expectedUrl: '/'         },
-        { selector: '#nav-menu [href="/fonts"]',    name: 'fonts',    expectedUrl: '/fonts'    },
-        { selector: '#nav-menu [href="/sync"]',     name: 'sync',     expectedUrl: '/sync'     },
+        { selector: '#nav-menu [href="/fonts"]',    name: 'fonts',    expectedUrl: '/fonts'    },
+        { selector: '#nav-menu [href="/sync"]',     name: 'sync',     expectedUrl: '/sync'     },
         { selector: '#nav-menu [href="/settings"]', name: 'settings', expectedUrl: '/settings' },
         { selector: '#page-header [href="/logs"]',  name: 'logs',     expectedUrl: '/logs'     },
       ]
-    }, {
+    },
+    {
       fromUrl: '/fonts',
       fromName: 'fonts',
       navs: [
         { selector: '#nav-menu [href="/"]',               name: 'home',      expectedUrl: '/'               },
         { selector: '#nav-menu [href="/card-templates"]', name: 'templates', expectedUrl: '/card-templates' },
-        { selector: '#nav-menu [href="/sync"]',           name: 'sync',      expectedUrl: '/sync'           },
+        { selector: '#nav-menu [href="/sync"]',           name: 'sync',      expectedUrl: '/sync'           },
         { selector: '#nav-menu [href="/settings"]',       name: 'settings',  expectedUrl: '/settings'       },
         { selector: '#page-header [href="/logs"]',        name: 'logs',      expectedUrl: '/logs'           },
       ]
-    }, {
+    },
+    {
       fromUrl: '/sync',
       fromName: 'sync',
       navs: [
         { selector: '#nav-menu [href="/"]',               name: 'home',      expectedUrl: '/'               },
         { selector: '#nav-menu [href="/card-templates"]', name: 'templates', expectedUrl: '/card-templates' },
-        { selector: '#nav-menu [href="/fonts"]',          name: 'fonts',     expectedUrl: '/fonts'          },
+        { selector: '#nav-menu [href="/fonts"]',          name: 'fonts',     expectedUrl: '/fonts'          },
         { selector: '#nav-menu [href="/settings"]',       name: 'settings',  expectedUrl: '/settings'       },
         { selector: '#page-header [href="/logs"]',        name: 'logs',      expectedUrl: '/logs'           },
       ]
-    }, {
+    },
+    {
       fromUrl: '/settings',
       fromName: 'settings',
       navs: [
         { selector: '#nav-menu [href="/"]',               name: 'home',        expectedUrl: '/'               },
         { selector: '#nav-menu [href="/card-templates"]', name: 'templates',   expectedUrl: '/card-templates' },
-        { selector: '#nav-menu [href="/fonts"]',          name: 'fonts',       expectedUrl: '/fonts'          },
+        { selector: '#nav-menu [href="/fonts"]',          name: 'fonts',       expectedUrl: '/fonts'          },
         { selector: '#nav-menu [href="/connections"]',    name: 'connections', expectedUrl: '/connections'    },
         { selector: '#nav-menu [href="/scheduler"]',      name: 'scheduler',   expectedUrl: '/scheduler'      },
         { selector: '#nav-menu [href="/import"]',         name: 'import',      expectedUrl: '/import'         },
+        { selector: '#nav-menu [href="/changelog"]',      name: 'changelog',   expectedUrl: '/changelog'      },
         { selector: '#page-header [href="/logs"]',        name: 'logs',        expectedUrl: '/logs'           },
+        { selector: '#main-content .label [href="/changelog"]', name: 'changelog', expectedUrl: '/changelog', }
       ]
-    }, {
+    },
+    {
       fromUrl: '/connections',
       fromName: 'connections',
       navs: [
         { selector: '#nav-menu [href="/"]',               name: 'home',      expectedUrl: '/'               },
         { selector: '#nav-menu [href="/card-templates"]', name: 'templates', expectedUrl: '/card-templates' },
-        { selector: '#nav-menu [href="/fonts"]',          name: 'fonts',     expectedUrl: '/fonts'          },
+        { selector: '#nav-menu [href="/fonts"]',          name: 'fonts',     expectedUrl: '/fonts'          },
         { selector: '#nav-menu [href="/settings"]',       name: 'settings',  expectedUrl: '/settings'       },
         { selector: '#nav-menu [href="/scheduler"]',      name: 'scheduler', expectedUrl: '/scheduler'      },
         { selector: '#nav-menu [href="/import"]',         name: 'import',    expectedUrl: '/import'         },
+        { selector: '#nav-menu [href="/changelog"]',      name: 'changelog',   expectedUrl: '/changelog'      },
         { selector: '#page-header [href="/logs"]',        name: 'logs',      expectedUrl: '/logs'           },
       ]
-    }, {
+    },
+    {
       fromUrl: '/scheduler',
       fromName: 'scheduler',
       navs: [
         { selector: '#nav-menu [href="/"]',               name: 'home',        expectedUrl: '/'               },
         { selector: '#nav-menu [href="/card-templates"]', name: 'templates',   expectedUrl: '/card-templates' },
-        { selector: '#nav-menu [href="/fonts"]',          name: 'fonts',       expectedUrl: '/fonts'          },
+        { selector: '#nav-menu [href="/fonts"]',          name: 'fonts',       expectedUrl: '/fonts'          },
         { selector: '#nav-menu [href="/settings"]',       name: 'settings',    expectedUrl: '/settings'       },
         { selector: '#nav-menu [href="/connections"]',    name: 'connections', expectedUrl: '/connections'    },
         { selector: '#nav-menu [href="/import"]',         name: 'import',      expectedUrl: '/import'         },
+        { selector: '#nav-menu [href="/changelog"]',      name: 'changelog',   expectedUrl: '/changelog'      },
         { selector: '#page-header [href="/logs"]',        name: 'logs',        expectedUrl: '/logs'           },
       ]
-    }, {
+    },
+    {
       fromUrl: '/import',
       fromName: 'import',
       navs: [
         { selector: '#nav-menu [href="/"]',               name: 'home',        expectedUrl: '/'               },
         { selector: '#nav-menu [href="/card-templates"]', name: 'templates',   expectedUrl: '/card-templates' },
-        { selector: '#nav-menu [href="/fonts"]',          name: 'fonts',       expectedUrl: '/fonts'          },
+        { selector: '#nav-menu [href="/fonts"]',          name: 'fonts',       expectedUrl: '/fonts'          },
         { selector: '#nav-menu [href="/settings"]',       name: 'settings',    expectedUrl: '/settings'       },
         { selector: '#nav-menu [href="/connections"]',    name: 'connections', expectedUrl: '/connections'    },
         { selector: '#nav-menu [href="/scheduler"]',      name: 'scheduler',   expectedUrl: '/scheduler'      },
+        { selector: '#nav-menu [href="/changelog"]',      name: 'changelog',   expectedUrl: '/changelog'      },
         { selector: '#page-header [href="/logs"]',        name: 'logs',        expectedUrl: '/logs'           },
-      ]
+      ],
+    },
+    {
+      fromUrl: '/changelog',
+      fromName: 'Changelog',
+      navs: [
+        { selector: '#nav-menu [href="/"]',               name: 'home',        expectedUrl: '/'               },
+        { selector: '#nav-menu [href="/card-templates"]', name: 'templates',   expectedUrl: '/card-templates' },
+        { selector: '#nav-menu [href="/fonts"]',          name: 'fonts',       expectedUrl: '/fonts'          },
+        { selector: '#nav-menu [href="/settings"]',       name: 'settings',    expectedUrl: '/settings'       },
+        { selector: '#nav-menu [href="/connections"]',    name: 'connections', expectedUrl: '/connections'    },
+        { selector: '#nav-menu [href="/scheduler"]',      name: 'scheduler',   expectedUrl: '/scheduler'      },
+        { selector: '#nav-menu [href="/import"]',         name: 'import',      expectedUrl: '/import'         },
+        { selector: '#page-header [href="/logs"]',        name: 'logs',        expectedUrl: '/logs'           },
+      ],
     }
   ];
 
