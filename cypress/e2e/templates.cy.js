@@ -65,6 +65,7 @@ describe('Card Templates', () => {
   });
 
   it('Changes all settings', () => {
+    const originalName = getRandomText();
     const newSettings = {
       name: getRandomText(),
       card_type: 'White Border',
@@ -74,6 +75,17 @@ describe('Card Templates', () => {
       hide_season_text: 'True',
       hide_episode_text: 'False',
       episode_text_format: getRandomText(),
+      skip_localized_images: 'True',
+      data_source_id: 'TMDb',
+      sync_specials: 'False',
+      extras: [
+        { cardType: 'Anime',              name: 'Episode Text Font Size', value: '2.0'     },
+        { cardType: 'Banner',             name: 'Banner Color',           value: 'black'   },
+        { cardType: 'Graph',              name: 'Text Position',          value: 'left'    },
+        { cardType: 'Music',              name: 'Player Style',           value: 'poster'  },
+        { cardType: 'Tinted Frame',       name: 'Frame Color',            value: 'crimson' },
+        { cardType: 'Variable Overrides', name: 'Season Text Format',     value: 'S1'      },
+      ],
     };
 
     // Create Font so it can be assigned to the Template
@@ -82,11 +94,11 @@ describe('Card Templates', () => {
     cy.createTMDbConnection()
     cy.reload()
 
-    cy.createObjectAndGetId('/api/templates/new', {'name': ' Blank Template'}).then((templateId) => {
+    cy.createObjectAndGetId('/api/templates/new', {'name': originalName}).then((templateId) => {
       // Expand template
-      cy.get(`#template-id${templateId}`)
-        .should('exist')
+      cy.get('#templates').contains(originalName)
         .click()
+        .parent()
         .then(($template) => {
           cy.wrap($template).find('.content').as('templateContent')
           cy.get('@templateContent').should('have.class', 'active')
@@ -99,7 +111,7 @@ describe('Card Templates', () => {
               .should('have.value', newSettings.name)
 
           // Card type
-          cy.selectDropdown('@templateContent', '.dropdown[data-value="card-types"]', newSettings.card_type)
+          cy.selectDropdown('@templateContent', '.dropdown[data-value="card_type"]', newSettings.card_type)
 
           // Font ID
           cy.selectDropdown('@templateContent', '.dropdown[data-value="font_id"]', newSettings.font_id)
@@ -123,8 +135,87 @@ describe('Card Templates', () => {
               .type(newSettings.episode_text_format)
               .should('have.value', newSettings.episode_text_format)
 
+          // Ignored Localized Images
+          cy.selectDropdown('@templateContent', '.dropdown[data-value="skip_localized_images"]', newSettings.skip_localized_images)
+
+          // Episode Data Source
+          cy.selectDropdown('@templateContent', '.dropdown[data-value="data_source_id"]', newSettings.data_source_id)
+
+          // Enable Specials
+          cy.selectDropdown('@templateContent', '.dropdown[data-value="sync_specials"]', newSettings.sync_specials)
+
+          // Extras
+          newSettings.extras.forEach((extra) => {
+            cy.selectExtra(
+              cy.get('@templateContent').find('section[aria-label="extras"]'),
+              extra.cardType, extra.name, extra.value
+            )
+          })
+
           // Save changes
-          cy.wrap($template).contains('button', 'Save Changes').click();
+          cy.get('@templateContent').contains('button', 'Save Changes').click()
+        })
+
+      // Reload page, find Template object
+      cy.reload()
+      cy.get('#templates').contains(newSettings.name)
+        .click()
+        .parent()
+        .then(($template) => {
+          // Verify all settings carried over
+          cy.wrap($template).find('.content').as('templateContent')
+
+          // Name
+          cy.get('@templateContent').find('input[name="name"]')
+            .should('have.value', newSettings.name)
+
+          // Card type
+          cy.get('@templateContent').find('.dropdown[data-value="card_type"] .menu .selected')
+            .should('contain', newSettings.card_type)
+
+          // Font ID
+          cy.get('@templateContent').find('.dropdown[data-value="font_id"] .menu .selected')
+            .should('contain', newSettings.font_id)
+
+          // Watched style
+          cy.get('@templateContent').find('.dropdown[data-value="watched_style"] .menu .selected')
+            .should('contain', newSettings.watched_style)
+
+          // Unwatched style
+          cy.get('@templateContent').find('.dropdown[data-value="unwatched_style"] .menu .selected')
+            .should('contain', newSettings.unwatched_style)
+
+          // Hide Season Text
+          cy.get('@templateContent').find('.dropdown[data-value="hide_season_text"] .menu .selected')
+            .should('contain', newSettings.hide_season_text)
+
+          // Hide Episode Text
+          cy.get('@templateContent').find('.dropdown[data-value="hide_episode_text"] .menu .selected')
+            .should('contain', newSettings.hide_episode_text)
+  
+          // Episode Text Format
+          cy.get('@templateContent').find('input[name="episode_text_format"]')
+            .should('have.value', newSettings.episode_text_format)
+
+          // Ignored Localized Images
+          cy.get('@templateContent').find('.dropdown[data-value="skip_localized_images"] .menu .selected')
+            .should('contain', newSettings.skip_localized_images)
+
+          // Episode Data Source
+          cy.get('@templateContent').find('.dropdown[data-value="data_source_id"] .menu .selected')
+            .should('contain', newSettings.data_source_id)
+
+          // Enable Specials
+          cy.get('@templateContent').find('.dropdown[data-value="sync_specials"] .menu .selected')
+            .should('contain', newSettings.sync_specials)
+
+          // Extras
+          newSettings.extras.forEach((extra) => {
+            cy.validateExtra(
+              cy.get('@templateContent').find('section[aria-label="extras"]'),
+              extra.cardType, extra.name, extra.value
+            )
+          })
         })
     });
   });
@@ -250,6 +341,11 @@ describe('Card Templates', () => {
       // Check length again
       cy.get('#templates > .accordion').should('have.length', templateCount - 1);
     });
+  });
+
+  // TODO
+  it('Assigns a global default Template', () => {
+
   });
 
 });
