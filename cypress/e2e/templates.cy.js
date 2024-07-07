@@ -1,3 +1,5 @@
+const getRandomText = () => Math.random().toString(36).substring(2, 10);
+
 describe('Card Templates', () => {
   beforeEach(() => cy.visit('/card-templates'));
 
@@ -36,41 +38,6 @@ describe('Card Templates', () => {
       ;
     });
   });
-  
-  it('Changes a template name and verify it persists after save and reload', () => {
-    cy.createObjectAndGetId('/api/templates/new', {'name': ' Blank Template'}).then((templateId) => {
-      // Create random name
-      const newValue = Math.random().toString(36).substring(2, 10);
-      // Get newly created Template
-      cy.get(`#template-id${templateId}`)
-        .should('exist')
-        .click()
-        .then(($template) => {
-          // Put new randomized name in the name field
-          cy.wrap($template).find('.content')
-            .should('have.class', 'active')
-            .find('input[name="name"]').first()
-              .clear()
-              .type(newValue)
-              .should('have.value', newValue)
-            ;
-  
-          // Save changes
-          cy.wrap($template).contains('button', 'Save Changes').click();
-        })
-
-      // Reload page
-      cy.reload();
-
-      // Check name
-      cy.get(`#template-id${templateId}`)
-        // Expand template
-        .click()
-        // Verify name matches
-        .find('.content input[name="name"]')
-        .should('have.value', newValue);
-    });
-  });
 
   it('Adds a new filter condition', () => {
     // Create new blank Template with no conditions
@@ -93,6 +60,71 @@ describe('Card Templates', () => {
           cy.wrap($template).find('[data-value="conditions"]').first().find('input[name="argument"]').should('exist');
           cy.wrap($template).find('[data-value="conditions"]').first().find('input[name="operation"]').should('exist');
           cy.wrap($template).find('[data-value="conditions"]').first().find('input[name="reference"]').should('exist');
+        })
+    });
+  });
+
+  it('Changes all settings', () => {
+    const newSettings = {
+      name: getRandomText(),
+      card_type: 'White Border',
+      font_id: getRandomText(),
+      watched_style: 'Blurred Grayscale Art',
+      unwatched_style: 'Grayscale Unique',
+      hide_season_text: 'True',
+      hide_episode_text: 'False',
+      episode_text_format: getRandomText(),
+    };
+
+    // Create Font so it can be assigned to the Template
+    cy.createObjectAndGetId('/api/fonts/new', {'name': newSettings.font_id}).as('fontId')
+    // Create dummy TMDb Connection so it can be selected
+    cy.createTMDbConnection()
+    cy.reload()
+
+    cy.createObjectAndGetId('/api/templates/new', {'name': ' Blank Template'}).then((templateId) => {
+      // Expand template
+      cy.get(`#template-id${templateId}`)
+        .should('exist')
+        .click()
+        .then(($template) => {
+          cy.wrap($template).find('.content').as('templateContent')
+          cy.get('@templateContent').should('have.class', 'active')
+
+          // Name
+          cy.get('@templateContent')
+            .find('input[name="name"]').first()
+              .clear()
+              .type(newSettings.name)
+              .should('have.value', newSettings.name)
+
+          // Card type
+          cy.selectDropdown('@templateContent', '.dropdown[data-value="card-types"]', newSettings.card_type)
+
+          // Font ID
+          cy.selectDropdown('@templateContent', '.dropdown[data-value="font_id"]', newSettings.font_id)
+
+          // Watched style
+          cy.selectDropdown('@templateContent', '.dropdown[data-value="watched_style"]', newSettings.watched_style)
+
+          // Unwatched style
+          cy.selectDropdown('@templateContent', '.dropdown[data-value="unwatched_style"]', newSettings.unwatched_style)
+
+          // Hide Season Text
+          cy.selectDropdown('@templateContent', '.dropdown[data-value="hide_season_text"]', newSettings.hide_season_text)
+
+          // Hide Episode Text
+          cy.selectDropdown('@templateContent', '.dropdown[data-value="hide_episode_text"]', newSettings.hide_episode_text)
+  
+          // Episode Text Format
+          cy.get('@templateContent')
+            .find('input[name="episode_text_format"]').first()
+              .clear()
+              .type(newSettings.episode_text_format)
+              .should('have.value', newSettings.episode_text_format)
+
+          // Save changes
+          cy.wrap($template).contains('button', 'Save Changes').click();
         })
     });
   });
