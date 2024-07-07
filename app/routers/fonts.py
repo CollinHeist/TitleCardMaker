@@ -37,7 +37,7 @@ font_router = APIRouter(
 )
 
 
-@font_router.post('/new', status_code=201)
+@font_router.post('/new')
 def create_font(
         new_font: NewNamedFont = Body(...),
         db: Session = Depends(get_database),
@@ -56,7 +56,7 @@ def create_font(
     return font
 
 
-@font_router.put('/{font_id}/file', status_code=200)
+@font_router.put('/{font_id}/file')
 async def add_font_file(
         font_id: int,
         file: UploadFile,
@@ -75,10 +75,10 @@ async def add_font_file(
 
     # Download file, raise 400 if contentless
     file_content = await file.read()
-    if len(file_content) == 0:
+    if not file_content:
         raise HTTPException(
             status_code=400,
-            detail=f'Font file has no content',
+            detail='Font file is invalid',
         )
 
     # Write to file
@@ -94,7 +94,7 @@ async def add_font_file(
     return font
 
 
-@font_router.delete('/{font_id}/file', status_code=200)
+@font_router.delete('/{font_id}/file')
 def delete_font_file(
         request: Request,
         font_id: int,
@@ -107,7 +107,7 @@ def delete_font_file(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Get existing font object, raise 404 if DNE
     font = get_font(db, font_id, raise_exc=True)
@@ -136,7 +136,7 @@ def delete_font_file(
     return font
 
 
-@font_router.patch('/{font_id}', status_code=200)
+@font_router.patch('/{font_id}')
 def update_font(
         request: Request,
         font_id: int,
@@ -151,7 +151,7 @@ def update_font(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Get existing font object, raise 404 if DNE
     font = get_font(db, font_id, raise_exc=True)
@@ -171,20 +171,19 @@ def update_font(
     return font
 
 
-@font_router.get('/all', status_code=200)
+@font_router.get('/all')
 def get_all_fonts(
         order: Literal['id', 'name'] = 'name',
         db: Session = Depends(get_database),
     ) -> list[NamedFont]:
     """Get all defined Fonts."""
 
-    if order == 'id':
-        return db.query(Font).all()
+    return db.query(Font)\
+        .order_by(Font.id if order == 'id' else Font.sort_name)\
+        .all()
 
-    return db.query(Font).order_by(Font.sort_name).all()
 
-
-@font_router.get('/{font_id}', status_code=200)
+@font_router.get('/{font_id}')
 def get_font_by_id(
         font_id: int,
         db: Session = Depends(get_database),
@@ -212,7 +211,7 @@ def delete_font(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Get specified Font, raise 404 if DNE
     font = get_font(db, font_id, raise_exc=True)
@@ -233,7 +232,7 @@ def delete_font(
     db.commit()
 
 
-@font_router.get('/{font_id}/analysis', status_code=200)
+@font_router.get('/{font_id}/analysis')
 def get_suggested_font_replacements(
         request: Request,
         font_id: int,
