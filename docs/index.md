@@ -231,7 +231,7 @@ TCM, then you need to do the following:
     2. Pull and relaunch the container:
 
         ```bash
-        docker compose up --pull -d
+        docker compose up --pull always -d
         ```
 
 === ":material-docker: Docker"
