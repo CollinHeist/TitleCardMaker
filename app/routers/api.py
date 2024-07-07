@@ -1,8 +1,14 @@
+from logging import Logger
+from os import environ
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import text
+from sqlalchemy import MetaData
 from sqlalchemy.orm import Session
 
-from app.dependencies import get_database
+from app.database.session import engine
+from app.dependencies import get_database, get_preferences
+from app.models.preferences import Preferences
 from app.routers.auth import auth_router
 from app.routers.availability import availablility_router
 from app.routers.blueprint import blueprint_router
@@ -13,7 +19,7 @@ from app.routers.fonts import font_router
 from app.routers.imports import import_router
 from app.routers.logs import log_router
 from app.routers.proxy import proxy_router
-from app.routers.schedule import schedule_router
+from app.routers.schedule import initialize_scheduler, schedule_router
 from app.routers.series import series_router
 from app.routers.settings import settings_router
 from app.routers.sources import source_router
@@ -64,3 +70,44 @@ def health_check(
             status_code=500,
             detail=f'Database returned some error - {exc}'
         ) from exc
+
+
+@api_router.post('/reset')
+def reset_database(
+        request: Request,
+        db: Session = Depends(get_database),
+        preferences: Preferences = Depends(get_preferences),
+    ) -> None:
+    """
+    Reset the entire database and system state. This DOES NOT clear any
+    files, and requires the appropriate environment variable to be set
+    in order to function.
+
+    Intended only for testing setup and teardown.
+    """
+
+    log: Logger = request.state.log
+
+    if environ.get('TCM_TESTING', 'false') == 'TRUE':
+        # Delete all tables in the database in reverse order so children
+        # are removed before parents
+        metadata = MetaData()
+        metadata.reflect(bind=engine)
+        for table in reversed(metadata.sorted_tables):
+            # Do not delete the version table so migrations aren't triggered
+            if table.name == 'alembic_version':
+                continue
+            log.info(f'Deleting SQL Table "{table.name}"')
+            db.execute(table.delete())
+        db.commit()
+
+        # Reset the global preferences
+        preferences.reset(log=log)
+
+        # Re-initialize the scheduler
+        initialize_scheduler(override=True)
+    else:
+        raise HTTPException(
+            status_code=401,
+            detail='Unauthorized',
+        )

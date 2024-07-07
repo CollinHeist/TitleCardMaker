@@ -321,6 +321,19 @@ class Preferences:
         self.commit()
 
 
+    def reset(self, *, log: Logger = log) -> None:
+        """
+        Reset all global preferences to their defaults.
+
+        Args:
+            log: Logger for all log messages.
+        """
+
+        self.__initialize_defaults()
+        self.commit()
+        log.info('Reset global preferences to defaults')
+
+
     def determine_imagemagick_prefix(self,
             *,
             log: Logger = log,
