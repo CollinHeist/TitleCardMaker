@@ -210,7 +210,13 @@ class ComicBookCardType(BaseCardTypeCustomFontAllText):
     hide_index_banner: bool = None
 
     @validator('title_text_rotation_angle', 'index_text_rotation_angle')
-    def validate_random_angle(cls, val):
+    def validate_random_angle(cls, val: Union[str, float]):
+        """
+        Validate the rotation angles. This verifies the randomized angles
+        are valid, generates them if necessary, and limits all angles
+        between 0 and 360 degrees.
+        """
+
         # If angle is a random range string, replace with random value in range
         if isinstance(val, str):
             # Get bounds from the random range string
@@ -220,9 +226,9 @@ class ComicBookCardType(BaseCardTypeCustomFontAllText):
             if lower >= upper:
                 raise ValueError(f'Lower bound must be below upper bound')
 
-            return uniform(lower, upper)
+            return uniform(lower, upper) % 360
 
-        return val
+        return val % 360
 
     @root_validator(skip_on_failure=True)
     def assign_unassigned_color(cls, values: dict) -> dict:
