@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Literal, Optional
 
-from pydantic import DirectoryPath, PositiveInt, conint, constr, validator
+from pydantic import DirectoryPath, FilePath, PositiveInt, conint, constr, validator
 
 from app.schemas.base import (
     Base, InterfaceType, ImageSource, UpdateBase, UNSPECIFIED
@@ -71,6 +71,7 @@ class UpdatePreferences(UpdateBase):
     card_height: PositiveInt = UNSPECIFIED
     card_filename_format: str = UNSPECIFIED
     card_extension: CardExtension = UNSPECIFIED
+    imagemagick_executable: Optional[FilePath] = UNSPECIFIED
     card_quality: conint(ge=1, le=100) = UNSPECIFIED
     library_unique_cards: bool = UNSPECIFIED
     image_source_priority: list[int] = UNSPECIFIED
@@ -150,6 +151,7 @@ class Preferences(Base):
     card_filename_format: str
     card_extension: str
     card_quality: int
+    imagemagick_executable: Optional[Path]
     library_unique_cards: bool
     image_source_priority: list[int]
     episode_data_source: Optional[int]

@@ -45,44 +45,7 @@
           {% endif %}
 
           <form id="settings-form" class="ui fluid form">
-            <!-- Folder Settings -->
-            <h3 class="ui horizontal divider header">
-              <i class="folder open outline icon"></i>
-              Root Folders
-            </h3>
-            <section>
-              <p class="help">Restart TitleCardMaker for changes to either of these directories to take effect.</p>
-              
-              <div class="ui two fields">
-                <div class="field">
-                  <label>Title Card Directory</label>
-                  <input type="text" name="card_directory" placeholder="{{preferences.card_directory}}" value="{{preferences.card_directory}}">
-                  <p class="help">
-                    Directory to store all Title Cards.
-                    <br>
-                    Can be overrwitten per-Series.
-                  </p>
-                </div>
-  
-                <div class="field">
-                  <label>Source Directory</label>
-                  <input type="text" name="source_directory" placeholder="{{preferences.source_directory}}" value="{{preferences.source_directory}}">
-                  <p class="help">Directory to store all textless source images.</p>
-                </div>
-              </div>
-
-              <div class="ui checkbox field">
-                <label>Delete Series Source Images</label>
-                {% if preferences.completely_delete_series %}
-                <input name="completely_delete_series" type="checkbox" checked="checked">
-                {% else %}
-                <input name="completely_delete_series" type="checkbox">
-                {% endif %}
-                <p class="help">Whether to delete Source Images when deleting a Series.</p>
-              </div>
-            </section>
-
-            <!-- Episode Data Settings -->
+            <!-- Series and Episode Data Settings -->
             <h3 class="ui horizontal divider header">
               <i class="database icon"></i>
               Series and Episode Data
@@ -157,6 +120,16 @@
                     <br>
                     <b>This will delete all Title Cards and manually added Series (if they are not in any Sync).</b>
                   </p>
+                </div>
+
+                <div class="ui checkbox field">
+                  <label>Delete Series Source Images</label>
+                  {% if preferences.completely_delete_series %}
+                  <input name="completely_delete_series" type="checkbox" checked="checked">
+                  {% else %}
+                  <input name="completely_delete_series" type="checkbox">
+                  {% endif %}
+                  <p class="help">Whether to delete Source Images when deleting a Series.</p>
                 </div>
               </div>
             </section>
@@ -277,38 +250,6 @@
                 <p class="help">Templates to apply to all Series when not directly specified.</p>
               </div>
 
-              <div class="fields">
-                <div class="four wide field">
-                  <label>Card Width</label>
-                  <div class="ui right labeled input">
-                    <input name="card_width" type="number" placeholder="{{preferences.card_width}}" value="{{preferences.card_width}}">
-                    <div class="ui basic label">
-                      px
-                    </div>
-                  </div>
-                </div>
-                <div class="four wide field">
-                  <label>Card Height</label>
-                  <div class="ui right labeled input">
-                    <input name="card_height" type="number" placeholder="{{preferences.card_height}}" value="{{preferences.card_height}}">
-                    <div class="ui basic label">
-                      px
-                    </div>
-                  </div>
-                </div>
-                <!-- <p class="help">Title Card dimensions (in pixels).</p> -->
-                
-                <div class="eight wide field">
-                  <label>Card Quality</label>
-                  <div data-value="card_quality" class="ui labeled ticked blue slider" id="card-quality"></div>
-                  <p class="help">
-                    Compression quality to utilize when creating Title Cards.
-                    <br>
-                    Lower values are more compressed, while higher values are less.
-                  </p>
-                </div>
-              </div>
-                
               <!-- Card preview -->
               <div class="ui horizontal raised card">
                 <div class="image">
@@ -345,40 +286,128 @@
 
             </section>
 
+            <h3 class="ui horizontal divider header">
+              <i class="magic icon"></i>
+              ImageMagick
+            </h3>
+            <section data-name="ImageMagick">
+              <div class="fields">
+                <div class="four wide field">
+                  <label>Card Width</label>
+                  <div class="ui right labeled input">
+                    <input name="card_width" type="number" placeholder="{{preferences.card_width}}" value="{{preferences.card_width}}">
+                    <div class="ui basic label">
+                      px
+                    </div>
+                  </div>
+                </div>
+                <div class="four wide field">
+                  <label>Card Height</label>
+                  <div class="ui right labeled input">
+                    <input name="card_height" type="number" placeholder="{{preferences.card_height}}" value="{{preferences.card_height}}">
+                    <div class="ui basic label">
+                      px
+                    </div>
+                  </div>
+                </div>
+                <!-- <p class="help">Title Card dimensions (in pixels).</p> -->
+
+                <div class="eight wide field" data-value="card_quality" data-label="Card Quality">
+                  <label>Card Quality</label>
+                  <div data-value="card_quality" class="ui labeled ticked blue slider" id="card-quality"></div>
+                  <p class="help">
+                    Compression quality to utilize when creating Title Cards.
+                    <br>
+                    Lower values are more compressed, while higher values are less.
+                  </p>
+                </div>
+              </div>
+
+              <div class="two fields">
+                {% if preferences.is_docker %}
+                <div class="disabled field" data-value="imagemagick_executable">
+                {% else %}
+                <div class="field" data-value="imagemagick_executable">
+                {% endif %}
+                  <label>ImageMagick Executable</label>
+                  {% if preferences.imagemagick_executable %}
+                  <input type="text" name="imagemagick_executable" placeholder="{{preferences.imagemagick_executable}}" value="{{preferences.imagemagick_executable}}">
+                  {% else %}
+                  <input type="text" name="imagemagick_executable" placeholder="Unspecified">
+                  {% endif %}
+                  <p class="help">
+                    Path to the ImageMagick executable file for running commands with.
+                    <br>
+                    Only required for some Windows installations.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <!-- Folder Settings -->
+            <h3 class="ui horizontal divider header">
+              <i class="folder open outline icon"></i>
+              Root Folders
+            </h3>
+            <section>
+              <p class="help">Restart TitleCardMaker for changes to either of these directories to take effect.</p>
+              
+              <div class="ui two fields">
+                <div class="field">
+                  <label>Title Card Directory</label>
+                  <input type="text" name="card_directory" placeholder="{{preferences.card_directory}}" value="{{preferences.card_directory}}">
+                  <p class="help">
+                    Directory to store all Title Cards.
+                    <br>
+                    Can be overrwitten per-Series.
+                  </p>
+                </div>
+  
+                <div class="field">
+                  <label>Source Directory</label>
+                  <input type="text" name="source_directory" placeholder="{{preferences.source_directory}}" value="{{preferences.source_directory}}">
+                  <p class="help">Directory to store all textless source images.</p>
+                </div>
+              </div>
+            </section>
+
             <!-- Filename Settings -->
             <h3 class="ui horizontal divider header">
               <i class="file outline icon"></i>
               File Naming
             </h3>
             <section>
-              <div class="field">
-                <label>Card Extension</label>
-                <div id="card-extension" class="ui compact selection dropdown">
-                  <input id="card-extension-input" type="hidden" name="card_extension" value="{{preferences.card_extension}}">
-                  <i class="dropdown icon"></i>
-                  <div class="default text">{{preferences.card_extension}}</div>
-                  <div id="card-extension-choices" class="menu">
-                    {% for extension in preferences.valid_image_extensions %}
-                    <div class="item" data-value="{{extension}}">{{extension}}</div>
-                    {% endfor %}
-                  </div>
+              <div class="fields">
+                <div class="twelve wide field">
+                  <label>Title Card Filename Format</label>
+                  <input type="text" name="card_filename_format" placeholder="{{preferences.card_filename_format}}" value="{{preferences.card_filename_format}}">
+                  <p class="help">
+                    Format of how to name all Title Cards.
+                    <br>
+                    <a href="https://titlecardmaker.com/user_guide/settings/#filename-format" target="_blank">See here</a> for some examples.
+                  </p>
                 </div>
-                <p class="help">File extension of all created Title Cards.</p>
+
+                <div class="four wide field">
+                  <label>Card Extension</label>
+                  <div id="card-extension" class="ui selection dropdown">
+                    <input id="card-extension-input" type="hidden" name="card_extension" value="{{preferences.card_extension}}">
+                    <i class="dropdown icon"></i>
+                    <div class="default text">{{preferences.card_extension}}</div>
+                    <div id="card-extension-choices" class="menu">
+                      {% for extension in preferences.valid_image_extensions %}
+                      <div class="item" data-value="{{extension}}">{{extension}}</div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                  <p class="help">File extension of all created Title Cards.</p>
+                </div>
               </div>
+
               <!-- Filesize warning for uncompressed images -->
               <div id="card-extension-warning" class="ui compact floating warning message">
                 <i class="exclamation triangle icon"></i>
                 <b>Warning</b> Uncompressed images will significantly increase the file size of title cards.
-              </div>
-
-              <div class="field">
-                <label>Title Card Filename Format</label>
-                <input type="text" name="card_filename_format" placeholder="{{preferences.card_filename_format}}" value="{{preferences.card_filename_format}}">
-                <p class="help">
-                  Format of how to name all Title Cards.
-                  <br>
-                  <!-- <a>Click here</a> to see all supported variables. -->
-                </p>
               </div>
               
               <div class="field">

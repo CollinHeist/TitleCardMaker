@@ -167,29 +167,31 @@ function updateGlobalSettings() {
   // Parse all settings data into one update object
   /** @type {UpdatePreferences} */
   const data = {
-    // Root Folders
-    card_directory: $('input[name="card_directory"]').val(),
-    source_directory: $('input[name="source_directory"]').val(),
-    completely_delete_series: $('input[name="completely_delete_series"]').is(':checked'),
     // Series and Episode Data
     episode_data_source: $('input[name="episode_data_source"]').val(),
     image_source_priority: $('input[name="image_source_priority"]').val().split(','),
     sync_specials: $('input[name="sync_specials"]').is(':checked'),
     delete_missing_episodes: $('input[name="delete_missing_episodes"]').is(':checked'),
     delete_unsynced_series: $('input[name="delete_unsynced_series"]').is(':checked'),
+    completely_delete_series: $('input[name="completely_delete_series"]').is(':checked'),
     // Title Cards
     default_card_type: $('input[name="default_card_type"]').val(),
     excluded_card_types: parseListString($('input[name="excluded_card_types"]').val()),
     default_watched_style: $('input[name="default_watched_style"]').val() || '{{preferences.default_watched_style}}',
     default_unwatched_style: $('input[name="default_unwatched_style"]').val() || '{{preferences.default_unwatched_style}}',
     default_templates: parseListString($('input[name="default_templates"]').val()),
+    global_extras: extras,
+    // ImageMagick
     card_width: $('input[name="card_width"]').val(),
     card_height: $('input[name="card_height"]').val(),
     card_quality: $('.slider[data-value="card_quality"]').slider('get value'),
-    global_extras: extras,
+    imagemagick_executable: $('input[name="imagemagick_executable"]').val() || null,
+    // Root Folders
+    card_directory: $('input[name="card_directory"]').val(),
+    source_directory: $('input[name="source_directory"]').val(),
     // File naming
-    card_extension: $('input[name="card_extension"]').val(),
     card_filename_format: $('input[name="card_filename_format"]').val(),
+    card_extension: $('input[name="card_extension"]').val(),
     specials_folder_format: $('input[name="specials_folder_format"]').val(),
     season_folder_format: $('input[name="season_folder_format"]').val(),
     library_unique_cards: $('input[name="library_unique_cards"]').is(':checked'),

@@ -6,7 +6,7 @@ from re import findall
 from shlex import split as command_split
 from string import hexdigits
 from subprocess import Popen, PIPE, TimeoutExpired
-from typing import Iterable, Literal, NamedTuple, Optional, overload
+from typing import Iterable, Literal, NamedTuple, Optional, Union, overload
 
 from imagesize import get as im_get
 
@@ -65,6 +65,7 @@ class ImageMagickInterface:
     def __init__(self,
             container: Optional[str] = None,
             use_magick_prefix: bool = False,
+            executable: Optional[Union[str, Path]] = None,
             timeout: int = COMMAND_TIMEOUT_SECONDS,
         ) -> None:
         """
@@ -74,22 +75,16 @@ class ImageMagickInterface:
             container: Optional Docker container name/ID to sending
                 ImageMagick commands to.
             use_magick_prefix: Whether to use 'magick' command prefix.
+            executable: ImageMagick executable which can be used for
+                running all ImageMagick commands.
             timeout: How many seconds to wait for a command to execute.
         """
 
         # Definitions of this interface
         self.container = environ.get('TCM_IM_DOCKER', container)
         self.use_docker = bool(self.container)
-
-        # Ensure any executable is surrounded in quotes
-        self.executable = environ.get('TCM_IM_PATH', None)
-        if self.executable:
-            self.executable =self.executable.removeprefix('"').removesuffix('"')
-
-        # Whether to prefix commands with "magick" or not
         self.prefix = 'magick ' if use_magick_prefix else ''
-
-        # Store command timeout
+        self.executable = str(executable) if executable else None
         self.timeout = timeout
 
         # Command history for debug purposes

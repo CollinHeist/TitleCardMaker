@@ -78,83 +78,6 @@ below.
         | Season Folder Format        | Season {season_number}                                       |
         | Multi-Library File Naming   | :fontawesome-regular-circle-xmark:{.red}                     |
 
-## Root Folders
-
-The root folders listed here serve as the primary asset directories for both
-Title Card and Source images. If using Docker, it is importan that both of these
-directories are accessible _outside_ of the Container.
-
-### Card Directory
-
-<!-- md:overwritable Series  -->
-
-The root folder for all Title Cards created by TitleCardMaker. Within this
-directory, each Series added to TitleCardMaker will have a subfolder created for
-it, under which cards will be created.
-
-??? example
-
-    === "Docker"
-
-        For Docker setups, the recommended settings for this is
-        `/config/cards`. In this instance, if the Series `Breaking Bad` were
-        added to TitleCardMaker, I'd expect to find all associated Title Cards
-        under the `/config/cards/Breaking Bad (2008)/` directory.
-
-    === "Non-Docker"
-
-        When installed locally, this setting can be whatever is most-convenient.
-        It is very common to specify a `cards` directory within your local
-        installation directory, e.g. `./config/cards/`. However, this is not
-        required. In this instance, if the Series `Breaking Bad` were added to
-        TitleCardMaker, I'd expect to find all associated Title Cards under the
-        `./config/cards/Breaking Bad (2008)/` directory.
-
-This directory __does not__ need to align with your Media folders (where your
-media files are kept), as TCM loads the Title Cards directly into your Media
-Server, bypassing any "local media" matching.
-
-### Source Directory
-
-The root folder for all Source Images downloaded and used by TitleCardMaker.
-Within this directory, each Series added to TitleCardMaker will have a subfolder
-created for it, under which Source Images (and logos) will be added.
-
-??? question "What's a Source Image?"
-
-    A Source Images is the (typically) textless input images which text or
-    effects are added on top of (by TCM) to create a Title Card.
-
-??? example
-
-    === "Docker"
-
-        For Docker setups, the recommended settings for this is
-        `/config/source`. In this instance, if the Series `Breaking Bad`
-        were added to TitleCardMaker, I'd expect to find all associated
-        source images (and logos) under the `/config/source/Breaking Bad
-        (2008)/` directory.
-
-    === "Non-Docker"
-
-        When installed locally, this setting can be whatever is most-
-        convenient. It is very common to specify a `source` directory
-        within your local installation directory, e.g. `./config/source/`.
-        However, this is not required. In this instance, if the Series
-        `Breaking Bad` were added to TitleCardMaker, I'd expect to find
-        all associated source images (and logos) under the `./config/source/
-        Breaking Bad (2008)/` directory.
-
-### Source Image Deletion
-
-Whether to delete Source Images when a Series is deleted from TitleCardMaker.
-
-If enabled, any Series that are deleted (manually or automatically) will have
-their entire source directory cleared - including Source Images, posters, logos,
-and backdrop art.
-
----
-
 ## Episode Data
 ### Episode Data Source
 
@@ -256,6 +179,10 @@ icon next to either dropdown.
     configuration, but the watched statuses of a Plex Media Server will
     __always__ come from the server admin.
 
+--------------------------------------------------------------------------------
+
+## ImageMagick
+
 ### Card Dimensions
 
 The output dimensions of all created Title Cards. This can be reduced to
@@ -289,33 +216,93 @@ Cards. The recommended value is between 92 and 95.
     For more details, read the applicable
     [ImageMagick documentation](https://www.imagemagick.org/script/command-line-options.php#quality).
 
+### ImageMagick Executable
+
+The filepath to the ImageMagick executable (usually `magick.exe`) which will be
+used to run all ImageMagick commands. This is required for some Windows users
+if the `convert` command is not properly added to your system PATH - this
+usually manifests as all Title Cards failing to be created.
+
+--------------------------------------------------------------------------------
+
+## Root Folders
+
+The root folders listed here serve as the primary asset directories for both
+Title Card and Source images. If using Docker, it is importan that both of these
+directories are accessible _outside_ of the Container.
+
+### Card Directory
+
+<!-- md:overwritable Series  -->
+
+The root folder for all Title Cards created by TitleCardMaker. Within this
+directory, each Series added to TitleCardMaker will have a subfolder created for
+it, under which cards will be created.
+
+??? example
+
+    === "Docker"
+
+        For Docker setups, the recommended settings for this is
+        `/config/cards`. In this instance, if the Series `Breaking Bad` were
+        added to TitleCardMaker, I'd expect to find all associated Title Cards
+        under the `/config/cards/Breaking Bad (2008)/` directory.
+
+    === "Non-Docker"
+
+        When installed locally, this setting can be whatever is most-convenient.
+        It is very common to specify a `cards` directory within your local
+        installation directory, e.g. `./config/cards/`. However, this is not
+        required. In this instance, if the Series `Breaking Bad` were added to
+        TitleCardMaker, I'd expect to find all associated Title Cards under the
+        `./config/cards/Breaking Bad (2008)/` directory.
+
+This directory __does not__ need to align with your Media folders (where your
+media files are kept), as TCM loads the Title Cards directly into your Media
+Server, bypassing any "local media" matching.
+
+### Source Directory
+
+The root folder for all Source Images downloaded and used by TitleCardMaker.
+Within this directory, each Series added to TitleCardMaker will have a subfolder
+created for it, under which Source Images (and logos) will be added.
+
+??? question "What's a Source Image?"
+
+    A Source Images is the (typically) textless input images which text or
+    effects are added on top of (by TCM) to create a Title Card.
+
+??? example
+
+    === "Docker"
+
+        For Docker setups, the recommended settings for this is
+        `/config/source`. In this instance, if the Series `Breaking Bad`
+        were added to TitleCardMaker, I'd expect to find all associated
+        source images (and logos) under the `/config/source/Breaking Bad
+        (2008)/` directory.
+
+    === "Non-Docker"
+
+        When installed locally, this setting can be whatever is most-
+        convenient. It is very common to specify a `source` directory
+        within your local installation directory, e.g. `./config/source/`.
+        However, this is not required. In this instance, if the Series
+        `Breaking Bad` were added to TitleCardMaker, I'd expect to find
+        all associated source images (and logos) under the `./config/source/
+        Breaking Bad (2008)/` directory.
+
+### Source Image Deletion
+
+Whether to delete Source Images when a Series is deleted from TitleCardMaker.
+
+If enabled, any Series that are deleted (manually or automatically) will have
+their entire source directory cleared - including Source Images, posters, logos,
+and backdrop art.
+
 ---
 
 ## File Naming
-### Card Extension
-
-Image extension for all created Title Cards. Below is a table summarizing the
-differences in each type (with regards to TCM):
-
-??? tip "Image Extension Differences"
- 
-    | Format | Compression Category | Supports Transparency | Relative Filesize |
-    | :---: | :---: | :---: | :---: |
-    | `jpg` / `jpeg` | Lossy | :material-close:{.red} | 100% |
-    | `png` | Lossless | :material-check:{.green} | 230% |
-    | `tiff` | Lossless | :material-check:{.green} | 300% |
-    | `gif` | Lossless | :material-check:{.green} | 90% |
-    | `webp` | Lossless / Lossy | :material-check:{.green} | 70% |
-
-    !!! note "Note about Transparency"
-
-        Only a select few card types can take advantage of transparency. These
-        are typically types that allow use of a background _color_ instead of an
-        image - e.g. the [Roman Numeral](...) and [Logo](...) cards.
-
-My personal recommendation is to use the `webp` image extension because of the
-file size savings and support for transparency. The reason this is not the
-default is because of the ubiquity of JPEG images.
 
 ### Filename Format
 
@@ -356,6 +343,31 @@ A complete list of the available variables is listed [here](./variables.md).
     - sometimes too long for the operating system - if the Episode titles are
     exceedingly long. TCM will automatically truncate all file names at 254
     characters.
+
+### Card Extension
+
+Image extension for all created Title Cards. Below is a table summarizing the
+differences in each type (with regards to TCM):
+
+??? tip "Image Extension Differences"
+ 
+    | Format | Compression Category | Supports Transparency | Relative Filesize |
+    | :---: | :---: | :---: | :---: |
+    | `jpg` / `jpeg` | Lossy | :material-close:{.red} | 100% |
+    | `png` | Lossless | :material-check:{.green} | 230% |
+    | `tiff` | Lossless | :material-check:{.green} | 300% |
+    | `gif` | Lossless | :material-check:{.green} | 90% |
+    | `webp` | Lossless / Lossy | :material-check:{.green} | 70% |
+
+    !!! note "Note about Transparency"
+
+        Only a select few card types can take advantage of transparency. These
+        are typically types that allow use of a background _color_ instead of an
+        image - e.g. the [Roman Numeral](...) and [Logo](...) cards.
+
+My personal recommendation is to use the `webp` image extension because of the
+file size savings and support for transparency. The reason this is not the
+default is because of the ubiquity of JPEG images.
 
 ### Specials Folder Format
 

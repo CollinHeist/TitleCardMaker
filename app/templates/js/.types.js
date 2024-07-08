@@ -366,6 +366,7 @@
  * @property {string} card_filename_format - The filename format of the card.
  * @property {string} card_extension - The extension of the card.
  * @property {number} card_quality - The quality of the card.
+ * @property {?string} imagemagick_executable Filepath to the magick.exe file for commands.
  * @property {boolean} library_unique_cards - Whether the library has unique cards or not.
  * @property {number[]} image_source_priority - The priority of the image source.
  * @property {number} episode_data_source - The source of the episode data.
@@ -373,6 +374,7 @@
  * @property {string} season_folder_format - The folder format of the season.
  * @property {boolean} sync_specials - Whether to sync the specials or not.
  * @property {boolean} delete_missing_episodes - Whether to delete missing episodes or not.
+ * @property {boolean} delete_unsynced_series - Whether to delete un-Synced Series.
  * @property {boolean} simplified_data_table - Whether the data table is simplified or not.
  * @property {string} default_card_type - The default card type.
  * @property {string[]} excluded_card_types - The excluded card types.

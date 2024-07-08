@@ -102,7 +102,6 @@ below.
     environment" step and make sure that the (Recommended) option of "Git from
     the command line and also from 3rd-party software" option is selected.
 
-
 ## Upgrading Pip
 
 Execute the following command:

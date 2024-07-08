@@ -48,8 +48,7 @@ class Preferences:
 
     """All environment variables which might be applicable to TCM, for boot"""
     __ENVIRONMENT_VARIABLES = (
-        'TCM_IS_DOCKER', 'TCM_IM_DOCKER', 'TCM_LOG', 'TCM_IM_PATH', 'TZ',
-        'TCM_DISABLE_AUTH',
+        'TCM_IS_DOCKER', 'TCM_IM_DOCKER', 'TCM_LOG', 'TZ', 'TCM_DISABLE_AUTH',
     )
 
     """Attributes whose values should be ignored when loading from file"""
@@ -77,7 +76,7 @@ class Preferences:
         'imported_blueprints', 'colorblind_mode', 'library_unique_cards',
         'invalid_connections', 'home_page_table_view', 'reduced_animations',
         'currently_running_sync', 'interactive_card_previews',
-        'delete_unsynced_series',
+        'delete_unsynced_series', 'imagemagick_executable',
     )
 
 
@@ -176,7 +175,12 @@ class Preferences:
         self.card_filename_format = self.DEFAULT_CARD_FILENAME_FORMAT
         self.library_unique_cards = False
         self.card_extension = self.DEFAULT_CARD_EXTENSION
+
         self.card_quality = ImageMagickInterface.DEFAULT_CARD_QUALITY
+        if (_path := environ.get('TCM_IM_PATH', None)):
+            self.imagemagick_executable: Optional[Path] = Path(_path)
+        else:
+            self.imagemagick_executable: Optional[Path] = None
 
         self.image_source_priority: list[int] = []
         self.episode_data_source: Optional[int] = None

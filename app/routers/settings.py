@@ -30,7 +30,7 @@ def get_global_settings(
     return preferences
 
 
-@settings_router.get('/version', status_code=200)
+@settings_router.get('/version')
 def get_current_version(
         preferences: PreferencesModel = Depends(get_preferences),
     ) -> str:
@@ -39,7 +39,7 @@ def get_current_version(
     return preferences.current_version
 
 
-@settings_router.patch('/update', status_code=200)
+@settings_router.patch('/update')
 def update_global_settings(
         request: Request,
         update_preferences: UpdatePreferences = Body(...),
@@ -59,6 +59,7 @@ def update_global_settings(
             get_template(db, template_id, raise_exc=True)
 
     preferences.update_values(**update_preferences.dict(), log=request.state.log)
+    preferences.determine_imagemagick_prefix(log=request.state.log)
 
     return preferences
 

@@ -172,7 +172,7 @@ describe('Page Navigation', () => {
     },
     {
       fromUrl: '/changelog',
-      fromName: 'Changelog',
+      fromName: 'changelog',
       navs: [
         { selector: '#nav-menu [href="/"]',               name: 'home',        expectedUrl: '/'               },
         { selector: '#nav-menu [href="/card-templates"]', name: 'templates',   expectedUrl: '/card-templates' },

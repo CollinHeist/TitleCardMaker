@@ -48,11 +48,11 @@ _root_ URL to your Sonarr server __including the port__.
 input box and then click <span class="example md-button">Create</span>. TCM will
 reload the page.
 
-7. The next step is to add the top-level directories for each of your Television
+7. The next step is to add the top-level directories for each of your television
 libraries to that TitleCardMaker can automatically detect a Series' Library when
 [Syncing](../first_sync/sonarr.md) from Sonarr. The paths listed here __must__
-be as they appear __within Sonarr__ - not Emby, Jellyfin, or Plex. See the
-following examples for help.
+be as they appear __within Sonarr__ - not your media server. See the following
+examples for reference.
 
     !!! tip "Quick Setup"
 
