@@ -4,6 +4,7 @@ from time import sleep
 from typing import Any, Optional
 
 from fastapi import HTTPException
+from pydantic import ValidationError
 from sqlalchemy import and_, or_
 from sqlalchemy.exc import OperationalError, PendingRollbackError
 from sqlalchemy.orm import Query, Session
@@ -351,17 +352,24 @@ def validate_card_type_model(
 
     # Get Pydantic model for this card type
     if card_settings['card_type'] in LocalCardTypeModels:
-        CardTypeModel = LocalCardTypeModels[card_settings['card_type']] # local
+        CardTypeModel = LocalCardTypeModels[card_settings['card_type']]
+    # Remove card types
     else:
-        CardTypeModel = CardClass.CardModel # remote
+        CardTypeModel: type[Base] = CardClass.CardModel
 
     try:
         return CardClass, CardTypeModel(**card_settings)
+    except ValidationError as exc:
+        log.exception('Card validation failed')
+        raise HTTPException(
+            status_code=400,
+            detail=exc.errors(),
+        )
     except Exception as exc:
         log.exception('Card validation failed')
         raise HTTPException(
             status_code=400,
-            detail='Cannot create Card - invalid card settings',
+            detail='Cannot create Card - invalid card settings ({exc})',
         ) from exc
 
 
