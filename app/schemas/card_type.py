@@ -7,7 +7,7 @@ from re import compile as re_compile, match as re_match
 from typing import Any, Literal, Optional, Union
 
 from pydantic import (
-    FilePath, PositiveFloat, PositiveInt, confloat, conint, constr,
+    FilePath, PositiveFloat, PositiveInt, ValidationError, confloat, conint, constr,
     root_validator, validator,
 )
 
@@ -248,6 +248,7 @@ class CutoutCardType(BaseCardModel):
     font_size: PositiveFloat = 1.0
     font_vertical_shift: int = 0
     blur_edges: bool = False
+    blur_profile: constr(regex=r'^\d+x\d+$') = CutoutTitleCard.BLUR_PROFILE
     overlay_color: str = 'black'
     overlay_transparency: confloat(ge=0.0, le=1.0) = 0.0
 
@@ -878,7 +879,7 @@ class WhiteBorderCardType(BaseCardTypeCustomFontAllText):
     episode_text_color: str = WhiteBorderTitleCard.TITLE_COLOR
     episode_text_font_size: PositiveFloat = 1.0
 
-LocalCardTypeModels: dict[str, Base] = {
+LocalCardTypeModels: dict[str, type[Base]] = {
     '4x3': FadeCardType,
     'anime': AnimeCardType,
     'banner': BannerCardType,
