@@ -206,8 +206,8 @@ def create_preview_card_for_episode(
     # Raise exception if Template IDs are part of update object; cannot
     # be reflected in the live preview because relationship objects will
     # not be reflected until a database commit
-    if (update_episode.template_ids != episode.template_ids
-        or update_series.template_ids != episode.series.template_ids):
+    if (getattr(update_episode, 'template_ids', []) != episode.template_ids or
+        getattr(update_series,'template_ids',[]) !=episode.series.template_ids):
         raise HTTPException(
             status_code=422,
             detail=(
