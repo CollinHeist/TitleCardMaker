@@ -2397,19 +2397,25 @@ function importMediuxYaml(event) {
   event.preventDefault();
 
   // Generate data and query params
-  const data = $('#import-mediux-modal textarea[name="yaml"]').val() || '';
-  const libraryNames = $('#import-mediux-modal input[name="libraries"]').val().split(',').filter(v => v).map(entry => entry.split('::').pop());
-  const libraryParamStr = libraryNames.map(val => `library_names=${encodeURIComponent(val)}`).join('&');
-  const forceReload = $('#import-mediux-modal input[name="force_reload"]').is(':checked');
+  const data = JSON.stringify($('#import-mediux-modal textarea[name="yaml"]').val() || '');
+  const params = new URLSearchParams([
+    ['force_reload', $('#import-mediux-modal input[name="force_reload"]').is(':checked')],
+    ['import_poster', $('#import-mediux-modal input[name="import_poster"]').is(':checked')],
+    ['import_backdrop', $('#import-mediux-modal input[name="import_backdrop"]').is(':checked')],
+    ['import_season_posters', $('#import-mediux-modal input[name="import_season_posters"]').is(':checked')],
+    ...$('#import-mediux-modal input[name="libraries"]').val().split(',')
+      .filter(library_key => library_key)
+      .map(entry => ['library_names', entry.split('::').pop()])
+  ]);
 
-  // Mark button as loading
+  // Mark button and form as loading
   $('#import-mediux-modal .button[type="submit"], #import-mediux-form').toggleClass('loading', true);
 
   // Submit API request
   $.ajax({
     type: 'POST',
-    url: `/api/import/series/{{series.id}}/cards/mediux?force_reload=${forceReload}&${libraryParamStr}`,
-    data: JSON.stringify(data),
+    url: `/api/import/series/{{series.id}}/cards/mediux?${params.toString()}`,
+    data: data,
     contentType: 'application/json',
     success: () => {
       showInfoToast('Cards imported - reloading page..');
