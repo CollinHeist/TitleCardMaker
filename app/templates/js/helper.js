@@ -99,23 +99,39 @@ function formatFastAPIError(errorResponse) {
     return errorResponse.detail;
   }
 
-  const formattedErrors = errorResponse.detail.map(detail => {
-    let errorMessage = "An error occurred.";
+  /**
+   * Format the given snake case string to title case.
+   * @param {string} snakeStr snake case string to convert.
+   * @returns title case equivalent of `snakeStr`.
+   * @example
+   * snakeToTitleCase('frame_width') // returns 'Frame Width'
+   */
+  const snakeToTitleCase = snakeStr => {
+    return snakeStr
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  };
 
+  const formattedErrors = errorResponse.detail.map(detail => {
+    // String-only detail
     if (typeof detail === 'string') {
-      errorMessage = detail;
-    } else if (detail.msg) {
-      errorMessage = detail.msg;
+      return detail;
     }
 
     if (detail.loc && Array.isArray(detail.loc)) {
-      errorMessage = `${detail.loc[1]}: ${errorMessage}`;
+      const location = detail.loc.map(snakeToTitleCase).join(' -> ').trim();
+      // Do not display "root" level locations, this will confuse people
+      if (location === 'Root') {
+        return detail.msg || 'An error occurred';
+      }
+      return `${location}: ${detail.msg || "An error occurred"}`;
     }
 
-    return errorMessage;
+    return 'An error occurred.';
   });
 
-  return formattedErrors.join('\n');
+  return formattedErrors.join('<br>');
 }
 
 /**
