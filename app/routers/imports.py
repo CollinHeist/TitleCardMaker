@@ -370,7 +370,6 @@ async def import_card_files_for_series(
 
 @import_router.post('/series/{series_id}/cards/mediux')
 async def import_mediux_yaml_for_series(
-        # background_tasks: BackgroundTasks,
         request: Request,
         series_id: int,
         yaml_str: str = Body(..., alias='yaml'),
@@ -383,6 +382,20 @@ async def import_mediux_yaml_for_series(
         db: Session = Depends(get_database),
     ) -> None:
     """
+    Import Cards, posters, and backgrounds from the given Kometa YAML
+    for the given Series.
+
+    - series_id: ID of the Series to import into.
+    - yaml_str: Raw YAML to import.
+    - import_poster: Whether to parse and import posters.
+    - import_backdrop: Whether to parse and import backdrops.
+    - import_season_posters: Whether to parse and import season posters.
+    - force_reload: Whether to replace any existing Cards.
+    - textless: Whether to change any affected Episode's card type to
+    Textless.
+    - library_names: Names of the libraries to import the Cards into. If
+    provided, then these assets are loaded into the associated
+    server(s).
     """
 
     # Get contextual logger

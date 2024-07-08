@@ -106,8 +106,9 @@ function formatFastAPIError(errorResponse) {
    * @example
    * snakeToTitleCase('frame_width') // returns 'Frame Width'
    */
-  const snakeToTitleCase = snakeStr => {
-    return snakeStr
+  const snakeToTitleCase = (snakeStr) => {
+    console.log(snakeStr);
+    return `${snakeStr}`
       .split('_')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ')
