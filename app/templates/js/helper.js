@@ -84,8 +84,8 @@ function formatBytes(bytes, decimals = 2) {
 /**
  * Format the given FastAPI response object into a single string.
  * @param {Object} errorResponse - AJAX response from to format.
- * @param {string|Object} errorResponse.detail - Details of the FastAPI error to
- * add to the return.
+ * @param {string | Object} errorResponse.detail - Details of the FastAPI error
+ * to add to the return.
  * @returns {string} Formatted string representation of the given response.
  */
 function formatFastAPIError(errorResponse) {
@@ -628,7 +628,7 @@ async function initializeExtras(
   sectionQuerySelector,
   inputTemplateElement,
   isGlobal = false,
-  groupAmount = 2,
+  groupAmount = 3,
 ) {
   if (allExtras === undefined) {
     await queryAvailableExtras();

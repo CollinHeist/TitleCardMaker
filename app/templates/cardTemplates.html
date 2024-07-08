@@ -74,11 +74,44 @@
       <div class="content">
         <div class="ui stackable grid">
           <!-- Template Settings -->
-          <div class="ten wide column">
+          <!-- <div class="ten wide column"> -->
+          <div class="column">
             <form class="ui form">
               <div class="field">
                 <label>Template Name</label>
                 <input name="name" type="text">
+              </div>
+
+              <h4 class="ui horizontal middle aligned divider header">Previews</h4>
+
+              <div data-action="refresh" class="ui blue tertiary compact button">
+                <i class="redo icon"></i>
+                Refresh Previews
+              </div>
+
+              <div class="ui grid">
+                <div class="eight wide column">
+                  <h3 class="ui header">Watched Content</h3>
+                  <div content-type="watched" class="ui fluid preview card">
+                    <div class="content">
+                      <img content-type="watched" src="/internal_assets/blank.png" loading="lazy">
+                    </div>
+                  </div>
+                </div>
+  
+                <div class="eight wide column">
+                  <h3 class="ui header">Unwatched Content</h3>
+                  <div content-type="unwatched" class="ui fluid preview card">
+                    <div class="content">
+                      <img content-type="unwatched" src="/internal_assets/blank.png" loading="lazy">
+                    </div>
+                  </div>
+                </div>
+              </div>
+  
+              <div class="ui visible floating warning message">
+                <i class="exclamation triangle icon"></i>
+                Custom season titles are not reflected in the live preview.
               </div>
 
               <h4 class="ui horizontal middle aligned divider header">Filters</h4>
@@ -109,7 +142,7 @@
                     <input name="card_type" type="hidden">
                     <i class="dropdown icon"></i>
                     <div class="default text">Global Default</div>
-                    <div class="down menu"><!-- Options added asynchronously --></div>
+                    <div class="down menu"><!-- Added asynchronously --></div>
                   </div>
                 </div>
   
@@ -119,7 +152,7 @@
                     <input name="font_id" type="hidden">
                     <i class="dropdown icon"></i>
                     <div class="default text">Card Default</div>
-                    <div class="menu"><!-- Elements added asynchrously --></div>
+                    <div class="menu"><!-- Added asynchronously --></div>
                   </div>
                 </div>
               </div>
@@ -166,11 +199,9 @@
                 <div class="two fields">
                   <div data-value="season-title-range" class="three wide right aligned field">
                     <label>Range</label>
-                    <!-- <input name="season_title_ranges" data-value="season-titles" type="text"> -->
                   </div>
                   <div data-value="season-title-value" class="eight wide field">
                     <label>Title</label>
-                    <!-- <input name="season_title_values" type="text"> -->
                   </div>
                 </div>
                 <div data-value="add-title" class="ui circular mini icon add-field button">
@@ -179,50 +210,54 @@
                 </div>
               </div>
 
-              <div class="ui field">
-                <label>Hide Episode Text</label>
-                <div data-value="hide_episode_text" class="ui compact selection clearable dropdown">
-                  <input name="hide_episode_text" type="hidden">
-                  <i class="dropdown icon"></i>
-                  <div class="default text">Default</div>
-                  <div class="menu"></div>
+              <div class="fields">
+                <div class="four wide field" data-value="hide_episode_text" data-label="Hide Episode Text">
+                  <label>Hide Episode Text</label>
+                  <div data-value="hide_episode_text" class="ui selection clearable dropdown">
+                    <input name="hide_episode_text" type="hidden">
+                    <i class="dropdown icon"></i>
+                    <div class="default text">Default</div>
+                    <div class="menu"></div>
+                  </div>
                 </div>
-              </div>
-
-              <div data-value="episode_text_format" class="field">
-                <label>Episode Text Format</label>
-                <input name="episode_text_format" type="text" placeholder="Card Default">
+  
+                <div class="twelve wide field" data-value="episode_text_format">
+                  <label>Episode Text Format</label>
+                  <input name="episode_text_format" type="text" placeholder="Card Default">
+                </div>
               </div>
 
               <h4 class="ui horizontal middle aligned divider header">Non-Card Settings</h4>
 
-              <div class="ui field">
-                <label>Ignored Localized Images</label>
-                <div data-value="skip_localized_images" class="ui compact selection clearable dropdown">
-                  <input name="skip_localized_images" type="hidden">
-                  <i class="dropdown icon"></i>
-                  <div class="default text">Default</div>
-                  <div class="menu"></div>
+              <div class="ui three fields">
+                <div class="ui field">
+                  <label>Ignored Localized Images</label>
+                  <div data-value="skip_localized_images" class="ui selection clearable dropdown">
+                    <input name="skip_localized_images" type="hidden">
+                    <i class="dropdown icon"></i>
+                    <div class="default text">Default</div>
+                    <div class="menu"></div>
+                  </div>
                 </div>
-              </div>
-
-              <div class="field">
-                <label>Episode Data Source</label>
-                <div class="ui compact selection clearable dropdown" data-value="data_source_id">
-                  <input name="data_source_id" type="hidden">
-                  <i class="dropdown icon"></i>
-                  <div class="default text">Global Default</div>
-                  <div class="menu"><!-- Added asynchronously --></div>
+  
+                <div class="field">
+                  <label>Episode Data Source</label>
+                  <div class="ui selection clearable dropdown" data-value="data_source_id">
+                    <input name="data_source_id" type="hidden">
+                    <i class="dropdown icon"></i>
+                    <div class="default text">Global Default</div>
+                    <div class="menu"><!-- Added asynchronously --></div>
+                  </div>
                 </div>
-              </div>
-
-              <div class="ui field">
-                <label>Enable Specials</label>
-                <div data-value="sync_specials" class="ui compact selection clearable dropdown">
-                  <input name="sync_specials" type="hidden">
-                  <i class="dropdown icon"></i>
-                  <div class="default text">Default</div>
-                  <div class="menu"></div>
+  
+                <div class="ui field">
+                  <label>Enable Specials</label>
+                  <div data-value="sync_specials" class="ui selection clearable dropdown">
+                    <input name="sync_specials" type="hidden">
+                    <i class="dropdown icon"></i>
+                    <div class="default text">Default</div>
+                    <div class="menu"></div>
+                  </div>
                 </div>
               </div>
 
@@ -259,33 +294,6 @@
               </button>
               <div class="'ui error message"></div>
             </form>
-          </div>
-
-          <!-- Preview Cards -->
-          <div class="six wide column">
-            <button data-action="refresh" class="ui blue tertiary compact button">
-              <i class="redo icon"></i>
-              Refresh Previews
-            </button>
-
-            <h3 class="ui header">Watched Content</h3>
-            <div content-type="watched" class="ui fluid preview card">
-              <div class="content">
-                <img content-type="watched" src="/internal_assets/blank.png" loading="lazy">
-              </div>
-            </div>
-
-            <h3 class="ui header">Unwatched Content</h3>
-            <div content-type="unwatched" class="ui fluid preview card">
-              <div class="content">
-                <img content-type="unwatched" src="/internal_assets/blank.png" loading="lazy">
-              </div>
-            </div>
-
-            <div class="ui visible floating warning message">
-              <i class="exclamation triangle icon"></i>
-              Custom season titles are not reflected in the live preview.
-            </div>
           </div>
         </div>
       </div>
