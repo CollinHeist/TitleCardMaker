@@ -107,19 +107,20 @@ function formatFastAPIError(errorResponse) {
    * snakeToTitleCase('frame_width') // returns 'Frame Width'
    */
   const snakeToTitleCase = (snakeStr) => {
-    console.log(snakeStr);
     return `${snakeStr}`
       .split('_')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ')
   };
 
+  /** @type {string} Formatted error text. */
   const formattedErrors = errorResponse.detail.map(detail => {
     // String-only detail
     if (typeof detail === 'string') {
       return detail;
     }
 
+    // Parse each location of the error
     if (detail.loc && Array.isArray(detail.loc)) {
       const location = detail.loc.map(snakeToTitleCase).join(' -> ').trim();
       // Do not display "root" level locations, this will confuse people
@@ -169,7 +170,8 @@ function showErrorToast({title, message, response, displayTime=7500}) {
  * @param {string} [args.title] - Title of the toast.
  * @param {string} [args.message] - Message of the toast - only displayed if
  * args.response is undefined.
- * @param {number} [args.displayTime=1000] - How long (in ms) to display the toast.
+ * @param {number} [args.displayTime=1000] - How long (in ms) to display the
+ * toast.
  */
 function showInfoToast(args) {
   if (typeof args === 'string') {
@@ -186,14 +188,13 @@ function showInfoToast(args) {
 }
 
 /**
- * Get the list of template values (for a $.dropdown) based on the given
- * IDs.
- * @param {int[]} activeIds - Template IDs which are active and to include
- * in the return.
- * @param {Object[]} availableTemplates - List of all the available
- * Template objects which should be filtered.
- * @returns {DropdownValue[]} List of values which can be used in the 
- * dropdown initialization for the given Template IDs.
+ * Get the list of template values (for a $.dropdown) based on the given IDs.
+ * @param {int[]} activeIds - Template IDs which are active and to include in
+ * the return.
+ * @param {Object[]} availableTemplates - List of all the available Template
+ * objects which should be filtered.
+ * @returns {DropdownValue[]} List of values which can be used in the  dropdown
+ * initialization for the given Template IDs.
  */
 function getActiveTemplates(activeIds, availableTemplates) {
   let values = [];
@@ -226,10 +227,10 @@ function getActiveTemplates(activeIds, availableTemplates) {
  * 
  * @param {int} pageNumber - Page number of the element to create.
  * @param {string} pageText - Text to display within the element.
- * @param {bool} active - Whether this element should be created as active
- * and disabled.
- * @param {function} navigateFunction - Function to call when this element
- * is clicked.
+ * @param {bool} active - Whether this element should be created as active and
+ * disabled.
+ * @param {function} navigateFunction - Function to call when this element is
+ * clicked.
  * @returns {HTMLElement} Created element for use in a pagination menu.
  */
 function createPageElement(pageNumber, pageText, active = false, navigateFunction) {
@@ -251,15 +252,14 @@ function createPageElement(pageNumber, pageText, active = false, navigateFunctio
  * 
  * @param {string} [args.paginationElementId] - DOM Element ID of the pagination
  * menu to update.
- * @param {function} [args.navigateFunction] - Function to call when a
- * page button is clicked.
+ * @param {function} [args.navigateFunction] - Function to call when a page
+ * button is clicked.
  * @param {number} [args.page=1] - Current page number. Defaults to 1.
  * @param {number} [args.pages=1] - Total number of pages. Defaults to 1.
  * @param {?number} [args.amountVisible] - Total number of page buttons to make
  * visible. If undefined, then the amount is determined by the element width.
  * @param {boolean} [args.hideIfSinglePage=false] - Whether to hide the
  * pagination menu if there is only a single page.
- * @returns 
  */
 function updatePagination(args) {
   let {
@@ -598,8 +598,7 @@ function timeDiffString(previousRun) {
  * @param {string} str - The input string to convert to title case.
  * @returns {string} The input string converted to title case.
  * @example
- * // returns "I Love JavaScript"
- * toTitleCase("i love JavaScript");
+ * toTitleCase("i love JavaScript"); // returns "I Love JavaScript"
  */
 function toTitleCase(str) {
   return str.replace(/(?:^|\s)\w/g, function(match) {

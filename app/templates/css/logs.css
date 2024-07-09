@@ -7,9 +7,29 @@
   -webkit-box-orient: vertical;
 }
 
+/* Formatting for code (traceback) messages */
+#log-data td.code[data-value="message"] {
+  /* Use a monospace font so text alignment is preserved */
+  font-family: monospace;
+  /* Preserve spaces so traceback boxes and lines are kept */
+  white-space: preserve;
+  /* Show up to 10 lines, not 5 */
+  line-clamp: 10;
+  -webkit-line-clamp: 10;
+}
+
 /* Center align table on mobile */
 @media (max-width: 768px) {
   table th, table td {
     text-align: center !important;
   }
+}
+
+/* Stylize "redacted" text */
+span.redacted.text:not(:hover, :focus) {
+  /* Hide the text */
+  color: transparent;
+  /* Add black highlight over text */
+  background-color: #1a1a1a;
+  border-radius: 4px;
 }

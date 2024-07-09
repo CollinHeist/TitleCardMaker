@@ -3,13 +3,12 @@ import {LogEntryPage, LogLevel} from './.types.js';
 {% endif %}
 
 /**
- * 
+ * Parse a Date from the given file name.
  * @param {string} name - Name to extract the Date from.
  * @returns {Date} parsed from the given name.
  */
 function parseDate(name) {
   const pattern = /(\d{4}-\d{2}-\d{2})_(\d{2}-\d{2}-\d{2})/;
-
   try {
     const [, datePart, timePart] = name.match(pattern);
     const [year, month, day] = datePart.split("-");
@@ -18,7 +17,6 @@ function parseDate(name) {
   } catch {
     return new Date();
   }
-  
 }
 
 /**
@@ -27,7 +25,6 @@ function parseDate(name) {
  * dropdown.
  */
 function updateMessageLevel(level) {
-  // Uppercase first letter of level
   const newLevel = level.toUpperCase();
   $('.dropdown[data-value="level"]').dropdown('set text', newLevel);
   $('.dropdown[data-value="level"]').dropdown('set selected', newLevel);
@@ -65,10 +62,46 @@ function appendContextID(id) {
   }
 }
 
-/**
- * Reset the filter form.
- */
+/** Reset the filter form. */
 const resetForm = () => $('#log-filters').form('clear');
+
+/**
+ * Parse the given message into navigation links around "objects" like Series,
+ * Templates, Syncs, etc. Also stylizes redacted messages.
+ * @param {string} message Message to parse for links to objects.
+ * @param {string} searchText Text was used to filter log messages with. Used in
+ * text highlighting.
+ * @returns {string} Modified message.
+ */
+function parseLinks(message, searchText='') {
+  return message
+    .replace(
+      /Series\[(\d+)\]/g,
+      (match, seriesID) => `<a href="/series/${seriesID}">${match}</a>`
+    ).replace(
+      /Task\[\w+\]/g,
+      (match) => `<a href="/scheduler">${match}</a>`
+    ).replace(
+      /Sync\[\d+\]/g,
+      (match) => `<a href="/sync">${match}</a>`
+    ).replace(
+      /(Emby|Jellyfin|Plex|Sonarr|TMDb|TVDb)(Connection|Interface)\[\d+\]/g,
+      (match) => `<a href="/connections">${match}</a>`
+    ).replace(
+      /Template\[\d+\]/g,
+      (match) => `<a href="/card-templates">${match}</a>`
+    ).replace(
+      /Font\[(\d+)\]/g,
+      (match, fontID) => `<a href="/fonts#font-id${fontID}">${match}</a>`
+    ).replace(
+      /\[REDACTED\]/g,
+      () => `<span class="redacted text">[REDACTED]</span>`,      
+    ).replace(
+      searchText,
+      `<span class="ui yellow text">${searchText}</span>`,
+    )
+  ;
+}
 
 /**
  * Submit an API request to query for the given page of logs. If successful,
@@ -110,10 +143,18 @@ function queryForLogs(page=1) {
         }
         row.querySelector('[data-value="context_id"]').innerText = message.context_id;
 
-        row.querySelector('[data-value="message"]').innerText = message.exception?.traceback
-          ? message.message + '\n\n' + message.exception.traceback
-          : message.message
-        ;
+        if (message.exception?.traceback) {
+          row.querySelector('[data-value="message"]').classList.add('code');
+          row.querySelector('[data-value="message"]').innerText = message.message + '\n\n' + message.exception.traceback;
+        } else if (message.message.startsWith('Internal Server Error') || message.message.includes('Traceback (most recent call last)')) {
+          row.querySelector('[data-value="message"]').classList.add('code');
+          row.querySelector('[data-value="message"]').innerText = message.message;
+        } else {
+          row.querySelector('[data-value="message"]').innerHTML = parseLinks(
+            message.message,
+            document.querySelector('input[name="contains"]').value,
+          );
+        }
 
         // On click of log level, update filter level
         row.querySelector('[data-value="level"]').onclick = () => updateMessageLevel(message.level);
@@ -129,6 +170,7 @@ function queryForLogs(page=1) {
 
       // Add rows to page
       document.getElementById('log-data').replaceChildren(...rows);
+      document.getElementById('log-table').scrollIntoView({behavior: 'smooth', block: 'start'});
 
       // Update pagination
       updatePagination({
