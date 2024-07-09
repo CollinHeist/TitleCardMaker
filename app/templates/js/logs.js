@@ -141,7 +141,17 @@ function queryForLogs(page=1) {
         } else {
           row.querySelector('[data-value="time"]').innerText = message.time;
         }
-        row.querySelector('[data-value="context_id"]').innerText = message.context_id;
+        row.querySelector('[data-value="context_id"]').innerText = message.context_id
+          ? message.context_id
+          : ''
+        
+        if (message.context_id) {
+          row.querySelector('[data-value="context_id"]').innerText = message.context_id;
+        } else {
+          row.querySelector('[data-value="context_id"]').innerText = '';
+          delete row.querySelector('[data-value="context_id"]').dataset.tooltip;
+          row.querySelector('[data-value="context_id"]').classList.remove('selectable');
+        }
 
         if (message.exception?.traceback) {
           row.querySelector('[data-value="message"]').classList.add('code');
@@ -163,13 +173,16 @@ function queryForLogs(page=1) {
         row.querySelector('[data-value="time"]').onclick = () => updateTimestamp(message.time);
         
         // On click of context ID, append current ID to input
-        row.querySelector('[data-value="context_id"]').onclick = () => appendContextID(message.context_id);
+        if (message.context_id) {
+          row.querySelector('[data-value="context_id"]').onclick = () => appendContextID(message.context_id);
+        }
 
         return row;
       });
 
       // Add rows to page
       document.getElementById('log-data').replaceChildren(...rows);
+      // Scroll to top of the table
       document.getElementById('log-table').scrollIntoView({behavior: 'smooth', block: 'start'});
 
       // Update pagination
