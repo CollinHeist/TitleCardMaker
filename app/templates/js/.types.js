@@ -324,7 +324,6 @@
  * @property {number} interline_spacing
  * @property {number} interword_spacing
  * @property {number} vertical_shift
- * @property {boolean} delete_missing
  * @property {?string} file
  * @property {?string} file_name
  * @property {string[]} replacements_in
@@ -535,7 +534,6 @@
  * @typedef {Object} BlueprintFont
  * @property {string} name - The name of the font.
  * @property {?string} color - The color of the font. Optional.
- * @property {boolean} delete_missing - Boolean flag for deleting missing elements.
  * @property {?string} file - The file associated with the font. Optional.
  * @property {?number} line_split_modifier
  * @property {?number} kerning - The kerning value for the font. Optional.
@@ -553,7 +551,6 @@
  * @typedef {Object} RemoteBlueprintFont
  * @property {string} name - The name of the font.
  * @property {?string} color - The color of the font. Optional.
- * @property {boolean} delete_missing - Boolean flag for deleting missing elements.
  * @property {?string} file - The file associated with the font. Optional.
  * @property {?number} line_split_modifier
  * @property {?number} kerning - The kerning value for the font. Optional.

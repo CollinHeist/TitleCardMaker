@@ -248,9 +248,6 @@ function populateFontElement(template, font, activeFontId) {
   template.querySelector('input[name="interline_spacing"]').value = font.interline_spacing;
   template.querySelector('input[name="interword_spacing"]').value = font.interword_spacing;
   template.querySelector('input[name="vertical_shift"]').value = font.vertical_shift;
-  if (font.delete_missing) {
-    template.querySelector('input[name="delete_missing"]').checked = true;
-  }
 
   // Set font replacements
   const inElement = template.querySelector('.field[data-value="in-replacements"]');

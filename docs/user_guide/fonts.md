@@ -10,10 +10,6 @@ tags:
 
 # Fonts
 
-!!! warning "Under Construction"
-
-    This documentation is actively being developed.
-
 There are two classifications of fonts in TCM - _named_ and _un-named_. _Named_
 fonts are created in the :fontawesome-solid-font: `Fonts` page within TCM (at
 the `/fonts` URL); while _un-named_ fonts can be added directly to a Series or
@@ -116,10 +112,10 @@ upload the File to the server and click the
 <span class="example md-button">Save Changes</span> button at the bottom
 of the Font.
 
-??? tip "File Location"
+??? note "File Location"
 
     Once uploaded, Font files are stored in TCM's _asset directory_. This means
-    you can delete the File from your host OS after submission.
+    you can delete the File from your host OS after it's been uploaded into TCM.
 
 ### Color
 

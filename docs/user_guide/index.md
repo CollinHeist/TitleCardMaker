@@ -23,11 +23,12 @@ below:
 
 - [Series](./series.md)
 - [Adding Series](./new_series.md)
+- [Missing Summary](./missing.md)
 - [Templates](./templates.md)
 - [Fonts](./fonts.md)
 - [Sync](./syncs.md)
 - [Settings](./settings.md)
 - [Connections](./connections.md)
-<!-- - [Scheduler](./scheduler.md) -->
-<!-- - [Importer](./importer.md) -->
+- [Scheduler](./scheduler.md)
+- [Importer](./importer.md)
 - [Logs](./logs.md)

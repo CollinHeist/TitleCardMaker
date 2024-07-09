@@ -43,7 +43,6 @@ class Font(Base):
 
     name: Mapped[str]
     color: Mapped[Optional[str]]
-    delete_missing: Mapped[bool] = mapped_column(default=True)
     file_name: Mapped[Optional[str]]
     interline_spacing: Mapped[int] = mapped_column(default=0)
     interword_spacing: Mapped[int] = mapped_column(default=0)
@@ -143,9 +142,7 @@ class Font(Base):
 
     @property
     def card_properties(self) -> dict[str, Any]:
-        """
-        Properties to utilize and merge in Title Card creation.
-        """
+        """Properties to utilize and merge in Title Card creation."""
 
         if (file := self.file) is None:
             return {
@@ -176,7 +173,6 @@ class Font(Base):
         return {
             'name': self.name,
             'color': self.color,
-            'delete_missing': None if self.delete_missing else False,
             'file': self.file_name,
             'interline_spacing': self.interline_spacing or None,
             'interword_spacing': self.interword_spacing or None,
@@ -204,7 +200,6 @@ class Font(Base):
 
         return (
             self.color == getattr(other, 'color', None)
-            and self.delete_missing == getattr(other, 'delete_missing', True)
             and self.file_name == getattr(other, 'file', None)
             and self.interline_spacing == getattr(other, 'interline_spacing', 0)
             and self.interword_spacing == getattr(other, 'interword_spacing', 0)

@@ -978,7 +978,6 @@ def parse_fonts(
             stroke_width=_get(font_dict, 'stroke_width', default=1.0, type_=Percentage),
             interline_spacing=_get(font_dict, 'interline_spacing', default=0, type_=int),
             vertical_shift=_get(font_dict, 'vertical_shift', default=0, type_=int),
-            delete_missing=_get(font_dict, 'delete_missing', default=True, type_=bool),
             replacements_in=list(replacements.keys()),
             replacements_out=list(replacements.values()),
         ))

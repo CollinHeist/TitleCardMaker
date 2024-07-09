@@ -87,7 +87,8 @@ re-importing the Blueprint.
 
 If you'd like to browse all available Blueprints, go to the new Series page
 (the `/add` URL) and scroll down to the Blueprints section. After clicking
-`Browse Blueprints`, preview cards for each Blueprint will be shown.
+<span class="example md-button">Browse Blueprints</span>, preview cards for each
+Blueprint will be shown.
 
 This is covered in greater detail [here](./user_guide/new_series.md).
 

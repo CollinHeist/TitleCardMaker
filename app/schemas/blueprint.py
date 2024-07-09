@@ -66,7 +66,6 @@ class BlueprintEpisode(BaseSeriesEpisode):
 class BlueprintFont(BlueprintBase):
     name: str
     color: Optional[str] = None
-    delete_missing: bool = None
     file: Optional[str] = None
     kerning: float = None
     interline_spacing: int = None

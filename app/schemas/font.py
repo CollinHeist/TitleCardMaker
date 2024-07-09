@@ -38,7 +38,6 @@ class BaseFont(Base):
 
 class BaseNamedFont(BaseFont):
     name: constr(min_length=1)
-    delete_missing: bool = True
 
 """
 Creation classes
@@ -76,7 +75,6 @@ Update classes
 class UpdateNamedFont(UpdateBase):
     name: constr(min_length=1) = UNSPECIFIED
     color: Optional[str] = UNSPECIFIED
-    delete_missing: bool = UNSPECIFIED
     interline_spacing: int = UNSPECIFIED
     interword_spacing: int = UNSPECIFIED
     kerning: float = UNSPECIFIED
