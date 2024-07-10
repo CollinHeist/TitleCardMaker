@@ -481,6 +481,7 @@ class RomanNumeralTitleCard(BaseCardType):
             f'-fill "{color}"',
             f'-pointsize 50',
             f'+interword-spacing',
+            f'+interline-spacing',
             f'-annotate {rotation}{offset} "{self.season_text}"',
         ]
 
