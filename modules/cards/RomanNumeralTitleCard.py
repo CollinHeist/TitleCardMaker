@@ -1,8 +1,7 @@
-from collections import namedtuple
 from pathlib import Path
 from random import choice
 from re import compile as re_compile
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, NamedTuple, Optional
 
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
@@ -13,9 +12,6 @@ from modules.Title import SplitCharacteristics
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
     from modules.Font import Font
-
-
-Position = namedtuple('Position', ('location', 'offset', 'rotation'))
 
 
 class Offset:
@@ -124,6 +120,11 @@ class Offset:
         return self
 
 
+class Position(NamedTuple):
+    location: str
+    offset: Offset
+    rotation: str
+
 """
 Lists of all possible Positions for season text around each possible
 roman numeral.
@@ -227,7 +228,8 @@ class RomanNumeralTitleCard(BaseCardType):
                 description='Color of the season text',
                 tooltip='Default is <c>rgb(200, 200, 200)</c>.'
             ),
-        ], description=[
+        ],
+        description=[
             'Imageless title cards featuring large roman numerals indicating '
             'the episode or absolute episode number just behind the title.',
             'Season text, if enabled, is placed at deterministic, but randomly '
@@ -285,17 +287,18 @@ class RomanNumeralTitleCard(BaseCardType):
 
     __slots__ = (
         'output_file', 'title_text', 'season_text', 'hide_season_text',
-        'hide_episode_text', 'font_color', 'font_interline_spacing',
-        'font_interword_spacing', 'font_size', 'background',
-        'roman_numeral_color', 'roman_numeral', '_roman_text_scalar',
-        '__roman_numeral_lines', 'rotation', 'offset', 'season_text_color',
-        'font_file',
+        'hide_episode_text', 'font_color', 'font_file', 'offset',
+        'font_interline_spacing', 'font_interword_spacing', 'font_size',
+        'background', 'roman_numeral_color', 'roman_numeral',
+        '_roman_text_scalar', '__roman_numeral_lines', 'rotation',
+        'season_text_color',
     )
 
     def __init__(self,
             card_file: Path,
             title_text: str,
             season_text: str,
+            episode_text: str,
             hide_season_text: bool = False,
             hide_episode_text: bool = False,
             font_color: str = TITLE_COLOR,
@@ -303,7 +306,6 @@ class RomanNumeralTitleCard(BaseCardType):
             font_interword_spacing: int = 0,
             font_file: str = TITLE_FONT,
             font_size: float = 1.0,
-            episode_number: int = 1,
             blur: bool = False,
             grayscale: bool = False,
             background: str = BACKGROUND_COLOR,
@@ -333,10 +335,10 @@ class RomanNumeralTitleCard(BaseCardType):
         self.season_text_color = season_text_color
 
         # Parse roman digits from the episode number
-        self.__assign_roman_numeral(episode_number)
+        self.__assign_roman_numeral(int(episode_text))
 
         # Select roman numeral for season text
-        self.season_text = season_text
+        self.season_text = self.image_magick.escape_chars(season_text)
         self.hide_season_text = hide_season_text
         self.hide_episode_text = hide_episode_text
 
@@ -452,10 +454,9 @@ class RomanNumeralTitleCard(BaseCardType):
         text at the given rotation and offset.
 
         Args:
-            rotation: Rotation (string) to utilize. Should be like
-                "90x90".
+            rotation: Rotation (string) to utilize - e.g. `"90x90"`.
             offset: Offset (string, not Object) to utilize relative to
-                the center of the canvas. Should be like "+100-300".
+                the center of the canvas - e.g. `"+100-300"`.
 
         Returns:
             List of ImageMagick commands.
@@ -719,11 +720,14 @@ class RomanNumeralTitleCard(BaseCardType):
 
         custom_extras = (
             ('background' in extras
-                and extras['background'] != RomanNumeralTitleCard.BACKGROUND_COLOR)
+                and extras['background'] != \
+                    RomanNumeralTitleCard.BACKGROUND_COLOR)
             or ('roman_numeral_color' in extras
-                and extras['roman_numeral_color'] != RomanNumeralTitleCard.ROMAN_NUMERAL_TEXT_COLOR)
+                and extras['roman_numeral_color'] != \
+                    RomanNumeralTitleCard.ROMAN_NUMERAL_TEXT_COLOR)
             or ('season_text_color' in extras
-                and extras['season_text_color'] != RomanNumeralTitleCard.SEASON_TEXT_COLOR)
+                and extras['season_text_color'] != \
+                    RomanNumeralTitleCard.SEASON_TEXT_COLOR)
         )
 
         return (custom_extras
@@ -753,10 +757,9 @@ class RomanNumeralTitleCard(BaseCardType):
             False otherwise.
         """
 
-        standard_etfs = RomanNumeralTitleCard.GENERIC_EPISODE_TEXT_FORMATS
-
         return (custom_episode_map
-                or episode_text_format not in standard_etfs)
+                or episode_text_format not in \
+                    RomanNumeralTitleCard.GENERIC_EPISODE_TEXT_FORMATS)
 
 
     def create(self):

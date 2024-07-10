@@ -7,7 +7,7 @@ from re import compile as re_compile, match as re_match
 from typing import Any, Literal, Optional, Union
 
 from pydantic import (
-    FilePath, PositiveFloat, PositiveInt, ValidationError, confloat, conint, constr,
+    FilePath, PositiveFloat, PositiveInt, confloat, conint, constr,
     root_validator, validator,
 )
 
@@ -52,12 +52,13 @@ from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 
 LocalCardIdentifiers = Literal[
-    'anime', 'banner', 'calligraphy', 'comic book', 'cutout', 'divider', 'fade',
-    'formula 1', 'frame', 'generic', 'graph', 'gundam', 'inset', 'ishalioh',
-    'landscape', 'logo', 'marvel', 'music', 'musikmann', 'notification',
-    'olivier', 'phendrena', 'photo', 'polygon', 'polymath', 'poster',
-    'reality tv', 'roman', 'roman numeral', 'shape', 'sherlock', 'standard',
-    'star wars', 'striped', 'textless', 'tinted glass', '4x3', 'white border',
+    '4x3', 'anime', 'banner', 'calligraphy', 'comic book', 'cutout', 'divider',
+    'fade', 'formula 1', 'frame', 'f1', 'generic', 'graph', 'gundam', 'inset',
+    'ishalioh', 'landscape', 'logo', 'marvel', 'music', 'musikmann',
+    'notification', 'olivier', 'phendrena', 'photo', 'polygon', 'polymath',
+    'poster', 'reality tv', 'roman', 'roman numeral', 'shape', 'sherlock',
+    'standard', 'star wars', 'striped', 'textless', 'tinted glass',
+    'white border',
 ]
 
 """
@@ -477,7 +478,7 @@ class MusicCardType(BaseCardTypeCustomFontAllText):
     watched: Optional[bool] = None
 
     @validator('control_colors')
-    def parse_control_colors(cls, val):
+    def parse_control_colors(cls, val: str) -> tuple[str, str, str, str]:
         return tuple(re_match(ControlColorRegex, val).groups())
 
     @root_validator(skip_on_failure=True)
@@ -642,10 +643,8 @@ class PosterCardType(BaseCardModel):
 
         return values
 
-RomanNumeralValue = conint(gt=0, le=RomanNumeralTitleCard.MAX_ROMAN_NUMERAL)
 class RomanNumeralCardType(BaseCardTypeAllText):
     source_file: Any
-    episode_number: RomanNumeralValue
     font_color: str = RomanNumeralTitleCard.TITLE_COLOR
     font_file: FilePath = RomanNumeralTitleCard.TITLE_FONT
     font_interline_spacing: int = 0
@@ -654,6 +653,19 @@ class RomanNumeralCardType(BaseCardTypeAllText):
     background: str = RomanNumeralTitleCard.BACKGROUND_COLOR
     roman_numeral_color: str = RomanNumeralTitleCard.ROMAN_NUMERAL_TEXT_COLOR
     season_text_color: str = RomanNumeralTitleCard.SEASON_TEXT_COLOR
+
+    @validator('episode_text')
+    def validate_episode_text(cls, val: str) -> str:
+        """
+        Remove all non-digits from the episode text, and verify the
+        number can be represented by a roman numeral.
+        """
+
+        val = ''.join(c for c in val if c.isdigit())
+        if not 0 <= int(val) <= RomanNumeralTitleCard.MAX_ROMAN_NUMERAL:
+            raise ValueError(f'Episode text number must be between 0 and '
+                             f'{RomanNumeralTitleCard.MAX_ROMAN_NUMERAL}')
+        return val
 
 RandomShapeRegex = (
     r'random\[\s*((circle|diamond|square|down triangle|up triangle)'
