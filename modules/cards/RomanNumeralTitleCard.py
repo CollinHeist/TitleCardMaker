@@ -601,7 +601,9 @@ class RomanNumeralTitleCard(BaseCardType):
 
         # Get boundaries of title text
         width, height = self.image_magick.get_text_dimensions(
-            self.title_text_command, width='width', height='sum'
+            self.title_text_command,
+            interline_spacing=self.font_interline_spacing,
+            line_count=len(self.title_text.splitlines()),
         )
         box0 = {
             'start_x': (-width  + self.WIDTH)  / 2,
