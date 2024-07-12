@@ -24,8 +24,10 @@ class NewBaseSync(Base):
     excluded_tags: list[str] = []
 
     @validator('template_ids', pre=False)
-    def validate_unique_template_ids(cls, val):
-        assert len(val) == len(set(val)), 'Template IDs must be unique'
+    def validate_unique_template_ids(cls, val: list[int]) -> list[int]:
+        if (cls.__name__.startswith(('New', 'Update'))
+            and len(val) != len(set(val))):
+            raise ValueError('Template IDs must be unique')
         return val
 
 class NewMediaServerSync(NewBaseSync):
