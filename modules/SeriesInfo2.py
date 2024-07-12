@@ -44,7 +44,7 @@ class SeriesInfo(DatabaseInfoContainer):
     __slots__ = (
         'name', 'year', 'emby_id', 'imdb_id', 'jellyfin_id', 'sonarr_id',
         'tmdb_id', 'tvdb_id', 'tvrage_id', 'match_titles', 'full_name',
-        'match_name', 'full_match_name', 'clean_name', 'full_clean_name',
+        'match_name', 'clean_name',
     )
 
 
@@ -307,11 +307,9 @@ class SeriesInfo(DatabaseInfoContainer):
 
         # Set match names
         self.match_name = self.get_matching_title(self.name)
-        self.full_match_name = self.get_matching_title(self.full_name)
 
         # Set folder-safe name
         self.clean_name = CleanPath.sanitize_name(self.name)
-        self.full_clean_name =  CleanPath.sanitize_name(self.full_name)
 
 
     def set_emby_id(self,
