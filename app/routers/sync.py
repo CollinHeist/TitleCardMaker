@@ -1,4 +1,7 @@
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Request
+from logging import Logger
+from fastapi import (
+    APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Request
+)
 from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_sync
@@ -97,7 +100,7 @@ def edit_sync(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Get existing Sync, raise 404 if DNE
     sync = get_sync(db, sync_id, raise_exc=True)
@@ -105,7 +108,7 @@ def edit_sync(
 
     # Verify any indicated Templates exist and update Sync
     changed = False
-    if (template_ids := getattr(update_sync, 'template_ids', None)) is not None:
+    if (template_ids := update_sync_dict.pop('template_ids', None)) is not None:
         if template_ids != sync.template_ids:
             templates = get_all_templates(db, update_sync_dict)
             sync.assign_templates(templates, log=log)
@@ -158,9 +161,7 @@ def delete_sync(
 def get_all_syncs(
         db: Session = Depends(get_database),
     ) -> list[Sync]:
-    """
-    Get all defined Syncs.
-    """
+    """Get all defined Syncs."""
 
     return db.query(models.sync.Sync).all()
 
@@ -169,9 +170,7 @@ def get_all_syncs(
 def get_all_emby_syncs(
         db: Session = Depends(get_database),
     ) -> list[EmbySync]:
-    """
-    Get all defined Syncs that interface with Emby.
-    """
+    """Get all defined Syncs that interface with Emby."""
 
     return db.query(models.sync.Sync).filter_by(interface='Emby').all()
 
@@ -180,9 +179,7 @@ def get_all_emby_syncs(
 def get_all_jellyfin_syncs(
         db: Session = Depends(get_database),
     ) -> list[JellyfinSync]:
-    """
-    Get all defined Syncs that interface with Jellyfin.
-    """
+    """Get all defined Syncs that interface with Jellyfin."""
 
     return db.query(models.sync.Sync).filter_by(interface='Jellyfin').all()
 
@@ -191,9 +188,7 @@ def get_all_jellyfin_syncs(
 def get_all_plex_syncs(
         db: Session = Depends(get_database),
     ) -> list[PlexSync]:
-    """
-    Get all defined Syncs that interface with Plex.
-    """
+    """Get all defined Syncs that interface with Plex."""
 
     return db.query(models.sync.Sync).filter_by(interface='Plex').all()
 
@@ -202,9 +197,7 @@ def get_all_plex_syncs(
 def get_all_sonarr_syncs(
         db: Session = Depends(get_database),
     ) -> list[SonarrSync]:
-    """
-    Get all defined Syncs that interface with Sonarr.
-    """
+    """Get all defined Syncs that interface with Sonarr."""
 
     return db.query(models.sync.Sync).filter_by(interface='Sonarr').all()
 
