@@ -58,11 +58,12 @@ class DataBackup(NamedTuple): # pylint: disable=missing-class-docstring
     database: Path
 
 
-def backup_data(*, log: Logger = log) -> DataBackup:
+def backup_data(version: str, *, log: Logger = log) -> DataBackup:
     """
     Perform a backup of the SQL database and global preferences.
 
     Args:
+        version: Current version of TCM.
         log: Logger for all log messages.
 
     Returns:
@@ -72,16 +73,17 @@ def backup_data(*, log: Logger = log) -> DataBackup:
     # Determine file to back up database to
     BACKUP_DT_FORMAT = '%Y-%m-%d_%H-%M-%S'
     name = datetime.now().strftime(BACKUP_DT_FORMAT)
+
     if IS_DOCKER:
         config = Path('/config/config.pickle')
-        config_backup = Path(f'/config/backups/config.pickle.{name}')
+        config_backup = Path(f'/config/backups/config.pickle.{version}.{name}')
         database = Path('/config/db.sqlite')
-        database_backup = Path(f'/config/backups/db.sqlite.{name}')
+        database_backup = Path(f'/config/backups/db.sqlite.{version}.{name}')
     else:
         config = Path('./config/config.pickle')
-        config_backup = Path(f'./config/backups/config.pickle.{name}')
+        config_backup = Path(f'./config/backups/config.pickle.{version}.{name}')
         database = Path('./config/db.sqlite')
-        database_backup = Path(f'./config/backups/db.sqlite.{name}')
+        database_backup = Path(f'./config/backups/db.sqlite.{version}.{name}')
 
     # Remove backups older than 3 weeks
     def delete_old_backup(backup_file: Path, base_filename: str) -> None:

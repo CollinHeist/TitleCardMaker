@@ -124,7 +124,7 @@ def wrapped_set_series_ids(log: Optional[Logger] = None) -> None:
 
 @wrap_scheduled_function(JOB_BACKUP_DATABASE)
 def wrapped_backup_database(log: Optional[Logger] = None) -> None:
-    backup_data(log=log)
+    backup_data(get_preferences().current_version, log=log)
 
 @wrap_scheduled_function(INTERNAL_JOB_CLEAN_DATABASE)
 def wrapped_clean_database(log: Optional[Logger] = None) -> None:
