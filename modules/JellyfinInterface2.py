@@ -83,8 +83,8 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             if not set(response).issuperset({'ServerName', 'Version', 'Id'}):
                 raise ConnectionError(f'Unable to authenticate with server')
         except Exception as exc:
-            log.critical(f'Cannot connect to Jellyfin - returned error {exc}')
-            log.exception(f'Bad Jellyfin connection')
+            log.critical(f'Cannot connect to Jellyfin - returned error')
+            log.exception('Bad Jellyfin connection')
             raise HTTPException(
                 status_code=400,
                 detail=f'Cannot connect to Jellyfin - {exc}',
@@ -201,12 +201,12 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             # Query for this item within Jellyfin
             id_ = series_info.jellyfin_id[self._interface_id, library_name]
             resp = self.session.get(
-                f'{self.url}/Items/{id_}',
+                f'{self.url}/Items/{id_}?userId={self.user_id}',
                 params=self.__params,
             )
 
             # If one item was returned, ID is still valid
-            if 'TotalRecordCount' in resp and resp['TotalRecordCount'] == 1:
+            if isinstance(resp, dict) and 'Id' in resp and resp['Id'] == id_:
                 return id_
 
             # No item found, ID must be invalid - reset and re-query
