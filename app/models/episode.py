@@ -115,11 +115,6 @@ class Episode(Base):
         default=None
     )
 
-    image_source_attempts: Mapped[dict[str, int]] = mapped_column(
-        MutableDict.as_mutable(JSON),
-        default={'Emby': 0, 'Jellyfin': 0, 'Plex': 0, 'TMDb': 0}
-    )
-
 
     def assign_templates(self,
             templates: list[Template],
