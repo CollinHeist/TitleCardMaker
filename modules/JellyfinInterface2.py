@@ -206,7 +206,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             )
 
             # If one item was returned, ID is still valid
-            if isinstance(resp, dict) and 'Id' in resp and resp['Id'] == id_:
+            if isinstance(resp, dict) and resp.get('Id') == id_:
                 return id_
 
             # No item found, ID must be invalid - reset and re-query

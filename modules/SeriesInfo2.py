@@ -287,6 +287,30 @@ class SeriesInfo(DatabaseInfoContainer):
         }
 
 
+    @property
+    def emby_provider_id_string(self) -> Optional[str]:
+        """
+        The Emby provider ID string of this series.
+
+        >>> series = SeriesInfo('_', 2024, imdb_id='tt1234', tmdb_id=987)
+        >>> series.emby_provider_id_string
+        'imdb.tt1234,tmdb.987'
+
+        >>> SeriesInfo('_', 2024).emby_provider_id_string
+        None
+        """
+
+        ids: list[str] = []
+        if self.imdb_id:
+            ids.append(f'imdb.{self.imdb_id}')
+        if self.tmdb_id:
+            ids.append(f'tmdb.{self.tmdb_id}')
+        if self.tvdb_id:
+            ids.append(f'tvdb.{self.tvdb_id}')
+
+        return ','.join(ids) if ids else None
+
+
     def update_name(self, name: str) -> None:
         """
         Update all names for this series.

@@ -212,12 +212,12 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             # Query for this item within Jellyfin
             id_ = series_info.emby_id[self._interface_id, library_name]
             resp = self.session.get(
-                f'{self.url}/Items/{id_}',
+                f'{self.url}/Items/{id_}?userId={self.user_id}',
                 params=self.__params,
             )
 
             # If one item was returned, ID is still valid
-            if 'TotalRecordCount' in resp and resp['TotalRecordCount'] == 1:
+            if isinstance(resp, dict) and resp.get('Id') == id_:
                 return id_
 
             # No item found, ID must be invalid - reset and re-query
@@ -230,17 +230,8 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             log.error(f'Library "{library_name}" not found in Emby')
             return None
 
-        # Generate provider ID query string
-        ids = []
-        if series_info.has_id('imdb_id'):
-            ids += [f'imdb.{series_info.imdb_id}']
-        if series_info.has_id('tmdb_id'):
-            ids += [f'tmdb.{series_info.tmdb_id}']
-        if series_info.has_id('tvdb_id'):
-            ids += [f'tvdb.{series_info.tvdb_id}']
-        provider_id_str = ','.join(ids)
-
         # Base params for all requests
+        pid_str = series_info.emby_provider_id_string
         params = {
             'Recursive': True,
             'Years': series_info.year,
@@ -248,7 +239,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             'SearchTerm': series_info.name,
             'Fields': 'ProviderIds,PremiereDate',
         } | self.__params \
-          |({'AnyProviderIdEquals': provider_id_str} if provider_id_str else {})
+          | ({'AnyProviderIdEquals': pid_str} if pid_str else {})
 
         # Look for this series in each library subfolder
         for parent_id in library_ids:
@@ -305,7 +296,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             } | self.__params,
         )
 
-        if 'Items' not in response or not response['Items']:
+        if not isinstance(response, dict) or not response.get('Items'):
             return None
 
         return response['Items'][0]['Id']
@@ -429,6 +420,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                     and isinstance(new_episode_info, EpisodeInfo)):
                     if old_episode_info == new_episode_info:
                         old_episode_info.copy_ids(new_episode_info, log=log)
+                        break
 
 
     def query_series(self,
@@ -500,8 +492,8 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         )
 
         # Inner function on whether to include this library in the return
-        def include_library(emby_library) -> bool:
-            if len(filter_libraries) == 0:
+        def include_library(emby_library: str) -> bool:
+            if not filter_libraries:
                 return True
             return emby_library in filter_libraries
 
@@ -551,7 +543,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         } | self.__params
 
         # Get excluded series ID's if excluding by tags
-        if len(excluded_tags) > 0:
+        if excluded_tags:
             # Get all items (series) for any of the excluded tags
             response = self.session.get(
                 f'{self.url}/Items',
@@ -564,11 +556,11 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             }
 
         # Also filter by tags if any were provided
-        if len(required_tags) > 0:
+        if required_tags:
             params |= {'Tags': '|'.join(required_tags)}
 
         # Go through each library in this server
-        all_series = []
+        all_series: list[tuple[SeriesInfo, str]] = []
         for library, library_ids in self.libraries.items():
             # Filter by library
             if ((required_libraries and library not in required_libraries)
@@ -639,7 +631,8 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                     library_name,
                     episode.get('UserData', {}).get('Played')
                 )
-            ) for episode in
+            )
+            for episode in
             self.__get_episodes(library_name, series_info, log=log)
         ]
 
@@ -666,7 +659,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         """
 
         # If no episodes, exit
-        if len(episodes) == 0:
+        if not episodes:
             return False
 
         # Get data for each Emby episode
