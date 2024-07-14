@@ -70,6 +70,7 @@ class Extra(Base):
     description: str
     tooltip: Optional[str] = None
     card_type: Optional[str] = None
+    default: Optional[Any] = None
 
 class BaseCardModel(Base):
     source_file: FilePath

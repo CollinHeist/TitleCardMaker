@@ -3,9 +3,9 @@
 
 {% if False %}
 import {
-  Blueprint, Episode, EpisodePage, ExternalSourceImage, LogEntryPage,
-  MediaServerLibrary, PreviewTitleCard, RemoteBlueprint, Series, Statistic,
-  SourceImagePage, TitleCardPage, UpdateEpisode
+  AvailableFont, AvailableTemplate, Blueprint, Episode, EpisodePage,
+  ExternalSourceImage, LogEntryPage, MediaServerLibrary, RemoteBlueprint, Series,
+  Statistic, StyleOption, SourceImagePage, TitleCardPage, UpdateEpisode,
 } from './.types.js';
 {% endif %}
 

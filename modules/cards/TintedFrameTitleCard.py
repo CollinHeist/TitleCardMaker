@@ -41,7 +41,7 @@ class TintedFrameTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color of the season and episode text',
-                tooltip='Default is to match the Font color.'
+                tooltip='Default is to match the Font color.',
             ),
             Extra(
                 name='Episode Text Font',
@@ -58,7 +58,8 @@ class TintedFrameTitleCard(BaseCardType):
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the season and episode text',
-                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.',
+                default=1.0,
             ),
             Extra(
                 name='Episode Text Vertical Shift',
@@ -67,6 +68,7 @@ class TintedFrameTitleCard(BaseCardType):
                     'Additional vertical shift to apply to the season and '
                     'episode text. Default is <v>0</v>.'
                 ),
+                default=0,
             ),
             Extra(
                 name='Separator Character',
@@ -74,7 +76,8 @@ class TintedFrameTitleCard(BaseCardType):
                 description=(
                     'Character that separates the season and episode text'
                 ),
-                tooltip='Default is <v>-</v>.'
+                tooltip='Default is <v>-</v>.',
+                default='-',
             ),
             Extra(
                 name='Frame Color',
@@ -95,6 +98,7 @@ class TintedFrameTitleCard(BaseCardType):
                 tooltip=(
                     'Number ≥<v>0</v>. Default is <v>5</v>. Unit is pixels.'
                 ),
+                default=5,
             ),
             Extra(
                 name='Top Element',
@@ -106,6 +110,7 @@ class TintedFrameTitleCard(BaseCardType):
                     'display anything, or <v>title</v> to display the title '
                     'text. Default is <v>title</v>.'
                 ),
+                default='title',
             ),
             Extra(
                 name='Middle Element',
@@ -115,6 +120,7 @@ class TintedFrameTitleCard(BaseCardType):
                     'Either <v>logo</v> to display the logo, or <v>omit</v> to '
                     'not display anything. Default is <v>omit</v>.'
                 ),
+                default='omit',
             ),
             Extra(
                 name='Bottom Element',
@@ -126,6 +132,7 @@ class TintedFrameTitleCard(BaseCardType):
                     'display anything, or <v>title</v> to display the title '
                     'text. Default is <v>index</v>.'
                 ),
+                default='index',
             ),
             Extra(
                 name='Logo Size',
@@ -133,7 +140,8 @@ class TintedFrameTitleCard(BaseCardType):
                 description=(
                     'Scalar for how much to scale the size of the logo element'
                 ),
-                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.',
+                default=1.0,
             ),
             Extra(
                 name='Logo Vertical Shift',
@@ -143,6 +151,7 @@ class TintedFrameTitleCard(BaseCardType):
                     'Positive values to shift the logo down, negative values to'
                     'shift it up. Unit is pixels. Default is <v>0.0</v>.'
                 ),
+                default=0.0,
             ),
             Extra(
                 name='Edge Blurring',
@@ -152,12 +161,14 @@ class TintedFrameTitleCard(BaseCardType):
                     'Either <v>True</v> or <v>False</v>. Default is '
                     '<v>True</v>.'
                 ),
+                default='True',
             ),
             Extra(
                 name='Shadow Color',
                 identifier='shadow_color',
                 description='Color of the drop shadow.',
                 tooltip='Default is <c>black</c>.',
+                default='black',
             ),
         ],
         description=[

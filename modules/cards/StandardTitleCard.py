@@ -34,13 +34,15 @@ class StandardTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-                tooltip='Default is <c>#CFCFCF</c>.'
+                tooltip='Default is <c>#CFCFCF</c>.',
+                default='#CFCFCF',
             ),
             Extra(
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the episode text',
-                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.',
+                default=1.0,
             ),
             Extra(
                 name='Episode Text Vertical Shift',
@@ -49,18 +51,21 @@ class StandardTitleCard(BaseCardType):
                     'Additional vertical shift to apply to the season and '
                     'episode text. Default is <v>0</v>.'
                 ),
+                default=0,
             ),
             Extra(
                 name='Stroke Text Color',
                 identifier='stroke_color',
                 description='Color to use for the title text stroke',
-                tooltip='Default is <c>black</c>.'
+                tooltip='Default is <c>black</c>.',
+                default='black',
             ),
             Extra(
                 name='Separator Character',
                 identifier='separator',
                 description='Character to separate season and episode text',
-                tooltip='Default is <v>•</v>.'
+                tooltip='Default is <v>•</v>.',
+                default='•',
             ),
             Extra(
                 name='Gradient Omission',
@@ -68,12 +73,15 @@ class StandardTitleCard(BaseCardType):
                 description='Whether to omit the gradient overlay',
                 tooltip=(
                     'Either <v>True</v> or <v>False</v>. If <v>True</v>, text '
-                    'may appear less legible on brighter images.'
+                    'may appear less legible on brighter images. Default is '
+                    '<v>False</v>.'
                 ),
+                default='False',
             ),
-        ], description=[
-            'The most "generic" type of title card.',
-            'This card features center-aligned season, episode, and title text.'
+        ],
+        description=[
+            'The most "generic" type of title card.', 'This card features '
+            'center-aligned season, episode, and title text.'
         ]
     )
 

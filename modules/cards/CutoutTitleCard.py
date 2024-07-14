@@ -35,7 +35,8 @@ class CutoutTitleCard(BaseCardType):
                 tooltip=(
                     'This color does not support transparency. Use the Overlay '
                     'Transparency extra for that. Default is <c>black</c>.'
-                )
+                ),
+                default='black',
             ),
             Extra(
                 name='Overlay Transparency',
@@ -45,6 +46,7 @@ class CutoutTitleCard(BaseCardType):
                     'Number between <v>0.0</v> and <v>1.0</v>. Default is '
                     '<v>0.0</v> (no transparency).'
                 ),
+                default=0.0,
             ),
             Extra(
                 name='Edge Blurring',
@@ -55,6 +57,7 @@ class CutoutTitleCard(BaseCardType):
                     'the cutout of the episode text is blurred. Default is '
                     '<v>False</v>.'
                 ),
+                default='False',
             ),
             Extra(
                 name='Blur Profile',
@@ -65,6 +68,7 @@ class CutoutTitleCard(BaseCardType):
                     '<v>{sigma}</v> values has the effect of a "stronger" '
                     'blur. Default is <v>0x30</v>.'
                 ),
+                default='0x30',
             ),
         ],
         description=[

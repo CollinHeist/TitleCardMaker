@@ -34,6 +34,7 @@ class BannerTitleCard(BaseCardType):
                 identifier='alternate_color',
                 description='Color of the text that appears in the banner',
                 tooltip='Default is <c>black</c>.',
+                default='black',
             ),
             Extra(
                 name='Banner Color',
@@ -48,12 +49,14 @@ class BannerTitleCard(BaseCardType):
                 tooltip=(
                     'Number ><v>0</v>. Default is <v>185</v>. Unit is pixels.'
                 ),
+                default=185,
             ),
             Extra(
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the episode text',
                 tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.',
+                default=1.0,
             ),
             Extra(
                 name='Banner Toggle',
@@ -63,6 +66,7 @@ class BannerTitleCard(BaseCardType):
                     'Either <v>True</v> or <v>False</v>. Default is '
                     '<v>False</v>.'
                 ),
+                default='False',
             ),
             Extra(
                 name='Horizontal Offset',
@@ -71,6 +75,7 @@ class BannerTitleCard(BaseCardType):
                 tooltip=(
                     'Number ≥<v>0</v>. Default is <v>50</v>. Unit is pixels.'
                 ),
+                default=50,
             ),
         ],
         description=[

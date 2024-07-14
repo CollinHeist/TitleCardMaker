@@ -280,18 +280,21 @@ class StripedTitleCard(BaseCardType):
                     'Value between <v>45</v> and <v>135</v>. <v>90</v> is '
                     'straight up. Default is <v>79.5</v>. Unit is degrees.'
                 ),
+                default=79.5,
             ),
             Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
                 tooltip='Default is <c>crimson</c>.',
+                default='crimson',
             ),
             Extra(
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the season and episode text',
                 tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.',
+                default=1.0,
             ),
             Extra(
                 name='Stripe Inset',
@@ -301,6 +304,7 @@ class StripedTitleCard(BaseCardType):
                     'Number between <v>0</v> and <v>1600</v>. Default is '
                     '<v>50</v>. Unit is pixels.'
                 ),
+                default=50,
             ),
             Extra(
                 name='Inter-stripe Spacing',
@@ -310,12 +314,14 @@ class StripedTitleCard(BaseCardType):
                     'Number between <v>0</v> and <v>800</v>. Default is '
                     '<v>8</v>. Unit is pixels.'
                 ),
+                default=8,
             ),
             Extra(
                 name='Overlay Color',
                 identifier='overlay_color',
                 description='Color of the overlay',
                 tooltip='Default is <c>white</c>.',
+                default='white',
             ),
             Extra(
                 name='Stripe Definition',
@@ -326,6 +332,7 @@ class StripedTitleCard(BaseCardType):
                     'the documentation</a> for details. Default is '
                     '<v>random[ssmmmlll]</v>.'
                 ),
+                default='random[ssmmmlll]',
             ),
             Extra(
                 name='Separator Character',
@@ -333,7 +340,8 @@ class StripedTitleCard(BaseCardType):
                 description=(
                     'Character that separates the season and episode text'
                 ),
-                tooltip='Default is <v> - </v>.'
+                tooltip='Default is <v> - </v>.',
+                default=' - ',
             ),
             Extra(
                 name='Text Position',
@@ -344,6 +352,7 @@ class StripedTitleCard(BaseCardType):
                     'left</v>, or <v>lower right</v>. Default is <v>lower '
                     'left</v>.'
                 ),
+                default='lower left',
             ),
         ],
         description=[

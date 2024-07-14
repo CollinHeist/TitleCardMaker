@@ -53,6 +53,7 @@ class MusicTitleCard(BaseCardType):
                     'logo, or <v>poster</v> to use the Series poster. The '
                     'default is <v>logo</v>.'
                 ),
+                default='logo',
             ),
             Extra(
                 name='Album Size',
@@ -60,7 +61,8 @@ class MusicTitleCard(BaseCardType):
                 description=(
                     'Scalar for how much to scale the size of the album image'
                 ),
-                tooltip='Number ><v>0.0</v>. Default is <v>1.0</v>.'
+                tooltip='Number ><v>0.0</v>. Default is <v>1.0</v>.',
+                default=1.0,
             ),
             Extra(
                 name='Album Image',
@@ -77,7 +79,7 @@ class MusicTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-                tooltip='Default is to match the Font color.'
+                tooltip='Default is to match the Font color.',
             ),
             Extra(
                 name='Player Inset',
@@ -87,12 +89,14 @@ class MusicTitleCard(BaseCardType):
                     'Number between <v>0</v> and <v>1200</v>. Default is '
                     '<v>75</v>. Unit is pixels.'
                 ),
+                default=75,
             ),
             Extra(
                 name='Player Background Color',
                 identifier='player_color',
                 description='Background color of the player',
                 tooltip='Default is <c>rgba(0,0,0,0.50)</c>.',
+                default='rgba(0,0,0,0.50)',
             ),
             Extra(
                 name='Player Width',
@@ -103,6 +107,7 @@ class MusicTitleCard(BaseCardType):
                     'enabled) and <v>3000</v>. Default is <v>900</v>. Unit is '
                     'pixels.'
                 ),
+                default=900,
             ),
             Extra(
                 name='Control Toggle',
@@ -112,6 +117,7 @@ class MusicTitleCard(BaseCardType):
                     'Either <v>True</v> or <v>False</v>. Default is '
                     '<v>False</v>.'
                 ),
+                default='False',
             ),
             Extra(
                 name='Control Colors',
@@ -124,6 +130,7 @@ class MusicTitleCard(BaseCardType):
                     ' Default is <c>white</c> <c>white</c> <c>white</c> '
                     '<c>white</c> <c>white</c>.'
                 ),
+                default='white white white white white',
             ),
             Extra(
                 name='Pause or Play Icon',
@@ -134,6 +141,7 @@ class MusicTitleCard(BaseCardType):
                     'use the watched status of the Episode (watched for pause, '
                     'unwatched for play). Default is <v>play</v>.'
                 ),
+                default='play',
             ),
             Extra(
                 name='Timeline Fill Percentage',
@@ -147,6 +155,7 @@ class MusicTitleCard(BaseCardType):
                     'season_episode_max}</v> to calculate as a percentage of '
                     'the season). Default is <v>random</v>.'
                 ),
+                default='random',
             ),
             Extra(
                 name='Player Position',
@@ -156,6 +165,7 @@ class MusicTitleCard(BaseCardType):
                     'Either <v>left</v>, <v>middle</v>, or <v>right</v>. '
                     'Default is <v>left</v>.'
                 ),
+                default='left',
             ),
             Extra(
                 name='Album Subtitle',
@@ -167,12 +177,14 @@ class MusicTitleCard(BaseCardType):
                     'the text. Set as <v>{""}</v> to omit. Default is '
                     '<v>{series_name}</v>.'
                 ),
+                default='{series_name}',
             ),
             Extra(
                 name='Timeline Color',
                 identifier='timeline_color',
                 description='Color of the filled timeline',
                 tooltip='Default is <c>rgb(29,185,84)</c>.',
+                default='rgb(29,185,84)',
             ),
             Extra(
                 name='Heart Toggle',
@@ -182,18 +194,21 @@ class MusicTitleCard(BaseCardType):
                     'Either <v>True</v> or <v>False</v>. Default is '
                     '<v>False</v>.'
                 ),
+                default='False',
             ),
             Extra(
                 name='Heart Fill Color',
                 identifier='heart_color',
                 description='Color to fill the heart with',
                 tooltip='Default is <c>transparent</c>.',
+                default='transparent'
             ),
             Extra(
                 name='Heart Stroke Color',
                 identifier='heart_stroke_color',
                 description='Color to use for the outline of the heart',
                 tooltip='Default is <c>white</c>.',
+                default='white',
             ),
             Extra(
                 name='Long Line Truncation',
@@ -205,6 +220,7 @@ class MusicTitleCard(BaseCardType):
                     '<v>False</v>, then titles are not cut off. Default is '
                     '<v>3</v>.'
                 ),
+                default=3,
             ),
             Extra(
                 name='Round Album Corners Toggle',
@@ -215,6 +231,7 @@ class MusicTitleCard(BaseCardType):
                     'fairly CPU intensive and will slow down Card creation. '
                     'Default is <v>True</v>.'
                 ),
+                default='True',
             ),
         ],
         description=[

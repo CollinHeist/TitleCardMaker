@@ -31,25 +31,29 @@ class OlivierTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-                tooltip='Default is <c>white</c>.'
+                tooltip='Default is <c>white</c>.',
+                default='white',
             ),
             Extra(
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the episode text',
-                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.',
+                default=1.0,
             ),
             Extra(
                 name='Episode Text Vertical Shift',
                 identifier='episode_text_vertical_shift',
                 description='Vertical offset to apply to the episode text',
-                tooltip='Default is <v>0</v>. Unit is pixels.'
+                tooltip='Default is <v>0</v>. Unit is pixels.',
+                default=0,
             ),
             Extra(
                 name='Text Stroke Color',
                 identifier='stroke_color',
                 description='Color to use for the text stroke',
-                tooltip='Default is <c>black</c>.'
+                tooltip='Default is <c>black</c>.',
+                default='black',
             ),
             Extra(
                 name='Gradient Omission',
@@ -60,6 +64,7 @@ class OlivierTitleCard(BaseCardType):
                     'may appear less legible on brighter images. Default is '
                     '<v>True</v>.'
                 ),
+                default='True',
             ),
         ],
         description=[

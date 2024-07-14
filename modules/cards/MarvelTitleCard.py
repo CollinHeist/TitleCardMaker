@@ -40,6 +40,7 @@ class MarvelTitleCard(BaseCardType):
                     'Color of the left/top/right borders. Default is '
                     '<c>white</c>.'
                 ),
+                default='white',
             ),
             Extra(
                 name='Border Size',
@@ -49,12 +50,14 @@ class MarvelTitleCard(BaseCardType):
                     'Size of the left/top/right borders. Default is <v>55</v>. '
                     'Unit is pixels.'
                 ),
+                default=55,
             ),
             Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-                tooltip='Default is <c>#C9C9C9</c>.'
+                tooltip='Default is <c>#C9C9C9</c>.',
+                default='#C9C9C9',
             ),
             Extra(
                 name='Episode Text Location',
@@ -65,6 +68,7 @@ class MarvelTitleCard(BaseCardType):
                     'the title text; or <v>fixed</v> to put the text on the '
                     'outer edges of the text box. Default is <v>fixed</v>.'
                 ),
+                default='fixed',
             ),
             Extra(
                 name='Fit Text',
@@ -75,6 +79,7 @@ class MarvelTitleCard(BaseCardType):
                     'in the bounds of the text box. Either <v>True</v> or '
                     '<v>False</v>. Default is <v>True</v>.'
                 ),
+                default='True',
             ),
             Extra(
                 name='Hide Border',
@@ -84,18 +89,21 @@ class MarvelTitleCard(BaseCardType):
                     'Whether to Either <v>True</v> or <v>False</v>. Default is '
                     '<v>False</v>.'
                 ),
+                default='False',
             ),
             Extra(
                 name='Text Box Color',
                 identifier='text_box_color',
                 description='Color of the (bottom) text box.',
                 tooltip='Default is <c>black</c>.',
+                default='black',
             ),
             Extra(
                 name='Text Box Height',
                 identifier='text_box_height',
                 description='Height of the (bottom) text box.',
                 tooltip='Default is <v>200</v>. Unit is pixels.',
+                default=200,
             ),
         ],
         description=[

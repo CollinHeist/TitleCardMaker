@@ -46,6 +46,7 @@ class AnimeTitleCard(BaseCardType):
                     'Either <v>True</v> or <v>False</v>. If <v>True</v>, cards '
                     'without Kanji will not be created. Default is <v>False</v>.'
                 ),
+                default='False',
             ),
             Extra(
                 name='Kanji Vertical Shift',
@@ -55,44 +56,51 @@ class AnimeTitleCard(BaseCardType):
                 ),
                 tooltip=(
                     'Positive values shift the Kanji up, negative values shift '
-                    'Kanji down. Unit is pixels.'
+                    'Kanji down. Default is <v>0</v>. Unit is pixels.'
                 ),
+                default=0,
             ),
             Extra(
                 name='Kanji Color',
                 identifier='kanji_color',
                 description='Color of the kanji text',
-                tooltip='Default is <c>white</c>.'
+                tooltip='Default is <c>white</c>.',
+                default='white',
             ),
             Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-                tooltip='Default is <c>#CFCFCF</c>.'
+                tooltip='Default is <c>#CFCFCF</c>.',
+                default='#CFCFCF',
             ),
             Extra(
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the season and episode text',
-                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.',
+                default=1.0,
             ),
             Extra(
                 name='Separator Character',
                 identifier='separator',
                 description='Character to separate season and episode text',
-                tooltip='Default is <v>·</v>.'
+                tooltip='Default is <v>·</v>.',
+                default='·',
             ),
             Extra(
                 name='Stroke Text Color',
                 identifier='stroke_color',
                 description='Color of the text stroke',
-                tooltip='Default is <c>black</c>.'
+                tooltip='Default is <c>black</c>.',
+                default='black',
             ),
             Extra(
                 name='Kanji Font Size',
                 identifier='kanji_font_size',
                 description='Font size of the kanji text',
                 tooltip='Number ≥<v>0.0</v>. Defaults to <v>1.0</v>.',
+                default=1.0,
             ),
             Extra(
                 name='Kanji Stroke Color',
@@ -105,6 +113,7 @@ class AnimeTitleCard(BaseCardType):
                 identifier='kanji_stroke_width',
                 description='Stroke width used on the Kanji text',
                 tooltip='Number. Defaults to <v>1.0</v>.',
+                default=1.0,
             ),
             Extra(
                 name='Gradient Omission',
@@ -115,12 +124,14 @@ class AnimeTitleCard(BaseCardType):
                     'may appear less legible on brighter images. Default is '
                     '<v>False</v>.'
                 ),
+                default='False',
             ),
             Extra(
                 name='Episode Text Stroke Color',
                 identifier='episode_stroke_color',
                 description='Color of the text stroke for the episode text',
-                tooltip='Default is <c>black</c>.'
+                tooltip='Default is <c>black</c>.',
+                default='black',
             ),
         ],
         description=[

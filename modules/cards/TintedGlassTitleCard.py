@@ -38,7 +38,8 @@ class TintedGlassTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-                tooltip='Default is <c>rgb(198, 226, 255)</c>.' # SlateGray1
+                tooltip='Default is <c>rgb(198, 226, 255)</c>.',
+                default='rgb(198, 226, 255)',
             ),
             Extra(
                 name='Episode Text Position',
@@ -50,6 +51,7 @@ class TintedGlassTitleCard(BaseCardType):
                     'Either <v>left</v>, <v>center</v>, or <v>right</v>. '
                     'Default is <v>center</v>.'
                 ),
+                default='center',
             ),
             Extra(
                 name='Glass Adjustments',
@@ -58,8 +60,10 @@ class TintedGlassTitleCard(BaseCardType):
                 tooltip=(
                     'Specified like <v>{top} {right} {bottom} {left}</v>. For '
                     'example: <v>-20 10 0 5</v>. Positive values move that '
-                    'face out, negative values move the face in. Unit is pixels.'
+                    'face out, negative values move the face in. Unit is '
+                    'pixels. Default is <v>0 0 0 0</v>'
                 ),
+                default='0 0 0 0',
             ),
             Extra(
                 name='Glass Corner Radius',
@@ -70,12 +74,14 @@ class TintedGlassTitleCard(BaseCardType):
                     'will result in more round edges. Default is <v>40</v>. '
                     'Unit is pixels.'
                 ),
+                default=40,
             ),
             Extra(
                 name='Glass Color',
                 identifier='glass_color',
                 description='Color of the "glass" beneath the text',
                 tooltip='Default is <c>rgba(25, 25, 25, 0.7)</c>.',
+                default='rgba(25, 25, 25, 0.7)',
             ),
             Extra(
                 name='Vertical Adjustment',
@@ -85,8 +91,10 @@ class TintedGlassTitleCard(BaseCardType):
                     'Positive values to move up, negative values to move down. '
                     'Default value is <v>0</v>. Unit is pixels.'
                 ),
+                default=0,
             )
-        ], description=[
+        ],
+        description=[
             'Card type featuring a darkened and blurred rounded rectangle '
             'surrounding the title and episode text.', 'By default, these '
             'cards also feature the name of the series in the episode text.',

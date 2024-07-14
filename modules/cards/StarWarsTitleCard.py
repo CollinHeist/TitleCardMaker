@@ -32,9 +32,11 @@ class StarWarsTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color of the season and episode text',
-                tooltip='Default is <c>#AB8630</c>.'
+                tooltip='Default is <c>#AB8630</c>.',
+                default='#AB8630',
             ),
-        ], description=[
+        ],
+        description=[
             'Title cards intended for Star Wars (or really any space-themed) '
             'shows.', 'Similar to the Olivier title card, these cards feature '
             'left-aligned title and episode text', 'A star-filled gradient '

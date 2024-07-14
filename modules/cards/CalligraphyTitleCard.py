@@ -37,6 +37,7 @@ class CalligraphyTitleCard(BaseCardType):
                 tooltip=(
                     'Either <v>True</v> or <v>False</v>. Default is <v>True</v>.'
                 ),
+                default='True',
             ),
             Extra(
                 name='Texture Randomization Toggle',
@@ -45,18 +46,20 @@ class CalligraphyTitleCard(BaseCardType):
                 tooltip=(
                     'Either <v>True</v> or <v>False</v>. Default is <v>True</v>.'
                 ),
+                default='True',
             ),
             Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-                tooltip='Default is to match the Font color.'
+                tooltip='Default is to match the Font color.',
             ),
             Extra(
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the episode text',
-                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>'
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>',
+                default=1.0,
             ),
             Extra(
                 name='Offset Title Toggle',
@@ -67,24 +70,28 @@ class CalligraphyTitleCard(BaseCardType):
                     'multi-line titles will be adjusted so the second line '
                     'hangs below the first. Default is <v>True</v>.'
                 ),
+                default='True',
             ),
             Extra(
                 name='Separator Character',
                 identifier='separator',
                 description='Character to separate season and episode text',
                 tooltip='Default is <v>-</v>.',
+                default='-',
             ),
             Extra(
                 name='Shadow Color',
                 identifier='shadow_color',
                 description='Color of the text drop shadow.',
                 tooltip='Default is <c>black</c>.',
+                default='black',
             ),
             Extra(
                 name='Logo Size',
                 identifier='logo_size',
                 description='Scalar for how much to scale the size of the logo',
                 tooltip='Number ><v>0.0</v>. Default is <v>1.0</v>',
+                default=1.0,
             ),
             Extra(
                 name='Deep Blur Unwatched Toggle',
@@ -97,6 +104,7 @@ class CalligraphyTitleCard(BaseCardType):
                     'spoiler-free blurring if a Blur style is used and the '
                     'Episode is unwatched. Default is <v>True</v>.'
                 ),
+                default='True',
             ),
         ],
         description=[

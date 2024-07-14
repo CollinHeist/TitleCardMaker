@@ -46,6 +46,7 @@ class LandscapeTitleCard(BaseCardType):
                     'Either <v>True</v>, or <v>False</v>. Default is '
                     '<v>True</v>.'
                 ),
+                default='True',
             ),
             Extra(
                 name='Box Color',
@@ -63,6 +64,7 @@ class LandscapeTitleCard(BaseCardType):
                     'negative values move the face in. Default is '
                     '<v>0 0 0 0</v>. Unit is pixels.'
                 ),
+                default='0 0 0 0',
             ),
             Extra(
                 name='Box Width',
@@ -71,6 +73,7 @@ class LandscapeTitleCard(BaseCardType):
                 tooltip=(
                     'Number ><v>0</v>. Default is <v>10</v>. Unit is pixels.'
                 ),
+                default=10,
             ),
             Extra(
                 name='Image Darkening',
@@ -82,12 +85,14 @@ class LandscapeTitleCard(BaseCardType):
                     'darken the image at all. This is to improve text '
                     'legibility on very bright images. Default is <v>box</v>.'
                 ),
+                default='box',
             ),
             Extra(
                 name='Shadow Color',
                 identifier='shadow_color',
                 description='Color of the text drop shadow.',
                 tooltip='Default is <c>black</c>.',
+                default='black',
             ),
         ],
         description=[

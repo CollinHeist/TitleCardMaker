@@ -19,6 +19,7 @@ class Extra(Base):
     identifier: Annotated[str, DictKey]
     description: str
     tooltip: Optional[str] = None
+    default: Optional[Any] = None
 
 class CardTypeDescription(Base):
     name: str

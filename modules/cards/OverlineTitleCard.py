@@ -40,7 +40,8 @@ class OverlineTitleCard(BaseCardType):
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the season and episode text',
-                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.',
+                default=1.0,
             ),
             Extra(
                 name='Line Color',
@@ -55,6 +56,7 @@ class OverlineTitleCard(BaseCardType):
                 tooltip=(
                     'Either <v>top</v> or <v>bottom</v>. Default is <v>top</v>.'
                 ),
+                default='top',
             ),
             Extra(
                 name='Line Width',
@@ -64,6 +66,7 @@ class OverlineTitleCard(BaseCardType):
                     'Thickness of the line. Default is <v>9</v>. Unit is '
                     'pixels.'
                 ),
+                default=9,
             ),
             Extra(
                 name='Line Toggle',
@@ -72,13 +75,15 @@ class OverlineTitleCard(BaseCardType):
                 tooltip=(
                     'Either <v>True</v> or <v>False</v>. Default is '
                     '<v>False</v>.'
-                )
+                ),
+                default='False',
             ),
             Extra(
                 name='Separator Character',
                 identifier='separator',
                 description='Character to separate season and episode text',
-                tooltip='Default is <v>-</v>.'
+                tooltip='Default is <v>-</v>.',
+                default='-',
             ),
             Extra(
                 name='Gradient Omission',
@@ -89,6 +94,7 @@ class OverlineTitleCard(BaseCardType):
                     'may appear less legible on brighter images. Default is '
                     '<v>False</v>.'
                 ),
+                default='False',
             ),
         ],
         description=[

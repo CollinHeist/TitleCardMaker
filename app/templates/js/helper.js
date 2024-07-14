@@ -14,6 +14,7 @@
  * @property {string} description
  * @property {?string} tooltip
  * @property {?string} card_type
+ * @property {any} default
  */
 
 /**
@@ -664,9 +665,19 @@ async function initializeExtras(
     // Add input field for each extra
     extras.forEach((extra, index) => {
       const newInput = inputTemplateElement.content.cloneNode(true);
-      newInput.querySelector('label').innerText = extra.name;
+      const def = extra.default === null ? 'Default' : extra.default;
+      // For color fields, add live color indicator
+      if (extra.name.endsWith('Color')) {
+        newInput.querySelector('label').innerHTML = `${extra.name}<span data-name="${extra.name}" class="inline color circle" style="--color: ${def}"></span>`;
+        newInput.querySelector('input').oninput = function() {
+          $(this).closest('.field').find('label > .color.circle').css('--color', $(this).val())
+        };
+      } else {
+        newInput.querySelector('label').innerText = extra.name;
+      }
       newInput.querySelector('.field').dataset.label = extra.name;
       newInput.querySelector('input').name = extra.identifier;
+      newInput.querySelector('input').placeholder = def;
       newInput.querySelector('.help').innerHTML = `<b>${extra.description}</b><br>`
         + (extra.tooltip
             ? extra.tooltip

@@ -37,25 +37,28 @@ class NotificationTitleCard(BaseCardType):
                 name='Edge Color',
                 identifier='edge_color',
                 description='Color of the edge of each notification box',
-                tooltip='Default is <c>white</c>.'
+                tooltip='Default is <c>white</c>.',
+                default='white',
             ),
             Extra(
                 name='Edge Width',
                 identifier='edge_width',
                 description='How wide to make the edge coloring',
-                tooltip='Number ><v>0</v>. Default is <v>5</v>. Unit is pixels.'
+                tooltip='Number ><v>0</v>. Default is <v>5</v>. Unit is pixels.',
+                default=5,
             ),
             Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color of the season and episode text',
-                tooltip='Default is to match the Font color.'
+                tooltip='Default is to match the Font color.',
             ),
             Extra(
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the season and episode text',
-                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.',
+                default=1.0,
             ),
             Extra(
                 name='Episode Text Vertical Shift',
@@ -65,12 +68,14 @@ class NotificationTitleCard(BaseCardType):
                     'episode text.'
                 ),
                 tooltip='Default is <v>0</v>.',
+                default=0,
             ),
             Extra(
                 name='Notification Background Color',
                 identifier='glass_color',
                 description='Background color of both text boxes',
-                tooltip='Default is <c>rgba(0,0,0,0.50)</c>.'
+                tooltip='Default is <c>rgba(0,0,0,0.50)</c>.',
+                default='rgba(0,0,0,0.50)',
             ),
             Extra(
                 name='Notification Position',
@@ -80,6 +85,7 @@ class NotificationTitleCard(BaseCardType):
                     'Either <v>left</v> or <v>right</v>. Default is '
                     '<v>right</v>.'
                 ),
+                default='right',
             ),
             Extra(
                 name='Notification Box Adjustments',
@@ -91,6 +97,7 @@ class NotificationTitleCard(BaseCardType):
                     'negative values move the face in. Default is '
                     '<v>0 0 0 0</v>. Unit is pixels.'
                 ),
+                default='0 0 0 0',
             ),
             Extra(
                 name='Separator Character',
@@ -98,7 +105,8 @@ class NotificationTitleCard(BaseCardType):
                 description=(
                     'Character that separates the season and episode text'
                 ),
-                tooltip='Default is <v>-</v>.'
+                tooltip='Default is <v>-</v>.',
+                default='-',
             ),
         ],
         description=[

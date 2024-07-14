@@ -112,7 +112,8 @@ class ComicBookTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-                tooltip='Default is <c>black</c>.'
+                tooltip='Default is <c>black</c>.',
+                default='black',
             ),
             Extra(
                 name='Index Text Position',
@@ -122,12 +123,14 @@ class ComicBookTitleCard(BaseCardType):
                     'Either <v>left</v>, <v>middle</v>, or <v>right</v>. '
                     'Default is <v>left</v>.'
                 ),
+                default='left',
             ),
             Extra(
                 name='Title Textbox Fill Color',
                 identifier='text_box_fill_color',
                 description='Fill color of the text box for the title text.',
-                tooltip='Default is <c>white</c>.'
+                tooltip='Default is <c>white</c>.',
+                default='white',
             ),
             Extra(
                 name='Title Textbox Edge Color',
@@ -146,6 +149,7 @@ class ComicBookTitleCard(BaseCardType):
                     'down, negative tilted up. Default is <v>-4.0</v>. Unit is '
                     'degrees.'
                 ),
+                default=-4.0,
             ),
             Extra(
                 name='Index Text Rotation Angle',
@@ -158,6 +162,7 @@ class ComicBookTitleCard(BaseCardType):
                     'down, negative tilted up. Default is <v>-4.0</v>. Unit is '
                     'degrees.'
                 ),
+                default=-4.0,
             ),
             Extra(
                 name='Banner Fill Color',
@@ -165,7 +170,8 @@ class ComicBookTitleCard(BaseCardType):
                 description=(
                     'Fill color for both the title and episode text banners'
                 ),
-                tooltip='Default is <c>rgba(235,73,69,0.6)</c>.'
+                tooltip='Default is <c>rgba(235,73,69,0.6)</c>.',
+                default='rgba(235,73,69,0.6)',
             ),
             Extra(
                 name='Title Banner Vertical Shift',
@@ -175,8 +181,9 @@ class ComicBookTitleCard(BaseCardType):
                 ),
                 tooltip=(
                     'Negative values shift the banner up, positive values '
-                    'shift the banner down. Unit is pixels.'
+                    'shift the banner down. Default is 0. Unit is pixels.'
                 ),
+                default=0,
             ),
             Extra(
                 name='Index Banner Vertical Shift',
@@ -186,8 +193,9 @@ class ComicBookTitleCard(BaseCardType):
                 ),
                 tooltip=(
                     'Negative values shift the banner up, positive values '
-                    'shift the banner down. Unit is pixels.'
+                    'shift the banner down. Default is 0. Unit is pixels.'
                 ),
+                default=0,
             ),
             Extra(
                 name='Hide Title Banner',
@@ -197,6 +205,7 @@ class ComicBookTitleCard(BaseCardType):
                     'Either <v>True</v> or <v>False</v>. Default is '
                     '<v>False</v>.'
                 ),
+                default='False',
             ),
             Extra(
                 name='Hide Index Banner',
@@ -206,12 +215,12 @@ class ComicBookTitleCard(BaseCardType):
                     'Either <v>True</v> or <v>False</v>. Default is '
                     '<v>False</v>.'
                 ),
+                default='False',
             ),
         ],
         description=[
-            'Title card styled after a comic book page.',
-            'The top and bottom of the card can each be individually colored, '
-            'toggled, and angled.'
+            'Title card styled after a comic book page.', 'The top and bottom '
+            'of the card can each be individually colored, toggled, and angled.'
         ]
     )
 

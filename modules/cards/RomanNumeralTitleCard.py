@@ -214,19 +214,22 @@ class RomanNumeralTitleCard(BaseCardType):
                 name='Background Color',
                 identifier='background',
                 description='Color of the background',
-                tooltip='Default is <c>black</c>.'
+                tooltip='Default is <c>black</c>.',
+                default='black',
             ),
             Extra(
                 name='Roman Numeral Color',
                 identifier='roman_numeral_color',
                 description='Color of the roman numerals',
-                tooltip='Default is <c>#AE2317</c>.'
+                tooltip='Default is <c>#AE2317</c>.',
+                default='#AE2317',
             ),
             Extra(
                 name='Season Text Color',
                 identifier='season_text_color',
                 description='Color of the season text',
-                tooltip='Default is <c>rgb(200, 200, 200)</c>.'
+                tooltip='Default is <c>rgb(200, 200, 200)</c>.',
+                default='rgb(200, 200, 200)',
             ),
         ],
         description=[

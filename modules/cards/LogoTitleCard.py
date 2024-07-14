@@ -31,7 +31,8 @@ class LogoTitleCard(BaseCardType):
                 name='Logo Size',
                 identifier='logo_size',
                 description='How much to scale the size of the logo',
-                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.'
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.',
+                default=1.0,
             ),
             Extra(
                 name='Logo Vertical Shift',
@@ -41,12 +42,14 @@ class LogoTitleCard(BaseCardType):
                     'Positive values to shift the logo down, negative values to'
                     'shift it up. Default is <v>0.0</v>. Unit is pixels.'
                 ),
+                default=0.0,
             ),
             Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
-                tooltip='Default is <c>#CFCFCF</c>.'
+                tooltip='Default is <c>#CFCFCF</c>.',
+                default='#CFCFCF',
             ),
             Extra(
                 name='Episode Text Vertical Shift',
@@ -55,6 +58,7 @@ class LogoTitleCard(BaseCardType):
                     'Additional vertical shift to apply to the season and '
                     'episode text. Default is <v>0</v>.'
                 ),
+                default=0,
             ),
             Extra(
                 name='Background Color',
@@ -64,12 +68,14 @@ class LogoTitleCard(BaseCardType):
                     'Ignored if a background image is used. Default is '
                     '<c>black</c>.'
                 ),
+                default='black',
             ),
             Extra(
                 name='Separator Character',
                 identifier='separator',
                 description='Character to separate season and episode text',
-                tooltip='Default is <v>•</v>.'
+                tooltip='Default is <v>•</v>.',
+                default='•',
             ),
             Extra(
                 name='Background Image Enabling',
@@ -79,12 +85,14 @@ class LogoTitleCard(BaseCardType):
                     'Either <v>True</v>, or <v>False</v>. Default is '
                     '<v>False</v>.'
                 ),
+                default='False',
             ),
             Extra(
                 name='Stroke Text Color',
                 identifier='stroke_color',
                 description='Color to use for the text stroke',
-                tooltip='Default is <c>black</c>.'
+                tooltip='Default is <c>black</c>.',
+                default='black',
             ),
             Extra(
                 name='Gradient Omission',
@@ -95,6 +103,7 @@ class LogoTitleCard(BaseCardType):
                     'may appear less legible on brighter images. Default is '
                     '<v>False</v>.'
                 ),
+                default='False',
             ),
             Extra(
                 name='Blur Image Only',
@@ -104,6 +113,7 @@ class LogoTitleCard(BaseCardType):
                     'Either <v>True</v> or <v>False</v>. If <v>True</v>, the '
                     'logo is not blurred. Default is <v>False</v>.'
                 ),
+                default='False',
             ),
         ],
         description=[

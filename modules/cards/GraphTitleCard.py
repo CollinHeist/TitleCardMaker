@@ -120,12 +120,14 @@ class GraphTitleCard(BaseCardType):
                 identifier='graph_background_color',
                 description='Background color of the graph',
                 tooltip='Default is <c>rgba(140,140,140,0.5)</c>.',
+                default='rgba(140,140,140,0.5)',
             ),
             Extra(
                 name='Graph Color',
                 identifier='graph_color',
                 description='Color of the filled-in portion of the graph',
-                tooltip='Default is <c>rgb(99,184,255)</c>.' # SteelBlue1
+                tooltip='Default is <c>rgb(99,184,255)</c>.',
+                default='rgb(99,184,255)',
             ),
             Extra(
                 name='Graph Inset',
@@ -135,6 +137,7 @@ class GraphTitleCard(BaseCardType):
                     'Number between <v>0.0</v> and <v>1800</v>. Default is '
                     '<v>75</v>. Unit is pixels.'
                 ),
+                default=75,
             ),
             Extra(
                 name='Graph Radius',
@@ -144,12 +147,14 @@ class GraphTitleCard(BaseCardType):
                     'Number between <v>0</v> and <v>900</v>. Default is '
                     '<v>175</v>. Unit is pixels.'
                 ),
+                default=175,
             ),
             Extra(
                 name='Graph Text Font Size',
                 identifier='graph_text_font_size',
                 description='Size adjustment for the graph text',
                 tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.',
+                default=1.0,
             ),
             Extra(
                 name='Graph Width',
@@ -158,7 +163,8 @@ class GraphTitleCard(BaseCardType):
                 tooltip=(
                     'Number between <v>2</v> and the graph radius. Default is '
                     '<v>25</v>. Unit is pixels.'
-                )
+                ),
+                default=25,
             ),
             Extra(
                 name='Fill Scale',
@@ -168,6 +174,7 @@ class GraphTitleCard(BaseCardType):
                     'Number between <v>0.0</v> and <v>1.0</v>. Default is '
                     '<v>0.6</v>.'
                 ),
+                default=0.6,
             ),
             Extra(
                 name='Gradient Omission',
@@ -178,6 +185,7 @@ class GraphTitleCard(BaseCardType):
                     'may appear less legible on brighter images. Default is '
                     '<v>False</v>.'
                 ),
+                default='False',
             ),
             Extra(
                 name='Text Position',
@@ -188,6 +196,7 @@ class GraphTitleCard(BaseCardType):
                     ' <v>right</v>, <v>lower left</v>, or <v>lower right</v>. '
                     'Default is <v>lower left</v>.'
                 ),
+                default='lower left',
             ),
         ],
         description=[

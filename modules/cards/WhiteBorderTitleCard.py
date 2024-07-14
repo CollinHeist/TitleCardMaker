@@ -33,18 +33,21 @@ class WhiteBorderTitleCard(BaseCardType):
                 identifier='border_color',
                 description='Color of the border',
                 tooltip='Default is <c>white</c>.',
+                default='white',
             ),
             Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color of the season and episode text',
                 tooltip='Default is <c>white</c>.',
+                default='white',
             ),
             Extra(
                 name='Episode Text Font Size',
                 identifier='episode_text_font_size',
                 description='Size adjustment for the episode text',
                 tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.',
+                default=1.0,
             ),
             Extra(
                 name='Separator Character',
@@ -53,6 +56,7 @@ class WhiteBorderTitleCard(BaseCardType):
                     'Character that separates the season and episode text'
                 ),
                 tooltip='Default is <v>•</v>.',
+                default='•',
             ),
         ],
         description=[

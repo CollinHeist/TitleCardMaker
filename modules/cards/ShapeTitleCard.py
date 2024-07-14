@@ -63,6 +63,7 @@ class ShapeTitleCard(BaseCardType):
                     'Either <v>True</v> or <v>False</v>. Default is '
                     '<v>False</v>.'
                 ),
+                default='False',
             ),
             Extra(
                 name='Italize Season Text',
@@ -72,12 +73,14 @@ class ShapeTitleCard(BaseCardType):
                     'Either <v>True</v> or <v>False</v>. Default is '
                     '<v>False</v>.'
                 ),
+                default='False',
             ),
             Extra(
                 name='Season Text Font Size',
                 identifier='season_text_font_size',
                 description='Size adjustment for the season text',
                 tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.',
+                default=1.0,
             ),
             Extra(
                 name='Season Text Position',
@@ -85,10 +88,12 @@ class ShapeTitleCard(BaseCardType):
                 description=(
                     'Where to position the season text relative to the title '
                     'text'
-                ), tooltip=(
+                ),
+                tooltip=(
                     'Either <v>above</v> or <v>below</v>. Default is '
                     '<v>below</v>.'
                 ),
+                default='below',
             ),
             Extra(
                 name='Shape',
@@ -102,12 +107,14 @@ class ShapeTitleCard(BaseCardType):
                     'randomly select one of those shapes. Default is '
                     '<v>diamond</v>.'
                 ),
+                default='diamond',
             ),
             Extra(
                 name='Shape Color',
                 identifier='shape_color',
                 description='Color of the shape',
                 tooltip='Default is <c>skyblue</c>.',
+                default='skyblue',
             ),
             Extra(
                 name='Shape Inset',
@@ -117,6 +124,7 @@ class ShapeTitleCard(BaseCardType):
                     'Number between <v>0</v> and <v>1800</v>. Default is '
                     '<v>75</v>. Unit is pixels.'
                 ),
+                default=75,
             ),
             Extra(
                 name='Shape Size',
@@ -127,6 +135,7 @@ class ShapeTitleCard(BaseCardType):
                     'increase the size of the shape; values less than '
                     '<v>1.0</v> will decrease it. Default is <v>1.0</v>.'
                 ),
+                default=1.0,
             ),
             Extra(
                 name='Shape Width',
@@ -135,6 +144,7 @@ class ShapeTitleCard(BaseCardType):
                 tooltip=(
                     'Number ><v>0</v>. Default is <v>10</v>. Unit is pixels.'
                 ),
+                default=10,
             ),
             Extra(
                 name='Shape Stroke Width',
@@ -143,7 +153,8 @@ class ShapeTitleCard(BaseCardType):
                 tooltip=(
                     'Number ≥<v>0.0</v>. Default is <v>0.0</v> (no stroke). '
                     'Unit is pixels.'
-                )
+                ),
+                default=0.0,
             ),
             Extra(
                 name='Shape Stroke Color',
@@ -153,12 +164,14 @@ class ShapeTitleCard(BaseCardType):
                     'Only visible if the shape stroke width is greater than 0. '
                     'Default is <c>black</c>.'
                 ),
+                default='black',
             ),
             Extra(
                 name='Stroke Text Color',
                 identifier='stroke_color',
                 description='Color to use for the text stroke',
-                tooltip='Default is <c>black</c>.'
+                tooltip='Default is <c>black</c>.',
+                default='black',
             ),
             Extra(
                 name='Text Position',
@@ -169,6 +182,7 @@ class ShapeTitleCard(BaseCardType):
                     ' <v>right</v>, <v>lower left</v>, or <v>lower right</v>. '
                     'Default is <v>lower left</v>.'
                 ),
+                default='lower left',
             ),
             Extra(
                 name='Gradient Omission',
@@ -179,6 +193,7 @@ class ShapeTitleCard(BaseCardType):
                     'may appear less legible on brighter images. Default is '
                     '<v>False</v>.'
                 ),
+                default='False',
             ),
         ], description=[
             'A title card featuring a customizable shape which surrounds the '

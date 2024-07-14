@@ -41,19 +41,21 @@ class FrameTitleCard(BaseCardType):
                     'Either <v>left</v>, <v>surround</v>, or <v>right</v>. '
                     'Default is <v>surround</v>.'
                 ),
+                default='surround',
             ),
             Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to use for the episode text',
-                tooltip='Default is <c>rgb(80, 80, 80)</c>.'
+                tooltip='Default is <c>rgb(80, 80, 80)</c>.',
+                default='rgb(80, 80, 80)',
             ),
         ],
         description=[
-            'Title card styled to look like a Polaroid photo.',
-            'The placement and color of the season and episode text can be '
-            'adjusted via extras.',
-        ]
+            'Title card styled to look like a Polaroid photo.', 'The placement '
+            'and color of the season and episode text can be adjusted via '
+            'extras.',
+        ],
     )
 
     """Directory where all reference files used by this card are stored"""
