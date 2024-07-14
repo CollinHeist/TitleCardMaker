@@ -128,11 +128,11 @@ def get_remote_card_types_(request: Request) -> list[RemoteCardType]:
 
     try:
         return get_remote_cards(log=request.state.log)
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=500,
-            detail=f'Error encountered while getting remote card types'
-        ) from e
+            detail='Error encountered while getting remote card types'
+        ) from exc
 
 
 @availablility_router.get('/extras')
@@ -256,9 +256,7 @@ def get_server_libraries(
         jellyfin_interfaces: InterfaceGroup[int, JellyfinInterface] = Depends(get_jellyfin_interfaces),
         plex_interfaces: InterfaceGroup[int, PlexInterface] = Depends(get_plex_interfaces),
     ) -> list[MediaServerLibrary]:
-    """
-    Get all available libraries for all enabled interfaces.
-    """
+    """Get all available libraries for all enabled interfaces."""
 
     libraries = []
     for interface_id, interface in emby_interfaces:

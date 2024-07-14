@@ -10,21 +10,40 @@ import {
 {% endif %}
 
 /** @type {string} */
-const series_name = {{series.name|tojson}};
+const series_name = {{ series.name|tojson }};
 /** @type {string} */
-const series_full_name = {{series.full_name|tojson}};
+const series_full_name = {{ series.full_name|tojson }};
 /** @type {boolean} */
-const global_library_unique_cards = {{preferences.library_unique_cards|tojson}};
+const global_library_unique_cards = {{ preferences.library_unique_cards|tojson }};
 /** @type {MediaServerLibrary[]} */
-const series_libraries = {{series.libraries|safe}};
+const series_libraries = {{ series.libraries|safe }};
 /** @type {boolean} */
-const reduced_animations = {{preferences.reduced_animations|tojson}};
+const reduced_animations = {{ preferences.reduced_animations|tojson }};
 /** @type {boolean} */
-const interactive_card_previews = {{preferences.interactive_card_previews|tojson}};
+const interactive_card_previews = {{ preferences.interactive_card_previews|tojson }};
 /** @type {boolean} */
-const simplified_data_table = {{preferences.simplified_data_table|tojson}};
+const simplified_data_table = {{ preferences.simplified_data_table|tojson }};
 /** @type {boolean} */
-const sources_as_table = {{preferences.sources_as_table|tojson}};
+const sources_as_table = {{ preferences.sources_as_table|tojson }};
+/** @type {StyleOption[]} List of available styles */
+const allStyles = [
+  { name: 'Art',                      value: 'art',                   style_type: 'art'    },
+  { name: 'Blurred Art',              value: 'art blur',              style_type: 'art'    },
+  { name: 'Grayscale Art',            value: 'art grayscale',         style_type: 'art'    },
+  { name: 'Blurred Grayscale Art',    value: 'art blur grayscale',    style_type: 'art'    },
+  { name: 'Unique',                   value: 'unique',                style_type: 'unique' },
+  { name: 'Blurred Unique',           value: 'blur unique',           style_type: 'unique' },
+  { name: 'Grayscale Unique',         value: 'grayscale unique',      style_type: 'unique' },
+  { name: 'Blurred Grayscale Unique', value: 'blur grayscale unique', style_type: 'unique' },
+];
+/** @type {AvailableTemplate[]} List of all available Template metadata */
+const availableTemplates = {{available_templates|tojson}};
+/** @type {AvailableFont[]} List of all available Font metadata */
+const availableFonts = {{available_fonts|tojson}};
+/** @type {EpisodeDataSourceToggle} Which data sources are enabled*/
+const episodeDataSources = {{episode_data_sources|tojson}};
+/** @type {AnyConnection[]} All globally defined and enabled Connections */
+const allConnections = {{all_connections|tojson}};
 
 /**
  * Get the DOM element ID of the Episode with the given ID.
@@ -225,10 +244,7 @@ function saveAllEpisodes() {
 }
 
 // Initialize series config data
-let allStyles, availableTemplates, availableFonts;
 async function initalizeSeriesConfig() {
-  // Get all connections
-  const allConnections = await fetch('/api/connection/all').then(resp => resp.json());
   // Libraries
   $.ajax({
     type: 'GET',
@@ -269,11 +285,14 @@ async function initalizeSeriesConfig() {
   });
 
   // Episode data sources
-  const allEpisodeDataSources = await fetch('/api/settings/episode-data-source').then(resp => resp.json());
   $('.dropdown[data-value="data_source_id"]').dropdown({
     placeholder: 'Default',
-    values: allEpisodeDataSources.map(({name, interface_id}) => {
-      return {name, value: interface_id, selected: `${interface_id}` === '{{series.data_source_id}}'};
+    values: episodeDataSources.map(({name, interface_id}) => {
+      return {
+        name,
+        value: interface_id,
+        selected: `${interface_id}` === '{{series.data_source_id}}'
+      };
     }),
   });
   // Special syncing
@@ -1168,11 +1187,6 @@ function getCardData(
 }
 
 async function initAll() {
-  // Get global availables for initializing dropdowns
-  allStyles = await fetch('/api/available/styles').then(resp => resp.json());
-  availableTemplates = await fetch('/api/available/templates').then(resp => resp.json());
-  availableFonts = await fetch('/api/available/fonts').then(resp => resp.json());
-
   // Initialize 
   initalizeSeriesConfig();
   getEpisodeData();

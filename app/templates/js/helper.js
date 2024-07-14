@@ -600,11 +600,7 @@ function timeDiffString(previousRun) {
  * @example
  * toTitleCase("i love JavaScript"); // returns "I Love JavaScript"
  */
-function toTitleCase(str) {
-  return str.replace(/(?:^|\s)\w/g, function(match) {
-    return match.toUpperCase();
-  });
-}
+const toTitleCase = (str) => str.replace(/(?:^|\s)\w/g, (match) => match.toUpperCase());
 
 /**
  * 
