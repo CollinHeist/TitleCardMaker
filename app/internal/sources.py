@@ -362,7 +362,6 @@ def download_episode_source_image(
 
         # If no source image was returned, increment attempts counter
         if source_image is None:
-            episode.image_source_attempts[interface.INTERFACE_TYPE] += 1
             log.trace(f'{episode} cannot download Source Image from '
                       f'Connection[{interface_id}] {interface.INTERFACE_TYPE}')
             if commit:
