@@ -623,7 +623,7 @@ function initializePlex() {
         plexForm.querySelector('input[name="url"]').value = connection.url;
         plexForm.querySelector('input[name="api_key"]').value = connection.api_key;
         // SSL later
-        // PMM integration later
+        // Kometa integration later
         plexForm.querySelector('input[name="filesize_limit"]').value = connection.filesize_limit;
 
         return plexForm;
@@ -640,9 +640,9 @@ function initializePlex() {
         $(`#connection${connection.id} .checkbox[data-value="use_ssl"]`).checkbox(
           connection.use_ssl ? 'check' : 'uncheck'
         );
-        // Integrate with PMM
-        $(`#connection${connection.id} .checkbox[data-value="integrate_with_pmm"]`).checkbox(
-          connection.integrate_with_pmm ? 'check' : 'uncheck'
+        // Integrate with Kometa
+        $(`#connection${connection.id} .checkbox[data-value="integrate_with_kometa"]`).checkbox(
+          connection.integrate_with_kometa ? 'check' : 'uncheck'
         );
         // Assign appropriate Tautulli modal form launch to button
         $(`#connection${connection.id} .button[data-action="tautulli"]`).on('click', () => {
