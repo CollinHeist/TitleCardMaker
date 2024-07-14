@@ -313,6 +313,71 @@ function populateFontElement(template, font, activeFontId) {
 }
 
 /**
+ * Groups an array of Fonts by the `sort_name` attribute, starting with the
+ * first `n` letters. If a group has at least `maxgroupSize` elements, it
+ * further groups by an additional letter recursively. Fonts with names starting
+ * with a number are grouped under "#".
+ * @param {NamedFont[]} fonts - The array of objects to be grouped. Each object
+ * must have a `name` attribute.
+ * @param {number} n - The number of initial letters to group by.
+ * @param {number} maxgroupSize - The maximum number of elements in a group
+ * before subgrouping.
+ * @returns {Object.<string, NamedFont[]>} - An object where keys are prefixes
+ * and values are arrays of grouped objects.
+ */
+function groupObjectsByPrefix(fonts, n, maxgroupSize=19) {
+  const result = {};
+
+  /**
+   * Groups objects by a prefix of their `sort_name` attribute.
+   * @param {NamedFont[]} fonts - The array of objects to be grouped.
+   * @param {number} prefixLength - The length of the prefix to group by.
+   * @returns {Object} - An object where keys are prefixes and values are arrays
+   * of grouped objects.
+   */
+  function groupByPrefix(fonts, prefixLength) {
+    const tempGroup = {};
+    fonts.forEach(font => {
+      let prefix;
+      if (/^\d/.test(font.sort_name)) {
+        prefix = "#";
+      } else {
+        prefix = font.sort_name.slice(0, prefixLength);
+      }
+      if (!tempGroup[prefix]) {
+        tempGroup[prefix] = [];
+      }
+      tempGroup[prefix].push(font);
+    });
+    return tempGroup;
+  }
+
+  /**
+   * Processes groups of objects and recursively refines groups that have at
+   * least `maxgroupSize` elements.
+   * @param {NamedFont[]} objects - The array of objects to be processed.
+   * @param {number} prefixLength - The current length of the prefix used for
+   * grouping.
+   */
+  function processGroup(objects, prefixLength) {
+    const groups = groupByPrefix(objects, prefixLength);
+    for (const prefix in groups) {
+      if (groups[prefix].length >= maxgroupSize) {
+        const subGroups = groupByPrefix(groups[prefix], prefixLength + 1);
+        for (const subPrefix in subGroups) {
+          result[subPrefix] = subGroups[subPrefix];
+        }
+      } else {
+        result[prefix] = groups[prefix];
+      }
+    }
+  }
+
+  processGroup(fonts, n);
+  return result;
+}
+
+/**
  * Submit an API request to query all defined Fonts and add their populated
  * forms to the DOM.
  */
@@ -325,35 +390,37 @@ function getAllFonts() {
      * @param {NamedFont[]} fonts 
      */
     success: fonts => {
-      // Display head if there are many Fonts
-      const hasManyFonts = fonts.length > 20;
-
       // Get the currently active Font from the URL
       const activeFontId = window.location.hash.substring(1);
 
-      // Create elements to add to DOM
-      let currentHeader = null,
-          fontElements = [];
-      fonts.forEach(font => {
-        // Add letter header for this Font if necessary
-        let letter = font.sort_name[0].toUpperCase();
-        letter = isNaN(parseInt(letter)) ? letter : '#'; // All numbers go under #
-
-        if (hasManyFonts && letter !== currentHeader) {
+      const fontElements = [];
+      // If there are lots of fonts, group elements under letter sections
+      if (fonts.length > 20) {
+        let groupedFonts = groupObjectsByPrefix(fonts, 1);
+        for (const [letter, fonts] of Object.entries(groupedFonts)) {
           const header = document.createElement('h3');
           header.className = 'ui dividing header';
-          header.innerText = (letter === ' ') ? 'Blank Fonts' : letter;
+          header.innerText = (letter === ' ') ? 'Blank Fonts' : (letter[0].toUpperCase() + letter.slice(1));
           fontElements.push(header);
-          currentHeader = letter;
-        }
 
-        // Add accordion for this Font
-        fontElements.push(populateFontElement(
-          document.getElementById('font-template').content.cloneNode(true),
-          font,
-          activeFontId
-        ));
-      });
+          fonts.forEach(font => {
+            // Add accordion for this Font
+            fontElements.push(populateFontElement(
+              document.getElementById('font-template').content.cloneNode(true),
+              font,
+              activeFontId
+            ));
+          });
+        }
+      } else {
+        fonts.forEach(font => {
+          fontElements.push(populateFontElement(
+            document.getElementById('font-template').content.cloneNode(true),
+            font,
+            activeFontId
+          ));
+        });
+      }
 
       // Put new font elements on the page
       document.getElementById('fonts').replaceChildren(...fontElements);
