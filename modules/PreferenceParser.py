@@ -726,7 +726,7 @@ class PreferenceParser(YamlReader):
                     ),
                 })
 
-        # If multiple servers were specified, parse all specificiations
+        # If multiple servers were specified, parse all specifications
         if isinstance(self.get('sonarr'), list):
             for server in self.get('sonarr'):
                 parse_server(server)
@@ -1101,7 +1101,7 @@ class PreferenceParser(YamlReader):
                             f'not present in font list')
                 log.info(f'Listed font names are {font_names}')
                 return None
-            # Font identifer in map, merge YAML
+            # Font identifier in map, merge YAML
             show_yaml['font'] = {}
             Template.recurse_priority_union(show_yaml['font'], font_yaml)
 

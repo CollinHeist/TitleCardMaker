@@ -32,7 +32,7 @@ Schema Version History (oldest to newest):
 - 1be1951acc40 | Add Font.line_split_modifier column
 - 2c1f9a3de797 | Added TVDb as a valid Connection type
 - 248e35b3e455 | Remove the Font.delete_missing column
-- 0a5f4764cd10 | Remove the Episode.image_source_attemps column
+- 0a5f4764cd10 | Remove the Episode.image_source_attempts column
 """
 
 # this is the Alembic Config object, which provides

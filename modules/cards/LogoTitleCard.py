@@ -159,7 +159,7 @@ class LogoTitleCard(BaseCardType):
     EPISODE_COUNT_FONT = REF_DIRECTORY / 'Proxima Nova Regular.otf'
     SERIES_COUNT_TEXT_COLOR = '#CFCFCF'
 
-    """Source path for the gradient image overlayed over all title cards"""
+    """Source path for the gradient image overlaid over all title cards"""
     __GRADIENT_IMAGE = REF_DIRECTORY / 'GRADIENT.png'
 
     __slots__ = (

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.database.query import get_connection
 from app.dependencies import get_database
 from app.internal.auth import get_current_user
-from modules.Debug import log
+from modules.Debug import log # noqa: F401
 
 
 # Create sub router for all /proxy API requests

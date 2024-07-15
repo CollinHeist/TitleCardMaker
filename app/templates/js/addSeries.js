@@ -91,7 +91,7 @@ function addSeries(result, resultElementId) {
       data: JSON.stringify(generateNewSeriesObject(result)),
       contentType: 'application/json',
       /**
-       * Series added successfully, disable element in DOM and show sucess.
+       * Series added successfully, disable element in DOM and show success.
        * @param {Series} series - Newly added Series.
        */
       success: series => {
@@ -133,7 +133,7 @@ function importBlueprint(blueprintId, elementId) {
 
 /**
  * Display the Blueprint Sets associated with the given Blueprint. This submits
- * an API request to query these, and then populates the appropiate element on
+ * an API request to query these, and then populates the appropriate element on
  * the page.
  * @param {number} blueprintId - ID of the Blueprint whose Sets to query and
  * display.

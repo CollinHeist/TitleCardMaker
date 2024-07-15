@@ -170,7 +170,7 @@ class Rectangle:
 
 
     def __repr__(self) -> str:
-        """Unambigious representation of this object."""
+        """Unambiguous representation of this object."""
 
         return f'Rectangle({self.start!r}, {self.end!r})'
 

@@ -171,7 +171,7 @@ class EpisodeMap:
 
                 # Error if range spans multiple seasons
                 assert start_season == end_season,'Cannot span multiple seasons'
-            # Some error ocurred while parsing this range
+            # Some error occurred while parsing this range
             except Exception as e:
                 self.valid = False
                 log.error(f'Invalid episode range "{episode_range}"')

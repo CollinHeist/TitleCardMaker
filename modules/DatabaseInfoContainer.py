@@ -287,7 +287,7 @@ class InterfaceID:
 
 
     def __repr__(self) -> str:
-        """Get an unambigious representation of this object."""
+        """Get an unambiguous representation of this object."""
 
         return f'<InterfaceID {self._ids}>'
 

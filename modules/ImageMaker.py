@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 from modules import global_objects
-from modules.Debug import log
+from modules.Debug import log # noqa: F401
 from modules.ImageMagickInterface import ImageMagickInterface, Dimensions
 
 if TYPE_CHECKING:

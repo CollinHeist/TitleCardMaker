@@ -270,7 +270,7 @@ class Title:
         respected, but the maximum number of lines will be.
 
         Args:
-            split: Defintion for how to split this title.
+            split: Definition for how to split this title.
 
         Returns:
             Split title text.

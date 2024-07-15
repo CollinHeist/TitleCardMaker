@@ -165,7 +165,7 @@ function querySuggestedFontReplacements(fontId, elementId) {
     success: analysis => {
       // Disable button now that Font has been analyzed
       $(`#${elementId} .button[data-action="populateReplacements"]`).toggleClass('disabled', true);
-      // Show toast for irreplacable characters
+      // Show toast for irreplaceable characters
       if (analysis.missing.length > 0) {
         showErrorToast({
           title: 'Irreplaceable Characters Identified',

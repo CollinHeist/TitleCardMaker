@@ -94,7 +94,7 @@ def load_all_media_servers(*, log: Logger = log) -> None:
                         break
                     log.debug('Database is busy, sleeping..')
                     sleep(30)
-    except Exception as e:
+    except Exception:
         log.exception('Failed to load Title Cards')
 
 

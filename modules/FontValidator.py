@@ -115,7 +115,7 @@ class FontValidator:
         # Get all missing entries
         missing = self.__db.search(
             (where('file') == font_filepath)
-            & (where('status') == False) # pylint: disable=singleton-comparison
+            & (where('status') == False) # noqa: E712 # pylint: disable=singleton-comparison
         )
 
         # Return set of just characters from entries

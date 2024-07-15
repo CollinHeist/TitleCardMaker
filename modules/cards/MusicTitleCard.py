@@ -6,7 +6,7 @@ from modules.BaseCardType import (
     BaseCardType, CardDescription, Coordinate, Dimensions, ImageMagickCommands,
     Extra, Rectangle, Shadow,
 )
-from modules.Debug import log
+from modules.Debug import log # noqa: F401
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Title import SplitCharacteristics
 
@@ -471,7 +471,7 @@ class MusicTitleCard(BaseCardType):
         if len(self.title_text) == 0:
             return []
 
-        # Determine x position of text based on player positon
+        # Determine x position of text based on player position
         MARGIN = 50 # - | + orientation
         if self.player_position == 'left':
             x = self.player_inset + MARGIN
@@ -531,7 +531,7 @@ class MusicTitleCard(BaseCardType):
         if not self.subtitle:
             return []
 
-        # Determine x position of text based on player positon
+        # Determine x position of text based on player position
         MARGIN = 53 # - | + orientation
         if self.player_position == 'left':
             x = self.player_inset + MARGIN

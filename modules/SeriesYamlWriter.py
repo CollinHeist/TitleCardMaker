@@ -103,7 +103,7 @@ class SeriesYamlWriter:
 
 
     def __repr__(self) -> str:
-        """Return an unambigious string representation of this object."""
+        """Return an unambiguous string representation of this object."""
 
         return (f'<SeriesYamlWriter {self.file=}, {self.sync_mode=}, '
                 f'{self.compact_mode=}, {self.volume_map=}>')
@@ -243,7 +243,7 @@ class SeriesYamlWriter:
 
         Returns:
             Dictionary that is the existing YAML. None if there is no
-            existing YAML, or if an error occured during the read.
+            existing YAML, or if an error occurred during the read.
         """
 
         # If the file DNE, just use write technique
@@ -261,7 +261,7 @@ class SeriesYamlWriter:
             return None
         except Exception as e:
             log.error(f'Cannot sync to file "{self.file.resolve()}"')
-            log.error(f'Error occured {e}')
+            log.error(f'Error occurred {e}')
             return None
 
         # Write if file exists but is blank
@@ -384,7 +384,7 @@ class SeriesYamlWriter:
             sonarr_interface: SonarrInterface to sync from.
             libraries: Dictionary of TCM paths to their corresponding
                 libraries.
-            required_tags: List of requried tags to filter the Sonarr
+            required_tags: List of required tags to filter the Sonarr
                 sync with.
             monitored_only: Whether to only sync monitored series from
                 Sonarr.

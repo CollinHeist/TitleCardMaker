@@ -1,7 +1,7 @@
 from datetime import timedelta
 from logging import Logger
 from os import environ
-from typing import Literal, Optional, Union
+from typing import Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from fastapi.security import OAuth2PasswordRequestForm

@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from logging import Logger
-from typing import Any, Iterator, Optional, TypeVar, Union
+from typing import Iterator, Optional, TypeVar, Union
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import HTTPException, Query, Request
@@ -118,7 +118,7 @@ def get_blueprint_database(
         allow_refresh: Whether to allow a refresh of the database if it
             has expired.
         force_refresh: Whether to force a refresh of the database.
-    
+
     Yields:
         A Session to the database which is closed afterwards.
     """

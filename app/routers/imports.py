@@ -1,7 +1,7 @@
 from logging import Logger
 from pathlib import Path
 from shutil import copyfile
-from typing import Any, Literal, Optional
+from typing import Literal, Optional
 
 from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Request,

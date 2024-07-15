@@ -761,7 +761,7 @@ function analyzePalette(imageElementSelector, paletteSelector) {
   /** @type {set[number, number, number]} */
   const seen = new Set();
 
-  // Analyze image, filter out colors that are too similiar to another
+  // Analyze image, filter out colors that are too similar to another
   new ColorThief().getPalette(image, 8, 12)?.filter(subArray => {
     // return true;
     if (hasDuplicatesWithinRange(subArray, seen)) {

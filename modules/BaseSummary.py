@@ -55,7 +55,7 @@ class BaseSummary(ImageMaker):
                 "{series_background}" to use the given Show object's
                 backdrop.
             created_by: Optional string to use in custom "Created by .."
-                tag at the botom of this Summary.
+                tag at the bottom of this Summary.
         """
 
         # Initialize parent ImageMaker

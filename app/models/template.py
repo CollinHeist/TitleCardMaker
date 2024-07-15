@@ -1,3 +1,4 @@
+# ruff: noqa: E731
 from datetime import datetime
 from pathlib import Path
 from re import match as re_match, sub as re_sub, IGNORECASE
@@ -35,7 +36,7 @@ DATETIME_FORMAT = '%Y-%m-%d'
 """
 Dictionary of Operation keywords to the corresponding Operation function
 """
-lower_str = lambda v: str(v).lower() # pylint: disable=unnecessary-lambda-assignment
+lower_str = lambda v: str(v).lower()
 OPERATIONS: dict[str, Callable[[Any, Any], bool]] = {
     'is true': lambda v, r: bool(v),
     'is false': lambda v, r: not bool(v),

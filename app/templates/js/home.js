@@ -43,7 +43,7 @@ function refreshCardData(seriesId) {
 }
 
 /**
- * Submit an API reuest to toggle the monitored status of the Series with the
+ * Submit an API request to toggle the monitored status of the Series with the
  * given ID. This also updates the poster class and the monitored icon.
  * @param {number} seriesId - ID of the Series to toggle.
  */
@@ -565,7 +565,7 @@ function batchProcess() {
 }
 
 /**
- * Submit an API request to load the Title Cards all the currently selecte
+ * Submit an API request to load the Title Cards all the currently selected
  * Series.
  * @param {boolean} reload - Whether to force reload the Title Cards.
  */

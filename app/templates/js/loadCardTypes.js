@@ -35,7 +35,7 @@ async function loadCardTypes(args) {
     }
   });
 
-  // Initialze dropdown with values
+  // Initialize dropdown with values
   $(element).dropdown({
     values: [
       {name: 'Built-in Cards', type: 'header'},

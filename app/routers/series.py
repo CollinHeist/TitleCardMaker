@@ -474,7 +474,7 @@ def remove_series_labels(
 
     # Get this Series and Interface, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
-    interface: PlexInterface = get_interface(interface_id, raise_exc=True)
+    interface = get_interface(interface_id, raise_exc=True)
 
     # Remove labels from specified library
     interface.remove_series_labels(

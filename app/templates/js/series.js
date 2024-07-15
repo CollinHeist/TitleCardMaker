@@ -244,7 +244,7 @@ function saveAllEpisodes() {
 }
 
 // Initialize series config data
-async function initalizeSeriesConfig() {
+async function initializeSeriesConfig() {
   // Libraries
   $.ajax({
     type: 'GET',
@@ -548,7 +548,7 @@ async function editEpisodeExtras(episode, allEpisodes) {
   $('#episode-extras-modal section[aria-label="extras"] > .tab, ' +
     '#episode-extras-modal section[aria-label="extras"] > .menu .item').remove();
 
-  // Initialze extras
+  // Initialize extras
   await initializeExtras(
     episode.extras || [],
     episode.card_type || ('{{series.card_type}}' !== 'None' ? '{{series.card_type}}' : '{{preferences.default_card_type}}'),
@@ -1188,7 +1188,7 @@ function getCardData(
 
 async function initAll() {
   // Initialize 
-  initalizeSeriesConfig();
+  initializeSeriesConfig();
   getEpisodeData();
   initStyles();
   getCardData(undefined, undefined, undefined, true);
@@ -1271,7 +1271,7 @@ async function initAll() {
 
   // Configure new episode modal
   $('#new-episode-modal')
-    .modal('attach events', '#new-episode', 'show') // Show modal on add buton press
+    .modal('attach events', '#new-episode', 'show') // Show modal on add button press
     .modal('setting', 'transition', 'fade up')      // Fade up modal on reveal
     .modal('setting', 'closable', false)            // Don't allow closing by clicking outside modal
     .modal({
@@ -1536,7 +1536,7 @@ function importBlueprint(cardId, blueprint, isSet=false) {
 
 /**
  * Display the Blueprint Sets associated with the given Blueprint. This submits
- * an API request to query these, and then populates the appropiate element on
+ * an API request to query these, and then populates the appropriate element on
  * the page.
  * @param {number} blueprintId - ID of the Blueprint whose Sets to query and
  * display.
@@ -1690,7 +1690,7 @@ function exportBlueprint() {
  * @param {string} url - URL (or Base64 encoded bytes) to download.
  */
 function selectTmdbImage(episodeId, url) {
-  // Create psuedo form for this URL
+  // Create pseudo form for this URL
   const form = new FormData();
   form.set('url', url);
   // Submit API request to upload this URL
@@ -1715,7 +1715,7 @@ function selectTmdbImage(episodeId, url) {
  * @param {string} url - URL of the logo file to download.
  */
 function downloadSeriesLogo(url) {
-  // Create psuedo form for this URL
+  // Create pseudo form for this URL
   const form = new FormData();
   form.set('url', url);
 
@@ -1743,7 +1743,7 @@ function downloadSeriesLogo(url) {
  * @param {string} url - URL of the backdrop file to download.
  */
 function downloadSeriesBackdrop(url) {
-  // Create psuedo form for this URL
+  // Create pseudo form for this URL
   const form = new FormData();
   form.set('url', url);
 
@@ -2478,7 +2478,7 @@ function uploadCards(setTextless=false) {
 }
 
 /**
- * Submit an API reuest to get the overview data for all episodes of this
+ * Submit an API request to get the overview data for all episodes of this
  * Series. These overviews are then populated into the preview episode dropdown.
  */
 function getEpisodeOverviews() {

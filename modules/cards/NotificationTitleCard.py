@@ -5,7 +5,7 @@ from modules.BaseCardType import (
     BaseCardType, CardDescription, Coordinate, Extra, ImageMagickCommands,
     Rectangle,
 )
-from modules.Debug import log
+from modules.Debug import log # noqa: F401
 from modules.Title import SplitCharacteristics
 
 if TYPE_CHECKING:

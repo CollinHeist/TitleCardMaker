@@ -73,7 +73,7 @@ def download_series_source_images(
 
 
 @source_router.post('/series/{series_id}/backdrop', deprecated=True)
-def download_series_backdrop(
+def download_series_backdrop_deprecated(
         series_id: int,
         request: Request,
         # ignore_blacklist: bool = Query(default=False),

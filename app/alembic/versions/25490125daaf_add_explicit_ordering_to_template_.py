@@ -50,7 +50,7 @@ class SyncTemplates(Base):
 class Series(Base):
     __tablename__ = 'series'
 
-    # Referencial arguments
+    # Referential arguments
     id = sa.Column(sa.Integer, primary_key=True)
     templates = relationship(
         'Template',
@@ -62,7 +62,7 @@ class Series(Base):
 class Episode(Base):
     __tablename__ = 'episode'
 
-    # Referencial arguments
+    # Referential arguments
     id = sa.Column(sa.Integer, primary_key=True, index=True)
     templates = relationship(
         'Template',
@@ -73,7 +73,7 @@ class Episode(Base):
 class Sync(Base):
     __tablename__ = 'sync'
 
-    # Referencial arguments
+    # Referential arguments
     id = sa.Column(sa.Integer, primary_key=True, index=True)
     templates = relationship(
         'Template',
@@ -84,7 +84,7 @@ class Sync(Base):
 class Template(Base):
     __tablename__ = 'template'
 
-    # Referencial arguments
+    # Referential arguments
     id = sa.Column(sa.Integer, primary_key=True, index=True)
     syncs = relationship(
         'Sync',

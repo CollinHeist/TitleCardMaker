@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Literal, Optional
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription, Shadow
 )
-from modules.Debug import log
+from modules.Debug import log # noqa: F401
 from modules.Title import SplitCharacteristics
 
 if TYPE_CHECKING:

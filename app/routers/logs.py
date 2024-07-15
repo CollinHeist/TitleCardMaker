@@ -11,7 +11,7 @@ from app.database.session import Page
 from app.internal.auth import get_current_user
 from app.schemas.logs import LogEntry, LogLevel
 
-from modules.Debug import log, DATETIME_FORMAT, LOG_FILE
+from modules.Debug import log, DATETIME_FORMAT, LOG_FILE # noqa: F401
 
 
 # Do not warn about SQL pagination, not used for log filtering
