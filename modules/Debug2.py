@@ -1,3 +1,5 @@
+from datetime import timedelta
+from functools import partial
 from os import environ
 from json import dumps
 from pathlib import Path
@@ -7,6 +9,8 @@ from typing import TYPE_CHECKING
 import better_exceptions
 from better_exceptions import format_exception
 from loguru import logger
+from loguru._file_sink import Rotation as LoguruRotation
+from loguru._string_parsers import parse_size
 
 if TYPE_CHECKING:
     from loguru import Record
@@ -60,6 +64,20 @@ def reduced_serializer(record: 'Record') -> str:
     })
     return '{extra[serialized]}\n'
 
+
+"""
+Define a custom rotation function to combine a rotation of timing (12h)
+and file size (24 MB).
+"""
+# Loguru's implementation of a timed file rotator
+TimedRotation = LoguruRotation.RotationTime(timedelta(hours=12))
+SizeRotation = partial(
+    LoguruRotation.rotation_size, size_limit=parse_size('24.9 MB')
+)
+def rotation_policy(message: 'Message', file: Path) -> bool:
+    return SizeRotation(message, file) or TimedRotation(message, file)
+
+
 logger.configure(
     handlers=[
         # WARNING: The sys.stdout print WILL NOT have secrets redacted
@@ -76,8 +94,8 @@ logger.configure(
             sink=LOG_FILE,
             level='TRACE',
             format=reduced_serializer,
-            # Rotate every 12 hours
-            rotation='12h',
+            # Rotate every 12 hours or 24.9 MB
+            rotation=rotation_policy,
             # Keep logs for two weeks
             retention='7 days',
             # Zip log files
