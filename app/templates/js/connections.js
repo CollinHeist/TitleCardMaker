@@ -1,14 +1,14 @@
 {% if False %}
 import {
-  EmbyConnection, InterfaceType, JellyfinConnection, PlexConnection,
-  SonarrConnection, TMDbConnection, TVDbConnection
+  AnyConnection, EmbyConnection, InterfaceType, JellyfinConnection,
+  PlexConnection, SonarrConnection, TMDbConnection, TVDbConnection
 } from './.types.js';
 {% endif %}
 
 /** @type {number[]} ID's of all invalid Connections. */
-const invalidConnectionIDs = {{preferences.invalid_connections|safe}};
+const invalidConnectionIDs = {{ preferences.invalid_connections | safe }};
 /** @type {boolean} Whether authentication is required */
-const requireAuth = {{preferences.require_auth | lower}};
+const requireAuth = {{ preferences.require_auth | lower }};
 
 // TVDb ordering types
 const tvdbOrderingTypes = [
@@ -42,15 +42,17 @@ const availableTVDbLanguages = [
   { value: "zhtw", name: "Chinese (Traditional)" }
 ];
 
-/**
-* Get all the defined non-Sonarr Connections and update the allConnections
-* list.
-*/
-let allConnections = [];
-async function getAllConnections() {
-  let allC = await fetch('/api/connection/all').then(resp => resp.json());
-  allConnections = allC.filter(connection => connection.interface_type !== 'Sonarr' && connection.interface_type !== 'TMDb');
-}
+/** @type {EmbyConnection | JellyfinConnection | PlexConnection} */
+const mediaServerConnections = [
+  {% for connection in connections %}
+    {% if connection.interface_type in ('Emby', 'Jellyfin', 'Plex')  %}
+      {{ connection | tojson }},
+    {% endif %}
+  {% endfor %}
+];
+
+/** @type {AnyConnection[]} List of all defined connections. */
+let allConnections = {{ connections | tojson }};
 
 /**
  * Get the global logo language priority, and initialize the dropdown
@@ -295,7 +297,7 @@ function addSonarrLibraryField(connectionId) {
   $(`#connection${connectionId} .field[data-value="media_server"]`).append(dropdown);
   $(`#connection${connectionId} .dropdown[data-value="interface_id"]`).last().dropdown({
     placeholder: 'Media Server',
-    values: allConnections.map(({id, name}) => {
+    values: mediaServerConnections.map(({id, name}) => {
       return {value: id, name: name, selected: false};
     }),
   });
@@ -350,10 +352,12 @@ function _deleteConnectionRequest(connectionId, deleteCards=false) {
     success: () => {
       showInfoToast('Deleted Connection');
       if (deleteCards) { showInfoToast('Deleted Title Cards'); }
+      showInfoToast('Reloading page..');
+      setTimeout(window.reload, 2500);
       // Delete this connection from the page, refresh Sonarr so server dropdowns update
-      document.getElementById(`connection${connectionId}-title`).remove();
-      document.getElementById(`connection${connectionId}`).remove();
-      getAllConnections().then(initializeSonarr);
+      // document.getElementById(`connection${connectionId}-title`).remove();
+      // document.getElementById(`connection${connectionId}`).remove();
+      // getAllConnections().then(initializeSonarr);
     },
     error: response => showErrorToast({title: 'Error Deleting Connection', response}),
   });
@@ -416,543 +420,492 @@ function deleteConnection(connectionId, isMediaServer=false) {
  * Initialize the Emby portion of the page with all Emby Connections.
  */
 function initializeEmby() {
-  $.ajax({
-    type: 'GET',
-    url: '/api/connection/emby/all',
-    /**
-     * Connections queried. Add to page.
-     * @param {EmbyConnection[]} connections 
-     */
-    success: connections => {
-      const embyTemplate = document.getElementById('emby-connection-template');
+  /** @type {EmbyConnection[]} */
+  const connections = allConnections.filter(connection => connection.interface_type === 'Emby');
 
-      // Add accordions for each Connection
-      const embyForms = connections.map(connection => {
-        const embyForm = embyTemplate.content.cloneNode(true);
+  const embyTemplate = document.getElementById('emby-connection-template');
 
-        // @ts-ignore
-        if (invalidConnectionIDs.includes(connection.id)) {
-          embyForm.querySelector('.title').classList.add('invalid');
-        }
-        
-        embyForm.querySelector('.title').id = `connection${connection.id}-title`;
-        embyForm.querySelector('.content').id = `connection${connection.id}`;
-        // Enable later
-        embyForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name} <span class="right floated">${connection.id}</span>`;
-        embyForm.querySelector('input[name="name"]').value = connection.name;
-        embyForm.querySelector('input[name="url"]').value = connection.url;
-        embyForm.querySelector('input[name="api_key"]').value = connection.api_key;
-        // Username later
-        // SSL later
-        embyForm.querySelector('input[name="filesize_limit"]').value = connection.filesize_limit;
+  // Add accordions for each Connection
+  const embyForms = connections.map(connection => {
+    const embyForm = embyTemplate.content.cloneNode(true);
 
-        return embyForm;
-      });
-      document.getElementById('emby-connections').replaceChildren(...embyForms);
+    if (invalidConnectionIDs.includes(connection.id)) {
+      embyForm.querySelector('.title').classList.add('invalid');
+    }
 
-      // Initialize elements of Form
-      connections.forEach(connection => {
-        // Enabled
-        $(`#connection${connection.id} .checkbox[data-value="enabled"]`).checkbox(
-          connection.enabled ? 'check' : 'uncheck'
-        );
-        // Query for usernames to initialize Dropdown if Connection is enabled
-        if (connection.enabled) {
-          $.ajax({
-            type: 'GET',
-            url: `/api/available/usernames/emby?interface_id=${connection.id}`,
-            success: usernames => {
-              $(`#connection${connection.id} .dropdown[data-value="username"]`).dropdown({
-                values: usernames.map(username => {
-                  return {
-                    name: username,
-                    value: username,
-                    selected: username === connection.username
-                  };
-                }),
-              });
-            }, error: response => showErrorToast({title: `Error Querying ${connection.name} Usernames`, response}),
-          });
-        } else if (connection.username) {
-          const dropdown = $(`#connection${connection.id} .dropdown[data-value="username"]`);
-          dropdown.toggleClass('disabled', true);
-          dropdown.dropdown({
-            values: [{name: connection.username, value: connection.username, selected: true}],
-          });
-        }
-        // SSL
-        $(`#connection${connection.id} .checkbox[data-value="use_ssl"]`).checkbox(
-          connection.use_ssl ? 'check' : 'uncheck'
-        );
-        // Assign save function to button
-        $(`#connection${connection.id} form`).on('submit', (event) => {
-          event.preventDefault();
-          if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
-          updateConnection(new FormData(event.target), connection.id, 'Emby');
-        });
-        // Assign delete function to button
-        $(`#connection${connection.id} button[data-action="delete"]`).on('click', (event) => {
-          event.preventDefault();
-          deleteConnection(connection.id, true);
-        });
-      });
-    },
-    error: response => showErrorToast({title: 'Error Querying Emby Connections', response}),
-    complete: () => {
-      addFormValidation();
-      refreshTheme();
-    },
+    embyForm.querySelector('.title').id = `connection${connection.id}-title`;
+    embyForm.querySelector('.content').id = `connection${connection.id}`;
+    // Enable later
+    embyForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name} <span class="right floated">${connection.id}</span>`;
+    embyForm.querySelector('input[name="name"]').value = connection.name;
+    embyForm.querySelector('input[name="url"]').value = connection.url;
+    embyForm.querySelector('input[name="api_key"]').value = connection.api_key;
+    // Username later
+    // SSL later
+    embyForm.querySelector('input[name="filesize_limit"]').value = connection.filesize_limit;
+
+    return embyForm;
   });
+  document.getElementById('emby-connections').replaceChildren(...embyForms);
+
+  // Initialize elements of Form
+  connections.forEach(connection => {
+    // Enabled
+    $(`#connection${connection.id} .checkbox[data-value="enabled"]`).checkbox(
+      connection.enabled ? 'check' : 'uncheck'
+    );
+    // Query for usernames to initialize Dropdown if Connection is enabled
+    if (connection.enabled) {
+      $.ajax({
+        type: 'GET',
+        url: `/api/available/usernames/emby?interface_id=${connection.id}`,
+        success: usernames => {
+          $(`#connection${connection.id} .dropdown[data-value="username"]`).dropdown({
+            values: usernames.map(username => {
+              return {
+                name: username,
+                value: username,
+                selected: username === connection.username
+              };
+            }),
+          });
+        }, error: response => showErrorToast({title: `Error Querying ${connection.name} Usernames`, response}),
+      });
+    } else if (connection.username) {
+      const dropdown = $(`#connection${connection.id} .dropdown[data-value="username"]`);
+      dropdown.toggleClass('disabled', true);
+      dropdown.dropdown({
+        values: [{name: connection.username, value: connection.username, selected: true}],
+      });
+    }
+    // SSL
+    $(`#connection${connection.id} .checkbox[data-value="use_ssl"]`).checkbox(
+      connection.use_ssl ? 'check' : 'uncheck'
+    );
+    // Assign save function to button
+    $(`#connection${connection.id} form`).on('submit', (event) => {
+      event.preventDefault();
+      if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
+      updateConnection(new FormData(event.target), connection.id, 'Emby');
+    });
+    // Assign delete function to button
+    $(`#connection${connection.id} button[data-action="delete"]`).on('click', (event) => {
+      event.preventDefault();
+      deleteConnection(connection.id, true);
+    });
+  });
+
+  addFormValidation();
+  refreshTheme();
 }
 
 /**
  * Initialize the Jellyfin portion of the page with all Jellyfin Connections.
  */
 function initializeJellyfin() {
-  $.ajax({
-    type: 'GET',
-    url: '/api/connection/jellyfin/all',
-    /**
-     * Connections queried. Add to page.
-     * @param {JellyfinConnection[]} connections 
-     */
-    success: connections => {
-      const jellyfinTemplate = document.getElementById('emby-connection-template');
-      
-      // Add accordions for each Connection
-      const jellyfinForms = connections.map(connection => {
-        const jellyfinForm = jellyfinTemplate.content.cloneNode(true);
-        if (invalidConnectionIDs.includes(connection.id)) {
-          jellyfinForm.querySelector('.title').classList.add('invalid');
-        }
-        jellyfinForm.querySelector('.title').id = `connection${connection.id}-title`;
-        jellyfinForm.querySelector('.content').id = `connection${connection.id}`;
-        // Enable later
-        jellyfinForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name} <span class="right floated">${connection.id}</span>`;
-        jellyfinForm.querySelector('input[name="name"]').value = connection.name;
-        jellyfinForm.querySelector('input[name="url"]').value = connection.url;
-        jellyfinForm.querySelector('input[name="api_key"]').value = connection.api_key;
-        // Username later
-        // SSL later
-        jellyfinForm.querySelector('input[name="filesize_limit"]').value = connection.filesize_limit;
+  /** @type {JellyfinConnection[]} */
+  const connections = allConnections.filter(connection => connection.interface_type === 'Jellyfin');
 
-        return jellyfinForm;
-      });
-      document.getElementById('jellyfin-connections').replaceChildren(...jellyfinForms);
+  const jellyfinTemplate = document.getElementById('emby-connection-template');
 
-      // Initialize elements of Form
-      connections.forEach(connection => {
-        // Enabled
-        $(`#connection${connection.id} .checkbox[data-value="enabled"]`).checkbox(
-          connection.enabled ? 'check' : 'uncheck'
-        );
-        // Query for usernames to initialize Dropdown if Connection is enabled
-        if (connection.enabled) {
-          $.ajax({
-            type: 'GET',
-            url: `/api/available/usernames/jellyfin?interface_id=${connection.id}`,
-            success: usernames => {
-              $(`#connection${connection.id} .dropdown[data-value="username"]`).dropdown({
-                values: usernames.map(username => {
-                  return {
-                    name: username,
-                    value: username,
-                    selected: username === connection.username
-                  };
-                }),
-              });
-            }, error: response => showErrorToast({title: `Error Querying ${connection.name} Usernames`, response}),
-          });
-        } else if (connection.username) {
-          const dropdown = $(`#connection${connection.id} .dropdown[data-value="username"]`);
-          dropdown.toggleClass('disabled', true);
-          dropdown.dropdown({
-            values: [{name: connection.username, value: connection.username, selected: true}],
-          });
-        }
-        // SSL
-        $(`#connection${connection.id} .checkbox[data-value="use_ssl"]`).checkbox(
-          connection.use_ssl ? 'check' : 'uncheck'
-        );
-        // Assign save function to button
-        $(`#connection${connection.id} form`).on('submit', (event) => {
-          event.preventDefault();
-          if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
-          updateConnection(new FormData(event.target), connection.id, 'Jellyfin');
-        });
-        // Assign delete function to button
-        $(`#connection${connection.id} button[data-action="delete"]`).on('click', (event) => {
-          event.preventDefault();
-          deleteConnection(connection.id, true);
-        });
-      });
-    }, error: response => showErrorToast({title: 'Error Querying Jellyfin Connections', response}),
-    complete: () => {
-      addFormValidation();
-      refreshTheme();
-    },
+  // Add accordions for each Connection
+  const jellyfinForms = connections.map(connection => {
+    const jellyfinForm = jellyfinTemplate.content.cloneNode(true);
+    if (invalidConnectionIDs.includes(connection.id)) {
+      jellyfinForm.querySelector('.title').classList.add('invalid');
+    }
+    jellyfinForm.querySelector('.title').id = `connection${connection.id}-title`;
+    jellyfinForm.querySelector('.content').id = `connection${connection.id}`;
+    // Enable later
+    jellyfinForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name} <span class="right floated">${connection.id}</span>`;
+    jellyfinForm.querySelector('input[name="name"]').value = connection.name;
+    jellyfinForm.querySelector('input[name="url"]').value = connection.url;
+    jellyfinForm.querySelector('input[name="api_key"]').value = connection.api_key;
+    // Username later
+    // SSL later
+    jellyfinForm.querySelector('input[name="filesize_limit"]').value = connection.filesize_limit;
+
+    return jellyfinForm;
   });
+  document.getElementById('jellyfin-connections').replaceChildren(...jellyfinForms);
+
+  // Initialize elements of Form
+  connections.forEach(connection => {
+    // Enabled
+    $(`#connection${connection.id} .checkbox[data-value="enabled"]`).checkbox(
+      connection.enabled ? 'check' : 'uncheck'
+    );
+    // Query for usernames to initialize Dropdown if Connection is enabled
+    if (connection.enabled) {
+      $.ajax({
+        type: 'GET',
+        url: `/api/available/usernames/jellyfin?interface_id=${connection.id}`,
+        success: usernames => {
+          $(`#connection${connection.id} .dropdown[data-value="username"]`).dropdown({
+            values: usernames.map(username => {
+              return {
+                name: username,
+                value: username,
+                selected: username === connection.username
+              };
+            }),
+          });
+        }, error: response => showErrorToast({title: `Error Querying ${connection.name} Usernames`, response}),
+      });
+    } else if (connection.username) {
+      const dropdown = $(`#connection${connection.id} .dropdown[data-value="username"]`);
+      dropdown.toggleClass('disabled', true);
+      dropdown.dropdown({
+        values: [{name: connection.username, value: connection.username, selected: true}],
+      });
+    }
+    // SSL
+    $(`#connection${connection.id} .checkbox[data-value="use_ssl"]`).checkbox(
+      connection.use_ssl ? 'check' : 'uncheck'
+    );
+    // Assign save function to button
+    $(`#connection${connection.id} form`).on('submit', (event) => {
+      event.preventDefault();
+      if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
+      updateConnection(new FormData(event.target), connection.id, 'Jellyfin');
+    });
+    // Assign delete function to button
+    $(`#connection${connection.id} button[data-action="delete"]`).on('click', (event) => {
+      event.preventDefault();
+      deleteConnection(connection.id, true);
+    });
+  });
+  
+  addFormValidation();
+  refreshTheme();
 }
 
 /*
  * Initialize the Plex portion of the page with all Plex Connections.
  */
 function initializePlex() {
-  $.ajax({
-    type: 'GET',
-    url: '/api/connection/plex/all',
-    /**
-     * Connections queried. Add to page.
-     * @param {PlexConnection[]} connections 
-     */
-    success: connections => {
-      const plexTemplate = document.getElementById('plex-connection-template');
-      const plexSection = document.getElementById('plex-connections');
+  /** @type {PlexConnection[]} */
+  const connections = allConnections.filter(connection => connection.interface_type === 'Plex');
 
-      // Add accordions for each Connection
-      const plexForms = connections.map(connection => {
-        const plexForm = plexTemplate.content.cloneNode(true);
-        if (invalidConnectionIDs.includes(connection.id)) {
-          plexForm.querySelector('.title').classList.add('invalid');
-        }
-        plexForm.querySelector('.title').id = `connection${connection.id}-title`;
-        plexForm.querySelector('.content').id = `connection${connection.id}`;
-        // Enable later
-        plexForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name} <span class="right floated">${connection.id}</span>`;
-        plexForm.querySelector('input[name="name"]').value = connection.name;
-        plexForm.querySelector('input[name="url"]').value = connection.url;
-        plexForm.querySelector('input[name="api_key"]').value = connection.api_key;
-        // SSL later
-        // Kometa integration later
-        plexForm.querySelector('input[name="filesize_limit"]').value = connection.filesize_limit;
+  const plexTemplate = document.getElementById('plex-connection-template');
+  const plexSection = document.getElementById('plex-connections');
 
-        return plexForm;
-      });
-      plexSection.replaceChildren(...plexForms);
+  // Add accordions for each Connection
+  const plexForms = connections.map(connection => {
+    const plexForm = plexTemplate.content.cloneNode(true);
+    if (invalidConnectionIDs.includes(connection.id)) {
+      plexForm.querySelector('.title').classList.add('invalid');
+    }
+    plexForm.querySelector('.title').id = `connection${connection.id}-title`;
+    plexForm.querySelector('.content').id = `connection${connection.id}`;
+    // Enable later
+    plexForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name} <span class="right floated">${connection.id}</span>`;
+    plexForm.querySelector('input[name="name"]').value = connection.name;
+    plexForm.querySelector('input[name="url"]').value = connection.url;
+    plexForm.querySelector('input[name="api_key"]').value = connection.api_key;
+    // SSL later
+    // Kometa integration later
+    plexForm.querySelector('input[name="filesize_limit"]').value = connection.filesize_limit;
 
-      // Initialize elements of Form
-      connections.forEach(connection => {
-        // Enabled
-        $(`#connection${connection.id} .checkbox[data-value="enabled"]`).checkbox(
-          connection.enabled ? 'check' : 'uncheck'
-        );
-        // SSL
-        $(`#connection${connection.id} .checkbox[data-value="use_ssl"]`).checkbox(
-          connection.use_ssl ? 'check' : 'uncheck'
-        );
-        // Integrate with Kometa
-        $(`#connection${connection.id} .checkbox[data-value="integrate_with_kometa"]`).checkbox(
-          connection.integrate_with_kometa ? 'check' : 'uncheck'
-        );
-        // Assign appropriate Tautulli modal form launch to button
-        $(`#connection${connection.id} .button[data-action="tautulli"]`).on('click', () => {
-          initializeTautulliForm(connection.id);
-          $('#tautulli-agent-modal')
-            .modal({blurring: true})
-            .modal('show');
-        });
-        // Assign save function to button
-        $(`#connection${connection.id} form`).on('submit', (event) => {
-          event.preventDefault();
-          if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
-          updateConnection(new FormData(event.target), connection.id, 'Plex');
-        });
-        // Assign delete function to button
-        $(`#connection${connection.id} button[data-action="delete"]`).on('click', (event) => {
-          event.preventDefault();
-          deleteConnection(connection.id, true);
-        });
-      });
-    }, error: response => showErrorToast({title: 'Error Querying Plex Connections', response}),
-    complete: () => {
-      addFormValidation();
-      refreshTheme();
-    },
+    return plexForm;
   });
+  plexSection.replaceChildren(...plexForms);
+
+  // Initialize elements of Form
+  connections.forEach(connection => {
+    // Enabled
+    $(`#connection${connection.id} .checkbox[data-value="enabled"]`).checkbox(
+      connection.enabled ? 'check' : 'uncheck'
+    );
+    // SSL
+    $(`#connection${connection.id} .checkbox[data-value="use_ssl"]`).checkbox(
+      connection.use_ssl ? 'check' : 'uncheck'
+    );
+    // Integrate with Kometa
+    $(`#connection${connection.id} .checkbox[data-value="integrate_with_kometa"]`).checkbox(
+      connection.integrate_with_kometa ? 'check' : 'uncheck'
+    );
+    // Assign appropriate Tautulli modal form launch to button
+    $(`#connection${connection.id} .button[data-action="tautulli"]`).on('click', () => {
+      initializeTautulliForm(connection.id);
+      $('#tautulli-agent-modal')
+        .modal({blurring: true})
+        .modal('show');
+    });
+    // Assign save function to button
+    $(`#connection${connection.id} form`).on('submit', (event) => {
+      event.preventDefault();
+      if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
+      updateConnection(new FormData(event.target), connection.id, 'Plex');
+    });
+    // Assign delete function to button
+    $(`#connection${connection.id} button[data-action="delete"]`).on('click', (event) => {
+      event.preventDefault();
+      deleteConnection(connection.id, true);
+    });
+  });
+
+  addFormValidation();
+  refreshTheme();
 }
 
 /*
  * Initialize the Sonarr portion of the page with all Sonarr Connections.
  */
 function initializeSonarr() {
-  $.ajax({
-    type: 'GET',
-    url: '/api/connection/sonarr/all',
-    /**
-     * Connections queried. Add to page.
-     * @param {SonarrConnection[]} connections 
-     */
-    success: connections => {
-      const sonarrTemplate = document.getElementById('sonarr-connection-template');
-      const sonarrSection = document.getElementById('sonarr-connections');
-      const interfaceDropdownTemplate = document.getElementById('interface-dropdown-template');
+  /** @type {SonarrConnection[]} */
+  const connections = allConnections.filter(connection => connection.interface_type === 'Sonarr');
 
-      // Add accordions for each Connection
-      const sonarrForms = connections.map(connection => {
-        const sonarrForm = sonarrTemplate.content.cloneNode(true);
-        if (invalidConnectionIDs.includes(connection.id)) {
-          sonarrForm.querySelector('.title').classList.add('invalid');
-        }
-        // Remove warning
-        sonarrForm.querySelector('.warning.message').remove();
-        sonarrForm.querySelector('.title').id = `connection${connection.id}-title`;
-        sonarrForm.querySelector('.content').id = `connection${connection.id}`;
-        // Enable later
-        sonarrForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name} <span class="right floated">${connection.id}</span>`;
-        sonarrForm.querySelector('input[name="name"]').value = connection.name;
-        sonarrForm.querySelector('input[name="url"]').value = connection.url;
-        sonarrForm.querySelector('input[name="api_key"]').value = connection.api_key;
-        // SSL later
-        // Downloaded only later
-        // Libraries
-        connection.libraries.forEach(({name, path}) => {
-          // media_server later
-          const dropdown = interfaceDropdownTemplate.content.cloneNode(true);
-          sonarrForm.querySelector('.field[data-value="libraries"] .field[data-value="media_server"]').appendChild(dropdown);
-          const nameInput = document.createElement('input'); nameInput.name = 'library_name'; nameInput.value = name;
-          sonarrForm.querySelector('.field[data-value="libraries"] .field[data-value="library_name"]').appendChild(nameInput);
-          const pathInput = document.createElement('input'); pathInput.name = 'library_path'; pathInput.value = path;
-          sonarrForm.querySelector('.field[data-value="libraries"] .field[data-value="library_path"]').appendChild(pathInput);
-        });
-        // Add/query library buttons later
+  const sonarrTemplate = document.getElementById('sonarr-connection-template');
+  const sonarrSection = document.getElementById('sonarr-connections');
+  const interfaceDropdownTemplate = document.getElementById('interface-dropdown-template');
 
-        return sonarrForm;
-      });
-      sonarrSection.replaceChildren(...sonarrForms);
+  // Add accordions for each Connection
+  const sonarrForms = connections.map(connection => {
+    const sonarrForm = sonarrTemplate.content.cloneNode(true);
+    if (invalidConnectionIDs.includes(connection.id)) {
+      sonarrForm.querySelector('.title').classList.add('invalid');
+    }
+    // Remove warning
+    sonarrForm.querySelector('.warning.message').remove();
+    sonarrForm.querySelector('.title').id = `connection${connection.id}-title`;
+    sonarrForm.querySelector('.content').id = `connection${connection.id}`;
+    // Enable later
+    sonarrForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name} <span class="right floated">${connection.id}</span>`;
+    sonarrForm.querySelector('input[name="name"]').value = connection.name;
+    sonarrForm.querySelector('input[name="url"]').value = connection.url;
+    sonarrForm.querySelector('input[name="api_key"]').value = connection.api_key;
+    // SSL later
+    // Downloaded only later
+    // Libraries
+    connection.libraries.forEach(({name, path}) => {
+      // media_server later
+      const dropdown = interfaceDropdownTemplate.content.cloneNode(true);
+      sonarrForm.querySelector('.field[data-value="libraries"] .field[data-value="media_server"]').appendChild(dropdown);
+      const nameInput = document.createElement('input'); nameInput.name = 'library_name'; nameInput.value = name;
+      sonarrForm.querySelector('.field[data-value="libraries"] .field[data-value="library_name"]').appendChild(nameInput);
+      const pathInput = document.createElement('input'); pathInput.name = 'library_path'; pathInput.value = path;
+      sonarrForm.querySelector('.field[data-value="libraries"] .field[data-value="library_path"]').appendChild(pathInput);
+    });
+    // Add/query library buttons later
 
-      // Initialize elements of Form
-      connections.forEach(connection => {
-        // Enabled
-        $(`#connection${connection.id} .checkbox[data-value="enabled"]`).checkbox(
-          connection.enabled ? 'check' : 'uncheck'
-        );
-        // SSL
-        $(`#connection${connection.id} .checkbox[data-value="use_ssl"]`).checkbox(
-          connection.use_ssl ? 'check' : 'uncheck'
-        );
-        // Downloaded only
-        $(`#connection${connection.id} .checkbox[data-value="downloaded_only"]`).checkbox(
-          connection.downloaded_only ? 'check' : 'uncheck'
-        );
-        // Library interface dropdowns
-        connection.libraries.forEach(({interface_id}, index) => {
-          $(`#connection${connection.id} .dropdown[data-value="interface_id"]`).eq(index).dropdown({
-            placeholder: 'Media Server',
-            values: allConnections.map(({id, name}) => {
-              return {value: id, name: name, selected: id === interface_id};
-            }),
-          })
-        });
-        // Add new library field on click
-        $(`#connection${connection.id} .button[data-action="add-library"]`).on('click', () => addSonarrLibraryField(connection.id));
-        // Query libraries on click
-        $(`#connection${connection.id} .button[data-action="query-libraries"]`).on('click', () => {
-          $.ajax({
-            type: 'GET',
-            url: `/api/connection/sonarr/${connection.id}/libraries`,
-            success: libraries => {
-              // Add new library fields if needed
-              const inputCount = $(`#connection${connection.id} .field[data-value="library_name"] input`).length;
-              if (inputCount < libraries.length) {
-                [...Array(libraries.length - inputCount)].map(() => addSonarrLibraryField(connection.id));
-              }
-              libraries.forEach(({name, path}, index) => {
-                $(`#connection${connection.id} .field[data-value="library_name"] input`).eq(index).val(name);
-                $(`#connection${connection.id} .field[data-value="library_path"] input`).eq(index).val(path);
-              });
-            }, error: response => showErrorToast({title: 'Error Querying Libraries', response}),
-          });
-        });
-        // Assign save function to button
-        $(`#connection${connection.id} form`).on('submit', (event) => {
-          event.preventDefault();
-          if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
-          const form = new FormData(event.target);
-          // Add library list data
-          const libraryData = [];
-          $(`#connection${connection.id} .field[data-value="library_name"] input`).each((index, element) => {
-            const path = $(`#connection${connection.id} .field[data-value="library_path"] input`).eq(index).val();
-            if (path !== "") {
-              libraryData.push({
-                name: element.value,
-                path: path,
-                interface_id: $(`#connection${connection.id} .dropdown[data-value="interface_id"] input`).eq(index).val(),
-              });
-            }
-          });
-          updateConnection(form, connection.id, 'Sonarr', {libraries: libraryData});
-        });
-        // Assign delete function to button
-        $(`#connection${connection.id} button[data-action="delete"]`).on('click', (event) => {
-          event.preventDefault();
-          deleteConnection(connection.id);
-        });
-      });
-    }, error: response => showErrorToast({title: 'Error Querying Sonarr Connections', response}),
-    complete: () => {
-      addFormValidation();
-      refreshTheme();
-    },
+    return sonarrForm;
   });
+  sonarrSection.replaceChildren(...sonarrForms);
+
+  // Initialize elements of Form
+  connections.forEach(connection => {
+    // Enabled
+    $(`#connection${connection.id} .checkbox[data-value="enabled"]`).checkbox(
+      connection.enabled ? 'check' : 'uncheck'
+    );
+    // SSL
+    $(`#connection${connection.id} .checkbox[data-value="use_ssl"]`).checkbox(
+      connection.use_ssl ? 'check' : 'uncheck'
+    );
+    // Downloaded only
+    $(`#connection${connection.id} .checkbox[data-value="downloaded_only"]`).checkbox(
+      connection.downloaded_only ? 'check' : 'uncheck'
+    );
+    // Library interface dropdowns
+    connection.libraries.forEach(({interface_id}, index) => {
+      $(`#connection${connection.id} .dropdown[data-value="interface_id"]`).eq(index).dropdown({
+        placeholder: 'Media Server',
+        values: mediaServerConnections.map(({id, name}) => {
+          return {value: id, name: name, selected: id === interface_id};
+        }),
+      })
+    });
+    // Add new library field on click
+    $(`#connection${connection.id} .button[data-action="add-library"]`).on('click', () => addSonarrLibraryField(connection.id));
+    // Query libraries on click
+    $(`#connection${connection.id} .button[data-action="query-libraries"]`).on('click', () => {
+      $.ajax({
+        type: 'GET',
+        url: `/api/connection/sonarr/${connection.id}/libraries`,
+        success: libraries => {
+          // Add new library fields if needed
+          const inputCount = $(`#connection${connection.id} .field[data-value="library_name"] input`).length;
+          if (inputCount < libraries.length) {
+            [...Array(libraries.length - inputCount)].map(() => addSonarrLibraryField(connection.id));
+          }
+          libraries.forEach(({name, path}, index) => {
+            $(`#connection${connection.id} .field[data-value="library_name"] input`).eq(index).val(name);
+            $(`#connection${connection.id} .field[data-value="library_path"] input`).eq(index).val(path);
+          });
+        }, error: response => showErrorToast({title: 'Error Querying Libraries', response}),
+      });
+    });
+    // Assign save function to button
+    $(`#connection${connection.id} form`).on('submit', (event) => {
+      event.preventDefault();
+      if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
+      const form = new FormData(event.target);
+      // Add library list data
+      const libraryData = [];
+      $(`#connection${connection.id} .field[data-value="library_name"] input`).each((index, element) => {
+        const path = $(`#connection${connection.id} .field[data-value="library_path"] input`).eq(index).val();
+        if (path !== "") {
+          libraryData.push({
+            name: element.value,
+            path: path,
+            interface_id: $(`#connection${connection.id} .dropdown[data-value="interface_id"] input`).eq(index).val(),
+          });
+        }
+      });
+      updateConnection(form, connection.id, 'Sonarr', {libraries: libraryData});
+    });
+    // Assign delete function to button
+    $(`#connection${connection.id} button[data-action="delete"]`).on('click', (event) => {
+      event.preventDefault();
+      deleteConnection(connection.id);
+    });
+  });
+
+  addFormValidation();
+  refreshTheme();
 }
 
 /*
  * Initialize the TMDb portion of the page with all TMDb Connections.
  */
 function initializeTMDb() {
-  $.ajax({
-    type: 'GET',
-    url: '/api/connection/tmdb/all',
-    /**
-     * Connections queried. Add to page.
-     * @param {TMDbConnection[]} connections 
-     */
-    success: connections => {
-      const tmdbTemplate = document.getElementById('tmdb-connection-template');
-      const tmdbSection = document.getElementById('tmdb-connections');
+  /** @type {TMDbConnection[]} */
+  const connections = allConnections.filter(connection => connection.interface_type === 'TMDb');
 
-      // Add accordions for each Connection
-      const tmdbForms = connections.map(connection => {
-        const tmdbForm = tmdbTemplate.content.cloneNode(true);
-        if (invalidConnectionIDs.includes(connection.id)) {
-          tmdbForm.querySelector('.title').classList.add('invalid');
-        }
-        tmdbForm.querySelector('.title').id = `connection${connection.id}-title`;
-        tmdbForm.querySelector('.content').id = `connection${connection.id}`;
-        // Enable later
-        tmdbForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name} <span class="right floated">${connection.id}</span>`;
-        tmdbForm.querySelector('input[name="name"]').value = connection.name;
-        tmdbForm.querySelector('input[name="api_key"]').value = connection.api_key;
-        tmdbForm.querySelector('input[name="minimum_dimensions"]').value = connection.minimum_dimensions;
-        // Language priority later
-        return tmdbForm;
-      });
-      tmdbSection.replaceChildren(...tmdbForms);
+  const tmdbTemplate = document.getElementById('tmdb-connection-template');
+  const tmdbSection = document.getElementById('tmdb-connections');
 
-      // Initialize elements of Form
-      connections.forEach(connection => {
-        // Enabled
-        $(`#connection${connection.id} .checkbox[data-value="enabled"]`).checkbox(
-          connection.enabled ? 'check' : 'uncheck'
-        );
-        // Ignore localized images
-        $(`#connection${connection.id} .checkbox[data-value="skip_localized"]`).checkbox(
-          connection.skip_localized ? 'check' : 'uncheck'
-        );
-        // Initialize logo language priority dropdown
-        $(`#connection${connection.id} .dropdown[data-value="language_priority"]`).dropdown({
-          values: availableLanguages.map(language => {
-            return {
-              name: language.name,
-              value: language.value,
-              selected: connection.language_priority.includes(language.value),
-            };
-          }),
-        });
-        // Assign save function to button
-        $(`#connection${connection.id} form`).on('submit', (event) => {
-          event.preventDefault();
-          if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
-          updateConnection(new FormData(event.target), connection.id, 'TMDb');
-        });
-        // Assign delete function to button
-        $(`#connection${connection.id} button[data-action="delete"]`).on('click', (event) => {
-          event.preventDefault();
-          deleteConnection(connection.id);
-        });
-      });
-    }, error: response => showErrorToast({title: 'Error Querying TMDb Connections', response}),
-    complete: () => {
-      addFormValidation();
-      refreshTheme();
-    },
+  // Add accordions for each Connection
+  const tmdbForms = connections.map(connection => {
+    const tmdbForm = tmdbTemplate.content.cloneNode(true);
+    if (invalidConnectionIDs.includes(connection.id)) {
+      tmdbForm.querySelector('.title').classList.add('invalid');
+    }
+    tmdbForm.querySelector('.title').id = `connection${connection.id}-title`;
+    tmdbForm.querySelector('.content').id = `connection${connection.id}`;
+    // Enable later
+    tmdbForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name} <span class="right floated">${connection.id}</span>`;
+    tmdbForm.querySelector('input[name="name"]').value = connection.name;
+    tmdbForm.querySelector('input[name="api_key"]').value = connection.api_key;
+    tmdbForm.querySelector('input[name="minimum_dimensions"]').value = connection.minimum_dimensions;
+    // Language priority later
+    return tmdbForm;
   });
+  tmdbSection.replaceChildren(...tmdbForms);
+
+  // Initialize elements of Form
+  connections.forEach(connection => {
+    // Enabled
+    $(`#connection${connection.id} .checkbox[data-value="enabled"]`).checkbox(
+      connection.enabled ? 'check' : 'uncheck'
+    );
+    // Ignore localized images
+    $(`#connection${connection.id} .checkbox[data-value="skip_localized"]`).checkbox(
+      connection.skip_localized ? 'check' : 'uncheck'
+    );
+    // Initialize logo language priority dropdown
+    $(`#connection${connection.id} .dropdown[data-value="language_priority"]`).dropdown({
+      values: availableLanguages.map(language => {
+        return {
+          name: language.name,
+          value: language.value,
+          selected: connection.language_priority.includes(language.value),
+        };
+      }),
+    });
+    // Assign save function to button
+    $(`#connection${connection.id} form`).on('submit', (event) => {
+      event.preventDefault();
+      if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
+      updateConnection(new FormData(event.target), connection.id, 'TMDb');
+    });
+    // Assign delete function to button
+    $(`#connection${connection.id} button[data-action="delete"]`).on('click', (event) => {
+      event.preventDefault();
+      deleteConnection(connection.id);
+    });
+  });
+
+  addFormValidation();
+  refreshTheme();
 }
 
 /*
  * Initialize the TVDb portion of the page with all TMDb Connections.
  */
 function initializeTVDb() {
-  $.ajax({
-    type: 'GET',
-    url: '/api/connection/tvdb/all',
-    /**
-     * Connections queried. Add to page.
-     * @param {TVDbConnection[]} connections 
-     */
-    success: connections => {
-      const tvdbTemplate = document.getElementById('tvdb-connection-template');
-      const tvdbSection = document.getElementById('tvdb-connections');
+  /** @type {TVDbConnection[]} */
+  const connections = allConnections.filter(connection => connection.interface_type === 'TVDb');
 
-      // Add accordions for each Connection
-      const tvdbForms = connections.map(connection => {
-        const tvdbForm = tvdbTemplate.content.cloneNode(true);
-        if (invalidConnectionIDs.includes(connection.id)) {
-          tvdbForm.querySelector('.title').classList.add('invalid');
-        }
-        tvdbForm.querySelector('.title').id = `connection${connection.id}-title`;
-        tvdbForm.querySelector('.content').id = `connection${connection.id}`;
-        // Enable later
-        tvdbForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name} <span class="right floated">${connection.id}</span>`;
-        tvdbForm.querySelector('input[name="name"]').value = connection.name;
-        tvdbForm.querySelector('input[name="api_key"]').value = connection.api_key;
-        tvdbForm.querySelector('input[name="minimum_dimensions"]').value = connection.minimum_dimensions;
-        // Language priority later
-        // Ordering later
-        // Include movies later
-        return tvdbForm;
-      });
-      tvdbSection.replaceChildren(...tvdbForms);
+  const tvdbTemplate = document.getElementById('tvdb-connection-template');
+  const tvdbSection = document.getElementById('tvdb-connections');
 
-      // Initialize elements of Form
-      connections.forEach(connection => {
-        // Enabled
-        $(`#connection${connection.id} .checkbox[data-value="enabled"]`).checkbox(
-          connection.enabled ? 'check' : 'uncheck'
-        );
-        // Ignore movies
-        $(`#connection${connection.id} .checkbox[data-value="include_movies"]`).checkbox(
-          connection.include_movies ? 'check' : 'uncheck'
-        );
-        // Initialize language priority dropdown
-        $(`#connection${connection.id} .dropdown[data-value="language_priority"]`).dropdown({
-          values: availableTVDbLanguages.map(language => {
-            return {
-              name: language.name,
-              value: language.value,
-              selected: connection.language_priority.includes(language.value),
-            };
-          }),
-        });
-        // Initialize episode ordering dropdown
-        $(`#connection${connection.id} .dropdown[data-value="episode_ordering"]`).dropdown({
-          values: tvdbOrderingTypes.map(ordering => {
-            return {
-              name: ordering.name,
-              value: ordering.value,
-              selected: connection.episode_ordering === ordering.value,
-            };
-          }),
-        });
-        // Assign save function to button
-        $(`#connection${connection.id} form`).on('submit', (event) => {
-          event.preventDefault();
-          if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
-          updateConnection(new FormData(event.target), connection.id, 'TVDb');
-        });
-        // Assign delete function to button
-        $(`#connection${connection.id} button[data-action="delete"]`).on('click', (event) => {
-          event.preventDefault();
-          deleteConnection(connection.id);
-        });
-      });
-    },
-    error: response => showErrorToast({title: 'Error Querying TVDb Connections', response}),
-    complete: () => {
-      addFormValidation();
-      refreshTheme();
-    },
+  // Add accordions for each Connection
+  const tvdbForms = connections.map(connection => {
+    const tvdbForm = tvdbTemplate.content.cloneNode(true);
+    if (invalidConnectionIDs.includes(connection.id)) {
+      tvdbForm.querySelector('.title').classList.add('invalid');
+    }
+    tvdbForm.querySelector('.title').id = `connection${connection.id}-title`;
+    tvdbForm.querySelector('.content').id = `connection${connection.id}`;
+    // Enable later
+    tvdbForm.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${connection.name} <span class="right floated">${connection.id}</span>`;
+    tvdbForm.querySelector('input[name="name"]').value = connection.name;
+    tvdbForm.querySelector('input[name="api_key"]').value = connection.api_key;
+    tvdbForm.querySelector('input[name="minimum_dimensions"]').value = connection.minimum_dimensions;
+    // Language priority later
+    // Ordering later
+    // Include movies later
+    return tvdbForm;
   });
+  tvdbSection.replaceChildren(...tvdbForms);
+
+  // Initialize elements of Form
+  connections.forEach(connection => {
+    // Enabled
+    $(`#connection${connection.id} .checkbox[data-value="enabled"]`).checkbox(
+      connection.enabled ? 'check' : 'uncheck'
+    );
+    // Ignore movies
+    $(`#connection${connection.id} .checkbox[data-value="include_movies"]`).checkbox(
+      connection.include_movies ? 'check' : 'uncheck'
+    );
+    // Initialize language priority dropdown
+    $(`#connection${connection.id} .dropdown[data-value="language_priority"]`).dropdown({
+      values: availableTVDbLanguages.map(language => {
+        return {
+          name: language.name,
+          value: language.value,
+          selected: connection.language_priority.includes(language.value),
+        };
+      }),
+    });
+    // Initialize episode ordering dropdown
+    $(`#connection${connection.id} .dropdown[data-value="episode_ordering"]`).dropdown({
+      values: tvdbOrderingTypes.map(ordering => {
+        return {
+          name: ordering.name,
+          value: ordering.value,
+          selected: connection.episode_ordering === ordering.value,
+        };
+      }),
+    });
+    // Assign save function to button
+    $(`#connection${connection.id} form`).on('submit', (event) => {
+      event.preventDefault();
+      if (!$(`#connection${connection.id} form`).form('is valid')) { return; }
+      updateConnection(new FormData(event.target), connection.id, 'TVDb');
+    });
+    // Assign delete function to button
+    $(`#connection${connection.id} button[data-action="delete"]`).on('click', (event) => {
+      event.preventDefault();
+      deleteConnection(connection.id);
+    });
+  });
+
+  addFormValidation();
+  refreshTheme();
 }
 
 let tempFormId = 0;
@@ -1046,7 +999,6 @@ async function initAll() {
   initializeEmby();
   initializeJellyfin();
   initializePlex();
-  await getAllConnections();
   initializeSonarr();
   await getAvailableLanguages();
   initializeTMDb();

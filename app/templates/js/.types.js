@@ -224,7 +224,7 @@
 /**
  * @typedef {Object} TVDbConnection
  * @property {number} id
- * @property {"TMDb"} interface_type 
+ * @property {"TVDb"} interface_type 
  * @property {boolean} enabled
  * @property {string} name
  * @property {string} api_key
