@@ -2,7 +2,7 @@ from logging import Logger
 from os import environ
 from pathlib import Path
 from pickle import dump, load
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Any, Literal, Optional, TYPE_CHECKING, overload
 
 from fastapi import BackgroundTasks
 
@@ -48,7 +48,8 @@ class Preferences:
 
     """All environment variables which might be applicable to TCM, for boot"""
     __ENVIRONMENT_VARIABLES = (
-        'TCM_IS_DOCKER', 'TCM_IM_DOCKER', 'TCM_LOG', 'TZ', 'TCM_DISABLE_AUTH',
+        'TCM_IS_DOCKER', 'TCM_IM_DOCKER', 'TCM_LOG_STDOUT', 'TCM_LOG_FILE',
+        'TCM_LOG_RETENTION', 'TZ', 'TCM_DISABLE_AUTH',
     )
 
     """Attributes whose values should be ignored when loading from file"""
@@ -243,8 +244,7 @@ class Preferences:
         log.debug(f'{"-" * 15} Environment Variables {"-" * 15}')
         padding = max(map(len, self.__ENVIRONMENT_VARIABLES))
         for var_name in self.__ENVIRONMENT_VARIABLES:
-            if (var := environ.get(var_name, None)) is None:
-                var = '[Unspecified]'
+            var = environ.get(var_name, '[Unspecified]')
             log.debug(f'  {var_name:>{padding}} : {var}')
         log.debug(f'{"-" * 53}')
 
@@ -446,7 +446,10 @@ class Preferences:
 
 
     @staticmethod
-    def get_filesize(value: Optional[int], unit: Optional[int]) ->Optional[int]:
+    def get_filesize(
+            value: Optional[int],
+            unit: Optional[int]
+        ) -> Optional[int]:
         """
         Get the filesize for the given value and unit.
 
@@ -472,6 +475,9 @@ class Preferences:
         }[unit.lower()]
 
 
+    @overload
+    def format_filesize(value: Literal[None]) -> tuple[Literal['0', 'Bytes']]:
+        ...
     @staticmethod
     def format_filesize(value: Optional[int]) -> tuple[str, str]:
         """

@@ -124,7 +124,7 @@ def get_blueprint_database(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # If refreshing db, database DNE, or file has expired, re-download
     global _db_expiration # pylint: disable=global-statement

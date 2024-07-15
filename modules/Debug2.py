@@ -83,7 +83,7 @@ logger.configure(
         # WARNING: The sys.stdout print WILL NOT have secrets redacted
         dict(
             sink=sys.stdout,
-            level=environ.get('TCM_LOG', 'INFO'),
+            level=environ.get('TCM_LOG_STDOUT', environ.get('TCM_LOG', 'INFO')),
             format='<level>[<bold>{level}</bold>] {message}</level>',
             colorize=True,
             backtrace=True,
@@ -92,7 +92,7 @@ logger.configure(
         ),
         dict(
             sink=LOG_FILE,
-            level='TRACE',
+            level=environ.get('TCM_LOG_FILE', 'TRACE'),
             format=reduced_serializer,
             # Rotate every 12 hours or 24.9 MB
             rotation=rotation_policy,
