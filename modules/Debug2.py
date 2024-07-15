@@ -97,9 +97,7 @@ logger.configure(
             # Rotate every 12 hours or 24.9 MB
             rotation=rotation_policy,
             # Keep logs for two weeks
-            retention='7 days',
-            # Zip log files
-            # compression='zip',
+            retention=environ.get('TCM_LOG_RETENTION', '7 days'),
             # Better exception printing
             backtrace=True,
             diagnose=True,
