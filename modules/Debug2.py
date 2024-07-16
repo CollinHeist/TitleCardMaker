@@ -70,7 +70,10 @@ Define a custom rotation function to combine a rotation of timing (12h)
 and file size (24 MB).
 """
 # Loguru's implementation of a timed file rotator
-TimedRotation = LoguruRotation.RotationTime(timedelta(hours=12))
+# TimedRotation = LoguruRotation.RotationTime( timedelta(hours=12))
+TimedRotation = LoguruRotation.RotationTime(
+    partial(LoguruRotation.forward_interval, interval=timedelta(hours=12))
+)
 SizeRotation = partial(
     LoguruRotation.rotation_size, size_limit=parse_size('24.9 MB')
 )
@@ -101,8 +104,9 @@ logger.configure(
             # Better exception printing
             backtrace=True,
             diagnose=True,
-            # Serialize each log entry as JSON; !this is handled by the formatter!
-            # See https://loguru.readthedocs.io/en/latest/resources/recipes.html
+            # Do not serialize each log entry as JSON as this is handled by the
+            # formatter! See
+            # https://loguru.readthedocs.io/en/latest/resources/recipes.html
             # serialize=True,
             # Make log calls non-blocking
             enqueue=True,
