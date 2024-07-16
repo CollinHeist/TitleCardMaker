@@ -97,6 +97,12 @@ function parseLinks(message, searchText='') {
       /\[REDACTED\]/g,
       () => `<span class="redacted text">[REDACTED]</span>`,      
     ).replace(
+      /(Finished in \d+\.\d+ms) \(((\d)\d\d .+)\)/g,
+      (match, durationText, statusText, statusCode) => {
+        const color = {1: 'grey', 2: 'green', 3: 'olive', 4: 'orange', 5: 'red'}[statusCode]
+        return `${durationText} (<span class="ui ${color} text">${statusText}</span>)`;
+      }
+    ).replace(
       searchText,
       `<span class="ui yellow text">${searchText}</span>`,
     )
