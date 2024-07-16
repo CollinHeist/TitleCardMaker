@@ -3,6 +3,8 @@ from logging import Logger
 from typing import Any, Literal, Optional, TypedDict
 from urllib.parse import quote as url_quote, urlencode
 
+from fastapi import HTTPException
+
 from modules.Debug import log
 from modules.EpisodeDataSource2 import (
     EpisodeDataSource, SearchResult, WatchedStatus
@@ -191,23 +193,24 @@ class TVDbInterface(EpisodeDataSource, WebInterface, Interface):
         # Authenticate with TVDb, generate session token
         self.__api_key = api_key
         self.__token_expiration: Optional[datetime] = None
-        self.__initialize_token() # This will initialize the interface
+        self.__initialize_token(log=log) # This will initialize the interface
 
 
-    def __generate_login_token(self, api_key: str) -> str:
+    def __generate_login_token(self, api_key: str, *, log: Logger = log) -> str:
         """
         Generate a login token which can be used for API requests with
         the given key.
 
         Args:
             api_key: The API key to communicate with TVDb.
+            log: Logger for all log messages.
 
         Returns:
             Token which can be used in a simple OAuth `Bearer` field
             for API requests.
 
         Raises:
-            ValueError if the given API key is rejected by TVDb.
+            Raises: HTTPException (401): The API key is invalid.
         """
 
         # Submit login request
@@ -234,12 +237,18 @@ class TVDbInterface(EpisodeDataSource, WebInterface, Interface):
         return json['data']['token']
 
 
-    def __initialize_token(self) -> None:
+    def __initialize_token(self, *, log: Logger = log) -> None:
         """
         Initialize the session token for communicating with TVDb. This
         can also re-initialize an expired session. Once initialized,
         this sets this object's session headers to use the OAuth2 bearer
         token.
+
+        Args:
+            log: Logger for all log messages.
+
+        Raises:
+            HTTPException (401): The API key is invalid.
         """
 
         # Token has not yet expired, skip
@@ -249,13 +258,16 @@ class TVDbInterface(EpisodeDataSource, WebInterface, Interface):
 
         # Token has expired, regenerate and update expiration
         try:
-            token = self.__generate_login_token(self.__api_key)
+            token = self.__generate_login_token(self.__api_key, log=log)
             self.__token_expiration = datetime.now() + self.__TOKEN_DURATION
             self.activate()
         except ValueError:
             log.exception('Failed to authenticate with TVDb')
             self.active = False
-            return None
+            raise HTTPException(
+                status_code=401,
+                detail='Invalid API key',
+            )
 
         # Set default headers on this object's session with new token
         self.session.headers = { # Pulled from tvdb_v4_official

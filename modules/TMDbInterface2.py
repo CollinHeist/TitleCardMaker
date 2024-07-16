@@ -294,12 +294,12 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         # Create API object, validate key
         try:
             self.api: TMDbAPIs = DecoratedAPI(TMDbAPIs(api_key, self.session))
-        except Unauthorized as e:
-            log.critical(f'TMDb API key is invalid')
+        except Unauthorized as exc:
+            log.critical('TMDb API key is invalid')
             raise HTTPException(
                 status_code=401,
                 detail=f'Invalid API Key'
-            ) from e
+            ) from exc
 
         # Create/read blacklist database
         self.__blacklist = PersistentDatabase(self.__BLACKLIST_DB)

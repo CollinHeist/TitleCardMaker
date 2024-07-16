@@ -205,7 +205,7 @@ def update_connection(
                 if interface_id not in preferences.invalid_connections:
                     preferences.invalid_connections.append(interface_id)
                 raise exc
-        # Connection is disabled, remove from IG
+        # Connection is disabled, remove from group
         else:
             interface_group.disable(interface_id)
             if interface_id in preferences.invalid_connections:
