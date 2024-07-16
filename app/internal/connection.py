@@ -9,6 +9,7 @@ from app.dependencies import (
     get_preferences, get_sonarr_interfaces, get_tmdb_interfaces,
     get_tvdb_interfaces,
 )
+from app.internal.auth import encrypt
 from app.models.connection import Connection
 from app.models.preferences import Preferences
 from app.schemas.base import UNSPECIFIED
@@ -57,7 +58,6 @@ def initialize_connections(
             (get_tmdb_interfaces(), 'TMDb'),
             (get_tvdb_interfaces(), 'TVDb'),
         ):
-
         # Get all Connections of this interface type
         connections: list[Connection] = db.query(Connection)\
             .filter_by(interface_type=interface_type)\
@@ -115,6 +115,7 @@ def add_connection(
 
     # Add to database
     connection = Connection(**new_connection.dict())
+    connection.encrypt()
     db.add(connection)
     db.commit()
 
@@ -178,7 +179,10 @@ def update_connection(
     for attr, value in update_object.dict(exclude_defaults=True).items():
         if value != UNSPECIFIED and getattr(connection, attr) != value:
             # Update Connection
-            setattr(connection, attr, value)
+            if attr in ('api_key', 'url'):
+                setattr(connection, attr, encrypt(value))
+            else:
+                setattr(connection, attr, value)
             changed = True
 
             # Update secrets, log change
@@ -190,6 +194,7 @@ def update_connection(
         db.commit()
         preferences = get_preferences()
         if connection.enabled:
+            # Attempt to re-initialize Interface with new details
             try:
                 interface_group.refresh(
                     interface_id, connection.interface_kwargs, log=log
@@ -200,6 +205,7 @@ def update_connection(
                 if interface_id not in preferences.invalid_connections:
                     preferences.invalid_connections.append(interface_id)
                 raise exc
+        # Connection is disabled, remove from IG
         else:
             interface_group.disable(interface_id)
             if interface_id in preferences.invalid_connections:

@@ -1,7 +1,11 @@
+from base64 import urlsafe_b64encode
+from cryptography.fernet import Fernet
 from datetime import datetime, timedelta
 from logging import getLogger, ERROR
+from os import environ
+from pathlib import Path
 from secrets import token_hex
-from typing import Literal, Optional, Union
+from typing import Optional
 
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
@@ -23,22 +27,28 @@ __all__ = (
 
 
 ALGORITHM = 'HS256'
-__SECRET_KEY = '360f8406f24d5bdd0ff24693e71e025f'
 
+"""File where the private key is stored"""
+IS_DOCKER = environ.get('TCM_IS_DOCKER', 'false').lower() == 'true'
+KEY_FILE = Path(__file__).parent.parent.parent / 'config' / '.key.txt'
+if IS_DOCKER:
+    KEY_FILE = Path('/config/.key.txt')
+
+"""Only log passlib errors so that bcrypt.__version__ boot warning is ignored"""
 getLogger('passlib').setLevel(ERROR)
 oath2_scheme = OAuth2PasswordBearer(tokenUrl='/api/auth/authenticate')
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 
-def generate_secret_key() -> str:
+def generate_secret_key() -> bytes:
     """
-    Generate a new, random secret 16.
+    Generate a new, random secret.
 
     Returns:
         A 16-character random hexstring.
     """
 
-    return token_hex(16)
+    return urlsafe_b64encode(token_hex(16).encode())
 
 
 def verify_password(plaintext: str, hashed: str) -> bool:
@@ -55,6 +65,26 @@ def verify_password(plaintext: str, hashed: str) -> bool:
     """
 
     return pwd_context.verify(plaintext, hashed)
+
+
+def get_secret_key() -> bytes:
+    """
+    Get the secret key for all encryption. This reads the local key file
+    if it exists, and generates a new one if it does not.
+
+    Returns:
+        Secret key (as a hexstring).
+    """
+
+    # File exists, read
+    if KEY_FILE.exists():
+        return KEY_FILE.read_bytes()
+
+    # No file, generate and write new key
+    key = generate_secret_key()
+    KEY_FILE.write_bytes(key)
+    log.info(f'Generated encrpytion key - wrote to "{KEY_FILE}"')
+    return key
 
 
 def get_password_hash(password: str) -> str:
@@ -125,7 +155,7 @@ def get_current_user(
 
     # Decode JWT, get encoded username
     try:
-        payload = jwt.decode(token, __SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, get_secret_key(), algorithms=[ALGORITHM])
         username: str = payload.get('sub')
         uid: str = payload.get('uid')
     except JWTError as exc:
@@ -203,4 +233,32 @@ def create_access_token(
     to_encode = data.copy()
     to_encode.update({'exp': expires})
 
-    return jwt.encode(to_encode, __SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, get_secret_key(), algorithm=ALGORITHM)
+
+
+def encrypt(plaintext: str) -> str:
+    """
+    Encrypt the given plaintext.
+
+    Args:
+        plaintext: Text to encrypt.
+
+    Returns:
+        Encrypted text.
+    """
+
+    return Fernet(get_secret_key()).encrypt(plaintext.encode()).decode()
+
+
+def decrypt(encrypted_text: str) -> str:    
+    """
+    Decrypt the given encrypted text into plaintext.
+
+    Args:
+        encrypted_text: Text to decrypt.
+
+    Returns:
+        Plain decrypted text.
+    """
+
+    return Fernet(get_secret_key()).decrypt(encrypted_text).decode()

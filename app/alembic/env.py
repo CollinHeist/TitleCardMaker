@@ -33,6 +33,7 @@ Schema Version History (oldest to newest):
 - 2c1f9a3de797 | Added TVDb as a valid Connection type
 - 248e35b3e455 | Remove the Font.delete_missing column
 - 0a5f4764cd10 | Remove the Episode.image_source_attempts column
+- 84971838f3fc | Encrypt Connection URLs and API keys
 """
 
 # this is the Alembic Config object, which provides
@@ -63,15 +64,15 @@ IS_DOCKER = environ.get('TCM_IS_DOCKER', 'false').lower() == 'true'
 
 
 def run_migrations_offline() -> None:
-    """Run migrations in 'offline' mode.
+    """
+    Run migrations in 'offline' mode.
 
-    This configures the context with just a URL
-    and not an Engine, though an Engine is acceptable
-    here as well.  By skipping the Engine creation
-    we don't even need a DBAPI to be available.
+    This configures the context with just a URL and not an Engine,
+    though an Engine is acceptable here as well.  By skipping the Engine
+    creation we don't even need a DBAPI to be available.
 
-    Calls to context.execute() here emit the given string to the
-    script output.
+    Calls to context.execute() here emit the given string to the script
+    output.
     """
 
     url = config.get_main_option("sqlalchemy.url")
@@ -92,10 +93,11 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode.
+    """
+    Run migrations in 'online' mode.
 
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
+    In this scenario we need to create an Engine and associate a
+    connection with the context.
     """
 
     connectable = engine_from_config(

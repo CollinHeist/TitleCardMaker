@@ -5,6 +5,7 @@ from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.session import Base
+from app.internal.auth import decrypt, encrypt
 from app.schemas.connection import InterfaceType, TVDbOrderType
 
 if TYPE_CHECKING:
@@ -75,8 +76,10 @@ class Connection(Base):
             'interface_type': self.interface_type,
             'enabled': self.enabled,
             'name': self.name,
-            'api_key': self.api_key,
-            'url': self.url,
+            'api_key': self.decrypted_api_key,
+            'url': self.decrypted_url,
+            # 'api_key': self.api_key,
+            # 'url': self.url,
             'use_ssl': self.use_ssl,
             'username': self.username,
             'filesize_limit': self.filesize_limit,
@@ -89,6 +92,29 @@ class Connection(Base):
             'episode_ordering': self.episode_ordering,
             'include_movies': self.include_movies,
         }
+
+
+    def encrypt(self) -> None:
+        """Encrypt this object's URL and API key."""
+
+        if self.url:
+            self.url = encrypt(self.url)
+        if self.api_key:
+            self.api_key = encrypt(self.api_key)
+
+
+    @property
+    def decrypted_url(self) -> Optional[str]:
+        """Decrypted URL of this Connection"""
+
+        return decrypt(self.url) if self.url else None
+
+
+    @property
+    def decrypted_api_key(self) -> Optional[str]:
+        """Decrypted API key of this Connection"""
+
+        return decrypt(self.api_key) if self.api_key else None
 
 
     @property
@@ -143,7 +169,7 @@ class Connection(Base):
         The dictionary of keyword arguments required to initialize an
         Interface of this Connection's type. For example:
 
-        >>> si = SonarrInterface(connection.interface_kwargs())
+        >>> SonarrInterface(connection.interface_kwargs())
 
         Returns:
             Dictionary of keyword-arguments.
@@ -152,8 +178,8 @@ class Connection(Base):
         if self.interface_type in ('Emby', 'Jellyfin'):
             return {
                 'interface_id': self.id,
-                'url': self.url,
-                'api_key': self.api_key,
+                'url': self.decrypted_url,
+                'api_key': self.decrypted_api_key,
                 'use_ssl': self.use_ssl,
                 'filesize_limit': self.filesize_limit_value,
                 'username': self.username,
@@ -162,8 +188,8 @@ class Connection(Base):
         if self.interface_type == 'Plex':
             return {
                 'interface_id': self.id,
-                'url': self.url,
-                'api_key': self.api_key,
+                'url': self.decrypted_url,
+                'api_key': self.decrypted_api_key,
                 'use_ssl': self.use_ssl,
                 'filesize_limit': self.filesize_limit_value,
                 'integrate_with_kometa': self.integrate_with_kometa,
@@ -172,8 +198,8 @@ class Connection(Base):
         if self.interface_type == 'Sonarr':
             return {
                 'interface_id': self.id,
-                'url': self.url,
-                'api_key': self.api_key,
+                'url': self.decrypted_url,
+                'api_key': self.decrypted_api_key,
                 'use_ssl': self.use_ssl,
                 'downloaded_only': self.downloaded_only,
                 'libraries': self.libraries,   
@@ -181,7 +207,7 @@ class Connection(Base):
 
         if self.interface_type == 'TMDb':
             return {
-                'api_key': self.api_key,
+                'api_key': self.decrypted_api_key,
                 'minimum_source_width': self.minimum_width,
                 'minimum_source_height': self.minimum_height,
                 'language_priority': self.language_priority,
@@ -189,7 +215,7 @@ class Connection(Base):
 
         if self.interface_type == 'TVDb':
             return {
-                'api_key': self.api_key,
+                'api_key': self.decrypted_api_key,
                 'episode_ordering': self.episode_ordering,
                 'include_movies': self.include_movies,
                 'minimum_source_width': self.minimum_width,
@@ -226,7 +252,7 @@ class Connection(Base):
         ]
 
 
-    def add_secrets(self, secret: set[str], /) -> None:
+    def add_secrets(self, secrets: set[str], /) -> None:
         """
         Add this Connection's secret details (the URL and API key) to
         the given set of secrets (for log redaction).
@@ -236,6 +262,8 @@ class Connection(Base):
         """
 
         if self.url:
-            secret.add(self.url)
+            secrets.add(self.url)
+            secrets.add(self.decrypted_url)
         if self.api_key:
-            secret.add(self.api_key)
+            secrets.add(self.api_key)
+            secrets.add(self.decrypted_api_key)

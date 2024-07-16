@@ -206,18 +206,22 @@ class UpdateTVDb(UpdateBase):
 Return classes
 """
 class EmbyConnection(BaseServer):
+    url: str
     username: Optional[str]
     filesize_limit: FilesizeLimit
 
 class JellyfinConnection(BaseServer):
+    url: str
     username: Optional[str]
     filesize_limit: FilesizeLimit
 
 class PlexConnection(BaseServer):
+    url: str
     integrate_with_kometa: bool
     filesize_limit: FilesizeLimit
 
 class SonarrConnection(BaseServer):
+    url: str
     downloaded_only: bool
     libraries: list[SonarrLibrary]
 
