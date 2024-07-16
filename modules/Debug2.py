@@ -34,7 +34,10 @@ SECRETS: set[str] = set()
 def redact_secrets(message: str) -> str:
     """Redact all secrets from the given message."""
 
-    for secret in SECRETS:
+    # Redact the longest secrets first so that substrings of secrets are
+    # not leaked - e.g. {'ABC', 'ABCDEF'} would redact 'ABC' and then
+    # leave 'DEF' exposed
+    for secret in sorted(SECRETS, key=len, reverse=True):
         message = message.replace(secret, '[REDACTED]')
 
     return message
