@@ -7,7 +7,6 @@ import sys
 from typing import TYPE_CHECKING
 
 import better_exceptions
-from better_exceptions import format_exception
 from loguru import logger
 from loguru._file_sink import Rotation as LoguruRotation
 from loguru._string_parsers import parse_size
@@ -47,11 +46,18 @@ def reduced_serializer(record: 'Record') -> str:
     """Formatter which serializes a subset of the record."""
 
     exc = None
-    if (record['exception']) is not None:
+    if record['exception'] is not None:
+        # Grab the ExceptionFormatter from the logger directly, rather
+        # than using the better- exceptions formatter, so that extended
+        # traceback stacks are properly displayed; handler[2]
+        # corresponds to the file handler
+        tb = logger._core.handlers[2]._exception_formatter.format_exception(
+            *record['exception']
+        )
         exc = {
             'type': str(record['exception'].type),
             'value': str(record['exception'].value),
-            'traceback': redact_secrets(format_exception(*record['exception'])),
+            'traceback': redact_secrets(''.join(tb)),
         }
 
     record['extra']['serialized'] = dumps({
@@ -105,6 +111,7 @@ logger.configure(
             # Keep logs for two weeks
             retention=environ.get('TCM_LOG_RETENTION', '7 days'),
             # Better exception printing
+            colorize=False,
             backtrace=True,
             diagnose=True,
             # Do not serialize each log entry as JSON as this is handled by the
