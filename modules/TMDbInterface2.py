@@ -4,7 +4,7 @@ from typing import Any, Callable, Literal, Optional, Union
 
 from fastapi import HTTPException
 from tinydb import Query, where
-from tmdbapis import Poster, TMDbAPIs, NotFound, Unauthorized, TMDbException
+from tmdbapis import Poster, TMDbAPIs, NotFound, TMDbImage, Unauthorized, TMDbException
 from tmdbapis.objs.reload import Episode as TMDbEpisode, Movie as TMDbMovie
 from tmdbapis.objs.image import Still as TMDbStill
 
@@ -305,6 +305,37 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         self.__blacklist = PersistentDatabase(self.__BLACKLIST_DB)
 
         self.activate()
+
+
+    def __sort_asset(self, asset: TMDbImage) -> int:
+        """
+        Get the sort "score" for the given asset. This can be used in a
+        `sorted()` call.
+
+        Args:
+            asset: Object being sorted. Must be a subclass of
+                `TMDbImage`.
+
+        Returns:
+            Sorted score for the object. Higher score indicates a higher
+            quality asset.
+        """
+
+        # Score dimensionally 0 -> 2.0 @ 4K resolution
+        dimension_score = (asset.width / 3840) + (asset.height / 2160)
+
+        # Textless posters get scored as neutral priority
+        if asset.iso_639_1 is None:
+            return dimension_score
+
+        # Give priority scoring to languages in the priority list
+        try:
+            # Reverse list so first elements get higher index
+            lang_score = self.language_priority[::-1].index(asset.iso_639_1)
+            return (lang_score * 10) + dimension_score
+        # Languages not in the priority list use a negative modifier
+        except ValueError:
+            return -10 + dimension_score
 
 
     def __get_condition(self,
@@ -1017,8 +1048,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             log.info(f'Series {series_info} has no logos')
             return None
 
-        # Series found on TMDb, return all logos
-        return series.logos
+        # Series found on TMDb, return all logos (sorted by quality)
+        return sorted(series.logos, key=self.__sort_asset, reverse=True)
 
 
     @catch_and_log('Error getting all backdrops', default=None)
@@ -1389,23 +1420,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         if not posters:
             return None
 
-        def _sort(poster: Poster) -> int:
-            # Score dimensionally 0 -> 2.0 @ 4K resolution
-            dimension_score = (poster.width / 3840) + (poster.height / 2160)
-
-            # Textless posters get scored as neutral priority
-            if poster.iso_639_1 is None:
-                return dimension_score
-
-            # Give priority scoring to languages in the priority list
-            try:
-                # Reverse list so first elements get higher index
-                lang_score = self.language_priority[::-1].index(
-                    poster.iso_639_1
-                )
-                return (lang_score * 10) + dimension_score
-            # Languages not in the priority list use a negative modifier
-            except ValueError:
-                return -10 + dimension_score
-
-        return sorted(series.posters, key=_sort, reverse=True)[0].url
+        return sorted(
+            series.posters,
+            key=self.__sort_asset,
+            reverse=True
+        )[0].url
