@@ -549,12 +549,12 @@ class StripedTitleCard(BaseCardType):
 
             # Pick random y-coordinates for the top and bottom of the polygon
             top_y = randint(
-                top_y_bound,
-                (self.HEIGHT - self._MIN_SHAPE_HEIGHT) // 2,
+                min(top_y_bound, self._MIN_SHAPE_HEIGHT // 3),
+                (self.HEIGHT // 2) - (self._MIN_SHAPE_HEIGHT) // 3),
             )
             bottom_y = randint(
-                (self.HEIGHT // 2) + self._MIN_SHAPE_HEIGHT // 3,
-                bottom_y_bound,
+                (self.HEIGHT // 2) + (self._MIN_SHAPE_HEIGHT // 3),
+                max(bottom_y_bound, self._MIN_SHAPE_HEIGHT // 3),
             )
 
             # For drawing the polygon, "invert" the y-coordinate used in
