@@ -4,7 +4,9 @@ from typing import Any, Callable, Literal, Optional, Union
 
 from fastapi import HTTPException
 from tinydb import Query, where
-from tmdbapis import Poster, TMDbAPIs, NotFound, TMDbImage, Unauthorized, TMDbException
+from tmdbapis import (
+    Poster, TMDbAPIs, NotFound, TMDbImage, Unauthorized, TMDbException
+)
 from tmdbapis.objs.reload import Episode as TMDbEpisode, Movie as TMDbMovie
 from tmdbapis.objs.image import Still as TMDbStill
 

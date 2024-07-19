@@ -299,7 +299,12 @@ class TVDbInterface(EpisodeDataSource, WebInterface, Interface):
             the first series.
             """
 
+            if not isinstance(results, list):
+                return None
+
             for result in results:
+                if not isinstance(result, dict):
+                    continue
                 # Ignore movies
                 if (id_ := result.get('series', {}).get('id')):
                     return id_
@@ -354,9 +359,10 @@ class TVDbInterface(EpisodeDataSource, WebInterface, Interface):
         # Search by IMDb ID if present
         if episode_info.has_id('imdb_id'):
             url =f'{self.__ROOT_API_URL}/search/remoteid/{episode_info.imdb_id}'
-            for result in self.get(url).get('data', []):
-                if (id_ := result.get('series', {}).get('id')):
-                    return id_
+            if isinstance((resp := self.get(url)), dict):
+                for result in resp.get('data', []):
+                    if (id_ := result.get('series', {}).get('id')):
+                        return int(id_)
         # Cannot search episodes by TMDb ID for some reason; raises error
         # Cannot search by episode title; not supported via /search endpoint
 
