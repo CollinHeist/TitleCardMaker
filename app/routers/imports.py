@@ -445,7 +445,7 @@ async def import_mediux_yaml_for_series(
     background: Optional[str] = yaml.url_background if import_backdrop else None
     poster: Optional[str] = yaml.url_poster if import_poster else None
     cards: list[tuple[Episode, Path]] = []
-    season_posters: dict[int, str] = []
+    season_posters: dict[int, str] = {}
 
     # Parse each season
     for season_number, season_yaml in yaml.seasons.items():
@@ -484,17 +484,18 @@ async def import_mediux_yaml_for_series(
             log.warning(f'Cannot import to library "{library_name}"')
             continue
 
-        import_card_files(
-            db, series, cards, library,
-            force_reload=force_reload, as_textless=textless, log=log,
-        )
+        if cards:
+            import_card_files(
+                db, series, cards, library,
+                force_reload=force_reload, as_textless=textless, log=log,
+            )
 
-        # Load cards into library
-        load_series_title_cards(
-            series, library['name'], library['interface_id'], db,
-            get_interface(library['interface_id'], raise_exc=True),
-            force_reload=force_reload,
-        )
+            # Load cards into library
+            load_series_title_cards(
+                series, library['name'], library['interface_id'], db,
+                get_interface(library['interface_id'], raise_exc=True),
+                force_reload=force_reload,
+            )
 
         # Load series backgrounds/poster, or season posters
         if background:
@@ -510,8 +511,9 @@ async def import_mediux_yaml_for_series(
                 library_name, series.as_series_info, season_posters,
                 log=log,
             )
+
     # No libraries specified import Cards without a library
-    else:
+    if not library_names:
         import_card_files(
             db, series, cards, library=None,
             force_reload=force_reload, as_textless=textless, log=log,
