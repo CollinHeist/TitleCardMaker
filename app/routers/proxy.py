@@ -42,25 +42,26 @@ def redirect_plex_url(
     connection = get_connection(db, interface_id, raise_exc=True)
 
     # Do not end server URL in /
-    if connection.url.endswith('/'):
-        server_url = connection.url[:-1]
+    if connection.decrypted_url.endswith('/'):
+        server_url = connection.decrypted_url[:-1]
     else:
-        server_url = connection.url
+        server_url = connection.decrypted_url
 
     # Do not start proxied URL in /
     url = url[1:] if url.startswith('/') else url
 
     # Redirect using the Connection's token (API key)
-    redirected_url = f'{server_url}/{url}?X-Plex-Token={connection.api_key}'
+    redirected_url = \
+        f'{server_url}/{url}?X-Plex-Token={connection.decrypted_api_key}'
 
     return Response(content=get(redirected_url, timeout=10).content)
 
 
 @proxy_router.get(
-        '/sonarr',
-        responses = {200: {'content': {'image/jpeg': {}}}},
-        response_class=Response
-    )
+    '/sonarr',
+    responses = {200: {'content': {'image/jpeg': {}}}},
+    response_class=Response
+)
 def redirect_sonarr_url(
         url: str = Query(...),
         interface_id: int = Query(...),
@@ -83,12 +84,12 @@ def redirect_sonarr_url(
     connection = get_connection(db, interface_id, raise_exc=True)
 
     # Remove /api/ endpoint from URL if present; do not end in /
-    if '/api' in connection.url:
-        server_url = connection.url.split('/api')[0]
-    elif connection.url.endswith('/'):
-        server_url = connection.url[:-1]
+    if '/api' in connection.decrypted_url:
+        server_url = connection.decrypted_url.split('/api')[0]
+    elif connection.decrypted_url.endswith('/'):
+        server_url = connection.decrypted_url[:-1]
     else:
-        server_url = connection.url
+        server_url = connection.decrypted_url
 
     # Start redirect URL in /
     url = url if url.startswith('/') else f'/{url}'
