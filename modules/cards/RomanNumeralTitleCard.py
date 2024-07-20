@@ -243,7 +243,7 @@ class RomanNumeralTitleCard(BaseCardType):
     MAX_ROMAN_NUMERAL = 3999
 
     """Maximum number of attempts for season text placement (if overlapping)"""
-    SEASON_TEXT_PLACEMENT_ATTEMPS = 5
+    SEASON_TEXT_PLACEMENT_ATTEMPTS = 5
 
     __slots__ = (
         'output_file', 'title_text', 'season_text', 'hide_season_text',
@@ -564,7 +564,9 @@ class RomanNumeralTitleCard(BaseCardType):
 
         # Get boundaries of title text
         width, height = self.image_magick.get_text_dimensions(
-            self.title_text_command, width='width', height='sum'
+            self.title_text_command,
+            interline_spacing=self.font_interline_spacing,
+            line_count=len(self.title_text.splitlines()),
         )
         box0 = {
             'start_x': (-width  + self.WIDTH)  / 2,
@@ -634,8 +636,8 @@ class RomanNumeralTitleCard(BaseCardType):
                 and box0['start_y'] < box1['end_y']  # Box0 top before Box1 bottom
                 and box0['end_y'] > box1['start_y']) # Box0 bottom after Box1 top
 
-        # Attempt position selection until not overlapping, or out of attemps
-        attempts_left = self.SEASON_TEXT_PLACEMENT_ATTEMPS
+        # Attempt position selection until not overlapping, or out of attempts
+        attempts_left = self.SEASON_TEXT_PLACEMENT_ATTEMPTS
         while (attempts_left := attempts_left-1) > 0 and select_position():
             pass
 
@@ -684,11 +686,14 @@ class RomanNumeralTitleCard(BaseCardType):
 
         custom_extras = (
             ('background' in extras
-                and extras['background'] != RomanNumeralTitleCard.BACKGROUND_COLOR)
+                and extras['background'] != \
+                    RomanNumeralTitleCard.BACKGROUND_COLOR)
             or ('roman_numeral_color' in extras
-                and extras['roman_numeral_color'] != RomanNumeralTitleCard.ROMAN_NUMERAL_TEXT_COLOR)
+                and extras['roman_numeral_color'] != \
+                    RomanNumeralTitleCard.ROMAN_NUMERAL_TEXT_COLOR)
             or ('season_text_color' in extras
-                and extras['season_text_color'] != RomanNumeralTitleCard.SEASON_TEXT_COLOR)
+                and extras['season_text_color'] != \
+                    RomanNumeralTitleCard.SEASON_TEXT_COLOR)
         )
 
         return (custom_extras
@@ -718,10 +723,9 @@ class RomanNumeralTitleCard(BaseCardType):
             False otherwise.
         """
 
-        standard_etfs = RomanNumeralTitleCard.GENERIC_EPISODE_TEXT_FORMATS
-
         return (custom_episode_map
-                or episode_text_format not in standard_etfs)
+                or episode_text_format not in \
+                    RomanNumeralTitleCard.GENERIC_EPISODE_TEXT_FORMATS)
 
 
     def create(self):
