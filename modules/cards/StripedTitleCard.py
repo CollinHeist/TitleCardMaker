@@ -598,7 +598,6 @@ class StripedTitleCard(BaseCardType):
             bottom_y_bound = self.HEIGHT - self.inset
 
             # Limit bounds of y-coordinates to not overlap with text
-            # log.debug(f'{b0} : {b1} | {_x_at(text_height, b0)} < {text_width}')
             if ((self.text_position == 'upper left'
                  and _x_at(text_height, b0) < text_width)
                 or (self.text_position == 'upper right'
@@ -609,17 +608,26 @@ class StripedTitleCard(BaseCardType):
                   or (self.text_position == 'lower right'
                       and _x_at(text_height, b1) > self.WIDTH - text_width)):
                 bottom_y_bound = self.HEIGHT - text_height
-                # log.debug(f'Limiting bottom_y to {text_height} from bottom')
 
             # Pick random y-coordinates for the top and bottom of the polygon
-            top_y = randint(
-                top_y_bound,
-                (self.HEIGHT - self._MIN_SHAPE_HEIGHT) // 2,
-            )
-            bottom_y = randint(
-                (self.HEIGHT // 2) + self._MIN_SHAPE_HEIGHT // 3,
-                bottom_y_bound,
-            )
+            try:
+                top_y = randint(
+                    top_y_bound,
+                    (self.HEIGHT // 2) - (self._MIN_SHAPE_HEIGHT // 3),
+                )
+            except ValueError:
+                # Text too high, limit to any height or only smallest possible
+                # top_y = randint(self.inset, self.HEIGHT // 2)
+                top_y = (self.HEIGHT // 2) - (self._MIN_SHAPE_HEIGHT // 3)
+            try:
+                bottom_y = randint(
+                    (self.HEIGHT // 2) + (self._MIN_SHAPE_HEIGHT // 3),
+                    bottom_y_bound,
+                )
+            except ValueError:
+                # Text too high, limit to any height or only smallest possible
+                # bottom_y = randint(self.HEIGHT // 2, self.HEIGHT - self.inset)
+                bottom_y = (self.HEIGHT // 2) + (self._MIN_SHAPE_HEIGHT // 3)
 
             # For drawing the polygon, "invert" the y-coordinate used in
             # the x-coordinate calculation since the canvas 0 is at the
