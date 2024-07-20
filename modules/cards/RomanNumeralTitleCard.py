@@ -417,10 +417,9 @@ class RomanNumeralTitleCard(BaseCardType):
         text at the given rotation and offset.
 
         Args:
-            rotation: Rotation (string) to utilize. Should be like
-                "90x90".
+            rotation: Rotation (string) to utilize - e.g. `"90x90"`.
             offset: Offset (string, not Object) to utilize relative to
-                the center of the canvas. Should be like "+100-300".
+                the center of the canvas - e.g. `"+100-300"`.
 
         Returns:
             List of ImageMagick commands.
@@ -445,6 +444,7 @@ class RomanNumeralTitleCard(BaseCardType):
             f'-fill "{color}"',
             f'-pointsize 50',
             f'+interword-spacing',
+            f'+interline-spacing',
             f'-annotate {rotation}{offset} "{self.season_text}"',
         ]
 
