@@ -248,7 +248,7 @@ class ComicBookTitleCard(BaseCardType):
         """Subcommands required to add the title text."""
 
         # If no title text, return empty commands
-        if len(self.title_text) == 0:
+        if not self.title_text:
             return []
 
         # Font characteristics
@@ -279,7 +279,7 @@ class ComicBookTitleCard(BaseCardType):
         """Subcommands required to add the title text box."""
 
         # No index text, return empty commands
-        if len(self.title_text) == 0:
+        if not self.title_text:
             return []
 
         # Get dimensions of the title text
