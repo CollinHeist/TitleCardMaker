@@ -544,11 +544,8 @@ def import_card_directory_for_series(
     - card_directory: Directory details to parse for cards to import.
     """
 
-    # Get this Series, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
-
     import_cards(
-        db, series, card_directory.directory,
+        db, get_series(db, series_id, raise_exc=True), card_directory.directory,
         card_directory.image_extension, card_directory.force_reload,
         log=request.state.log,
     )
@@ -570,11 +567,9 @@ def import_cards_for_multiple_series(
 
     # Import Card for each identified Series
     for series_id in card_import.series_ids:
-        # Get this Series, raise 404 if DNE
-        series = get_series(db, series_id, raise_exc=True)
-
         # Import Cards for this Series
         import_cards(
-            db, series, None, card_import.image_extension,
-            card_import.force_reload, log=request.state.log,
+            db, get_series(db, series_id, raise_exc=True), None,
+            card_import.image_extension, card_import.force_reload,
+            log=request.state.log,
         )
