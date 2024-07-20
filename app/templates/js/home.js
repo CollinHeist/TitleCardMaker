@@ -197,8 +197,7 @@ function _populateSeriesRow(series, template) {
   // Determine maximum number of Cards based on libraries
   const maxCards = library_unique_cards
     ? series.episode_count * series.libraries.length
-    : series.episode_count
-  ;
+    : series.episode_count;
 
   // Make row red / yellow depending on Card count
   if (series.card_count === 0 && series.episode_count > 0) {
@@ -211,7 +210,8 @@ function _populateSeriesRow(series, template) {
   row.querySelector('a[data-action="select"]').onclick = (event) => toggleSeriesSelection(series.id, undefined, event);
 
   // Link name cell to Series page
-  row.querySelector('td[data-row="name"] a').onclick = () => openSeries(series.id);
+  // row.querySelector('td[data-row="name"] a').onclick = () => openSeries(series.id);
+  row.querySelector('td[data-row="name"] a').href = `/series/${series.id}`;
   row.querySelector('td[data-row="name"]').dataset.sortValue = `_${series.sort_name}`; // Add _ so numbers are still parsed as text
 
   // Add Series Name
@@ -486,9 +486,9 @@ const sortStates = {
   cards: ['cards',        'reverse-cards'],
   id:    ['reverse-id',   'id',],
   name:  ['alphabetical', 'reverse-alphabetical'],
-  sync:  ['sync', 'sync'],
+  sync:  ['sync',         'sync'],
   year:  ['year',         'reverse-year'],
-}
+};
 /**
  * Adjust how the Series are sorted on the home page. This updates the local
  * storage for the sort parameter, and re-queries the current page.
