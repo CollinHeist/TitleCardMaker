@@ -99,9 +99,7 @@ class StarWarsTitleCard(BaseCardType):
             preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
-        """
-        Initialize the CardType object.
-        """
+        """Initialize the CardType object."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)

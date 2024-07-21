@@ -1,10 +1,7 @@
-from datetime import datetime, timedelta
-from logging import Logger
 from os import environ
 from pathlib import Path
 from re import IGNORECASE, sub as re_sub, match as _regex_match
-from shutil import copy as file_copy
-from typing import Any, Generator, NamedTuple
+from typing import Any, Generator
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -18,7 +15,6 @@ from thefuzz.fuzz import partial_token_sort_ratio as partial_ratio
 from unidecode import unidecode
 
 from app.models.preferences import Preferences
-from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.InterfaceGroup import InterfaceGroup
@@ -52,103 +48,6 @@ if IS_DOCKER:
 blueprint_engine = create_engine(
     BLUEPRINT_SQL_DATABASE_URL, connect_args={'check_same_thread': False},
 )
-
-class DataBackup(NamedTuple): # pylint: disable=missing-class-docstring
-    config: Path
-    database: Path
-
-
-def backup_data(version: str, *, log: Logger = log) -> DataBackup:
-    """
-    Perform a backup of the SQL database and global preferences.
-
-    Args:
-        version: Current version of TCM.
-        log: Logger for all log messages.
-
-    Returns:
-        Tuple of Paths to created preferences and database backup files.
-    """
-
-    # Determine file to back up database to
-    BACKUP_DT_FORMAT = '%Y-%m-%d_%H-%M-%S'
-    name = datetime.now().strftime(BACKUP_DT_FORMAT)
-
-    if IS_DOCKER:
-        config = Path('/config/config.pickle')
-        config_backup = Path(f'/config/backups/config.pickle.{version}.{name}')
-        database = Path('/config/db.sqlite')
-        database_backup = Path(f'/config/backups/db.sqlite.{version}.{name}')
-    else:
-        config = Path('./config/config.pickle')
-        config_backup = Path(f'./config/backups/config.pickle.{version}.{name}')
-        database = Path('./config/db.sqlite')
-        database_backup = Path(f'./config/backups/db.sqlite.{version}.{name}')
-
-    # Remove backups older than 3 weeks
-    def delete_old_backup(backup_file: Path, base_filename: str) -> None:
-        for prior in backup_file.parent.glob(f'{base_filename}.*'):
-            try:
-                date = datetime.strptime(
-                    prior.name.rsplit('.')[-1],
-                    BACKUP_DT_FORMAT
-                )
-            except ValueError:
-                log.debug(f'Cannot identify date of backup file "{prior}"')
-                continue
-
-            if date < datetime.now() - timedelta(weeks=3):
-                prior.unlink(missing_ok=True)
-                log.debug(f'Deleted old backup "{prior}"')
-
-    delete_old_backup(config_backup, 'config.pickle')
-    delete_old_backup(database_backup, 'db.sqlite')
-
-    # Backup config
-    if config.exists():
-        config_backup.parent.mkdir(exist_ok=True, parents=True)
-        file_copy(config, config_backup)
-        log.info(f'Performed settings backup ({config_backup})')
-
-    # Backup database
-    if database.exists():
-        database_backup.parent.mkdir(exist_ok=True, parents=True)
-        file_copy(database, database_backup)
-        log.info(f'Performed database backup ({database_backup})')
-
-    return DataBackup(config=config_backup, database=database_backup)
-
-
-def restore_backup(backup: DataBackup, /, *, log: Logger = log):
-    """
-    Restore the config and database from the given data backup.
-
-    Args:
-        backup: Tuple of backup data (as returned by `backup_data()`)
-            to restore from.
-        log: Logger for all log messages.
-    """
-
-    # Restore config
-    if backup.config.exists():
-        if IS_DOCKER:
-            file_copy(backup.config, Path('/config/config.pickle'))
-        else:
-            file_copy(backup.config, Path('./config/config.pickle'))
-        log.debug(f'Restored backup from "{backup.config}"')
-    else:
-        log.warning(f'Cannot restore backup from "{backup.config}"')
-
-    # Restore database
-    if backup.database.exists():
-        if IS_DOCKER:
-            file_copy(backup.database, Path('/config/db.sqlite'))
-        else:
-            file_copy(backup.database, Path('./config/db.sqlite'))
-        log.debug(f'Restored backup from "{backup.database}"')
-    else:
-        log.warning(f'Cannot restore backup from "{backup.database}"')
-
 
 """
 Register a custom Regex replacement function that can be used on this

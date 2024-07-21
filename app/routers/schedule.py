@@ -8,7 +8,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 
-from app.database.session import backup_data
+from app.internal.backup import backup_data
 from app.dependencies import get_preferences, get_scheduler
 from app.internal.auth import get_current_user
 from app.internal.availability import get_latest_version

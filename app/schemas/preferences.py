@@ -1,9 +1,12 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 # pyright: reportInvalidTypeForm=false
+from datetime import datetime
 from pathlib import Path
 from typing import Literal, Optional
 
-from pydantic import DirectoryPath, FilePath, PositiveInt, conint, constr, validator
+from pydantic import (
+    DirectoryPath, FilePath, PositiveInt, conint, constr, validator
+)
 
 from app.schemas.base import (
     Base, InterfaceType, ImageSource, UpdateBase, UNSPECIFIED
@@ -177,3 +180,18 @@ class Preferences(Base):
     colorblind_mode: bool
     reduced_animations: bool
     interactive_card_previews: bool
+
+class DatabaseBackup(Base):
+    filename: str
+    filesize: int
+    schema_version: str
+
+class SettingsBackup(Base):
+    filename: str
+    filesize: int
+
+class SystemBackup(Base):
+    database: DatabaseBackup
+    settings: SettingsBackup
+    timestamp: datetime
+    version: str

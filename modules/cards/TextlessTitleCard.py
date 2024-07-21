@@ -73,9 +73,7 @@ class TextlessTitleCard(BaseCardType):
             preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this card.
-        """
+        """Construct a new instance of this card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)

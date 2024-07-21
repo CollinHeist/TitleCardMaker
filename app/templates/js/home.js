@@ -1,7 +1,5 @@
 {% if False %}
-import {
-  Series, SeriesPage, Statistic
-} from './.types.js';
+import {Series, SeriesPage, Statistic} from './.types.js';
 {% endif %}
 
 /** @type {number[]} */

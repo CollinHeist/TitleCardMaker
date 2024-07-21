@@ -4,12 +4,14 @@ from sqlalchemy.orm import Session
 from app.database.query import get_template
 from app.dependencies import get_database, get_preferences
 from app.internal.auth import get_current_user
+from app.internal.backup import list_available_backups
 from app.internal.settings import get_episode_data_sources
 from app.models.connection import Connection
 from app.models.preferences import Preferences as PreferencesModel
 from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import (
-    EpisodeDataSourceToggle, ImageSourceToggle, Preferences, UpdatePreferences
+    EpisodeDataSourceToggle, ImageSourceToggle, Preferences, SystemBackup,
+    UpdatePreferences,
 )
 
 
@@ -110,3 +112,10 @@ def get_image_source_priority(
                 'selected': False,
             })
     return sources
+
+
+@settings_router.get('/backups')
+def get_available_system_backups() -> list[SystemBackup]:
+    """Get a list detailing all the available system backups."""
+
+    return list_available_backups()

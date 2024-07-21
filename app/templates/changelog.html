@@ -23,14 +23,190 @@
       <h1 class="ui header">Changelog</h1>
 
       <div class="ui small blue labels">
-        {% set versions = ["v2.0-alpha.10.1", "v2.0-alpha.10.0", "2.0-alpha.9.1", "v2.0-alpha.9.0",
-                           "v2.0-alpha.8.1", "v2.0-alpha.8.0", "v2.0-alpha.7.0", "v2.0-alpha.6.0",
-                           "v2.0-alpha.5.2", "v2.0-alpha.5.1", "v2.0-alpha.5.0", "v2.0-alpha.4.1",
-                           "v2.0-alpha.4.0", "v2.0-alpha.3.0", "v2.0-alpha.2.2", "v2.0-alpha.2.1",
-                           "v2.0-alpha.2.0", "v2.0-alpha.1.0"] %}
-        {% for version in versions %}
+        {% set versions = [
+          "v2.0-alpha.1.0", "v2.0-alpha.2.0", "v2.0-alpha.2.1", "v2.0-alpha.2.2",
+          "v2.0-alpha.3.0", "v2.0-alpha.4.0", "v2.0-alpha.4.1", "v2.0-alpha.5.0",
+          "v2.0-alpha.5.1", "v2.0-alpha.5.2", "v2.0-alpha.6.0", "v2.0-alpha.7.0",
+          "v2.0-alpha.8.0", "v2.0-alpha.8.1", "v2.0-alpha.9.0", "2.0-alpha.9.1",
+          "v2.0-alpha.10.0", "v2.0-alpha.10.1", "v2.0-alpha.11.0"
+        ] %}
+        {% for version in versions[::-1] %}
           <a class="ui label" href="#{{version}}">{{version}}</a>
         {% endfor %}
+      </div>
+
+      <h2 id="v2.0-alpha.11.0" class="ui top attached header">
+        v2.0-alpha.11.0
+        <div class="sub header">Released July 21, 2024</div>
+      </h2>
+      <div data-version="v2.0-alpha.11.0" class="ui bottom attached segment">
+        <h3>Major Changes</h3>
+        <div class="ui ordered list">
+          <div class="item">Begin implementing automated front-end testing with <a href="https://www.cypress.io/" target="_blank">Cypress</a></div>
+          <div class="item">Allow importing series poster, series backgrounds, and season posters via Kometa / MediUX YAML (this works for Emby, Jellyfin, and Plex)</div>
+          <div class="item">Add ability to delete all Series which are not a part of <i>any</i> Sync
+            <div class="list">
+              <div class="item">Adds a global setting called "Delete Un-Synced Series" on the Settings page</div>
+              <div class="item">If enabled, TCM will delete the Series, Cards, and Source Images (if enabled) of any Series which is not included in any Sync</div>
+              <div class="item"><b>This is a potentially destructive setting</b> - be careful before enabling. Deleted Cards and Source Images are not backed up by TCM</div>
+            </div>
+          </div>
+          <div class="item">Add global option for the ImageMagick executable path
+            <div class="list">
+              <div class="item">This option <i>replaces_ the <b>TCM_IM</i> PATH</b> environment variable</div>
+              <div class="item">This setting is only applicable to <i>some</i> Windows users</div>
+            </div>
+          </div>
+          <div class="item">Significantly improve front-end error messages for Title Card validation failures - TCM will now display more "human readable" messages of the specific field validations which caused the creation to fail</div>
+          <div class="item">Reorganize the Templates page
+            <div class="list">
+              <div class="item">Move the preview cards to the top of the template (from the side) to allow the options to take up the full width of the page</div>
+              <div class="item">Display extras in groups of three fields, not two</div>
+              <div class="item">Join some input fields together</div>
+            </div>
+          </div>
+          <div class="item">Remove the "Delete Missing" option for named Fonts - this was rarely used, not well documented, and largely superfluous</div>
+          <div class="item">Add the TCM version number to backup filenames</div>
+          <div class="item">Rotate logs every 12 hours <i>or</i> every 24.9 Megabytes (was just every 12 hours) in order to prevent logs from exceeding the default Discord upload size limit</div>
+          <div class="item">Various security improvements
+            <div class="list">
+              <div class="item">Generate a random encryption key <i>on-device</i> at boot time for TCM, rather than using hard-coded value</div>
+              <div class="item">Encrypt all private Connection details (URLs and API keys) within the database, rather than keep them in plaintext</div>
+              <div class="item">Do not send private Connection details in API responses even if the user is authorized</div>
+              <div class="item">Properly redact secrets which may appear in exception tracebacks - this most commonly occurred in Plex API errors which include the X-Plex-Token as a header parameter</div>
+              <div class="item">Redact secrets in order of descending length to prevent possible "leaking" partial substrings of the secret if contained in another secret - e.g. if you had an API key of <b>ABC</b> and <b>ABCDEF</b>, previously <b>ABC</b> could have been redacted <i>first</i> , resulting in <b>DEF</b> kept as-is in the logs</div>
+            </div>
+          </div>
+        </div>
+        <h3>Major Fixes </h3>
+        <div class="ui ordered list">
+          <div class="item">Fix handling of dynamic Emby and Jellyfin database ID's
+            <div class="list">
+              <div class="item">Series are now searched for <i>without</i> the year if not found by year (only applicable to Jellyfin)</div>
+              <div class="item">Match Series by database ID's, not just name</div>
+              <div class="item">Dynamically validate and update Series ID's to handle database changes</div>
+              <div class="item">Update and overwrite existing Series Emby and Jellyfin ID's if newer ID's are found during the Set Series ID's Task</div>
+            </div>
+          </div>
+          <div class="item">Catch and handle errors raised by invalid card type models during Card imports</div>
+          <div class="item">Display the currently running Sync on Sync page (re)load</div>
+          <div class="item">Prevent multiple Syncs from being run concurrently via the UI</div>
+          <div class="item">Fix Card importing via File upload</div>
+          <div class="item">Properly initialize the Kometa integration checkbox (if enabled) within the UI</div>
+          <div class="item">Properly detect invalid TVDb API keys (and mark the Connection as invalid and disabled)</div>
+          <div class="item">Use improved full-length traceback logging in log <i>files</i> , not just stdout</div>
+          <div class="item">Fix Source Image gathering if TVDb is a specified source <i>and</i> has no images</div>
+        </div>
+        <h3>Minor Changes</h3>
+        <div class="ui ordered list">
+          <div class="item">Add sidebar link to the Changelog (accessible from the Settings submenu)</div>
+          <div class="item">Minor QOL improvements for extra inputs
+            <div class="list">
+              <div class="item">Display the default value in the input's placeholder text</div>
+              <div class="item">Add live color bubbles to all color extra fields</div>
+            </div>
+          </div>
+          <div class="item">Add some QOL visual improvements to the Logs page
+            <div class="list">
+              <div class="item">Add dynamic links for Series, Fonts, Templates, etc. when detected in log messages - e.g. a message mentioning Series 1 will include a link to the page for Series 1</div>
+              <div class="item">Highlight matching text when filtering logs by the message</div>
+              <div class="item">Significantly improve the format of traceback / error messages so they are much easier to read within the UI</div>
+              <div class="item">Add minor formatting for redacted messages</div>
+            </div>
+          </div>
+          <div class="item">Reorganize the Settings page - this is just an aesthetic change to improve logical layout of various settings</div>
+          <div class="item">Pass the active user into the Connections page via Jinja2 template variable, not an API call - this will prevent page unresponsiveness if the authentication section is interacted with immediately after loading the page</div>
+          <div class="item">Improve logging when parsing invalid Kometa YAML during Card imports</div>
+          <div class="item">Print the ImageMagick command history if preview card creation fails</div>
+          <div class="item">Improve ImageMagick <b>magick</b> command prefix detection during boot - TCM will now look at what prefix should be used in background and foreground threads (was just foreground)</div>
+          <div class="item">Rename the "Mutli Library Filename Support" setting - now called "Multi-Library File Naming"</div>
+          <div class="item">Log how many Series are returned from a Sync when run</div>
+          <div class="item">Remove unused <b>full_match_name</b> and <b>full_clean_name</b> attributes from <b>SeriesInfo</b> objects</div>
+          <div class="item">Add in-UI warning to verify Sonarr libraries <i>before</i> changing them</div>
+          <div class="item">Group Fonts into sub-groups if there are more than 19 Fonts per section - e.g. if there are 20 fonts that start with <b>A</b>, then it will be broken into <b>Aa</b>, <b>Ab</b>, etc.</div>
+          <div class="item">Remove the Episode image source attempt counter column from the SQL database</div>
+          <div class="item">Initialize the Connections page with Jinja2 template variables, not API calls</div>
+          <div class="item">Modify logging environment variables
+            <div class="list">
+              <div class="item"><b>TCM_LOG_STDOUT</b> replaces <b>TCM_LOG</b> and adjusts the log level for the std (terminal) output</div>
+              <div class="item">Add <b>TCM_LOG_FILE</b> to change the log level for file logging - default is <b>TRACE</b></div>
+              <div class="item">Add <b>TCM_LOG_RETENTION</b> to change how long logs are kept - default is <b>7 days</b></div>
+            </div>
+          </div>
+          <div class="item">Add the HTTP status code and text to API request terminations - e.g. <b>200 OK</b></div>
+          <div class="item">Display logos from TMDb in "order" sorted by language and resolution</div>
+          <div class="item">Add right-click interactivity to Series in the home page tablular view (i.e. open in new tab)</div>
+        </div>
+        <h3>Minor Fixes</h3>
+        <div class="ui ordered list">
+          <div class="item">Pin Pydantic dependency version to <b>1.10.17</b> to fix uvicorn server launch on Python 3.12.4</div>
+          <div class="item">Use alternate randomized filenames for files downloaded during Kometa YAML parsing</div>
+          <div class="item">Reset intervals to <i>exactly</i> 10 minutes if scheduled interval is too short (was resetting only the minutes field)</div>
+          <div class="item"><div class="ui mini circular green label">v1</div> Handle incorrectly written/formatted series record database version files</div>
+          <div class="item">Correctly initialize the card quality slider color based on the currently selected value</div>
+          <div class="item">Delay running Syncs by up to 5 minutes if a Sync is already running when the Task is executed</div>
+          <div class="item">Recursively delete <i>all</i> content in Series source folders instead of just files (if globally enabled)</div>
+          <div class="item">Handle objects specified without template ID's in the Episode card preview API endpoint</div>
+          <div class="item">Improve handling of log messages without context ID's in the log message table
+            <div class="list">
+              <div class="item">No longer add <b>null</b> to the context ID filter list when the blank cells are clicked</div>
+              <div class="item">Do not allow blank context ID cells to be clicked (also remove tool tip text)</div>
+            </div>
+          </div>
+          <div class="item">Only require unique Template ID's in New and UpdateTemplate objects</div>
+          <div class="item">Add TVDb to the list of Connections to search in the internal Task to set the Series IDs</div>
+          <div class="item">Properly handle blank results from TVDb when searching for a Series or Episode via external ID</div>
+        </div>
+        <h3>Title Card Changes</h3>
+        <div class="ui ordered list">
+          <div class="item">Comic Book
+            <div class="list">
+              <div class="item">Limit angle fields between 0 and 360 degrees</div>
+            </div>
+          </div>
+          <div class="item">Cutout
+            <div class="list">
+              <div class="item">Correctly parse the Blur Profile extra</div>
+            </div>
+          </div>
+          <div class="item">Overline
+            <div class="list">
+              <div class="item">Fix the episode text font size extra</div>
+            </div>
+          </div>
+          <div class="item">Roman Numeral
+            <div class="list">
+              <div class="item">Parse the roman numeral from the episode text directly so it can be modified with the Episode Text Format </div>
+              <div class="item">Correctly display multi-line season text</div>
+              <div class="item">Properly calculate overlapping text for titles with non-default interline spacing</div>
+            </div>
+          </div>
+          <div class="item">Striped
+            <div class="list">
+              <div class="item">Reduce default interline spacing by 20px</div>
+              <div class="item">Improve handling of text boundary calculation for very tall text - no longer raise an uncaught exception if the text is taller than the midpoint of the image</div>
+            </div>
+          </div>
+        </div>
+        <h3>Documentation Changes</h3>
+        <div class="ui ordered list">
+          <div class="item">Improve installation instructions for Unraid users by adding details on how to create template within the UI</div>
+          <div class="item">Add TVDb section to the Getting Started page navigation</div>
+          <div class="item">Add a note about how to add <b>ghcr.io</b> credentials to various Docker managers</div>
+          <div class="item">Fix command on updating container using Docker compose</div>
+          <div class="item">Update "Add Series" documentation to reflect new layout and removal of the "Quick-Add" concept</div>
+        </div>
+        <h3>API Changes</h3>
+        <div class="ui ordered list">
+          <div class="item">Create <b>POST</b> <b>/api/scheduler/type/{mode}</b> endpoint to explicitly set the Scheduler mode</div>
+          <div class="item">Fix <b>GET</b> <b>/api/settings/version</b> endpoint</div>
+          <div class="item">Create <b>POST</b> <b>/api/reset</b> and <b>POST</b> <b>/api/auth/reset</b> endpoints to reset all of TCM (or all authentication) - these endpoints are disabled for normal usage, and only enabled when TCM is launched in test mode</div>
+          <div class="item">Remove explicit <b>200</b> and <b>201</b> status codes from various <b>/api/fonts</b> endpoints</div>
+          <div class="item">Add <b>imagemagick_executable</b> field to the <b>UpdatePreferences</b> and <b>Preferences</b> API schema</div>
+          <div class="item">Remove <b>delete_missing</b> field from the <b>UpdateFont</b>, <b>NamedFont</b>, and <b>BlueprintFont</b> API schema</div>
+          <div class="item">Add <b>default</b> field to the <b>Extra</b> API schema</div>
+          <div class="item">Modify all <b>GET</b> <b>/api/connection/*</b> endpoints to no longer return plaintext URLs or API keys</div>
+        </div>
       </div>
 
       <h2 id="v2.0-alpha.10.1" class="ui top attached header">
