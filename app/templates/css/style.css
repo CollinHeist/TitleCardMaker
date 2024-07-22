@@ -83,8 +83,8 @@ span.color.circle {
   width: 8px;
   height: 8px;
   display: inline-block;
-  background-color: var(--color, transparent);
-  border: 0.5px solid var(--color, #ffffff7d);
+  background-color: var(--color, var(--default-color, transparent));
+  border: 0.5px solid var(--color, var(--default-color, #ffffff7d));
   /* Add space between color bubble and name */
   margin-left: 4px;
 }

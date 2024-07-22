@@ -668,7 +668,7 @@ async function initializeExtras(
       const def = extra.default === null ? 'Default' : extra.default;
       // For color fields, add live color indicator
       if (extra.name.endsWith('Color')) {
-        newInput.querySelector('label').innerHTML = `${extra.name}<span data-name="${extra.name}" class="inline color circle" style="--color: ${def}"></span>`;
+        newInput.querySelector('label').innerHTML = `${extra.name}<span data-name="${extra.name}" class="inline color circle" style="--default-color: ${def}"></span>`;
         newInput.querySelector('input').oninput = function() {
           $(this).closest('.field').find('label > .color.circle').css('--color', $(this).val())
         };
@@ -691,12 +691,16 @@ async function initializeExtras(
           );
 
       // Fill out input if part of active extras
-      if ((isGlobal && activeExtras.hasOwnProperty(card_type)
-            && activeExtras[card_type][extra.identifier]) ||
-          (!isGlobal && activeExtras[extra.identifier])) {
-            newInput.querySelector('input').value = isGlobal
+      if ((isGlobal && activeExtras.hasOwnProperty(card_type) && activeExtras[card_type][extra.identifier])
+          || (!isGlobal && activeExtras[extra.identifier])) {
+            const thisValue = isGlobal
               ? activeExtras[card_type][extra.identifier]
-              : activeExtras[extra.identifier];
+              : activeExtras[extra.identifier]
+            ;
+            newInput.querySelector('input').value = thisValue
+            if (extra.name.endsWith('Color')) {
+              newInput.querySelector('.field label > .color.circle').style.setProperty('--color', thisValue);
+            }
       }
 
       // Group every two fields into a field group
