@@ -44,6 +44,20 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: python3 build cache for docker
+        uses: actions/cache@v4
+        with:
+          path: python-build-cache
+          key: ${{ runner.os }}-python-build-cache-${{ hashFiles('Pipfile.lock') }}
+
+      - name: inject python-build-cache into docker
+        uses: reproducible-containers/buildkit-cache-dance@v3 # v2.1.4
+        with:
+          cache-map: | 
+            { 
+              "python-build-cache" : "/root/.cache"
+            }
+
       # Build container
       - name: Build Container
         uses: docker/build-push-action@v5
