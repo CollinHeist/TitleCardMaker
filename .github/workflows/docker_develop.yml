@@ -10,14 +10,17 @@ jobs:
     with:
       tag: develop
     secrets:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
-      DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+      # DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+      # DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
   docker-develop-armv7:
     uses: ./.github/workflows/docker_build_armv7.yml
     with:
       tag: develop-armv7
     secrets:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
-      DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+      # DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+      # DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
