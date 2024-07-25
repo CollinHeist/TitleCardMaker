@@ -71,8 +71,8 @@ class RemoteCardType:
             self.source = 'local'
         else:
             # Get username and class name from the identifier specification
-            username = identifier.split('/')[0]
-            class_name = identifier.split('/')[-1]
+            username = str(identifier).split('/')[0]
+            class_name = str(identifier).split('/')[-1]
 
             # Download and write the CardType class into a temporary file
             file_name = self.TEMP_DIR / f'{username}-{class_name}.py'
