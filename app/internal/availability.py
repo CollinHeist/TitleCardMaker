@@ -14,7 +14,7 @@ from modules.Version import Version
 # URL for user card types
 USER_CARD_TYPE_URL = (
     'https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/'
-    'hash-validation/cards.json'
+    'web-ui/cards.json'
 )
 
 

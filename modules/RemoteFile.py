@@ -129,15 +129,15 @@ class RemoteFile:
         GitHub, and write it to a temporary local file.
 
         Raises:
-            AssertionError if the Response is not OK; Exception if there
-            is some uncaught error.
+            ValueError: The Response is not OK.
         """
 
         # Download remote file
         content = self.__get_remote_content()
 
         # Verify content is valid
-        assert content.ok, 'File does not exist'
+        if not content.ok:
+            raise ValueError('File does not exist')
 
         # Write content to file
         with self.local_file.open('wb') as file_handle:

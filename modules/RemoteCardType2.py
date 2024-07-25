@@ -25,7 +25,7 @@ class RemoteCardType:
     """Base URL for all remote Card Type files to download"""
     URL_BASE = (
         'https://raw.githubusercontent.com/CollinHeist/'
-        'TitleCardMaker-CardTypes/hash-validation'
+        'TitleCardMaker-CardTypes/web-ui'
     )
 
     """Temporary directory all card types are written to"""
