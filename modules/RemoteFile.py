@@ -110,6 +110,12 @@ class RemoteFile:
         return self.local_file.resolve()
 
 
+    def exists(self) -> bool:
+        """Wrapper for `Path.exists()` of the associated file."""
+
+        return self.local_file.exists()
+
+
     @retry(stop=stop_after_attempt(3),
            wait=wait_fixed(3)+wait_exponential(min=1, max=16))
     def __get_remote_content(self) -> Response:
