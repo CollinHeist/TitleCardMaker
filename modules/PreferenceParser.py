@@ -776,7 +776,7 @@ class PreferenceParser(YamlReader):
 
         if (value := self.get('tmdb', 'logo_language_priority',
                                type_=str)) is not None:
-            codes = list(map(lambda s: str(s).lower().strip(), value.split(',')))
+            codes = list(map(str.strip, value.split(',')))
             if all(code in TMDbInterface.LANGUAGE_CODES for code in codes):
                 self.tmdb_logo_language_priority = codes
             else:
@@ -842,11 +842,10 @@ class PreferenceParser(YamlReader):
             log.warning(f'Specifying the "imagemagick" section is not '
                         f'recommended when using TitleCardMaker in Docker')
 
-        if (value := self.get('imagemagick', 'container',
-                               type_=str)) is not None:
+        if (value := self.get('imagemagick', 'container', type_=str)):
             self.imagemagick_container = value
 
-        if (value := self.get('imagemagick', 'timeout',type_=int)) is not None:
+        if (value := self.get('imagemagick', 'timeout', type_=int)):
             self.imagemagick_timeout = value
 
         return None
