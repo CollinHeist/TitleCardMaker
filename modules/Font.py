@@ -140,7 +140,7 @@ class Font(YamlReader):
 
         # File
         if (value := self.get('file', type_=Path)) is not None:
-            # If specified as direct path, check for existance
+            # If specified as direct path, check for existence
             if value.exists():
                 self.file = str(value.resolve())
                 self.replacements = {}

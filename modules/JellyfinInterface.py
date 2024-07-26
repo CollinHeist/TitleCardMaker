@@ -63,7 +63,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             SystemExit: Invalid URL/API key provided.
         """
 
-        # Intiialize parent classes
+        # Initialize parent classes
         super().__init__(filesize_limit)
 
         # Store attributes of this Interface

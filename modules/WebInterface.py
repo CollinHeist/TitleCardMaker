@@ -158,18 +158,19 @@ class WebInterface:
             destination.write_bytes(image)
             return True
 
-        # Attempt to download the image, if an error happens log to user
+        # Attempt download
+        url = image
         try:
-            # Get content from URL
-            image = get(image, timeout=30).content
+            # Download from URL
+            image = get(url, timeout=30).content
             if len(image) == 0:
-                raise ValueError(f'URL {image} returned no content error')
-            if any(bad_content in image for bad_content in WebInterface.BAD_CONTENT):
-                raise ValueError(f'URL {image} returned malformed content')
+                raise ValueError(f'URL {url} returned no content')
+            if any(bc in image for bc in WebInterface.BAD_CONTENT):
+                raise ValueError(f'URL {url} returned malformed content')
 
             # Write content to file, return success
             destination.write_bytes(image)
             return True
         except Exception: # pylint: disable=broad-except
-            log.exception(f'Cannot download image, returned error')
+            log.exception('Cannot download image, returned error')
             return False
