@@ -723,7 +723,7 @@ class PreferenceParser(YamlReader):
                     ),
                 })
 
-        # If multiple servers were specified, parse all specificiations
+        # If multiple servers were specified, parse all specifications
         if isinstance(self.get('sonarr'), list):
             for server in self.get('sonarr'):
                 parse_server(server)
@@ -771,9 +771,8 @@ class PreferenceParser(YamlReader):
                                type_=bool)) is not None:
             self.tmdb_skip_localized_images = value
 
-        if (value := self.get('tmdb', 'logo_language_priority',
-                               type_=str)) is not None:
-            codes = list(map(lambda s: str(s).lower().strip(), value.split(',')))
+        if (value := self.get('tmdb', 'logo_language_priority', type_=str)):
+            codes = list(map(str.strip, value.split(',')))
             if all(code in TMDbInterface.LANGUAGE_CODES for code in codes):
                 self.tmdb_logo_language_priority = codes
             else:
@@ -839,11 +838,10 @@ class PreferenceParser(YamlReader):
             log.warning(f'Specifying the "imagemagick" section is not '
                         f'recommended when using TitleCardMaker in Docker')
 
-        if (value := self.get('imagemagick', 'container',
-                               type_=str)) is not None:
+        if (value := self.get('imagemagick', 'container', type_=str)):
             self.imagemagick_container = value
 
-        if (value := self.get('imagemagick', 'timeout',type_=int)) is not None:
+        if (value := self.get('imagemagick', 'timeout', type_=int)):
             self.imagemagick_timeout = value
 
         return None
@@ -1076,7 +1074,7 @@ class PreferenceParser(YamlReader):
                             f'not present in font list')
                 log.info(f'Listed font names are {font_names}')
                 return None
-            # Font identifer in map, merge YAML
+            # Font identifier in map, merge YAML
             show_yaml['font'] = {}
             Template.recurse_priority_union(show_yaml['font'], font_yaml)
 

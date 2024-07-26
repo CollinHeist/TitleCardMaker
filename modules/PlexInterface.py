@@ -134,8 +134,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         except Unauthorized:
             log.critical(f'Invalid Plex Token "{x_plex_token}"')
             sys_exit(1)
-        except Exception:
-            log.critical(f'Cannot connect to Plex - returned error: "{e}"')
+        except Exception as exc:
+            log.critical(f'Cannot connect to Plex - returned error: "{exc}"')
             sys_exit(1)
 
         # Adjust timeout for PlexServer object and environment variable
