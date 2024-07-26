@@ -39,7 +39,10 @@ class LogoTitleCard(BaseCardType):
     """Whether this CardType uses unique source images"""
     USES_UNIQUE_SOURCES = False
 
-    """Standard class has standard archive name"""
+    """Whether this class uses Source Images at all"""
+    USES_SOURCE_IMAGES = False # Set as False; if required then caught by model
+
+    """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Logo Style'
 
     """Default fonts and color for series count text"""
@@ -47,7 +50,7 @@ class LogoTitleCard(BaseCardType):
     EPISODE_COUNT_FONT = REF_DIRECTORY / 'Proxima Nova Regular.otf'
     SERIES_COUNT_TEXT_COLOR = '#CFCFCF'
 
-    """Source path for the gradient image overlayed over all title cards"""
+    """Source path for the gradient image overlaid over all title cards"""
     __GRADIENT_IMAGE = REF_DIRECTORY / 'GRADIENT.png'
 
     __slots__ = (

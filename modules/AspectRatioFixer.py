@@ -33,7 +33,7 @@ class AspectRatioFixer(ImageMaker):
 
         Args:
             source: Path to the source image to use.
-            destination: Path to the desination file to write the image
+            destination: Path to the destination file to write the image
                 at.
             style: Aspect ratio correction style.
 

@@ -1,8 +1,7 @@
-from pathlib import Path as _Path_, _windows_flavour, _posix_flavour
-import os
+from pathlib import Path
 
 
-class CleanPath(_Path_):
+class CleanPath(type(Path())):
     """
     Subclass of Path that is more OS-agnostic and implements methods of
     cleaning directories and filenames of bad characters. For example:
@@ -27,8 +26,9 @@ class CleanPath(_Path_):
         '\\': '+',
     }
 
-    """Implement the correct 'flavour' depending on the host OS"""
-    _flavour = _windows_flavour if os.name == 'nt' else _posix_flavour
+
+    def __new__(cls, *pathsegments: str):
+        return super().__new__(cls, *pathsegments)
 
 
     def finalize(self) -> 'CleanPath':
