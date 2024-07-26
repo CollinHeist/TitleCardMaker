@@ -110,6 +110,12 @@ class RemoteFile:
         return self.local_file.resolve()
 
 
+    def exists(self) -> bool:
+        """Wrapper for `Path.exists()` of the associated file."""
+
+        return self.local_file.exists()
+
+
     @retry(stop=stop_after_attempt(3),
            wait=wait_fixed(3)+wait_exponential(min=1, max=16))
     def __get_remote_content(self) -> Response:
@@ -129,15 +135,15 @@ class RemoteFile:
         GitHub, and write it to a temporary local file.
 
         Raises:
-            AssertionError if the Response is not OK; Exception if there
-            is some uncaught error.
+            ValueError: The Response is not OK.
         """
 
         # Download remote file
         content = self.__get_remote_content()
 
         # Verify content is valid
-        assert content.ok, 'File does not exist'
+        if not content.ok:
+            raise ValueError('File does not exist')
 
         # Write content to file
         with self.local_file.open('wb') as file_handle:
