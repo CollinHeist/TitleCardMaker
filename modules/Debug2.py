@@ -7,6 +7,7 @@ import sys
 from typing import TYPE_CHECKING
 
 import better_exceptions
+from fastapi import WebSocket
 from loguru import logger
 from loguru._file_sink import Rotation as LoguruRotation
 from loguru._string_parsers import parse_size
@@ -24,6 +25,10 @@ if environ.get('TCM_IS_DOCKER', 'false').lower() == 'true':
     LOG_FILE = Path('/config/logs/log.jsonl')
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
+"""Websocket connections to send log messages to"""
+ACTIVE_WEBSOCKETS: set[WebSocket] = set()
+
+"""Do not limit the length of exception tracebacks"""
 better_exceptions.MAX_LENGTH = None
 
 """
@@ -86,9 +91,19 @@ TimedRotation = LoguruRotation.RotationTime(
 SizeRotation = partial(
     LoguruRotation.rotation_size, size_limit=parse_size('24.9 MB')
 )
-def rotation_policy(message: 'Message', file: Path) -> bool:
+def rotation_policy(message: str, file: Path) -> bool:
     return SizeRotation(message, file) or TimedRotation(message, file)
 
+"""
+Send log messages over all active WebSockets for real-time logs to the
+UI.
+"""
+async def send_websocket_logs(message: str):
+    for connection in ACTIVE_WEBSOCKETS:
+        try:
+            await connection.send_text(message)
+        except Exception:
+            pass
 
 logger.configure(
     handlers=[
@@ -126,6 +141,14 @@ logger.configure(
         #     sink='sqlalchemy.engine',
         #     level='DEBUG',
         # ),
+        dict(
+            sink=send_websocket_logs,
+            level='INFO',
+            format='{message}',
+            colorize=False,
+            backtrace=False,
+            enqueue=True,
+        ),
     ],
     levels=[
         dict(name='TRACE', color='<dim><fg #6d6d6d>'),

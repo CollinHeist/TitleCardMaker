@@ -774,8 +774,7 @@ class PreferenceParser(YamlReader):
                                type_=bool)) is not None:
             self.tmdb_skip_localized_images = value
 
-        if (value := self.get('tmdb', 'logo_language_priority',
-                               type_=str)) is not None:
+        if (value := self.get('tmdb', 'logo_language_priority', type_=str)):
             codes = list(map(str.strip, value.split(',')))
             if all(code in TMDbInterface.LANGUAGE_CODES for code in codes):
                 self.tmdb_logo_language_priority = codes
