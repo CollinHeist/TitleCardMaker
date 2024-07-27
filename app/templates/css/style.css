@@ -66,6 +66,27 @@ body > div:first-of-type {
   z-index: 98;
 }
 
+/* FLoating log messages (toasts) */
+#__current_log {
+  /* Position message in the lower-right corner */
+  position: fixed;
+  bottom: 0.8em;
+  right: 1em;
+  /* Color semi-transparent black with a blue right border */
+  color: white;
+  background-color: rgba(21, 21, 21, 90%);
+  border-right: 3px solid rgb(76, 154, 247);
+  /* Add slight shadow */
+  box-shadow: rgba(0, 0, 0, 60%) 5px 5px 5px;
+  /* Curve edges */
+  border-radius: 0.4em;
+  padding: 0.785em 1em;
+  /* Limit width */
+  max-width: 400px;
+  /* Position above all other content */
+  z-index: 9999;
+}
+
 /* Stylize "code" color text */
 code.color {
   /* Add stylized bubble */
