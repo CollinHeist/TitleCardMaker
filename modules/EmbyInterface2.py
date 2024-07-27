@@ -386,7 +386,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                         f'"{library_name}" in Emby')
             return None
 
-        del series_info[self._interface_id, library_name]
+        del series_info.emby_id[self._interface_id, library_name]
         series_info.copy_ids(series)
         return None
 

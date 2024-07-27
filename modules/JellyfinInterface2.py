@@ -431,7 +431,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
                         f'"{library_name}" in Jellyfin')
             return None
 
-        del series_info[self._interface_id, library_name]
+        del series_info.jellyfin_id[self._interface_id, library_name]
         series_info.copy_ids(result, log=log)
         return None
 
