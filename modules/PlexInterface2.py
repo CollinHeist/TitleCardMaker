@@ -873,7 +873,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                     plex_episode.removeLabel(['Overlay'])
                     log.trace(f'Removed "Overlay" label from {plex_episode}')
                 log.debug(f'{series_info} {plex_episode.seasonEpisode} loaded '
-                          f'Card into "{library_name}"')
+                          f'Card {image.name} into "{library_name}"')
             except Exception:
                 log.exception(f'Unable to upload {image.resolve()} to '
                               f'{series_info}')
