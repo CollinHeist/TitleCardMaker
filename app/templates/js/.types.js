@@ -641,7 +641,13 @@
  * @property {number} size
  * @property {number} page
  * @property {number} pages
- * 
+ */
+
+/**
+ * @typedef {Object} LogInternalServerError
+ * @property {?string} context_id
+ * @property {string} time
+ * @property {string} file
  */
 
 // Statistics ------------------------------------------------------------------

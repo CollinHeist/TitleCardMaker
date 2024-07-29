@@ -1,5 +1,5 @@
 {% if False %}
-import {LogEntryPage, LogLevel} from './.types.js';
+import {LogEntryPage, LogInternalServerError, LogLevel} from './.types.js';
 {% endif %}
 
 /**
@@ -150,7 +150,8 @@ function queryForLogs(page=1) {
         row.querySelector('[data-value="context_id"]').innerText = message.context_id
           ? message.context_id
           : ''
-        
+        ;
+
         if (message.context_id) {
           row.querySelector('[data-value="context_id"]').innerText = message.context_id;
         } else {
@@ -253,6 +254,86 @@ function queryLogFiles() {
 }
 
 /**
+ * Query a list of all internal server errors listed in the log files.
+ */
+function queryLogErrors() {
+  /**
+   * Get a string which details how long ago the given date occured.
+   * @param {Date} date - Reference date to format between.
+   * @returns String between `date` and now.
+   */
+  function timeAgo(date) {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+
+    const units = [
+        { name: 'year',   seconds: 31536000 },
+        { name: 'month',  seconds: 2592000 },
+        { name: 'week',   seconds: 604800 },
+        { name: 'day',    seconds: 86400 },
+        { name: 'hour',   seconds: 3600 },
+        { name: 'minute', seconds: 60 },
+        { name: 'second', seconds: 1 }
+    ];
+
+    for (const unit of units) {
+      const interval = Math.floor(diffInSeconds / unit.seconds);
+      if (interval > 0) {
+        return `${interval} ${unit.name}${interval !== 1 ? 's' : ''} ago`;
+      }
+    }
+    return 'Just Now';
+  }
+
+  $.ajax({
+    type: 'GET',
+    url: '/api/logs/errors',
+    /**
+     * List of errors returned. Populate page.
+     * @param {LogInternalServerError[]} logErrors 
+     */
+    success: logErrors => {
+      const errorList = document.getElementById('error-list');
+      const template = document.getElementById('internal-error-template');
+      logErrors.forEach(error => {
+        const item = template.content.cloneNode(true);
+        // Populate the item
+        item.querySelector('[data-value="time"]').innerText = timeAgo(new Date(error.time));
+        item.querySelector('[data-value="context_id"]').innerText = error.context_id;
+        // When the context ID is clicked, add-to and scroll-to input
+        item.querySelector('[data-value="context_id"]').onclick = () => {
+          document.querySelector('input[name="context_id"]').scrollIntoView({behavior: 'smooth', block: 'start'});
+          setTimeout(() => appendContextID(error.context_id), 250);
+        }
+        // When timestamp is clicked, update inputs
+        item.querySelector('[data-value="time"]').onclick = () => {
+          document.querySelector('input[name="context_id"]').scrollIntoView({behavior: 'smooth', block: 'start'});
+          updateTimestamp(error.time);
+        };
+        // When the GitHub icon is clicked, query the log file sizp and open a new tab
+        item.querySelector('.icon').onclick = () => $.ajax({
+          type: 'GET',
+          url: `/api/logs/files/${error.file}/zip`,
+          xhrFields: {responseType: 'blob'},
+          success: logBlob => {
+            downloadFileBlob('log.zip', logBlob);
+
+            window.open(
+              'https://github.com/TitleCardMaker/TitleCardMaker-WebUI/issues/new?'
+              + 'assignees=CollinHeist&labels=bug&projects=&template=bug_report_log.yml'
+              + '&title=BUG+-+&version={{ preferences.current_version }}',
+              '_blank'
+            );
+          },
+        });
+
+        errorList.appendChild(item);
+      });
+    },
+  })
+}
+
+/**
  * Initialize the page. This queries for logs, initializes dropdowns, and
  * initializes the after/before calendar inputs.
  */
@@ -260,6 +341,7 @@ function initAll() {
   $('.ui.dropdown').dropdown();
   queryForLogs();
   queryLogFiles();
+  queryLogErrors();
 
   // Initialize date range calendars
   $('#date-after').calendar({

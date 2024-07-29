@@ -1,40 +1,29 @@
 from datetime import datetime
-from typing import Optional, TypedDict
+from logging import Logger
+from typing import Optional
 from warnings import simplefilter
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import (
+    APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
+)
+from fastapi.responses import FileResponse
 from fastapi_pagination import paginate
 from fastapi_pagination.utils import FastAPIPaginationWarning
-from json import JSONDecodeError, loads
 
 from app.database.session import Page
+from app.dependencies import get_preferences
 from app.internal.auth import get_current_user
-from app.schemas.logs import LogEntry, LogLevel
+from app.internal.logs import RawLogData, read_log_files
+from app.models.preferences import Preferences
+from app.schemas.logs import LogEntry, LogInternalServerError, LogLevel
 
-from modules.Debug import log, DATETIME_FORMAT, LOG_FILE # noqa: F401
+from modules.Debug import log, DATETIME_FORMAT, LOG_FILE
+from modules.TemporaryZip import TemporaryZip # noqa: F401
 
 
 # Do not warn about SQL pagination, not used for log filtering
 simplefilter('ignore', FastAPIPaginationWarning)
 
-# pylint: disable=missing-class-docstring
-class ExecutionDetails(TypedDict):
-    file: str
-    line: int
-
-class ExceptionDetails(TypedDict):
-    type: str
-    value: str
-    traceback: str
-
-class RawLogData(TypedDict):
-    message: str
-    context_id: str
-    level: LogLevel
-    time: datetime
-    execution: ExecutionDetails
-    exception: Optional[ExceptionDetails]
-# pylint: enable=missing-class-docstring
 
 # Create sub router for all /logs API requests
 log_router = APIRouter(
@@ -69,36 +58,25 @@ def query_logs(
     evaluate the most recent (active) log file.
     """
 
-    # Read all associated log files from the rotated files
-    logs: list[RawLogData] = []
-
-    # Only read the active log file
-    if shallow:
-        with LOG_FILE.open('r') as file_handle:
-            for line in file_handle.readlines():
-                try:
-                    logs.append(loads(line))
-                except JSONDecodeError:
-                    pass
-    # Read all log files
-    else:
-        for log_file in LOG_FILE.parent.glob(f'{LOG_FILE.stem}*{LOG_FILE.suffix}'):
-            # Skip files last modified before the minimum after time
-            if (after is not None
-                and after > datetime.fromtimestamp(log_file.stat().st_mtime)):
-                continue
-
-            # Add file contents to the list
-            with log_file.open('r') as file_handle:
-                for line in file_handle.readlines():
-                    try:
-                        logs.append(loads(line))
-                    except JSONDecodeError:
-                        pass
+    logs = read_log_files(after=after, before=before, shallow=shallow)
 
     # Function to filter log results by
     contains = None if contains is None else contains.lower().split('|')
     def meets_filters(data: RawLogData) -> bool:
+        # return (
+        #     _LEVEL_NUMBERS[data['level']] >= _LEVEL_NUMBERS[level]
+        #     and (
+        #         data['context_id'] is None
+        #         or context_id is None
+        #         or data['context_id'] in context_id
+        #     )
+        #     and (before is None or data['time'] <= before)
+        #     and (after is None or data['time'] >= after)
+        #     and (
+        #         contains is None
+        #         or any(cont in data['message'].lower() for cont in contains)
+        #     )
+        # )
         # Level criteria
         if _LEVEL_NUMBERS[data['level']] < _LEVEL_NUMBERS[level]:
             return False
@@ -150,3 +128,63 @@ def get_log_files() -> list[str]:
         str(file).replace(str(LOG_FILE.parent.resolve()), '/logs')
         for file in LOG_FILE.parent.glob(f'{LOG_FILE.stem}*{LOG_FILE.suffix}')
     ]
+
+
+@log_router.get('/files/{filename}/zip')
+def zip_log_file(
+        background_tasks: BackgroundTasks,
+        request: Request,
+        filename: str,
+        preferences: Preferences = Depends(get_preferences),
+    ) -> FileResponse:
+    """
+    Zip the log file with the given name and return it's contents.
+
+    - filename: Name of the file to zip.
+    """
+
+    log: Logger = request.state.log
+
+    # Find associated log file, raise 404 if DNE
+    if not (file := LOG_FILE.parent / filename).exists():
+        raise HTTPException(
+            status_code=404,
+            detail='The specified log file does not exist',
+        )
+
+    # Add log file to a temporary directory
+    tzip = TemporaryZip(preferences.TEMPORARY_DIRECTORY, background_tasks)
+    tzip.add_file(file, 'log.jsonl', log=log)
+
+    return FileResponse(tzip.zip(log=log))
+
+
+@log_router.get('/errors')
+def get_internal_server_errors(
+        after: Optional[datetime] = Query(default=None),
+        before: Optional[datetime] = Query(default=None),
+        shallow: bool = Query(default=False),
+    ) -> list[LogInternalServerError]:
+    """
+    Get a list of all internal server errors listed in the log files.
+
+    - after: Earliest date of logs to return. ISO 8601 format.
+    - before: Latest date of logs to return. ISO 8601 format.
+    - shallow: Whether to only do a "shallow" query, which will only
+    evaluate the most recent (active) log file.
+    """
+
+    return sorted(
+        [
+            LogInternalServerError(
+                context_id=log['context_id'],
+                time=datetime.strptime(log['time'], DATETIME_FORMAT),
+                # message=log['message'],
+                file=log['file'].name,
+            )
+            for log in read_log_files(after=after, before=before, shallow=shallow)
+            if log['message'].startswith('Internal Server Error\n')
+        ],
+        key=lambda log: log.time,
+        reverse=True,
+    )

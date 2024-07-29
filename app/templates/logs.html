@@ -66,6 +66,16 @@
     </tr>
   </template>
 
+  <template id="internal-error-template">
+    <div class="item">
+      <i class="large github middle aligned red icon" title="Open a new Issue on GitHub" style="cursor: pointer"></i>
+      <div class="content">
+        <a class="header" data-value="context_id"></a>
+        <div class="description" data-value="time">from xxx</div>
+      </div>
+    </div>
+  </template>
+
   <template id="log-file-template">
     <tr>
       <td class="collapsing" data-value="filename"></td>
@@ -187,8 +197,19 @@
       <!-- Pagination buttons -->
       <div id="pagination" class="ui pagination menu"><!-- Added asynchronously --></div>
 
+      <h1 class="ui header">
+        <div class="content">
+          Internal Server Errors
+          <div class="sub header">
+            Unexpected errors which may indicate some bug within TCM. Click the
+            respective GitHub icon to open an issue for that Error.
+          </div>
+        </div>
+      </h1>
+      <div class="ui relaxed divided list" id="error-list"><!-- Added asynchronously --></div>
+
       <!-- Log files -->
-      <h2 class="ui header">Log Files</h2>
+      <h1 class="ui header">Log Files</h1>
       <table class="ui striped compact table">
         <thead>
           <tr>
@@ -200,7 +221,6 @@
         <tbody id="file-list"></tbody>
       </table>
     </div>
-
   </div>
 </body>
 </html>

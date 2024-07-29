@@ -1669,7 +1669,8 @@ function exportBlueprint() {
       // Get URL to pre-fill Blueprint form
       let url = `series_year={{series.year}}&database_ids=${(idStr)}`
         + `&series_name=${encodeURIComponent(series_name)}`
-        + `&title=[Blueprint] ${encodeURIComponent(series_name)}`;
+        + `&title=[Blueprint] ${encodeURIComponent(series_name)}`
+      ;
 
       // Open window for Blueprint submission
       window.open(

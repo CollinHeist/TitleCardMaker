@@ -25,3 +25,9 @@ class LogEntry(Base):
     time: datetime
     message: str
     exception: Optional[LogException]
+
+class LogInternalServerError(Base):
+    context_id: Optional[str]
+    time: datetime
+    # message: str
+    file: str
