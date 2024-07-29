@@ -7,16 +7,16 @@ description: >
 
 # Import TitleCardMaker YAML Settings
 
+!!! note "Applicability"
+
+    This page is only applicable to users who have old YAML preferences files
+    from previous TitleCardMaker installations. New users should skip this.
+
 !!! tip "Recommendation"
 
     Unless you are _really_ against filling out text boxes, I strongly recommend
     skipping any YAML importing. It is generally more error-prone, and sometimes
     even slower than entering the info manually.
-
-!!! note "Applicability"
-
-    This page is only applicable to users who have old YAML preferences files
-    from previous TitleCardMaker installations. New users should skip this.
 
 For users migrating to the Web UI from TCM v1 (the command-line interface), some
 of the following configuration steps _can_ be skipped by importing your

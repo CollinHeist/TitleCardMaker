@@ -131,7 +131,7 @@ def get_log_files() -> list[str]:
 
 
 @log_router.get('/files/{filename}/zip')
-def zip_log_file(
+def get_zipped_log_file(
         background_tasks: BackgroundTasks,
         request: Request,
         filename: str,
