@@ -127,6 +127,7 @@ class TitleCard:
 
 
     def __init__(self,
+            series_info: SeriesInfo,
             episode: 'Episode',
             profile: 'Profile',
             title_characteristics: SplitCharacteristics,
@@ -136,6 +137,7 @@ class TitleCard:
         Constructs a new instance of this class.
 
         Args:
+            series_info: Info of the Card's associated Series.
             episode: The episode whose TitleCard this corresponds to.
             profile: The profile to apply to the creation of this title
                 card.
@@ -184,6 +186,7 @@ class TitleCard:
             'grayscale': episode.grayscale,
             'watched': episode.watched,
         } | profile.font.attributes \
+          | series_info.characteristics \
           | self.episode.episode_info.indices \
           | extra_characteristics
 

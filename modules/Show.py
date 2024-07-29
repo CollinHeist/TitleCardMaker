@@ -1088,6 +1088,7 @@ class Show(YamlReader):
 
             # Create a TitleCard object for this episode with Show's profile
             title_card = TitleCard(
+                self.series_info,
                 episode,
                 self.profile,
                 self.card_class.TITLE_CHARACTERISTICS,
