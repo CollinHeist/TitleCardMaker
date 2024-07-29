@@ -147,7 +147,7 @@ logger.configure(
             format='{message}',
             colorize=False,
             backtrace=False,
-            enqueue=True,
+            enqueue=environ.get('TCM_V1', 'False') == 'False',
         ),
     ],
     levels=[
