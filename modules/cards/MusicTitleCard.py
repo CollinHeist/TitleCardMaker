@@ -1008,11 +1008,11 @@ class MusicTitleCard(BaseCardType):
 
         if not custom_font:
             if 'control_colors' in extras:
-                extras['control_colors'] = MusicTitleCard.DEFAULT_CONTROL_COLORS
+                del extras['control_colors']
             if 'episode_text_color' in extras:
-                extras['episode_text_color'] = MusicTitleCard.EPISODE_TEXT_COLOR
+                del extras['episode_text_color']
             if 'timeline_color' in extras:
-                extras['timeline_color'] = MusicTitleCard.DEFAULT_TIMELINE_COLOR
+                del extras['timeline_color']
 
 
     @staticmethod

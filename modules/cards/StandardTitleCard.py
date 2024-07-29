@@ -314,14 +314,13 @@ class StandardTitleCard(BaseCardType):
         # Generic font, reset custom episode text color
         if not custom_font:
             if 'episode_text_color' in extras:
-                extras['episode_text_color'] = \
-                    StandardTitleCard.SERIES_COUNT_TEXT_COLOR
+                del extras['episode_text_color']
             if 'episode_text_font_size' in extras:
-                extras['episode_text_font_size'] = 1.0
+                del extras['episode_text_font_size']
             if 'episode_text_vertical_shift' in extras:
-                extras['episode_text_vertical_shift'] = 0
+                del extras['episode_text_vertical_shift']
             if 'stroke_color' in extras:
-                extras['stroke_color'] = 'black'
+                del extras['stroke_color']
 
 
     @staticmethod
@@ -370,10 +369,9 @@ class StandardTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
-        standard_etf = StandardTitleCard.EPISODE_TEXT_FORMAT.upper()
-
         return (custom_episode_map
-                or episode_text_format.upper() != standard_etf)
+                or episode_text_format.upper() != \
+                    StandardTitleCard.EPISODE_TEXT_FORMAT.upper())
 
 
     def create(self) -> None:
