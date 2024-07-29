@@ -1,7 +1,6 @@
 from logging import Logger
 from pathlib import Path
 from re import compile as re_compile, IGNORECASE
-from time import sleep
 
 from fastapi import HTTPException
 from requests import get
@@ -38,35 +37,6 @@ REPO_URL = 'https://github.com/TitleCardMaker/Blueprints/raw/master'
 
 """URL under which all Blueprint subdirectories are located"""
 BLUEPRINTS_URL = f'{REPO_URL}/blueprints'
-
-
-def delay_zip_deletion(zip_directory: Path, zip_file: Path) -> None:
-    """
-    Delete the given zip directory and files. A delay is utilized so
-    that the browser is able to download the content before they are
-    deleted.
-
-    Args:
-        zip_directory: Directory containing zipped files to be deleted.
-            The contents are deleted, then the directory itself.
-        zip_file: Zip file to delete directly.
-    """
-
-    # Wait a while to give the browser time to download the zips
-    sleep(5)
-
-    # Delete zip file
-    zip_file.unlink(missing_ok=True)
-    log.debug(f'Deleted "{zip_file}"')
-
-    # Delete zip directory contents
-    for file in zip_directory.glob('*'):
-        file.unlink(missing_ok=True)
-        log.debug(f'Deleted "{file}"')
-
-    # Delete zip directory
-    zip_directory.rmdir()
-    log.debug(f'Deleted {zip_directory}')
 
 
 def generate_series_blueprint(

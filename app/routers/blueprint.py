@@ -2,7 +2,6 @@ from json import dump
 from logging import Logger
 from pathlib import Path
 from random import choice as random_choice
-from shutil import copy as copy_file, make_archive as zip_directory
 from typing import Literal, Optional
 
 from fastapi import (
@@ -20,8 +19,8 @@ from app.dependencies import (
 )
 from app.internal.auth import get_current_user
 from app.internal.blueprint import (
-    delay_zip_deletion, generate_series_blueprint, get_blueprint_font_files,
-    import_blueprint, query_series_blueprints
+    generate_series_blueprint, get_blueprint_font_files, import_blueprint,
+    query_series_blueprints
 )
 from app.internal.episodes import get_all_episode_data
 from app.internal.series import add_series
@@ -32,7 +31,7 @@ from app.schemas.blueprint import (
     DownloadableFile, ExportBlueprint, RemoteBlueprint, RemoteBlueprintSet,
 )
 from app.schemas.series import Series
-from modules.Debug import generate_context_id
+from modules.TemporaryZip import TemporaryZip
 
 
 # Create sub router for all /blueprints API requests
@@ -183,49 +182,36 @@ async def export_series_blueprint_as_zip(
     # Select random Card if possible
     card_file = Path(random_choice(filtered_cards)) if filtered_cards else None
 
-    # Directories for zipping
-    ZIPS_DIR = preferences.TEMPORARY_DIRECTORY / 'zips'
-    cid = generate_context_id()
-    font_zip_dir = ZIPS_DIR / f"fonts_{cid}"
-    font_zip_dir.mkdir(exist_ok=True, parents=True)
-    zip_dir: Path = ZIPS_DIR / cid
-    zip_dir.mkdir(exist_ok=True, parents=True)
+    # Directories for zipping all Blueprint data and Fonts
+    tzip = TemporaryZip(preferences.TEMPORARY_DIRECTORY, background_tasks)
+    font_tzip = TemporaryZip(preferences.TEMPORARY_DIRECTORY, background_tasks)
 
     # Copy all files into the zip directory
     for file in font_files:
-        copy_file(file, font_zip_dir / file.name)
-        log.debug(f'Copied "{file}" into Font zip directory')
+        font_tzip.add_file(file, log=log)
 
-    # Zip files, copy into main zip directory, delete after some delay
+    # Zip files, copy into main zip directory
     if font_files:
-        font_zip = Path(zip_directory(font_zip_dir, 'zip', font_zip_dir))
-        background_tasks.add_task(delay_zip_deletion, font_zip_dir, font_zip)
-        copy_file(font_zip, zip_dir / 'fonts.zip')
+        tzip.add_file(font_tzip.zip(log=log), log=log)
 
     # Copy preview into main zip directory
     if card_file is None:
         log.warning(f'No applicable Title Cards found for preview')
     # .webp must be converted, GitHub does not support natively
     elif card_file.suffix == '.webp':
-        Image.open(card_file).convert('RGB').save(zip_dir / 'preview.jpg')
+        Image.open(card_file).convert('RGB').save(tzip.dir / 'preview.jpg')
         log.debug(f'Converted "{card_file}" to .jpg')
         log.debug(f'Copied "{card_file}" into zip directory')
     else:
-        copy_file(card_file, zip_dir / f'preview{card_file.suffix}')
-        log.debug(f'Copied "{card_file}" into zip directory')
+        tzip.add_file(card_file, f'preview{card_file.suffix}', log=log)
 
     # Write Blueprint as JSON into zip directory
-    blueprint_file = zip_dir / 'blueprint.json'
-    with blueprint_file.open('w') as file_handle:
+    with (tzip.dir / 'blueprint.json').open('w') as file_handle:
         dump(blueprint.dict(), file_handle, indent=2)
-    log.debug(f'Wrote "blueprint.json" into zip directory')
+    log.debug('Wrote "blueprint.json" into zip directory')
 
     # Create zip of Font zip + preview file + Blueprint JSON
-    zip_ = zip_directory(zip_dir, 'zip', zip_dir)
-    background_tasks.add_task(delay_zip_deletion, zip_dir, Path(zip_))
-
-    # Zip directory, return zipped file
-    return FileResponse(zip_)
+    return FileResponse(tzip.zip(log=log))
 
 
 @blueprint_router.put('/blacklist/{blueprint_id}')
