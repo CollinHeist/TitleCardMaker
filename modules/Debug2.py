@@ -98,7 +98,7 @@ def rotation_policy(message: str, file: Path) -> bool:
 Send log messages over all active WebSockets for real-time logs to the
 UI.
 """
-async def send_websocket_logs(message: str):
+async def websocket_logger(message: str) -> None:
     for connection in ACTIVE_WEBSOCKETS:
         try:
             await connection.send_text(message)
@@ -142,7 +142,7 @@ logger.configure(
         #     level='DEBUG',
         # ),
         dict(
-            sink=send_websocket_logs,
+            sink=websocket_logger,
             level='INFO',
             format='{message}',
             colorize=False,
