@@ -79,6 +79,11 @@ table .dropdown[data-value="libraries"] .active.item {
   min-width: 0;
 }
 
+/* Vertically center statistic loaders */
+.statistics .statistic .value .loader {
+  top: -0.2em;
+}
+
 /* Mobile formatting */
 @media (max-width: 768px) {
   /* Show 3 cards/row */
