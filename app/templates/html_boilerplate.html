@@ -18,7 +18,6 @@
 <script type="text/javascript" src="/templates/js/loadStaticContent.js?v={{preferences.current_version}}"></script>
 <script type="text/javascript" src="/templates/js/loadCardTypes.js?v={{preferences.current_version}}"></script>
 <script type="text/javascript" src="/templates/js/theme.js?v={{preferences.current_version}}"></script>
-<script type="text/javascript" src="/templates/js/messages.js?v={{preferences.current_version}}"></script>
 <script type="text/javascript" src="/templates/js/helper.js?v={{preferences.current_version}}"></script>
 <script type="text/javascript" src="/templates/js/tablesort.js?v={{preferences.current_version}}"></script>
 <script type="text/javascript">
@@ -41,15 +40,15 @@
     let docSite = '';
     if      (location.pathname === '/') { }
     else if (location.pathname.startsWith('/series')) { docSite = 'user_guide/series/'; }
-    else if (location.pathname === '/add')  { docSite = 'user_guide/new_series'; }
+    else if (location.pathname === '/add')            { docSite = 'user_guide/new_series'; }
     else if (location.pathname === '/card-templates') { docSite = 'user_guide/templates'; }
-    else if (location.pathname === '/fonts') { docSite = 'user_guide/fonts'; }
-    else if (location.pathname === '/sync') { docSite = 'user_guide/syncs'; }
-    else if (location.pathname === '/settings') { docSite = 'user_guide/settings/'; }
-    else if (location.pathname === '/connections') { docSite = 'user_guide/connections/'; }
-    else if (location.pathname === '/scheduler') { }
-    else if (location.pathname === '/import') { }
-    else if (location.pathname === '/logs') { docSite = 'user_guide/logs/' }
+    else if (location.pathname === '/fonts')          { docSite = 'user_guide/fonts'; }
+    else if (location.pathname === '/sync')           { docSite = 'user_guide/syncs'; }
+    else if (location.pathname === '/settings')       { docSite = 'user_guide/settings/'; }
+    else if (location.pathname === '/connections')    { docSite = 'user_guide/connections/'; }
+    else if (location.pathname === '/scheduler')      { }
+    else if (location.pathname === '/import')         { }
+    else if (location.pathname === '/logs')           { docSite = 'user_guide/logs/' }
     document.getElementById('documentation-link').href = `https://titlecardmaker.com/${docSite}`;
   });
 </script>
