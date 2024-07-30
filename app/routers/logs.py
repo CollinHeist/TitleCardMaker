@@ -32,6 +32,7 @@ log_router = APIRouter(
     dependencies=[Depends(get_current_user)],
 )
 
+# Map of log level names to numbers for relative comparison
 _LEVEL_NUMBERS: dict[LogLevel, int] = {
     'TRACE': -1, 'DEBUG': 0, 'INFO': 1, 'WARNING': 2, 'ERROR': 3, 'CRITICAL': 4
 }
@@ -101,10 +102,11 @@ def query_logs(
     log_entries = []
     for data in logs:
         # Parse entry into data
-        try:
-            data['time'] = datetime.strptime(data['time'], DATETIME_FORMAT)
-        except ValueError:
-            continue
+        if not isinstance(data['time'], datetime):
+            try:
+                data['time'] = datetime.strptime(data['time'], DATETIME_FORMAT)
+            except ValueError:
+                continue
 
         # Skip if doesn't meet filter criteria
         if not meets_filters(data):
@@ -178,7 +180,11 @@ def get_internal_server_errors(
         [
             LogInternalServerError(
                 context_id=log['context_id'],
-                time=datetime.strptime(log['time'], DATETIME_FORMAT),
+                time=(
+                    log['time']
+                    if isinstance(log['time'], datetime) else
+                    datetime.strptime(log['time'], DATETIME_FORMAT)
+                ),
                 # message=log['message'],
                 file=log['file'].name,
             )
