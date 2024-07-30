@@ -31,6 +31,11 @@ this is the following:
 
 Each Connection is described in greater detail below.
 
+!!! tip "Private Information"
+
+    Any input field marked with an :material-lock: icon is encrypted within the
+    TitleCardMaker database, and is automatically redacted from all logs.
+
 ## Authentication
 
 If you expose your instance of TCM _outside_ your LAN (through a reverse proxy
