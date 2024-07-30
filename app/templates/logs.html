@@ -192,21 +192,15 @@
           </tr>
         </thead>
         <tbody id="log-data"></tbody>
+        <!-- Pagination buttons -->
+        <tfoot>
+          <tr>
+            <th colspan="4">
+              <div id="pagination" class="ui pagination menu"><!-- Added asynchronously --></div>
+            </th>
+          </tr>
+        </tfoot>
       </table>
-
-      <!-- Pagination buttons -->
-      <div id="pagination" class="ui pagination menu"><!-- Added asynchronously --></div>
-
-      <h1 class="ui header">
-        <div class="content">
-          Internal Server Errors
-          <div class="sub header">
-            Unexpected errors which may indicate some bug within TCM. Click the
-            respective GitHub icon to open an issue for that Error.
-          </div>
-        </div>
-      </h1>
-      <div class="ui relaxed divided list" id="error-list"><!-- Added asynchronously --></div>
 
       <!-- Log files -->
       <h1 class="ui header">Log Files</h1>
@@ -220,6 +214,18 @@
         </thead>
         <tbody id="file-list"></tbody>
       </table>
+
+      <!-- Internal server errors -->
+      <h1 class="ui header">
+        <div class="content">
+          Internal Server Errors
+          <div class="sub header">
+            Unexpected errors which may indicate some bug within TCM. Click the
+            respective GitHub icon to open an Issue for that error.
+          </div>
+        </div>
+      </h1>
+      <div class="ui relaxed divided list" id="error-list"><!-- Added asynchronously --></div>
     </div>
   </div>
 </body>

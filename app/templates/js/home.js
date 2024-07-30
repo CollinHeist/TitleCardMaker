@@ -472,7 +472,6 @@ function getAllStatistics() {
 
 /** Initialize the page by querying for Series and statistics */
 function initAll() {
-  // Make remote queries
   getAllSeries();
   getAllStatistics();
   // Initialize table sorting and dropdowns

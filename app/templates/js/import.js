@@ -207,8 +207,30 @@ function importSeries() {
   });
 }
 
-async function submitYamlForm(args) {
-  const {url, data, formId, name, successMessage} = args;
+async function submitYamlForm({url, data, formId, name, successMessage}) {
+  // const {url, data, formId, name, successMessage} = args;
+
+  // $.ajax({
+  //   type: 'POST',
+  //   url,
+  //   data,
+  //   success: response => {
+  //     if (response) {
+  //       showInfoToast(`Imported ${name} YAML`, { message: successMessage(responseData) });
+  //     } else {
+  //       showInfoToast(`Imported ${name} YAML`);
+  //     }
+  //     $(`${formId} .error.message[data-value="${name}"]`)[0].innerHTML = '';
+  //   },
+  //   error: response => {
+  //     $(formId).toggleClass('error', true);
+  //     showErrorToast({title: `Unable to import ${name} YAML`, response});
+
+  //     const messageHtml = `<div class="header">${name} YAML Parsing Error</div><p>${error.message}</p>`;
+  //     $(`${formId} .error.message[data-value="${name}"]`)[0].innerHTML = messageHtml;
+  //   },
+  //   complete: () => $(`${formId} button`).toggleClass('loading', false),
+  // });
 
   try {
     $(`${formId} button`).toggleClass('loading', true);
@@ -220,9 +242,6 @@ async function submitYamlForm(args) {
     });
 
     const responseData = await response.json();
-    if (!response.ok) {
-      throw new Error(JSON.stringify(responseData));
-    }
 
     if (successMessage === undefined) {
       showInfoToast(`Imported ${name} YAML`);

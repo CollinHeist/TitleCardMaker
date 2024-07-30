@@ -310,7 +310,7 @@ function queryLogErrors() {
           document.querySelector('input[name="context_id"]').scrollIntoView({behavior: 'smooth', block: 'start'});
           updateTimestamp(error.time);
         };
-        // When the GitHub icon is clicked, query the log file sizp and open a new tab
+        // When the GitHub icon is clicked, query the log zip and open a new tab
         item.querySelector('.icon').onclick = () => $.ajax({
           type: 'GET',
           url: `/api/logs/files/${error.file}/zip`,
