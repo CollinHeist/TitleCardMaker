@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>System - TitleCardMaker</title>
+  {% include "./html_boilerplate.html" %}
+  <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.3/dist/semantic.min.js"></script>
+
+  <script type="text/javascript">
+    {% include "./js/system.js" %}
+  </script>
+  
+  <link rel="stylesheet" type="text/css" href="/templates/css/system.css?v={{preferences.current_version}}"/>
+
+  <template id="extra-input-template">
+    <div class="field">
+      <label>{label}</label>
+      <input type="text">
+      <p class="help">{tooltip}</p>
+    </div>
+  </template>
+</head>
+
+<body onload="initAll();">
+  <div class="pusher">
+    <!-- Static header and sidebar -->
+    <div id="page-header">
+      {% include "./header.html" %}
+    </div>
+    <div id="nav-menu">
+      {% include "./system_sidebar.html" %}
+    </div>
+
+    <!-- Actual page content -->
+    <div id="main-content" class="article">
+      <h1 class="ui header">System Details</h1>
+
+      <div class="ui relaxed divided list">
+        <div class="item">
+          <div class="content">
+            <a class="header" href="/changelog#{{ preferences.current_version }}">Current Version</a>
+            <div class="description">{{ preferences.current_version }}</div>
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="content">
+            <a class="header" href="https://github.com/TitleCardMaker/TitleCardMaker-WebUI/releases">Available Version</a>
+            <div class="description">{{ preferences.available_version }}</div>
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="content">
+            <div class="header">Execution Mode</div>
+            <div class="description">
+              {% if preferences.is_docker %}
+              Docker
+              {% else %}
+              Non-Docker
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="content">
+            <div class="header">Database Schema</div>
+            <div class="description">{{ preferences.current_db_schema }} test</div>
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="content">
+            <div class="header">Uptime</div>
+            <div class="description">{{ preferences.server_uptime }} test</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Links -->
+      <h2 class="ui header">Links</h2>
+
+      <div class="ui relaxed divided list">
+        <div class="item">
+          <div class="content">
+            <a class="header" href="https://titlecardmaker.com/">Website</a>
+            <div class="description">https://titlecardmaker.com/</div>
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="content">
+            <a class="header" href="https://discord.gg/bJ3bHtw8wH">Discord</a>
+            <div class="description">https://discord.gg/bJ3bHtw8wH</div>
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="content">
+            <a class="header" href="https://github.com/TitleCardMaker/TitleCardMaker-WebUI">Source Code</a>
+            <div class="description">https://github.com/TitleCardMaker/TitleCardMaker-WebUI</div>
+          </div>
+        </div>
+      </div>
+      <div class="ui list">
+        <a class="item" href="https://titlecardmaker.com/" target="_blank">Website</a>
+        <a class="item">Who is our user?</a>
+        <a class="item">Where is our office located?</a>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    
+  </script>
+</body>
+
+</html>
