@@ -570,7 +570,11 @@ function populateBlueprintCard(card, blueprint, blueprintId) {
   return card;
 }
 
-
+/**
+ * Get a time-difference string from now to `previousRun`.
+ * @param {Date} previousRun Previous date to format the text relative from.
+ * @returns String describing how along ago `previousRun` was.
+ */
 function timeDiffString(previousRun) {
   const previous = new Date(previousRun);
 
@@ -583,7 +587,7 @@ function timeDiffString(previousRun) {
   // Create string for next run time, only show up to two time units
   const timeUnits = [];
   if (diffDays > 1) { timeUnits.push(`${diffDays} days`); }
-  else if (diffDays > 0) { timeUnits.push(`diffDays day`); }
+  else if (diffDays > 0) { timeUnits.push(`${diffDays} day`); }
   if (diffHours % 24 > 1) { timeUnits.push(`${diffHours%24} hours`); }
   else if (diffHours % 24 > 0) { timeUnits.push(`${diffHours%24} hour`); }
   if (diffMinutes % 60 > 1) { timeUnits.push(`${diffMinutes%60} minutes`); }
