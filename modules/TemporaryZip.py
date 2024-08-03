@@ -18,6 +18,8 @@ class TemporaryZip:
     def __init__(self,
             temporary_directory: Path,
             background_tasks: BackgroundTasks,
+            *,
+            name: Optional[str] = None,
         ) -> None:
         """
         Initialize a new temporary directory.
@@ -26,13 +28,15 @@ class TemporaryZip:
             temporary_directory: Root directory where zips should be
                 created.
             background_tasks: Task queue to add the delayed deletion to.
+            name: Optional name of the zipped subdirectory. If omitted,
+                a randomized name is generated.
         """
 
         self.tasks = background_tasks
 
         # Generate a random subfolder
         zip_dir = temporary_directory / 'zips'
-        context_id = generate_context_id()
+        context_id = name or generate_context_id()
         self.dir = zip_dir / context_id
         self.dir.mkdir(exist_ok=True, parents=True)
 

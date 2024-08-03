@@ -184,7 +184,9 @@ async def export_series_blueprint_as_zip(
 
     # Directories for zipping all Blueprint data and Fonts
     tzip = TemporaryZip(preferences.TEMPORARY_DIRECTORY, background_tasks)
-    font_tzip = TemporaryZip(preferences.TEMPORARY_DIRECTORY, background_tasks)
+    font_tzip = TemporaryZip(
+        preferences.TEMPORARY_DIRECTORY, background_tasks, name='fonts'
+    )
 
     # Copy all files into the zip directory
     for file in font_files:
