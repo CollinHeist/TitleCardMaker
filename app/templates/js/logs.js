@@ -73,8 +73,8 @@ const resetForm = () => $('#log-filters').form('clear');
  * text highlighting.
  * @returns {string} Modified message.
  */
-function parseLinks(message, searchText='') {
-  return message
+function addRichFormatting(message, searchText='') {
+  message = message
     .replace(
       /Series\[(\d+)\]/g,
       (match, seriesID) => `<a href="/series/${seriesID}">${match}</a>`
@@ -102,11 +102,17 @@ function parseLinks(message, searchText='') {
         const color = {1: 'grey', 2: 'green', 3: 'olive', 4: 'orange', 5: 'red'}[statusCode]
         return `${durationText} (<span class="ui ${color} text">${statusText}</span>)`;
       }
-    ).replace(
-      searchText,
-      `<span class="ui yellow text">${searchText}</span>`,
     )
   ;
+
+  searchText.split('|').forEach(subString => {
+    message = message.replace(
+      subString,
+      `<span class="ui yellow text">${subString}</span>`,
+    )
+  });
+    
+  return message;
 }
 
 /**
@@ -167,7 +173,7 @@ function queryForLogs(page=1) {
           row.querySelector('[data-value="message"]').classList.add('code');
           row.querySelector('[data-value="message"]').innerText = message.message;
         } else {
-          row.querySelector('[data-value="message"]').innerHTML = parseLinks(
+          row.querySelector('[data-value="message"]').innerHTML = addRichFormatting(
             message.message,
             document.querySelector('input[name="contains"]').value,
           );
