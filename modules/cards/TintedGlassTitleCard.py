@@ -61,7 +61,7 @@ class TintedGlassTitleCard(BaseCardType):
                     'Specified like <v>{top} {right} {bottom} {left}</v>. For '
                     'example: <v>-20 10 0 5</v>. Positive values move that '
                     'face out, negative values move the face in. Unit is '
-                    'pixels. Default is <v>0 0 0 0</v>'
+                    'pixels. Default is <v>0 0 0 0</v>.'
                 ),
                 default='0 0 0 0',
             ),
