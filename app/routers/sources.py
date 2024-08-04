@@ -557,9 +557,9 @@ async def set_episode_source_image(
             connection = get_connection(db, interface_id, raise_exc=True)
 
             # Use server URL, de-proxied URL, and add the token as a param
-            url = connection.url.removesuffix('/') \
+            url = connection.decrypted_url.removesuffix('/') \
                 + url.split('/api/proxy/plex?url=', maxsplit=1)[1] \
-                + f'?X-Plex-Token={connection.api_key}'
+                + f'?X-Plex-Token={connection.decrypted_api_key}'
 
         if not WebInterface.download_image(url, source_file, log=log):
             raise HTTPException(
