@@ -105,60 +105,67 @@ async def websocket_logger(message: str) -> None:
         except Exception:
             pass
 
-logger.configure(
-    handlers=[
-        # WARNING: The sys.stdout print WILL NOT have secrets redacted
-        dict(
-            sink=sys.stdout,
-            level=environ.get('TCM_LOG_STDOUT', environ.get('TCM_LOG', 'INFO')),
-            format='<level>[<bold>{level}</bold>] {message}</level>',
-            colorize=True,
-            backtrace=True,
-            diagnose=True,
-            enqueue=True,
-        ),
-        dict(
-            sink=LOG_FILE,
-            level=environ.get('TCM_LOG_FILE', 'TRACE'),
-            format=reduced_serializer,
-            # Rotate every 12 hours or 24.9 MB
-            rotation=rotation_policy,
-            # Keep logs for two weeks
-            retention=environ.get('TCM_LOG_RETENTION', '7 days'),
-            # Better exception printing
-            colorize=False,
-            backtrace=True,
-            diagnose=True,
-            # Do not serialize each log entry as JSON as this is handled by the
-            # formatter! See
-            # https://loguru.readthedocs.io/en/latest/resources/recipes.html
-            # serialize=True,
-            # Make log calls non-blocking
-            enqueue=True,
-        ),
-        # Uncomment to capture SQLAlchemy logging
-        # dict(
-        #     sink='sqlalchemy.engine',
-        #     level='DEBUG',
-        # ),
-        dict(
-            sink=websocket_logger,
-            level='INFO',
-            format='{message}',
-            colorize=False,
-            backtrace=False,
-            enqueue=environ.get('TCM_V1', 'False') == 'False',
-        ),
-    ],
-    levels=[
-        dict(name='TRACE', color='<dim><fg #6d6d6d>'),
-        dict(name='DEBUG', color='<dim><white>'),
-        dict(name='INFO', color='<light-cyan>'),
-        dict(name='WARNING', color='<yellow>'),
-        dict(name='ERROR', color='<fg 237,112,46>'),
-        dict(name='CRITICAL', color='<red><bold>'),
-    ],
-)
+handlers = [
+    # WARNING: The sys.stdout print WILL NOT have secrets redacted
+    dict(
+        sink=sys.stdout,
+        level=environ.get('TCM_LOG_STDOUT', environ.get('TCM_LOG', 'INFO')),
+        format='<level>[<bold>{level}</bold>] {message}</level>',
+        colorize=True,
+        backtrace=True,
+        diagnose=True,
+        enqueue=True,
+    ),
+    dict(
+        sink=LOG_FILE,
+        level=environ.get('TCM_LOG_FILE', 'TRACE'),
+        format=reduced_serializer,
+        # Rotate every 12 hours or 24.9 MB
+        rotation=rotation_policy,
+        # Keep logs for two weeks
+        retention=environ.get('TCM_LOG_RETENTION', '7 days'),
+        # Better exception printing
+        colorize=False,
+        backtrace=True,
+        diagnose=True,
+        # Do not serialize each log entry as JSON as this is handled by the
+        # formatter! See
+        # https://loguru.readthedocs.io/en/latest/resources/recipes.html
+        # serialize=True,
+        # Make log calls non-blocking
+        enqueue=True,
+    ),
+    # Uncomment to capture SQLAlchemy logging
+    # dict(
+    #     sink='sqlalchemy.engine',
+    #     level='DEBUG',
+    # ),
+    # Asyncronous websocket handler - must be removed if executing in an
+    # environment w/o an event loop
+    dict(
+        sink=websocket_logger,
+        level='INFO',
+        format='{message}',
+        colorize=False,
+        backtrace=False,
+        enqueue=environ.get('TCM_V1', 'False') == 'False',
+    ),
+]
+levels = [
+    dict(name='TRACE', color='<dim><fg #6d6d6d>'),
+    dict(name='DEBUG', color='<dim><white>'),
+    dict(name='INFO', color='<light-cyan>'),
+    dict(name='WARNING', color='<yellow>'),
+    dict(name='ERROR', color='<fg 237,112,46>'),
+    dict(name='CRITICAL', color='<red><bold>'),
+]
+
+try:
+    logger.configure(handlers=handlers, levels=levels)
+except ValueError:
+    # Remove the async handler if executing without an event loop
+    handlers.pop(-1)
+    logger.configure(handlers=handlers, levels=levels)
 
 # Automatically redact all messages
 logger = logger.patch(
