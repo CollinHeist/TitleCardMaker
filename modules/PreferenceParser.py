@@ -231,6 +231,10 @@ class PreferenceParser(YamlReader):
         is logged and this object's validity is set to False.
         """
 
+        if self.is_docker:
+            self.use_magick_prefix = False
+            return None
+
         # Try variations of the font list command with/out the "magick " prefix
         for prefix, use_magick in zip(('', 'magick '), (False, True)):
             # Create ImageMagickInterface and verify validity
