@@ -18,8 +18,9 @@ try:
     from modules.SeasonPoster import SeasonPoster
     from modules.StandardSummary import StandardSummary
     from modules.StylizedSummary import StylizedSummary
-except ImportError:
-    print(f'Required Python packages are missing - execute "pipenv install"')
+except ImportError as exc:
+    print('Required Python packages are missing - execute "pipenv install"')
+    print(f'  Specific Error: {exc}')
     sys_exit(1)
 
 # Environment Variables
