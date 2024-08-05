@@ -1,3 +1,4 @@
+from datetime import datetime
 from logging import Logger
 from os import environ
 from pathlib import Path
@@ -56,7 +57,8 @@ class Preferences:
     __read_only = (
         'is_docker', 'file', 'asset_directory', 'card_type_directory',
         'remote_card_types', 'local_card_types', 'invalid_connections',
-        'currently_running_sync',
+        'currently_running_sync', 'current_db_schema', 'current_version',
+        'server_boot_time',
     )
 
     __slots__ = (
@@ -77,7 +79,8 @@ class Preferences:
         'imported_blueprints', 'colorblind_mode', 'library_unique_cards',
         'invalid_connections', 'home_page_table_view', 'reduced_animations',
         'currently_running_sync', 'interactive_card_previews',
-        'delete_unsynced_series', 'imagemagick_executable',
+        'delete_unsynced_series', 'imagemagick_executable', 'current_db_schema',
+        'server_boot_time',
     )
 
 
@@ -97,8 +100,9 @@ class Preferences:
         self.file = file
         self.file.parent.mkdir(exist_ok=True)
 
-        # Pars file
+        # Parse file
         self.parse_file(self.read_file())
+        self.server_boot_time = datetime.now()
 
         # Initialize paths
         self.asset_directory: Path = Path(self.asset_directory)
@@ -288,6 +292,7 @@ class Preferences:
         # Set attributes not parsed from the object
         self.current_version = Version(self.VERSION_FILE.read_text().strip())
         self.available_version: Optional[Version] = None
+        self.current_db_schema: Optional[str] = None
 
         # Write object to file
         self.commit()

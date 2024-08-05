@@ -135,6 +135,34 @@ class YamlReader:
         return True
 
 
+    @staticmethod
+    def parse_card_type(card_type: str, /) -> Optional[BaseCardType]:
+        """
+        Read the card_type specification for this object. This first
+        looks at the locally implemented types in the TitleCard class,
+        then attempts to create a RemoteCardType from the specification.
+        This can be either a local file to inject, or a GitHub-hosted
+        remote file to download and inject.
+
+        Args:
+            card_type: The value of card_type to read/parse.
+
+        Returns:
+            Subclass of `BaseCardType` which is indicated by the given
+            card type identifier string.
+        """
+
+        # If known card type, use class from hard-coded dict
+        if card_type in TitleCard.CARD_TYPES:
+            return TitleCard.CARD_TYPES[card_type]
+
+        # Try as RemoteCardtype
+        if (remote_card_type := RemoteCardType(card_type)).valid:
+            return remote_card_type.card_class
+
+        return None
+
+
     def _parse_card_type(self, card_type: str, /) -> Optional[BaseCardType]:
         """
         Read the card_type specification for this object. This first
@@ -152,12 +180,8 @@ class YamlReader:
             card type identifier string.
         """
 
-        # If known card type, use class from hard-coded dict
-        if card_type in TitleCard.CARD_TYPES:
-            return TitleCard.CARD_TYPES[card_type]
-        # Try as RemoteCardtype
-        if (remote_card_type := RemoteCardType(card_type)).valid:
-            return remote_card_type.card_class
+        if (ct := YamlReader.parse_card_type(card_type)):
+            return ct
 
         log.error(f'Invalid card type "{card_type}"')
         self.valid = False
