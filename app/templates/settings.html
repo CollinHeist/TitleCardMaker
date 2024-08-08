@@ -570,30 +570,7 @@
           <div class="system info">
             <div class="ui blue label">
               Current Version
-              <div class="detail">{{preferences.current_version}}</div>
-            </div>
-  
-            <div class="ui blue label">
-              Available Version
-              <a class="detail" href="https://github.com/TitleCardMaker/TitleCardMaker-WebUI/releases" target="_blank">
-                {{preferences.available_version}}
-              </a>
-            </div>
-  
-            <div class="ui blue label">
-              Execution Mode
-              <div class="detail">
-                {% if preferences.is_docker %}
-                Docker
-                {% else %}
-                Non-Docker
-                {% endif %}
-              </div>
-            </div>
-  
-            <div class="ui blue label">
-              Changelog
-              <a class="detail" href="/changelog">View</a>
+              <div class="detail">{{ preferences.current_version }}</div>
             </div>
           </div>
         </div>
