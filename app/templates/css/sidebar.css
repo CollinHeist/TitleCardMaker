@@ -87,7 +87,7 @@
   /* Color icon and text a TCM blue */
   color: var(--tcm-blue-color);
   /* Add blurred shadow around icon and text */
-  text-shadow: 0 0 10px var(--tcm-blue-color);
+  text-shadow: 0 0 8px var(--tcm-blue-color);
 }
 
 /* Reduce padding on text */
