@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, Query
-from pydantic import PositiveInt
+from pydantic import PositiveFloat, PositiveInt
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -138,19 +138,24 @@ def get_series_statistics(
 
 @statistics_router.get('/snapshots')
 def get_snapshots(
-        previous_days: PositiveInt = Query(default=14),
+        previous_days: float = Query(default=14, ge=0.0),
+        previous_hours: float = Query(default=0, ge=0.0),
         slice_: PositiveInt = Query(alias='slice', default=1),
         db: Session = Depends(get_database),
     ) -> list[Snapshot]:
     """
     Get the database Snapshots from the given number of days in the past.
 
-    - previous_days: How many days of past snapshots to return.
+    - previous_days: How many days of past snapshots to return. Added to
+    previous hours.
+    - previous_hours: How many hours of past snapshots to return. Added
+    to previous days.
     - slice: How to "slice" the return - e.g. `1` would be every
     Snapshot, `2` would be every other, etc.
     """
 
-    previous = datetime.now() - timedelta(days=previous_days)
+    previous = datetime.now() \
+        - timedelta(days=previous_days, hours=previous_hours)
 
     return db.query(SnapshotModel)\
         .filter(SnapshotModel.timestamp > previous)\
