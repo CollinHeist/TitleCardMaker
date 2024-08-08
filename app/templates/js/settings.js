@@ -205,6 +205,7 @@ function updateGlobalSettings() {
     colorblind_mode: $('input[name="colorblind_mode"]').is(':checked'),
     reduced_animations: $('input[name="reduced_animations"]').is(':checked'),
     interactive_card_previews: $('input[name="interactive_card_previews"]').is(':checked'),
+    display_live_messages: $('input[name="display_live_messages"]').is(':checked'),
   };
 
   // Submit API request

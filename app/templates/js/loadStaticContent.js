@@ -1,3 +1,5 @@
+const _thisScript = document.currentScript;
+
 $(document).ready(function() {
   // Trigger events on keypresses
   $(document).keypress((event) => {
@@ -37,48 +39,51 @@ $(document).ready(function() {
     },
   });
 
-  // Open logging WebSocket
-  const createLogMessage = () => {
-    const elem = document.createElement('div');
-    elem.id = '__current_log';
-    elem.onclick = () => elem.remove();
-    document.querySelector('body').appendChild(elem);
-    return elem;
-  }
-
-  const addMessage = (message) => {
-    // Either replace currently displayed message or create a new one
-    document.getElementById('__current_log')?.remove();
-    const info = createLogMessage();
-    info.innerText = message;
-
-    // Remove message after 5 seconds
-    setTimeout(() => {
-      info.innerHTML = '<i class="exclamation circle icon"></i>';
-      info.addEventListener('mouseover', () => {
-        info.innerHTML = message;
-      })
-      info.addEventListener('mouseout', () => {
-        info.innerHTML = '<i class="exclamation circle icon"></i>';
-      });
-    }, 5000);
-    // setTimeout(() => info.remove(), 5000);
-  };
+  // Enable webhook if passed as true in the script tag
+  if (Object.fromEntries(new URL(_thisScript.src).searchParams).websocket.toLowerCase() === 'true') {
+    // Open logging WebSocket
+    const createLogMessage = () => {
+      const elem = document.createElement('div');
+      elem.id = '__current_log';
+      elem.onclick = () => elem.remove();
+      document.querySelector('body').appendChild(elem);
+      return elem;
+    }
   
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsUrl = `${protocol}//${window.location.host}/ws/logs`;
-  const websocket = new WebSocket(wsUrl);
-
-  // websocket.onopen = () => addMessage('Connection Opened');
-  websocket.onclose = () => addMessage('Connection Closed');
-  websocket.onmessage = (event) => addMessage(event.data);
-  websocket.onerror = (error) => {
-    console.log(error);
-    addMessage(`Error Ocurred`);
+    const addMessage = (message) => {
+      // Either replace currently displayed message or create a new one
+      document.getElementById('__current_log')?.remove();
+      const info = createLogMessage();
+      info.innerText = message;
+  
+      // Remove message after 5 seconds
+      setTimeout(() => {
+        info.innerHTML = '<i class="exclamation circle icon"></i>';
+        info.addEventListener('mouseover', () => {
+          info.innerHTML = message;
+        })
+        info.addEventListener('mouseout', () => {
+          info.innerHTML = '<i class="exclamation circle icon"></i>';
+        });
+      }, 5000);
+    };
+    
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/logs`;
+    const websocket = new WebSocket(wsUrl);
+  
+    websocket.onclose = () => addMessage('Connection Closed');
+    websocket.onmessage = (event) => addMessage(event.data);
+    websocket.onerror = (error) => {
+      console.log(error);
+      addMessage('Error ocurred - see Console');
+    }
+  
+    window.onbeforeunload = function() {
+      websocket.onclose = () => {};
+      websocket.close();
+    };
+  } else {
+    console.log('Websockets have been globally disabled')
   }
-
-  window.onbeforeunload = function() {
-    websocket.onclose = () => {}; // disable onclose handler first
-    websocket.close();
-  };
-})
+});

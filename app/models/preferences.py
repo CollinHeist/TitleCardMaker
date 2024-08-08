@@ -80,7 +80,7 @@ class Preferences:
         'invalid_connections', 'home_page_table_view', 'reduced_animations',
         'currently_running_sync', 'interactive_card_previews',
         'delete_unsynced_series', 'imagemagick_executable', 'current_db_schema',
-        'server_boot_time',
+        'server_boot_time', 'display_live_messages',
     )
 
 
@@ -232,6 +232,7 @@ class Preferences:
         self.home_page_table_view = True
         self.colorblind_mode = False
         self.reduced_animations = False
+        self.display_live_messages = True
 
 
     def log_startup(self, *, log: Logger = log) -> None:

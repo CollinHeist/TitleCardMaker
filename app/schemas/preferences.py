@@ -5,11 +5,20 @@ from pathlib import Path
 from typing import Literal, Optional
 
 from pydantic import (
-    DirectoryPath, FilePath, PositiveInt, conint, constr, validator
+    DirectoryPath,
+    FilePath,
+    PositiveInt,
+    conint,
+    constr,
+    validator
 )
 
 from app.schemas.base import (
-    Base, InterfaceType, ImageSource, UpdateBase, UNSPECIFIED
+    Base,
+    ImageSource,
+    InterfaceType,
+    UpdateBase,
+    UNSPECIFIED
 )
 
 from modules.FormatString import FormatString
@@ -99,6 +108,7 @@ class UpdatePreferences(UpdateBase):
     colorblind_mode: bool = UNSPECIFIED
     reduced_animations: bool = UNSPECIFIED
     interactive_card_previews: bool = UNSPECIFIED
+    display_live_messages: bool = UNSPECIFIED
 
     @validator('card_filename_format', pre=True)
     def validate_card_filename_format(cls, v: str) -> str:
@@ -180,6 +190,7 @@ class Preferences(Base):
     colorblind_mode: bool
     reduced_animations: bool
     interactive_card_previews: bool
+    display_live_messages: bool
 
 class DatabaseBackup(Base):
     filename: str

@@ -529,14 +529,26 @@
                 </div>
               </div>
 
-              <div class="ui checkbox field">
-                <label>Interactive Title Cards</label>
-                {% if preferences.interactive_card_previews %}
-                <input name="interactive_card_previews" type="checkbox" checked="checked">
-                {% else %}
-                <input name="interactive_card_previews" type="checkbox">
-                {% endif %}
-                <p class="help">Whether to add click and right-click functionality to the Title Card previews on the Series pages.</p>
+              <div class="ui two fields">
+                <div class="ui checkbox field">
+                  <label>Interactive Title Cards</label>
+                  {% if preferences.interactive_card_previews %}
+                  <input name="interactive_card_previews" type="checkbox" checked="checked">
+                  {% else %}
+                  <input name="interactive_card_previews" type="checkbox">
+                  {% endif %}
+                  <p class="help">Whether to add click and right-click functionality to the Title Card previews on the Series pages.</p>
+                </div>
+
+                <div class="ui checkbox field">
+                  <label>Display Live Log Messages</label>
+                  {% if preferences.display_live_messages %}
+                  <input name="display_live_messages" type="checkbox" checked="checked">
+                  {% else %}
+                  <input name="display_live_messages" type="checkbox">
+                  {% endif %}
+                  <p class="help">Whether to display real-time log messages within the UI.</p>
+                </div>
               </div>
             </section>
 
