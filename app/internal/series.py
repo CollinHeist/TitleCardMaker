@@ -735,15 +735,14 @@ def add_series(
     refresh_remote_card_types(db, log=log)
 
     # Refresh Episode data
-    if background_tasks:
-        background_tasks.add_task(
-            # Function
-            refresh_episode_data,
-            # Arguments
-            db, series, background_tasks=background_tasks, log=log,
-        )
-    else:
-        refresh_episode_data(db, series, background_tasks=None, log=log)
+    if series.monitored:
+        if background_tasks:
+            background_tasks.add_task(
+                refresh_episode_data,
+                db, series, background_tasks=background_tasks, log=log,
+            )
+        else:
+            refresh_episode_data(db, series, background_tasks=None, log=log)
 
     return series
 
