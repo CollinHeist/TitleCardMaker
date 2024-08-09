@@ -49,7 +49,7 @@ $(document).ready(function() {
       document.querySelector('body').appendChild(elem);
       return elem;
     }
-  
+
     const addMessage = (message) => {
       // Either replace currently displayed message or create a new one
       document.getElementById('__current_log')?.remove();
@@ -67,11 +67,11 @@ $(document).ready(function() {
         });
       }, 5000);
     };
-    
+
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws/logs`;
     const websocket = new WebSocket(wsUrl);
-  
+
     websocket.onclose = () => addMessage('Connection Closed');
     websocket.onmessage = (event) => addMessage(event.data);
     websocket.onerror = (error) => {
