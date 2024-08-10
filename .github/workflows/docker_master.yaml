@@ -8,27 +8,8 @@ jobs:
   docker-main:
     uses: ./.github/workflows/docker_build.yml
     with:
-      tag: main
-    secrets:
-      CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-      # DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
-      # DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
-  docker-latest:
-    uses: ./.github/workflows/docker_build.yml
-    with:
-      tag: latest
-    secrets:
-      CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-      # DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
-      # DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
-  docker-main-armv7:
-    uses: ./.github/workflows/docker_build_armv7.yml
-    with:
-      tag: main-armv7
+      tag: develop
+      addl_tag: main
     secrets:
       CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
       # DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
