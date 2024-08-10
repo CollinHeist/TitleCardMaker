@@ -183,11 +183,12 @@ function showEditModel(sync) {
   // Fill out existing data
   $(`#edit-sync${sync.id} .header`)[0].innerText = `Editing Sync "${sync.name}"`;
   $(`#edit-sync${sync.id} .dropdown[data-value="interface_id"]`).dropdown('set selected', sync.interface_id);
-  $(`#edit-sync${sync.id} input[name="name"]`)[0].value = sync.name;
+  $(`#edit-sync${sync.id} input[name="name"]`).val(sync.name);
   $(`#edit-sync${sync.id} .dropdown[data-value="template_ids"]`).dropdown({
     placeholder: 'None',
     values: getActiveTemplates(sync.template_ids, allTemplates),
   });
+  $(`#edit-sync${sync.id} input[name="add_as_unmonitored"]`)[0].checked = sync.add_as_unmonitored;
   $(`#edit-sync${sync.id} .dropdown[data-value="template_ids"]`).dropdown('set selected', sync.template_ids);
   $(`#edit-sync${sync.id} .dropdown[data-value="required_tags"]`).dropdown('set selected', sync.required_tags);
   $(`#edit-sync${sync.id} .dropdown[data-value="required_libraries"]`).dropdown('set selected', sync.required_libraries);
@@ -216,13 +217,20 @@ function showEditModel(sync) {
     event.preventDefault();
     // Turn form into object, turning multi selects into arrays
     let form = new FormData(document.getElementById(`edit-sync${sync.id}-form`));
-    let dataObj = {downloaded_only: false, monitored_only: false};
+    let dataObj = {downloaded_only: false, monitored_only: false, add_as_unmonitored: false};
     for (let [name, value] of [...form.entries()]) {
-      if (name.includes('_tags') || name.includes('_libraries')
-          || name === 'required_root_folders' || name === 'template_ids') {
-        if (value !== '') { dataObj[name] = value.split(',');
-        } else { dataObj[name] = []; }
-      } else if (value !== '') { dataObj[name] = value; }
+      if (name.includes('_tags')
+          || name.includes('_libraries')
+          || name === 'required_root_folders'
+          || name === 'template_ids') {
+        if (value !== '') {
+          dataObj[name] = value.split(',');
+        } else {
+          dataObj[name] = [];
+        }
+      } else if (value !== '') {
+        dataObj[name] = value;
+      }
     }
 
     $.ajax({
@@ -419,7 +427,7 @@ function getSyncSchedule() {
     type: 'GET',
     url: '/api/schedule/SyncInterfaces',
     /**
-     * 
+     * Next run queried. Update the text.
      * @param {string} _.next_run - Datetime representation of the next run.
      */
     success: ({next_run}) => {

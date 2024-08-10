@@ -54,6 +54,7 @@ class Sync(Base):
 
     name: Mapped[str]
     interface: Mapped[SyncInterface] = mapped_column(String)
+    add_as_unmonitored: Mapped[bool] = mapped_column(default=False)
 
     required_tags: Mapped[list[str]] = mapped_column(JSON, default=[])
     excluded_tags: Mapped[list[str]] = mapped_column(JSON, default=[])

@@ -527,6 +527,7 @@
  * @property {string[]} required_libraries
  * @property {string[]} excluded_libraries
  * @property {string[]} required_root_folders
+ * @property {boolean} add_as_unmonitored
  */
 
 // Blueprints ------------------------------------------------------------------

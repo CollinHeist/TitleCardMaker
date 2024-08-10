@@ -19,6 +19,7 @@ class Tag(Base):
 class NewBaseSync(Base):
     name: constr(min_length=1)
     interface_id: int
+    add_as_unmonitored: bool = False
     template_ids: list[int] = []
     required_tags: list[str] = []
     excluded_tags: list[str] = []
@@ -70,8 +71,9 @@ class SonarrSync(ExistingBaseSync, NewSonarrSync):
 class Sync(ExistingBaseSync, NewSonarrSync):
     ...
 
-class UpdateSync(UpdateBase):
+class UpdateSync(Base):
     name: constr(min_length=1) = UNSPECIFIED
+    add_as_unmonitored: bool = UNSPECIFIED
     interface_id: int = UNSPECIFIED
     template_ids: list[int] = UNSPECIFIED
     required_tags: list[str] = UNSPECIFIED

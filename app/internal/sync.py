@@ -209,8 +209,11 @@ def run_sync(
         # Create NewSeries for this entry
         else:
             added.append(NewSeries(
-                name=series_info.name, year=series_info.year,
-                libraries=libraries, **series_info.ids,
+                name=series_info.name,
+                year=series_info.year,
+                monitored=not sync.add_as_unmonitored,
+                libraries=libraries,
+                **series_info.ids,
                 sync_id=sync.id, template_ids=sync.template_ids,
             ))
 
