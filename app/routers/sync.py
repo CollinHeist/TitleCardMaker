@@ -25,7 +25,7 @@ sync_router = APIRouter(
 )
 
 
-@sync_router.post('/emby/new', tags=['Emby'], status_code=201)
+@sync_router.post('/emby/new', tags=['Emby'])
 def create_new_emby_sync(
         request: Request,
         new_sync: NewEmbySync = Body(...),
@@ -40,7 +40,7 @@ def create_new_emby_sync(
     return add_sync(db, new_sync, log=request.state.log)
 
 
-@sync_router.post('/jellyfin/new', tags=['Jellyfin'], status_code=201)
+@sync_router.post('/jellyfin/new', tags=['Jellyfin'])
 def create_new_jellyfin_sync(
         request: Request,
         new_sync: NewJellyfinSync = Body(...),
@@ -55,7 +55,7 @@ def create_new_jellyfin_sync(
     return add_sync(db, new_sync, log=request.state.log)
 
 
-@sync_router.post('/plex/new', tags=['Plex'], status_code=201)
+@sync_router.post('/plex/new', tags=['Plex'])
 def create_new_plex_sync(
         request: Request,
         new_sync: NewPlexSync = Body(...),
@@ -70,7 +70,7 @@ def create_new_plex_sync(
     return add_sync(db, new_sync, log=request.state.log)
 
 
-@sync_router.post('/sonarr/new', tags=['Sonarr'], status_code=201)
+@sync_router.post('/sonarr/new', tags=['Sonarr'])
 def create_new_sonarr_sync(
         request: Request,
         new_sync: NewSonarrSync = Body(...),
@@ -85,7 +85,7 @@ def create_new_sonarr_sync(
     return add_sync(db, new_sync, log=request.state.log)
 
 
-@sync_router.patch('/{sync_id}', status_code=201)
+@sync_router.patch('/{sync_id}')
 def edit_sync(
         request: Request,
         sync_id: int,
@@ -104,7 +104,7 @@ def edit_sync(
 
     # Get existing Sync, raise 404 if DNE
     sync = get_sync(db, sync_id, raise_exc=True)
-    update_sync_dict = update_sync.dict()
+    update_sync_dict = update_sync.dict(exclude_unset=True)
 
     # Verify any indicated Templates exist and update Sync
     changed = False
@@ -116,7 +116,7 @@ def edit_sync(
 
     # Update Sync itself
     for attribute, value in update_sync_dict.items():
-        if value is not None and getattr(sync, attribute) != value:
+        if getattr(sync, attribute) != value:
             setattr(sync, attribute, value)
             log.debug(f'Sync[{sync.id}].{attribute} = {value}')
             changed = True
@@ -216,7 +216,7 @@ def get_sync_by_id(
     return get_sync(db, sync_id, raise_exc=True)
 
 
-@sync_router.post('/{sync_id}', status_code=201)
+@sync_router.post('/{sync_id}')
 def run_sync_(
         background_tasks: BackgroundTasks,
         request: Request,
