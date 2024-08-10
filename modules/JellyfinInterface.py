@@ -549,18 +549,15 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             return None
 
         # Go through each episode in Jellyfin, update Episode status/card
-        for jellyfin_episode in response['Items']:
-            # Skip if this episode isn't in TCM
-            season_number = jellyfin_episode['ParentIndexNumber']
-            ep_key = f'{season_number}-{jellyfin_episode["IndexNumber"]}'
-            if not (episode := episode_map.get(ep_key)):
+        for jf_ep in response['Items']:
+            # Skip if the episode does not have an index
+            if ((s_num := jf_ep.get('ParentIndexNumber')) is None
+                or (e_num := jf_ep.get('IndexNumber')) is None
+                or not (episode := episode_map.get(f'{s_num}-{e_num}'))):
                 continue
 
             # Set Episode watch/spoil statuses
-            episode.update_statuses(
-                jellyfin_episode['UserData']['Played'],
-                style_set
-            )
+            episode.update_statuses(jf_ep['UserData']['Played'], style_set)
 
             # Get characteristics of this Episode's loaded card
             details = self._get_loaded_episode(loaded_series, episode)
