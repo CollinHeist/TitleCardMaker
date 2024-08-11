@@ -167,19 +167,22 @@ def list_available_backups() -> list[SystemBackup]:
         for subfolder in backup_dir.glob('2*')
     ]
 
-    return [
-        SystemBackup(
-            database=DatabaseBackup(
-                filename=database.name,
-                filesize=database.stat().st_size,
-                schema_version=_parse_schema_version(database),
-            ),
-            settings=SettingsBackup(
-                filename=settings.name,
-                filesize=settings.stat().st_size,
-            ),
-            timestamp=datetime.strptime(settings.parent.name, BACKUP_DT_FORMAT),
-            version=_parse_version_number(settings),
-        )
-        for settings, database in backup_files
-    ]
+    return sorted(
+        [
+            SystemBackup(
+                database=DatabaseBackup(
+                    filename=database.name,
+                    filesize=database.stat().st_size,
+                    schema_version=_parse_schema_version(database),
+                ),
+                settings=SettingsBackup(
+                    filename=settings.name,
+                    filesize=settings.stat().st_size,
+                ),
+                timestamp=datetime.strptime(settings.parent.name, BACKUP_DT_FORMAT),
+                version=_parse_version_number(settings),
+            )
+            for settings, database in backup_files
+        ],
+        key=lambda backup: backup.timestamp,
+    )

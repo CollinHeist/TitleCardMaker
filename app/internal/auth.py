@@ -84,6 +84,7 @@ def get_secret_key() -> bytes:
     key = generate_secret_key()
     KEY_FILE.write_bytes(key)
     log.info(f'Generated encrpytion key - wrote to "{KEY_FILE}"')
+
     return key
 
 
