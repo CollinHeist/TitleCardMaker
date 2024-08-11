@@ -1,24 +1,16 @@
 name: Docker Develop Release
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ develop ]
+    branches:
+      - develop
 
 jobs:
   docker-develop:
     uses: ./.github/workflows/docker_build.yml
     with:
       tag: develop
-    secrets:
-      CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-      # DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
-      # DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
-  docker-develop-armv7:
-    uses: ./.github/workflows/docker_build_armv7.yml
-    with:
-      tag: develop-armv7
     secrets:
       CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
       # DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
