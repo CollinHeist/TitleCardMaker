@@ -267,6 +267,12 @@ movie_poster_group.add_argument(
     metavar='SCALE%',
     help='A font scale (as percentage) for the movie poster')
 movie_poster_group.add_argument(
+    '--movie-font-vertical-shift',
+    type=int,
+    default=0,
+    metavar='PIXELS',
+    help='How many pixels to vertically shift the title text')
+movie_poster_group.add_argument(
     '--movie-drop-shadow',
     action='store_true',
     help='Whether to add a drop shadow to the text for the movie poster')
@@ -494,6 +500,7 @@ if hasattr(args, 'movie_poster'):
         font_file=args.movie_font,
         font_color=args.movie_font_color,
         font_size=float(args.movie_font_size[:-1])/100.0,
+        font_vertical_shift=args.movie_font_vertical_shift,
         borderless=args.borderless,
         add_drop_shadow=args.movie_drop_shadow,
         omit_gradient=args.no_gradient,
