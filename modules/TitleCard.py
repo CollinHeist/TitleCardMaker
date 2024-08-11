@@ -165,6 +165,7 @@ class TitleCard:
 
         # Initialize this episode's CardType instance
         kwargs = {
+            'backdrop_file': episode.source.parent / 'backdrop.jpg',
             'source_file': episode.source,
             'card_file': episode.destination,
             'title_text': self.converted_title,
