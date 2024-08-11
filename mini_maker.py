@@ -370,6 +370,12 @@ season_poster_group.add_argument(
     metavar='SCALE%',
     help='Specify the font kerning scale (as percentage) in the season poster')
 season_poster_group.add_argument(
+    '--season-font-vertical-shift',
+    type=int,
+    default=0,
+    metavar='PIXELS',
+    help='How many pixels to vertically shift the season text')
+season_poster_group.add_argument(
     '--logo-placement',
     choices=('top', 'middle', 'bottom'),
     default='bottom',
@@ -589,6 +595,7 @@ if hasattr(args, 'season_poster'):
         font_color=args.season_font_color,
         font_size=float(args.season_font_size[:-1])/100.0,
         font_kerning=float(args.season_font_kerning[:-1])/100.0,
+        font_vertical_shift=args.season_font_vertical_shift,
         logo_placement=args.logo_placement,
         omit_gradient=args.no_gradient,
         omit_logo=not hasattr(args, 'season_poster_logo'),

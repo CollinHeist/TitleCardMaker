@@ -1,7 +1,10 @@
 from pathlib import Path
-from typing import Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional, Union
 
 from modules.ImageMaker import ImageMagickCommands, ImageMaker
+
+if TYPE_CHECKING:
+    from modules.PreferenceParser import PreferenceParser
 
 
 _LogoPlacement = Literal['top', 'middle', 'bottom']
@@ -32,11 +35,12 @@ class SeasonPoster(ImageMaker):
     __slots__ = (
         'source', 'destination', 'logo', 'season_text', 'font', 'font_color',
         'font_size', 'font_kerning', 'logo_placement', 'omit_gradient',
-        'omit_logo', 'text_placement',
+        'omit_logo', 'text_placement', 'font_vertical_shift',
     )
 
 
     def __init__(self,
+            *,
             source: Path,
             destination: Path,
             logo: Optional[Path],
@@ -45,31 +49,17 @@ class SeasonPoster(ImageMaker):
             font_color: str = SEASON_TEXT_COLOR,
             font_size: float = 1.0,
             font_kerning: float = 1.0,
+            font_vertical_shift: int = 0,
             logo_placement: _LogoPlacement = 'top',
             omit_gradient: bool = False,
             omit_logo: bool = False,
             text_placement: _TextPlacement = 'top',
+            preferences: Optional['Preferences'] = None,
         ) -> None:
-        """
-        Initialize this SeasonPoster object.
-
-        Args:
-            source: Path to the source image to use for the poster.
-            logo: Path to the logo file to use on the poster.
-            destination: Path to the desination file to create.
-            season_text: Season text to utilize on the poster.
-            font: Path to the font file to use for the season text.
-            font_color: Font color to use for the season text.
-            font_size: Font size scalar to use for the season text.
-            font_kerning: Font kerning scalar to use for the season text.
-            logo_placement: Where to place the logo on the poster.
-            omit_gradient: Whether to omit the gradient overlay.
-            omit_logo: Whether to omit the logo overlay.
-            text_placement: Where to place text.
-        """
+        """Initialize this SeasonPoster object."""
 
         # Initialize parent object for the ImageMagickInterface
-        super().__init__()
+        super().__init__(preferences=preferences)
 
         # Store provided file attributes
         self.source = source
@@ -84,6 +74,7 @@ class SeasonPoster(ImageMaker):
         self.font_color = font_color
         self.font_size = font_size
         self.font_kerning = font_kerning
+        self.font_vertical_shift = font_vertical_shift
         self.logo_placement: _LogoPlacement = logo_placement
         self.omit_gradient = omit_gradient
         self.text_placement: _TextPlacement = text_placement
@@ -183,6 +174,7 @@ class SeasonPoster(ImageMaker):
                 text_offset = 212 + self.__get_logo_height() + 60
         else:
             text_offset = self.POSTER_HEIGHT - 295
+        text_offset += self.font_vertical_shift
 
         return [
             f'-gravity north',
