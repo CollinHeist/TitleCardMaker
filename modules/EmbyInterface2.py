@@ -590,7 +590,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
                         all_series.append((
                             SeriesInfo.from_emby_info(
-                                series, year, self._interface_id, library,
+                                series, self._interface_id, library,
                             ),
                             library
                         ))
