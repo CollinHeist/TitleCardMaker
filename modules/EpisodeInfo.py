@@ -318,10 +318,15 @@ class EpisodeInfo(DatabaseInfoContainer):
             ordinal form.
         """
 
+        abs_ep = self.abs_number
+        if abs_ep is None:
+            abs_ep = self.episode_number
+
         return {
             'season_number': self.season_number,
             'episode_number': self.episode_number,
             'abs_number': self.abs_number,
+            'abs_episode_number': abs_ep,
             'airdate': self.airdate,
             **self.word_set,
         }
