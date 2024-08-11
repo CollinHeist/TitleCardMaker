@@ -201,9 +201,11 @@ def genre_card_batch(
 @click.option('--font', type=Path, default=MoviePosterMaker.FONT,
               help='Custom font for the title text')
 @click.option('--font-color', type=str, default=MoviePosterMaker.FONT_COLOR,
-              help='Font color for the title text(s)')
+              help='Font color for the title text')
 @click.option('--font-size', type=click.FloatRange(min=0.0), default=1.0,
               help='Font size scalar for the text')
+@click.option('--font-vertical-shift', type=int, default=0,
+              help='Vertical shift to apply to title text')
 @click.option('--drop-shadow', is_flag=True,
               help='Whether to add a drop shadow to the text for the movie poster')
 @click.option('--borderless', is_flag=True,
@@ -221,6 +223,7 @@ def create_movie_poster(
         font: Path,
         font_color: str,
         font_size: float,
+        font_vertical_shift: int,
         drop_shadow: bool,
         borderless: bool,
         omit_gradient: bool,
@@ -237,6 +240,7 @@ def create_movie_poster(
         font_file=font,
         font_color=font_color,
         font_size=font_size,
+        font_vertical_shift=font_vertical_shift,
         borderless=borderless,
         add_drop_shadow=drop_shadow,
         omit_gradient=omit_gradient,
@@ -324,6 +328,8 @@ def show_summary(
               help='Font size scalar for the season text')
 @click.option('--font-kerning', type=float, default=1.0,
               help='Font kerning scale for the season text')
+@click.option('--font-vertical-shift', type=int, default=0,
+              help='Vertical shift to apply to the season text (in pixels)')
 @click.option('--logo-placement',
               type=click.Choice(['top', 'middle', 'bottom']), default='bottom',
               help='Placement of the logo')
@@ -337,10 +343,11 @@ def season_poster(
         destination: Path,
         logo: Optional[Path],
         season_text: list[str],
-        font: Path,
+        font_file: Path,
         font_color: str,
         font_size: float,
         font_kerning: float,
+        font_vertical_shift: int,
         logo_placement: Literal['top', 'middle', 'bottom'],
         text_placement: Literal['top', 'bottom'],
         omit_gradient: bool,
@@ -351,10 +358,11 @@ def season_poster(
         destination=destination,
         logo=logo,
         season_text='\n'.join(season_text),
-        font=font,
         font_color=font_color,
+        font=font_file,
         font_size=font_size,
         font_kerning=font_kerning,
+        font_vertical_shift=font_vertical_shift,
         logo_placement=logo_placement,
         text_placement=text_placement,
         omit_gradient=omit_gradient,

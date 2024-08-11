@@ -32,32 +32,12 @@ class MoviePosterMaker(ImageMaker):
             font_file: Path = FONT,
             font_color: str = FONT_COLOR,
             font_size: float = 1.0,
+            font_vertical_shift: int = 0,
             borderless: bool = False,
             add_drop_shadow: bool = False,
             omit_gradient: bool = False,
         ) -> None:
-        """
-        Construct a new instance of a CollectionPosterMaker.
-
-        Args:
-            source: The source image to use for the poster.
-            output: The output path to write the poster to.
-            title: String to use on the created poster.
-            subtitle: String to use for smaller title text.
-            top_subtitle: String to use for smaller subtitle text that
-                appears above the title text.
-            movie_index: Optional (series) index to place behind the
-                movie title.
-            logo: Optional path to a logo file to place on top of the
-                poster.
-            font_file: Path to the font file of the poster's title.
-            font_color: Font color of the poster text.
-            font_size: Scalar for the font size of the poster's title.
-            add_drop_shadow: Whether to add a drop shadow to the text.
-            borderless: Whether to omit the white frame border.
-            omit_gradient: Whether to make the poster with no gradient
-                overlay.
-        """
+        """Construct a new instance of this object."""
 
         # Initialize parent object for the ImageMagickInterface
         super().__init__()
@@ -70,6 +50,7 @@ class MoviePosterMaker(ImageMaker):
         self.font_file = font_file
         self.font_color = font_color
         self.font_size = font_size
+        self.font_vertical_shift = font_vertical_shift
         self.borderless = borderless
         self.add_drop_shadow = add_drop_shadow
         self.omit_gradient = omit_gradient
@@ -223,6 +204,7 @@ class MoviePosterMaker(ImageMaker):
                 f'-layers merge',
                 f'+repage',
             ]
+        y_offset += self.font_vertical_shift
 
         # At least one title being added, return entire command
         return [
