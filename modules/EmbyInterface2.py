@@ -377,7 +377,6 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             log: Logger for all log messages.
         """
 
-        # Find series
         series = self.__get_series_id(
             library_name, series_info, raw_obj=True, log=log
         )
@@ -386,7 +385,11 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                         f'"{library_name}" in Emby')
             return None
 
-        del series_info.emby_id[self._interface_id, library_name]
+        # Remove existing Emby ID if one exists
+        if series_info.has_id('emby_id', self._interface_id, library_name):
+            del series_info.emby_id[self._interface_id, library_name]
+
+        # Add new ID's
         series_info.copy_ids(series)
         return None
 
