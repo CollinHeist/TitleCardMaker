@@ -1,3 +1,4 @@
+from datetime import datetime
 from re import compile as re_compile, match, sub as re_sub, IGNORECASE
 from typing import Optional, Union
 
@@ -12,6 +13,9 @@ class SeriesInfo(DatabaseInfoContainer):
     This class encapsulates static information that is tied to a single
     Series.
     """
+
+    """How Emby and Jellyfin store datetimes"""
+    AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f000000Z'
 
     """Regex to match name + year from given full name"""
     __FULL_NAME_REGEX = re_compile(r'^(.*?)\s+\((\d{4})\)$')
@@ -113,6 +117,30 @@ class SeriesInfo(DatabaseInfoContainer):
         """Returns a string representation of the object."""
 
         return self.full_name
+
+
+    @classmethod
+    def from_jellyfin_info(cls, info: dict) -> 'SeriesInfo':
+        """
+        Create a SeriesInfo object from the given Jellyfin series data
+        (from the `/Items/` endpoint).
+
+        Args:
+            info: Dictionary of series info.
+
+        Returns:
+            SeriesInfo object defining the given data.
+        """
+
+        return cls(
+            info['Name'],
+            datetime.strptime(info['PremiereDate'], cls.AIRDATE_FORMAT).year,
+            jellyfin_id=info["Id"],
+            imdb_id=info.get('ProviderIds', {}).get('Imdb'),
+            tmdb_id=info.get('ProviderIds', {}).get('Tmdb'),
+            tvdb_id=info.get('ProviderIds', {}).get('Tvdb'),
+            tvrage_id=info.get('ProviderIds', {}).get('TvRage'),
+        )
 
 
     @staticmethod
