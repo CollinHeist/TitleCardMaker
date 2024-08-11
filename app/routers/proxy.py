@@ -41,20 +41,11 @@ def redirect_plex_url(
     # Get Connection with this ID, raise 404 if DNE
     connection = get_connection(db, interface_id, raise_exc=True)
 
-    # Do not end server URL in /
-    if connection.decrypted_url.endswith('/'):
-        server_url = connection.decrypted_url[:-1]
-    else:
-        server_url = connection.decrypted_url
-
-    # Do not start proxied URL in /
-    url = url[1:] if url.startswith('/') else url
-
-    # Redirect using the Connection's token (API key)
-    redirected_url = \
-        f'{server_url}/{url}?X-Plex-Token={connection.decrypted_api_key}'
-
-    return Response(content=get(redirected_url, timeout=10).content)
+    return Response(content=get(
+        f'{connection.decrypted_url.removesuffix("/")}/'
+        f'{url.removeprefix("/")}?X-Plex-Token={connection.decrypted_api_key}',
+        timeout=10,
+    ).content)
 
 
 @proxy_router.get(
