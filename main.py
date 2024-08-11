@@ -6,8 +6,6 @@ from sys import exit as sys_exit
 from re import match
 from time import sleep
 
-from modules.Version import Version
-
 try:
     from requests import get
     import schedule
@@ -21,14 +19,15 @@ try:
     from modules.Manager import Manager
     from modules.MediaInfoSet import MediaInfoSet
     from modules.ShowRecordKeeper import ShowRecordKeeper
+    from modules.Version import Version
 except ImportError as e:
-    print(f'Required Python packages are missing - execute "pipenv install"')
+    print('Required Python packages are missing - run "pipenv install"')
     print(f'  Specific Error: {e}')
     sys_exit(1)
 
 # Version information
-REPO_URL = ('https://api.github.com/repos/'
-            'CollinHeist/TitleCardMaker/releases/latest')
+REPO_URL = \
+    'https://api.github.com/repos/CollinHeist/TitleCardMaker/releases/latest'
 
 # Environment variables
 ENV_IS_DOCKER = 'TCM_IS_DOCKER'
