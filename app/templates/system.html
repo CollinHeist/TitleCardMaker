@@ -19,6 +19,18 @@
       <p class="help">{tooltip}</p>
     </div>
   </template>
+
+  <template id="backup-row-template">
+    <tr class="center aligned">
+      <td data-action="restore"><i class="ui undo icon"></i></td>
+      <td data-value="timestamp">July 21, 2024 at 01:15:25</td>
+      <td data-value="version">v10.1.0-webui156</td>
+      <td data-value="schema">84971838f3fc</td>
+      <td data-value="database-filesize">28.4 MB</td>
+      <td data-value="settings-filesize">3.2 KB</td>
+      <td data-action="delete"><i class="trash alternate icon"></i></td>
+    </tr>
+  </template>
 </head>
 
 <body onload="initAll();">
@@ -33,7 +45,7 @@
 
     <!-- Actual page content -->
     <div id="main-content" class="article">
-      <h1 class="ui header">System Details</h1>
+      <h2 class="ui header">System Details</h2>
 
       <div class="ui relaxed divided list">
         <div class="item">
@@ -103,6 +115,25 @@
           </div>
         </div>
       </div>
+
+      <!-- Backups -->
+      <h2 class="ui header">System Backups</h2>
+
+      <table class="ui collapsing sortable table" id="system-backups">
+        <thead>
+          <tr class="center aligned">
+            <th data-sort-method="none">Restore</th>
+            <th data-row-label="timestamp">Timestamp</th>
+            <th data-row-label="version">Version</th>
+            <th data-row-label="schema">Database Schema</th>
+            <th data-row-label="database-filesize"><span>Database Filesize</span></th>
+            <th data-row-label="settings-filesize"><span>Settings Filesize</span></th>
+            <th data-row-label="delete" data-sort-method="none">Delete</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
     </div>
   </div>
 </body>

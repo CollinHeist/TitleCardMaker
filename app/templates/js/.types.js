@@ -392,6 +392,27 @@
  * @property {boolean} display_live_messages
  */
 
+/**
+ * @typedef {Object} DatabaseBackup
+ * @property {string} filename
+ * @property {number} filesize
+ * @property {string} schema_version
+ */
+
+/**
+ * @typedef {Object} SettingsBackup
+ * @property {string} filename
+ * @property {number} filesize
+ */
+
+/**
+ * @typedef {Object} SystemBackup
+ * @property {DatabaseBackup} database
+ * @property {SettingsBackup} settings
+ * @property {Date} timestamp
+ * @property {string} version
+ */
+
 // Series ----------------------------------------------------------------------
 
 /**
