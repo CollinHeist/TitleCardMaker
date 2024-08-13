@@ -38,6 +38,7 @@ class WebInterface:
     BAD_CONTENT = (
         b'<html><head><title>',
         b'<Code>AccessDenied</Code>',
+        b'<!DOCTYPE html>',
     )
 
 
