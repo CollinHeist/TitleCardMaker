@@ -127,10 +127,11 @@ class AnimeCardType(BaseCardTypeCustomFontAllText):
     kanji_vertical_shift: int = 0
     separator: str = '·'
     omit_gradient: bool = False
-    stroke_color: str = 'black'
     episode_stroke_color: str = AnimeTitleCard.EPISODE_STROKE_COLOR
-    episode_text_color: str = AnimeTitleCard.SERIES_COUNT_TEXT_COLOR
+    episode_text_color: str = AnimeTitleCard.EPISODE_TEXT_COLOR
     episode_text_font_size: PositiveFloat = 1.0
+    season_text_color: Optional[str] = None
+    stroke_color: str = 'black'
 
     @root_validator(skip_on_failure=True)
     def validate_kanji(cls, values: dict) -> dict:
@@ -143,6 +144,8 @@ class AnimeCardType(BaseCardTypeCustomFontAllText):
     def assign_unassigned_values(cls, values: dict) -> dict:
         if values['kanji_stroke_color'] is None:
             values['kanji_stroke_color'] = values['stroke_color']
+        if values['season_text_color'] is None:
+            values['season_text_color'] = values['episode_text_color']
 
         return values
 
