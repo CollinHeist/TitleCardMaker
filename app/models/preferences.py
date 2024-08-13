@@ -361,33 +361,21 @@ class Preferences:
             self.use_magick_prefix = False
             return None
 
-        def _detect_imagemagick(threaded: bool) -> None:
-            """Detect if ImageMagick is installed."""
+        # Try to initialize with/out the "magick " prefix
+        for prefix, use_magick in (('magick', True), ('', False)):
+            # Create ImageMagickInterface and verify validity
+            interface = ImageMagickInterface(use_magick_prefix=use_magick)
+            if interface.validate_interface():
+                # Since cards are typically created in the background
+                # thread; assign prefix only for threaded eval
+                self.use_magick_prefix = use_magick
+                log.debug(f'Using "{prefix}" ImageMagick command prefix '
+                            + ('in the primary thread'))
+                return None
 
-            # Try to initialize with/out the "magick " prefix
-            for prefix, use_magick in (('magick', True), ('', False)):
-                # Create ImageMagickInterface and verify validity
-                interface = ImageMagickInterface(use_magick_prefix=use_magick)
-                if interface.validate_interface():
-                    # Since cards are typically created in the background
-                    # thread; assign prefix only for threaded eval
-                    if threaded:
-                        self.use_magick_prefix = use_magick
-                    log.debug(f'Using "{prefix}" ImageMagick command prefix '
-                              + ('in background threads'
-                                 if threaded else 'in the primary thread'))
-                    return None
-
-            # If neither variation worked, IM might not be installed
-            log.critical("ImageMagick doesn't appear to be installed")
-            return None
-
-        # Try normally (i.e. using main server process)
-        _detect_imagemagick(threaded=False)
-
-        # Try using spawned background thread
-        tasks = BackgroundTasks()
-        tasks.add_task(_detect_imagemagick, threaded=True)
+        # If neither variation worked, IM might not be installed
+        log.critical("ImageMagick doesn't appear to be installed")
+        return None
 
 
     def parse_local_card_types(self, *, log: Logger = log) -> None:
