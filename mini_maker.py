@@ -10,7 +10,7 @@ try:
     from modules.AspectRatioFixer import AspectRatioFixer
     from modules.CleanPath import CleanPath
     from modules.CollectionPosterMaker import CollectionPosterMaker
-    from modules.Debug2 import logger
+    from modules.Debug import log
     from modules.GenreMaker import GenreMaker
     from modules.MoviePosterMaker import MoviePosterMaker
     from modules.RemoteFile import RemoteFile
@@ -104,7 +104,7 @@ def aspect_ratio_batch(
               help='Font size scalar')
 @click.option('--omit-collection', is_flag=True,
               help='Whether to omit the "COLLECTION" text')
-def create_collection_poster(
+def collection_poster(
         source: Path,
         destination: Path,
         title: list[str],
@@ -212,7 +212,7 @@ def genre_card_batch(
               help='Omit the border from the created image')
 @click.option('--omit-gradient', is_flag=True,
               help='Omit the gradient from the created image')
-def create_movie_poster(
+def movie_poster(
         source: Path,
         destination: Path,
         title: list[str],
@@ -426,13 +426,13 @@ def title_card(
     arbitrary_data = {}
     if len(extras) % 2 == 0 and len(extras) > 1:
         arbitrary_data = dict(zip(extras[::2], extras[1::2]))
-        logger.debug('Extras Identified:')
+        log.debug('Extras Identified:')
         for key, value in arbitrary_data.items():
-            logger.debug(f'  {key}: "{value}"')
+            log.debug(f'  {key}: "{value}"')
 
     # Attempt to get local card type, if not, try RemoteCardType
     if not (CardClass := YamlReader.parse_card_type(card_type)):
-        logger.error('Invalid --card-type')
+        log.error('Invalid --card-type')
         return None
     RemoteFile.reset_loaded_database()
 
@@ -469,9 +469,9 @@ def title_card(
     # Create, log success/failure
     card.create()
     if destination.exists():
-        logger.info(f'Created "{destination.resolve()}"')
+        log.info(f'Created "{destination.resolve()}"')
     else:
-        logger.warning(f'Could not create "{destination.resolve()}"')
+        log.warning(f'Could not create "{destination.resolve()}"')
         card.image_magick.print_command_history()
 
 
