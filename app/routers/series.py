@@ -1,8 +1,15 @@
-from typing import Literal, Optional
+from typing import Optional
 
 from fastapi import (
-    APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, Query,
-    Request, UploadFile
+    APIRouter,
+    BackgroundTasks,
+    Body,
+    Depends,
+    Form,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile
 )
 from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_pagination import paginate as paginate_sequence
@@ -13,16 +20,24 @@ from sqlalchemy.orm import Session
 from unidecode import unidecode
 
 from app.dependencies import (
-    get_database, get_preferences, require_interface, require_tmdb_interface,
-    Preferences, TMDbInterface
+    get_database,
+    get_preferences,
+    require_interface,
+    require_tmdb_interface,
+    Preferences,
+    TMDbInterface
 )
 from app.database.session import Page
 from app.database.query import get_interface, get_series
 from app import models
 from app.internal.cards import delete_cards
 from app.internal.series import (
-    add_series, delete_series, download_series_poster, lookup_series,
-    process_series, update_series_config,
+    add_series,
+    delete_series,
+    download_series_poster,
+    lookup_series,
+    process_series,
+    update_series_config,
 )
 from app.internal.auth import get_current_user
 from app.models.card import Card
@@ -30,9 +45,15 @@ from app.models.loaded import Loaded
 from app.models.series import Series as SeriesModel
 from app.schemas.connection import SonarrWebhook
 from app.schemas.series import (
-    BatchUpdateSeries, NewSeries, SearchResult, Series, UpdateSeries
+    BatchUpdateSeries,
+    NewSeries,
+    SearchResult,
+    Series,
+    SeriesOrder,
+    UpdateSeries
 )
 from modules.SeriesInfo2 import SeriesInfo
+from modules.WebInterface import WebInterface
 
 
 series_router = APIRouter(
@@ -520,6 +541,7 @@ def query_series_poster(
 
 @series_router.put('/series/{series_id}/poster', status_code=201)
 async def set_series_poster(
+        request: Request,
         series_id: int,
         poster_url: Optional[str] = Form(default=None),
         poster_file: Optional[UploadFile] = None,
@@ -562,16 +584,17 @@ async def set_series_poster(
 
     # If only URL was required, attempt to download, error if unable
     if poster_url is not None:
-        try:
-            poster_content = get(poster_url, timeout=30).content
-        except Exception as e:
+        poster_content = WebInterface.download_image_raw(
+            poster_url, log=request.state.log,
+        )
+        if poster_content is None:
             raise HTTPException(
                 status_code=400,
-                detail=f'Unable to download poster - {e}'
-            ) from e
+                detail='Unable to download poster'
+            )
 
     # Valid poster provided, download into asset directory
-    poster_path = preferences.asset_directory / str(series.id) / 'poster.jpg'
+    poster_path = preferences.asset_directory / str(series.id) / 'poster.jpg'  
     series.poster_file = str(poster_path)
     poster_path.parent.mkdir(exist_ok=True, parents=True)
     poster_path.write_bytes(poster_content)
