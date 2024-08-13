@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Body, Depends, Request
 from sqlalchemy.orm import Session
 
@@ -10,7 +11,10 @@ from app.models.connection import Connection
 from app.models.preferences import Preferences as PreferencesModel
 from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import (
-    EpisodeDataSourceToggle, ImageSourceToggle, Preferences, SystemBackup,
+    EpisodeDataSourceToggle,
+    ImageSourceToggle,
+    Preferences,
+    SystemBackup,
     UpdatePreferences,
 )
 
@@ -119,3 +123,16 @@ def get_available_system_backups() -> list[SystemBackup]:
     """Get a list detailing all the available system backups."""
 
     return list_available_backups()
+
+
+@settings_router.get('/background-tasks')
+def get_pending_background_tasks() -> list[tuple[str, Optional[str]]]:
+    from modules.BackgroundTasks import task_queue
+
+    return [
+        (
+            task[1].__name__,
+            task[1].__doc__,
+        )
+        for task in task_queue
+    ]
