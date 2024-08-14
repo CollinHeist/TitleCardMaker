@@ -144,8 +144,6 @@ class AnimeCardType(BaseCardTypeCustomFontAllText):
     def assign_unassigned_values(cls, values: dict) -> dict:
         if values['kanji_stroke_color'] is None:
             values['kanji_stroke_color'] = values['stroke_color']
-        if values['season_text_color'] is None:
-            values['season_text_color'] = values['episode_text_color']
 
         return values
 

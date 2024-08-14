@@ -226,7 +226,7 @@ class AnimeTitleCard(BaseCardType):
             kanji_stroke_color: str = 'black',
             kanji_stroke_width: float = 1.0,
             kanji_vertical_shift: float = 0.0,
-            season_text_color: str = EPISODE_TEXT_COLOR,
+            season_text_color: Optional[str] = None,
             stroke_color: str = 'black',
             preferences: Optional['Preferences'] = None,
             **unused,
@@ -273,7 +273,7 @@ class AnimeTitleCard(BaseCardType):
         self.kanji_stroke_color = kanji_stroke_color
         self.kanji_stroke_width = kanji_stroke_width
         self.separator = separator
-        self.season_text_color = season_text_color
+        self.season_text_color = season_text_color or episode_text_color
         self.stroke_color = stroke_color
 
 
