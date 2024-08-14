@@ -24,6 +24,13 @@ Base classes
 """
 FilterOperation = Literal[tuple(OPERATIONS.keys())]
 FilterArgument = Literal[tuple(ARGUMENT_KEYS)]
+SeriesOrder = Literal[
+    'alphabetical', 'reverse-alphabetical',
+    'cards', 'reverse-cards',
+    'id', 'reverse-id',
+    'sync',
+    'year', 'reverse-year'
+]
 
 class Condition(Base):
     argument: FilterArgument
