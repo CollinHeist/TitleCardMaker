@@ -15,8 +15,6 @@ import starlette.background
 
 from modules.Debug2 import logger as log
 
-P = ParamSpec("P")
-
 
 class _Task(NamedTuple):
     id: int
@@ -47,6 +45,13 @@ class TaskQueue:
             task_function: Callable,
         ) -> None:
         """
+        Add the given task to the queue, indicating it needs to be
+        executed.
+
+        Args:
+            task: BackgroundTask to add to the queue.
+            task_function: Function which will be executed when this
+                task will finish.
         """
 
         self.tasks.append((id(task), task_function))
@@ -54,6 +59,11 @@ class TaskQueue:
 
     def remove_task(self, task: starlette.background.BackgroundTask) -> None:
         """
+        Remove the task from this queue. This should only be done after
+        the task has finished executing.
+
+        Args:
+            task: BackgroundTask to remove.
         """
 
         found = False
@@ -80,6 +90,8 @@ TracebackSuppressedPackages = [
     tmdbapis,
     'app-main.py',
 ]
+
+P = ParamSpec("P")
 
 class BackgroundTasks(starlette.background.BackgroundTasks):
     async def __call__(self) -> None:
