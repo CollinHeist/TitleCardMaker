@@ -63,17 +63,10 @@ series_router = APIRouter(
 )
 
 
-OrderBy = Literal[
-    'alphabetical', 'reverse-alphabetical',
-    'cards', 'reverse-cards',
-    'id', 'reverse-id',
-    'sync',
-    'year', 'reverse-year'
-]
 @series_router.get('/all')
 def get_all_series(
         db: Session = Depends(get_database),
-        order_by: OrderBy = Query(default='alphabetical'),
+        order_by: SeriesOrder = Query(default='alphabetical'),
         # filter: SeriesFilter = Query(default={}),
     ) -> Page[Series]:
     """
