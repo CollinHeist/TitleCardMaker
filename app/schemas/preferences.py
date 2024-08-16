@@ -168,7 +168,6 @@ class Preferences(Base):
     library_unique_cards: bool
     image_source_priority: list[int]
     episode_data_source: Optional[int]
-    valid_image_extensions: list[str]
     specials_folder_format: str
     season_folder_format: str
     sync_specials: bool
