@@ -354,7 +354,33 @@ def toggle_schedule_type(
     initialize_scheduler(override=True)
 
 
-@schedule_router.post('/type/{mode}')
+@schedule_router.post('/type/{mode}', deprecated=True)
+def set_the_scheduler_type(
+        request: Request,
+        mode: Literal['advanced', 'basic'],
+        preferences: Preferences = Depends(get_preferences),
+    ) -> None:
+    """
+    **Deprecated - use the `PUT` alternative**
+
+    Set the scheduler mode to the given mode.
+
+    - mode: Which mode to set.
+    """
+
+    # Toggle scheduling method
+    if mode == 'advanced':
+        request.state.log.info('Enabling advanced Task scheduling')
+    else:
+        request.state.log.info('Disabling advanced Task scheduling')
+    preferences.advanced_scheduling = mode == 'advanced'
+    preferences.commit()
+
+    # Reset Scheduler
+    initialize_scheduler(override=True)
+
+
+@schedule_router.put('/type/{mode}')
 def set_the_scheduler_type(
         request: Request,
         mode: Literal['advanced', 'basic'],
@@ -502,7 +528,7 @@ def reschedule_task(
     return _scheduled_task_from_job(job)
 
 
-@schedule_router.post('/{task_id}')
+@schedule_router.put('/{task_id}')
 def run_task(
         request: Request,
         task_id: TaskID,
