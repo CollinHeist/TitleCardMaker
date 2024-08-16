@@ -39,7 +39,9 @@ class Preferences:
         '{series_full_name} - S{season_number:02}E{episode_number:02}'
     )
     DEFAULT_CARD_EXTENSION: 'CardExtension' = '.jpg'
-    VALID_IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp')
+    VALID_IMAGE_EXTENSIONS = (
+        '.avif', '.heic', '.jpg', '.jpeg', '.jxl', '.png', '.tiff', '.webp',
+    )
 
     """Directory to all internal assets"""
     INTERNAL_ASSET_DIRECTORY = TCM_ROOT / 'app' / 'assets'
@@ -65,22 +67,22 @@ class Preferences:
         'is_docker', 'asset_directory', 'card_directory', 'source_directory',
         'completely_delete_series', 'file', 'card_width', 'card_height',
         'card_filename_format', 'card_extension', 'image_source_priority',
-        'episode_data_source', 'valid_image_extensions', 'card_quality',
-        'specials_folder_format', 'season_folder_format', 'sync_specials',
-        'delete_missing_episodes', 'remote_card_types', 'default_card_type',
-        'excluded_card_types', 'default_templates', 'global_extras',
-        'default_watched_style', 'default_unwatched_style', 'use_emby',
-        'use_jellyfin', 'use_plex', 'use_sonarr', 'use_tmdb', 'use_tvdb',
-        'use_magick_prefix', 'current_version', 'available_version',
-        'blacklisted_blueprints', 'advanced_scheduling', 'require_auth',
-        'task_crontabs', 'simplified_data_table', 'home_page_size',
-        'episode_data_page_size', 'stylize_unmonitored_posters',
-        'sources_as_table', 'card_type_directory', 'local_card_types',
-        'imported_blueprints', 'colorblind_mode', 'library_unique_cards',
-        'invalid_connections', 'home_page_table_view', 'reduced_animations',
-        'currently_running_sync', 'interactive_card_previews',
-        'delete_unsynced_series', 'imagemagick_executable', 'current_db_schema',
-        'server_boot_time', 'display_live_messages',
+        'episode_data_source', 'card_quality', 'specials_folder_format',
+        'season_folder_format', 'sync_specials', 'delete_missing_episodes',
+        'remote_card_types', 'default_card_type', 'excluded_card_types',
+        'default_templates', 'global_extras', 'default_watched_style',
+        'default_unwatched_style', 'use_emby', 'use_jellyfin', 'use_plex',
+        'use_sonarr', 'use_tmdb', 'use_tvdb', 'use_magick_prefix',
+        'current_version', 'available_version', 'blacklisted_blueprints',
+        'advanced_scheduling', 'require_auth', 'task_crontabs',
+        'simplified_data_table', 'home_page_size', 'episode_data_page_size',
+        'stylize_unmonitored_posters', 'sources_as_table',
+        'card_type_directory', 'local_card_types', 'imported_blueprints',
+        'colorblind_mode', 'library_unique_cards', 'invalid_connections',
+        'home_page_table_view', 'reduced_animations', 'currently_running_sync',
+        'interactive_card_previews', 'delete_unsynced_series',
+        'imagemagick_executable', 'current_db_schema', 'server_boot_time',
+        'display_live_messages',
     )
 
 
@@ -189,7 +191,6 @@ class Preferences:
 
         self.image_source_priority: list[int] = []
         self.episode_data_source: Optional[int] = None
-        self.valid_image_extensions = self.VALID_IMAGE_EXTENSIONS
 
         self.specials_folder_format = 'Specials'
         self.season_folder_format = 'Season {season_number}'

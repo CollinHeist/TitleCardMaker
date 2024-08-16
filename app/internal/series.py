@@ -287,9 +287,7 @@ def process_series(
         log.debug(f'{series} Started downloading source images')
         for episode in series.episodes:
             background_tasks.add_task(
-                # Function
                 download_episode_source_images,
-                # Arguments
                 db, episode, commit=False, raise_exc=False, log=log,
             )
 
@@ -298,10 +296,7 @@ def process_series(
         log.debug(f'{series} Started adding translations')
         for episode in series.episodes:
             background_tasks.add_task(
-                # Function
-                translate_episode,
-                # Arguments
-                db, episode, commit=False, log=log,
+                translate_episode, db, episode, commit=False, log=log,
             )
     db.commit()
 
@@ -309,10 +304,7 @@ def process_series(
     log.debug(f'{series} Starting Card creation')
     for episode in series.episodes:
         background_tasks.add_task(
-            # Function
-            create_episode_cards,
-            # Arguments
-            db, episode, raise_exc=False, log=log
+            create_episode_cards, db, episode, raise_exc=False, log=log
         )
 
 

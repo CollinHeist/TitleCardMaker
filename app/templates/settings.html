@@ -382,7 +382,7 @@
                   <label>Title Card Filename Format</label>
                   <input type="text" name="card_filename_format" placeholder="{{preferences.card_filename_format}}" value="{{preferences.card_filename_format}}">
                   <p class="help">
-                    Format of how to name all Title Cards.
+                    Format of how to name Title Cards.
                     <br>
                     <a href="https://titlecardmaker.com/user_guide/settings/#filename-format" target="_blank">See here</a> for some examples.
                   </p>
@@ -395,12 +395,12 @@
                     <i class="dropdown icon"></i>
                     <div class="default text">{{preferences.card_extension}}</div>
                     <div id="card-extension-choices" class="menu">
-                      {% for extension in preferences.valid_image_extensions %}
+                      {% for extension in preferences.VALID_IMAGE_EXTENSIONS %}
                       <div class="item" data-value="{{extension}}">{{extension}}</div>
                       {% endfor %}
                     </div>
                   </div>
-                  <p class="help">File extension of all created Title Cards.</p>
+                  <p class="help">File extension of Title Cards.</p>
                 </div>
               </div>
 
