@@ -276,11 +276,11 @@ class EpisodeInfo(DatabaseInfoContainer):
             info['Name'],
             info['ParentIndexNumber'],
             info['IndexNumber'],
-            imdb_id=info['ProviderIds'].get('Imdb'),
+            imdb_id=info.get('ProviderIds', {}).get('Imdb'),
             jellyfin_id=f'{interface_id}:{library_name}:{info["Id"]}',
-            tmdb_id=info['ProviderIds'].get('Tmdb'),
-            tvdb_id=info['ProviderIds'].get('Tvdb'),
-            tvrage_id=info['ProviderIds'].get('TvRage'),
+            tmdb_id=info.get('ProviderIds', {}).get('Tmdb'),
+            tvdb_id=info.get('ProviderIds', {}).get('Tvdb'),
+            tvrage_id=info.get('ProviderIds', {}).get('TvRage'),
             airdate=airdate,
         )
 
