@@ -119,10 +119,10 @@ def get_image_source_priority(
 
 
 @settings_router.get('/backups')
-def get_available_system_backups() -> list[SystemBackup]:
+def get_available_system_backups(request: Request) -> list[SystemBackup]:
     """Get a list detailing all the available system backups."""
 
-    return list_available_backups()
+    return list_available_backups(log=request.state.log)
 
 
 @settings_router.get('/background-tasks')

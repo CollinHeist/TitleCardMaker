@@ -4,7 +4,9 @@ from os import environ
 from pathlib import Path
 from shutil import copy as file_copy
 from sqlite3 import connect
-from typing import NamedTuple
+from typing import NamedTuple, Optional
+
+from sqlalchemy.exc import OperationalError
 
 from app.schemas.preferences import DatabaseBackup, SettingsBackup, SystemBackup
 from modules.Debug import log
@@ -135,9 +137,12 @@ def restore_backup(backup: DataBackup, /, *, log: Logger = log):
         log.warning(f'Cannot restore backup from "{backup.database}"')
 
 
-def list_available_backups() -> list[SystemBackup]:
+def list_available_backups(*, log: Logger = log) -> list[SystemBackup]:
     """
     Get a list detailing all the available system backups.
+
+    Args:
+        log: Logger for all log messages.
 
     Returns:
         List of system backup information.
@@ -149,40 +154,49 @@ def list_available_backups() -> list[SystemBackup]:
         """Parse the version number from the given file."""
         return file.name[len('config.pickle') + 1:]
 
-    def _parse_schema_version(file: Path) -> str:
+    def _parse_schema_version(file: Path) -> Optional[str]:
         """Parse the alembic schema version from the given file."""
         connection = connect(file)
         try:
             return connection.cursor()\
                 .execute('SELECT * FROM alembic_version LIMIT 1')\
                 .fetchone()[0]
+        except OperationalError:
+            log.debug(f'Unable to detect schema from {file}')
+            return None
         finally:
             connection.close()
 
-    backup_files = [
-        (
-            next(subfolder.glob('config.pickle*')),
-            next(subfolder.glob('db.sqlite*'))
-        )
-        for subfolder in backup_dir.glob('2*')
-    ]
+    backups: list[SystemBackup] = []
+    for subfolder in backup_dir.glob('2*'):
+        # Find setting and database files
+        try:
+            settings = next(subfolder.glob('config.pickle*'))
+            database = next(subfolder.glob('db.sqlite*'))
+        except StopIteration:
+            log.debug(f'Missing backup file(s) from "{subfolder}"')
+            continue
 
-    return sorted(
-        [
-            SystemBackup(
-                database=DatabaseBackup(
-                    filename=database.name,
-                    filesize=database.stat().st_size,
-                    schema_version=_parse_schema_version(database),
-                ),
-                settings=SettingsBackup(
-                    filename=settings.name,
-                    filesize=settings.stat().st_size,
-                ),
-                timestamp=datetime.strptime(settings.parent.name, BACKUP_DT_FORMAT),
-                version=_parse_version_number(settings),
-            )
-            for settings, database in backup_files
-        ],
-        key=lambda backup: backup.timestamp,
-    )
+        # Skip if there's no version or schema
+        schema = _parse_schema_version(database)
+        version = _parse_version_number(settings)
+        if not schema or not version:
+            log.debug(f'Unable to identify database schema or version from '
+                      f'"{subfolder}')
+            continue
+
+        backups.append(SystemBackup(
+            database=DatabaseBackup(
+                filename=database.name,
+                filesize=database.stat().st_size,
+                schema_version=schema,
+            ),
+            settings=SettingsBackup(
+                filename=settings.name,
+                filesize=settings.stat().st_size,
+            ),
+            timestamp=datetime.strptime(settings.parent.name, BACKUP_DT_FORMAT),
+            version=_parse_version_number,
+        ))
+
+    return sorted(backups, key=lambda b: b.timestamp)

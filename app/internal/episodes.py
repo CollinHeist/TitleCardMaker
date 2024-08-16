@@ -234,10 +234,10 @@ def refresh_episode_data(
 
     # Get existing Episodes
     if get_preferences().delete_missing_episodes:
-        new_keys = set(episode_info.index_str for episode_info, _ in all_episodes)
-        all_existing = {episode.index_str: episode for episode in series.episodes}
+        new_keys = set(ei.index_str for ei, _ in all_episodes)
+        all_existing = {ep.index_str: ep for ep in series.episodes}
         for delete_key in set(all_existing) - new_keys:
-            # Delete Title Cards
+            # Delete Title Card(s)
             log.info(f'Deleting {all_existing[delete_key]} - not in Episode '
                       f'Data Source')
             cards = db.query(Card)\
@@ -262,11 +262,7 @@ def refresh_episode_data(
     if background_tasks is None:
         set_episode_ids(db, series, episodes, log=log)
     else:
-        background_tasks.add_task(
-            set_episode_ids,
-            # Arguments
-            db, series, episodes, log=log
-        )
+        background_tasks.add_task(set_episode_ids, db, series, episodes,log=log)
 
     # Commit to database if changed
     if changed:
