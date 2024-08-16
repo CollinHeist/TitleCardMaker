@@ -8,23 +8,35 @@ from sqlalchemy import not_
 from sqlalchemy.orm import Session
 
 from app.database.query import (
-    get_card, get_episode, get_font, get_interface, get_series
+    get_card,
+    get_episode,
+    get_font,
+    get_interface,
+    get_series
 )
 from app.database.session import Page
 from app.dependencies import (
-    get_database, get_preferences, require_plex_interface, PlexInterface,
+    get_database,
+    get_preferences,
+    require_plex_interface,
+    PlexInterface,
     Preferences
 )
 from app import models
 from app.internal.auth import get_current_user
 from app.internal.cards import (
-    create_episode_cards, delete_cards, get_watched_statuses,
-    resolve_card_settings, validate_card_type_model
+    create_episode_cards,
+    delete_cards,
+    get_watched_statuses,
+    resolve_card_settings,
+    validate_card_type_model
 )
 from app.internal.episodes import refresh_episode_data, update_episode_config
 from app.internal.series import (
-    load_all_series_title_cards, load_episode_title_card,
-    load_series_title_cards, update_series_config
+    load_all_series_title_cards,
+    load_episode_title_card,
+    load_series_title_cards,
+    update_series_config
 )
 from app.internal.snapshot import take_snapshot
 from app.internal.sources import download_episode_source_images
@@ -303,7 +315,7 @@ def create_cards_for_series(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
