@@ -629,17 +629,19 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
 
         # Invalid return, exit
         if not isinstance(response, dict) or 'Items' not in response:
-            log.warning(f'Jellyfin returned bad Episode data')
-            log.debug(f'{response}')
+            log.warning('Jellyfin returned bad Episode data')
+            log.trace(response)
             return []
 
         # Parse each returned episode into EpisodeInfo object
         all_episodes = []
         for episode in response['Items']:
-            # Skip episodes without episode or season numbers
-            if (episode.get('IndexNumber', None) is None
-                or episode.get('ParentIndexNumber', None) is None):
-                log.debug(f'Series {series_info} episode is missing index data')
+            # Skip episodes without required a title, season, or episode number
+            if (episode.get('Name') is None
+                or episode.get('IndexNumber') is None
+                or episode.get('ParentIndexNumber') is None):
+                log.debug(f'Series {series_info} is missing required episode data')
+                log.trace(episode)
                 continue
 
             all_episodes.append((
@@ -678,7 +680,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         """
 
         # If no episodes, exit
-        if len(episodes) == 0:
+        if not episodes:
             return False
 
         # Find this series
@@ -686,42 +688,15 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         if series_id is None:
             return False
 
-        # Query for all episodes of this series
-        response = self.session.get(
-            f'{self.url}/Shows/{series_id}/Episodes',
-            params={
-                'UserId': self.user_id,
-                'Fields': 'ProviderIds,PremiereDate',
-            } | self.__params
-        )
-        if not isinstance(response, dict) or 'Items' not in response:
-            log.warning(f'Jellyfin returned bad Episode data')
-            log.debug(f'{response}')
-            return False
-
         # Get data for each Jellyfin episode
-        jellyfin_episodes = [
-            (
-                EpisodeInfo.from_jellyfin_info(
-                    episode, self._interface_id, library_name, log=log
-                ),
-                WatchedStatus(
-                    self._interface_id,
-                    library_name,
-                    episode['UserData']['Played']
-                )
-            )
-            for episode in response['Items']
-            if (episode.get('IndexNumber') is not None
-                and episode.get('ParentIndexNumber') is not None
-                and episode.get('UserData', {}).get('Played') is not None)
-        ]
+        jellyfin_episodes = self.get_all_episodes(
+            library_name, series_info, log=log,
+        )
 
         # Update watched statuses of all Episodes
         changed = False
         for episode in episodes:
             episode_info = episode.as_episode_info
-            # Match to the given Jellyfin Episode
             for jellyfin_episode, watched_status in jellyfin_episodes:
                 if episode_info == jellyfin_episode:
                     changed |= episode.add_watched_status(watched_status)
