@@ -196,7 +196,7 @@ def list_available_backups(*, log: Logger = log) -> list[SystemBackup]:
                 filesize=settings.stat().st_size,
             ),
             timestamp=datetime.strptime(settings.parent.name, BACKUP_DT_FORMAT),
-            version=_parse_version_number,
+            version=version,
         ))
 
     return sorted(backups, key=lambda b: b.timestamp)
