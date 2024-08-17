@@ -4,13 +4,21 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
 from app.dependencies import (
-    get_database, get_emby_interfaces, get_jellyfin_interfaces,
-    get_plex_interfaces, get_preferences, get_sonarr_interfaces,
-    require_emby_interface, require_jellyfin_interface, require_plex_interface
+    get_database,
+    get_emby_interfaces,
+    get_jellyfin_interfaces,
+    get_plex_interfaces,
+    get_preferences,
+    get_sonarr_interfaces,
+    require_emby_interface,
+    require_jellyfin_interface,
+    require_plex_interface
 )
 from app.internal.auth import get_current_user
 from app.internal.availability import (
-    get_latest_version, get_local_cards, get_remote_cards
+    get_latest_version,
+    get_local_cards,
+    get_remote_cards
 )
 from app import models
 from app.internal.font import get_available_fonts
@@ -18,10 +26,16 @@ from app.internal.templates import get_available_templates
 from app.models.preferences import Preferences
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.availability import (
-    AvailableFont, AvailableSeries, AvailableTemplate, TranslationLanguage
+    AvailableFont,
+    AvailableSeries,
+    AvailableTemplate,
+    TranslationLanguage,
 )
 from app.schemas.card import (
-    BuiltinCardType, CardTypeDescription, LocalCardType, RemoteCardType
+    BuiltinCardType,
+    CardTypeDescription,
+    LocalCardType,
+    RemoteCardType
 )
 from app.schemas.card_type import Extra
 from app.schemas.preferences import StyleOption
