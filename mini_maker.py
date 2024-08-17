@@ -464,6 +464,7 @@ def title_card(
         logo_file=logo,
         blur=blur,
         grayscale=grayscale,
+        **arbitrary_data,
     )
 
     # Create, log success/failure
