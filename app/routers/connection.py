@@ -15,11 +15,26 @@ from app.models.series import Series
 from app.models.sync import Sync
 from app.models.template import Template
 from app.schemas.connection import (
-    AnyConnection, EmbyConnection, JellyfinConnection, NewEmbyConnection,
-    NewJellyfinConnection, NewPlexConnection, NewSonarrConnection,
-    NewTautulliConnection, NewTMDbConnection, NewTVDbConnection, PlexConnection,
-    PotentialSonarrLibrary, SonarrConnection, TMDbConnection, TVDbConnection,
-    UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb,
+    AnyConnection,
+    EmbyConnection,
+    JellyfinConnection,
+    NewEmbyConnection,
+    NewJellyfinConnection,
+    NewPlexConnection,
+    NewSonarrConnection,
+    NewTautulliConnection,
+    NewTMDbConnection,
+    NewTVDbConnection,
+    PlexConnection,
+    PotentialSonarrLibrary,
+    SonarrConnection,
+    TMDbConnection,
+    TVDbConnection,
+    UpdateEmby,
+    UpdateJellyfin,
+    UpdatePlex,
+    UpdateSonarr,
+    UpdateTMDb,
     UpdateTVDb,
 )
 from modules.SonarrInterface2 import SonarrInterface
