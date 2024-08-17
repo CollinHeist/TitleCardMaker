@@ -10,15 +10,21 @@ from sqlalchemy.exc import InvalidRequestError, OperationalError
 from sqlalchemy.orm import Session
 
 from app.database.query import (
-    get_all_templates, get_font, get_interface, get_sync
+    get_all_templates,
+    get_font,
+    get_interface,
+    get_sync,
 )
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.cards import (
-    create_episode_cards, get_watched_statuses, refresh_remote_card_types
+    create_episode_cards,
+    get_watched_statuses,
+    refresh_remote_card_types
 )
 from app.internal.episodes import refresh_episode_data
 from app.internal.sources import (
-    download_episode_source_images, download_series_logo
+    download_episode_source_images,
+    download_series_logo
 )
 from app.internal.translate import translate_episode
 from app.models.card import Card
