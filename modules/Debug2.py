@@ -171,3 +171,22 @@ except ValueError:
 logger = logger.patch(
     lambda record: record.update(message=redact_secrets(record['message']))
 )
+
+import http.client
+def httpclient_logging_patch():
+    """Enable HTTPConnection debug logging to the logging framework"""
+
+    def httpclient_log(*args):
+        if len(args) == 0 or args[0] == 'header:':
+            return
+        if args[0] == 'send:':
+            logger.debug(f'SEND : ' + ' '.join(args[1:]))
+        else:
+            logger.info(f'{args[0].upper()} : ' + ' '.join(args[1:]))
+
+    # mask the print() built-in in the http.client module to use
+    # logging instead
+    http.client.print = httpclient_log
+    # enable debugging
+    http.client.HTTPConnection.debuglevel = 1
+# httpclient_logging_patch()
