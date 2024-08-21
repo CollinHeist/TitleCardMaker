@@ -18,7 +18,10 @@ ServerName = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr']
 
 # Any acceptable Interface to an EpisodeDataSource
 EpisodeDataSourceInterface = Union[
-    EmbyInterface, JellyfinInterface, PlexInterface, SonarrInterface,
+    EmbyInterface,
+    JellyfinInterface,
+    PlexInterface,
+    SonarrInterface,
     TMDbInterface,
 ]
 
@@ -247,8 +250,12 @@ class TVDbConnection(Base):
     language_priority: list[str]
 
 AnyConnection = Union[
-    EmbyConnection, JellyfinConnection, PlexConnection, SonarrConnection,
-    TMDbConnection, TVDbConnection,
+    EmbyConnection,
+    JellyfinConnection,
+    PlexConnection,
+    SonarrConnection,
+    TMDbConnection,
+    TVDbConnection,
 ]
 
 """
