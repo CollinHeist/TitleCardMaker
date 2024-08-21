@@ -212,7 +212,7 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             # Query for this item within Jellyfin
             id_ = series_info.emby_id[self._interface_id, library_name]
             resp = self.session.get(
-                f'{self.url}/Items/{id_}?userId={self.user_id}',
+                f'{self.url}/Users/{self.user_id}/Items/{id_}',
                 params=self.__params,
             )
 
