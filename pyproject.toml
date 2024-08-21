@@ -1,57 +1,150 @@
-[tool.poetry]
+[project]
 name = "titlecardmaker"
-version = "2.9.1"
+version = "2.0-alpha"
 description = "An automated title card creation program for Plex, Emby, and Jellyfin"
-authors = ["Collin Heist"]
-license = "GPL-3.0"
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.9"
-regex = "==2023.10.3"
-num2words = "==0.5.12"
-pyyaml = "==6.0.1"
-requests = "==2.31.0"
-titlecase = "==2.4.1"
-tqdm = "==4.66.1"
-fonttools = "==4.43.0"
-plexapi = "==4.15.4"
-tenacity = "==8.2.3"
-tinydb = "==4.8.0"
-schedule = "==1.2.1"
-tmdbapis = "==1.2.6"
-"ruamel.yaml" = "==0.17.21"
-uvicorn = "==0.22.0"
-fastapi = "==0.99.1"
-sqlalchemy = "==2.0.17"
-python-multipart = "==0.0.6"
-jinja2 = "==3.1.2"
-pydantic = "==1.10.17"
-apscheduler = "==3.10.1"
-imagesize = "==1.4.1"
-alembic = "==1.11.1"
-tzdata = "==2023.3"
-fastapi-pagination = "==0.12.5"
-python-jose = {version = "==3.3.0", extras = ["cryptography"]}
-bcrypt = "==4.1.2"
-passlib = {version = "==1.7.4", extras = ["bcrypt"]}
-pillow = "==10.2.0"
-thefuzz = "==0.20.0"
-charset-normalizer = "==3.3.2"
-loguru = "==0.7.2"
-better-exceptions = "==0.2.1"
-colorama = "==0.4.6"
-win32-setctime = "==1.1.0"
-websockets = "^12.0"
-click = "^8.1.7"
+requires-python = ">=3.9"
+dependencies = [
+    "regex>=2024.7.24",
+    "num2words>=0.5.13",
+    "pyyaml>=6.0.2",
+    "titlecase>=2.4.1",
+    "tqdm>=4.66.5",
+    "fonttools>=4.53.1",
+    "plexapi>=4.15.16",
+    "tenacity>=9.0.0",
+    "tinydb>=4.8.0",
+    "schedule>=1.2.2",
+    "tmdbapis==1.2.6",
+    "sqlalchemy>=2.0.32",
+    "python-multipart>=0.0.9",
+    "jinja2>=3.1.4",
+    "apscheduler>=3.10.4",
+    "tzdata>=2024.1",
+    "fastapi-pagination==0.12.26",
+    "bcrypt>=4.2.0",
+    "pillow>=10.4.0",
+    "passlib[bcrypt]>=1.7.4",
+    "thefuzz>=0.22.1",
+    "loguru>=0.7.2",
+    "rich>=13.7.1",
+    "unidecode>=1.3.8",
+    "click>=8.1.7",
+    "websockets>=13.0",
+    "colorama>=0.4.6",
+    "better-exceptions>=0.3.3",
+    "ruamel-yaml>=0.18.6",
+    "uvicorn>=0.30.6",
+    "pydantic==1.10.17",
+    "requests>=2.32.3",
+    "imagesize>=1.4.1",
+    "alembic>=1.13.2",
+    "python-jose[cryptography]>=3.3.0",
+    "python-dotenv>=1.0.1",
+    "fastapi>=0.112.1",
+    "charset-normalizer>=3.3.2",
+    "win32-setctime>=1.1.0",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "setuptools>=73.0.1",
+    "ruff>=0.6.1",
+]
 
 [tool.pyright]
 exclude = [
     "config/assets",
     "config/cards",
     "config/source"
+]
+
+[tool.ruff]
+exclude = [
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".pytype",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "config",
+    "archives",
+    "modules/.objects",
+    "app/alembic/",
+    "modules/global_objects.py",
+]
+
+# Same as Black.
+line-length = 88
+indent-width = 4
+
+# Assume Python 3.11
+target-version = "py311"
+
+[tool.ruff.lint]
+# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
+select = ["E4", "E7", "E9", "F"]
+ignore = ['F541', 'F403', 'F405']
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "single"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+[tool.pylint.master]
+ignore = [
+    "archives",
+    "assets",
+    "config",
+    "docs",
+    "fonts",
+]
+init-hook='import sys; sys.path.append("/mnt/user/Media/TitleCardMaker")'
+extension-pkg-whitelist = "pydantic"
+
+[tool.pylint.message_control]
+disable = [
+    "logging-fstring-interpolation",
+    "f-string-without-interpolation",
+    "redefined-outer-name",
+    "broad-except",
+    "pointless-string-statement",
+    "invalid-name",
+    "missing-module-docstring",
+    "duplicate-code",
+    "too-many-lines",
+    "too-few-public-methods",
+    "too-many-locals",
+    "too-many-statements",
+    "too-many-arguments",
+    "too-many-instance-attributes",
+    "anomalous-backslash-in-string",
+    "dangerous-default-value",
 ]
