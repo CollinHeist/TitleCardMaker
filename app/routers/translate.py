@@ -8,7 +8,6 @@ from app.internal.translate import translate_episode
 from app.schemas.episode import Episode
 
 
-
 translation_router = APIRouter(
     prefix='/translate',
     tags=['Translations'],
@@ -16,7 +15,7 @@ translation_router = APIRouter(
 )
 
 
-@translation_router.post('/series/{series_id}', status_code=201)
+@translation_router.post('/series/{series_id}')
 def add_series_translations(
         series_id: int,
         background_tasks: BackgroundTasks,
@@ -29,20 +28,14 @@ def add_series_translations(
     - series_id: ID of the Series whose Episodes are being translated.
     """
 
-    # Find Series and Template with this ID, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
-
-    # Add background task to translate each Episode
-    for episode in series.episodes:
+    for episode in get_series(db, series_id, raise_exc=True).episodes:
         background_tasks.add_task(
-            # Function
             translate_episode,
-            # Arguments
             db, episode, log=request.state.log,
         )
 
 
-@translation_router.post('/episode/{episode_id}', status_code=200)
+@translation_router.post('/episode/{episode_id}')
 def add_episode_translations(
         episode_id: int,
         request: Request,
