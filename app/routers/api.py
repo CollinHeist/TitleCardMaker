@@ -27,6 +27,7 @@ from app.routers.statistics import statistics_router
 from app.routers.sync import sync_router
 from app.routers.templates import template_router
 from app.routers.translate import translation_router
+from app.routers.webhooks import webhook_router
 
 # Create sub router for all API requests
 api_router = APIRouter(prefix='/api')
@@ -50,6 +51,7 @@ api_router.include_router(source_router)
 api_router.include_router(sync_router)
 api_router.include_router(template_router)
 api_router.include_router(translation_router)
+api_router.include_router(webhook_router)
 
 @api_router.get('/healthcheck')
 def health_check(

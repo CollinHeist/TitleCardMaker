@@ -14,7 +14,6 @@ from fastapi import (
 from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_pagination import paginate as paginate_sequence
 from PIL import Image
-from requests import get
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 from unidecode import unidecode
@@ -43,7 +42,7 @@ from app.internal.auth import get_current_user
 from app.models.card import Card
 from app.models.loaded import Loaded
 from app.models.series import Series as SeriesModel
-from app.schemas.connection import SonarrWebhook
+from app.schemas.webhooks import SonarrWebhook
 from app.schemas.series import (
     BatchUpdateSeries,
     NewSeries,
@@ -214,7 +213,7 @@ def delete_series_(
     delete_series(db, series, log=request.state.log)
 
 
-@series_router.post('/sonarr/delete')
+@series_router.post('/sonarr/delete', deprecated=True)
 def delete_series_via_sonarr_webhook(
         request: Request,
         webhook: SonarrWebhook,

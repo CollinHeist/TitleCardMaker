@@ -1,6 +1,6 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 # pyright: reportInvalidTypeForm=false
-from typing import Any, Literal, Optional, Union
+from typing import Literal, Optional, Union
 
 from pydantic import AnyUrl, constr, validator
 
@@ -257,28 +257,3 @@ AnyConnection = Union[
     TMDbConnection,
     TVDbConnection,
 ]
-
-"""
-Sonarr Webhooks
-"""
-class WebhookSeries(Base):
-    id: int
-    title: str
-    year: int
-    imdbId: Any = None
-    tvdbId: Any = None
-    tvRageId: Any = None
-
-class WebhookEpisode(Base):
-    id: int
-    episodeNumber: int
-    seasonNumber: int
-    title: str
-    seriesId: int
-    # Added in v4.0.0.717 (https://github.com/Sonarr/Sonarr/pull/6151)
-    tvdbId: Optional[int] = None
-
-class SonarrWebhook(Base):
-    series: WebhookSeries
-    episodes: list[WebhookEpisode] = []
-    eventType: str # Literal['SeriesAdd', 'Download', 'SeriesDelete', 'EpisodeFileDelete']

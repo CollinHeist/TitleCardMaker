@@ -38,18 +38,18 @@ from app.internal.series import (
     load_series_title_cards,
     update_series_config
 )
-from app.internal.snapshot import take_snapshot
 from app.internal.sources import download_episode_source_images
 from app.internal.translate import translate_episode
+from app.internal.webhooks import process_rating_key
 from app.models.episode import Episode
 from app.models.series import Series
 from app.schemas.card import CardActions, TitleCard, PreviewTitleCard
-from app.schemas.connection import SonarrWebhook
 from app.schemas.episode import Episode as EpisodeSchema, UpdateEpisode
 from app.schemas.font import DefaultFont
 from app.schemas.series import UpdateSeries
-from modules.Debug import InvalidCardSettings, MissingSourceImage
+from app.schemas.webhooks import SonarrWebhook
 
+from modules.Debug import InvalidCardSettings, MissingSourceImage
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.FormatString import FormatString
 from modules.SeriesInfo2 import SeriesInfo
@@ -60,6 +60,7 @@ from modules.TieredSettings import TieredSettings
 card_router = APIRouter(
     prefix='/cards',
     tags=['Title Cards'],
+    # dependencies=[Depends(get_current_user)], # TODO add after webhooks are removed
 )
 
 
@@ -541,10 +542,11 @@ def create_card_for_episode(
         ) from exc
 
 
-@card_router.post('/key', tags=['Plex', 'Tautulli'])
+@card_router.post('/key', tags=['Plex', 'Webhooks'], deprecated=True)
 def create_cards_for_plex_rating_key(
         request: Request,
         key: int = Body(...),
+        snapshot: bool = Query(default=True),
         db: Session = Depends(get_database),
         plex_interface: PlexInterface = Depends(require_plex_interface),
     ) -> None:
@@ -552,100 +554,22 @@ def create_cards_for_plex_rating_key(
     Create the Title Card for the item associated with the given Plex
     Rating Key. This item can be a Show, Season, or Episode. This
     endpoint does NOT require an authenticated User so that Tautulli can
-    trigger this without any credentials. The `interface_id` of the
-    appropriate Plex Connection must be passed via a Query parameter.
+    trigger this without any credentials.
 
-    - plex_rating_keys: Unique keys within Plex that identifies the item
-    to remake the card of.
+    - interface_id: Interface ID of the Plex Connection associated with
+    this Key.
+    - key: Rating Key within Plex that identifies the item to create the
+    Card(s) for.
+    - snapshot: Whether to take snapshot of the database after all Cards
+    have been processed.
     """
 
-    # Get contextual logger
-    log = request.state.log
-
-    # Get details of each key from Plex, raise 404 if not found/invalid
-    if len(details := plex_interface.get_episode_details(key, log=log)) == 0:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Rating key {key} is invalid'
-        )
-    log.debug(f'Identified {len(details)} entries from RatingKey={key}')
-
-    # Process each set of details
-    episodes_to_load: list[Episode] = []
-    for series_info, episode_info, watched_status in details:
-        # Find all matching Episodes
-        episodes = db.query(Episode)\
-            .filter(episode_info.filter_conditions(Episode))\
-            .all()
-
-        # Episode does not exist, refresh episode data and try again
-        if not episodes:
-            # Try and find associated Series, skip if DNE
-            series = db.query(Series)\
-                .filter(series_info.filter_conditions(Series))\
-                .first()
-            if series is None:
-                log.info(f'Cannot find Series for {series_info}')
-                continue
-
-            # Series found, refresh data and look for Episode again
-            refresh_episode_data(db, series, log=log)
-            episodes = db.query(Episode)\
-                .filter(episode_info.filter_conditions(Episode))\
-                .all()
-            if not episodes:
-                log.info(f'Cannot find Episode for {series_info} {episode_info}')
-                continue
-
-        # Get first Episode that matches this Series
-        episode, found = None, False
-        for episode in episodes:
-            if episode.series.as_series_info == series_info:
-                found = True
-                break
-
-        # If no match, exit
-        if not found:
-            log.info(f'Cannot find Episode for {series_info} {episode_info}')
-            continue
-
-        # Update Episode watched status
-        episode.add_watched_status(watched_status)
-
-        # Look for source, add translation, create card if source exists
-        images = download_episode_source_images(db, episode, log=log)
-        translate_episode(db, episode, log=log)
-        if not any(images):
-            log.info(f'{episode} has no source image - skipping')
-            continue
-        create_episode_cards(db, episode, log=log)
-
-        # Add this Series to list of Series to load
-        if episode not in episodes_to_load:
-            episodes_to_load.append(episode)
-
-    # Load all Episodes that require reloading
-    for episode in episodes_to_load:
-        # Refresh this Episode so that relational Card objects are
-        # updated, preventing stale (deleted) Cards from being used in
-        # the Loaded asset evaluation. Not sure why this is required
-        # because SQLAlchemy should update child objects when the DELETE
-        # is committed; but this does not happen.
-        db.refresh(episode)
-
-        # Reload into all associated libraries
-        for library in episode.series.libraries:
-            interface = get_interface(library['interface_id'])
-            load_episode_title_card(
-                episode, db, library['name'], library['interface_id'],
-                interface, attempts=6, log=log,
-            )
-
-    take_snapshot(db, log=log)
-    return None
+    return process_rating_key(
+        db, plex_interface, key, snapshot=snapshot, log=request.state.log,
+    )
 
 
-@card_router.post('/sonarr', tags=['Sonarr'])
+@card_router.post('/sonarr', tags=['Webhooks'], deprecated=True)
 def create_cards_for_sonarr_webhook(
         request: Request,
         webhook: SonarrWebhook = Body(...),

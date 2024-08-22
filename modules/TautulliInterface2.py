@@ -68,8 +68,8 @@ class TautulliInterface(WebInterface, Interface):
         super().__init__('Tautulli', use_ssl, cache=False)
 
         # Get correct TCM URL
-        tcm_url = tcm_url.removesuffix('/') + '/'
-        self.tcm_url =f'{tcm_url}api/cards/key?interface_id={plex_interface_id}'
+        self.tcm_url = f'{tcm_url.removesuffix("/")}/api/webhooks/plex/rating-key?' \
+            + f'interface_id={plex_interface_id}'
 
         # Get correct Tautulli URL
         tautulli_url = tautulli_url.removesuffix('/') + '/'
