@@ -63,6 +63,41 @@ def create_cards_for_plex_rating_key(
     )
 
 
+@webhook_router.post('/plex', tags=['Plex'])
+async def process_plex_webhook(
+        request: Request,
+        # FastAPI cannot parse the payload, for some reason, so this needs to
+        # be parsed from the request.form() directly
+        # webhook: PlexWebhook = Form(...),
+        snapshot: bool = Query(default=True),
+        trigger_on: Optional[str] = Query(default=None),
+        db: Session = Depends(get_database),
+        plex_interface: PlexInterface = Depends(require_plex_interface),
+    ) -> None:
+    """
+    """
+
+    # Get contextual logger
+    log: Logger = request.state.log
+
+    webhook = PlexWebhook.parse_raw((await request.form()).get('payload'))
+
+    # Only process new or watched content
+    if (webhook.event not in ('library.new', 'media.scrobble')
+        and (not trigger_on
+             or (trigger_on and webhook.event not in trigger_on))):
+        log.debug(f'Skipping Webhook of type "{webhook.event}"')
+        return None
+
+    return process_rating_key(
+        db,
+        plex_interface,
+        webhook.Metadata.ratingKey,
+        snapshot=snapshot,
+        log=log,
+    )
+
+
 @webhook_router.post('/sonarr/cards', tags=['Sonarr'])
 def create_cards_for_sonarr_webhook(
         request: Request,
