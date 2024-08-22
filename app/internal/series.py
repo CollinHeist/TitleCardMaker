@@ -288,7 +288,7 @@ def process_series(
     # Update watch statuses
     get_watched_statuses(db, series, series.episodes, log=log)
 
-    # Begin downloading Source images - use BackgroundTasks
+    # Begin downloading Source images
     if series.monitored:
         log.debug(f'{series} Started downloading source images')
         for episode in series.episodes:
@@ -297,20 +297,21 @@ def process_series(
                 db, episode, commit=False, raise_exc=False, log=log,
             )
 
-    # Begin Episode translation - use BackgroundTasks
+    # Begin Episode translation
     if series.monitored:
         log.debug(f'{series} Started adding translations')
         for episode in series.episodes:
             background_tasks.add_task(
-                translate_episode, db, episode, commit=False, log=log,
+                translate_episode,
+                db, episode, commit=False, log=log,
             )
-    db.commit()
 
-    # Begin Card creation - use BackgroundTasks
+    # Begin Card creation
     log.debug(f'{series} Starting Card creation')
     for episode in series.episodes:
         background_tasks.add_task(
-            create_episode_cards, db, episode, raise_exc=False, log=log
+            create_episode_cards,
+            db, episode, raise_exc=False, log=log
         )
 
 
