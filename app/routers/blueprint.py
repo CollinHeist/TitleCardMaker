@@ -408,7 +408,7 @@ def import_blueprint_and_series(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Get this Blueprint, raise 404 if DNE
     blueprint = get_blueprint(blueprint_db, blueprint_id, raise_exc=True)

@@ -1,6 +1,6 @@
 from typing import Literal, Optional, Union, overload
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, object_session
 
 from app.database.query import get_template
 from app.dependencies import get_preferences
@@ -61,7 +61,7 @@ def get_effective_template(
 
     # Object is global Preferences, query for each Template as evaluated
     if isinstance(obj, Preferences) and obj.default_templates:
-        db = Session.object_session(series)
+        db = object_session(series)
         for template_id in obj.default_templates:
             if ((template := get_template(db, template_id, raise_exc=False))
                 and template.meets_filter_criteria(obj, series, episode, library)):
