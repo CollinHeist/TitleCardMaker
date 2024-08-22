@@ -80,11 +80,12 @@ task_queue = TaskQueue()
 """
 Which modules (and files) should be suppressed in traceback printing
 """
-import alembic, anyio, fastapi, starlette, tmdbapis, tenacity
+import alembic, anyio, fastapi, sqlalchemy, starlette, tmdbapis, tenacity
 TracebackSuppressedPackages = [
     alembic,
     anyio,
     fastapi,
+    sqlalchemy,
     starlette,
     tenacity,
     tmdbapis,
