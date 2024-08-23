@@ -74,12 +74,12 @@ def catch_and_log(
             except PlexApiException:
                 clog.exception(message)
                 return default
-            except (ReadTimeout, PlexConnectionError) as e:
-                clog.exception(f'Plex API has timed out, DB might be busy')
-                raise e
-            except Exception as e:
-                clog.exception(f'Uncaught exception')
-                raise e
+            except (ReadTimeout, PlexConnectionError) as exc:
+                clog.exception('Plex API has timed out, DB might be busy')
+                raise exc
+            except Exception as exc:
+                clog.exception('Uncaught exception')
+                raise exc
         return inner
     return decorator
 
@@ -1035,7 +1035,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 log.trace(f'Removed "Overlay" label from {series}')
             log.debug(f'{series_info} loaded background')
         except Exception:
-            log.exception(f'Failed to upload {image.resolve()} to {series_info}')
+            log.exception(f'Failed to upload "{image}" to {series_info}')
 
         return None
 
@@ -1071,45 +1071,52 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             if entry.type == 'show':
                 entry: PlexShow
                 series_info = SeriesInfo.from_plex_show(entry)
-                return [EpisodeDetails(
-                    series_info,
-                    EpisodeInfo.from_plex_episode(ep),
-                    WatchedStatus(
-                        self._interface_id,
-                        entry.librarySectionTitle, # entry.parent TODO evaluate
-                        ep.isWatched,
+                return [
+                    EpisodeDetails(
+                        series_info,
+                        EpisodeInfo.from_plex_episode(ep),
+                        WatchedStatus(
+                            self._interface_id,
+                            entry.librarySectionTitle, # entry.parent TODO evaluate
+                            ep.isWatched,
+                        )
                     )
-                ) for ep in entry.episodes()]
+                    for ep in entry.episodes()
+                ]
 
             # Season, return all episodes in season
             if entry.type == 'season':
                 entry: PlexSeason
                 series: PlexShow = self.__server.fetchItem(entry.parentRatingKey)
                 series_info = SeriesInfo.from_plex_show(series)
-                return [EpisodeDetails(
-                    series_info,
-                    EpisodeInfo.from_plex_episode(ep),
-                    WatchedStatus(
-                        self._interface_id,
-                        ep.librarySectionTitle, # TODO double check
-                        ep.isWatched,
-                    ),
-                ) for ep in entry.episodes()]
+                return [
+                    EpisodeDetails(
+                        series_info,
+                        EpisodeInfo.from_plex_episode(ep),
+                        WatchedStatus(
+                            self._interface_id,
+                            ep.librarySectionTitle, # TODO double check
+                            ep.isWatched,
+                        ),
+                    ) for ep in entry.episodes()
+                ]
 
             # Episode, return just that
             if entry.type == 'episode':
                 entry: PlexEpisode
                 series: PlexShow = self.__server.fetchItem(entry.grandparentRatingKey)
                 series_info = SeriesInfo.from_plex_show(series)
-                return [EpisodeDetails(
-                    series_info,
-                    EpisodeInfo.from_plex_episode(entry),
-                    WatchedStatus(
-                        self._interface_id,
-                        entry.librarySectionTitle, # TODO double check
-                        entry.isWatched,
-                    ),
-                )]
+                return [
+                    EpisodeDetails(
+                        series_info,
+                        EpisodeInfo.from_plex_episode(entry),
+                        WatchedStatus(
+                            self._interface_id,
+                            entry.librarySectionTitle, # TODO double check
+                            entry.isWatched,
+                        ),
+                    )
+                ]
 
             log.warning(f'Item with rating key {rating_key} has no episodes')
             return []
@@ -1144,22 +1151,17 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             log: Logger for all log messages.
         """
 
-        # Exit if no labels to remove
-        if not labels:
-            return None
-
-        # If the given library cannot be found, exit
-        if not (library := self.__get_library(library_name, log=log)):
-            return None
-
-        # If the given series cannot be found in this library, exit
-        if not (series := self.__get_series(library, series_info, log=log)):
+        # Exit if no labels were provided or the library/series is not found
+        if (not labels
+            or not (library := self.__get_library(library_name, log=log))
+            or not (series := self.__get_series(library, series_info, log=log))):
             return None
 
         # Remove labels from all Episodes
         for plex_episode in series.episodes(container_size=500):
             plex_episode: PlexEpisode
-            log.debug(f'Removed {labels} from {plex_episode.labels} of {plex_episode}')
+            log.debug(f'Removed {labels} from {plex_episode.labels} of '
+                      f'{plex_episode}')
             plex_episode.removeLabel(labels)
 
         return None
