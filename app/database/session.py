@@ -7,6 +7,11 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor
 from fastapi_pagination import Page
+from fastapi_pagination.customization import (
+    CustomizedPage,
+    UseName,
+    UseParamsFields
+)
 from pydantic import Field
 from sqlalchemy import create_engine
 from sqlalchemy.event import listens_for
@@ -132,7 +137,11 @@ PreferencesLocal = Preferences(preferences_file)
 
 
 # Default Page arguments used for paginated returns
-Page = Page.with_custom_options(size=Field(100, ge=1))
+Page = CustomizedPage[
+    Page,
+    UseName('Page'),
+    UseParamsFields(size=100),
+]
 
 
 # Initialize all interfaces
