@@ -69,11 +69,7 @@ def download_series_source_images(
     the associated Episode has been internally blacklisted.
     """
 
-    # Query for this Series, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
-
-    # Add task to download source image for each Episode
-    for episode in series.episodes:
+    for episode in get_series(db, series_id, raise_exc=True).episodes:
         background_tasks.add_task(
             # Function
             download_episode_source_images,
