@@ -5,7 +5,7 @@ from pydantic import BaseModel, constr, root_validator
 
 
 # Default value to use for arguments in Update objects that accept None
-UNSPECIFIED: Literal['__unspecified_'] = '__unspecified_'
+UNSPECIFIED = '_UnspecifiedValue'
 
 # String that can be used as key in a dictionary
 DictKey = constr(regex=r'^[a-zA-Z]+[^ -]*$', min_length=1)
