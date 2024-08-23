@@ -13,17 +13,26 @@ from app.dependencies import get_preferences, get_scheduler
 from app.internal.auth import get_current_user
 from app.internal.availability import get_latest_version
 from app.internal.cards import (
-    create_all_title_cards, refresh_all_remote_card_types, clean_database,
+    clean_database,
+    create_all_title_cards,
+    refresh_all_remote_card_types,
 )
 from app.internal.series import (
-    download_all_series_posters, load_all_media_servers, set_all_series_ids
+    download_all_series_posters,
+    load_all_media_servers,
+    set_all_series_ids
 )
 from app.internal.sources import download_all_series_logos
 from app.internal.snapshot import snapshot_database
 from app.internal.sync import sync_all
 from app.models.preferences import Preferences
 from app.schemas.schedule import (
-    Days, Hours, Minutes, NewJob, ScheduledTask, UpdateSchedule
+    Days,
+    Hours,
+    Minutes,
+    NewJob,
+    ScheduledTask,
+    UpdateSchedule
 )
 
 from modules.Debug import contextualize, log, tz
@@ -73,9 +82,9 @@ def wrap_scheduled_function(job_id: str) -> Callable[[Optional[Logger]], None]:
         @wraps(func)
         def wrapper(log: Optional[Optional[Logger]] = None) -> None:
             log = log or contextualize()
-            log.info(f'Task[{job_id}] Started Execution')
+            log.info(f'Task[{job_id}] started execution')
             if BaseJobs[job_id].running:
-                log.info(f'Task[{job_id}] Finished execution - Task is already running')
+                log.info(f'Task[{job_id}] finished execution - Task is already running')
                 return None
 
             BaseJobs[job_id].previous_start_time = datetime.now()
@@ -83,7 +92,7 @@ def wrap_scheduled_function(job_id: str) -> Callable[[Optional[Logger]], None]:
 
             func(log=log)
 
-            log.info(f'Task[{job_id}] Finished execution')
+            log.info(f'Task[{job_id}] finished execution')
             BaseJobs[job_id].previous_end_time = datetime.now()
             BaseJobs[job_id].running = False
             return None
@@ -171,14 +180,14 @@ BaseJobs = {
         function=wrapped_download_all_series_logos,
         seconds=Days(1),
         crontab='0 0 */1 * *',
-        description='Download Logos for all Series',
+        description='Download logos for all Series',
     ),
     JOB_DOWNLOAD_SERIES_POSTERS: NewJob(
         id=JOB_DOWNLOAD_SERIES_POSTERS,
         function=wrapped_download_all_series_posters,
         seconds=Days(1),
         crontab='0 0 */1 * *',
-        description='Download Posters for all Series',
+        description='Download posters for all Series',
     ),
     JOB_BACKUP_DATABASE: NewJob(
         id=JOB_BACKUP_DATABASE,
@@ -193,7 +202,7 @@ BaseJobs = {
         function=wrapped_get_latest_version,
         seconds=Days(1),
         crontab='0 0 */1 * *',
-        description='Check for a new release',
+        description='Check for a new release of TitleCardMaker',
         internal=True,
     ),
     INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES: NewJob(
@@ -216,7 +225,7 @@ BaseJobs = {
         id=INTERNAL_JOB_CLEAN_DATABASE,
         function=wrapped_clean_database,
         seconds=Days(2) + Hours(12),
-        crontab='0 */3 * * *',
+        crontab='0 12 */3 * *',
         description='Clean the database',
         internal=True,
     ),
