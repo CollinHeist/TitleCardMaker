@@ -133,6 +133,7 @@ class BackgroundTasks(starlette.background.BackgroundTasks):
                 console = Console(file=StringIO())
                 console.print(
                     Traceback(
+                        width=120,
                         show_locals=True,
                         locals_max_length=512,
                         locals_max_string=512,
