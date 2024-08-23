@@ -1,7 +1,11 @@
 from io import StringIO
 from logging import Logger
 import sys
-from typing import Any, Callable, Iterator, NamedTuple
+from typing import Any, Callable, Iterator, Literal, NamedTuple
+
+from sqlalchemy.orm.session import Session
+
+from app.database.session import Base as DatabaseBase, SessionLocal
 
 if sys.version_info >= (3, 10): # pragma: no cover
     from typing import ParamSpec
@@ -90,10 +94,108 @@ TracebackSuppressedPackages = [
     tenacity,
     tmdbapis,
     'app-main.py',
+    'BackgroundTasks.py',
 ]
 
-P = ParamSpec("P")
+class DependencyInjector:
+    def __init__(self, args: tuple, kwargs: dict) -> None:
+        """
+        
+        """
 
+        # Determine how many dependencies will require a Session be
+        # instantiated
+        is_dependency = lambda a: isinstance(a, (Session, DatabaseBase))
+        self.multiple_db_dependencies = (
+            sum(1 for arg in args if is_dependency(arg)) \
+            + sum(1 for v in kwargs.values() if is_dependency(v))
+            > 1
+        )
+
+        # Store data to reconstruct each type of dependency argument
+        self._args: list[tuple[Literal['Database', 'Model', 'Other'], Any]] = []
+        for arg in args:
+            if isinstance(arg, Session):
+                self._args.append(('Database', SessionLocal))
+            elif isinstance(arg, DatabaseBase):
+                self._args.append(('Model', (arg.__class__, arg.id)))
+            else:
+                self._args.append(('Other', arg))
+
+        self._kwargs: dict[str, tuple[Literal['Database', 'Model', 'Other'], Any]] = {}
+        for key, val in kwargs.items():
+            if isinstance(val, Session):
+                self._kwargs[key] = ('Database', SessionLocal)
+            elif isinstance(val, DatabaseBase):
+                self._kwargs[key] = ('Model', (val.__class__, val.id))
+            else:
+                self._kwargs[key] = ('Other', val)
+
+    @property
+    def args(self) -> tuple:
+        # Single (or no) DB connections, return post-injected args
+        if not self.multiple_db_dependencies:
+            args = []
+            for arg_type, arg in self._args:
+                if arg_type == 'Database':
+                    args.append(SessionLocal())
+                elif arg_type == 'Model':
+                    obj_class, obj_id = arg
+                    args.append(SessionLocal().query(obj_class).get(obj_id))
+                else:
+                    args.append(arg)
+
+            return tuple(args)
+
+        # More than one database connection, instantiate singular
+        # Session for use by all associated Dependencies
+        db = SessionLocal()
+        args = []
+        for arg_type, arg in self._args:
+            if arg_type == 'Database':
+                args.append(db)
+            elif arg_type == 'Model':
+                obj_class, obj_id = arg
+                args.append(db.query(obj_class).get(obj_id))
+            else:
+                args.append(arg)
+
+        return tuple(args)
+
+
+    @property
+    def kwargs(self) -> dict:
+        # Single (or no) DB connections, return post-injected args
+        if not self.multiple_db_dependencies:
+            kwargs = {}
+            for key, (arg_type, arg) in self._kwargs.items():
+                if arg_type == 'Database':
+                    kwargs[key] = SessionLocal()
+                elif arg_type == 'Model':
+                    obj_class, obj_id = arg
+                    kwargs[key] = SessionLocal().query(obj_class).get(obj_id)
+                else:
+                    kwargs[key] = arg
+
+            return kwargs
+
+        # More than one database connection, instantiate singular
+        # Session for use by all associated Dependencies
+        db = SessionLocal()
+        kwargs = {}
+        for key, (arg_type, arg) in self._kwargs.items():
+            if arg_type == 'Database':
+                kwargs[key] = db
+            elif arg_type == 'Model':
+                obj_class, obj_id = arg
+                kwargs[key] = db.query(obj_class).get(obj_id)
+            else:
+                kwargs[key] = arg
+
+        return kwargs
+
+
+P = ParamSpec('P')
 class BackgroundTasks(starlette.background.BackgroundTasks):
     async def __call__(self) -> None:
         """
@@ -113,13 +215,28 @@ class BackgroundTasks(starlette.background.BackgroundTasks):
         ) -> None:
         """
         Modified implementation of
-        `starlette.background.BackgroundTasks.add_task` which handles
-        and adds better logging to uncaught exceptions in the
-        encapsulated function.
+        `starlette.background.BackgroundTasks.add_task` which adds
+        better logging to uncaught exceptions in the wrapped task
+        function.
+
+        This also dynamically removes DB Session and associated objects
+        which may be passed as arguments, and then replaces them with
+        newly instanted Session connection when the Task is actually
+        run. This allows for FastAPI injected dependencies (like
+        `get_database`) to be passed into task functions directly. The
+        same Session connection will be shared by all relevant arguments
+        of the same task.
+
+        >>> bg = BackgroundTasks() # Likely created via FastAPI dep.
+        >>> db: Session = ...      # Likely also created via dep.
+        >>> obj = db.query(Episode).first()
+        >>> bg.add_task(my_func, db, obj) # Dynamically re-creates db
         """
 
-        def new_func(*args_: P.args, **kwargs_: P.kwargs) -> None:
+        def new_func(injector: DependencyInjector) -> None:
             try:
+                # Re-inject any Dependencies - e.g. the SQL DB Session
+                args_, kwargs_ = injector.args, injector.kwargs
                 func(*args_, **kwargs_)
             except Exception:
                 # Grab logger if present in kwargs of wrapped function
@@ -150,8 +267,15 @@ class BackgroundTasks(starlette.background.BackgroundTasks):
                 )
 
         # Original add_task creates a BackgroundTask object and adds to
-        # tasks queue
-        task = starlette.background.BackgroundTask(new_func, *args, **kwargs)
+        # tasks queue; replace injected objects which may be from
+        # FastAPI router dependencies - e.g. SQL DB Sessions - with an
+        # injector which will instante a new DB Session when the Task is
+        # actually run. Thisis required as of FastAPI v0.106.0 - see
+        # https://github.com/fastapi/fastapi/releases/tag/0.106.0
+        task = starlette.background.BackgroundTask(
+            new_func,
+            DependencyInjector(args, kwargs)
+        )
         self.tasks.append(task)
         task_queue.add_task(task, func)
 
