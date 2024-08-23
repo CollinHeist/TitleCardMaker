@@ -18,12 +18,12 @@ yaml/
 .github
 .gitignore
 .dockerignore
-.ruff.toml
-README.md
-LICENSE
+alembic.ini
+cypress.config.js
 Dockerfile
 Dockerfile.armv7
+LICENSE
 package.json
 package-lock.json
-cypress.config.js
+README.md
 ._*
