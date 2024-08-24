@@ -10,6 +10,7 @@ from fastapi import (
     Request
 )
 from fastapi.exceptions import HTTPException
+from pydantic.error_wrappers import ValidationError
 from sqlalchemy.orm import Session
 
 from app.database.query import get_interface
@@ -80,7 +81,13 @@ async def process_plex_webhook(
     # Get contextual logger
     log: Logger = request.state.log
 
-    webhook = PlexWebhook.parse_raw((await request.form()).get('payload'))
+    try:
+        webhook = PlexWebhook.parse_raw((await request.form()).get('payload'))
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail='Webhook format is invalid'
+        ) from exc
 
     # Only process new or watched content
     if (webhook.event not in ('library.new', 'media.scrobble')
