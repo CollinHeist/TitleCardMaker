@@ -3,7 +3,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, Coordinate, ImageMagickCommands, Extra, CardDescription
+    BaseCardType,
+    CardDescription,
+    Coordinate,
+    ImageMagickCommands,
+    Extra,
 )
 from modules.Title import SplitCharacteristics
 

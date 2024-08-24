@@ -120,7 +120,7 @@ function runTask(taskId) {
   $(`tr[data-id="${taskId}"] td[data-column="runTask"] i`).toggleClass('blue loading', true);
   showInfoToast(`Running Task ${taskId}`);
   $.ajax({
-    type: 'POST',
+    type: 'PUT',
     url: `/api/schedule/${taskId}`,
     success: task => {
       showInfoToast(`Task ${taskId} Completed`);

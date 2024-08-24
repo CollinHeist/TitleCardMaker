@@ -35,6 +35,7 @@ YamlWriterSet = namedtuple(
     'YamlWriterSet', ('interface_id', 'writer', 'update_args')
 )
 
+
 class PreferenceParser(YamlReader):
     """
     This class describes a preference parser that reads a given

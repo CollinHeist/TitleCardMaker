@@ -4,7 +4,12 @@ from typing import Optional
 from warnings import simplefilter
 
 from fastapi import (
-    APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    Query,
+    Request
 )
 from fastapi.responses import FileResponse
 from fastapi_pagination import paginate

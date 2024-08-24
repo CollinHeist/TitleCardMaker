@@ -7,7 +7,9 @@ from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_font, get_interface
 from app.dependencies import (
-    get_preferences, get_sonarr_interfaces, get_tmdb_interfaces,
+    get_preferences,
+    get_sonarr_interfaces,
+    get_tmdb_interfaces,
     get_tvdb_interfaces
 )
 from app.internal.templates import get_effective_templates

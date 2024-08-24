@@ -17,7 +17,10 @@ from app.models.series import Series
 from app.models.sync import Sync
 from app.schemas.series import NewSeries
 from app.schemas.sync import (
-    NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync
+    NewEmbySync,
+    NewJellyfinSync,
+    NewPlexSync,
+    NewSonarrSync
 )
 from modules.Debug import log
 

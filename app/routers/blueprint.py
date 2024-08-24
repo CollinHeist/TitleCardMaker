@@ -5,7 +5,13 @@ from random import choice as random_choice
 from typing import Literal, Optional
 
 from fastapi import (
-    APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Request
+    APIRouter,
+    BackgroundTasks,
+    Body,
+    Depends,
+    HTTPException,
+    Query,
+    Request
 )
 from fastapi.responses import FileResponse
 from fastapi_pagination import paginate as paginate_sequence
@@ -15,11 +21,16 @@ from sqlalchemy.orm import Session
 from app.database.query import get_blueprint, get_blueprint_set, get_series
 from app.database.session import Page
 from app.dependencies import (
-    Preferences, get_blueprint_database, get_database, get_preferences
+    Preferences,
+    get_blueprint_database,
+    get_database,
+    get_preferences
 )
 from app.internal.auth import get_current_user
 from app.internal.blueprint import (
-    generate_series_blueprint, get_blueprint_font_files, import_blueprint,
+    generate_series_blueprint,
+    get_blueprint_font_files,
+    import_blueprint,
     query_series_blueprints
 )
 from app.internal.episodes import get_all_episode_data
@@ -28,7 +39,10 @@ from app import models
 from app.models.blueprint import Blueprint, BlueprintSeries
 from app.models.card import Card
 from app.schemas.blueprint import (
-    DownloadableFile, ExportBlueprint, RemoteBlueprint, RemoteBlueprintSet,
+    DownloadableFile,
+    ExportBlueprint,
+    RemoteBlueprint,
+    RemoteBlueprintSet,
 )
 from app.schemas.series import Series
 from modules.TemporaryZip import TemporaryZip

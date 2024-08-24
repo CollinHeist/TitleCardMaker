@@ -6,7 +6,10 @@ from typing import Any, Optional
 from pydantic import PositiveFloat, root_validator, validator # pylint: disable=no-name-in-module
 
 from app.schemas.base import (
-    Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
+    Base,
+    UpdateBase,
+    UNSPECIFIED,
+    validate_argument_lists_to_dict
 )
 from app.schemas.card import TitleCard
 from app.schemas.ids import EmbyID, IMDbID, JellyfinID, TMDbID, TVDbID, TVRageID

@@ -6,7 +6,11 @@ from typing import Annotated, Any, Literal, Optional, Union
 from pydantic import validator, root_validator
 
 from app.schemas.base import (
-    Base, DictKey, ImageSource, UpdateBase, validate_argument_lists_to_dict
+    Base,
+    DictKey,
+    ImageSource,
+    UpdateBase,
+    validate_argument_lists_to_dict
 )
 from app.schemas.font import TitleCase
 from app.schemas.preferences import Style

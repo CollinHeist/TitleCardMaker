@@ -2,7 +2,13 @@ from logging import Logger
 from pathlib import Path
 from re import sub as regex_replace, IGNORECASE
 from typing import (
-    Any, Iterator, Literal, Optional, TypedDict, Union, TYPE_CHECKING
+    Any,
+    Iterator,
+    Literal,
+    Optional,
+    TypedDict,
+    Union,
+    TYPE_CHECKING
 )
 
 from sqlalchemy import ColumnElement, ForeignKey, JSON, func

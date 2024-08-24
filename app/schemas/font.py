@@ -4,7 +4,11 @@ from pathlib import Path
 from typing import Literal, Optional
 
 from pydantic import ( # pylint: disable=no-name-in-module
-    NonNegativeFloat, PositiveFloat, constr, validator, root_validator
+    NonNegativeFloat,
+    PositiveFloat,
+    constr,
+    root_validator,
+    validator,
 )
 
 from app.schemas.base import Base, UpdateBase, UNSPECIFIED

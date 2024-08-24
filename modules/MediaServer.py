@@ -15,6 +15,7 @@ from modules.StyleSet import StyleSet
 
 SourceImage = Union[str, bytes, None]
 
+
 class MediaServer(ABC):
     """
     This class describes an abstract base class for all MediaServer

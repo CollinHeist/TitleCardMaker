@@ -11,10 +11,13 @@ import plexapi.server
 from plexapi.server import PlexServer, NotFound, Unauthorized
 from plexapi.library import Library as PlexLibrary
 from plexapi.video import (
-    Episode as PlexEpisode, Show as PlexShow, Season as PlexSeason
+    Episode as PlexEpisode,
+    Show as PlexShow,
+    Season as PlexSeason
 )
 from requests.exceptions import (
-    ReadTimeout, ConnectionError as PlexConnectionError
+    ConnectionError as PlexConnectionError,
+    ReadTimeout,
 )
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 from tinydb import where

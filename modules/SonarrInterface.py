@@ -11,6 +11,7 @@ from modules.SeriesInfo import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
+
 class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface):
     """
     This class describes a Sonarr interface, which is a type of

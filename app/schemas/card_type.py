@@ -7,8 +7,14 @@ from re import compile as re_compile, match as re_match
 from typing import Any, Literal, Optional, Union
 
 from pydantic import (
-    FilePath, PositiveFloat, PositiveInt, confloat, conint, constr,
-    root_validator, validator,
+    FilePath,
+    PositiveFloat,
+    PositiveInt,
+    confloat,
+    conint,
+    constr,
+    root_validator,
+    validator,
 )
 
 from app.schemas.base import Base, DictKey
@@ -21,18 +27,23 @@ from modules.cards.CutoutTitleCard import CutoutTitleCard
 from modules.cards.DividerTitleCard import DividerTitleCard, TextGravity
 from modules.cards.FadeTitleCard import FadeTitleCard
 from modules.cards.FormulaOneTitleCard import (
-    FormulaOneTitleCard, Country as FormulaOneCountry
+    FormulaOneTitleCard,
+    Country as FormulaOneCountry
 )
 from modules.cards.FrameTitleCard import FrameTitleCard
 from modules.cards.GraphTitleCard import (
-    GraphTitleCard, TextPosition as GraphTextPosition
+    GraphTitleCard,
+    TextPosition as GraphTextPosition
 )
 from modules.cards.InsetTitleCard import InsetTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
 from modules.cards.MarvelTitleCard import MarvelTitleCard
 from modules.cards.MusicTitleCard import (
-    MusicTitleCard, PlayerAction, PlayerPosition, PlayerStyle,
+    MusicTitleCard,
+    PlayerAction,
+    PlayerPosition,
+    PlayerStyle,
 )
 from modules.cards.NotificationTitleCard import NotificationTitleCard
 from modules.cards.OlivierTitleCard import OlivierTitleCard
@@ -40,12 +51,15 @@ from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
 from modules.cards.RomanNumeralTitleCard import RomanNumeralTitleCard
 from modules.cards.ShapeTitleCard import (
-    Shape, ShapeTitleCard, TextPosition as ShapeTextPosition
+    Shape,
+    ShapeTitleCard,
+    TextPosition as ShapeTextPosition
 )
 from modules.cards.StandardTitleCard import StandardTitleCard
 from modules.cards.StarWarsTitleCard import StarWarsTitleCard
 from modules.cards.StripedTitleCard import (
-    StripedTitleCard, TextPosition as StripedTextPosition
+    StripedTitleCard,
+    TextPosition as StripedTextPosition
 )
 from modules.cards.TintedFrameTitleCard import TintedFrameTitleCard
 from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard

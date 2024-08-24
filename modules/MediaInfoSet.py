@@ -8,6 +8,7 @@ from modules.EpisodeInfo import EpisodeInfo
 from modules.PersistentDatabase import PersistentDatabase
 from modules.SeriesInfo import SeriesInfo
 
+
 class MediaInfoSet:
     """
     This class describes a set of media info; notably SeriesInfo and

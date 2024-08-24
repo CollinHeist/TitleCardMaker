@@ -88,10 +88,10 @@ availablility_router = APIRouter(
 
 
 @availablility_router.get('/version')
-def get_latest_available_version(request: Request) -> Optional[str]:
+def get_latest_available_version(request: Request) -> str:
     """Get the latest version number for TitleCardMaker."""
 
-    return get_latest_version(log=request.state.log)
+    return str(get_latest_version(log=request.state.log))
 
 
 @availablility_router.get('/card-types', tags=['Title Cards'])

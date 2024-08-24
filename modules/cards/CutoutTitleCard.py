@@ -2,13 +2,17 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, Extra, CardDescription, ImageMagickCommands
+    BaseCardType,
+    CardDescription,
+    Extra,
+    ImageMagickCommands,
 )
 from modules.Title import SplitCharacteristics
 
 if TYPE_CHECKING:
     from app.models.preferences import Preferences
     from modules.Font import Font
+
 
 class CutoutTitleCard(BaseCardType):
     """

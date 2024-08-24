@@ -1,6 +1,12 @@
 from logging import Logger
 from fastapi import (
-    APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Request
+    APIRouter,
+    BackgroundTasks,
+    Body,
+    Depends,
+    HTTPException,
+    Query,
+    Request
 )
 from sqlalchemy.orm import Session
 
@@ -11,8 +17,16 @@ from app.internal.series import delete_series
 from app.internal.sync import add_sync, run_sync
 from app import models
 from app.schemas.sync import (
-    EmbySync, JellyfinSync, PlexSync, SonarrSync, Sync, NewEmbySync,
-    NewJellyfinSync, NewPlexSync, NewSonarrSync, UpdateSync,
+    EmbySync,
+    JellyfinSync,
+    NewEmbySync,
+    NewJellyfinSync,
+    NewPlexSync,
+    NewSonarrSync,
+    PlexSync,
+    SonarrSync,
+    Sync,
+    UpdateSync,
 )
 from app.schemas.series import Series
 

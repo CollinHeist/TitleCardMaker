@@ -12,7 +12,10 @@ from app.internal.auth import get_current_user
 from app.models.font import Font
 from app.models.preferences import Preferences
 from app.schemas.font import (
-    FontAnalysis, NamedFont, NewNamedFont, UpdateNamedFont
+    FontAnalysis,
+    NamedFont,
+    NewNamedFont,
+    UpdateNamedFont
 )
 from modules.FontValidator2 import FontValidator
 

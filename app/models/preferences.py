@@ -5,10 +5,7 @@ from pathlib import Path
 from pickle import dump, load
 from typing import Any, Literal, Optional, TYPE_CHECKING, overload
 
-from fastapi import BackgroundTasks
-
 from app.schemas.base import UNSPECIFIED
-
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo

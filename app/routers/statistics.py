@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, Query
-from pydantic import PositiveFloat, PositiveInt
+from pydantic import PositiveInt
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -18,7 +18,11 @@ from app.models.snapshot import Snapshot as SnapshotModel
 from app.models.sync import Sync
 from app.models.template import Template
 from app.schemas.statistic import (
-    Snapshot, Statistic, CardCount, EpisodeCount, AssetSize
+    AssetSize,
+    CardCount,
+    EpisodeCount,
+    Snapshot,
+    Statistic,
 )
 
 

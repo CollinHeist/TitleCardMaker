@@ -3,7 +3,12 @@ from random import random
 from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, CardDescription, Dimensions, Extra, ImageMagickCommands, Shadow,
+    BaseCardType,
+    CardDescription,
+    Dimensions,
+    Extra,
+    ImageMagickCommands,
+    Shadow,
 )
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Title import SplitCharacteristics

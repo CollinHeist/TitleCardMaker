@@ -6,12 +6,22 @@ from pydantic import conint, constr, Field, root_validator, validator
 
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.base import (
-    Base, MediaServer, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
+    Base,
+    MediaServer,
+    UpdateBase,
+    UNSPECIFIED,
+    validate_argument_lists_to_dict
 )
 from app.schemas.connection import TMDbLanguageCode
 from app.schemas.font import TitleCase
 from app.schemas.ids import (
-    EmbyID, IMDbID, JellyfinID, SonarrID, TMDbID, TVDbID, TVRageID
+    EmbyID,
+    IMDbID,
+    JellyfinID,
+    SonarrID,
+    TMDbID,
+    TVDbID,
+    TVRageID
 )
 from app.schemas.preferences import Style
 
@@ -299,6 +309,7 @@ class Series(BaseSeries):
     sync_id: Optional[int]
     full_name: str
     sort_name: str
+    # clean_name: str
     poster_path: Optional[str]
     poster_url: str
     small_poster_url: Optional[str]

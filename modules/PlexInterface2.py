@@ -3,7 +3,13 @@ from logging import Logger
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
 from typing import (
-    TYPE_CHECKING, Any, Callable, Literal, NamedTuple, Optional, Union
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Literal,
+    NamedTuple,
+    Optional,
+    Union
 )
 
 from fastapi import HTTPException
@@ -14,13 +20,16 @@ from plexapi.video import Episode as PlexEpisode, Season as PlexSeason
 from plexapi.server import PlexServer, NotFound, Unauthorized
 from plexapi.video import Show as PlexShow
 from requests.exceptions import (
-    ReadTimeout, ConnectionError as PlexConnectionError
+    ReadTimeout,
+    ConnectionError as PlexConnectionError,
 )
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 
 from modules.Debug import log
 from modules.EpisodeDataSource2 import (
-    EpisodeDataSource, SearchResult, WatchedStatus
+    EpisodeDataSource,
+    SearchResult,
+    WatchedStatus,
 )
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface

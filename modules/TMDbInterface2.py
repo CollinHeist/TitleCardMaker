@@ -5,14 +5,21 @@ from typing import Any, Callable, Literal, Optional, Union
 from fastapi import HTTPException
 from tinydb import Query, where
 from tmdbapis import (
-    Poster, TMDbAPIs, NotFound, TMDbImage, Unauthorized, TMDbException
+    Poster,
+    TMDbAPIs,
+    NotFound,
+    TMDbException,
+    TMDbImage,
+    Unauthorized,
 )
 from tmdbapis.objs.reload import Episode as TMDbEpisode, Movie as TMDbMovie
 from tmdbapis.objs.image import Still as TMDbStill
 
 from modules.Debug import log
 from modules.EpisodeDataSource2 import (
-    EpisodeDataSource, SearchResult, WatchedStatus
+    EpisodeDataSource,
+    SearchResult,
+    WatchedStatus
 )
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface

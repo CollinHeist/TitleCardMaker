@@ -5,8 +5,12 @@ from sqlalchemy.orm import Session
 
 from app.database.query import get_connection
 from app.dependencies import (
-    get_emby_interfaces, get_jellyfin_interfaces, get_plex_interfaces,
-    get_preferences, get_sonarr_interfaces, get_tmdb_interfaces,
+    get_emby_interfaces,
+    get_jellyfin_interfaces,
+    get_plex_interfaces,
+    get_preferences,
+    get_sonarr_interfaces,
+    get_tmdb_interfaces,
     get_tvdb_interfaces,
 )
 from app.internal.auth import encrypt
@@ -14,9 +18,18 @@ from app.models.connection import Connection
 from app.models.preferences import Preferences
 from app.schemas.base import UNSPECIFIED
 from app.schemas.connection import (
-    NewEmbyConnection, NewJellyfinConnection, NewPlexConnection,
-    NewSonarrConnection, NewTMDbConnection, NewTVDbConnection,
-    UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb, UpdateTVDb
+    NewEmbyConnection,
+    NewJellyfinConnection,
+    NewPlexConnection,
+    NewSonarrConnection,
+    NewTMDbConnection,
+    NewTVDbConnection,
+    UpdateEmby,
+    UpdateJellyfin,
+    UpdatePlex,
+    UpdateSonarr,
+    UpdateTMDb,
+    UpdateTVDb
 )
 from modules.Debug import log
 from modules.Debug2 import SECRETS

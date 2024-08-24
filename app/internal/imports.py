@@ -9,11 +9,17 @@ from ruamel.yaml import YAML
 from sqlalchemy.orm import Session
 
 from app.dependencies import (
-    get_emby_interfaces, get_jellyfin_interfaces, get_plex_interfaces,
-    get_sonarr_interfaces, get_tmdb_interfaces, refresh_imagemagick_interface
+    get_emby_interfaces,
+    get_jellyfin_interfaces,
+    get_plex_interfaces,
+    get_sonarr_interfaces,
+    get_tmdb_interfaces,
+    refresh_imagemagick_interface
 )
 from app.internal.cards import (
-    add_card_to_database, resolve_card_settings, validate_card_type_model
+    add_card_to_database,
+    resolve_card_settings,
+    validate_card_type_model
 )
 from app.internal.connection import add_connection, update_connection
 from app import models
@@ -24,17 +30,29 @@ from app.models.series import Library, Series
 from app.schemas.base import UNSPECIFIED
 from app.schemas.card import NewTitleCard
 from app.schemas.connection import (
-    NewEmbyConnection, NewJellyfinConnection, NewPlexConnection,
-    NewSonarrConnection, NewTMDbConnection, UpdateEmby, UpdateJellyfin,
-    UpdatePlex, UpdateSonarr, UpdateTMDb,
+    NewEmbyConnection,
+    NewJellyfinConnection,
+    NewPlexConnection,
+    NewSonarrConnection,
+    NewTMDbConnection,
+    UpdateEmby,
+    UpdateJellyfin,
+    UpdatePlex,
+    UpdateSonarr,
+    UpdateTMDb,
 )
 from app.schemas.font import NewNamedFont
 from app.schemas.preferences import (
-    CardExtension, EpisodeDataSource, UpdatePreferences
+    CardExtension,
+    EpisodeDataSource,
+    UpdatePreferences
 )
 from app.schemas.series import NewSeries, NewTemplate, Translation
 from app.schemas.sync import (
-    NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync
+    NewEmbySync,
+    NewJellyfinSync,
+    NewPlexSync,
+    NewSonarrSync
 )
 
 from modules.Debug import InvalidCardSettings, log

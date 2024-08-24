@@ -4,7 +4,7 @@ from typing import Literal, Optional
 
 from pydantic import constr, validator
 
-from app.schemas.base import Base, UpdateBase, UNSPECIFIED
+from app.schemas.base import Base, UNSPECIFIED
 
 
 SonarrSeriesType = Literal['anime', 'daily', 'standard']

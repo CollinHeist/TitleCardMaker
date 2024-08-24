@@ -5,9 +5,18 @@ from sqlalchemy.orm import Session
 
 from app.database.session import Base
 from app.dependencies import (
-    EmbyInterface, EmbyInterfaces, JellyfinInterface, JellyfinInterfaces,
-    PlexInterface, PlexInterfaces, SonarrInterface, SonarrInterfaces,
-    TMDbInterface, TMDbInterfaces, TVDbInterface, TVDbInterfaces
+    EmbyInterface,
+    EmbyInterfaces,
+    JellyfinInterface,
+    JellyfinInterfaces,
+    PlexInterface,
+    PlexInterfaces,
+    SonarrInterface,
+    SonarrInterfaces,
+    TMDbInterface,
+    TMDbInterfaces,
+    TVDbInterface,
+    TVDbInterfaces
 )
 from app.models.blueprint import Blueprint, BlueprintSet
 from app.models.card import Card

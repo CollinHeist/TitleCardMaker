@@ -100,7 +100,15 @@ TracebackSuppressedPackages = [
 class DependencyInjector:
     def __init__(self, args: tuple, kwargs: dict) -> None:
         """
-        
+        Initialize the injector for a function with the given arguments.
+        Any SQL database connections will be removed and then re-
+        injected with the `args` and `kwargs` properties of this object.
+
+        Args:
+            args: Positional arguments which will be passed to the
+                wrapped function.
+            kwargs: Keyword argument which will be passed to the wrapped
+                function.
         """
 
         # Determine how many dependencies will require a Session be
@@ -133,6 +141,11 @@ class DependencyInjector:
 
     @property
     def args(self) -> tuple:
+        """
+        Post re-injected positional arguments with a re-initialized SQL
+        DB connection (if present).
+        """
+
         # Single (or no) DB connections, return post-injected args
         if not self.multiple_db_dependencies:
             args = []
@@ -165,6 +178,11 @@ class DependencyInjector:
 
     @property
     def kwargs(self) -> dict:
+        """
+        Post re-injected keyword arguments with a re-initialized SQL DB
+        connection (if present).
+        """
+
         # Single (or no) DB connections, return post-injected args
         if not self.multiple_db_dependencies:
             kwargs = {}

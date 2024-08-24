@@ -8,6 +8,7 @@ from tinydb import TinyDB
 from modules.Debug import log
 from modules import global_objects
 
+
 class PersistentDatabase:
     """
     This class describes some persistent storage and is a loose wrapper

@@ -11,7 +11,9 @@ from app.dependencies import get_database
 from app.internal.auth import get_current_user
 from app.internal.cards import delete_cards, refresh_remote_card_types
 from app.internal.episodes import (
-    set_episode_ids, refresh_episode_data, update_episode_config
+    refresh_episode_data,
+    set_episode_ids,
+    update_episode_config
 )
 from app.models.card import Card
 from app.models.episode import Episode as EpisodeModel
