@@ -8,9 +8,17 @@ from requests import get
 from sqlalchemy.orm import Session
 
 from app.database.session import (
-    BlueprintSessionMaker, EmbyInterfaces, ImageMagickInterfaceLocal,
-    JellyfinInterfaces, PlexInterfaces, PreferencesLocal, Scheduler,
-    SessionLocal, SonarrInterfaces, TMDbInterfaces, TVDbInterfaces,
+    BlueprintSessionMaker,
+    EmbyInterfaces,
+    ImageMagickInterfaceLocal,
+    JellyfinInterfaces,
+    PlexInterfaces,
+    PreferencesLocal,
+    Scheduler,
+    SessionLocal,
+    SonarrInterfaces,
+    TMDbInterfaces,
+    TVDbInterfaces,
 )
 from app.models.preferences import Preferences
 
@@ -30,7 +38,7 @@ __all__ = [
     'Preferences', 'Session', 'EmbyInterface', 'ImageMagickInterface',
     'InterfaceGroup',  'JellyfinInterface', 'PlexInterface', 'SonarrInterface',
     'TMDbInterface', 'TVDbInterface', 'get_database', 'get_blueprint_database',
-    'get_scheduler', 'get_preferences',
+    'get_scheduler', 'get_preferences', 'get_first_tvdb_interface',
     'get_emby_interfaces', 'require_emby_interface',
     'refresh_imagemagick_interface', 'get_imagemagick_interface',
     'get_jellyfin_interfaces', 'require_jellyfin_interface',
