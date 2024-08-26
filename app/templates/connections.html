@@ -33,39 +33,55 @@
           <label>Enabled</label>
         </div>
 
-        <div class="ui required eight wide field">
-          <label>Connection Name</label>
-          <input name="name" type="text" value="Server">
-          <p class="help">Name of this Connection within TCM.</p>
+        <div class="ui two fields">
+          <div class="ui required field">
+            <label>Connection Name</label>
+            <input name="name" type="text" value="Server">
+            <p class="help">Name of this Connection within TCM.</p>
+          </div>
+  
+          <div class="ui required field">
+            <label>URL</label>
+            <div class="ui icon input">
+              <i class="lock icon"></i>
+              <input name="url" type="text" placeholder="http://192.168.0.1:8000/">
+            </div>
+            <p class="help">Host URL or IP Address of the server (including the port number).</p>
+          </div>
         </div>
 
-        <div class="ui required eight wide field">
-          <label>URL</label>
-          <div class="ui icon input">
-            <i class="lock icon"></i>
-            <input name="url" type="text" placeholder="http://192.168.0.1:8000/">
+        <div class="ui two fields">
+          <div class="ui required field">
+            <label>API Key</label>
+            <div class="ui icon input">
+              <i class="lock icon"></i>
+              <input name="api_key" type="text" class="private">
+            </div>
+            <p class="help">API key to authenticate communication.</p>
           </div>
-          <p class="help">Host URL or IP Address of the server (including the port number).</p>
+
+          <div class="ui field">
+            <label>Filesize Limit</label>
+            <input name="filesize_limit" type="text" value="5 Megabytes">
+            <p class="help">
+              Maximum file size of Title Cards to upload.
+              <br>
+              Title Cards larger than this will be compressed.
+            </p>
+          </div>
         </div>
 
-        <div class="ui required eight wide field">
-          <label>API Key</label>
-          <div class="ui icon input">
-            <i class="lock icon"></i>
-            <input name="api_key" type="text" class="private">
+        <div class="ui two fields">
+          <div class="ui required field" data-value="username">
+            <label>Username</label>
+            <div data-value="username" class="ui compact selection dropdown">
+              <input type="hidden" name="username">
+              <i class="dropdown icon"></i>
+              <div class="default text"></div>
+              <div class="menu"></div>
+            </div>
+            <p class="help">Username of the user to query Episode watched statuses from.</p>
           </div>
-          <p class="help">API key to authenticate communication.</p>
-        </div>
-
-        <div class="ui required field" data-value="username">
-          <label>Username</label>
-          <div data-value="username" class="ui compact selection dropdown">
-            <input type="hidden" name="username">
-            <i class="dropdown icon"></i>
-            <div class="default text"></div>
-            <div class="menu"></div>
-          </div>
-          <p class="help">Username of the user to query Episode watched statuses from.</p>
         </div>
 
         <div data-value="use_ssl" class="ui left aligned checkbox field">
@@ -73,16 +89,7 @@
           <input name="use_ssl" type="checkbox" checked="">
           <p class="help">Connect with HTTPS instead of HTTP.</p>
         </div>
-
-        <div class="ui eight wide field">
-          <label>Filesize Limit</label>
-          <input name="filesize_limit" type="text" value="5 Megabytes">
-          <p class="help">
-            Maximum file size of Title Cards to upload.
-            <br>
-            Title Cards larger than this will be compressed.
-          </p>
-        </div>
+        <br>
 
         <div class="ui error message"></div>
         <button class="ui primary animated button" type="submit" data-action="save">
@@ -115,57 +122,63 @@
           <p class="help">Disabled Connections cannot be interacted with by TitleCardMaker.</p>
         </div>
 
-        <div class="ui required eight wide field">
-          <label>Connection Name</label>
-          <input name="name" type="text" value="Plex">
-          <p class="help">Name of this Connection within TCM.</p>
-        </div>
-
-        <div class="ui required eight wide field">
-          <label>URL</label>
-          <div class="ui icon input">
-            <i class="lock icon"></i>
-            <input name="url" type="text" placeholder="http://localhost:32400/">
+        <div class="ui two fields">
+          <div class="ui required field">
+            <label>Connection Name</label>
+            <input name="name" type="text" value="Plex">
+            <p class="help">Name of this Connection within TCM.</p>
           </div>
-          <p class="help">Host URL or IP Address of the server (including the port number).</p>
-        </div>
-
-        <div class="ui required eight wide field">
-          <label>Token <a href="https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/" target="_blank"><i class="external alternate small icon"></i></a></label>
-          <div class="ui icon input">
-            <i class="lock icon"></i>
-            <input name="api_key" type="text" class="private" placeholder="Token">
+  
+          <div class="ui required field">
+            <label>URL</label>
+            <div class="ui icon input">
+              <i class="lock icon"></i>
+              <input name="url" type="text" placeholder="http://localhost:32400/">
+            </div>
+            <p class="help">Host URL or IP Address of the server (including the port number).</p>
           </div>
-          <p class="help">X-Plex-Token to authenticate communication.</p>
         </div>
 
-        <div data-value="use_ssl" class="ui left aligned checkbox field"">
-          <label>Use SSL</label>
-          <input name="use_ssl" type="checkbox" checked="">
-          <p class="help">Connect with HTTPS instead of HTTP.</p>
-        </div>
-        <br>
+        <div class="ui two fields">
+          <div class="ui required field">
+            <label>Token <a href="https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/" target="_blank"><i class="external alternate small icon"></i></a></label>
+            <div class="ui icon input">
+              <i class="lock icon"></i>
+              <input name="api_key" type="text" class="private" placeholder="Token">
+            </div>
+            <p class="help">X-Plex-Token to authenticate communication.</p>
+          </div>
 
-        <div data-value="integrate_with_kometa" class="ui left aligned checkbox field">
-          <label>Integrate with Kometa</label>
-          <input name="integrate_with_kometa" type="checkbox">
-          <p class="help">
-            Whether to remove the <b>Overlay</b> label after uploading Title Cards.
-            <br>
-            This also prevents TCM from grabbing Source Images with overlays applied.
-          </p>
+          <div class="ui field">
+            <label>Filesize Limit</label>
+            <input name="filesize_limit" type="text" value="5 Megabytes">
+            <p class="help">
+              Maximum file size of Title Cards to upload.
+              <br>
+              Title Cards larger than this will be compressed.
+              <br>
+              Plex rejects all images larger than 10 Megabytes.
+            </p>
+          </div>
         </div>
 
-        <div class="ui eight wide field">
-          <label>Filesize Limit</label>
-          <input name="filesize_limit" type="text" value="5 Megabytes">
-          <p class="help">
-            Maximum file size of Title Cards to upload.
-            <br>
-            Title Cards larger than this will be compressed.
-            <br>
-            Plex rejects all images larger than 10 Megabytes.
-          </p>
+        <div class="ui two fields">
+          <div data-value="use_ssl" class="ui left aligned checkbox field"">
+            <label>Use SSL</label>
+            <input name="use_ssl" type="checkbox" checked="">
+            <p class="help">Connect with HTTPS instead of HTTP.</p>
+          </div>
+          <br>
+  
+          <div data-value="integrate_with_kometa" class="ui left aligned checkbox field">
+            <label>Integrate with Kometa</label>
+            <input name="integrate_with_kometa" type="checkbox">
+            <p class="help">
+              Whether to remove the <b>Overlay</b> label after uploading Title Cards.
+              <br>
+              This also prevents TCM from grabbing Source Images with overlays applied.
+            </p>
+          </div>
         </div>
 
         <div class="ui field">
@@ -213,19 +226,21 @@
           <input name="enabled" type="checkbox" checked="">
         </div>
 
-        <div class="ui required eight wide field">
-          <label>Connection Name</label>
-          <input name="name" type="text" value="Sonarr">
-          <p class="help">Name of this Connection within TCM.</p>
-        </div>
-
-        <div class="ui required eight wide field">
-          <label>URL</label>
-          <div class="ui icon input">
-            <i class="lock icon"></i>
-            <input name="url" type="text" placeholder="http://localhost:8989/">
+        <div class="ui two fields">
+          <div class="ui required field">
+            <label>Connection Name</label>
+            <input name="name" type="text" value="Sonarr">
+            <p class="help">Name of this Connection within TCM.</p>
           </div>
-          <p class="help">Host URL or IP Address of the server (including the port number).</p>
+  
+          <div class="ui required field">
+            <label>URL</label>
+            <div class="ui icon input">
+              <i class="lock icon"></i>
+              <input name="url" type="text" placeholder="http://localhost:8989/">
+            </div>
+            <p class="help">Host URL or IP Address of the server (including the port number).</p>
+          </div>
         </div>
 
         <div class="ui required eight wide field">
@@ -237,17 +252,18 @@
           <p class="help">API key to authenticate communication.</p>
         </div>
 
-        <div data-value="use_ssl" class="ui left aligned checkbox field">
-          <label>Use SSL</label>
-          <input name="use_ssl" type="checkbox" checked="">
-          <p class="help">Connect with HTTPS instead of HTTP.</p>
-        </div>
-        <br>
+        <div class="ui two fields">
+          <div data-value="use_ssl" class="ui left aligned checkbox field">
+            <label>Use SSL</label>
+            <input name="use_ssl" type="checkbox" checked="">
+            <p class="help">Connect with HTTPS instead of HTTP.</p>
+          </div>
 
-        <div data-value="downloaded_only" class="ui left aligned checkbox field">
-          <label>Query Downloaded Episodes Only</label>
-          <input name="downloaded_only" type="checkbox" checked="">
-          <p class="help">Only add Episodes which are downloaded.</p>
+          <div data-value="downloaded_only" class="ui left aligned checkbox field">
+            <label>Query Downloaded Episodes Only</label>
+            <input name="downloaded_only" type="checkbox" checked="">
+            <p class="help">Only add Episodes which are downloaded.</p>
+          </div>
         </div>
 
         <div class="ui eight wide field" data-value="libraries">
@@ -329,27 +345,42 @@
           <input name="enabled" type="checkbox" checked="">
         </div>
 
-        <div data-value="name" class="ui required eight wide field">
-          <label>Connection Name</label>
-          <input name="name" type="text" value="TMDb">
-          <p class="help">Name of this Connection within TCM.</p>
-        </div>
-
-        <div data-value="api_key" class="ui required eight wide field">
-          <label>API Key <a href="https://developers.themoviedb.org/3/getting-started/introduction" target="_blank"><i class="external alternate small icon"></i></a></label>
-          <div class="ui icon input">
-            <i class="lock icon"></i>
-            <input name="api_key" type="text" class="private">
+        <div class="ui two fields">
+          <div data-value="name" class="ui required eight wide field">
+            <label>Connection Name</label>
+            <input name="name" type="text" value="TMDb">
+            <p class="help">Name of this Connection within TCM.</p>
           </div>
-          <p class="help">Key to submit API requests to TMDb.</p>
+  
+          <div data-value="api_key" class="ui required eight wide field">
+            <label>API Key <a href="https://developers.themoviedb.org/3/getting-started/introduction" target="_blank"><i class="external alternate small icon"></i></a></label>
+            <div class="ui icon input">
+              <i class="lock icon"></i>
+              <input name="api_key" type="text" class="private">
+            </div>
+            <p class="help">Key to submit API requests to TMDb.</p>
+          </div>
         </div>
 
-        <div data-value="minimum_dimensions" class="ui required four wide field">
-          <label>Minimum Image Dimensions</label>
-          <input name="minimum_dimensions" type="text" value="800x400">
-          <p class="help">
-            Minimum image resolution for Source Images from TMDb (in pixels) - enter as <b>width</b>x<b>height</b>.
-          </p>
+        <div class="ui two fields">
+          <div data-value="minimum_dimensions" class="ui required field">
+            <label>Minimum Image Dimensions</label>
+            <input name="minimum_dimensions" type="text" value="800x400">
+            <p class="help">
+              Minimum image resolution for Source Images from TMDb (in pixels) - enter as <b>width</b>x<b>height</b>.
+            </p>
+          </div>
+
+          <div data-value="language_priority" class="ui required field">
+            <label>Language Priority</label>
+            <div data-value="language_priority" class="ui multiple search selection dropdown">
+              <input type="hidden" name="language_priority">
+              <i class="dropdown icon"></i>
+              <div class="default text"></div>
+              <div class="menu"></div>
+            </div>
+            <p class="help">Order of languages to search for posters and logos.</p>
+          </div>
         </div>
 
         <div data-value="skip_localized" class="ui left aligned checkbox field">
@@ -361,17 +392,7 @@
             Can be overwritten per-Series.
           </p>
         </div>
-
-        <div data-value="language_priority" class="ui required field">
-          <label>Language Priority</label>
-          <div data-value="language_priority" class="ui compact multiple search selection dropdown">
-            <input type="hidden" name="language_priority">
-            <i class="dropdown icon"></i>
-            <div class="default text"></div>
-            <div class="menu"></div>
-          </div>
-          <p class="help">Order of languages to search for posters and logos.</p>
-        </div>
+        <br>
 
         <div class="ui error message"></div>
         <button class="ui primary animated button" type="submit" data-action="save">
@@ -403,19 +424,82 @@
           <input name="enabled" type="checkbox" checked="">
         </div>
 
-        <div data-value="name" class="ui required eight wide field">
-          <label>Connection Name</label>
-          <input name="name" type="text" value="TVDb">
-          <p class="help">Name of this Connection within TCM.</p>
+        <div class="ui two fields">
+          <div data-value="name" class="ui required eight wide field">
+            <label>Connection Name</label>
+            <input name="name" type="text" value="TVDb">
+            <p class="help">Name of this Connection within TCM.</p>
+          </div>
+  
+          <div data-value="api_key" class="ui required eight wide field">
+            <label>API Key <a href="https://thetvdb.com/api-information" target="_blank"><i class="external alternate small icon"></i></a></label>
+            <div class="ui icon input">
+              <i class="lock icon"></i>
+              <input name="api_key" type="text" class="private">
+            </div>
+            <p class="help">Key to submit API requests to TVDb.</p>
+          </div>
         </div>
 
-        <div data-value="api_key" class="ui required eight wide field">
-          <label>API Key <a href="https://thetvdb.com/api-information" target="_blank"><i class="external alternate small icon"></i></a></label>
-          <div class="ui icon input">
-            <i class="lock icon"></i>
-            <input name="api_key" type="text" class="private">
+        <div class="ui two fields">
+          <div data-value="minimum_dimensions" class="ui required field">
+            <label>Minimum Image Dimensions</label>
+            <input name="minimum_dimensions" type="text" value="400x200">
+            <p class="help">
+              Minimum image resolution for Source Images from TVDb (in pixels) - enter as <b>width</b>x<b>height</b>.
+            </p>
           </div>
-          <p class="help">Key to submit API requests to TVDb.</p>
+  
+          <div data-value="language_priority" class="ui required field">
+            <label>Language Priority</label>
+            <div data-value="language_priority" class="ui multiple search selection dropdown">
+              <input type="hidden" name="language_priority">
+              <i class="dropdown icon"></i>
+              <div class="default text"></div>
+              <div class="menu">
+                <div class="item" data-value="ara">Arabic</div>
+                <div class="item" data-value="ces">Czech</div>
+                <div class="item" data-value="dan">Danish</div>
+                <div class="item" data-value="deu">German</div>
+                <div class="item" data-value="ell">Greek</div>
+                <div class="item" data-value="eng">English</div>
+                <div class="item" data-value="fra">French</div>
+                <div class="item" data-value="ita">Italian</div>
+                <div class="item" data-value="kor">Korean</div>
+                <div class="item" data-value="nld">Dutch</div>
+                <div class="item" data-value="pol">Polish</div>
+                <div class="item" data-value="por">Portuguese</div>
+                <div class="item" data-value="pt">Portuguese (Portugal)</div>
+                <div class="item" data-value="rus">Russian</div>
+                <div class="item" data-value="spa">Spanish</div>
+                <div class="item" data-value="swe">Swedish</div>
+                <div class="item" data-value="tur">Turkish</div>
+                <div class="item" data-value="zho">Chinese</div>
+                <div class="item" data-value="zhtw">Chinese (Traditional)</div>
+              </div>
+            </div>
+            <p class="help">Order of languages to search for posters and logos.</p>
+          </div>
+        </div>
+
+        <div class="ui two fields">
+          <div class="ui required field" data-value="episode_ordering">
+            <label>Episode Ordering</label>
+            <div data-value="episode_ordering" class="ui selection dropdown">
+              <input type="hidden" name="episode_ordering">
+              <i class="dropdown icon"></i>
+              <div class="default text"></div>
+              <div class="menu">
+                <div class="item" data-value="absolute">Absolute</div>
+                <div class="item" data-value="alternate">Alternate (Story)</div>
+                <div class="item" data-value="default">Default</div>
+                <div class="item" data-value="dvd">DVD</div>
+                <div class="item" data-value="official">Official</div>
+                <div class="item" data-value="regional">Regional</div>
+              </div>
+            </div>
+            <p class="help">Which order of episodes to utilize. Not all Series have all orderings.</p>
+          </div>
         </div>
 
         <div data-value="include_movies" class="ui left aligned checkbox field">
@@ -423,63 +507,7 @@
           <input name="include_movies" type="checkbox">
           <p class="help">Whether to include Episodes which are marked as movies.</p>
         </div>
-
-        <div data-value="minimum_dimensions" class="ui required four wide field">
-          <label>Minimum Image Dimensions</label>
-          <input name="minimum_dimensions" type="text" value="400x200">
-          <p class="help">
-            Minimum image resolution for Source Images from TVDb (in pixels) - enter as <b>width</b>x<b>height</b>.
-          </p>
-        </div>
-
-        <div data-value="language_priority" class="ui required field">
-          <label>Language Priority</label>
-          <div data-value="language_priority" class="ui compact multiple search selection dropdown">
-            <input type="hidden" name="language_priority">
-            <i class="dropdown icon"></i>
-            <div class="default text"></div>
-            <div class="menu">
-              <div class="item" data-value="ara">Arabic</div>
-              <div class="item" data-value="ces">Czech</div>
-              <div class="item" data-value="dan">Danish</div>
-              <div class="item" data-value="deu">German</div>
-              <div class="item" data-value="ell">Greek</div>
-              <div class="item" data-value="eng">English</div>
-              <div class="item" data-value="fra">French</div>
-              <div class="item" data-value="ita">Italian</div>
-              <div class="item" data-value="kor">Korean</div>
-              <div class="item" data-value="nld">Dutch</div>
-              <div class="item" data-value="pol">Polish</div>
-              <div class="item" data-value="por">Portuguese</div>
-              <div class="item" data-value="pt">Portuguese (Portugal)</div>
-              <div class="item" data-value="rus">Russian</div>
-              <div class="item" data-value="spa">Spanish</div>
-              <div class="item" data-value="swe">Swedish</div>
-              <div class="item" data-value="tur">Turkish</div>
-              <div class="item" data-value="zho">Chinese</div>
-              <div class="item" data-value="zhtw">Chinese (Traditional)</div>
-            </div>
-          </div>
-          <p class="help">Order of languages to search for posters and logos.</p>
-        </div>
-
-        <div class="ui required field" data-value="episode_ordering">
-          <label>Episode Ordering</label>
-          <div data-value="episode_ordering" class="ui compact selection dropdown">
-            <input type="hidden" name="episode_ordering">
-            <i class="dropdown icon"></i>
-            <div class="default text"></div>
-            <div class="menu">
-              <div class="item" data-value="absolute">Absolute</div>
-              <div class="item" data-value="alternate">Alternate (Story)</div>
-              <div class="item" data-value="default">Default</div>
-              <div class="item" data-value="dvd">DVD</div>
-              <div class="item" data-value="official">Official</div>
-              <div class="item" data-value="regional">Regional</div>
-            </div>
-          </div>
-          <p class="help">Which order of episodes to utilize. Not all Series have all orderings.</p>
-        </div>
+        <br>
 
         <div class="ui error message"></div>
         <button class="ui primary animated button" type="submit" data-action="save">
