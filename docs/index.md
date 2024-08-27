@@ -1,10 +1,10 @@
 ---
 title: Welcome to TitleCardMaker
 description: >
-    Automate the creation and customization of Title Cards for Plex, Jellyfin,
-    and Emby.
+  Automate the creation and customization of Title Cards for Plex, Jellyfin,
+  and Emby.
 hide:
-    - navigation
+  - navigation
 ---
 
 <script src="../../javascripts/home.js" defer></script>
@@ -274,8 +274,5 @@ TCM, then you need to do the following:
     4. Re-launch TitleCardMaker.
 
         ```bash
-        pipenv install
-        pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
+        uv run uvicorn app-main:app --host "0.0.0.0" --port 4242
         ```
-
-*[PAT]: Personal Access Token
