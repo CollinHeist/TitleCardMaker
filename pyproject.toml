@@ -54,6 +54,8 @@ build-backend = "hatchling.build"
 dev-dependencies = [
     "setuptools>=73.0.1",
     "ruff>=0.6.1",
+    "mkdocs-material>=9.5.33",
+    "mkdocs-glightbox>=0.4.0",
 ]
 
 [tool.pyright]
