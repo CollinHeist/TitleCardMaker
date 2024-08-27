@@ -7,7 +7,7 @@ tags:
     - TVDb
 ---
 
-# :simple-themoviedatabase:{.tmdb} The Movie Database
+# ![TVDb Logo](./assets/tvdb-light.png#only-light){.no-lightbox .twemoji} ![TVDb Logo](./assets/tvdb-dark.png#only-dark){.no-lightbox .twemoji} The TV Database
 
 !!! info "Optional Step"
 
@@ -22,8 +22,7 @@ publicly accessible database which can serve as an
 <span class="example md-button">Add Connection</span> button.
 
 2. Click the external link :octicons-link-external-16: icon next to _API Key_
-and open the TVDb
-[API](https://developer.themoviedb.org/docs/getting-started) page.
+and open the TVDb [API](https://thetvdb.com/api-information) page.
 
 3. Follow their instructions to generate an API key for yourself (this will
 require a TVDb account). Copy the generated API key.

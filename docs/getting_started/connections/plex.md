@@ -42,8 +42,9 @@ Kometa` checkbox.
 6. Click <span class="example md-button">Create</span>. TCM will reload the
 page.
 
-7. If you utilize Tautulli, I recommend setting up the
-[Notification Agent](./tautulli.md) while here.
+7. If you would like to utilize Webhooks or Tautulli to quickly create and load
+Cards into Plex for new or watched content, see
+[here](../../user_guide/integrations.md).
 
 The above process can be repeated for as many Plex Media Servers as you have. I
 do recommend specifying a _unique_ name for each Connection so they can be

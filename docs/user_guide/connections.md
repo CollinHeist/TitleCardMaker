@@ -10,13 +10,10 @@ tags:
     - Sonarr
     - Tautulli
     - TMDb
+    - TVDb
 ---
 
 # Connections
-
-!!! warning "Under Construction"
-
-    This documentation is actively being developed.
 
 The Connections page is where all _external_ connections are defined. Currently
 this is the following:
@@ -28,8 +25,12 @@ this is the following:
 - [Sonarr](#sonarr)
 - [Tautulli](#tautulli_1)
 - [TheMovieDatabase](#themoviedatabase)
+- [TheTVDatabase](#thetvdatabase)
 
 Each Connection is described in greater detail below.
+
+![Connections Page](./assets/connections-light.webp#only-light){.no-lightbox}
+![Connections Page](./assets/connections-dark.webp#only-dark){.no-lightbox}
 
 !!! tip "Private Information"
 
@@ -151,7 +152,7 @@ setting first.
 ### Connection Name
 
 The name of the Connection as it appears within the UI. This is purely
-aesthetic.
+cosmetic.
 
 ### URL
 
@@ -163,14 +164,6 @@ API key to authenticate communication. The process of creating one within
 Emby is covered
 [Getting Started](../getting_started/connections/emby.md).
 
-### Username
-
-Username of the user to query Episode watched statuses from.
-
-### SSL
-
-Whether to connect with HTTPS instead of HTTP.
-
 ### Filesize Limit
 
 The maximum file size of Title Cards to upload to Emby. Title Cards larger than
@@ -181,6 +174,14 @@ Title Cards.
 
 This can be entered as `{digit} {unit}` - e.g. `4 Megabytes` - where the
 acceptable units are `Bytes`, `Kilobytes`, and `Megabytes`.
+
+### Username
+
+Username of the user to query Episode watched statuses from.
+
+### SSL
+
+Whether to connect with HTTPS instead of HTTP.
 
 ---
 
@@ -201,7 +202,7 @@ support](./settings.md#multi-library-filename-support) setting first.
 ### Connection Name
 
 The name of the Connection as it appears within the UI. This is purely
-aesthetic.
+cosmetic.
 
 ### URL
 
@@ -213,14 +214,6 @@ API key to authenticate communication. The process of creating one within
 Jellyfin is covered in
 [Getting Started](../getting_started/connections/jellyfin.md).
 
-### Username
-
-Username of the user to query Episode watched statuses from.
-
-### SSL
-
-Whether to connect with HTTPS instead of HTTP.
-
 ### Filesize Limit
 
 The maximum file size of Title Cards to upload to Jellyfin. Title Cards larger
@@ -231,6 +224,14 @@ Title Cards.
 
 This can be entered as `{digit} {unit}` - e.g. `4 Megabytes` - where the
 acceptable units are `Bytes`, `Kilobytes`, and `Megabytes`.
+
+### Username
+
+Username of the user to query Episode watched statuses from.
+
+### SSL
+
+Whether to connect with HTTPS instead of HTTP.
 
 ---
 
@@ -251,7 +252,7 @@ support](./settings.md#multi-library-filename-support) setting first.
 ### Connection Name
 
 The name of the Connection as it appears within the UI. This is purely
-aesthetic.
+cosmetic.
 
 ### URL
 
@@ -262,6 +263,17 @@ The _root_ URL to your Plex server, including the port.
 Token to authenticate communication. The process of obtaining your Plex Token
 is covered in
 [Getting Started](../getting_started/connections/plex.md).
+
+### Filesize Limit
+
+The maximum file size of Title Cards to upload to Jellyfin. Title Cards larger
+than this will be compressed[^1].
+
+Changing this setting __does not__ retroactively affect created or uploaded
+Title Cards.
+
+This can be entered as `{digit} {unit}` - e.g. `4 Megabytes` - where the
+acceptable units are `Bytes`, `Kilobytes`, and `Megabytes`.
 
 ### SSL
 
@@ -274,17 +286,6 @@ prevents TCM from grabbing Source Images with overlays applied.
 
 Only check this box if you use (or have used)
 [Kometa](https://github.com/Kometa-Team/Kometa) Episode overlays.
-
-### Filesize Limit
-
-The maximum file size of Title Cards to upload to Jellyfin. Title Cards larger
-than this will be compressed[^1].
-
-Changing this setting __does not__ retroactively affect created or uploaded
-Title Cards.
-
-This can be entered as `{digit} {unit}` - e.g. `4 Megabytes` - where the
-acceptable units are `Bytes`, `Kilobytes`, and `Megabytes`.
 
 ### Tautulli
 
@@ -307,7 +308,7 @@ creation when new Episodes are added - settings this up is detailed
 ### Connection Name
 
 The name of the Connection as it appears within the UI. This is purely
-aesthetic.
+cosmetic.
 
 ### URL
 
@@ -408,8 +409,8 @@ available, or an existing Episode has been watched.
 This integration can only be created _after_ creating a Plex connection, and it
 is server-specific, as Tautulli only works on one Plex server at a time.
 
-The instructions for enabling this integration are detailed in the
-[Getting Started](../getting_started/connections/tautulli.md) page.
+The instructions for enabling this integration are detailed
+[here](./integrations.md#tautulli).
 
 ---
 
@@ -419,8 +420,7 @@ TMDb is a free database service which can serve as an
 [Episode Data Source](./settings.md#episode-data-source), and is the recommended
 [Image Source](./settings.md#image-source-priority) due to the much higher
 quality (and wider selection) of images compared to the Media Servers. It is
-also the only Connection which can provide Episode translations, Series
-logos[^2], backdrops, and posters.
+also the only Connection which can provide Episode translations.
 
 ??? question "Why enable multiple TMDb Connections?"
 
@@ -436,7 +436,7 @@ logos[^2], backdrops, and posters.
 ### Connection Name
 
 The name of the Connection as it appears within the UI. This is purely
-aesthetic.
+cosmetic.
 
 ### API Key
 
@@ -449,19 +449,10 @@ The minimum resolution of _Source Images_ to gather from TMDb. This must be
 entered as `{width}x{height}` - e.g. `800x400` - and can be as low as `0x0` (to
 not apply any minimum resolution).
 
-### Ignore Localized Images
+### Language Priority
 
-<!-- md:overwritable Series, Template -->
-
-When users upload images to TMDb they can assign a language to that image - this
-is not common, but some Episodes feature in-Episode title cards which might
-typically want to be avoided by TCM. Enabling this will direct TCM to ignore all
-images with assigned language codes.
-
-### Logo Language Priority
-
-The relative priority of languages to search for logos under. Ordered highest
-to lowest priority.
+The relative priority of languages to search for posters and logos under.
+This is ordered highest to lowest priority.
 
 For non-English users whose library might contain non-English content, it is
 recommended to set this to (your language) _then_ English; as this will prompt
@@ -474,3 +465,74 @@ alongside a low filesize limit, then the compression algorithm TCM uses might
 fail to compress and upload some Title Cards.
 [^2]: _Technically_, Emby and Jellyfin can provide logos as well, however their
 logos are not browsable.
+
+### Ignore Localized Images
+
+<!-- md:overwritable Series, Template -->
+
+When users upload images to TMDb they can assign a language to that image - this
+is not common, but some Episodes feature in-Episode title cards which might
+typically want to be avoided by TCM. Enabling this will direct TCM to ignore all
+images with assigned language codes.
+
+## ![TVDb Logo](./assets/tvdb-light.png#only-light){.no-lightbox .twemoji} ![TVDb Logo](./assets/tvdb-dark.png#only-dark){.no-lightbox .twemoji} TheTVDatabase
+
+TVDb is a free database service which can serve as an
+[Episode Data Source](./settings.md#episode-data-source), and
+[Image Source](./settings.md#image-source-priority). It is also the only Episode
+Data Source which allows customizing the episode order - i.e. absolute,
+official, etc.
+
+??? question "Why enable multiple TVDb Connections?"
+
+    For the most part the only reason to enable multiple TVDb Connections would
+    be to utilize different Episode orderings. You can have one Connection
+    which uses the _Default_ ordering, and another that uses _DVD_.
+
+### Connection Name
+
+The name of the Connection as it appears within the UI. This is purely
+cosmetic.
+
+### API Key
+
+API key to submit request to TVDb. These are free, and details on obtaining one
+are covered in [Getting Started](../getting_started/connections/tvdb.md).
+
+### Minimum Image Resolution
+
+The minimum resolution of _Source Images_ to gather from TVDb. This must be
+entered as `{width}x{height}` - e.g. `800x400` - and can be as low as `0x0` (to
+not apply any minimum resolution).
+
+### Language Priority
+
+The relative priority of languages to search for posters and logos under.
+This is ordered highest to lowest priority.
+
+For non-English users whose library might contain non-English content, it is
+recommended to set this to (your language) _then_ English; as this will prompt
+TCM to search for logos in your native language and then English if none are
+available.
+
+### Episode Ordering
+
+Which order of Episode data to request when querying Episodes from TVDb. Not all
+Series have all orders, and if a selected Series does _not_ have the selected
+order, then TVDb will return no Episodes.
+
+These orders line up with what can be seen on the TVDb website, so it might be
+easiest to find the desired order on the website and then select that within
+TCM.
+
+### Include Movies
+
+Whether to include or exclude "Episodes" which are marked as movies.
+
+This is most often applicable to Anime, in which OVA movies may be listed under
+Specials (season 0).
+
+[^1]: If you are using an uncompressed
+[file extension](./settings.md#card-extension), like `.png` or `.tiff`, 
+alongside a low filesize limit, then the compression algorithm TCM uses might
+fail to compress and upload some Title Cards.

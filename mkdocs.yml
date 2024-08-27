@@ -72,10 +72,10 @@ plugins:
       width: 65%
       skip_classes:
         - no-lightbox
-  
-  # Enable animated code terminals
-  - termynal:
-      title: Command Line
+
+  # Enable page tagging
+  # - tags:
+  #     tags_file: tags.md
 
   # Enable social cards
   - social:
@@ -204,19 +204,25 @@ nav:
   - Blueprints: blueprints.md
   - User Guide:
     - user_guide/index.md
-    - Series: user_guide/series.md
-    - Adding Series: user_guide/new_series.md
-    - Templates: user_guide/templates.md
-    - Fonts: user_guide/fonts.md
-    - Sync: user_guide/syncs.md
-    - Settings: user_guide/settings.md
-    - Connections: user_guide/connections.md
-    - Scheduler: user_guide/scheduler.md
-    - Variables: user_guide/variables.md
-    # - Importer: user_guide/importer.md
-    - Logs: user_guide/logs.md
-    - Setting Priority: user_guide/setting_priority.md
+    - Pages:
+      - Series: user_guide/series.md
+      - Adding Series: user_guide/new_series.md
+      - Missing Summary: user_guide/missing.md
+      - Templates: user_guide/templates.md
+      - Fonts: user_guide/fonts.md
+      - Sync: user_guide/syncs.md
+      - Settings: user_guide/settings.md
+      - Connections: user_guide/connections.md
+      - Scheduler: user_guide/scheduler.md
+      - Importer: user_guide/importer.md
+      - System Summary: user_guide/system.md
+      - Logs: user_guide/logs.md
+      - Graphs: user_guide/graphs.md
+      - Changelog: user_guide/changelog.md
+    - Integrations: user_guide/integrations.md
     - Mask Images: user_guide/mask_images.md
+    - Setting Priority: user_guide/setting_priority.md
+    - Variables: user_guide/variables.md
     # - FAQ: user_guide/faq.md
   - Card Types:
     - card_types/index.md

@@ -33,7 +33,9 @@ below:
 - [Connections](./connections.md)
 - [Scheduler](./scheduler.md)
 - [Importer](./importer.md)
+- [System Summary](./system.md)
 - [Logs](./logs.md)
+- [Graphs](./graphs.md)
 - [Changelog](./changelog.md)
 
 ## Selecting a Branch / Tag
@@ -114,6 +116,11 @@ your version of TCM.
 While a vast majority of TCM's behavior can be adjusted within the UI, there are
 a few options which can only be adjusted with environment variables. These are
 described below:
+
+`TCM_BACKUP_RETENTION`
+
+:   How long to keep old backups before deleting them. This is an integer number
+    of days. The default is `21`.
 
 `TCM_IM_DOCKER`
 
