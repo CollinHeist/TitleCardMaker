@@ -214,12 +214,12 @@ def create_cards_for_sonarr_webhook(
     return None
 
 
-@webhook_router.post('/sonarr/delete', tags=['Sonarr'])
+@webhook_router.post('/sonarr/series/delete', tags=['Sonarr'])
 def delete_series_via_sonarr_webhook(
         request: Request,
         webhook: SonarrWebhook,
         delete_title_cards: bool = Query(default=True),
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> None:
     """
     Delete the Series defined in the given Webhook.

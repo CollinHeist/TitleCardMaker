@@ -107,7 +107,7 @@ click _Webhook_.
     from Sonarr, de-select all triggers _except_ `On Series Delete`.
 
     7. Enter the URL of your TCM server (including the port), followed by
-    `/api/webhooks/sonarr/delete`.
+    `/api/webhooks/sonarr/series/delete`.
 
     8. If you would like TCM to _not_ delete the Title Card files themselves,
     add `?delete_title_cards=false` to the end of the URL.
