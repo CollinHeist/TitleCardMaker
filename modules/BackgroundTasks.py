@@ -94,7 +94,6 @@ TracebackSuppressedPackages = [
     tenacity,
     tmdbapis,
     'app-main.py',
-    'BackgroundTasks.py',
 ]
 
 class DependencyInjector:
