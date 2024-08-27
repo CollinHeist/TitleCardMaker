@@ -115,10 +115,11 @@ def process_rating_key(
 
         # Reload into all associated libraries
         for library in episode.series.libraries:
-            interface = get_interface(library['interface_id'])
             load_episode_title_card(
                 episode, db, library['name'], library['interface_id'],
-                interface, attempts=6, log=log,
+                get_interface(library['interface_id']),
+                attempts=5 if library['interface'] == 'Plex' else 1,
+                log=log,
             )
 
     if snapshot:
