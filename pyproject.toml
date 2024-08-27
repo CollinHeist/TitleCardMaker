@@ -58,6 +58,12 @@ dev-dependencies = [
     "mkdocs-glightbox>=0.4.0",
 ]
 
+[tool.hatch.build.targets.wheel]
+packages = [
+    "app",
+    "modules",
+]
+
 [tool.pyright]
 exclude = [
     "config/assets",
