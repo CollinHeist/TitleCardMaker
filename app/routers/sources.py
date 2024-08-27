@@ -162,7 +162,7 @@ def download_series_backdrop_from_tmdb(
 
 
 @source_router.post('/series/{series_id}/backdrop/tvdb')
-def download_series_backdrop(
+def download_series_backdrop_from_tvdb(
         series_id: int,
         request: Request,
         db: Session = Depends(get_database),
@@ -355,12 +355,11 @@ def get_all_series_logos_on_tmdb(
     # Get the Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    logos = tmdb_interface.get_all_logos(
+    return tmdb_interface.get_all_logos(
         series.as_series_info,
         bypass_blacklist=True,
         log=request.state.log,
-    )
-    return [] if logos is None else logos
+    ) or []
 
 
 @source_router.get('/series/{series_id}/backdrop/browse')
