@@ -48,8 +48,14 @@ class Preferences:
 
     """All environment variables which might be applicable to TCM, for boot"""
     __ENVIRONMENT_VARIABLES = (
-        'TCM_IS_DOCKER', 'TCM_IM_DOCKER', 'TCM_LOG_STDOUT', 'TCM_LOG_FILE',
-        'TCM_LOG_RETENTION', 'TZ', 'TCM_DISABLE_AUTH',
+        'TCM_BACKUP_RETENTION',
+        'TCM_DISABLE_AUTH',
+        'TCM_IS_DOCKER',
+        'TCM_IM_DOCKER',
+        'TCM_LOG_STDOUT',
+        'TCM_LOG_FILE',
+        'TCM_LOG_RETENTION',
+        'TZ',
     )
 
     """Attributes whose values should be ignored when loading from file"""
