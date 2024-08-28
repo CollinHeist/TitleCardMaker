@@ -11,10 +11,6 @@ hide:
 
 # Welcome to TitleCardMaker
 
-!!! warning "Under Construction"
-
-    This documentation is actively being developed.
-
 TitleCardMaker (TCM) is a program and Docker container written in Python that
 automates the creation of customized Title Cards for use in personal media
 server services like Plex, Jellyfin, or Emby. This is a self-hosted tool - 

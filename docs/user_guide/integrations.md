@@ -84,7 +84,7 @@ only be able to _actually_ trigger on `library.on.deck`, `media.pause`,
     The Webhook utilized by TCM was reworked in Sonarr v4; meaning this is
     required for the integration.
 
-Sonarr can be configured to create new Cards, or delete Series in TCM via
+Sonarr can be configured to create new Cards, or add/delete Series in TCM via
 Webhooks.
 
 ### Enabling
@@ -101,33 +101,49 @@ click _Webhook_.
 
 5. Leave the Tags field blank (unless you'd like to filter by tag).
 
+Depending on the type of integration you would like to enable, do the following:
+
+=== "New Series"
+
+    1. To configure Sonarr to instruct TCM to add Series as they're added to
+    Sonarr, de-select all triggeres except `On Series Add`.
+
+    2. Enter the URL of your TCM server (including the port), followed by
+    `/api/webhooks/sonarr/series/add`.
+
+    3. Ensure the Method is `POST`.
+
+    4. Click <span class="example md-button">Save</span>.
+
 === "Series Deletion"
 
-    6. To configure Sonarr to instruct TCM to remove Series as they're deleted
-    from Sonarr, de-select all triggers _except_ `On Series Delete`.
+    1. To configure Sonarr to instruct TCM to remove Series as they're deleted
+    from Sonarr, de-select all triggers except `On Series Delete`.
 
-    7. Enter the URL of your TCM server (including the port), followed by
+    2. Enter the URL of your TCM server (including the port), followed by
     `/api/webhooks/sonarr/series/delete`.
 
-    8. If you would like TCM to _not_ delete the Title Card files themselves,
+    3. If you would like TCM to _not_ delete the Title Card files themselves,
     add `?delete_title_cards=false` to the end of the URL.
 
-    9. Ensure the Method is `POST`.
+    4. Ensure the Method is `POST`.
 
-    10. Click <span class="example md-button">Save</span>.
+    5. Click <span class="example md-button">Save</span>.
 
-=== "New Episodes"
+=== "New Episode(s)"
 
-    6. To configure Sonarr to instruct TCM to create Cards for new Episodes as
-    they're added to Sonarr, de-select all triggers _except_
-    `On Import Complete` and `On File Upgrade`.
+    1. To configure Sonarr to instruct TCM to create Cards for new Episodes as
+    they're added to Sonarr, de-select all triggers except `On Import Complete`
+    and `On File Upgrade`.
 
-    7. Enter the URL of your TCM server (including the port), followed by
+    2. Enter the URL of your TCM server (including the port), followed by
     `/api/webhooks/sonarr/cards`.
 
-    8. Ensure the Method is `POST`.
+    3. Ensure the Method is `POST`.
 
-    9. Click <span class="example md-button">Save</span>.
+    4. Click <span class="example md-button">Save</span>.
+
+Multiple of the above integrations may be enabled at once, if desired.
 
 ## Tautulli
 

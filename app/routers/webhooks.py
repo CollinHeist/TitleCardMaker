@@ -4,6 +4,7 @@ from typing import Optional
 
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Body,
     Depends,
     Query,
@@ -17,7 +18,11 @@ from app.database.query import get_interface
 from app.dependencies import get_database, require_plex_interface, PlexInterface
 from app.internal.cards import create_episode_cards, delete_cards
 from app.internal.episodes import refresh_episode_data
-from app.internal.series import delete_series, load_episode_title_card
+from app.internal.series import (
+    add_series,
+    delete_series,
+    load_episode_title_card,
+)
 from app.internal.sources import download_episode_source_images
 from app.internal.translate import translate_episode
 from app.internal.webhooks import process_rating_key
@@ -25,6 +30,7 @@ from app.models.card import Card
 from app.models.episode import Episode
 from app.models.loaded import Loaded
 from app.models.series import Series
+from app.schemas.series import NewSeries
 from app.schemas.webhooks import PlexWebhook, SonarrWebhook
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.SeriesInfo2 import SeriesInfo
@@ -264,3 +270,35 @@ def delete_series_via_sonarr_webhook(
         )
     delete_series(db, series, log=request.state.log)
     return None
+
+
+@webhook_router.post('/sonarr/series/add', tags=['Sonarr'])
+def add_series_via_sonarr_webhook(
+        background_tasks: BackgroundTasks,
+        request: Request,
+        webhook: SonarrWebhook,
+        db: Session = Depends(get_database),
+    ) -> None:
+    """
+    Add the Series defined in the given Webhook.
+
+    - webhook: Webhook payload containing the details of the Series to
+    add.
+    """
+
+    if webhook.eventType != 'SeriesAdd':
+        request.state.log.debug(f'Skipping Webhook type "{webhook.eventType}"')
+        return None
+
+    add_series(
+        NewSeries(
+            name=webhook.series.title,
+            year=webhook.series.year,
+            imdb_id=webhook.series.imdbId,
+            tvdb_id=webhook.series.tvdbId,
+            tvrage_id=webhook.series.tvRageId,
+        ),
+        background_tasks=background_tasks,
+        db=db,
+        log=request.state.log
+    )
