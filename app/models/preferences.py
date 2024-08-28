@@ -473,9 +473,6 @@ class Preferences:
         }[unit.lower()]
 
 
-    @overload
-    def format_filesize(value: Literal[None]) -> tuple[Literal['0', 'Bytes']]:
-        ...
     @staticmethod
     def format_filesize(value: Optional[int]) -> tuple[str, str]:
         """
