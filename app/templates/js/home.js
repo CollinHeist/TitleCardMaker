@@ -450,7 +450,7 @@ const statisticMap = [
 function getAllStatistics() {
   $.ajax({
     type: 'GET',
-    url: '/api/statistics',
+    url: '/api/statistics/system',
     /**
      * API call was successful, populate statistic elements.
      * @param {Statistic[]} statistics 
