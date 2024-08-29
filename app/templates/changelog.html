@@ -4,6 +4,11 @@
 <head>
   <title>Changelog - TitleCardMaker</title>
   {% include "./html_boilerplate.html" %}
+
+  <script type="text/javascript">
+    {% include "./js/changelog.js" %}
+  </script>
+
   <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.3/dist/semantic.min.js"></script>  
   <link rel="stylesheet" type="text/css" href="/templates/css/settings.css?v={{preferences.current_version}}"/>
 </head>
@@ -24,15 +29,200 @@
 
       <div class="ui small blue labels">
         {% set versions = [
-          "v2.0-alpha.1.0", "v2.0-alpha.2.0", "v2.0-alpha.2.1", "v2.0-alpha.2.2",
-          "v2.0-alpha.3.0", "v2.0-alpha.4.0", "v2.0-alpha.4.1", "v2.0-alpha.5.0",
-          "v2.0-alpha.5.1", "v2.0-alpha.5.2", "v2.0-alpha.6.0", "v2.0-alpha.7.0",
-          "v2.0-alpha.8.0", "v2.0-alpha.8.1", "v2.0-alpha.9.0", "2.0-alpha.9.1",
-          "v2.0-alpha.10.0", "v2.0-alpha.10.1", "v2.0-alpha.11.0"
+          "v2.0-alpha.1.0",
+          "v2.0-alpha.2.0",
+          "v2.0-alpha.2.1",
+          "v2.0-alpha.2.2",
+          "v2.0-alpha.3.0",
+          "v2.0-alpha.4.0",
+          "v2.0-alpha.4.1",
+          "v2.0-alpha.5.0",
+          "v2.0-alpha.5.1",
+          "v2.0-alpha.5.2",
+          "v2.0-alpha.6.0",
+          "v2.0-alpha.7.0",
+          "v2.0-alpha.8.0",
+          "v2.0-alpha.8.1",
+          "v2.0-alpha.9.0",
+          "v2.0-alpha.9.1",
+          "v2.0-alpha.10.0",
+          "v2.0-alpha.10.1",
+          "v2.0-alpha.11.0",
+          "v2.0-alpha.12.0",
         ] %}
         {% for version in versions[::-1] %}
           <a class="ui label" href="#{{version}}">{{version}}</a>
         {% endfor %}
+      </div>
+
+      <h2 id="v2.0-alpha.12.0" class="ui top attached header">
+        v2.0-alpha.12.0
+        <div class="sub header">Released August 27, 2024</div>
+      </h2>
+      <div data-version="v2.0-alpha.12.0" class="ui bottom attached segment">
+        <h3>Major Changes</h3>
+        <div class="ui ordered list">
+          <div class="item"><i>BREAKING CHANGE</i> - No longer use <b>pipenv</b> for non-Docker Python dependency virtual environment management
+            <div class="list">
+              <div class="item">Use <a href="https://docs.astral.sh/uv/" target="_blank">uv</a> instead</div>
+              <div class="item">This is ~10-100x faster than Pipenv</div>
+              <div class="item">Has built-in support for multiple Python versions and on-the-fly Python installation</div>
+              <div class="item">All documentation has been updated, but old <b>pipenv run</b> commands can be replaced with <b>uv run</b> (after installation)</div>
+            </div>
+          </div>
+          <div class="item">Added support for Plex Webhooks
+            <div class="list">
+              <div class="item">Here is a real-time example of Plex triggering TCM to create a new Card on item <i>rating</i> :
+            <div class="list">
+              <img width="50%" src="https://github.com/user-attachments/assets/4ef65968-cef5-43f7-8aa5-cb209f61ecb0" width="60%">
+            </div>
+          </div>
+              <div class="item">Documentation to implement these is available <a href="https://titlecardmaker.com/user_guide/integrations/#plex" target="_blank">here</a></div>
+              <div class="item">These are the preferred method of triggering fast-updates from Plex (instead of Tautulli), as they are much faster and allow support for custom conditions</div>
+            </div>
+          </div>
+          <div class="item">Add real-time log messages to the UI (and no longer poll logs on fixed interval) - <a onclick='addMessage(`<i class="ghost icon"></i>Boo!`)'>click here to see one!</a>
+            <div class="list">
+              <div class="item">These messages will appear in the lower right corner of the UI</div>
+              <div class="item">Messages are sent via WebSockets, so users who have disabled these via a proxy will need to remove that if you want these messages</div>
+              <div class="item">Add global option "Disable Live Log Messages" which can be toggled if you do not want these</div>
+            </div>
+          </div>
+          <div class="item">Reorganize part of the sidebar
+            <div class="list">
+              <div class="item">Create new "System" page which contains high-level system info like the current version, database schema, server uptime, and available system backups</div>
+              <div class="item">Move the Logs, Graph, and Changelog pages under the new System menu</div>
+              <div class="item">Change the menu icon for the Settings page</div>
+            </div>
+          </div>
+          <div class="item">Merge two new user-submitted card types:
+            <div class="list">
+              <div class="item">The <b>Supremicus/Dawn</b> card, created by Supremicus
+            <div class="list">
+              <img width="50%" src="https://raw.githubusercontent.com/Supremicus/tcm-images/main/Preview%20Cards/DawnTitleCard.preview.jpg" width="60%">
+            </div>
+          </div>
+              <div class="item">The <b>Supremicus/Horizon</b> card, also created by Supremicus
+            <div class="list">
+              <img width="50%" src="https://raw.githubusercontent.com/Supremicus/tcm-images/main/Preview%20Cards/HorizonTitleCard.preview.jpg" width="60%">
+            </div>
+          </div>
+              <div class="item">Both of these cards are very thorough and can be fine-tuned quite a bit. I recommend reading their extras and perhaps the <a href="https://github.com/CollinHeist/TitleCardMaker-CardTypes/tree/web-ui/Supremicus" target="_blank">README</a> if you are interested</div>
+            </div>
+          </div>
+          <div class="item">Significantly improve Docker build times - <i>_huge_</i> thanks to mchangrh for developing these</div>
+        </div>
+        <h3>Major Fixes </h3>
+        <div class="ui ordered list">
+          <div class="item">Fix series ID replacement in Emby and Jellyfin</div>
+          <div class="item">Fix downloading Source Images from Plex via the UI</div>
+          <div class="item">Fix setting Emby series ID's for Series without ID's</div>
+          <div class="item">Fix Syncing from Emby when no filter libraries are indicated</div>
+          <div class="item">Fix querying Series ID's from Emby on some servers</div>
+          <div class="item">Correct the crontab schedule of the "Clean Database" Task when the Scheduler is in advanced mode</div>
+        </div>
+        <h3>Minor Changes</h3>
+        <div class="ui ordered list">
+          <div class="item">Add new Sync setting to automatically mark all added Series as Unmonitored
+            <div class="list">
+              <div class="item">This setting can be toggled if you want to fine-tune which Series have Cards created for them (but don't want to use a more fine-tuned Sync filter)</div>
+              <div class="item">Requires schema revision <b>db6a1eda7d21</b></div>
+            </div>
+          </div>
+          <div class="item">Add a list of internal server errors to the Logs page
+            <div class="list">
+              <div class="item">These will appear at the bottom of the Logs page, and can be clicked to easily open an Issue on the GitHub for this error</div>
+            </div>
+          </div>
+          <div class="item">Log the file name of uploaded files when uploading Cards to Plex</div>
+          <div class="item"><div class="ui mini circular green label">v1</div> Add series characteristics to card initialization</div>
+          <div class="item"><div class="ui mini circular green label">v1</div> Delete (do not reset) extras in Music and Standard card type archive sub-variations</div>
+          <div class="item">Cache parsed log data for all inactive log files - this will significantly speed up log loading and searching</div>
+          <div class="item">Add loading placeholders to the home page statistics (in place of the X</div>
+          <div class="item">Add the log message's context ID to the right-side of the log message on the Series page</div>
+          <div class="item">Remove the CSS max content width from log messages on the Series page</div>
+          <div class="item"><div class="ui mini circular green label">v1</div> Add the <b>abs_episode_number</b> variable to card initialization</div>
+          <div class="item">Reduce the active menu icon glow by 2px</div>
+          <div class="item">Rewrite the mini maker script to use improved sub-command syntax - e.g. <b>mini_maker.py genre-card {...}</b></div>
+          <div class="item">Add placeholder text to the name fields when creating Syncs</div>
+          <div class="item"><div class="ui mini circular green label">v1</div> Add <b>--font-vertical-shift</b> arguments to the mini maker for season and movie posters</div>
+          <div class="item">Use Background Tasks in the Episode data refresh API endpoint</div>
+          <div class="item">Add support for additional card extensions - namely <b>.avif</b>, <b>.heic</b>, and <b>.jxl</b></div>
+          <div class="item">Remove support for the <b>.gif</b> card extension</div>
+          <div class="item">Remove explicit <b>poetry</b> version management files, move to <b>uv</b></div>
+          <div class="item">Exclude <b>sqlalchemy</b> code from logged tracebacks</div>
+          <div class="item">Include JQuery file directly, do not load via CDN</div>
+          <div class="item">Utilize new SQL DB connections for functions executed in Background Tasks
+            <div class="list">
+              <div class="item">As of FastAPI v0.106.0, yielded dependencies do not persist after the request response has been sent, so this requires new DB connections to be made for each background function</div>
+            </div>
+          </div>
+          <div class="item">Reorganize the Connections forms to use two columns of inputs, rather than one</div>
+          <div class="item">Only make up to five attempts when loading single-Episode Cards (via API) to <i>Plex</i> , not Emby or Jellyfin</div>
+          <div class="item">Create new Sonarr integration/webhook to add Series to TCM as they're added to Sonarr; this has marginal benefit over Syncing, but is available regardless - see <a href="https://titlecardmaker.com/user_guide/integrations/#__tabbed_1_1" target="_blank">here</a> for details</div>
+        </div>
+        <h3>Minor Fixes</h3>
+        <div class="ui ordered list">
+          <div class="item">Use <b>web-ui</b> branch for all user card type file and cards</div>
+          <div class="item">Do not reset the <b>days</b> URL query parameter when loading the Graphs page</div>
+          <div class="item"><div class="ui mini circular green label">v1</div> Add the <b>backdrop_file</b> argument to Title Card initialization</div>
+          <div class="item">Fix the "... days ago" text which could appear within the UI as <i>literally</i> <b>diffDays days</b></div>
+          <div class="item">Improve rich formatting when searching log message for multiple <b>|</b>-separated values</div>
+          <div class="item">Do not attempt to query the ImageMagick prefix when executing in Docker mode</div>
+          <div class="item"><div class="ui mini circular green label">v1</div> Utilize improved Jellyfin Series matching with database ID's</div>
+          <div class="item">Reword the "Run this Task" text which appears on the Scheduler page</div>
+          <div class="item">Do not refresh Episode data when a Series is newly added <i>if</i> it was added as Unmonitored</div>
+          <div class="item"><div class="ui mini circular green label">v1</div> Improve handling of Episodes without indices when querying watched statuses from Jellyfin</div>
+          <div class="item">Detect bad images from TPDb uploaded via the API</div>
+          <div class="item">Detect all types of bad images uploaded via the poster upload API endpoint</div>
+          <div class="item">Improve handling of Jellyfin episodes without a defined ProviderId field</div>
+          <div class="item">Improve handling of Jellyfin episodes without titles</div>
+          <div class="item">Pin <b>rich</b> package version to <b>13.8.0</b> to use my PR'd fixes which were causing an "internal server error" during some traceback logging</div>
+          <div class="item">Potentially fix AJAX-blocked statistics query on the home page for some users using reverse proxies</div>
+        </div>
+        <h3>Title Card Changes</h3>
+        <div class="ui ordered list">
+          <div class="item">Anime
+            <div class="list">
+              <div class="item">Add season text color extra (defaults to matching the episode text color)</div>
+            </div>
+          </div>
+        </div>
+        <h3>Documentation Changes</h3>
+        <div class="ui ordered list">
+          <div class="item">Add documentation on selecting a branch or Docker tag <a href="https://titlecardmaker.com/user_guide/" target="_blank">here</a></div>
+          <div class="item">Add documentation on all available environment variables <a href="https://titlecardmaker.com/user_guide/#environment-variables" target="_blank">here</a></div>
+          <div class="item">Add a note about which Connection fields are encrypted within TCM to the Connection page docs</div>
+          <div class="item">Create <a href="https://titlecardmaker.com/user_guide/system/" target="_blank">System Summary</a> User Guide page</div>
+          <div class="item">Use new preview image(s) for the Logs page</div>
+          <div class="item">Describe the log files and internal server errors section of the Logs page</div>
+          <div class="item">Document all webhook <a href="https://titlecardmaker.com/user_guide/integrations/" target="_blank">integrations</a> in the User Guide</div>
+          <div class="item">Add documentation on the TVDb Connection to the User Guide</div>
+          <div class="item">No longer recommend Tautulli, instead prefer Plex Webhooks</div>
+        </div>
+        <h3>API Changes</h3>
+        <div class="ui ordered list">
+          <div class="item">Add <b>exists()</b> method to the <b>RemoteFile</b> class - can be used in remote card types</div>
+          <div class="item">Create <b>GET</b> <b>/api/logs/errors</b> endpoint to get all internal server errors which appear in log files</div>
+          <div class="item">Create <b>GET</b> <b>/api/logs/files/{filename}/zip</b> endpoint to get a .zip version of a given log file</div>
+          <div class="item">Add the <b>previous_hours</b> query parameter to the <b>GET</b> <b>/api/statistics/snapshots</b> endpoint</div>
+          <div class="item">Create <b>GET</b> <b>/api/settings/background-tasks</b> endpoint to view all pending Background Task information
+            <div class="list">
+              <div class="item">This currently just returns the pending function name and docstring; this will be changed</div>
+            </div>
+          </div>
+          <div class="item">Change the HTTP method for explicitly setting the scheduler mode (<b>/api/scheduler/type/{mode}</b>) - <b>POST</b> has been deprecated, new method is <b>PUT</b></div>
+          <div class="item">Add <b>snapshot</b> query parameter to <b>/api/webhooks/plex/rating-key</b> endpoint</div>
+          <div class="item">Reorganize all Webhook-related endpoints into a separate <b>/webhooks/</b> router
+            <div class="list">
+              <div class="item">Deprecate <b>POST</b> <b>/api/series/sonarr/delete</b> - new route is <b>/api/webhooks/sonarr/series/delete</b></div>
+              <div class="item">Deprecate <b>POST</b> <b>/api/cards/key</b> - new route is <b>/api/webhooks/plex/rating-key</b></div>
+              <div class="item">Deprecate <b>POST</b> <b>/api/cards/sonarr</b> - new route is <b>/api/webhooks/sonarr/cards</b></div>
+            </div>
+          </div>
+          <div class="item">Fix <b>GET</b> <b>/api/available/version</b> and <b>GET</b> <b>/api/settings/version</b> endpoints</div>
+          <div class="item">Deprecate <b>GET</b> <b>/api/statistics/</b> endpoint - new route is <b>/api/statistics/system</b></div>
+        </div>
       </div>
 
       <h2 id="v2.0-alpha.11.0" class="ui top attached header">
