@@ -375,6 +375,7 @@ if __name__ == '__main__':
     ap = ArgumentParser()
     ap.add_argument('changelog', type=Path, help='Markdown file to parse')
     ap.add_argument('output', type=Path, help='HTML file to write')
+    ap.add_argument('version', type=str, help='Version number of the release')
     args = ap.parse_args()
 
-    Changelog(args.changelog).write(args.output)
+    Changelog(args.changelog, args.version).write(args.output)
