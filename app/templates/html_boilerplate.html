@@ -15,11 +15,11 @@
 <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.js"></script>
 
 <!-- JS Files -->
-<script type="text/javascript" src="/templates/js/loadStaticContent.js?v={{preferences.current_version}}&websocket={{ preferences.display_live_messages }}"></script>
-<script type="text/javascript" src="/templates/js/loadCardTypes.js?v={{preferences.current_version}}"></script>
-<script type="text/javascript" src="/templates/js/theme.js?v={{preferences.current_version}}"></script>
-<script type="text/javascript" src="/templates/js/helper.js?v={{preferences.current_version}}"></script>
-<script type="text/javascript" src="/templates/js/tablesort.js?v={{preferences.current_version}}"></script>
+<script type="text/javascript" src="/templates/js/loadStaticContent.js?v={{ preferences.current_version }}&websocket={{ preferences.display_live_messages }}"></script>
+<script type="text/javascript" src="/templates/js/loadCardTypes.js?v={{ preferences.current_version }}"></script>
+<script type="text/javascript" src="/templates/js/theme.js?v={{ preferences.current_version }}"></script>
+<script type="text/javascript" src="/templates/js/helper.js?v={{ preferences.current_version }}"></script>
+<script type="text/javascript" src="/templates/js/tablesort.js?v={{ preferences.current_version }}"></script>
 <script type="text/javascript">
   $(document).ready(function() {
     // Error icon if a Connection is invalid
@@ -45,6 +45,8 @@
     else if (location.pathname === '/fonts')          { docSite = 'user_guide/fonts'; }
     else if (location.pathname === '/sync')           { docSite = 'user_guide/syncs'; }
     else if (location.pathname === '/settings')       { docSite = 'user_guide/settings/'; }
+    else if (location.pathname === '/system')         { docSite = 'user_guide/system/'; }
+    else if (location.pathname.startsWith('/graphs')) { }
     else if (location.pathname === '/connections')    { docSite = 'user_guide/connections/'; }
     else if (location.pathname === '/scheduler')      { }
     else if (location.pathname === '/import')         { }
