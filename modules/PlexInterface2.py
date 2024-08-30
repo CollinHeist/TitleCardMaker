@@ -16,12 +16,13 @@ from fastapi import HTTPException
 from PIL import Image
 from plexapi.exceptions import PlexApiException
 from plexapi.library import Library as PlexLibrary
+from plexapi.mixins import ArtMixin, PosterMixin
 from plexapi.video import Episode as PlexEpisode, Season as PlexSeason
 from plexapi.server import PlexServer, NotFound, Unauthorized
 from plexapi.video import Show as PlexShow
 from requests.exceptions import (
-    ReadTimeout,
     ConnectionError as PlexConnectionError,
+    ReadTimeout,
 )
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 
@@ -756,30 +757,34 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
            before_sleep=lambda _:log.warning('Cannot upload image, retrying..'),
            reraise=True)
     def __retry_upload(self,
-            plex_object: Union[PlexShow, PlexSeason, PlexEpisode],
+            entry: Union[ArtMixin, PosterMixin],
             image: Union[str, Path],
             kind: Literal['art', 'poster'] = 'poster',
+            *,
+            log: Logger = log,
         ) -> None:
         """
-        Upload the given image to the given object, retrying if it
-        fails.
+        Upload the given image to the given entry, retrying if it fails.
 
         Args:
-            plex_object: The plexapi object to upload the file to.
+            entry: The plexapi object to upload the file to.
             image: URL or Path to the file to upload.
+            kind: The kind of asset the given image is. This will
+                affect what kind of upload functin to call.
+            log: Logger for all log messages.
         """
 
+        # Upload image as URL or file
+        kwargs = {'url' if isinstance(image, str) else 'filepath': image}
         if kind == 'art':
-            if isinstance(image, str):
-                plex_object.uploadArt(url=image)
-            else:
-                plex_object.uploadArt(filepath=image)
+            entry.uploadArt(**kwargs)
         else:
-            if isinstance(image, str):
-                plex_object.uploadPoster(url=image)
-            else:
-                plex_object.uploadPoster(filepath=image)
-        plex_object.addLabel(['TCM'])
+            entry.uploadPoster(**kwargs)
+
+        try:
+            entry.addLabel(['TCM'])
+        except (PlexApiException, ReadTimeout):
+            log.exception(f'Unable to add "TCM" label to {entry}')
 
 
     def __add_exif_tag(self, image: Path, *, log: Logger = log) -> None:
@@ -875,7 +880,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                     self.__add_exif_tag(image, log=log)
 
                 # Upload card
-                self.__retry_upload(plex_episode, image.resolve())
+                self.__retry_upload(plex_episode, image.resolve(), log=log)
 
                 # If integrating with Kometa, remove label
                 if self.integrate_with_kometa:
@@ -937,7 +942,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                     self.__add_exif_tag(poster)
 
                 # Upload poster
-                self.__retry_upload(season, poster)
+                self.__retry_upload(season, poster, log=log)
 
                 # If integrating with Kometa, remove label
                 if self.integrate_with_kometa:
@@ -988,7 +993,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 self.__add_exif_tag(image)
 
             # Upload poster
-            self.__retry_upload(series, image)
+            self.__retry_upload(series, image, log=log)
 
             # If integrating with Kometa, remove label
             if self.integrate_with_kometa:
@@ -1036,7 +1041,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 self.__add_exif_tag(image)
 
             # Upload poster
-            self.__retry_upload(series, image, kind='art')
+            self.__retry_upload(series, image, kind='art', log=log)
 
             # If integrating with Kometa, remove label
             if self.integrate_with_kometa:
@@ -1086,7 +1091,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                         EpisodeInfo.from_plex_episode(ep),
                         WatchedStatus(
                             self._interface_id,
-                            entry.librarySectionTitle, # entry.parent TODO evaluate
+                            entry.librarySectionTitle,
                             ep.isWatched,
                         )
                     )
@@ -1113,7 +1118,9 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             # Episode, return just that
             if entry.type == 'episode':
                 entry: PlexEpisode
-                series: PlexShow = self.__server.fetchItem(entry.grandparentRatingKey)
+                series: PlexShow = self.__server.fetchItem(
+                    entry.grandparentRatingKey
+                )
                 series_info = SeriesInfo.from_plex_show(series)
                 return [
                     EpisodeDetails(
@@ -1127,7 +1134,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                     )
                 ]
 
-            log.warning(f'Item with rating key {rating_key} has no episodes')
+            log.debug(f'Item with rating key {rating_key} has no episodes')
             return []
         except NotFound:
             log.warning(f'No item with rating key {rating_key} exists')
