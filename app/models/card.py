@@ -46,7 +46,10 @@ class Card(Base):
     library_name: Mapped[Optional[str]]
 
     card_type: Mapped[str]
-    model_json: Mapped[dict] = mapped_column(MutableDict.as_mutable(JSON), default={})
+    model_json: Mapped[dict] = mapped_column(
+        MutableDict.as_mutable(JSON),
+        default={}
+    )
 
 
     def __repr__(self) -> str:
