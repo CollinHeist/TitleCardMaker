@@ -43,7 +43,7 @@ TCM - e.g. `1`, `2`, etc. You will need this later.
 
 4. In the top-right corner of Plex, click Settings (the wrench icon).
 
-5. From the left-hand side bar, navigate to _Webhooks_.
+5. From the left-hand sidebar, navigate to _Webhooks_.
 
 6. Click <span class="example md-button">Add webhook</span>, and then enter
 the URL of your TCM server (including the port), followed by
@@ -56,6 +56,13 @@ from Step 2.
         `http://192.168.0.29:8000/api/webhooks/plex?interface_id=2`
 
 7. Click <span class="example md-button">Save Changes</span>.
+
+8. From the left-hand sidebar, navigate to _Network_ under _Settings_.
+
+9. Make sure you're viewing Advanced options, and check the _Webhooks_ checkbox
+at the bottom of the page.
+
+10. Click <span class="example md-button">Save Changes</span>.
 
 ### Customization
 
