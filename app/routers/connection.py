@@ -1,3 +1,4 @@
+from logging import Logger
 from typing import Literal
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
@@ -49,7 +50,7 @@ connection_router = APIRouter(
 )
 
 
-@connection_router.post('/emby/new', status_code=201)
+@connection_router.post('/emby/new')
 def add_emby_connection(
         request: Request,
         new_connection: NewEmbyConnection = Body(...),
@@ -68,7 +69,7 @@ def add_emby_connection(
     )
 
 
-@connection_router.post('/jellyfin/new', status_code=201)
+@connection_router.post('/jellyfin/new')
 def add_jellyfin_connection(
         request: Request,
         new_connection: NewJellyfinConnection = Body(...),
@@ -87,7 +88,7 @@ def add_jellyfin_connection(
     )
 
 
-@connection_router.post('/plex/new', status_code=201)
+@connection_router.post('/plex/new')
 def add_plex_connection(
         request: Request,
         new_connection: NewPlexConnection = Body(...),
@@ -106,7 +107,7 @@ def add_plex_connection(
     )
 
 
-@connection_router.post('/sonarr/new', status_code=201)
+@connection_router.post('/sonarr/new')
 def add_sonarr_connection(
         request: Request,
         new_connection: NewSonarrConnection = Body(...),
@@ -125,7 +126,7 @@ def add_sonarr_connection(
     )
 
 
-@connection_router.post('/tmdb/new', status_code=201)
+@connection_router.post('/tmdb/new')
 def add_tmdb_connection(
         request: Request,
         new_connection: NewTMDbConnection = Body(...),
@@ -144,7 +145,7 @@ def add_tmdb_connection(
     )
 
 
-@connection_router.post('/tvdb/new', status_code=201)
+@connection_router.post('/tvdb/new')
 def add_tvdb_connection(
         request: Request,
         new_connection: NewTVDbConnection = Body(...),
@@ -163,10 +164,10 @@ def add_tvdb_connection(
     )
 
 
-@connection_router.put('/{connection}/{interface_id}/{status}')
+@connection_router.put('/{connection_type}/{interface_id}/{status}')
 def enable_or_disable_connection_by_id(
         request: Request,
-        connection: Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
+        connection_type: Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
         interface_id: int,
         status: Literal['enable', 'disable'],
         db: Session = Depends(get_database),
@@ -180,7 +181,7 @@ def enable_or_disable_connection_by_id(
     """
     Set the enabled/disabled status of the given connection.
 
-    - connection: Interface name whose connection is being toggled.
+    - connection_type: Interface name whose connection is being toggled.
     - interface_id: ID of the Interface to toggle.
     - status: Whether to enable or disable the given interface.
     """
@@ -197,7 +198,7 @@ def enable_or_disable_connection_by_id(
         'emby': emby_interfaces, 'jellyfin': jellyfin_interfaces,
         'plex': plex_interfaces, 'sonarr': sonarr_interfaces,
         'tmdb': tmdb_interfaces, 'tvdb': tvdb_interfaces,
-    }[connection]
+    }[connection_type]
 
     # Refresh or disable interface within group
     if connection.enabled:
@@ -210,7 +211,7 @@ def enable_or_disable_connection_by_id(
     return connection
 
 
-@connection_router.get('/all', status_code=200)
+@connection_router.get('/all')
 def get_all_connection_details(
         db: Session = Depends(get_database),
     ) -> list[AnyConnection]:
@@ -219,7 +220,7 @@ def get_all_connection_details(
     return db.query(Connection).all()
 
 
-@connection_router.get('/emby/all', status_code=200)
+@connection_router.get('/emby/all')
 def get_all_emby_connection_details(
         db: Session = Depends(get_database),
     ) -> list[EmbyConnection]:
@@ -230,7 +231,7 @@ def get_all_emby_connection_details(
         .all()
 
 
-@connection_router.get('/emby/{interface_id}', status_code=200)
+@connection_router.get('/emby/{interface_id}')
 def get_emby_connection_details_by_id(
         interface_id: int,
         db: Session = Depends(get_database),
@@ -244,20 +245,18 @@ def get_emby_connection_details_by_id(
     return get_connection(db, interface_id, raise_exc=True)
 
 
-@connection_router.get('/jellyfin/all', status_code=200)
+@connection_router.get('/jellyfin/all')
 def get_all_jellyfin_connection_details(
         db: Session = Depends(get_database),
     ) -> list[JellyfinConnection]:
-    """
-    Get details for all defined Jellyfin Connections.
-    """
+    """Get details for all defined Jellyfin Connections."""
 
     return db.query(Connection)\
         .filter_by(interface_type='Jellyfin')\
         .all()
 
 
-@connection_router.get('/jellyfin/{interface_id}', status_code=200)
+@connection_router.get('/jellyfin/{interface_id}')
 def get_jellyfin_connection_details_by_id(
         interface_id: int,
         db: Session = Depends(get_database),
@@ -271,20 +270,18 @@ def get_jellyfin_connection_details_by_id(
     return get_connection(db, interface_id, raise_exc=True)
 
 
-@connection_router.get('/plex/all', status_code=200)
+@connection_router.get('/plex/all')
 def get_all_plex_connection_details(
         db: Session = Depends(get_database),
     ) -> list[PlexConnection]:
-    """
-    Get details for all defined Plex Connections.
-    """
+    """Get details for all defined Plex Connections."""
 
     return db.query(Connection)\
         .filter_by(interface_type='Plex')\
         .all()
 
 
-@connection_router.get('/plex/{interface_id}', status_code=200)
+@connection_router.get('/plex/{interface_id}')
 def get_plex_connection_details_by_id(
         interface_id: int,
         db: Session = Depends(get_database),
@@ -298,20 +295,18 @@ def get_plex_connection_details_by_id(
     return get_connection(db, interface_id, raise_exc=True)
 
 
-@connection_router.get('/sonarr/all', status_code=200)
+@connection_router.get('/sonarr/all')
 def get_all_sonarr_connection_details(
         db: Session = Depends(get_database),
     ) -> list[SonarrConnection]:
-    """
-    Get details for all defined Sonarr Connections.
-    """
+    """Get details for all defined Sonarr Connections."""
 
     return db.query(Connection)\
         .filter_by(interface_type='Sonarr')\
         .all()
 
 
-@connection_router.get('/sonarr/{interface_id}', status_code=200)
+@connection_router.get('/sonarr/{interface_id}')
 def get_sonarr_connection_details_by_id(
         interface_id: int,
         db: Session = Depends(get_database),
@@ -325,20 +320,18 @@ def get_sonarr_connection_details_by_id(
     return get_connection(db, interface_id, raise_exc=True)
 
 
-@connection_router.get('/tmdb/all', status_code=200)
+@connection_router.get('/tmdb/all')
 def get_all_tmdb_connection_details(
         db: Session = Depends(get_database),
     ) -> list[TMDbConnection]:
-    """
-    Get details for all defined TMDb Connections.
-    """
+    """Get details for all defined TMDb Connections."""
 
     return db.query(Connection)\
         .filter_by(interface_type='TMDb')\
         .all()
 
 
-@connection_router.get('/tmdb/{interface_id}', status_code=200)
+@connection_router.get('/tmdb/{interface_id}')
 def get_tmdb_connection_details_by_id(
         interface_id: int,
         db: Session = Depends(get_database),
@@ -352,7 +345,7 @@ def get_tmdb_connection_details_by_id(
     return get_connection(db, interface_id, raise_exc=True)
 
 
-@connection_router.get('/tvdb/all', status_code=200)
+@connection_router.get('/tvdb/all')
 def get_all_tvdb_connection_details(
         db: Session = Depends(get_database),
     ) -> list[TVDbConnection]:
@@ -365,7 +358,7 @@ def get_all_tvdb_connection_details(
         .all()
 
 
-@connection_router.get('/tvdb/{interface_id}', status_code=200)
+@connection_router.get('/tvdb/{interface_id}')
 def get_tvdb_connection_details_by_id(
         interface_id: int,
         db: Session = Depends(get_database),
@@ -379,7 +372,7 @@ def get_tvdb_connection_details_by_id(
     return get_connection(db, interface_id, raise_exc=True)
 
 
-@connection_router.patch('/emby/{interface_id}', status_code=200)
+@connection_router.patch('/emby/{interface_id}')
 def update_emby_connection(
         request: Request,
         interface_id: int,
@@ -399,7 +392,7 @@ def update_emby_connection(
     )
 
 
-@connection_router.patch('/jellyfin/{interface_id}', status_code=200)
+@connection_router.patch('/jellyfin/{interface_id}')
 def update_jellyfin_connection(
         request: Request,
         interface_id: int,
@@ -420,7 +413,7 @@ def update_jellyfin_connection(
     )
 
 
-@connection_router.patch('/plex/{interface_id}', status_code=200)
+@connection_router.patch('/plex/{interface_id}')
 def update_plex_connection(
         request: Request,
         interface_id: int,
@@ -440,7 +433,7 @@ def update_plex_connection(
     )
 
 
-@connection_router.patch('/sonarr/{interface_id}', status_code=200)
+@connection_router.patch('/sonarr/{interface_id}')
 def update_sonarr_connection(
         request: Request,
         interface_id: int,
@@ -461,7 +454,7 @@ def update_sonarr_connection(
     )
 
 
-@connection_router.patch('/tmdb/{interface_id}', status_code=200)
+@connection_router.patch('/tmdb/{interface_id}')
 def update_tmdb_connection(
         request: Request,
         interface_id: int,
@@ -482,7 +475,7 @@ def update_tmdb_connection(
     )
 
 
-@connection_router.patch('/tvdb/{interface_id}', status_code=200)
+@connection_router.patch('/tvdb/{interface_id}')
 def update_tvdb_connection(
         request: Request,
         interface_id: int,
@@ -532,7 +525,7 @@ def delete_connection(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Get Connection with this ID
     connection = get_connection(db, interface_id, raise_exc=True)
@@ -631,14 +624,12 @@ def delete_connection(
     db.commit()
 
 
-@connection_router.get('/sonarr/{interface_id}/libraries', status_code=200, tags=['Sonarr'])
+@connection_router.get('/sonarr/{interface_id}/libraries', tags=['Sonarr'])
 def get_potential_sonarr_libraries(
         interface_id: int,
         sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
     ) -> list[PotentialSonarrLibrary]:
-    """
-    Get the potential library names and paths from Sonarr.
-    """
+    """Get the potential library names and paths from Sonarr."""
 
     if not (sonarr_interface := sonarr_interfaces[interface_id]):
         raise HTTPException(
@@ -651,11 +642,12 @@ def get_potential_sonarr_libraries(
         {
             'name': folder.name.replace('-', ' ').replace('_', ' '),
             'path': str(folder)
-        } for folder in sonarr_interface.get_root_folders()
+        }
+        for folder in sonarr_interface.get_root_folders()
     ]
 
 
-@connection_router.post('/tautulli/check', status_code=200, tags=['Tautulli'])
+@connection_router.post('/tautulli/check', tags=['Tautulli'])
 def check_tautulli_integration(
         request: Request,
         tautulli_connection: NewTautulliConnection = Body(...),
@@ -681,7 +673,7 @@ def check_tautulli_integration(
     return interface.is_integrated()
 
 
-@connection_router.post('/tautulli/integrate', status_code=201, tags=['Tautulli'])
+@connection_router.post('/tautulli/integrate', tags=['Tautulli'])
 def add_tautulli_integration(
         request: Request,
         tautulli_connection: NewTautulliConnection = Body(...),

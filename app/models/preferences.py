@@ -3,7 +3,7 @@ from logging import Logger
 from os import environ
 from pathlib import Path
 from pickle import dump, load
-from typing import Any, Literal, Optional, TYPE_CHECKING, overload
+from typing import Any, Optional, TYPE_CHECKING
 
 from app.schemas.base import UNSPECIFIED
 from modules.BaseCardType import BaseCardType
@@ -544,8 +544,8 @@ class Preferences:
 
         fstring = (
             self.specials_folder_format
-            if episode_info.season_number == 0 else
-            self.season_folder_format
+            if episode_info.season_number == 0
+            else self.season_folder_format
         )
 
         # Only return first 254 characters to handle the Windows path limit

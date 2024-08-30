@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
@@ -12,13 +10,13 @@ from app.dependencies import (
     get_sonarr_interfaces,
     require_emby_interface,
     require_jellyfin_interface,
-    require_plex_interface
+    require_plex_interface,
 )
 from app.internal.auth import get_current_user
 from app.internal.availability import (
     get_latest_version,
     get_local_cards,
-    get_remote_cards
+    get_remote_cards,
 )
 from app import models
 from app.internal.font import get_available_fonts
@@ -35,7 +33,7 @@ from app.schemas.card import (
     BuiltinCardType,
     CardTypeDescription,
     LocalCardType,
-    RemoteCardType
+    RemoteCardType,
 )
 from app.schemas.card_type import Extra
 from app.schemas.preferences import StyleOption
@@ -61,14 +59,16 @@ VARIABLE_OVERRIDES = [
             'Applies after all Font replacements, casing, etc. See '
             'documentation for full list of supported variables.'
         ),
-    ), Extra(
+    ),
+    Extra(
         name='Season Text Format', identifier='season_text_format',
         description='How to format season text',
         tooltip=(
             'Applies after any season title ranges. See documentation for full '
             'list of supported variables.'
         ),
-    ), Extra(
+    ),
+    Extra(
         name='Logo Filepath', identifier='logo_file',
         description='Logo file name or file name format string',
         tooltip=(
@@ -233,9 +233,7 @@ def get_emby_libraries(
 def get_jellyfin_libraries(
         jellyfin_interface: JellyfinInterface = Depends(require_jellyfin_interface),
     ) -> list[MediaServerLibrary]:
-    """
-    Get all available libraries for the given Jellyfin interface.
-    """
+    """Get all available libraries for the given Jellyfin interface."""
 
     return [
         MediaServerLibrary(
@@ -250,9 +248,7 @@ def get_jellyfin_libraries(
 def get_plex_libraries(
         plex_interface: PlexInterface = Depends(require_plex_interface),
     ) -> list[MediaServerLibrary]:
-    """
-    Get all available libraries for the given Plex interface.
-    """
+    """Get all available libraries for the given Plex interface."""
 
     return [
         MediaServerLibrary(
@@ -367,12 +363,19 @@ def get_available_styles() -> list[StyleOption]:
     """Get all supported Styles."""
 
     return [
-        {'name': 'Art', 'value': 'art', 'style_type': 'art'},
-        {'name': 'Blurred Art', 'value': 'art blur', 'style_type': 'art'},
-        {'name': 'Grayscale Art', 'value': 'art grayscale', 'style_type': 'art'},
-        {'name': 'Blurred Grayscale Art', 'value': 'art blur grayscale', 'style_type': 'art'},
-        {'name': 'Unique', 'value': 'unique', 'style_type': 'unique'},
-        {'name': 'Blurred Unique', 'value': 'blur unique', 'style_type': 'unique'},
-        {'name': 'Grayscale Unique', 'value': 'grayscale unique', 'style_type': 'unique'},
-        {'name': 'Blurred Grayscale Unique', 'value': 'blur grayscale unique', 'style_type': 'unique'},
+        {
+            'name': name,
+            'value': value,
+            'style_type': 'art' if 'Art' in name else 'unique',
+        }
+        for name, value in
+        [
+            ('Art',                      'art'),
+            ('Blurred Art',              'art blur'),
+            ('Grayscale Art',            'art grayscale'),
+            ('Unique',                   'unique'),
+            ('Blurred Unique',           'blur unique'),
+            ('Grayscale Unique',         'grayscale unique'),
+            ('Blurred Grayscale Unique', 'blur grayscale unique'),
+        ]
     ]

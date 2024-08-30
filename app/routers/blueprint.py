@@ -24,14 +24,14 @@ from app.dependencies import (
     Preferences,
     get_blueprint_database,
     get_database,
-    get_preferences
+    get_preferences,
 )
 from app.internal.auth import get_current_user
 from app.internal.blueprint import (
     generate_series_blueprint,
     get_blueprint_font_files,
     import_blueprint,
-    query_series_blueprints
+    query_series_blueprints,
 )
 from app.internal.episodes import get_all_episode_data
 from app.internal.series import add_series

@@ -43,7 +43,7 @@ from app.internal.translate import translate_episode
 from app.internal.webhooks import process_rating_key
 from app.models.episode import Episode
 from app.models.series import Series
-from app.schemas.card import CardActions, TitleCard, PreviewTitleCard
+from app.schemas.card import CardActions, PreviewTitleCard, TitleCard
 from app.schemas.episode import Episode as EpisodeSchema, UpdateEpisode
 from app.schemas.font import DefaultFont
 from app.schemas.series import UpdateSeries
