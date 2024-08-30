@@ -3,10 +3,8 @@ from logging import Logger
 from os import environ
 from pathlib import Path
 from shutil import copy as file_copy
-from sqlite3 import connect
+from sqlite3 import connect, OperationalError
 from typing import NamedTuple, Optional
-
-from sqlalchemy.exc import OperationalError
 
 from app.schemas.preferences import DatabaseBackup, SettingsBackup, SystemBackup
 from modules.Debug import log
