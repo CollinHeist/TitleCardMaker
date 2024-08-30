@@ -264,6 +264,10 @@ class Connection(Base):
         if self.url:
             secrets.add(self.url)
             secrets.add(self.decrypted_url)
+            # Add host URL if URL has a port number
+            if ':' in self.decrypted_url:
+                secrets.add(self.decrypted_url.split(':')[0])
+
         if self.api_key:
             secrets.add(self.api_key)
             secrets.add(self.decrypted_api_key)
