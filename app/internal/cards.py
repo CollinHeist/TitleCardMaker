@@ -26,7 +26,6 @@ from app.schemas.base import Base
 from app.schemas.font import DefaultFont
 from app.schemas.card import NewTitleCard
 from app.schemas.card_type import LocalCardTypeModels
-
 from modules.BaseCardType import BaseCardType
 from modules.CleanPath import CleanPath
 from modules.Debug import InvalidCardSettings, MissingSourceImage, log
@@ -467,9 +466,11 @@ def resolve_card_settings(
         {'hide_season_text': False, 'hide_episode_text': False},
         DefaultFont,
         preferences.card_properties,
-        {'logo_file': series.get_logo_file(),
-         'backdrop_file': series.get_series_backdrop(),
-         'poster_file': series.get_series_poster()},
+        {
+            'logo_file': series.get_logo_file(),
+            'backdrop_file': series.get_series_backdrop(),
+            'poster_file': series.get_series_poster()
+        },
         global_template_dict,
         global_font_dict,
         series_template_dict,
@@ -513,7 +514,10 @@ def resolve_card_settings(
     if CardClass is None:
         raise HTTPException(
             status_code=400,
-            detail=f'Cannot create Card - invalid card type {card_settings["card_type"]}',
+            detail=(
+                f'Cannot create Card - invalid card type '
+                f'{card_settings["card_type"]}'
+            ),
         )
 
     # Add card default font stuff
