@@ -38,6 +38,12 @@ class TaskQueue:
         self.tasks: list[_Task] = []
 
 
+    def __bool__(self) -> bool:
+        """Whether this task queue has any pending tasks."""
+
+        return len(self.tasks) > 0
+
+
     def __iter__(self) -> Iterator[_Task]:
         """Iterate through this object's pending tasks."""
 
