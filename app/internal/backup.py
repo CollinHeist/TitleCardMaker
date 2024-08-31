@@ -4,15 +4,24 @@ from os import environ
 from pathlib import Path
 from shutil import copy as file_copy
 from sqlite3 import connect, OperationalError
-from typing import NamedTuple, Optional
+from typing import NamedTuple, Optional, Union
 
 from app.schemas.preferences import DatabaseBackup, SettingsBackup, SystemBackup
 from modules.Debug import log
 
 
+"""Naming scheme for backup subfolders"""
 BACKUP_DT_FORMAT = '%Y-%m-%d_%H-%M-%S'
+
+"""How long to keep old backups"""
 BACKUP_RETENTION = timedelta(days=int(environ.get('TCM_BACKUP_RETENTION', 21)))
+
+"""Whether executing in Docker mode"""
 IS_DOCKER = environ.get('TCM_IS_DOCKER', 'false').lower() == 'true'
+
+"""Directory for all backups"""
+BACKUP_DIRECTORY = Path('/config/backups' if IS_DOCKER else './config/backups')
+BACKUP_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
 
 class DataBackup(NamedTuple): # pylint: disable=missing-class-docstring
@@ -20,22 +29,17 @@ class DataBackup(NamedTuple): # pylint: disable=missing-class-docstring
     database: Path
 
 
-def delete_old_backups(
-        backup_directory: Path,
-        *,
-        log: Logger = log,
-    ) -> None:
+def delete_old_backups(*, log: Logger = log) -> None:
     """
-    Delete all old backups.
+    Delete all backups older than `BACKUP_RETENTION`.
 
     Args:
-        backup_directory: Directory containing backup files to delete.
         log: Logger for all log messages.
     """
 
     delete_before = datetime.now() - BACKUP_RETENTION
 
-    for backup in backup_directory.iterdir():
+    for backup in BACKUP_DIRECTORY.iterdir():
         # Backup subdirectories
         if backup.is_dir():
             try:
@@ -65,9 +69,32 @@ def delete_old_backups(
                 log.debug(f'Deleted old backup "{backup}"')
 
 
+def delete_backup(folder_name: Union[str, Path], *, log: Logger = log) -> None:
+    """
+    Delete the given backup folder.
+
+    Args:
+        folder_name: Name of the directory to delete.
+        log: Logger for all log messages.
+    """
+
+    if not (folder := Path(BACKUP_DIRECTORY / folder_name)).exists():
+        log.debug(f'Specified backup folder ({folder}) does not exist')
+        return None
+
+    # Delete subcontents and folder
+    for file in folder.iterdir():
+        file.unlink(missing_ok=True)
+        log.debug(f'Deleted backup file "{folder.name}/{file.name}"')
+    folder.rmdir()
+
+    return None
+
+
 def backup_data(version: str, *, log: Logger = log) -> DataBackup:
     """
-    Perform a backup of the SQL database and global preferences.
+    Perform a backup of the SQL database and global preferences. This
+    also deletes any "old" backups.
 
     Args:
         version: Current version of TCM.
@@ -78,18 +105,17 @@ def backup_data(version: str, *, log: Logger = log) -> DataBackup:
     """
 
     # Store backups in a dated subfolder
-    date = datetime.now().strftime(BACKUP_DT_FORMAT)
-    pre = '' if IS_DOCKER else '.'
-    backup_folder = Path(f'{pre}/config/backups/{date}')
+    backup_folder = BACKUP_DIRECTORY / datetime.now().strftime(BACKUP_DT_FORMAT)
     backup_folder.mkdir(exist_ok=True, parents=True)
 
     # Identify source and destination files
+    pre = '' if IS_DOCKER else '.'
     config = Path(f'{pre}/config/config.pickle')
     config_backup = backup_folder / f'config.pickle.{version}'
     database = Path(f'{pre}/config/db.sqlite')
     database_backup = backup_folder / f'db.sqlite.{version}'
 
-    delete_old_backups(backup_folder.parent, log=log)
+    delete_old_backups(log=log)
 
     # Backup config
     if config.exists():
@@ -146,8 +172,6 @@ def list_available_backups(*, log: Logger = log) -> list[SystemBackup]:
         List of system backup information.
     """
 
-    backup_dir = Path('/config/backups' if IS_DOCKER else './config/backups')
-
     def _parse_version_number(file: Path) -> str:
         """Parse the version number from the given file."""
         return file.name[len('config.pickle') + 1:]
@@ -166,7 +190,7 @@ def list_available_backups(*, log: Logger = log) -> list[SystemBackup]:
             connection.close()
 
     backups: list[SystemBackup] = []
-    for subfolder in backup_dir.glob('2*'):
+    for subfolder in BACKUP_DIRECTORY.glob('2*'):
         # Find setting and database files
         try:
             settings = next(subfolder.glob('config.pickle*'))
@@ -176,9 +200,8 @@ def list_available_backups(*, log: Logger = log) -> list[SystemBackup]:
             continue
 
         # Skip if there's no version or schema
-        schema = _parse_schema_version(database)
-        version = _parse_version_number(settings)
-        if not schema or not version:
+        if (not (schema := _parse_schema_version(database))
+            or not (version := _parse_version_number(settings))):
             log.debug(f'Unable to identify database schema or version from '
                       f'"{subfolder}')
             continue
@@ -195,6 +218,7 @@ def list_available_backups(*, log: Logger = log) -> list[SystemBackup]:
             ),
             timestamp=datetime.strptime(settings.parent.name, BACKUP_DT_FORMAT),
             version=version,
+            folder_name=subfolder.name,
         ))
 
     return sorted(backups, key=lambda b: b.timestamp)

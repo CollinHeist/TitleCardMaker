@@ -205,3 +205,4 @@ class SystemBackup(Base):
     settings: SettingsBackup
     timestamp: datetime
     version: str
+    folder_name: str

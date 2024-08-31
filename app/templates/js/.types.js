@@ -411,6 +411,7 @@
  * @property {SettingsBackup} settings
  * @property {Date} timestamp
  * @property {string} version
+ * @property {string} folder_name
  */
 
 // Series ----------------------------------------------------------------------

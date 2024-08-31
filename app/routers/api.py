@@ -11,6 +11,7 @@ from app.dependencies import get_database, get_preferences
 from app.models.preferences import Preferences
 from app.routers.auth import auth_router
 from app.routers.availability import availablility_router
+from app.routers.backups import backup_router
 from app.routers.blueprint import blueprint_router
 from app.routers.cards import card_router
 from app.routers.connection import connection_router
@@ -35,6 +36,7 @@ api_router = APIRouter(prefix='/api')
 # Include sub-routers
 api_router.include_router(auth_router)
 api_router.include_router(availablility_router)
+api_router.include_router(backup_router)
 api_router.include_router(blueprint_router)
 api_router.include_router(card_router)
 api_router.include_router(connection_router)
@@ -52,6 +54,7 @@ api_router.include_router(sync_router)
 api_router.include_router(template_router)
 api_router.include_router(translation_router)
 api_router.include_router(webhook_router)
+
 
 @api_router.get('/healthcheck')
 def health_check(

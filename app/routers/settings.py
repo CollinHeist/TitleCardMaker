@@ -121,7 +121,7 @@ def get_image_source_priority(
     return sources
 
 
-@settings_router.get('/backups')
+@settings_router.get('/backups', deprecated=True)
 def get_available_system_backups(request: Request) -> list[SystemBackup]:
     """Get a list detailing all the available system backups."""
 
