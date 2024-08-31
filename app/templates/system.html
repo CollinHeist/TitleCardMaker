@@ -5,6 +5,7 @@
   <title>System - TitleCardMaker</title>
   {% include "./html_boilerplate.html" %}
   <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.3/dist/semantic.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script>
 
   <script type="text/javascript">
     {% include "./js/system.js" %}
@@ -51,7 +52,10 @@
         <div class="item">
           <div class="content">
             <a class="header" href="/changelog#{{ preferences.current_version }}">Current Version</a>
-            <div class="description">{{ preferences.current_version }}</div>
+            <div class="description">
+              {{ preferences.current_version }}
+              <i class="copy outline icon"></i>
+            </div>
           </div>
         </div>
 
@@ -78,7 +82,10 @@
         <div class="item">
           <div class="content">
             <div class="header">Database Schema</div>
-            <div class="description">{{ preferences.current_db_schema }}</div>
+            <div class="description">
+              {{ preferences.current_db_schema }}
+              <i class="copy outline icon"></i>
+            </div>
           </div>
         </div>
 

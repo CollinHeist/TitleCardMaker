@@ -85,4 +85,9 @@ function initAll() {
   updateUptimeText();
   setInterval(updateUptimeText, 1000);
   querySystemBackups();
+
+  // Copy text content when copy icon is clicked
+  new ClipboardJS('.copy.icon', {
+    target: function(trigger) { return trigger.parentElement; }
+});
 }
