@@ -348,9 +348,6 @@ def import_series_yaml(
 
     return all_series
 
-@import_router.post('/series/{series_id}/cards', deprecated=True)
-def import_cards_for_series() -> None:
-    return None
 
 @import_router.post('/series/{series_id}/cards/files',
                     tags=['Title Cards', 'Series'])

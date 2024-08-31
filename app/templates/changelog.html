@@ -179,6 +179,8 @@
           <div class="item">Improve handling of Jellyfin episodes without titles</div>
           <div class="item">Pin <b>rich</b> package version to <b>13.8.0</b> to use my PR'd fixes which were causing an "internal server error" during some traceback logging</div>
           <div class="item">Potentially fix AJAX-blocked statistics query on the home page for some users using reverse proxies</div>
+          <div class="item">Also redact host-only URLs from logs - e.g. for <b>192.168.0.29:32400</b>, redact just <b>192.168.0.29</b></div>
+          <div class="item">Handle exceptions raised while adding the TCM label to objects while loading images into Plex</div>
         </div>
         <h3>Title Card Changes</h3>
         <div class="ui ordered list">

@@ -29,7 +29,6 @@ from app.dependencies import (
 from app.database.session import Page
 from app.database.query import get_interface, get_series
 from app import models
-from app.internal.cards import delete_cards
 from app.internal.series import (
     add_series,
     delete_series,
@@ -40,9 +39,7 @@ from app.internal.series import (
 )
 from app.internal.auth import get_current_user
 from app.models.card import Card
-from app.models.loaded import Loaded
 from app.models.series import Series as SeriesModel
-from app.schemas.webhooks import SonarrWebhook
 from app.schemas.series import (
     BatchUpdateSeries,
     NewSeries,
@@ -51,7 +48,6 @@ from app.schemas.series import (
     SeriesOrder,
     UpdateSeries
 )
-from modules.SeriesInfo2 import SeriesInfo
 from modules.WebInterface import WebInterface
 
 
@@ -211,58 +207,6 @@ def delete_series_(
 
     # Delete Series and all child content
     delete_series(db, series, log=request.state.log)
-
-
-@series_router.post('/sonarr/delete', deprecated=True)
-def delete_series_via_sonarr_webhook(
-        request: Request,
-        webhook: SonarrWebhook,
-        delete_title_cards: bool = Query(default=True),
-        db: Session = Depends(get_database)
-    ) -> None:
-    """
-    Delete the Series defined in the given Webhook.
-
-    - webhook: Webhook payload containing the details of the Series to
-    delete.
-    - delete_title_cards: Whether to delete Title Cards.
-    """
-
-    # Skip if Webhook type is not a Series deletion
-    if webhook.eventType != 'SeriesDelete':
-        return None
-
-    # Create SeriesInfo for this payload's series
-    series_info = SeriesInfo(
-        name=webhook.series.title,
-        year=webhook.series.year,
-        imdb_id=webhook.series.imdbId,
-        tvdb_id=webhook.series.tvdbId,
-        tvrage_id=webhook.series.tvRageId,
-    )
-
-    # Search for this Series
-    series = db.query(Series)\
-        .filter(series_info.filter_conditions(Series))\
-        .first()
-
-    # Series is not found, exit
-    if series is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Series {series_info} not found',
-        )
-
-    # Delete Card, Loaded, and Series, as well all child content
-    if delete_title_cards:
-        delete_cards(
-            db,
-            db.query(Card).filter_by(series_id=series.id),
-            db.query(Loaded).filter_by(series_id=series.id),
-            log=request.state.log,
-        )
-    delete_series(db, series, log=request.state.log)
-    return None
 
 
 @series_router.get('/search')

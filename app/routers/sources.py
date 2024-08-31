@@ -72,51 +72,6 @@ def download_series_source_images(
         )
 
 
-@source_router.post('/series/{series_id}/backdrop', deprecated=True)
-def download_series_backdrop_deprecated(
-        series_id: int,
-        request: Request,
-        # ignore_blacklist: bool = Query(default=False),
-        db: Session = Depends(get_database),
-        tmdb_interfaces: InterfaceGroup[int, TMDbInterface] = Depends(get_tmdb_interfaces),
-    ) -> str:
-    """
-    Download a backdrop (art image) for the given Series. This only uses
-    TMDb.
-
-    - series_id: ID of the Series to download a backdrop for.
-    - ignore_blacklist: Whether to force a download from TMDb, even if
-    the associated Series backdrop has been internally blacklisted.
-    """
-    # TODO add ability to download art from a media server
-    # Get contextual logger
-    log: Logger = request.state.log
-
-    # Get this Series, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
-
-    # Get backdrop, return if exists
-    if (backdrop_file := series.get_series_backdrop()).exists():
-        log.debug(f'{series} Backdrop file exists')
-        return f'/source/{series.path_safe_name}/backdrop.jpg'
-
-    # Download new backdrop
-    if tmdb_interfaces:
-        for _, interface in tmdb_interfaces:
-            backdrop = interface.get_series_backdrop(
-                series.as_series_info, raise_exc=True,
-            )
-            if (backdrop
-                and WebInterface.download_image(backdrop,backdrop_file,log=log)):
-                log.debug(f'{series} Downloaded backdrop from TMDb')
-                return f'/source/{series.path_safe_name}/backdrop.jpg'
-
-    raise HTTPException(
-        status_code=400,
-        detail=f'Unable to download backdrop'
-    )
-
-
 @source_router.post('/series/{series_id}/backdrop/tmdb')
 def download_series_backdrop_from_tmdb(
         series_id: int,

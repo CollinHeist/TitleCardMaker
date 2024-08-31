@@ -24,7 +24,7 @@ from app.internal.cards import (
 from app.internal.episodes import refresh_episode_data
 from app.internal.sources import (
     download_episode_source_images,
-    download_series_logo
+    download_series_logo,
 )
 from app.internal.translate import translate_episode
 from app.models.card import Card
