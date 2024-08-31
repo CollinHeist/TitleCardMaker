@@ -1,4 +1,5 @@
 from typing import Optional
+
 from fastapi import APIRouter, Body, Depends, Request
 from sqlalchemy.orm import Session
 
@@ -6,6 +7,7 @@ from app.database.query import get_template
 from app.dependencies import get_database, get_preferences
 from app.internal.auth import get_current_user
 from app.internal.backup import list_available_backups
+from app.internal.cards import refresh_remote_card_types
 from app.internal.settings import get_episode_data_sources
 from app.models.connection import Connection
 from app.models.preferences import Preferences as PreferencesModel
@@ -65,6 +67,7 @@ def update_global_settings(
             get_template(db, template_id, raise_exc=True)
 
     preferences.update_values(**update_preferences.dict(), log=request.state.log)
+    refresh_remote_card_types(db, log=request.state.log)
     preferences.determine_imagemagick_prefix(log=request.state.log)
 
     return preferences
