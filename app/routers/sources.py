@@ -487,8 +487,7 @@ async def set_episode_source_image(
 
     # If file already exists, warn about overwriting
     if source_file.exists():
-        log.info(f'{episode.series} {episode} source file '
-                 f'"{source_file.resolve()}" exists - replacing')
+        log.info(f'{episode} Source Image "{source_file}" exists - replacing')
 
     # Either download URL or write content directly
     if uploaded_file:
@@ -540,8 +539,8 @@ def mirror_episode_source_image(
         db: Session = Depends(get_database),
     ) -> SourceImage:
     """
-    Mirror the Source Image for the given Episode. This flips the
-    image horizontally. Any associated Card or Loaded asset is deleted.
+    Mirror the Source Image for the given Episode. This flips the image
+    horizontally. Any associated Card or Loaded asset(s) are deleted.
 
     - episode_id: ID of the Episode whose Source Image is being
     mirrored.
