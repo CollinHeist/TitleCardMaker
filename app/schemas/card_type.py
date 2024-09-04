@@ -821,7 +821,7 @@ class TintedFrameCardType(BaseCardTypeAllText):
     separator: str = '-'
     episode_text_color: Optional[str] = None
     episode_text_font: Union[Literal['{title_font}'], str, Path] = TintedFrameTitleCard.EPISODE_TEXT_FONT
-    episode_text_font_size: PositiveFloat = 1.0
+    episode_text_font_size: confloat(ge=0.0) = 1.0
     episode_text_vertical_shift: int = 0
     frame_color: Optional[str] = None
     frame_width: PositiveInt = TintedFrameTitleCard.BOX_WIDTH
