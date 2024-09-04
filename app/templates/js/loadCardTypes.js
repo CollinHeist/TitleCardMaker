@@ -5,6 +5,22 @@ async function getAllCardTypes(showExcluded=false) {
   }
 }
 
+/**
+ * Loads and initializes a dropdown menu with card types.
+ *
+ * @async
+ * @function
+ * @param {Object} args - The arguments for the function.
+ * @param {HTMLElement} args.element - The DOM dropdown element to initialize.
+ * @param {Function} args.isSelected - A function that determines if a card type
+ * is selected, based on its identifier.
+ * @param {boolean} [args.showExcluded=false] - Whether to include excluded card
+ * types in the dropdown.
+ * @param {Object} args.dropdownArgs - Additional arguments to pass to the
+ * dropdown initialization function.
+ * @returns {Promise<string[]>} A promise that resolves to an array of all card
+ * type identifiers.
+ */
 async function loadCardTypes(args) {
   let {element, isSelected, showExcluded=false, dropdownArgs} = args;
   if (allCardTypes === undefined) {
