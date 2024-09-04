@@ -96,7 +96,8 @@ class TintedFrameTitleCard(BaseCardType):
                 identifier='frame_width',
                 description='Width of the frame',
                 tooltip=(
-                    'Number ≥<v>0</v>. Default is <v>5</v>. Unit is pixels.'
+                    'Number between <v>0</v> and <v>1600</v>. Default is '
+                    '<v>5</v>. Unit is pixels.'
                 ),
                 default=5,
             ),

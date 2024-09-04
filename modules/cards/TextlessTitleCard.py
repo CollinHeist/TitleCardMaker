@@ -31,7 +31,7 @@ class TextlessTitleCard(BaseCardType):
             'A card completely devoid of all text.',
             'This card is intended to easily enable users to have TCM manage '
             'non-TCM-created cards, as well as apply style modifiers (like '
-            'blurring and grayscale) to images',
+            'blurring and grayscale) to images.',
         ]
     )
 
