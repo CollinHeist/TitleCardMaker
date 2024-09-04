@@ -181,6 +181,13 @@ def get_internal_server_errors(
     evaluate the most recent (active) log file.
     """
 
+    def has_valid_dt(time: datetime) -> bool:
+        try:
+            datetime.strptime(time, DATETIME_FORMAT)
+            return True
+        except:
+            return False
+
     return sorted(
         [
             LogInternalServerError(
@@ -194,7 +201,10 @@ def get_internal_server_errors(
                 file=log['file'].name,
             )
             for log in read_log_files(after=after, before=before, shallow=shallow)
-            if log['message'].startswith('Internal Server Error\n')
+            if (
+                log['message'].startswith('Internal Server Error')
+                and has_valid_dt(log['time'])
+            )
         ],
         key=lambda log: log.time,
         reverse=True,

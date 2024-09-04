@@ -128,7 +128,7 @@ def delete_font_file(
     except Exception as exc:
         log.exception(f'Error deleting {font.file}')
         raise HTTPException(
-            status_code=500,
+            status_code=400,
             detail=f'Error deleting Font file - {exc}',
         ) from exc
 
