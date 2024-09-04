@@ -230,16 +230,20 @@ def delete_font(
         log.debug(f'{preferences.default_fonts = }')
 
     # If Font file is specified (and exists), delete
-    if (font_file := font.file) is not None:
-        try:
-            font_file.unlink(missing_ok=True)
-            font_file.parent.rmdir()
-        except Exception as exc:
-            log.exception(f'Error deleting {font_file}')
-            raise HTTPException(
-                status_code=500,
-                detail=f'Error deleting font file - {exc}',
-            ) from exc
+    font_dir = preferences.asset_directory / 'fonts' / str(font_id)
+    if font_dir.exists():
+        for file in font_dir.iterdir():
+            try:
+                if file.is_file():
+                    file.unlink(missing_ok=True)
+                else:
+                    file.rmdir()
+            except OSError as exc:
+                log.exception(f'Error deleting "{file}"')
+                raise HTTPException(
+                    status_code=500,
+                    detail='Error deleting Font file(s)',
+                ) from exc
 
     db.delete(font)
     db.commit()
