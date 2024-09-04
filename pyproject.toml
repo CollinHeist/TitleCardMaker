@@ -66,10 +66,16 @@ packages = [
 ]
 
 [tool.pyright]
+include = [
+    "./app",
+    "./modules"
+]
 exclude = [
-    "config/assets",
-    "config/cards",
-    "config/source"
+    "./archives",
+    "./config",
+    "**__pycache__",
+    "**.ruff_cache",
+    "**.venv"
 ]
 
 [tool.ruff]
