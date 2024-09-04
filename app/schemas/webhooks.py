@@ -114,7 +114,7 @@ class PlexMetadata(Base):
 class PlexWebhook(Base):
     event: PlexEvent
     # user: bool
-    # owner: bool
+    owner: Optional[bool] = None
     # Account: PlexAccoun
     # Server: PlexServer
     # Player: PlexPlayer
