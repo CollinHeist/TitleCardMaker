@@ -824,7 +824,7 @@ class TintedFrameCardType(BaseCardTypeAllText):
     episode_text_font_size: confloat(ge=0.0) = 1.0
     episode_text_vertical_shift: int = 0
     frame_color: Optional[str] = None
-    frame_width: PositiveInt = TintedFrameTitleCard.BOX_WIDTH
+    frame_width: conint(ge=0.0, le=1600) = TintedFrameTitleCard.BOX_WIDTH
     top_element: OuterElement = 'title'
     middle_element: MiddleElement = 'omit'
     bottom_element: OuterElement = 'index'
