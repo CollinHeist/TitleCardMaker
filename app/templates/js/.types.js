@@ -27,6 +27,20 @@
  */
 
 /**
+ * @typedef {Object} CardTypeDescription
+ * @property {string} name - The name of the card type.
+ * @property {string} identifier - A unique identifier for the card type.
+ * @property {string} example - An example of the card type.
+ * @property {string[]} creators - A list of creators associated with the card type.
+ * @property {'builtin' | 'local' | 'remote'} source - The source of the card
+ * type, indicating where it originates.
+ * @property {boolean} supports_custom_fonts - Indicates if the card type supports custom fonts.
+ * @property {boolean} supports_custom_seasons - Indicates if the card type supports custom seasons.
+ * @property {Extra[]} supported_extras - A list of extras supported by the card type.
+ * @property {string[]} description - A list of strings describing the card type.
+ */
+
+/**
  * @typedef {Object} Extra
  * @property {string} name
  * @property {DictKey} identifier
