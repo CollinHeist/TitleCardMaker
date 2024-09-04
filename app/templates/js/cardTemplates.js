@@ -100,6 +100,10 @@ function reloadPreview(watchStatus, templateElementId, cardElement, imgElement) 
     url: '/api/cards/preview',
     data: JSON.stringify(previewCard),
     contentType: 'application/json',
+    /**
+     * Preview created - update the image src.
+     * @param {string} imageUrl URL to the image to display.
+     */
     success: imageUrl => imgElement.src = `${imageUrl}?${new Date().getTime()}`,
     error: response =>  showErrorToast({title: 'Error Creating Preview Card', response}),
     complete: () => cardElement.classList.remove('loading'),
@@ -260,6 +264,11 @@ async function getAllTemplates() {
     // Filters added later
     // Card type set later
     // Font set later
+    if (templateObj.font_id === null) {
+      base.querySelector('a[data-value="font-link"]').remove();
+    } else {
+      base.querySelector('a[data-value="font-link"]').href = `/fonts#font-id${templateObj.font_id}`;
+    }
     // Unwatched and Watched style set later
     // Hide season text set later
     // Season titles
@@ -299,6 +308,18 @@ async function getAllTemplates() {
     };
     watchedCard.onclick = () => reloadPreview('watched', templateElementId, watchedCard, watchedImg);
     unwatchedCard.onclick = () => reloadPreview('unwatched', templateElementId, unwatchedCard, unwatchedImg);
+
+    // Update Templates
+    base.querySelector('button[button-type="submit"]').onclick = (event) => {
+      event.preventDefault();
+      updateTemplate(templateObj.id);
+    };
+    // Delete Template
+    base.querySelector('button[button-type="delete"]').onclick = (event) => {
+      event.preventDefault();
+      showDeleteModal(templateObj.id)
+    };
+
     elements.push(base);
   });
 
@@ -337,7 +358,11 @@ async function getAllTemplates() {
         $(`#template-id${templateObj.id} .dropdown[data-value="filter-operators"]`).last().dropdown({
           placeholder: 'Select Operation',
           values: allFilterOptions.operations.map(operation => {
-            return {name: operation, value: operation, selected: operation === condition.operation};
+            return {
+              name: operation,
+              value: operation,
+              selected: operation === condition.operation
+            };
           })
         });
         if (condition.reference !== null) {
@@ -378,12 +403,6 @@ async function getAllTemplates() {
         return {name: name, value: id, selected: id === templateObj.font_id};
       }),
     });
-    // Update/remove link to Font
-    if (templateObj.font_id === null) {
-      $(`#template-id${templateObj.id} a[data-value="font-link"]`).remove();
-    } else {
-      $(`#template-id${templateObj.id} a[data-value="font-link"]`)[0].href = `/fonts#font-id${templateObj.font_id}`;
-    }
     // Watched style
     $(`#template-id${templateObj.id} .dropdown[data-value="watched_style"]`).dropdown({
       placeholder: 'Global Default',
@@ -493,7 +512,7 @@ async function getAllTemplates() {
     );
     // Add new field with add translation button
     $(`#template-id${templateObj.id} .button[data-add-field="translation"]`).on('click', () => {
-      const newTranslation = document.querySelector('#translation-template').content.cloneNode(true);
+      const newTranslation = document.getElementById('translation-template').content.cloneNode(true);
       $(`#template-id${templateObj.id} [data-value="translations"]`).append(newTranslation);
       // Language code dropdown
       $(`#template-id${templateObj.id} .dropdown[data-value="language_code"]`).last().dropdown({
@@ -513,17 +532,6 @@ async function getAllTemplates() {
           {name: 'Kanji', text: 'kanji', value: 'kanji'},
         ]
       });
-    });
-    
-    // Update via API
-    $(`#template-id${templateObj.id} form`).on('submit', (event) => {
-      event.preventDefault();
-      updateTemplate(templateObj.id);
-    });
-    // Delete via API
-    $(`#template-id${templateObj.id} button[button-type="delete"]`).on('click', (event) => {
-      event.preventDefault();
-      showDeleteModal(templateObj.id);
     });
   });
 
