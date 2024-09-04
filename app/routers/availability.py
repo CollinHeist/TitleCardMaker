@@ -94,7 +94,7 @@ def get_latest_available_version(request: Request) -> str:
     return str(get_latest_version(log=request.state.log))
 
 
-@availablility_router.get('/card-types', tags=['Title Cards'])
+@availablility_router.get('/card-types')
 def get_all_available_card_types(
         request: Request,
         show_excluded: bool = Query(default=False),
