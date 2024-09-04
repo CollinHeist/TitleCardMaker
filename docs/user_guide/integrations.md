@@ -75,7 +75,8 @@ following:
 `...` with a comma-separated list of triggers from Plex. A complete list is
 [here](https://support.plex.tv/articles/115002267687-webhooks/), but TCM will
 only be able to _actually_ trigger on `library.on.deck`, `media.pause`,
-`media.play`, `media.rate`, `media.resume`, `media.stop` and `playback.started`.
+`media.play`, `media.rate`, `media.resume`, `media.stop` and `playback.started`
+(in addition to `library.new` and `media.scrobble`).
 
     !!! example "Example"
 
