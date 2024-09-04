@@ -451,14 +451,14 @@
               <div class="ui two fields">
                 <div class="eight wide field">
                   <label>Home Page Size</label>
-                  <input type="number" name="home_page_size" placeholder="{{preferences.home_page_size}}" value="{{preferences.home_page_size}}">
+                  <input type="number" name="home_page_size" placeholder="{{preferences.home_page_size}}" value="{{preferences.home_page_size}}" min="1">
                   <p class="help">How many Series per page to display on the home screen. Minimum 1.</p>
                 </div>
     
                 <div class="eight wide field">
                   <label>Episode Data Table Page Size</label>
-                  <input type="number" name="episode_data_page_size" placeholder="{{preferences.episode_data_page_size}}" value="{{preferences.episode_data_page_size}}">
-                  <p class="help">How many Episodes per page to display in Episode data tables.</p>
+                  <input type="number" name="episode_data_page_size" placeholder="{{preferences.episode_data_page_size}}" value="{{preferences.episode_data_page_size}}" min="1">
+                  <p class="help">How many Episodes per page to display in Episode data tables. Minimum 1.</p>
                 </div>
               </div>
   
