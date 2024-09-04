@@ -39,7 +39,12 @@ log_router = APIRouter(
 
 # Map of log level names to numbers for relative comparison
 _LEVEL_NUMBERS: dict[LogLevel, int] = {
-    'TRACE': -1, 'DEBUG': 0, 'INFO': 1, 'WARNING': 2, 'ERROR': 3, 'CRITICAL': 4
+    'TRACE': -1,
+    'DEBUG': 0,
+    'INFO': 1,
+    'WARNING': 2,
+    'ERROR': 3,
+    'CRITICAL': 4,
 }
 
 
@@ -69,21 +74,6 @@ def query_logs(
     # Function to filter log results by
     contains = None if contains is None else contains.lower().split('|')
     def meets_filters(data: RawLogData) -> bool:
-        # return (
-        #     _LEVEL_NUMBERS[data['level']] >= _LEVEL_NUMBERS[level]
-        #     and (
-        #         data['context_id'] is None
-        #         or context_id is None
-        #         or data['context_id'] in context_id
-        #     )
-        #     and (before is None or data['time'] <= before)
-        #     and (after is None or data['time'] >= after)
-        #     and (
-        #         contains is None
-        #         or any(cont in data['message'].lower() for cont in contains)
-        #     )
-        # )
-        # Level criteria
         if _LEVEL_NUMBERS[data['level']] < _LEVEL_NUMBERS[level]:
             return False
 
