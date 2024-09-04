@@ -29,7 +29,7 @@ from app.schemas.connection import (
     UpdatePlex,
     UpdateSonarr,
     UpdateTMDb,
-    UpdateTVDb
+    UpdateTVDb,
 )
 from modules.Debug import log
 from modules.Debug2 import SECRETS
