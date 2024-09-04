@@ -77,6 +77,7 @@ async def process_plex_webhook(
         # be parsed from the request.form() directly
         # webhook: PlexWebhook = Form(...),
         snapshot: bool = Query(default=True),
+        require_owner: bool = Query(default=True),
         trigger_on: Optional[str] = Query(default=None),
         db: Session = Depends(get_database),
         plex_interface: PlexInterface = Depends(require_plex_interface),
@@ -97,6 +98,7 @@ async def process_plex_webhook(
 
     # Only process new or watched content
     if (webhook.event not in ('library.new', 'media.scrobble')
+        and (not require_owner or (require_owner and webhook.owner))
         and (not trigger_on
              or (trigger_on and webhook.event not in trigger_on))):
         log.debug(f'Skipping Webhook of type "{webhook.event}"')
