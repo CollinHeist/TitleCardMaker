@@ -8,8 +8,9 @@ from pydantic import ValidationError
 from sqlalchemy import and_, or_
 from sqlalchemy.exc import OperationalError, PendingRollbackError
 from sqlalchemy.orm import Query, Session
+from sqlalchemy.orm.session import object_session
 
-from app.database.query import get_interface
+from app.database.query import get_font, get_interface
 from app.dependencies import get_database, get_preferences
 from app.internal.availability import get_remote_card_hash
 from app.internal.episodes import refresh_episode_data
@@ -434,11 +435,13 @@ def resolve_card_settings(
         MissingSourceImage: The required Source Image is missing.
     """
 
-    # Get effective Template for this Series and Episode
+    # Get effective Template(s) for this Series and Episode
+    preferences = get_preferences()
     series = episode.series
     global_template, series_template, episode_template =get_effective_templates(
         series, episode, library
     )
+
     global_template_dict, series_template_dict, episode_template_dict = {},{},{}
     if global_template is not None:
         global_template_dict = global_template.card_properties
@@ -446,6 +449,16 @@ def resolve_card_settings(
         series_template_dict = series_template.card_properties
     if episode_template is not None:
         episode_template_dict = episode_template.card_properties
+
+    # Determine the card type
+    card_type: str = TieredSettings.resolve_singular_setting(
+        preferences.default_card_type,
+        global_template_dict.get('card_type'),
+        series_template_dict.get('card_type'),
+        series.card_type,
+        episode_template_dict.get('card_type'),
+        episode.card_type,
+    )
 
     # Get effective Font for this Series and Episode
     global_font_dict, series_font_dict, episode_font_dict = {}, {}, {}
@@ -459,9 +472,13 @@ def resolve_card_settings(
         series_font_dict = series_template.font.card_properties
     elif global_template and global_template.font:
         global_font_dict = global_template.font.card_properties
+    elif preferences.default_fonts.get(card_type) is not None:
+        global_font_dict = get_font(
+            object_session(episode),
+            preferences.default_fonts[card_type],
+        ).card_properties
 
     # Resolve all settings from global -> Episode
-    preferences = get_preferences()
     card_settings = TieredSettings.new_settings(
         {'hide_season_text': False, 'hide_episode_text': False},
         DefaultFont,
@@ -704,6 +721,8 @@ def create_episode_card(
     Raises:
         HTTPException: If the card settings are invalid and `raise_exc`
             is True.
+        InvalidCardSettings: If the card settings are invalid and
+            `raise_exc` is True.
     """
 
     # Resolve Card settings

@@ -205,6 +205,7 @@ def delete_font(
         request: Request,
         font_id: int,
         db: Session = Depends(get_database),
+        preferences: Preferences = Depends(get_preferences),
     ) -> None:
     """
     Delete the Font with the given ID. This also deletes the font's
@@ -218,6 +219,15 @@ def delete_font(
 
     # Get specified Font, raise 404 if DNE
     font = get_font(db, font_id, raise_exc=True)
+
+    # Delete from global setting if indicated
+    if font_id in preferences.default_fonts.values():
+        preferences.default_fonts = {
+            card_type: id_
+            for card_type, id_ in preferences.default_fonts.items()
+            if id_ != font_id
+        }
+        log.debug(f'{preferences.default_fonts = }')
 
     # If Font file is specified (and exists), delete
     if (font_file := font.file) is not None:
@@ -233,6 +243,7 @@ def delete_font(
 
     db.delete(font)
     db.commit()
+    preferences.commit()
 
 
 @font_router.get('/{font_id}/analysis')

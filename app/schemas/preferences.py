@@ -10,7 +10,7 @@ from pydantic import (
     PositiveInt,
     conint,
     constr,
-    validator
+    validator,
 )
 
 from app.schemas.base import (
@@ -18,7 +18,7 @@ from app.schemas.base import (
     ImageSource,
     InterfaceType,
     UpdateBase,
-    UNSPECIFIED
+    UNSPECIFIED,
 )
 
 from modules.FormatString import FormatString
@@ -99,6 +99,7 @@ class UpdatePreferences(UpdateBase):
     default_watched_style: Style = UNSPECIFIED
     default_unwatched_style: Style = UNSPECIFIED
     default_templates: list[int] = UNSPECIFIED
+    default_fonts: dict[str, int] = UNSPECIFIED
     global_extras: dict[str, dict[str, str]] = UNSPECIFIED
     home_page_size: PositiveInt = UNSPECIFIED
     episode_data_page_size: PositiveInt = UNSPECIFIED
@@ -180,6 +181,7 @@ class Preferences(Base):
     default_watched_style: Style
     default_unwatched_style: Style
     default_templates: list[int]
+    default_fonts: dict[str, int]
     global_extras: dict[str, dict[str, str]]
     home_page_size: PositiveInt
     episode_data_page_size: PositiveInt

@@ -79,7 +79,7 @@ class Preferences:
         'current_version', 'available_version', 'blacklisted_blueprints',
         'advanced_scheduling', 'require_auth', 'task_crontabs',
         'simplified_data_table', 'home_page_size', 'episode_data_page_size',
-        'stylize_unmonitored_posters', 'sources_as_table',
+        'stylize_unmonitored_posters', 'sources_as_table', 'default_fonts',
         'card_type_directory', 'local_card_types', 'imported_blueprints',
         'colorblind_mode', 'library_unique_cards', 'invalid_connections',
         'home_page_table_view', 'reduced_animations', 'currently_running_sync',
@@ -211,6 +211,7 @@ class Preferences:
         self.default_watched_style = 'unique'
         self.default_unwatched_style = 'unique'
         self.default_templates: list[int] = []
+        self.default_fonts: dict[str, int] = {}
         self.global_extras: dict[str, dict[str, str]] = {}
 
         self.currently_running_sync: Optional[int] = None

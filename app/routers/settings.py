@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Body, Depends, Request
 from sqlalchemy.orm import Session
 
-from app.database.query import get_template
+from app.database.query import get_font, get_template
 from app.dependencies import get_database, get_preferences
 from app.internal.auth import get_current_user
 from app.internal.backup import list_available_backups
@@ -60,7 +60,11 @@ def update_global_settings(
     - update_preferences: UpdatePreferences containing fields to update.
     """
 
-    # Verify all specified Templates exist
+    # Verify any specified Fonts/Templates exist
+    if (hasattr(update_preferences, 'default_fonts')
+        and update_preferences.default_fonts != UNSPECIFIED):
+        for font_id in update_preferences.default_fonts.values():
+            get_font(db, font_id, raise_exc=True)
     if (hasattr(update_preferences, 'default_templates')
         and update_preferences.default_templates != UNSPECIFIED):
         for template_id in update_preferences.default_templates:
