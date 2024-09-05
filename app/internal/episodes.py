@@ -154,7 +154,7 @@ def refresh_episode_data(
         background_tasks: Optional[BackgroundTasks] = None,
         *,
         log: Logger = log,
-    ) -> None:
+    ) -> list[Episode]:
     """
     Refresh the episode data for the given Series. This adds any new
     Episodes on the associated episode data source to the Database,
@@ -168,6 +168,10 @@ def refresh_episode_data(
             Episode ID assignment task to, if provided. If omitted then
             the assignment is done in a blocking manner.
         log: Logger for all log messages.
+
+    Returns:
+        List of any newly added Episodes. Empty list of no new Episodes
+        were added, or only existing Episodes were modified.
 
     Raises:
         HTTPException (404): A Series Template does not exist.
@@ -188,7 +192,8 @@ def refresh_episode_data(
     )
 
     # Filter Episodes
-    changed, episodes, new_episodes = False, [], []
+    new_episodes: list[Episode] = []
+    changed, episodes = False, []
     for episode_info, watched in all_episodes:
         # Skip specials if indicated
         if not sync_specials and episode_info.season_number == 0:
@@ -203,7 +208,6 @@ def refresh_episode_data(
 
         # Episode does not exist, add
         if existing is None:
-            new_episodes.append(episode_info.title)
             episode = Episode(
                 series=series,
                 title=episode_info.title,
@@ -212,6 +216,7 @@ def refresh_episode_data(
                 watched_statuses=watched.as_db_entry,
                 airdate=episode_info.airdate,
             )
+            new_episodes.append(episode)
             db.add(episode)
             changed = True
             episodes.append(episode)
@@ -258,7 +263,7 @@ def refresh_episode_data(
     if len(new_episodes) > 1:
         log.info(f'{series} {len(new_episodes)} new Episodes')
     elif len(new_episodes) == 1:
-        log.info(f'{series} new Episode "{new_episodes[0]}"')
+        log.info(f'{series} new Episode "{new_episodes[0].title}"')
 
     # Set Episode ID's for all new Episodes as background task or directly
     if background_tasks is None:
@@ -269,6 +274,8 @@ def refresh_episode_data(
     # Commit to database if changed
     if changed:
         db.commit()
+
+    return new_episodes
 
 
 def update_episode_config(

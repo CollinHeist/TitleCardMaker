@@ -88,6 +88,7 @@ async def process_plex_webhook(
     # Get contextual logger
     log: Logger = request.state.log
 
+    # Parse Webhook from payload
     try:
         webhook = PlexWebhook.parse_raw((await request.form()).get('payload'))
     except ValidationError as exc:
@@ -108,6 +109,7 @@ async def process_plex_webhook(
         db,
         plex_interface,
         webhook.Metadata.ratingKey,
+        new_only=webhook.event == 'library.new',
         snapshot=snapshot,
         log=log,
     )

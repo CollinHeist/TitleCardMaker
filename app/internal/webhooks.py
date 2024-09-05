@@ -20,6 +20,7 @@ def process_rating_key(
         db: Session,
         plex_interface: PlexInterface,
         key: int,
+        new_only: bool = False,
         *,
         snapshot: bool = True,
         log: Logger = log,
@@ -34,6 +35,9 @@ def process_rating_key(
             associated with this Key.
         key: Rating Key within Plex that identifies the item to create
             the Card(s) for.
+        new_only: Whether to only process newly added Episodes. If False
+            then ALL Episodes associated with the given Key will be
+            reloaded.
         snapshot: Whether to take a snapshot of the database afterwards.
         log: Logger for all log messages.
 
@@ -69,13 +73,17 @@ def process_rating_key(
                 continue
 
             # Series found, refresh data and look for Episode again
-            refresh_episode_data(db, series, log=log)
+            new_episodes = refresh_episode_data(db, series, log=log)
             episodes = db.query(Episode)\
                 .filter(episode_info.filter_conditions(Episode))\
                 .all()
             if not episodes:
                 log.info(f'Cannot find Episode for {series_info} {episode_info}')
                 continue
+        elif new_only:
+            log.debug(f'Not processing existing Episode {series_info} '
+                      f'{episode_info}')
+            continue
 
         # Get first Episode that matches this Series
         episode, found = None, False
