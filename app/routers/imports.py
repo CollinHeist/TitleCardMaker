@@ -386,7 +386,7 @@ async def import_card_files_for_series(
 
 
 @import_router.post('/series/{series_id}/cards/mediux')
-async def import_mediux_yaml_for_series(
+def import_mediux_yaml_for_series(
         request: Request,
         series_id: int,
         yaml_str: str = Body(..., alias='yaml'),
