@@ -61,6 +61,7 @@ def create_font(
 
 @font_router.put('/{font_id}/file')
 async def add_font_file(
+        request: Request,
         font_id: int,
         file: UploadFile,
         db: Session = Depends(get_database),
@@ -77,12 +78,22 @@ async def add_font_file(
     font = get_font(db, font_id, raise_exc=True)
 
     # Download file, raise 400 if contentless
-    file_content = await file.read()
-    if not file_content:
+    if not (file_content := await file.read()):
         raise HTTPException(
             status_code=400,
             detail='Font file is invalid',
         )
+
+    # Delete existing file (if present)
+    if (existing_font := font.file):
+        try:
+            existing_font.unlink(missing_ok=True)
+        except OSError as exc:
+            request.state.log.exception('Unable to delete Font file')
+            raise HTTPException(
+                status_code=400,
+                detail=f'Error deleting Font file - {exc}',
+            )
 
     # Write to file
     font_directory = preferences.asset_directory / 'fonts'
