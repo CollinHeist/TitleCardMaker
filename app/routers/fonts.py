@@ -364,3 +364,38 @@ def get_suggested_font_replacements(
         replacements=replacements,
         missing=bad,
     )
+
+
+@font_router.put('/transfer/')
+def transfer_font_references(
+        request: Request,
+        to_id: int = Query(..., alias='to'),
+        from_id: int = Query(..., alias='from'),
+        delete_from: bool = Query(default=False),
+        db: Session = Depends(get_database),
+    ) -> NamedFont:
+    """
+    Transfer all references for the given `from` Font to the given `to` Font.
+
+    - to: ID of the Font to transfer _to_.
+    - from: ID of the Font to transfer _from_.
+    - delete_from: Whether to delete the _from_ Font after the references are
+    reassigned.
+    """
+
+    # Get contextual logger
+    log: Logger = request.state.log
+
+    # Get specified Fonts, raise 404 if DNE
+    to_font = get_font(db, to_id, raise_exc=True)
+    from_font = get_font(db, from_id, raise_exc=True)
+
+    # Perform reference transfer
+    ...
+
+    if delete_from:
+        ...
+
+    db.commit()
+
+    return to_font
