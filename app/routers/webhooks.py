@@ -78,11 +78,21 @@ async def process_plex_webhook(
         # webhook: PlexWebhook = Form(...),
         snapshot: bool = Query(default=True),
         require_owner: bool = Query(default=True),
-        trigger_on: Optional[str] = Query(default=None),
+        trigger_on: str = Query(default='library.new,media.scrobble'),
         db: Session = Depends(get_database),
         plex_interface: PlexInterface = Depends(require_plex_interface),
     ) -> None:
     """
+    Process the items defined in the given Plex Webhook. The Webhook
+    data must be passed as a multipart Form inside the Request payment.
+
+    - interface_id: Interface ID of the Plex Connection associated with
+    this Key.
+    - snapshot: Whether to take snapshot of the database after all Cards
+    have been processed.
+    - require_owner: Whether to only process triggers which come from
+    the owner of the server.
+    - trigger_on: String containing webhook event types to trigger on.
     """
 
     # Get contextual logger
@@ -97,11 +107,8 @@ async def process_plex_webhook(
             detail='Webhook format is invalid'
         ) from exc
 
-    # Only process new or watched content
-    if (webhook.event not in ('library.new', 'media.scrobble')
-        and (not require_owner or (require_owner and webhook.owner))
-        and (not trigger_on
-             or (trigger_on and webhook.event not in trigger_on))):
+    if (webhook.event not in trigger_on
+        and (not require_owner or (require_owner and webhook.owner))):
         log.debug(f'Skipping Webhook of type "{webhook.event}"')
         return None
 
