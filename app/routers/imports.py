@@ -1,6 +1,6 @@
 from logging import Logger
 from pathlib import Path
-from shutil import copyfile
+from shutil import copyfile, move as move_file
 from typing import Literal, Optional
 
 from fastapi import (
@@ -11,7 +11,7 @@ from fastapi import (
     HTTPException,
     Query,
     Request,
-    UploadFile
+    UploadFile,
 )
 from pydantic.error_wrappers import ValidationError
 from sqlalchemy.orm import Session
@@ -35,12 +35,12 @@ from app.internal.imports import (
     parse_sonarr,
     parse_syncs,
     parse_templates,
-    parse_tmdb
+    parse_tmdb,
 )
 from app.internal.series import (
     download_series_poster,
     load_series_title_cards,
-    set_series_database_ids
+    set_series_database_ids,
 )
 from app.internal.sources import download_series_logo
 from app import models
@@ -50,7 +50,7 @@ from app.schemas.imports import (
     ImportCardDirectory,
     ImportYaml,
     KometaYaml,
-    MultiCardImport
+    MultiCardImport,
 )
 from app.schemas.preferences import Preferences
 from app.schemas.series import Series, Template
@@ -491,9 +491,22 @@ def import_mediux_yaml_for_series(
                 log.debug(f'Skipping {episode.index_str} - has Cards')
                 continue
 
-            # Episode exists, download and add to card list
-            if (card := _download_image(episode_yaml.url_poster)):
-                cards.append((episode, card))
+            # Episode exists, download image
+            if not (card := _download_image(episode_yaml.url_poster)):
+                continue
+
+            # If textless import, then download as Source Image
+            if textless:
+                if (source := episode.get_source_file('unique')).exists():
+                    log.debug(f'{episode} Source Image exists - replacing')
+                try:
+                    move_file(card, source)
+                except OSError:
+                    log.exception('Error occurred while moving Card file')
+                    continue
+
+            # Add to list to import
+            cards.append((episode, card))
 
     # Import content into all specified libraries
     log.debug(f'Identified {len(cards)} Cards to import')
@@ -575,7 +588,7 @@ def import_card_directory_for_series(
 def import_cards_for_multiple_series(
         request: Request,
         card_import: MultiCardImport = Body(...),
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> None:
     """
     Import any existing Title Cards for all the given Series. This finds
