@@ -109,7 +109,7 @@ async def process_plex_webhook(
 
     if (webhook.event not in trigger_on
         and (not require_owner or (require_owner and webhook.owner))):
-        log.debug(f'Skipping Webhook of type "{webhook.event}"')
+        log.trace(f'Skipping Webhook of trigger "{webhook.event}"')
         return None
 
     return process_rating_key(
