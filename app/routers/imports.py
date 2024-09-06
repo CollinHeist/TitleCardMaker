@@ -498,7 +498,8 @@ def import_mediux_yaml_for_series(
             # If textless import, then download as Source Image
             if textless:
                 if (source := episode.get_source_file('unique')).exists():
-                    log.debug(f'{episode} Source Image exists - replacing')
+                    log.debug(f'{episode} Source Image ({source.name}) exists '
+                              f'- replacing')
                 try:
                     move_file(card, source)
                 except OSError:
