@@ -74,14 +74,15 @@ following:
 1. Within Plex, edit the Webhook URL to include `&trigger_on=...`, replacing
 `...` with a comma-separated list of triggers from Plex. A complete list is
 [here](https://support.plex.tv/articles/115002267687-webhooks/), but TCM will
-only be able to _actually_ trigger on `library.on.deck`, `media.pause`,
-`media.play`, `media.rate`, `media.resume`, `media.stop` and `playback.started`
-(in addition to `library.new` and `media.scrobble`).
+only be able to _actually_ trigger on `library.new`, `library.on.deck`,
+`media.pause`, `media.play`, `media.rate`, `media.resume`, `media.scrobble`,
+`media.stop` and `playback.started`. This argument is
+`library.new,media.scrobble` by default.
 
     !!! example "Example"
 
         The example above used the following URL:
-        `http://192.168.0.29:8000/api/webhooks/plex?interface_id=2&trigger_on=media.rate`
+        `http://192.168.0.29:8000/api/webhooks/plex?interface_id=2&trigger_on=library.new,media.scrobble,media.rate`
 
 2. Click <span class="example md-button">Save Changes</span>.
 
