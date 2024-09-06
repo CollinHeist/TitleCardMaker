@@ -142,7 +142,6 @@ def get_all_episode_data(
         return []
 
     # Get Episodes from the Series' first (primary) library
-    log.trace(f'Querying {interface}..')
     return interface.get_all_episodes(
         libraries[0][1], series.as_series_info, log=log
     )
