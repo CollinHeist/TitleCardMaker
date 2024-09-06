@@ -44,6 +44,10 @@ engine = create_engine(
     # https://docs.sqlalchemy.org/en/20/core/pooling.html#pool-disconnects
     connect_args={'check_same_thread': False, 'timeout': 30},
     # echo=True,
+    # Do not limit pool overflow since "new" connections are made inside queued
+    # BackgroundTasks - see https://docs.sqlalchemy.org/en/20/errors.html for
+    # reference
+    pool_size=5, max_overflow=-1,
 )
 
 # URL to the Blueprints SQL database
