@@ -439,7 +439,7 @@ class Episode(Base):
 
     def add_watched_status(self, status: WatchedStatus, /) -> bool:
         """
-        Add the given WatchedStatus to this Episodes watched statuses.
+        Add the given WatchedStatus to this Episode's watched statuses.
 
         Args:
             status: The WatchedStatus to update this object with.

@@ -640,6 +640,7 @@ class Series(Base):
             / self.path_safe_name \
             / 'logo.png'
     
+    
     @property
     def logo_uri(self) -> str:
         """

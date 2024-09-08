@@ -68,7 +68,7 @@ def health_check(
     """
 
     try:
-        db.execute(text('SELECT 1'))
+        db.execute('SELECT 1')
     except Exception as exc:
         request.state.log.exception(f'Health check failed - {exc}')
         raise HTTPException(
