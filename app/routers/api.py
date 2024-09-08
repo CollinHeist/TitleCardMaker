@@ -2,7 +2,6 @@ from logging import Logger
 from os import environ
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy import text
 from sqlalchemy import MetaData
 from sqlalchemy.orm import Session
 
@@ -19,6 +18,7 @@ from app.routers.episodes import episodes_router
 from app.routers.fonts import font_router
 from app.routers.imports import import_router
 from app.routers.logs import log_router
+from app.routers.missing import missing_router
 from app.routers.proxy import proxy_router
 from app.routers.schedule import initialize_scheduler, schedule_router
 from app.routers.series import series_router
@@ -29,6 +29,8 @@ from app.routers.sync import sync_router
 from app.routers.templates import template_router
 from app.routers.translate import translation_router
 from app.routers.webhooks import webhook_router
+from modules.Debug import log
+
 
 # Create sub router for all API requests
 api_router = APIRouter(prefix='/api')
@@ -44,6 +46,7 @@ api_router.include_router(episodes_router)
 api_router.include_router(font_router)
 api_router.include_router(import_router)
 api_router.include_router(log_router)
+api_router.include_router(missing_router)
 api_router.include_router(proxy_router)
 api_router.include_router(schedule_router)
 api_router.include_router(series_router)
