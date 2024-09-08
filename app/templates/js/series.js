@@ -389,7 +389,7 @@ async function initializeSeriesConfig() {
   if ({{series.translations|safe}}.length > 0) { 
     const translationSegment = $('#card-config-form [data-value="translations"]');
     for (const translation of {{series.translations|safe}}) {
-      const newTranslation = document.querySelector('#translation-template').content.cloneNode(true);
+      const newTranslation = document.getElementById('translation-template').content.cloneNode(true);
       translationSegment.append(newTranslation);
       $(`#card-config-form .dropdown[data-value="language_code"]`).last().dropdown({
         values: [
