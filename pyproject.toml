@@ -41,7 +41,7 @@ dependencies = [
     "alembic>=1.13.2",
     "python-jose[cryptography]>=3.3.0",
     "python-dotenv>=1.0.1",
-    "fastapi>=0.112.1",
+    "fastapi==0.112.2",
     "charset-normalizer>=3.3.2",
     "win32-setctime>=1.1.0",
     "starlette==0.38.4",
