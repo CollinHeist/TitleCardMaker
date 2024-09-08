@@ -52,7 +52,7 @@ def process_rating_key(
             status_code=404,
             detail=f'Rating key {key} does not correspond to any content'
         )
-    log.debug(f'Identified {len(details)} entries from RatingKey={key}')
+    log.debug(f'Identified {len(details)} entries from RatingKey {key}')
 
     # Process each set of details
     episodes_to_load: list[Episode] = []
@@ -73,7 +73,7 @@ def process_rating_key(
                 continue
 
             # Series found, refresh data and look for Episode again
-            new_episodes = refresh_episode_data(db, series, log=log)
+            refresh_episode_data(db, series, log=log)
             episodes = db.query(Episode)\
                 .filter(episode_info.filter_conditions(Episode))\
                 .all()
@@ -81,8 +81,6 @@ def process_rating_key(
                 log.info(f'Cannot find Episode for {series_info} {episode_info}')
                 continue
         elif new_only:
-            log.debug(f'Not processing existing Episode {series_info} '
-                      f'{episode_info}')
             continue
 
         # Get first Episode that matches this Series
