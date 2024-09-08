@@ -2,7 +2,7 @@ from logging import Logger
 from os import environ
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy import MetaData
+from sqlalchemy import MetaData, text
 from sqlalchemy.orm import Session
 
 from app.database.session import engine
@@ -71,9 +71,9 @@ def health_check(
     """
 
     try:
-        db.execute('SELECT 1')
+        db.execute(text('SELECT 1'))
     except Exception as exc:
-        request.state.log.exception(f'Health check failed - {exc}')
+        getattr(request.state, 'log', log).exception(f'Health check failed - {exc}')
         raise HTTPException(
             status_code=500,
             detail=f'Database returned some error - {exc}'
