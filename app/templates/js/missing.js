@@ -1,13 +1,21 @@
 {% if False %}
-import {Episode, EpisodePage} from './.types.js';
+import {
+  Episode, EpisodePage, Series
+} from './.types.js';
 {% endif %}
 
 
-function initAll() {
+/**
+ * Query all Episodes which are missing a Card and display them all on the page.
+ */
+function queryMissingCards() {
   $.ajax({
     type: 'GET',
-    url: '/api/cards/missing',
-    /** @param {EpisodePage} episodeData */
+    url: '/api/missing/cards',
+    /**
+     * Missing Episodes queried, populate table.
+     * @param {EpisodePage} episodeData - Episodes missing Cards.
+     */
     success: episodeData => {
       /** @type {Object.<number, Episode>} Group Episodes by Series*/
       const groupedEpisodes = {};
@@ -21,13 +29,13 @@ function initAll() {
       // Templates
       const template = document.getElementById('missing-card-template');
       const table = document.getElementById('missing-cards');
-      const rowTemplate = document.getElementById('row-template');
+      const rowTemplate = document.getElementById('missing-card-row-template');
 
       // Add rows to the table
       for (const [series_id, episodes] of Object.entries(groupedEpisodes)) {
         // Link name cell to Series page
         const row = template.content.cloneNode(true);
-        row.querySelector('td[data-row="series"]').onclick = () => window.location.href = `/series/${series_id}`;
+        row.querySelector('td[data-row="series"]').onclick = () => window.location.href = `/series/${series_id}#files`;
         row.querySelector('td[data-row="series"] [data-value="name"]').innerText = episodes[0].series.name;
         row.querySelector('td[data-row="series"] img').src = episodes[0].series.small_poster_url;
         row.querySelector('td[data-row="series"]').rowSpan = episodes.length;
@@ -48,5 +56,45 @@ function initAll() {
 
       refreshTheme();
     },
+    error: response => showErrorToast({title: 'Error Querying Missing Cards', response}),
   });
+}
+
+/**
+ * Query all Series which are missing logos and display them on the page.
+ */
+function queryMissingLogos() {
+  $.ajax({
+    url: '/api/missing/logos',
+    /**
+     * Missing logos queried, populate the table.
+     * @param {Series[]} allSeries - List of Series which are missing logos.
+     */
+    success: allSeries => {
+      // Templates
+      const template = document.getElementById('missing-logo-template');
+      const table = document.getElementById('missing-logos');
+
+      allSeries.forEach(series => {
+        const row = template.content.cloneNode(true);
+
+        row.querySelector('td[data-row="series"]').onclick = () => window.location.href = `/series/${series.id}#files`;
+        row.querySelector('td[data-row="series"] [data-value="name"]').innerText = series.name;
+        row.querySelector('td[data-row="series"] img').src = series.small_poster_url;
+
+        row.querySelector('td[data-row="filename"]').innerText = 'logo.png';
+
+        table.appendChild(row);
+      });
+
+      refreshTheme();
+    },
+    error: response => showErrorToast({title: 'Error Querying Missing Logos', response}),
+  });
+}
+
+
+function initAll() {
+  queryMissingCards();
+  queryMissingLogos();
 }
