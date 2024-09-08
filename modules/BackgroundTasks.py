@@ -129,6 +129,7 @@ class DependencyInjector:
         self._args: list[tuple[Literal['Database', 'Model', 'Other'], Any]] = []
         for arg in args:
             if isinstance(arg, Session):
+                arg.close()
                 self._args.append(('Database', SessionLocal))
             elif isinstance(arg, DatabaseBase):
                 self._args.append(('Model', (arg.__class__, arg.id)))
@@ -138,11 +139,13 @@ class DependencyInjector:
         self._kwargs: dict[str, tuple[Literal['Database', 'Model', 'Other'], Any]] = {}
         for key, val in kwargs.items():
             if isinstance(val, Session):
+                val.close()
                 self._kwargs[key] = ('Database', SessionLocal)
             elif isinstance(val, DatabaseBase):
                 self._kwargs[key] = ('Model', (val.__class__, val.id))
             else:
                 self._kwargs[key] = ('Other', val)
+
 
     @property
     def args(self) -> tuple:
