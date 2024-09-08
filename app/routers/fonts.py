@@ -2,7 +2,15 @@ from logging import Logger
 from string import printable, punctuation, whitespace
 from typing import Literal
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Request, UploadFile
+from fastapi import (
+    APIRouter,
+    Body,
+    Depends,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile
+)
 from sqlalchemy.orm import Session
 from unidecode import unidecode
 
@@ -74,15 +82,15 @@ async def add_font_file(
     - file: Font file to attach to the specified font.
     """
 
-    # Get existing font object, raise 404 if DNE
-    font = get_font(db, font_id, raise_exc=True)
-
     # Download file, raise 400 if contentless
     if not (file_content := await file.read()):
         raise HTTPException(
             status_code=400,
             detail='Font file is invalid',
         )
+
+    # Get existing font object, raise 404 if DNE
+    font = get_font(db, font_id, raise_exc=True)
 
     # Delete existing file (if present)
     if (existing_font := font.file):
@@ -366,7 +374,7 @@ def get_suggested_font_replacements(
     )
 
 
-@font_router.put('/transfer/')
+@font_router.put('/transfer')
 def transfer_font_references(
         request: Request,
         to_id: int = Query(..., alias='to'),
