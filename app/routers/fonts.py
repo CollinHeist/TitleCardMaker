@@ -17,6 +17,7 @@ from unidecode import unidecode
 from app.database.query import get_font
 from app.dependencies import get_database, get_preferences
 from app.internal.auth import get_current_user
+from app.internal.font import delete_font_files
 from app.models.font import Font
 from app.models.preferences import Preferences
 from app.schemas.font import (
@@ -141,17 +142,8 @@ def delete_font_file(
             detail=f'Font {font.name} has no file',
         )
 
-    # Raise exception if unable to delete file
-    try:
-        font.file.unlink()
-    except Exception as exc:
-        log.exception(f'Error deleting {font.file}')
-        raise HTTPException(
-            status_code=400,
-            detail=f'Error deleting Font file - {exc}',
-        ) from exc
-
-    # Reset file path, update database
+    # Delete files, update font name reference
+    delete_font_files(font, log=log)
     font.file_name = None
     db.commit()
 
@@ -248,22 +240,8 @@ def delete_font(
         }
         log.debug(f'{preferences.default_fonts = }')
 
-    # If Font file is specified (and exists), delete
-    font_dir = preferences.asset_directory / 'fonts' / str(font_id)
-    if font_dir.exists():
-        for file in font_dir.iterdir():
-            try:
-                if file.is_file():
-                    file.unlink(missing_ok=True)
-                else:
-                    file.rmdir()
-            except OSError as exc:
-                log.exception(f'Error deleting "{file}"')
-                raise HTTPException(
-                    status_code=500,
-                    detail='Error deleting Font file(s)',
-                ) from exc
-
+    # Delete all files and the Font itself
+    delete_font_files(font, log=log)
     db.delete(font)
     db.commit()
     preferences.commit()
