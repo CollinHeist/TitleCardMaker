@@ -273,17 +273,17 @@ def reset_all_authentication(
     Intended only for testing setup and teardown.
     """
 
-    if environ.get('TCM_TESTING', 'false') == 'TRUE':
-        # Delete all Users from the database
-        request.state.log.warning('Resetting all authentication')
-        db.query(User).delete()
-        db.commit()
-
-        # Do not require authentication
-        preferences.require_auth = False
-        preferences.commit()
-    else:
+    if environ.get('TCM_TESTING', 'false') != 'TRUE':
         raise HTTPException(
             status_code=401,
             detail='Unauthorized',
         )
+
+    # Delete all Users from the database
+    request.state.log.warning('Resetting all authentication')
+    db.query(User).delete()
+    db.commit()
+
+    # Do not require authentication
+    preferences.require_auth = False
+    preferences.commit()
