@@ -359,14 +359,16 @@ def transfer_font_references(
         from_id: int = Query(..., alias='from'),
         delete_from: bool = Query(default=False),
         db: Session = Depends(get_database),
+        preferences: Preferences = Depends(get_preferences),
     ) -> NamedFont:
     """
-    Transfer all references for the given `from` Font to the given `to` Font.
+    Transfer all references for the given `from` Font to the given `to`
+    Font.
 
     - to: ID of the Font to transfer _to_.
     - from: ID of the Font to transfer _from_.
-    - delete_from: Whether to delete the _from_ Font after the references are
-    reassigned.
+    - delete_from: Whether to delete the _from_ Font after the
+    references are reassigned.
     """
 
     # Get contextual logger
@@ -377,10 +379,29 @@ def transfer_font_references(
     from_font = get_font(db, from_id, raise_exc=True)
 
     # Perform reference transfer
-    ...
+    # Reassign global Fonts
+    for card_type, id_ in preferences.default_fonts.items():
+        if id_ == from_id:
+            log.debug(f'Preferences.global_font[{card_type}] = {from_id} -> {to_id}')
+            preferences.default_fonts[card_type] = to_id
+    # Reassign Template Fonts
+    for template in from_font.templates:
+        log.debug(f'Template[{template.id}].font_id = {from_id} -> {to_id}')
+        template.font_id = to_id
+    # Reassign Series Fonts
+    for series in from_font.series:
+        log.debug(f'Series[{series.id}].font_id = {from_id} -> {to_id}')
+        series.font_id = to_id
+    # Reassign Episode Fonts
+    for episode in from_font.episodes:
+        log.debug(f'Episode[{episode.id}].font_id = {from_id} -> {to_id}')
+        episode.font_id = to_id
 
+    # Delete transferred Font, if indicated
     if delete_from:
-        ...
+        delete_font_files(from_font, log=log)
+        db.delete(from_font)
+        log.debug(f'Deleting Font[{from_id}]')
 
     db.commit()
 
