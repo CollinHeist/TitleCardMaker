@@ -1,5 +1,5 @@
 from logging import Logger
-from os import environ
+from os import getenv
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import MetaData, text
@@ -96,26 +96,26 @@ def reset_database(
 
     log: Logger = request.state.log
 
-    if environ.get('TCM_TESTING', 'false') == 'TRUE':
-        # Delete all tables in the database in reverse order so children
-        # are removed before parents
-        metadata = MetaData()
-        metadata.reflect(bind=engine)
-        for table in reversed(metadata.sorted_tables):
-            # Do not delete the version table so migrations aren't triggered
-            if table.name == 'alembic_version':
-                continue
-            log.info(f'Deleting SQL Table "{table.name}"')
-            db.execute(table.delete())
-        db.commit()
-
-        # Reset the global preferences
-        preferences.reset(log=log)
-
-        # Re-initialize the scheduler
-        initialize_scheduler(override=True)
-    else:
+    if getenv('TCM_TESTING', 'false') != 'TRUE':
         raise HTTPException(
             status_code=401,
             detail='Unauthorized',
         )
+
+    # Delete all tables in the database in reverse order so children
+    # are removed before parents
+    metadata = MetaData()
+    metadata.reflect(bind=engine)
+    for table in reversed(metadata.sorted_tables):
+        # Do not delete the version table so migrations aren't triggered
+        if table.name == 'alembic_version':
+            continue
+        log.info(f'Deleting SQL Table "{table.name}"')
+        db.execute(table.delete())
+    db.commit()
+
+    # Reset the global preferences
+    preferences.reset(log=log)
+
+    # Re-initialize the scheduler
+    initialize_scheduler(override=True)
