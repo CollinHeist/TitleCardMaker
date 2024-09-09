@@ -294,7 +294,7 @@ def process_series(
         for episode in series.episodes:
             background_tasks.add_task(
                 download_episode_source_images,
-                db, episode, commit=False, raise_exc=False, log=log,
+                db, episode, commit=True, raise_exc=False, log=log,
             )
 
     # Begin Episode translation
@@ -303,7 +303,7 @@ def process_series(
         for episode in series.episodes:
             background_tasks.add_task(
                 translate_episode,
-                db, episode, commit=False, log=log,
+                db, episode, commit=True, log=log,
             )
 
     # Begin Card creation
