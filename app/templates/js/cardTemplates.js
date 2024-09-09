@@ -148,7 +148,7 @@ function showDeleteModal(templateId) {
           url: `/api/templates/${templateId}`,
           success: () => {
             showInfoToast('Deleted Template');
-            getAllTemplates(); // TODO delete just this one template element
+            document.getElementById(`template-id${templateId}`).remove();
           },
           error: response => showErrorToast({title: 'Error Deleting Template', response}),
         });
