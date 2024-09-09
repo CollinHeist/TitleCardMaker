@@ -202,6 +202,54 @@ function querySuggestedFontReplacements(fontId, elementId) {
   });
 }
 
+/**
+ * 
+ * @param {number} fromId ID of the Font whose assignments are being transferred
+ * from.
+ * @param {number} toId ID of the Font whose assignments are being transferred
+ * to.
+ * @param {boolean} deleteFrom Whether to delete the "from" Font after
+ * transferring.
+ */
+function transferFontReferences(fromId, toId, deleteFrom) {
+  const args = new URLSearchParams({
+    from: fromId,
+    to: toId,
+    delete_from: deleteFrom,
+  })
+  $.ajax({
+    type: 'PUT',
+    url: `/api/fonts/transfer?${args.toString()}`,
+    /**
+     * 
+     * @param {NamedFont} font "To" Font after re-assignment.
+     */
+    success: font => {
+      showInfoToast(`Font references transferred to "${font.name}"`);
+      if (deleteFrom) {
+        showInfoToast('Font deleted');
+        // Remove deleted Font
+        document.getElementById(`font-id${fromId}`).remove();
+        $(`.dropdown[data-action="transfer"] .item[data-value="${fromId}"]`).remove();
+      }
+    },
+    error: response => showErrorToast({title: 'Error transferring Font', response}),
+  });
+}
+
+/**
+ * 
+ * @param {number} fromId ID of the Font whose assignments are being transferred
+ * from.
+ * @param {number} toId ID of the Font whose assignments are being transferred
+ * to.
+ */
+function showTransferFontDialog(fromId, toId) {
+  document.querySelector('#transfer-font-modal [data-action="transfer-only"]').onclick = () => transferFontReferences(fromId, toId, false);
+  document.querySelector('#transfer-font-modal [data-action="transfer-with-delete"]').onclick = () => transferFontReferences(fromId, toId, true);
+  $('#transfer-font-modal').modal('show');
+}
+
 let previewData;
 /**
  * 
@@ -215,6 +263,7 @@ let previewData;
 function populateFontElement(template, font, activeFontId) {
   // Set Element ID
   template.querySelector('.accordion').id = `font-id${font.id}`;
+  template.querySelector('.accordion').dataset.id = font.id;
 
   // Make accordion active if this was indicated in the URL
   if (activeFontId && `font-id${font.id}` === activeFontId) {
@@ -283,6 +332,10 @@ function populateFontElement(template, font, activeFontId) {
     event.preventDefault();
     saveFontForm(font.id, event.target);
   };
+
+  // Disable transfer item to this Font (cannot transfer to itself)
+  template.querySelector('.button[data-action="transfer"]').onclick = event => event.preventDefault();
+  template.querySelector(`.dropdown[data-value="font_ids"] .item[data-value="${font.id}"]`).classList.add('disabled');
 
   // Set delete button to submit DELETE API request
   template.querySelector('.negative.button').onclick = event => {
@@ -393,6 +446,16 @@ function getAllFonts() {
       // Get the currently active Font from the URL
       const activeFontId = window.location.hash.substring(1);
 
+      // Populate font transfer dropdown in the template
+      const transferItems = fonts.map(font => {
+        const item = document.createElement('div');
+        item.className = 'item';
+        item.innerText = font.name;
+        item.dataset.value = font.id;
+        return item;
+      });
+      document.getElementById('font-template').content.querySelector('.dropdown[data-value="font_ids"] .menu .menu').replaceChildren(...transferItems);
+
       const fontElements = [];
       // If there are lots of fonts, group elements under letter sections
       if (fonts.length > 20) {
@@ -423,6 +486,7 @@ function getAllFonts() {
       }
 
       // Put new font elements on the page
+      document.getElementById('loader').remove();
       document.getElementById('fonts').replaceChildren(...fontElements);
 
       // Scroll to active Font if indicated
@@ -436,9 +500,21 @@ function getAllFonts() {
         reloadPreview(...previewData);
       }
 
+      // Enable transfer functionality
+      $('.dropdown[data-action="transfer"]').dropdown({
+          action: 'hide',
+          onChange: function(value, text, $selectedItem) {
+            showTransferFontDialog(
+              $selectedItem.closest('.accordion').data('id'),
+              value,
+            )
+          }
+        })
+      ;
+
       // Enable accordion/dropdown/checkbox elements
       $('.ui.accordion').accordion();
-      $('.ui.dropdown').dropdown();
+      // $('.ui.dropdown').dropdown();
       $('.ui.checkbox').checkbox();
 
       // Fill in card type dropdowns
