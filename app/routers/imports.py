@@ -501,9 +501,9 @@ def import_mediux_yaml_for_series(
                     log.debug(f'{episode} Source Image ({source.name}) exists '
                               f'- replacing')
                 try:
-                    move_file(card, source)
+                    copyfile(card, source)
                 except OSError:
-                    log.exception('Error occurred while moving Card file')
+                    log.exception('Error occurred while copying Card file')
                     continue
 
             # Add to list to import
