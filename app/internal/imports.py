@@ -1,4 +1,3 @@
-from logging import Logger
 from pathlib import Path
 from re import match, IGNORECASE
 from shutil import move as move_file
@@ -54,8 +53,7 @@ from app.schemas.sync import (
     NewPlexSync,
     NewSonarrSync
 )
-
-from modules.Debug import InvalidCardSettings, log
+from modules.Debug import InvalidCardSettings, Logger, log
 from modules.EpisodeMap import EpisodeMap
 from modules.PreferenceParser import PreferenceParser
 from modules.SeriesInfo2 import SeriesInfo

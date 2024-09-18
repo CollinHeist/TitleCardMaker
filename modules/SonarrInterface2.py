@@ -1,12 +1,11 @@
 from datetime import datetime, timedelta
-from logging import Logger
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
 from typing import Any, Literal, Optional
 
 from fastapi import HTTPException
 
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.EpisodeDataSource2 import (
     EpisodeDataSource,
     SearchResult,

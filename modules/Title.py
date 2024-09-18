@@ -139,7 +139,7 @@ class Title:
             This title split evenly.
         """
 
-        lines: list[list[str], list[str]] = [[], []]
+        lines: list[list[str]] = [[], []]
         def len_l1() -> int:
             return sum(map(len, lines[0]))
         def len_l2() -> int:

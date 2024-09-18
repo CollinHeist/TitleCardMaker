@@ -1,10 +1,9 @@
 from json import dumps
-from logging import Logger
 from typing import Optional, NamedTuple
 
 from fastapi import HTTPException
 
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.Interface import Interface
 from modules.WebInterface import WebInterface
 

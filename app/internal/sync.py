@@ -1,4 +1,3 @@
-from logging import Logger
 from time import sleep
 from typing import Optional, Union
 
@@ -22,7 +21,7 @@ from app.schemas.sync import (
     NewPlexSync,
     NewSonarrSync
 )
-from modules.Debug import log
+from modules.Debug import Logger, log
 
 
 def sync_all(*, log: Logger = log) -> None:

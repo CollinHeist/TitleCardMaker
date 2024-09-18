@@ -22,7 +22,7 @@ class SeriesCharacteristics(TypedDict):
 
 class SeriesIDs(TypedDict):
     emby_id: str
-    imdb_id:str
+    imdb_id: str
     jellyfin_id: str
     sonarr_id: str
     tmdb_id: int
@@ -52,7 +52,7 @@ class SeriesInfo(DatabaseInfoContainer):
             name: str,
             year: Optional[int] = None,
             *,
-            emby_id: Optional[int] = None,
+            emby_id: Optional[str] = None,
             imdb_id: Optional[str] = None,
             jellyfin_id: Optional[str] = None,
             sonarr_id: Optional[str]  =None,
@@ -155,10 +155,14 @@ class SeriesInfo(DatabaseInfoContainer):
         """
 
         series_info = cls(
-            primary.name, primary.year, emby_id=primary.emby_id,
-            imdb_id=primary.imdb_id, jellyfin_id=primary.jellyfin_id,
-            sonarr_id=primary.sonarr_id, tmdb_id=primary.tmdb_id,
-            tvdb_id=primary.tvdb_id, tvrage_id=primary.tvrage_id,
+            primary.name, primary.year,
+            emby_id=str(primary.emby_id),
+            imdb_id=primary.imdb_id,
+            jellyfin_id=str(primary.jellyfin_id),
+            sonarr_id=str(primary.sonarr_id),
+            tmdb_id=primary.tmdb_id,
+            tvdb_id=primary.tvdb_id,
+            tvrage_id=primary.tvrage_id,
             match_titles=primary.match_titles,
         )
 
@@ -409,7 +413,7 @@ class SeriesInfo(DatabaseInfoContainer):
         return ''.join(filter(str.isalnum, text)).lower()
 
 
-    def matches(self, *names: tuple[str]) -> bool:
+    def matches(self, *names: str) -> bool:
         """
         Get whether any of the given names match this Series.
 

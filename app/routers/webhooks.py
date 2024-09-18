@@ -1,4 +1,3 @@
-from logging import Logger
 from time import sleep
 from typing import Optional
 
@@ -32,6 +31,8 @@ from app.models.loaded import Loaded
 from app.models.series import Series
 from app.schemas.series import NewSeries
 from app.schemas.webhooks import PlexWebhook, SonarrWebhook
+
+from modules.Debug import Logger
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.SeriesInfo2 import SeriesInfo
 
@@ -220,8 +221,8 @@ def create_cards_for_sonarr_webhook(
         for library in series.libraries:
             if (interface := get_interface(library['interface_id'], raise_exc=False)):
                 load_episode_title_card(
-                    episode, db, library['name'], library['interface_id'], interface,
-                    attempts=6, log=log,
+                    episode, db, library['name'], library['interface_id'],
+                    interface, attempts=6, log=log,
                 )
             else:
                 log.debug(f'Not loading {series_info} {episode_info} into '

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Union
 
 from modules.Debug import log
 from modules.BaseSummary import BaseSummary
@@ -70,14 +70,13 @@ class StandardSummary(BaseSummary):
                 pass
 
         # If a filepath that exists, use as image
+        self.background: Union[str, Path] = background
+        self.__background_is_image = False
         if Path(background).exists():
             self.background = Path(background)
             self.__background_is_image = True
             log.debug(f'Identified summary background image '
                       f'{self.background.resolve()}')
-        else:
-            self.background = background
-            self.__background_is_image = False
 
 
     def _create_montage(self) -> Path:

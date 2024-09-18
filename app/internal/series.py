@@ -1,4 +1,3 @@
-from logging import Logger
 from pathlib import Path
 from time import sleep
 from typing import Optional, Union
@@ -15,7 +14,7 @@ from app.database.query import (
     get_interface,
     get_sync,
 )
-from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.dependencies import get_database, get_preferences, get_sonarr_interfaces, get_tmdb_interfaces, get_tvdb_interfaces
 from app.internal.cards import (
     create_episode_cards,
     get_watched_statuses,
@@ -34,8 +33,7 @@ from app.models.series import Series
 from app.schemas.base import UNSPECIFIED
 from app.schemas.connection import EpisodeDataSourceInterface
 from app.schemas.series import NewSeries, SearchResult, UpdateSeries
-
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.EmbyInterface2 import EmbyInterface
 from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
@@ -153,11 +151,11 @@ def set_series_database_ids(
         if (interface := get_interface(library['interface_id'])):
             interface.set_series_ids(library['name'], series_info, log=log)
     for _, interface in get_sonarr_interfaces():
-        interface.set_series_ids(None, series_info, log=log)
+        interface.set_series_ids('', series_info, log=log)
     for _, interface in get_tmdb_interfaces():
-        interface.set_series_ids(None, series_info, log=log)
+        interface.set_series_ids('', series_info, log=log)
     for _, interface in get_tvdb_interfaces():
-        interface.set_series_ids(None, series_info, log=log)
+        interface.set_series_ids('', series_info, log=log)
 
     # Update Series with new IDs
     if (changed := series.set_ids_from_series_info(series_info)) and commit:

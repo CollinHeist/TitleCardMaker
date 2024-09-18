@@ -1,4 +1,3 @@
-from logging import Logger
 from pathlib import Path
 from typing import Optional
 
@@ -17,6 +16,7 @@ from app.models.series import Library, Series
 from app.schemas.card import SourceImage
 from app.schemas.preferences import Style
 from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.TieredSettings import TieredSettings
 from modules.WebInterface import WebInterface
 
@@ -70,7 +70,7 @@ def resolve_source_settings(
 
     # Resolve styles
     preferences = get_preferences()
-    watched_style = TieredSettings.resolve_singular_setting(
+    watched_style: Style = TieredSettings.resolve_singular_setting(
         preferences.default_watched_style,
         getattr(global_template, 'watched_style', None),
         getattr(series_template, 'watched_style', None),
@@ -79,7 +79,7 @@ def resolve_source_settings(
         getattr(episode_template, 'watched_style', None),
         episode.watched_style,
     )
-    unwatched_style = TieredSettings.resolve_singular_setting(
+    unwatched_style: Style = TieredSettings.resolve_singular_setting(
         preferences.default_unwatched_style,
         getattr(global_template, 'unwatched_style', None),
         getattr(series_template, 'unwatched_style', None),

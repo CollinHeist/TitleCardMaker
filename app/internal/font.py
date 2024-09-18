@@ -1,4 +1,3 @@
-from logging import Logger
 from typing import Optional, Union
 
 from fastapi import HTTPException
@@ -10,7 +9,7 @@ from app.models.font import Font
 from app.models.series import Series
 from app.schemas.availability import AvailableFont
 from app.schemas.font import NamedFont
-from modules.Debug import log
+from modules.Debug import Logger, log
 
 
 def get_effective_fonts(

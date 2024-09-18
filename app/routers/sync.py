@@ -15,7 +15,6 @@ from app.dependencies import get_database, get_preferences
 from app.internal.auth import get_current_user
 from app.internal.series import delete_series
 from app.internal.sync import add_sync, run_sync
-from app import models
 from app.schemas.sync import (
     EmbySync,
     JellyfinSync,
@@ -29,6 +28,7 @@ from app.schemas.sync import (
     UpdateSync,
 )
 from app.schemas.series import Series
+from app.models.sync import Sync as SyncModel
 
 
 # Create sub router for all /sync API requests
@@ -177,7 +177,7 @@ def get_all_syncs(
     ) -> list[Sync]:
     """Get all defined Syncs."""
 
-    return db.query(models.sync.Sync).all()
+    return db.query(SyncModel).all()
 
 
 @sync_router.get('/emby/all', tags=['Emby'], status_code=200)
@@ -186,7 +186,7 @@ def get_all_emby_syncs(
     ) -> list[EmbySync]:
     """Get all defined Syncs that interface with Emby."""
 
-    return db.query(models.sync.Sync).filter_by(interface='Emby').all()
+    return db.query(SyncModel).filter_by(interface='Emby').all()
 
 
 @sync_router.get('/jellyfin/all', tags=['Jellyfin'], status_code=200)
@@ -195,7 +195,7 @@ def get_all_jellyfin_syncs(
     ) -> list[JellyfinSync]:
     """Get all defined Syncs that interface with Jellyfin."""
 
-    return db.query(models.sync.Sync).filter_by(interface='Jellyfin').all()
+    return db.query(SyncModel).filter_by(interface='Jellyfin').all()
 
 
 @sync_router.get('/plex/all', tags=['Plex'], status_code=200)
@@ -204,7 +204,7 @@ def get_all_plex_syncs(
     ) -> list[PlexSync]:
     """Get all defined Syncs that interface with Plex."""
 
-    return db.query(models.sync.Sync).filter_by(interface='Plex').all()
+    return db.query(SyncModel).filter_by(interface='Plex').all()
 
 
 @sync_router.get('/sonarr/all', tags=['Sonarr'], status_code=200)
@@ -213,7 +213,7 @@ def get_all_sonarr_syncs(
     ) -> list[SonarrSync]:
     """Get all defined Syncs that interface with Sonarr."""
 
-    return db.query(models.sync.Sync).filter_by(interface='Sonarr').all()
+    return db.query(SyncModel).filter_by(interface='Sonarr').all()
 
 
 @sync_router.get('/{sync_id}', status_code=200)

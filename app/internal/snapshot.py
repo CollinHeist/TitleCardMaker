@@ -1,5 +1,3 @@
-from logging import Logger
-
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
@@ -7,9 +5,7 @@ from app.dependencies import get_database, get_preferences
 from app import models
 from app.models.snapshot import Snapshot
 from app.schemas.statistic import NewSnapshot
-
-
-from modules.Debug import log
+from modules.Debug import Logger, log
 
 
 def snapshot_database(*, log: Logger = log) -> None:

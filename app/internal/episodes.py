@@ -1,4 +1,3 @@
-from logging import Logger
 from pathlib import Path
 from typing import Iterable, Optional
 
@@ -16,10 +15,9 @@ from app.internal.templates import get_effective_templates
 from app.models.card import Card
 from app.models.episode import Episode
 from app.models.series import Series
-
 from app.schemas.base import UNSPECIFIED
 from app.schemas.episode import UpdateEpisode
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.EpisodeDataSource2 import WatchedStatus
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.TieredSettings import TieredSettings
@@ -59,7 +57,7 @@ def set_episode_ids(
     for _, interface in get_sonarr_interfaces():
         interface.set_episode_ids(
             None, series.as_series_info, episode_infos, log=log
-    )
+        )
     for _, interface in get_tmdb_interfaces():
         interface.set_episode_ids(
             None, series.as_series_info, episode_infos, log=log
@@ -128,7 +126,7 @@ def get_all_episode_data(
 
     # Query Connections which do not have libraries
     if interface.INTERFACE_TYPE in ('Sonarr', 'TMDb', 'TVDb'):
-        return interface.get_all_episodes(None, series.as_series_info, log=log)
+        return interface.get_all_episodes('', series.as_series_info, log=log)
 
     # Verify Series has an associated Library if EDS is a media server
     if not (libraries := list(series.get_libraries(interface_id))):
@@ -190,7 +188,7 @@ def refresh_episode_data(
         series.sync_specials,
     )
 
-    # Filter Episodes
+    # Filter Episodezs
     new_episodes: list[Episode] = []
     changed, episodes = False, []
     for episode_info, watched in all_episodes:

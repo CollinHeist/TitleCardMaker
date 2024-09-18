@@ -1,4 +1,3 @@
-from logging import Logger
 from typing import Union
 
 from sqlalchemy.orm import Session
@@ -31,7 +30,7 @@ from app.schemas.connection import (
     UpdateTMDb,
     UpdateTVDb,
 )
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.Debug2 import SECRETS
 from modules.InterfaceGroup import InterfaceGroup
 

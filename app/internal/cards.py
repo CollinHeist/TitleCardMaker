@@ -1,4 +1,3 @@
-from logging import Logger
 from pathlib import Path
 from time import sleep
 from typing import Any, Optional
@@ -29,7 +28,7 @@ from app.schemas.card import NewTitleCard
 from app.schemas.card_type import LocalCardTypeModels
 from modules.BaseCardType import BaseCardType
 from modules.CleanPath import CleanPath
-from modules.Debug import InvalidCardSettings, MissingSourceImage, log
+from modules.Debug import InvalidCardSettings, Logger, MissingSourceImage, log
 from modules.FormatString import FormatString
 from modules.RemoteCardType2 import RemoteCardType
 from modules.RemoteFile import RemoteFile
@@ -479,7 +478,7 @@ def resolve_card_settings(
         ).card_properties
 
     # Resolve all settings from global -> Episode
-    card_settings = TieredSettings.new_settings(
+    card_settings: dict[str, Any] = TieredSettings.new_settings(
         {'hide_season_text': False, 'hide_episode_text': False},
         DefaultFont,
         preferences.card_properties,
@@ -748,6 +747,7 @@ def create_episode_card(
     card_settings['card_file'].parent.mkdir(parents=True, exist_ok=True)
 
     # Find existing Card
+    existing_card: Optional[Card] = None
     # Library unique mode is disabled, look for any Card for this Episode
     if not get_preferences().library_unique_cards or not library:
         existing_card = db.query(Card).filter_by(episode_id=episode.id).first()

@@ -1,4 +1,3 @@
-from logging import Logger
 from signal import SIGINT, raise_signal
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
@@ -13,7 +12,7 @@ from app.internal.backup import (
 )
 from app.schemas.preferences import SystemBackup
 from modules.BackgroundTasks import task_queue
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.Debug2 import ACTIVE_WEBSOCKETS
 
 

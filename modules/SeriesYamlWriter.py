@@ -233,7 +233,7 @@ class SeriesYamlWriter:
             dump(yaml, file_handle, **self.__WRITE_OPTIONS)
 
 
-    def __read_existing_file(self, yaml: SeriesYaml) -> SeriesYaml:
+    def __read_existing_file(self, yaml: SeriesYaml) -> Optional[SeriesYaml]:
         """
         Read the existing YAML from this writer's file. If the file has
         no existing YAML to read, then just write the given YAML.
