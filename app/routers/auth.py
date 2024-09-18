@@ -7,7 +7,6 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from app import models
 from app.dependencies import get_database, get_preferences
 from app.internal.auth import (
     authenticate_user,
@@ -17,6 +16,7 @@ from app.internal.auth import (
     get_user
 )
 from app.models.preferences import Preferences
+from app.models.user import User as UserModel
 from app.schemas.auth import NewUser, Token, UpdateUser, User
 
 
@@ -49,13 +49,13 @@ def enable_authentication(
     preferences.commit()
 
     # Get current users
-    users = db.query(models.user.User).all()
+    users = db.query(UserModel).all()
     if users:
         return users[0]
 
     # No existing Users, create temporary
     new_user = NewUser(username='admin', password='password')
-    new_user = models.user.User(
+    new_user = UserModel(
         username=new_user.username,
         hashed_password=get_password_hash(new_user.password),
     )
@@ -90,7 +90,7 @@ def disable_authentication(
     # If revoking access, deleting existing User entries
     if revoke_access:
         log.warning(f'Revoking access from all existing Users')
-        db.query(models.user.User).delete()
+        db.query(UserModel).delete()
         db.commit()
 
 
@@ -107,7 +107,7 @@ def add_new_user(
     """
 
     # Verify no User exists with this username
-    existing = db.query(models.user.User)\
+    existing = db.query(UserModel)\
         .filter_by(username=new_user.username)\
         .first()
     if existing:
@@ -117,7 +117,7 @@ def add_new_user(
         )
 
     # Hash this Password, add to database
-    user = models.user.User(
+    user = UserModel(
         username=new_user.username,
         hashed_password=get_password_hash(new_user.password),
     )
@@ -147,7 +147,7 @@ def delete_user(
     log = request.state.log
 
     # Find this User
-    user = db.query(models.user.User).filter_by(username=username).first()
+    user = db.query(UserModel).filter_by(username=username).first()
     if user is None:
         raise HTTPException(
             status_code=404,
@@ -160,7 +160,7 @@ def delete_user(
     log.info(f'Deleted User({username})')
 
     # If there are no more active Users, disable authentication to avoid L/O
-    if len(db.query(models.user.User).all()) == 0:
+    if len(db.query(UserModel).all()) == 0:
         log.warning(f'No remaining active users - disabling authentication')
         preferences.require_auth = False
         preferences.commit()
@@ -170,7 +170,7 @@ def delete_user(
 def get_all_usernames(db: Session = Depends(get_database)) -> list[str]:
     """Get the usernames of all Users in the database."""
 
-    return [user.username for user in db.query(models.user.User).all()]
+    return [user.username for user in db.query(UserModel).all()]
 
 
 @auth_router.get('/active')
@@ -205,7 +205,7 @@ def update_user_credentials(
     user = get_user(db, user.username)
 
     # Verify new username does not conflict with existing user
-    existing_user = db.query(models.user.User)\
+    existing_user = db.query(UserModel)\
         .filter_by(username=update_user.username)\
         .first()
     if existing_user and existing_user != user:
@@ -254,10 +254,10 @@ def login_for_access_token(
         f'Authenticated User({user.username}) for {EXPIRATION_TIME}'
     )
 
-    return {
-        'access_token': access_token,
-        'token_type': 'bearer',
-    }
+    return Token(
+        access_token=access_token,
+        token_type='bearer',
+    )
 
 
 @auth_router.post('/reset')

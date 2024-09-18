@@ -32,7 +32,7 @@ def get_available_system_backups(request: Request) -> list[SystemBackup]:
 
 
 @backup_router.post('/backup')
-def perform_backup(request: Request) -> SystemBackup:
+def perform_backup(request: Request) -> None:
     """Perform a backup of the SQL database and global settings."""
 
     backup_data(get_preferences().current_version, log=request.state.log)
