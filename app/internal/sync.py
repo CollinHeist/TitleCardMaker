@@ -154,7 +154,7 @@ def run_sync(
     log.trace(f'{sync} returned {len(all_series)} Series')
 
     # Process all Series returned by Sync
-    added: list[Series] = []
+    added: list[NewSeries] = []
     existing_series: set[Series] = set()
     for series_info, lib_or_dir in all_series:
         # Look for existing Series
