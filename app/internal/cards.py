@@ -122,7 +122,7 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                     log.exception('Error ocurred while processing Series')
                     sleep(10)
     except Exception:
-        log.exception(f'Failed to create title cards')
+        log.exception('Failed to create title cards')
 
 
 def clean_database(*, log: Logger = log) -> None:

@@ -29,7 +29,7 @@ def upgrade() -> None:
             'add_as_unmonitored',
             sa.Boolean(),
             nullable=False,
-            server_default=str(False),
+            server_default=sa.false(),
         ))
 
     log.debug(f'Upgraded SQL Schema to Version[{revision}]')

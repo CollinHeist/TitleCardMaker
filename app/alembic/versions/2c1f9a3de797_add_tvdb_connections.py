@@ -19,7 +19,6 @@ depends_on = None
 
 # Models necessary for data migration
 from os import environ
-from pathlib import Path
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
 
@@ -50,7 +49,7 @@ def upgrade() -> None:
     with op.batch_alter_table('connection', schema=None) as batch_op:
         batch_op.add_column(sa.Column(
             'integrate_with_kometa', sa.Boolean(), nullable=False,
-            server_default=str(False),
+            server_default=sa.false(),
         ))
         batch_op.add_column(sa.Column(
             'language_priority', sa.JSON(), nullable=False,
@@ -62,7 +61,7 @@ def upgrade() -> None:
         ))
         batch_op.add_column(sa.Column(
             'include_movies', sa.Boolean(), nullable=False,
-            server_default=str(False),
+            server_default=sa.false(),
         ))
 
     with op.batch_alter_table('font', schema=None) as batch_op:
@@ -98,7 +97,8 @@ def upgrade() -> None:
         batch_op.alter_column('required_root_folders',
             existing_type=sqlite.JSON(),
             server_default=None,
-            existing_nullable=False)
+            existing_nullable=False
+        )
 
 
     # Perform data migrations

@@ -60,25 +60,29 @@ def downgrade() -> None:
             'delete_missing',
             sa.BOOLEAN(),
             nullable=False,
-            server_default=sa.text(True),
+            server_default=sa.true(),
         ))
 
     with op.batch_alter_table('connection', schema=None) as batch_op:
         batch_op.alter_column('include_movies',
-               existing_type=sa.BOOLEAN(),
-               server_default=sa.text("'False'"),
-               existing_nullable=False)
+            existing_type=sa.BOOLEAN(),
+            server_default=sa.text("'False'"),
+            existing_nullable=False
+        )
         batch_op.alter_column('episode_ordering',
-               existing_type=sa.VARCHAR(),
-               server_default=sa.text("'default'"),
-               existing_nullable=False)
+            existing_type=sa.VARCHAR(),
+            server_default=sa.text("'default'"),
+            existing_nullable=False
+        )
         batch_op.alter_column('language_priority',
-               existing_type=sqlite.JSON(),
-               server_default=sa.text("'[]'"),
-               existing_nullable=False)
+            existing_type=sqlite.JSON(),
+            server_default=sa.text("'[]'"),
+            existing_nullable=False
+        )
         batch_op.alter_column('integrate_with_kometa',
-               existing_type=sa.BOOLEAN(),
-               server_default=sa.text("'False'"),
-               existing_nullable=False)
+            existing_type=sa.BOOLEAN(),
+            server_default=sa.text("'False'"),
+            existing_nullable=False
+        )
 
     log.debug(f'Downgraded SQL Schema to Version[{down_revision}]')

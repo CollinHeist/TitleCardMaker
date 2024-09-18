@@ -13,7 +13,6 @@ Create Date: 2024-03-10 11:41:30.812809
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import sqlite
 from modules.Debug import contextualize
 from modules.Debug2 import logger 
 
@@ -52,7 +51,7 @@ def upgrade() -> None:
             'auto_split_title',
             sa.Boolean(),
             nullable=False,
-            server_default=str(True),
+            server_default=sa.true(),
         ))
 
     # Perform data migration
