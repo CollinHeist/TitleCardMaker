@@ -1,11 +1,11 @@
 from datetime import datetime
-from logging import Logger
 from os import environ
 from pathlib import Path
 from random import choices as random_choices
 from string import hexdigits
 from typing import Optional
 
+from loguru import Logger as LoguruLogger
 from pytz import timezone, UnknownTimeZoneError
 
 from modules.Debug2 import DATETIME_FORMAT, logger as log
@@ -49,9 +49,9 @@ def generate_context_id() -> str:
 
 
 def contextualize(
-        logger: Logger = log,
+        logger: LoguruLogger = log,
         context_id: Optional[str] = None
-    ) -> Logger:
+    ) -> LoguruLogger:
     """
     Create a contextualized Logger.
 
