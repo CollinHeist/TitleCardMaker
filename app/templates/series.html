@@ -732,7 +732,7 @@
                       {% if series.font_size is none %}
                       <input name="font_size" type="number" placeholder="Default">
                       {% else %}
-                      <input name="font_size" type="number" placeholder="Default" value="{{series.font_size*100}}">
+                      <input name="font_size" type="number" placeholder="Default" value="{{ (series.font_size*100)|int }}">
                       {% endif %}
                       <div class="ui basic label">%</div>
                     </div>
@@ -743,7 +743,7 @@
                       {% if series.font_kerning is none %}
                       <input name="font_kerning" type="number" placeholder="Default">
                       {% else %}
-                      <input name="font_kerning" type="number" placeholder="Default" value="{{series.font_kerning*100}}">
+                      <input name="font_kerning" type="number" placeholder="Default" value="{{ (series.font_kerning*100)|int }}">
                       {% endif %}
                       <div class="ui basic label">%</div>
                     </div>
@@ -754,7 +754,7 @@
                       {% if series.font_stroke_width is none %}
                       <input name="font_stroke_width" type="number" placeholder="Default">
                       {% else %}
-                      <input name="font_stroke_width" type="number" placeholder="Default" value="{{series.font_stroke_width*100}}">
+                      <input name="font_stroke_width" type="number" placeholder="Default" value="{{ (series.font_stroke_width*100)|int }}">
                       {% endif %}
                       <div class="ui basic label">%</div>
                     </div>
@@ -768,7 +768,7 @@
                     {% if series.font_interline_spacing is none %}
                     <input name="font_interline_spacing" type="number" placeholder="Default">
                     {% else %}
-                    <input name="font_interline_spacing" type="number" placeholder="Default" value="{{series.font_interline_spacing}}">
+                    <input name="font_interline_spacing" type="number" placeholder="Default" value="{{ series.font_interline_spacing }}">
                     {% endif %}
                   </div>
 
@@ -777,7 +777,7 @@
                     {% if series.font_interword_spacing is none %}
                     <input name="font_interword_spacing" type="number" placeholder="Default">
                     {% else %}
-                    <input name="font_interword_spacing" type="number" placeholder="Default" value="{{series.font_interword_spacing}}">
+                    <input name="font_interword_spacing" type="number" placeholder="Default" value="{{ series.font_interword_spacing }}">
                     {% endif %}
                   </div>
   
@@ -786,7 +786,7 @@
                     {% if series.font_vertical_shift is none %}
                     <input name="font_vertical_shift" type="number" placeholder="Default">
                     {% else %}
-                    <input name="font_vertical_shift" type="number" placeholder="Default" value="{{series.font_vertical_shift}}">
+                    <input name="font_vertical_shift" type="number" placeholder="Default" value="{{ series.font_vertical_shift }}">
                     {% endif %}
                   </div>
                 </div>
@@ -816,7 +816,7 @@
                       <label>Range</label>
                       {% if series.season_titles is not none %}
                       {% for title_range, _ in series.season_titles.items() %}
-                      <input name="season_title_ranges" data-value="season-titles" type="text" value="{{title_range}}">
+                      <input name="season_title_ranges" data-value="season-titles" type="text" value="{{ title_range }}">
                       {% endfor %}
                       {% endif %}
                     </div>
@@ -824,7 +824,7 @@
                       <label>Title</label>
                       {% if series.season_titles is not none %}
                       {% for _, title_value in series.season_titles.items() %}
-                      <input name="season_title_values" type="text" type="text" value="{{title_value}}">
+                      <input name="season_title_values" type="text" type="text" value="{{ title_value }}">
                       {% endfor %}
                       {% endif %}
                     </div>
@@ -860,7 +860,7 @@
                   {% if series.episode_text_format is none %}
                   <input name="episode_text_format" type="text" placeholder="Card Default">
                   {% else %}
-                  <input name="episode_text_format" type="text" placeholder="Card Default" value="{{series.episode_text_format}}">
+                  <input name="episode_text_format" type="text" placeholder="Card Default" value="{{ series.episode_text_format }}">
                   {% endif %}
                 </div>
 
