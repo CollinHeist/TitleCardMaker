@@ -89,7 +89,7 @@ TimedRotation = LoguruRotation.RotationTime(
     partial(LoguruRotation.forward_interval, interval=timedelta(hours=12))
 )
 SizeRotation = partial(
-    LoguruRotation.rotation_size, size_limit=parse_size('24.9 MB')
+    LoguruRotation.rotation_size, size_limit=parse_size('9.9 MB')
 )
 def rotation_policy(message: str, file: Path) -> bool:
     return SizeRotation(message, file) or TimedRotation(message, file)
