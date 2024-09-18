@@ -1,13 +1,19 @@
+/** @type {CardTypeDescription[]} */
 let allCardTypes;
+
+/**
+ * 
+ * @param {boolean} showExcluded Whether to include excluded card types.
+ */
 async function getAllCardTypes(showExcluded=false) {
   if (allCardTypes === undefined) {
-    allCardTypes = await fetch(`/api/available/card-types?show_excluded=${showExcluded}`).then(resp => resp.json());
+    allCardTypes = await fetch(`/api/available/card-types?show_excluded=${showExcluded}`)
+      .then(resp => resp.json());
   }
 }
 
 /**
  * Loads and initializes a dropdown menu with card types.
- *
  * @async
  * @function
  * @param {Object} args - The arguments for the function.
@@ -18,8 +24,8 @@ async function getAllCardTypes(showExcluded=false) {
  * types in the dropdown.
  * @param {Object} args.dropdownArgs - Additional arguments to pass to the
  * dropdown initialization function.
- * @returns {Promise<string[]>} A promise that resolves to an array of all card
- * type identifiers.
+ * @returns {Promise<CardTypeDescription[]>} A promise that resolves to an array
+ * of the card type descriptions.
  */
 async function loadCardTypes(args) {
   let {element, isSelected, showExcluded=false, dropdownArgs} = args;

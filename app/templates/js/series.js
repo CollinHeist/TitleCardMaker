@@ -951,9 +951,9 @@ async function getEpisodeData(page=1) {
       // Unwatched style
       // Watched style
       row.querySelector('input[name="font_color"]').value = episode.font_color;
-      row.querySelector('input[name="font_size"]').value = episode.font_size === null ? episode.font_size : episode.font_size * 100;
-      row.querySelector('input[name="font_kerning"]').value = episode.font_kerning === null ? episode.font_kerning : episode.font_kerning * 100;
-      row.querySelector('input[name="font_stroke_width"]').value = episode.font_stroke_width === null ? episode.font_stroke_width : episode.font_stroke_width * 100;
+      row.querySelector('input[name="font_size"]').value = episode.font_size === null ? episode.font_size : Math.round(episode.font_size * 100);
+      row.querySelector('input[name="font_kerning"]').value = episode.font_kerning === null ? episode.font_kerning : Math.round(episode.font_kerning * 100);
+      row.querySelector('input[name="font_stroke_width"]').value = episode.font_stroke_width === null ? episode.font_stroke_width : Math.round(episode.font_stroke_width * 100);
       row.querySelector('input[name="font_interline_spacing"]').value = episode.font_interline_spacing;
       row.querySelector('input[name="font_interword_spacing"]').value = episode.font_interword_spacing;
       row.querySelector('input[name="font_vertical_shift"]').value = episode.font_vertical_shift;

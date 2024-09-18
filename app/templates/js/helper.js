@@ -708,7 +708,7 @@ async function initializeExtras(
             }
       }
 
-      // Group every two fields into a field group
+      // Group every (n) fields into a field group
       if (index % groupAmount === 0) {
         const newFields = document.createElement('div');
         newFields.className = 'ui equal width fields';

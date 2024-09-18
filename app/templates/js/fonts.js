@@ -291,9 +291,9 @@ function populateFontElement(template, font, activeFontId) {
     template.querySelector('input[name="title_case"]').value = font.title_case;
   }
   template.querySelector('input[name="line_split_modifier"]').value = font.line_split_modifier;
-  template.querySelector('input[name="size"]').value = Math.floor(font.size*100);
-  template.querySelector('input[name="kerning"]').value = Math.floor(font.kerning*100);
-  template.querySelector('input[name="stroke_width"]').value = Math.floor(font.stroke_width*100);
+  template.querySelector('input[name="size"]').value = Math.round(font.size*100);
+  template.querySelector('input[name="kerning"]').value = Math.round(font.kerning*100);
+  template.querySelector('input[name="stroke_width"]').value = Math.round(font.stroke_width*100);
   template.querySelector('input[name="interline_spacing"]').value = font.interline_spacing;
   template.querySelector('input[name="interword_spacing"]').value = font.interword_spacing;
   template.querySelector('input[name="vertical_shift"]').value = font.vertical_shift;
