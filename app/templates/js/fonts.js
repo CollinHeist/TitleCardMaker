@@ -486,7 +486,7 @@ function getAllFonts() {
       }
 
       // Put new font elements on the page
-      document.getElementById('loader').remove();
+      document.getElementById('loader')?.remove();
       document.getElementById('fonts').replaceChildren(...fontElements);
 
       // Scroll to active Font if indicated

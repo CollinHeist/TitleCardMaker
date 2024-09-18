@@ -83,9 +83,10 @@ def export_series_blueprint(
     # Get raw Episode data
     episode_data = []
     if include_episode_overrides:
-        episode_data = get_all_episode_data(
-            series, raise_exc=False, log=request.state.log,
-        )
+        episode_data = [
+            ei for ei, _ in
+            get_all_episode_data(series, raise_exc=False, log=request.state.log)
+        ]
 
     return generate_series_blueprint(
         series, episode_data, include_global_defaults, include_episode_overrides
@@ -118,10 +119,10 @@ def get_series_blueprint_font_files(
 
     # Return downloadable files for these
     return [
-        {
-            'url': f'/assets/fonts/{font_file.parent.name}/{font_file.name}',
-            'filename': font_file.name
-        }
+        DownloadableFile(
+            url=f'/assets/fonts/{font_file.parent.name}/{font_file.name}',
+            filename=font_file.name
+        )
         for font_file in font_files
     ]
 
@@ -177,11 +178,9 @@ async def export_series_blueprint_as_zip(
 
     # Get all non-Specials Cards for this Series
     cards = db.query(Card)\
-        .join(models.episode.Episode)\
-        .filter(Card.series_id==series_id,
-                models.episode.Episode.season_number>0)\
-        .order_by(models.episode.Episode.season_number,
-                  models.episode.Episode.episode_number)\
+        .join(models.Episode)\
+        .filter(Card.series_id==series_id, models.Episode.season_number>0)\
+        .order_by(models.Episode.season_number, models.Episode.episode_number)\
         .all()
 
     # Filter out Cards which are stylized or DNE
@@ -325,8 +324,8 @@ def query_all_blueprints_(
         if not include_missing_series:
             # Determine if this Series already exists
             series_info = blueprint.series.as_series_info
-            series = db.query(models.series.Series)\
-                .filter(series_info.filter_conditions(models.series.Series))\
+            series = db.query(models.Series)\
+                .filter(series_info.filter_conditions(models.Series))\
                 .first()
 
             # Series not present, do not include
@@ -429,8 +428,8 @@ def import_blueprint_and_series(
 
     # Query for this Blueprint's Series
     series_info = blueprint.series.as_series_info
-    series = db.query(models.series.Series)\
-        .filter(series_info.filter_conditions(models.series.Series))\
+    series = db.query(models.Series)\
+        .filter(series_info.filter_conditions(models.Series))\
         .first()
 
     # Series does not exist, create and add to database
