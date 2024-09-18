@@ -5,7 +5,7 @@ from random import choices as random_choices
 from string import hexdigits
 from typing import Optional
 
-from loguru import Logger as LoguruLogger
+from loguru._logger import Logger as LoguruLogger
 from pytz import timezone, UnknownTimeZoneError
 
 from modules.Debug2 import DATETIME_FORMAT, logger as log
