@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from logging import Logger
 from os import environ
 from pathlib import Path
 from shutil import copy as file_copy
@@ -7,7 +6,8 @@ from sqlite3 import connect, OperationalError
 from typing import NamedTuple, Optional, Union
 
 from app.schemas.preferences import DatabaseBackup, SettingsBackup, SystemBackup
-from modules.Debug import log
+from modules.Debug import Logger, log
+from modules.Version import Version
 
 
 """Naming scheme for backup subfolders"""
@@ -91,7 +91,11 @@ def delete_backup(folder_name: Union[str, Path], *, log: Logger = log) -> None:
     return None
 
 
-def backup_data(version: str, *, log: Logger = log) -> DataBackup:
+def backup_data(
+        version: Union[str, Version],
+        *,
+        log: Logger = log,
+    ) -> DataBackup:
     """
     Perform a backup of the SQL database and global preferences. This
     also deletes any "old" backups.

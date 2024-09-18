@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from logging import Logger
 from typing import Optional
 
 from fastapi import HTTPException
@@ -7,7 +6,7 @@ from requests import get as req_get
 
 from app.models.preferences import Preferences
 from app.schemas.card import LocalCardType, RemoteCardType
-from modules.Debug import log
+from modules.Debug import log, Logger
 from modules.Version import Version
 
 

@@ -1,11 +1,11 @@
 from datetime import datetime
-from os import environ
+from os import environ, getenv
 from pathlib import Path
 from random import choices as random_choices
 from string import hexdigits
 from typing import Optional
 
-from loguru._logger import Logger as LoguruLogger
+from loguru._logger import Logger
 from pytz import timezone, UnknownTimeZoneError
 
 from modules.Debug2 import DATETIME_FORMAT, logger as log
@@ -17,9 +17,12 @@ class InvalidFormatString(InvalidCardSettings): ...
 class MissingSourceImage(InvalidCardSettings): ...
 # pylint: enable=missing-class-docstring,multiple-statements
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from loguru import Logger
 
 __all__ = (
-    'log', 'generate_context_id', 'contextualize', 'DATETIME_FORMAT',
+    'log', 'Logger', 'generate_context_id', 'contextualize', 'DATETIME_FORMAT',
     'IS_DOCKER', 'TQDM_KWARGS', 'InvalidCardSettings', 'InvalidFormatString',
     'MissingSourceImage',
 )
@@ -49,9 +52,9 @@ def generate_context_id() -> str:
 
 
 def contextualize(
-        logger: LoguruLogger = log,
+        logger: Logger = log,
         context_id: Optional[str] = None
-    ) -> LoguruLogger:
+    ) -> Logger:
     """
     Create a contextualized Logger.
 
@@ -79,8 +82,8 @@ try:
     tz = datetime.now().astimezone().tzinfo
 except Exception:
     tz = timezone('UTC')
-if environ.get('TZ', None) is not None:
+if (tz_code := getenv('TZ', None)) is not None:
     try:
-        tz = timezone(environ.get('TZ'))
+        tz = timezone(tz_code)
     except UnknownTimeZoneError:
-        print(f'Invalid timezone (TZ) environment variable')
+        print(f'Invalid timezone (TZ) environment variable "{tz_code}"')
