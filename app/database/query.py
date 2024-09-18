@@ -108,12 +108,18 @@ def get_blueprint_set(
     ) -> BlueprintSet:
     ...
 
+@overload
+def get_blueprint_set(
+        db: Session, set_id: int, *, raise_exc: Literal[False] = False
+    ) -> Optional[BlueprintSet]:
+    ...
+
 def get_blueprint_set(
         db: Session,
         set_id: Optional[int],
         *,
         raise_exc: bool = True
-    ) -> BlueprintSet:
+    ) -> Optional[BlueprintSet]:
     """
     Get the BlueprintSet with the given ID from the given Database.
 
@@ -127,6 +133,12 @@ def get_blueprint_set(
 def get_card(
         db: Session, card_id: int, *, raise_exc: Literal[True] = True,
     ) -> Card:
+    ...
+
+@overload
+def get_card(
+        db: Session, card_id: int, *, raise_exc: Literal[False] = False,
+    ) -> Optional[Card]:
     ...
 
 def get_card(
@@ -146,8 +158,14 @@ def get_card(
 
 @overload
 def get_connection(
-        db: Session, connection_id: int, *, raise_exc: Literal[True] = True,
+        db: Session, connection_id: int, /, *, raise_exc: Literal[True] = True,
     ) -> Connection:
+    ...
+
+@overload
+def get_connection(
+        db: Session, connection_id: int, /,*, raise_exc: Literal[False] = False,
+    ) -> Optional[Connection]:
     ...
 
 def get_connection(
@@ -172,6 +190,12 @@ def get_episode(
     ) -> Episode:
     ...
 
+@overload
+def get_episode(
+        db: Session, episode_id: int, *, raise_exc: Literal[False] = False,
+    ) -> Optional[Episode]:
+    ...
+
 def get_episode(
         db: Session,
         episode_id: Optional[int],
@@ -193,6 +217,12 @@ def get_font(
     ) -> Font:
     ...
 
+@overload
+def get_font(
+        db: Session, font_id: int, *, raise_exc: Literal[False] = False,
+    ) -> Optional[Font]:
+    ...
+
 def get_font(
         db: Session,
         font_id: Optional[int],
@@ -210,8 +240,14 @@ def get_font(
 
 @overload
 def get_series(
-        db: Session, series_id: int, *, raise_exc: Literal[True] = True,
+        db: Session, series_id: int, *, raise_exc: Literal[True],
     ) -> Series:
+    ...
+
+@overload
+def get_series(
+        db: Session, series_id: int, *, raise_exc: Union[bool, Literal[False]],
+    ) -> Optional[Series]:
     ...
 
 def get_series(
@@ -235,6 +271,13 @@ def get_sync(
     ) -> Sync:
     ...
 
+@overload
+def get_sync(
+        db: Session, sync_id: int, *,
+        raise_exc: Union[bool, Literal[False]] = False,
+    ) -> Optional[Sync]:
+    ...
+
 def get_sync(
         db: Session,
         sync_id: Optional[int],
@@ -252,8 +295,14 @@ def get_sync(
 
 @overload
 def get_template(
-        db: Session, template_id: int, *, raise_exc: Literal[True] = True,
+        db: Session, template_id: int, *, raise_exc: Literal[True],
     ) -> Template:
+    ...
+
+@overload
+def get_template(
+        db: Session, template_id: int, *, raise_exc: Union[bool, Literal[False]],
+    ) -> Optional[Template]:
     ...
 
 def get_template(
@@ -277,6 +326,11 @@ def get_all_templates(
     ) -> list[Template]:
     ...
 
+@overload
+def get_all_templates(
+        db: Session, obj_dict: dict, *, raise_exc: Literal[False] = False,
+    ) -> Optional[list[Template]]:
+    ...
 
 def get_all_templates(
         db: Session,
@@ -311,19 +365,32 @@ def get_all_templates(
     ]
 
 
+AnyInterface = Union[
+    EmbyInterface,
+    JellyfinInterface,
+    PlexInterface,
+    SonarrInterface,
+    TMDbInterface,
+    TVDbInterface,
+]
+
 @overload
 def get_interface(
-        interface_id: int, *, raise_exc: Literal[True] = True,
-    ) -> Union[EmbyInterface, JellyfinInterface, PlexInterface, SonarrInterface,
-               TMDbInterface, TVDbInterface]:
+        interface_id: int, *, raise_exc: Literal[True]
+    ) -> AnyInterface:
+    ...
+
+@overload
+def get_interface(
+        interface_id: int, *, raise_exc: Union[bool, Literal[False]],
+    ) -> Optional[AnyInterface]:
     ...
 
 def get_interface(
         interface_id: Optional[int],
         *,
         raise_exc: bool = True,
-    ) -> Optional[Union[EmbyInterface, JellyfinInterface, PlexInterface,
-                        SonarrInterface, TMDbInterface, TVDbInterface]]:
+    ) -> Optional[AnyInterface]:
     """
     Get the `Interface` to communicate with the service with the given
     ID. This searches all the global `InterfaceGroup` for each service.
@@ -340,7 +407,16 @@ def get_interface(
     Raises:
         HTTPException (404): If there is no valid and active Interface
             with the given ID.
+        HTTPException (422): No interface ID was provided.
     """
+
+    if interface_id is None:
+        if raise_exc:
+            raise HTTPException(
+                status_code=422,
+                detail='Connection ID must be provided',
+            )
+        return None
 
     # Look for interface under each type
     interface = None
