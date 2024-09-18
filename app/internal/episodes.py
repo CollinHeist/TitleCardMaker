@@ -114,6 +114,13 @@ def get_all_episode_data(
         series.data_source_id,
     )
 
+    # No assigned Episode Data Source
+    if interface_id is None:
+        raise HTTPException(
+            status_code=409,
+            detail='No assigned Episode Data Source',
+        )
+
     # Raise 409 if cannot communicate with the Series' Episode data source
     if (interface := get_interface(interface_id, raise_exc=False)) is None:
         log.error('Unable to communicate with Episode Data Source')

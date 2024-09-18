@@ -13,9 +13,9 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from app import models
 from app.dependencies import get_database, get_preferences
 from app.models.preferences import Preferences
+from app.models.user import User as UserModel
 from app.schemas.auth import User
 from modules.Debug import log
 
@@ -115,7 +115,7 @@ def get_user(db: Session, username: str) -> Optional[User]:
         exists.
     """
 
-    return db.query(models.user.User).filter_by(username=username).first()
+    return db.query(UserModel).filter_by(username=username).first()
 
 
 _creds = {}
@@ -157,8 +157,8 @@ def get_current_user(
     # Decode JWT, get encoded username
     try:
         payload = jwt.decode(token, get_secret_key(), algorithms=[ALGORITHM])
-        username: str = payload.get('sub')
-        uid: str = payload.get('uid')
+        username: Optional[str] = payload.get('sub')
+        uid: Optional[str] = payload.get('uid')
     except JWTError as exc:
         raise credential_exception from exc
 
