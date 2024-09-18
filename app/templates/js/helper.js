@@ -123,7 +123,7 @@ function formatFastAPIError(errorResponse) {
 
     // Parse each location of the error
     if (detail.loc && Array.isArray(detail.loc)) {
-      const location = detail.loc.map(snakeToTitleCase).join(' -> ').trim();
+      const location = detail.loc.map(snakeToTitleCase).join(' <i class="angle right icon"></i>').trim();
       // Do not display "root" level locations, this will confuse people
       if (location === 'Root') {
         return detail.msg || 'An error occurred';
