@@ -213,46 +213,49 @@ function showEditModel(sync) {
   // Delete form assignment
   $(`#edit-sync${sync.id} button`)[0].setAttribute('form', `edit-sync${sync.id}-form`);
   // Submit API request on button press
-  $(`#edit-sync${sync.id} button`).on('click', (event) => {
-    event.preventDefault();
-    // Turn form into object, turning multi selects into arrays
-    let form = new FormData(document.getElementById(`edit-sync${sync.id}-form`));
-    let dataObj = {downloaded_only: false, monitored_only: false, add_as_unmonitored: false};
-    for (let [name, value] of [...form.entries()]) {
-      if (name.includes('_tags')
-          || name.includes('_libraries')
-          || name === 'required_root_folders'
-          || name === 'template_ids') {
-        if (value !== '') {
-          dataObj[name] = value.split(',');
-        } else {
-          dataObj[name] = [];
+  $(`#edit-sync${sync.id} button`)
+    .off('click')
+    .on('click', (event) => {
+      event.preventDefault();
+      // Turn form into object, turning multi selects into arrays
+      let form = new FormData(document.getElementById(`edit-sync${sync.id}-form`));
+      let dataObj = {downloaded_only: false, monitored_only: false, add_as_unmonitored: false};
+      for (let [name, value] of [...form.entries()]) {
+        if (name.includes('_tags')
+            || name.includes('_libraries')
+            || name === 'required_root_folders'
+            || name === 'template_ids') {
+          if (value !== '') {
+            dataObj[name] = value.split(',');
+          } else {
+            dataObj[name] = [];
+          }
+        } else if (value !== '') {
+          dataObj[name] = value;
         }
-      } else if (value !== '') {
-        dataObj[name] = value;
       }
-    }
 
-    $.ajax({
-      type: 'PATCH',
-      url: `/api/sync/${sync.id}`,
-      data: JSON.stringify(dataObj),
-      contentType: 'application/json',
-      /**
-       * Re-query all Syncs.
-       * @param {Sync} updatedSync - Modified Sync object.
-       */
-      success: updatedSync => {
-        showInfoToast(`Updated Sync "${updatedSync.name}"`);
-        getAllSyncs();
-      },
-      error: response => showErrorToast({title: 'Error Editing Sync', response}),
-      complete: () => {
-        $(`#edit-sync${sync.id}`).modal('hide');
-        $(`#edit-sync${sync.id}`).remove();
-      }
-    });
-  });
+      $.ajax({
+        type: 'PATCH',
+        url: `/api/sync/${sync.id}`,
+        data: JSON.stringify(dataObj),
+        contentType: 'application/json',
+        /**
+         * Sync updated, re-query all Syncs.
+         * @param {Sync} updatedSync - Modified Sync object.
+         */
+        success: updatedSync => {
+          showInfoToast(`Updated Sync "${updatedSync.name}"`);
+          getAllSyncs();
+        },
+        error: response => showErrorToast({title: 'Error Editing Sync', response}),
+        complete: () => {
+          $(`#edit-sync${sync.id}`).modal('hide');
+          $(`#edit-sync${sync.id}`).remove();
+        }
+      });
+    })
+  ;
 
   $(`#edit-sync${sync.id}`).modal('show');
 }
@@ -376,8 +379,8 @@ function getAllSyncs() {
       url: `/api/sync/${source}/all`,
       /**
        * Syncs returned, add elements for each defined object to the page.
-       * @param {Sync[]} allSyncs - All Sync objects defined for this
-       * Connection type.
+       * @param {Sync[]} allSyncs - All Sync objects defined for this Connection
+       * type.
        */
       success: allSyncs => {
         // Create elements for each Sync 
