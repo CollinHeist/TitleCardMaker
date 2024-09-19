@@ -1,5 +1,3 @@
-from logging import Logger
-
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy import not_
@@ -33,13 +31,15 @@ from app.internal.series import (
     load_series_title_cards,
     update_series_config,
 )
+from app.models.card import Card
 from app.models.episode import Episode
+from app.models.loaded import Loaded
 from app.schemas.card import CardActions, PreviewTitleCard, TitleCard
 from app.schemas.episode import Episode as EpisodeSchema, UpdateEpisode
 from app.schemas.font import DefaultFont
 from app.schemas.series import UpdateSeries
 
-from modules.Debug import InvalidCardSettings, MissingSourceImage
+from modules.Debug import InvalidCardSettings, Logger, MissingSourceImage
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.FormatString import FormatString
 from modules.TieredSettings import TieredSettings
@@ -334,12 +334,12 @@ def get_series_cards(
     """
 
     return paginate(
-        db.query(models.card.Card)\
-            .filter(models.card.Card.series_id == series_id)\
-            .join(models.episode.Episode)\
-            .order_by(models.episode.Episode.season_number)\
-            .order_by(models.episode.Episode.episode_number)\
-            .order_by(models.card.Card.library_name)
+        db.query(Card)\
+            .filter(Card.series_id == series_id)\
+            .join(Episode)\
+            .order_by(Episode.season_number)\
+            .order_by(Episode.episode_number)\
+            .order_by(Card.library_name)
     )
 
 
@@ -392,6 +392,12 @@ def load_series_title_cards_into_library(
     series = get_series(db, series_id, raise_exc=True)
     interface = get_interface(interface_id, raise_exc=True)
 
+    if not interface.INTERFACE_TYPE in ('Emby', 'Jellyfin', 'Plex'):
+        raise HTTPException(
+            status_code=400,
+            detail='Cannot load Cards into a non-media-server Connection'
+        )
+
     # Load Cards
     load_series_title_cards(
         series, library_name, interface_id, db, interface,
@@ -410,7 +416,7 @@ def get_episode_cards(
     - episode_id: ID of the Episode to get the cards of.
     """
 
-    return paginate(db.query(models.card.Card).filter_by(episode_id=episode_id))
+    return paginate(db.query(Card).filter_by(episode_id=episode_id))
 
 
 @card_router.delete('/series/{series_id}', tags=['Series'])
@@ -427,8 +433,8 @@ def delete_series_title_cards(
     """
 
     # Create queries for Cards of this Series
-    card_query = db.query(models.card.Card).filter_by(series_id=series_id)
-    loaded_query = db.query(models.loaded.Loaded).filter_by(series_id=series_id)
+    card_query = db.query(Card).filter_by(series_id=series_id)
+    loaded_query = db.query(Loaded).filter_by(series_id=series_id)
 
     # Delete cards
     deleted = delete_cards(db, card_query, loaded_query, log=request.state.log)
@@ -450,8 +456,8 @@ def delete_episode_title_cards(
     """
 
     # Create Queries for Cards of this Episode
-    card_query = db.query(models.card.Card).filter_by(episode_id=episode_id)
-    loaded_query = db.query(models.loaded.Loaded).filter_by(episode_id=episode_id)
+    card_query = db.query(Card).filter_by(episode_id=episode_id)
+    loaded_query = db.query(Loaded).filter_by(episode_id=episode_id)
 
     # Delete cards
     deleted = delete_cards(db, card_query, loaded_query, log=request.state.log)
@@ -473,8 +479,8 @@ def delete_title_card(
     """
 
     # Create Queries for Cards of this Episode
-    card_query = db.query(models.card.Card).filter_by(id=card_id)
-    loaded_query = db.query(models.loaded.Loaded).filter_by(id=card_id)
+    card_query = db.query(Card).filter_by(id=card_id)
+    loaded_query = db.query(Loaded).filter_by(id=card_id)
 
     # Delete cards
     deleted = delete_cards(db, card_query, loaded_query, log=request.state.log)
@@ -533,7 +539,7 @@ def get_missing_cards(
     return paginate(
         db.query(Episode)\
             .filter(not_(Episode.id.in_(
-                db.query(models.card.Card.episode_id).distinct()
+                db.query(Card.episode_id).distinct()
             )))
     )
 
@@ -551,8 +557,8 @@ def batch_delete_title_cards(
     deleted.
     """
 
-    cards = db.query(models.card.Card)\
-        .filter(models.card.Card.series_id.in_(series_ids))
+    cards = db.query(Card)\
+        .filter(Card.series_id.in_(series_ids))
 
     return CardActions(
         deleted=len(delete_cards(db, cards, log=request.state.log)),
