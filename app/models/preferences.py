@@ -86,6 +86,8 @@ class Preferences:
         'interactive_card_previews', 'delete_unsynced_series',
         'imagemagick_executable', 'current_db_schema', 'server_boot_time',
         'display_live_messages',
+        'source_preview_page_dimensions',
+        'title_card_preview_page_dimensions',
     )
 
 
@@ -232,6 +234,8 @@ class Preferences:
         self.require_auth = False
         self.home_page_size = 100
         self.episode_data_page_size = 50
+        self.source_preview_page_dimensions = '3x3'
+        self.title_card_preview_page_dimensions = '3x3'
         self.stylize_unmonitored_posters = False
         self.sources_as_table = True
         self.home_page_table_view = True
