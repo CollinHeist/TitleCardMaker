@@ -136,15 +136,6 @@
   padding: unset;
 }
 
-/* Desktop only formatting */
-@media (min-width: 768px) {
-  /* Limit card size to 33% */
-  .tab[data-tab="files"] .accordion .image,
-  .tab[data-tab="files"] .cards .card {
-    max-width: calc(32% - 1em);
-  }
-}
-
 /* Show cursor on all file card icons, and images in tmdb modal */
 #source-images .card .icon,
 #browse-tmdb-modal .image.content .images a,

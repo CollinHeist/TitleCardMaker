@@ -44,6 +44,10 @@ const availableFonts = {{available_fonts|tojson}};
 const episodeDataSources = {{episode_data_sources|tojson}};
 /** @type {AnyConnection[]} All globally defined and enabled Connections */
 const allConnections = {{all_connections|tojson}};
+/** @type {number} Page size for the title card previews */
+const titleCardPreviewPageSize = isSmallScreen() ? 3 : {{ (preferences.title_card_preview_page_dimensions.split('x')[0]|int) * (preferences.title_card_preview_page_dimensions.split('x')[1]|int) }};
+/** @type {number} Page size for source image previews */
+const sourceImagePreviewPageSize = {{ (preferences.source_preview_page_dimensions.split('x')[0]|int) * (preferences.source_preview_page_dimensions.split('x')[1]|int) }};
 
 /**
  * Get the DOM element ID of the Episode with the given ID.
@@ -742,7 +746,7 @@ async function getSourceFileData(page=currentFilePage) {
 
   $.ajax({
     type: 'GET',
-    url: `/api/sources/series/{{series.id}}?page=${page}&size=12`,
+    url: `/api/sources/series/{{series.id}}?page=${page}&size=${sourceImagePreviewPageSize}`,
     /**
      * Sources queried, create elements to display on the page.
      * @param {SourceImagePage} allFiles - Page of Source Images for this Series.
@@ -838,10 +842,10 @@ async function getSourceFileData(page=currentFilePage) {
     
       // Update source image previews
       const sourceImages = [];
+      const template = document.getElementById('source-image-template');
       allFiles.items.forEach(source => {
         if (!source.exists) { return; }
-        // Clone template
-        const image = document.getElementById('preview-image-template').content.cloneNode(true);
+        const image = template.content.cloneNode(true);
         image.querySelector('.dimmer .content').innerHTML = `<h4>Season ${source.season_number} Episode ${source.episode_number} (${source.source_file_name})</h4>`;
         image.querySelector('img').src = `${source.source_url}?${source.filesize}`;
         image.querySelector('img').onclick = () => browseSourceImages(source.episode_id, getSourceImageElementId(source.episode_id), episodeIds);
@@ -1105,16 +1109,15 @@ function getCardData(
     updateLivePreview=false
   ) {
 
-  const pageSize = isSmallScreen() ? 3 : 12;
   $.ajax({
     type: 'GET',
-    url: `/api/cards/series/{{series.id}}?page=${page}&size=${pageSize}`,
+    url: `/api/cards/series/{{series.id}}?page=${page}&size=${titleCardPreviewPageSize}`,
     /**
      * Cards queried, populate page / table of Card data.
      * @param {TitleCardPage} cards - Current page of Title Card data.
      */
     success: cards => {
-      const previewTemplate = document.getElementById('preview-image-template');
+      const previewTemplate = document.getElementById('card-image-template');
       const previews = cards.items.map((card, index) => {
         // Update live preview if first element and updating
         if (updateLivePreview && index === 0) {

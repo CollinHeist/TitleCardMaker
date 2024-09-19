@@ -31,6 +31,15 @@ space), and local card types (any character(s).py).
 """
 CardTypeIdentifier = constr(regex=r'^([a-zA-Z].*|[a-zA-Z].*\/[a-zA-Z].*|.+\.py)$')
 
+"""
+Page dimension string for specifying {rows}x{columns}.
+"""
+PageSizeDimensions = constr(
+    strip_whitespace=True,
+    to_lower=True,
+    regex=r'^\d+x\d+$',
+)
+
 CardExtension = Literal['.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp']
 
 Style = Literal[
@@ -103,6 +112,8 @@ class UpdatePreferences(UpdateBase):
     global_extras: dict[str, dict[str, str]] = UNSPECIFIED
     home_page_size: PositiveInt = UNSPECIFIED
     episode_data_page_size: PositiveInt = UNSPECIFIED
+    source_preview_page_dimensions: PageSizeDimensions = UNSPECIFIED
+    title_card_preview_page_dimensions: PageSizeDimensions = UNSPECIFIED
     stylize_unmonitored_posters: bool = UNSPECIFIED
     sources_as_table: bool = UNSPECIFIED
     home_page_table_view: bool = UNSPECIFIED
@@ -147,10 +158,17 @@ class UpdatePreferences(UpdateBase):
             )
         except KeyError as exc:
             raise ValueError(
-                f'Invalid folder format - use "season_number", "episode_numer" '
-                f'and/or "absolute_number"'
+                'Invalid folder format - use "season_number", "episode_numer" '
+                'and/or "absolute_number"'
             ) from exc
 
+        return v
+
+    @validator('source_preview_page_dimensions', 'title_card_preview_page_dimensions')
+    def validate_page_dimensions(cls, v: str) -> str:
+        rows, columns = v.split('x')
+        if int(rows) * int(columns) > 100:
+            raise ValueError('A maximum of 100 items can be displayed per-page')
         return v
 
 """
@@ -185,6 +203,8 @@ class Preferences(Base):
     global_extras: dict[str, dict[str, str]]
     home_page_size: PositiveInt
     episode_data_page_size: PositiveInt
+    source_preview_page_dimensions: PageSizeDimensions
+    title_card_preview_page_dimensions: PageSizeDimensions
     stylize_unmonitored_posters: bool
     sources_as_table: bool
     home_page_table_view: bool

@@ -282,15 +282,30 @@
     </div>
   </template>
 
-  <template id="preview-image-template">
-    <div class="ui image"> <!-- transition hidden -->
+  <template id="source-image-template">
+    <div class="ui image" style="width: {{ (100.0 / (preferences.source_preview_page_dimensions.split('x')[1]|int)) - 1 }}% !important;">
       <div class="ui bottom dimmer">
         <div class="content">
           <h3>Season {x} Episode {y}</h3>
-              {file name}
+          {file name}
         </div>
       </div>
       <img loading="lazy">
+    </div>
+  </template>
+
+  <template id="card-image-template">
+    <div class="ui image" style="width: {{ (100.0 / (preferences.title_card_preview_page_dimensions.split('x')[1]|int)) - 1 }}% !important;">
+      <div class="ui bottom dimmer">
+        <div class="content">
+          <h3>Season {x} Episode {y}</h3>
+          {file name}
+        </div>
+      </div>
+      <img loading="lazy">
+      <a data-value="loaded" class="ui left corner label" style="border-color: transparent;">
+        <i style="background-color: #000000cc;border-radius: 4px;padding:3px;height:auto;" class="large green check icon"></i>
+      </a>
     </div>
   </template>
 

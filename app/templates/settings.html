@@ -443,7 +443,6 @@
             </section>
 
             <h3 class="ui horizontal divider header">
-              <!-- <i class="wrench icon"></i> -->
               <i class="universal access icon"></i>
               Web Interface
             </h3>
@@ -459,6 +458,20 @@
                   <label>Episode Data Table Page Size</label>
                   <input type="number" name="episode_data_page_size" placeholder="{{preferences.episode_data_page_size}}" value="{{preferences.episode_data_page_size}}" min="1">
                   <p class="help">How many Episodes per page to display in Episode data tables. Minimum 1.</p>
+                </div>
+              </div>
+
+              <div class="ui two fields">
+                <div class="eight wide field">
+                  <label>Source Image Preview Page Dimensions</label>
+                  <input type="text" name="source_preview_page_dimensions" placeholder="{{ preferences.source_preview_page_dimensions }}" value="{{ preferences.source_preview_page_dimensions }}">
+                  <p class="help">How many Source Images per page to display, as <b>ROWSxCOLUMNS</b> - e.g. <b>3x4</b> is 3 rows of 4 columns each.</p>
+                </div>
+    
+                <div class="eight wide field">
+                  <label>Title Card Preview Page Dimensions</label>
+                  <input name="title_card_preview_page_dimensions" placeholder="{{ preferences.title_card_preview_page_dimensions }}" value="{{ preferences.title_card_preview_page_dimensions }}">
+                  <p class="help">How many Title Cards per page to display, as <b>ROWSxCOLUMNS</b> - e.g. <b>2x3</b> is 2 rows of 3 columns each.</p>
                 </div>
               </div>
   

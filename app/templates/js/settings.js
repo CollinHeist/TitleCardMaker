@@ -198,6 +198,8 @@ function updateGlobalSettings() {
     // Web interface
     home_page_size: $('input[name="home_page_size"]').val(),
     episode_data_page_size: $('input[name="episode_data_page_size"]').val(),
+    source_preview_page_dimensions: $('input[name="source_preview_page_dimensions"]').val(),
+    title_card_preview_page_dimensions: $('input[name="title_card_preview_page_dimensions"]').val(),
     home_page_table_view: $('input[name="home_page_table_view"]').is(':checked'),
     sources_as_table: $('input[name="sources_as_table"]').is(':checked'),
     simplified_data_table: $('input[name="simplified_data_table"]').is(':checked'),

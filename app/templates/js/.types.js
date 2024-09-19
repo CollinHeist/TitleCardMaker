@@ -404,6 +404,8 @@
  * @property {boolean} reduced_animations - Whether reduced animations are enabled or not.
  * @property {boolean} interactive_card_previews
  * @property {boolean} display_live_messages
+ * @property {string} source_preview_page_dimensions
+ * @property {string} title_card_preview_page_dimensions
  */
 
 /**
