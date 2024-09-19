@@ -18,10 +18,10 @@ from app.internal.availability import (
     get_local_cards,
     get_remote_cards,
 )
-from app import models
 from app.internal.font import get_available_fonts
 from app.internal.templates import get_available_templates
 from app.models.preferences import Preferences
+from app.models.series import Series
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.availability import (
     AvailableFont,
@@ -222,7 +222,7 @@ def get_emby_libraries(
 
     return [
         MediaServerLibrary(
-            media_server='Emby',
+            interface='Emby',
             interface_id=emby_interface._interface_id, # pylint: disable=protected-access
             name=library,
         ) for library in emby_interface.get_libraries()
@@ -237,7 +237,7 @@ def get_jellyfin_libraries(
 
     return [
         MediaServerLibrary(
-            media_server='Jellyfin',
+            interface='Jellyfin',
             interface_id=jellyfin_interface._interface_id, # pylint: disable=protected-access
             name=library,
         ) for library in jellyfin_interface.get_libraries()
@@ -252,7 +252,7 @@ def get_plex_libraries(
 
     return [
         MediaServerLibrary(
-            media_server='Plex',
+            interface='Plex',
             interface_id=plex_interface._interface_id, # pylint: disable=protected-access
             name=library,
         ) for library in plex_interface.get_libraries()
@@ -272,7 +272,7 @@ def get_server_libraries(
     for interface_id, interface in emby_interfaces:
         libraries += [
             MediaServerLibrary(
-                interface=interface.INTERFACE_TYPE,
+                interface=interface.INTERFACE_TYPE, # pylint: disable=protected-access
                 interface_id=interface_id,
                 name=library
             ) for library in interface.get_libraries()
@@ -343,9 +343,9 @@ def get_available_series(
     ) -> list[AvailableSeries]:
     """Get all the available Series base data."""
 
-    return db.query(models.series.Series)\
-        .order_by(models.series.Series.sort_name)\
-        .order_by(models.series.Series.year)\
+    return db.query(Series)\
+        .order_by(Series.sort_name)\
+        .order_by(Series.year)\
         .all()
 
 
@@ -363,11 +363,11 @@ def get_available_styles() -> list[StyleOption]:
     """Get all supported Styles."""
 
     return [
-        {
-            'name': name,
-            'value': value,
-            'style_type': 'art' if 'Art' in name else 'unique',
-        }
+        StyleOption(
+            name=name,
+            value=value,
+            style_type='art' if 'Art' in name else 'unique',
+        )
         for name, value in
         [
             ('Art',                      'art'),
