@@ -19,6 +19,18 @@
       <p class="help">{tooltip}</p>
     </div>
   </template>
+
+  <template id="default-font-template">
+    <div class="ui field">
+      <label data-value="card_type">{card type}</label>
+      <div class="ui clearable selection dropdown" data-value="font_id">
+        <input type="hidden" name="font_id">
+        <i class="dropdown icon"></i>
+        <div class="default text">Card Default</div>
+        <div class="menu"></div>
+      </div>
+    </div>
+  </template>
 </head>
 
 <body onload="initAll();">
@@ -268,10 +280,10 @@
                 </div>
               </div>
 
-              <!-- Global extras -->
               <div class="ui visible info message">
-                The following Card extras will be automatically applied to all Cards of that type.
+                The following Card extras and Fonts will be automatically applied to all Cards of that type.
               </div>
+              <!-- Global extras -->
               <div class="ui styled fluid accordion">
                 <div class="title">
                   <i class="dropdown icon"></i>
@@ -281,6 +293,16 @@
                   <section aria-label="extras">
                     <div class="ui top attached tabular wrapping menu"></div>
                   </section>
+                </div>
+              </div>
+              <!-- Global Fonts -->
+              <div class="ui styled fluid accordion">
+                <div class="title">
+                  <i class="dropdown icon"></i>
+                  Global Fonts
+                </div>
+                <div class="content">
+                  <section aria-label="default_fonts"></section>
                 </div>
               </div>
 

@@ -1,9 +1,14 @@
 {% if False %}
 import {
-  AvailableTemplate, EpisodeDataSourceToggle, ImageSourceToggle,
-  UpdatePreferences,
+  AvailableFont, AvailableTemplate, CardTypeDescription,
+  EpisodeDataSourceToggle, ImageSourceToggle, UpdatePreferences,
 } from './.types.js';
 {% endif %}
+
+/** @type {Object<string, ?number>} */
+const globalFonts = {{ preferences.default_fonts | tojson }};
+/** @type {number[]} */
+const defaultTemplates = {{ preferences.default_templates | tojson }};
 
 // Get all Connection data
 let allConnections;
@@ -31,7 +36,7 @@ function getTemplates() {
       allTemplates = availableTemplates;
       $('.dropdown[data-value="default_templates"]').dropdown({
         placeholder: 'None',
-        values: getActiveTemplates({{preferences.default_templates}}, availableTemplates),
+        values: getActiveTemplates(defaultTemplates, availableTemplates),
       });
     },
     error: response => showErrorToast({'title': 'Error Querying Templates', response}),
@@ -116,6 +121,59 @@ async function initCardTypeDropdowns() {
   return allCards;
 }
 
+/**
+ * 
+ * @param {CardTypeDescription[]} allCardTypes List of card type identifiers 
+ */
+function initializeGlobalFonts(allCardTypes) {
+  $.ajax({
+    type: 'GET',
+    url: '/api/available/fonts',
+    /**
+     * Available fonts queried - populate default dropdowns.
+     * @param {AvailableFont[]} allFonts List of all available Fonts which can
+     * be selected per card type.
+     */
+    success: allFonts => {
+      // Initialize the template's Font dropdown with all available fonts
+      const template = document.getElementById('default-font-template').content;
+      allFonts.forEach(font => {
+        const newItem = document.createElement('div');
+        newItem.className = 'item';
+        newItem.dataset.value = font.id;
+        newItem.innerText = font.name;
+        template.querySelector('.dropdown[data-value="font_id"] .menu').appendChild(newItem);
+      });
+
+      // Add each card type field to the page
+      const section = document.querySelector('[aria-label="default_fonts"]');
+      allCardTypes.forEach((cardType, index) => {
+        const newField = template.cloneNode(true);
+
+        newField.querySelector('label').innerText = cardType.name;
+        newField.querySelector('.field').dataset.cardType = cardType.identifier;
+        // If this card type has a global font then mark that Font item as active
+        if (globalFonts[cardType.identifier]) {
+          const fontId = globalFonts[cardType.identifier];
+          newField.querySelector(`.dropdown[data-value="font_id"] .menu .item[data-value="${fontId}"]`).classList.add('active', 'selected');
+          newField.querySelector(`.dropdown[data-value="font_id"] .menu .item[data-value="${fontId}"]`).selected = true;
+        }
+
+        // Add in groups of 4 per-row
+        if (index % 4 === 0) {
+          const newFields = document.createElement('div');
+          newFields.className = 'ui equal width fields';
+          section.appendChild(newFields);
+        }
+        section.lastChild.appendChild(newField);
+      });
+
+      $('.dropdown[data-value="font_id"]').dropdown();
+      refreshTheme();
+    },
+  });
+}
+
 /*
  * Update the preview title card for the given type. This updates all
  * elements of the preview card.
@@ -162,6 +220,14 @@ function updateGlobalSettings() {
     if (Object.keys(currentExtras).length > 0) { extras[cardType] = currentExtras; }
   });
 
+  // Parse global fonts
+  const defaultFonts = {};
+  $('section[aria-label="default_fonts"] .field').each(function() {
+    const cardType = $(this).attr('data-card-type');
+    const fontId = $(this).find('input[name="font_id"]').val();
+    if (fontId !== '') { defaultFonts[cardType] = Number(fontId); }
+  });
+
   const parseListString = (val) => val === '' ? [] : val.split(',');
 
   // Parse all settings data into one update object
@@ -181,6 +247,7 @@ function updateGlobalSettings() {
     default_unwatched_style: $('input[name="default_unwatched_style"]').val() || '{{preferences.default_unwatched_style}}',
     default_templates: parseListString($('input[name="default_templates"]').val()),
     global_extras: extras,
+    default_fonts: defaultFonts,
     // ImageMagick
     card_width: $('input[name="card_width"]').val(),
     card_height: $('input[name="card_height"]').val(),
@@ -354,5 +421,6 @@ async function initAll() {
   (async () => {
     allCards = await initCardTypeDropdowns();
     updatePreviewTitleCard(allCards, '{{preferences.default_card_type}}');
+    initializeGlobalFonts(allCards);
   })()
 }
