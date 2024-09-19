@@ -202,7 +202,11 @@ def update_user_credentials(
         )
 
     # Get user
-    user = get_user(db, user.username)
+    if (user := get_user(db, user.username)) is None:
+        raise HTTPException(
+            status_code=404,
+            detail='No User found',
+        )
 
     # Verify new username does not conflict with existing user
     existing_user = db.query(UserModel)\
