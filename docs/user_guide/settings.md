@@ -38,7 +38,7 @@ below.
         | Source Directory            | /config/source/                                              |
         | Delete Series Source Images | :fontawesome-regular-circle-xmark:{.red}                     |
         | Episode Data Source         | Sonarr                                                       |
-        | Image Source Priority       | `TMDb` `Plex` `Emby` `Jellyfin`                              |
+        | Image Source Priority       | `TMDb` `Plex` `Emby` `Jellyfin`[^2]                          |
         | Enable Specials             | :fontawesome-regular-circle-xmark:{.red}                     |
         | Delete Missing Episodes     | :fontawesome-regular-circle-check:{.green}                   |
         | Default Card Type           | _Personal Preference_                                        |
@@ -46,7 +46,7 @@ below.
         | Watched Episode Style       | Unique                                                       |
         | Unwatched Episode Style     | _Personal Preference_                                        |
         | Default Templates           | _Blank_                                                      |
-        | Card Dimensions             | 3200x1800                                                    |
+        | Card Dimensions             | 3200x1800[^3]                                                |
         | Card Quality                | 95                                                           |
         | Card Extension              | .jpg                                                         |
         | Filename Format             | {series_full_name} - S{season_number:02}E{episode_number:02} |
@@ -62,7 +62,7 @@ below.
         | Source Directory            | ./config/source/                                             |
         | Delete Series Source Images | :fontawesome-regular-circle-xmark:{.red}                     |
         | Episode Data Source         | Sonarr                                                       |
-        | Image Source Priority       | `TMDb` `Plex` `Emby` `Jellyfin`                              |
+        | Image Source Priority       | `TMDb` `Plex` `Emby` `Jellyfin`[^2]                          |
         | Enable Specials             | :fontawesome-regular-circle-xmark:{.red}                     |
         | Delete Missing Episodes     | :fontawesome-regular-circle-check:{.green}                   |
         | Default Card Type           | _Personal Preference_                                        |
@@ -70,7 +70,7 @@ below.
         | Watched Episode Style       | Unique                                                       |
         | Unwatched Episode Style     | _Personal Preference_                                        |
         | Default Templates           | _Blank_                                                      |
-        | Card Dimensions             | 3200x1800                                                    |
+        | Card Dimensions             | 3200x1800[^3]                                                |
         | Card Quality                | 95                                                           |
         | Card Extension              | .jpg                                                         |
         | Filename Format             | {series_full_name} - S{season_number:02}E{episode_number:02} |
@@ -91,20 +91,21 @@ however, there are some differences between each.
 ??? info "Differences in Episode Data Sources"
 
     | Episode Data Source | Provides Absolute Episode Numbers | Only Provides Data for Downloaded Episodes | Relative Speed |
-    | :---: | :---: | :---: | :---: |
-    | Emby | :material-close:{.red} | :material-check:{.green} | Average |
-    | Jellyfin | :material-close:{.red} | :material-check:{.green} | Average |
-    | Plex | :material-close:{.red} | :material-check:{.green} | Average |
-    | Sonarr | :material-check:{.green} | :material-check:{.green} [^1] | Fast |
-    | TMDb | :material-close:{.red} | :octicons-x-16:{.red} | Fast |
+    | :------: | :----------------------: | :---------------------------: | :-----: |
+    | Emby     | :material-close:{.red}   | :material-check:{.green}      | Average |
+    | Jellyfin | :material-close:{.red}   | :material-check:{.green}      | Average |
+    | Plex     | :material-close:{.red}   | :material-check:{.green}      | Average |
+    | Sonarr   | :material-check:{.green} | :material-check:{.green} [^1] | Fast    |
+    | TMDb     | :material-close:{.red}   | :octicons-x-16:{.red}         | Fast    |
+    | TVDb     | :material-check:{.green} | :octicons-x-16:{.red}         | Fast    |
 
-    The speed of a Media Server as an Episode data source will vary wildy with
-    both the number of Episodes for a given Series, as well as the overall size
-    of your database.
+    The speed of your Media Server and Sonarr as an Episode data source will
+    vary wildy with both the number of Episodes for a given Series, as well as
+    the overall size of your database.
 
 ### Image Source Priority
 
-Similar to the [Episode data source](#episode-data-source) option, this
+Similar to the [Episode Data Source](#episode-data-source) option, this
 setting controls where TitleCardMaker should gather images (this includes source
 images, logos, and posters) from. Unlike the Episode data source, multiple
 sources can be specified here, and the selected order does matter.
@@ -445,7 +446,22 @@ longer load times. Must be between 1 and 250.
 ### Episode Data Table Page Size
 
 How many Episodes per page to display in Episode data tables. These are the
-tables accessed on a [Series page](./series.md) in the _Episode Data_ tab.
+tables accessed on a [Series page](./series.md) in the _Episode Data_ tab. Must
+be at least 1.
+
+### Source Image Preview Page Dimensions
+
+How many Source Image previews to display per page. These are displayed on a
+[Series page](./series.md) in the _Files_ tab. This is entered as the number of
+rows and columns - e.g. `3x4` is 3 rows of 4 columns each. Must be between 1
+and 100 items per page.
+
+### Title Card Preview Page Dimensions
+
+How many Title Card previews to display per page. These are displayed on a
+[Series page](./series.md) in the _Files_ tab. This is entered as the number of
+rows and columns - e.g. `2x3` is 2 rows of 3 columns each. Must be between 1
+and 100 items per page.
 
 ### Home Page Table Display
 
@@ -506,3 +522,9 @@ This does not disable all animations, just the more "egregious" ones like the
 home-page Series loading.
 
 [^1]: This can be toggled on/off.
+
+[^2]: Only include the Connections which you are personally using.
+
+[^3]: Feel free to reduce this to some ratio of 16:9 (e.g. 1600:900) if you want
+to save storage space (at the minor cost of image fidelity). Increasing this is
+not recommended.
