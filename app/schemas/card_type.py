@@ -66,12 +66,44 @@ from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 
 LocalCardIdentifiers = Literal[
-    '4x3', 'anime', 'banner', 'calligraphy', 'comic book', 'cutout', 'divider',
-    'fade', 'formula 1', 'frame', 'f1', 'generic', 'graph', 'gundam', 'inset',
-    'ishalioh', 'landscape', 'logo', 'marvel', 'music', 'musikmann',
-    'notification', 'olivier', 'phendrena', 'photo', 'polygon', 'polymath',
-    'poster', 'reality tv', 'roman', 'roman numeral', 'shape', 'sherlock',
-    'standard', 'star wars', 'striped', 'textless', 'tinted glass',
+    '4x3',
+    'anime',
+    'banner',
+    'calligraphy',
+    'comic book',
+    'cutout',
+    'divider',
+    'fade',
+    'formula 1',
+    'frame',
+    'f1',
+    'generic',
+    'graph',
+    'gundam',
+    'inset',
+    'ishalioh',
+    'landscape',
+    'logo',
+    'marvel',
+    'music',
+    'musikmann',
+    'notification',
+    'olivier',
+    'phendrena',
+    'photo',
+    'polygon',
+    'polymath',
+    'poster',
+    'reality tv',
+    'roman',
+    'roman numeral',
+    'shape',
+    'sherlock',
+    'standard',
+    'star wars',
+    'striped',
+    'textless',
+    'tinted glass',
     'white border',
 ]
 
@@ -824,7 +856,7 @@ class TintedFrameCardType(BaseCardTypeAllText):
     episode_text_font_size: confloat(ge=0.0) = 1.0
     episode_text_vertical_shift: int = 0
     frame_color: Optional[str] = None
-    frame_width: conint(ge=0.0, le=1600) = TintedFrameTitleCard.BOX_WIDTH
+    frame_width: conint(ge=0, le=1600) = TintedFrameTitleCard.BOX_WIDTH
     top_element: OuterElement = 'title'
     middle_element: MiddleElement = 'omit'
     bottom_element: OuterElement = 'index'
@@ -858,12 +890,13 @@ class TintedFrameCardType(BaseCardTypeAllText):
         bottom = values['bottom_element']
         if ((top == 'logo' or middle == 'logo' or bottom == 'logo')
             and not values['logo_file'].exists()):
-            raise ValueError(f'Logo file indicated and does not exist')
+            raise ValueError(f'Indicated logo file does not exist '
+                             f'({values["logo_file"]})')
 
         # Verify no two elements are the same
         if ((top != 'omit' and top in (middle, bottom))
             or (middle != 'omit' and (middle == bottom))):
-            raise ValueError(f'Top/middle/bottom elements cannot be the same')
+            raise ValueError('Top/middle/bottom elements cannot be the same')
 
         # Convert None colors to the default font color
         if values['episode_text_color'] is None:

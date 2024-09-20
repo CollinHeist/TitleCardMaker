@@ -1,10 +1,4 @@
-from logging import Logger
-
-from fastapi import (
-    APIRouter,
-    Depends,
-    Request,
-)
+from fastapi import APIRouter, Depends
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy import not_
 from sqlalchemy.orm import Session
