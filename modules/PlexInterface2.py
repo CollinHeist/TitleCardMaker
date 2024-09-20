@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from logging import Logger
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
 from typing import (
@@ -15,8 +14,7 @@ from typing import (
 from fastapi import HTTPException
 from PIL import Image
 from plexapi.exceptions import PlexApiException
-from plexapi.library import Library as PlexLibrary
-from plexapi.mixins import ArtMixin, PosterMixin
+from plexapi.library import LibrarySection as PlexLibrary
 from plexapi.video import Episode as PlexEpisode, Season as PlexSeason
 from plexapi.server import PlexServer, NotFound, Unauthorized
 from plexapi.video import Show as PlexShow
@@ -26,7 +24,7 @@ from requests.exceptions import (
 )
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.EpisodeDataSource2 import (
     EpisodeDataSource,
     SearchResult,
@@ -100,10 +98,10 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
     and episode data, along with other attributes
     """
 
-    INTERFACE_TYPE = 'Plex'
+    INTERFACE_TYPE: str = 'Plex'
 
     """Series ID's that can be set by TMDb"""
-    SERIES_IDS = ('imdb_id', 'tmdb_id', 'tvdb_id')
+    SERIES_IDS: tuple[str] = ('imdb_id', 'tmdb_id', 'tvdb_id')
 
     """EXIF data to write to images if Kometa integration is enabled"""
     EXIF_TAG = {'key': 0x4242, 'data': 'titlecard'}
@@ -390,6 +388,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         all_episodes = []
         for plex_episode in series.episodes(container_size=500):
             # Skip if episode has no season or episode number
+            plex_episode: PlexEpisode
             if (plex_episode.parentIndex is None
                 or plex_episode.index is None):
                 log.warning(f'Episode {plex_episode} of {series_info} in '
@@ -757,7 +756,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
            before_sleep=lambda _:log.warning('Cannot upload image, retrying..'),
            reraise=True)
     def __retry_upload(self,
-            entry: Union[ArtMixin, PosterMixin],
+            entry: Union[PlexShow, PlexSeason, PlexEpisode],
             image: Union[str, Path],
             kind: Literal['art', 'poster'] = 'poster',
             *,
@@ -854,23 +853,30 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             for episode, card in episode_and_cards
         ]
 
-        # Go through each episode within Plex, set title cards
-        skipped, loaded = [], []
+        # Find episodes which have a matching Card to load
+        skipped: list[str] = []
+        matched_episodes: list[tuple[PlexEpisode, 'Episode', EpisodeInfo, 'Card']] = []
         for plex_episode in series.episodes(container_size=100):
-            # Skip episode if no matching episode was provided
-            plex_episode: PlexEpisode = plex_episode
-            found = False
+            plex_episode: PlexEpisode
             for episode, episode_info, card in infos:
                 if episode_info == plex_episode:
-                    found = True
+                    matched_episodes.append(
+                        (plex_episode, episode, episode_info, card)
+                    )
                     break
-            if not found:
+            # Episode never matched
+            else:
                 skipped.append(plex_episode.seasonEpisode)
-                continue
 
-            # Shrink image if necessary, skip if cannot be compressed
-            # pylint: disable=undefined-loop-variable
+        # Prepare batch edits on all these episodes
+        library.batchMultiEdits([ep[0] for ep in matched_episodes])
+
+        # Upload card for all matched episodes
+        loaded: list[tuple['Episode', 'Card']] = []
+        for plex_episode, episode, episode_info, card in matched_episodes:
+            # Shrink image if necesssary, skipping if uncompressable
             if (image := self.compress_image(card.card_file, log=log)) is None:
+                skipped.append(plex_episode.seasonEpisode)
                 continue
 
             # Upload card
@@ -895,7 +901,12 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             else:
                 loaded.append((episode, card))
 
-        log.trace(f'Not loading Card into {", ".join(skipped)} for {series_info}')
+        # Save batch edits
+        library.saveMultiEdits()
+
+        if skipped:
+            log.trace(f'Not loading Card into {", ".join(skipped)} for '
+                      f'{series_info}')
         return loaded
 
 
@@ -925,7 +936,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             return None
 
         for season in series.seasons():
-            season: PlexSeason = season
+            season: PlexSeason
             # Skip if there is no poster for this season
             if not (poster := posters.get(season.index)):
                 continue
@@ -1173,11 +1184,17 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             or not (series := self.__get_series(library, series_info, log=log))):
             return None
 
-        # Remove labels from all Episodes
-        for plex_episode in series.episodes(container_size=500):
-            plex_episode: PlexEpisode
-            log.debug(f'Removed {labels} from {plex_episode.labels} of '
-                      f'{plex_episode}')
-            plex_episode.removeLabel(labels)
+        # Get all Episodes for batch edits
+        episodes: list[PlexEpisode] = series.episodes(container_size=500)
+        library.batchMultiEdits(episodes)
+
+        # Remove all indicated labels
+        for episode in episodes:
+            log.debug(f'Removed {labels} from {episode.labels} of '
+                      f'{episode}')
+            episode.removeLabel(labels)
+
+        # Finalize batch edits
+        library.saveMultiEdits()
 
         return None
