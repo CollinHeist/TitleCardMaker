@@ -169,6 +169,9 @@ class EpisodeData(Base):
     episode_number: int
     absolute_number: Optional[int] = None
 
+class LoadedDetails(Base):
+    library_name: str
+
 class TitleCard(Base):
     id: int
     series_id: int
@@ -179,3 +182,4 @@ class TitleCard(Base):
     filesize: int
     model_json: dict
     library_name: Optional[str] = None
+    loaded: Optional[LoadedDetails] = None

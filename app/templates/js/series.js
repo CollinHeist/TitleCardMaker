@@ -1130,6 +1130,11 @@ function getCardData(
           preview.querySelector('.image').classList.add('transition', 'hidden');
         }
 
+        // Remove check label if not loaded
+        if (!card.loaded) {
+          preview.querySelector('.label[data-value="loaded"]').remove();
+        }
+
         // Re-create Card when image is clicked or right-clicked (if enabled)
         if (interactive_card_previews) {
           preview.querySelector('img').onclick = () => createEpisodeCard(card.episode_id);
