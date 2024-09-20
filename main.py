@@ -5,8 +5,11 @@ from os import environ
 from sys import exit as sys_exit
 from re import match
 from time import sleep
+from typing import Union
 
 try:
+    from dotenv import load_dotenv
+    load_dotenv()
     from requests import get
     import schedule
 
@@ -14,15 +17,19 @@ try:
     from modules.FontValidator import FontValidator
     from modules.PreferenceParser import PreferenceParser
     from modules.RemoteFile import RemoteFile
-    from modules.global_objects import set_preference_parser, \
-        set_font_validator, set_media_info_set, set_show_record_keeper
+    from modules.global_objects import (
+        set_preference_parser,
+        set_font_validator,
+        set_media_info_set,
+        set_show_record_keeper
+    )
     from modules.Manager import Manager
     from modules.MediaInfoSet import MediaInfoSet
     from modules.ShowRecordKeeper import ShowRecordKeeper
     from modules.Version import Version
-except ImportError as e:
+except ImportError as exc:
     print('Required Python packages are missing - run "pipenv install"')
-    print(f'  Specific Error: {e}')
+    print(f'  Specific Error: {exc}')
     sys_exit(1)
 
 # Version information
@@ -46,16 +53,18 @@ DEFAULT_FREQUENCY = '12h'
 DEFAULT_TAUTULLI_FREQUENCY = '4m'
 
 # Pseudo-type functions for argument runtime and frequency
-def runtime(arg: str) -> dict:
+def runtime(arg: str) -> str:
     """Validate the given argument is a valid runtime (e.g. HH:MM)"""
     try:
         hour, minute = map(int, arg.split(':'))
-        assert hour in range(0, 24) and minute in range(0, 60)
+        if hour not in range(0, 24) or minute not in range(0, 60):
+            raise ValueError
         return arg
     except Exception as exc:
-        raise ArgumentTypeError(f'Invalid time, specify as HH:MM') from exc
+        raise ArgumentTypeError('Invalid time, specify as HH:MM') from exc
 
-def frequency(arg: str) -> dict:
+
+def frequency(arg: str) -> dict[str, Union[str, int]]:
     """Get the frequency dictionary of the given frequency string."""
     try:
         interval, unit = match(r'(\d+)(s|m|h|d|w)', arg).groups()
@@ -67,8 +76,8 @@ def frequency(arg: str) -> dict:
                      'w':'weeks'}[unit],
         }
     except Exception as exc:
-        raise ArgumentTypeError(f'Invalid frequency, specify as FREQUENCY[unit]'
-                                f', i.e. 12h -> 12 hours, 1d -> 1 day') from exc
+        raise ArgumentTypeError('Invalid frequency, specify as FREQUENCY[unit]'
+                                ', i.e. 12h -> 12 hours, 1d -> 1 day') from exc
 
 # Set up argument parser
 parser = ArgumentParser(description='Start the TitleCardMaker')
@@ -153,7 +162,7 @@ if not args.preferences.exists():
 
 # Store objects in global namespace
 if not (pp := PreferenceParser(args.preferences, is_docker)).valid:
-    log.critical(f'Preference file is invalid')
+    log.critical('Preference file is invalid')
     sys_exit(1)
 set_preference_parser(pp)
 set_font_validator(FontValidator())
@@ -221,7 +230,7 @@ def run():
         sys_exit(1)
 
 
-def first_run() -> schedule.CancelJob:
+def first_run() -> type[schedule.CancelJob]:
     """
     First Manager run that schedules subsequent runs and then cancels
     itself.

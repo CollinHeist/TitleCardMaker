@@ -283,6 +283,27 @@ These replacements can take any text (the left input field) and will replace
 that with the replacement text (the right input field). This replacement text
 can be blank to indicate the input text should be deleted.
 
+??? tip "Advanced Replacement Logic"
+
+    TCM actually applies font replacements twice; once _before_ splitting the
+    title into multiple lines (if enabled) and applying the
+    [text case](#text-case), and once _after_. This is done so that the original
+    text and the "cased" text can be replaced separately (if desired).
+
+    However, because of this, some replacements might appear to "doubled up".
+    For example, if a replacement was used to add an extra space between some
+    character, such as `,` to `, `, then TCM will actually add _two_ spaces.
+
+    This can be avoided by using the `pre:` and `post:` tags described below.
+
+??? tip "Pre- and Post- Tags"
+
+    To only apply a character replacement only before the
+    [text case](#text-case), preface the text to replace with `pre:`. Likewise,
+    to only apply a character replacement after the text case, preface the text
+    with with `post:`. TCM will ignore the `pre:` and `post:` text in the
+    actual replacement.
+
 ## Character Replacement Analysis
 
 Under the [Character Replacements](#character-replacements) section of a Font

@@ -5,7 +5,12 @@ from typing import Optional, TypedDict
 
 from app.schemas.logs import LogLevel
 
-from modules.Debug import log, LOG_FILE # noqa: F401
+from modules.Debug import (
+    log,
+    DATETIME_FORMAT,
+    DATETIME_FORMAT_NO_TZ,
+    LOG_FILE
+)
 
 
 # pylint: disable=missing-class-docstring
@@ -35,6 +40,41 @@ unnecessarily (as their contents should not change).
 _LOG_DATA: dict[Path, list[RawLogData]] = {}
 
 
+def parse_line(line: str, file: Path) -> Optional[RawLogData]:
+    """
+    Parse the raw log line into a dictionary of log data.
+
+    Args:
+        line: Line to parse.
+        file: File which contained the given line.
+
+    Returns:
+        Log data parsed from the given line, None if there is some error
+        in the parsing.
+    """
+
+    # Decode line as JSON
+    try:
+        line_data = loads(line) | {'file': file}
+    except JSONDecodeError:
+        return None
+
+    try:
+        line_data['time'] = datetime.strptime(line_data['time'],DATETIME_FORMAT)
+        return line_data
+    except ValueError:
+        pass
+
+    try:
+        line_data['time'] = datetime.strptime(
+            line_data['time'],
+            DATETIME_FORMAT_NO_TZ
+        )
+        return line_data
+    except ValueError:
+        return None
+
+
 def read_log_files(
         *,
         after: Optional[datetime] = None,
@@ -58,12 +98,11 @@ def read_log_files(
     if shallow:
         with LOG_FILE.open('r') as file_handle:
             for line in file_handle.readlines():
-                try:
-                    logs.append(loads(line) | {'file': LOG_FILE})
-                except JSONDecodeError:
-                    pass
+                if (line_data := parse_line(line, file=LOG_FILE)):
+                    logs.append(line_data)
 
         return logs
+
     # Read every log file
     for log_file in LOG_FILE.parent.glob(f'{LOG_FILE.stem}*{LOG_FILE.suffix}'):
         # Skip files last modified before the minimum "after" time or
@@ -83,10 +122,8 @@ def read_log_files(
         file_data: list[RawLogData] = []
         with log_file.open('r') as file_handle:
             for line in file_handle.readlines():
-                try:
-                    file_data.append(loads(line) | {'file': log_file})
-                except JSONDecodeError:
-                    pass
+                if (line_data := parse_line(line, file=log_file)):
+                    file_data.append(line_data)
 
         # Add to cache IF not the active log file since the active log
         # is constantly updated

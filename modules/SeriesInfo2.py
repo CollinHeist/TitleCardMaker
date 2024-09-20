@@ -3,8 +3,7 @@ from re import match, compile as re_compile
 from typing import TYPE_CHECKING, Optional, TypedDict
 
 from plexapi.video import Show as PlexShow
-from sqlalchemy import and_, func, or_
-from sqlalchemy.orm import Query
+from sqlalchemy import ColumnElement, and_, func, or_
 
 from modules.CleanPath import CleanPath
 from modules.DatabaseInfoContainer import DatabaseInfoContainer, InterfaceID
@@ -22,12 +21,12 @@ class SeriesCharacteristics(TypedDict):
 
 class SeriesIDs(TypedDict):
     emby_id: str
-    imdb_id: str
+    imdb_id: Optional[str]
     jellyfin_id: str
     sonarr_id: str
-    tmdb_id: int
-    tvdb_id: int
-    tvrage_id: int
+    tmdb_id: Optional[int]
+    tvdb_id: Optional[int]
+    tvrage_id: Optional[int]
 # pylint: enable=missing-class-docstring
 
 class SeriesInfo(DatabaseInfoContainer):
@@ -42,11 +41,21 @@ class SeriesInfo(DatabaseInfoContainer):
     __FULL_NAME_REGEX = re_compile(r'^(.*?)\s+\((\d{4})\)$')
 
     __slots__ = (
-        'name', 'year', 'emby_id', 'imdb_id', 'jellyfin_id', 'sonarr_id',
-        'tmdb_id', 'tvdb_id', 'tvrage_id', 'match_titles', 'full_name',
-        'match_name', 'clean_name',
+        'name',
+        'year',
+        'emby_id',
+        'imdb_id',
+        'jellyfin_id',
+        'sonarr_id',
+        'tmdb_id',
+        'tvdb_id',
+        'tvrage_id',
+        'match_titles',
+        'full_name',
+        'match_name',
+        'clean_name',
     )
-
+    
 
     def __init__(self,
             name: str,
@@ -252,7 +261,7 @@ class SeriesInfo(DatabaseInfoContainer):
         """
 
         # Create SeriesInfo for this show
-        series_info = cls(plex_show.title, plex_show.year)
+        series_info = cls(plex_show.title, int(plex_show.year))
 
         # Add any GUIDs as database ID's
         for guid in plex_show.guids:
@@ -341,7 +350,7 @@ class SeriesInfo(DatabaseInfoContainer):
 
 
     def set_emby_id(self,
-            emby_id: int,
+            emby_id: Optional[int],
             interface_id: int,
             library_name: str,
         ) -> None:
@@ -353,14 +362,14 @@ class SeriesInfo(DatabaseInfoContainer):
         )
 
 
-    def set_imdb_id(self, imdb_id: str) -> None:
+    def set_imdb_id(self, imdb_id: Optional[str]) -> None:
         """Set this object's IMDb ID - see `_update_attribute()`."""
 
         self._update_attribute('imdb_id', imdb_id, type_=str)
 
 
     def set_jellyfin_id(self,
-            jellyfin_id: str,
+            jellyfin_id: Optional[str],
             interface_id: int,
             library_name: str,
         ) -> None:
@@ -372,7 +381,10 @@ class SeriesInfo(DatabaseInfoContainer):
         )
 
 
-    def set_sonarr_id(self, sonarr_id: int, interface_id: int) -> None:
+    def set_sonarr_id(self,
+            sonarr_id: Optional[int],
+            interface_id: int,
+        ) -> None:
         """Set this object's Sonarr ID - see `_update_attribute()`."""
 
         self._update_attribute(
@@ -380,19 +392,19 @@ class SeriesInfo(DatabaseInfoContainer):
         )
 
 
-    def set_tmdb_id(self, tmdb_id: int) -> None:
+    def set_tmdb_id(self, tmdb_id: Optional[int]) -> None:
         """Set this object's TMDb ID - see `_update_attribute()`."""
 
         self._update_attribute('tmdb_id', tmdb_id, type_=int)
 
 
-    def set_tvdb_id(self, tvdb_id: int) -> None:
+    def set_tvdb_id(self, tvdb_id: Optional[int]) -> None:
         """Set this object's TVDb ID - see `_update_attribute()`."""
 
         self._update_attribute('tvdb_id', tvdb_id, type_=int)
 
 
-    def set_tvrage_id(self, tvrage_id: int) -> None:
+    def set_tvrage_id(self, tvrage_id: Optional[int]) -> None:
         """Set this object's TVRage ID - see `_update_attribute()`."""
 
         self._update_attribute('tvrage_id', tvrage_id, type_=int)
@@ -432,7 +444,7 @@ class SeriesInfo(DatabaseInfoContainer):
 
     def filter_conditions(self,
             SeriesModel: 'Series',
-        ) -> Query:
+        ) -> ColumnElement[bool]:
         """
         Get the SQLAlchemy Query condition for this object.
 

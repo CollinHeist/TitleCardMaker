@@ -8,7 +8,7 @@ from typing import Optional
 from loguru._logger import Logger
 from pytz import timezone, UnknownTimeZoneError
 
-from modules.Debug2 import DATETIME_FORMAT, logger as log
+from modules.Debug2 import DATETIME_FORMAT, DATETIME_FORMAT_NO_TZ, logger as log
 
 """Custom Exception classes"""
 # pylint: disable=missing-class-docstring,multiple-statements

@@ -93,24 +93,12 @@ def query_logs(
             or any(cont in data['message'].lower() for cont in contains)
         )
 
-    # Convert raw logs to LogEntry objects/dicts
-    log_entries = []
-    for data in logs:
-        # Parse entry into data
-        if not isinstance(data['time'], datetime):
-            try:
-                data['time'] = datetime.strptime(data['time'], DATETIME_FORMAT)
-            except ValueError:
-                continue
-
-        # Skip if doesn't meet filter criteria
-        if not meets_filters(data):
-            continue
-
-        log_entries.append(data)
-
     return paginate(
-        sorted(log_entries, key=lambda data: data['time'], reverse=True)
+        sorted(
+            [data for data in logs if meets_filters(data)],
+            key=lambda data: data['time'],
+            reverse=True
+        )
     )
 
 
@@ -171,30 +159,15 @@ def get_internal_server_errors(
     evaluate the most recent (active) log file.
     """
 
-    def has_valid_dt(time: datetime) -> bool:
-        try:
-            datetime.strptime(time, DATETIME_FORMAT)
-            return True
-        except:
-            return False
-
     return sorted(
         [
             LogInternalServerError(
                 context_id=log['context_id'],
-                time=(
-                    log['time']
-                    if isinstance(log['time'], datetime) else
-                    datetime.strptime(log['time'], DATETIME_FORMAT)
-                ),
-                # message=log['message'],
+                time=log['time'],
                 file=log['file'].name,
             )
             for log in read_log_files(after=after, before=before, shallow=shallow)
-            if (
-                log['message'].startswith('Internal Server Error')
-                and has_valid_dt(log['time'])
-            )
+            if log['message'].startswith('Internal Server Error')
         ],
         key=lambda log: log.time,
         reverse=True,

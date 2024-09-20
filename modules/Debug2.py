@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 
 """Format for all datetime objects written to log files"""
 DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f %Z'
+DATETIME_FORMAT_NO_TZ = '%Y-%m-%d %H:%M:%S.%f'
 
 """Base log file"""
 LOG_FILE = Path(__file__).parent.parent / 'config' / 'logs' / 'log.jsonl'
@@ -56,7 +57,7 @@ def reduced_serializer(record: 'Record') -> str:
         # than using the better- exceptions formatter, so that extended
         # traceback stacks are properly displayed; handler[2]
         # corresponds to the file handler
-        tb = logger._core.handlers[2]._exception_formatter.format_exception(
+        tb = logger._core.handlers[2]._exception_formatter.format_exception( # pylance: disable=reportAttributeAccessIssue
             *record['exception']
         )
         exc = {
