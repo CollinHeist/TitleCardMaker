@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
-from logging import Logger
 from typing import Any, Optional, Union
 from modules.DatabaseInfoContainer import InterfaceID
 
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.SeriesInfo2 import SeriesInfo
 
@@ -139,8 +138,8 @@ class WatchedStatus:
 
 
     @property
-    def as_db_entry(self) -> dict[str, dict[str, bool]]:
-        """SQL database representatin of this status."""
+    def as_db_entry(self) -> dict[str, bool]:
+        """SQL database representation of this status."""
 
         if self.library_name is not None and self.status is not None:
             return {self.db_key: self.status}

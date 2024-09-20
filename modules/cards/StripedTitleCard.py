@@ -3,10 +3,10 @@ from math import tan, pi as PI
 from pathlib import Path
 from random import choice as random_choice, randint
 from re import IGNORECASE, compile as re_compile
-from typing import TYPE_CHECKING, Iterable, Literal, Optional
+from typing import TYPE_CHECKING, Iterable, Literal, Optional, Sequence
 
 from modules.BaseCardType import (
-    BaseCardType, CardTypeDescription, Coordinate, ImageMagickCommands, Extra,
+    BaseCardType, CardTypeDescription, Coordinate, ImageMagickCommands, Extra, TextCase,
 )
 from modules.Debug import log # noqa: F401
 from modules.Title import SplitCharacteristics
@@ -124,8 +124,8 @@ class PolygonDistribution:
         self._str = polygons.lower()
         match = self._RANDOMIZED_POLYGONS_REGEX.match(self._str)
 
-        self._distribution: Optional[Iterable[str]] = None
-        self._order: Optional[Iterable[str]] = None
+        self._distribution: Optional[Sequence[str]] = None
+        self._order: list[str] = []
         self._sizes: dict[str, list[int]] = self.DEFAULT_SHAPE_SIZES
         self._repeating = False
 
@@ -180,7 +180,7 @@ class PolygonDistribution:
     def generate_coordinates(self,
             inset: int,
             inter_shape_spacing: int,
-        ) -> list[Coordinate]:
+        ) -> list[int]:
         """
         Generate a list of Coordinates constrained by the given inset
         and spacing. The generated coordinates follow the definition
@@ -263,7 +263,7 @@ class StripedTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardTypeDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Striped',
         identifier='striped',
         example='/internal_assets/cards/striped.webp',
@@ -375,10 +375,10 @@ class StripedTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'Golca Bold Italic.ttf').resolve())
-    TITLE_COLOR = 'black'
-    DEFAULT_FONT_CASE = 'source'
-    FONT_REPLACEMENTS = {}
+    TITLE_FONT: str = str((REF_DIRECTORY / 'Golca Bold Italic.ttf').resolve())
+    TITLE_COLOR: str = 'black'
+    DEFAULT_FONT_CASE: TextCase = 'source'
+    FONT_REPLACEMENTS: dict[str, str] = {}
  
     """Characteristics of the episode text"""
     EPISODE_TEXT_COLOR = 'crimson' # TITLE_COLOR
@@ -387,10 +387,10 @@ class StripedTitleCard(BaseCardType):
     INDEX_TEXT_FONT = REF_DIRECTORY / 'Gotham-Medium.ttf'
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE: bool = True
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Striped Style'
+    ARCHIVE_NAME: str = 'Striped Style'
 
     """Implementation details"""
     DEFAULT_ANGLE = 79.5 # Degrees
@@ -612,7 +612,7 @@ class StripedTitleCard(BaseCardType):
             # Pick random y-coordinates for the top and bottom of the polygon
             try:
                 top_y = randint(
-                    top_y_bound,
+                    int(top_y_bound),
                     (self.HEIGHT // 2) - (self._MIN_SHAPE_HEIGHT // 3),
                 )
             except ValueError:
@@ -622,7 +622,7 @@ class StripedTitleCard(BaseCardType):
             try:
                 bottom_y = randint(
                     (self.HEIGHT // 2) + (self._MIN_SHAPE_HEIGHT // 3),
-                    bottom_y_bound,
+                    int(bottom_y_bound),
                 )
             except ValueError:
                 # Text too high, limit to any height or only smallest possible
@@ -791,7 +791,7 @@ class StripedTitleCard(BaseCardType):
 
         mask = self._create_polygon_mask()
 
-        command = ' '.join([
+        self.image_magick.run([
             f'convert "{self.source_file.resolve()}"',
             f'-density 100',
             # Resize and apply styles to source image
@@ -811,7 +811,5 @@ class StripedTitleCard(BaseCardType):
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
-
-        self.image_magick.run(command)
 
         self.image_magick.delete_intermediate_images(mask)

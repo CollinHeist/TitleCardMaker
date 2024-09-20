@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional
 
-from modules.BaseCardType import BaseCardType, CardTypeDescription
+from modules.BaseCardType import BaseCardType, CardTypeDescription, TextCase
 from modules.Debug import log # noqa: F401
 from modules.Title import SplitCharacteristics
 
@@ -18,7 +18,7 @@ class TextlessTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardTypeDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Textless',
         identifier='textless',
         example='/internal_assets/cards/textless.jpg',
@@ -43,29 +43,29 @@ class TextlessTitleCard(BaseCardType):
     }
 
     """Font case for this card is entirely blank"""
-    DEFAULT_FONT_CASE = 'blank'
+    DEFAULT_FONT_CASE: TextCase = 'blank'
 
     """Default episode text format string, can be overwritten by each class"""
-    EPISODE_TEXT_FORMAT = ''
+    EPISODE_TEXT_FORMAT: str = ''
 
     """Characteristics of the default title font"""
-    TITLE_FONT = ''
-    TITLE_COLOR = ''
-    FONT_REPLACEMENTS = {}
+    TITLE_FONT: str = ''
+    TITLE_COLOR: str = ''
+    FONT_REPLACEMENTS: dict[str, str] = {}
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = False
+    USES_SEASON_TITLE: bool = False
 
     """Don't require source images to work w/ importing"""
-    USES_SOURCE_IMAGES = False # Set as False; if required then caught by model
+    USES_SOURCE_IMAGES: bool = False # Set as False; if required then caught by model
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Textless Version'
+    ARCHIVE_NAME: str = 'Textless Version'
 
     __slots__ = ('source_file', 'output_file')
 
 
-    def __init__(self,
+    def __init__(self, *,
             source_file: Path,
             card_file: Path,
             blur: bool = False,
@@ -135,7 +135,7 @@ class TextlessTitleCard(BaseCardType):
                 f'xc:None',
             ]
 
-        command = ' '.join([
+        self.image_magick.run([
             f'convert',
             *add_source,
             *self.resize_and_style,
@@ -143,5 +143,3 @@ class TextlessTitleCard(BaseCardType):
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
-
-        self.image_magick.run(command)

@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from logging import Logger
 from pathlib import Path
 from random import choices as random_choices
 from string import hexdigits
@@ -10,7 +9,7 @@ from requests import get, Session
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 import urllib3
 
-from modules.Debug import log
+from modules.Debug import Logger, log
 
 
 class CachedResult(TypedDict):
@@ -240,15 +239,15 @@ class WebInterface:
         url = image
         try:
             # Download from URL
-            image = get(url, timeout=30).content
-            if len(image) == 0:
+            content = get(url, timeout=30).content
+            if len(content) == 0:
                 raise ValueError(f'URL {url} returned no content')
-            if any(bc in image for bc in WebInterface.BAD_CONTENT):
+            if any(bc in content for bc in WebInterface.BAD_CONTENT):
                 raise ValueError(f'URL {url} returned malformed content')
 
             # Write content to file, return success
-            destination.write_bytes(image)
-            log.trace(f'Downloaded {len(image):,} bytes from {url}')
+            destination.write_bytes(content)
+            log.trace(f'Downloaded {len(content):,} bytes from {url}')
             return True
         except Exception: # pylint: disable=broad-except
             log.exception('Cannot download image, returned error')

@@ -28,7 +28,7 @@ class TintedGlassTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardTypeDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Tinted Glass',
         identifier='tinted glass',
         example='/internal_assets/cards/tinted glass.jpg',
@@ -116,9 +116,9 @@ class TintedGlassTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((SW_REF_DIRECTORY / 'HelveticaNeue-Bold.ttf').resolve())
-    TITLE_COLOR = 'white'
-    FONT_REPLACEMENTS = {}
+    TITLE_FONT: str = str((SW_REF_DIRECTORY / 'HelveticaNeue-Bold.ttf').resolve())
+    TITLE_COLOR: str = 'white'
+    FONT_REPLACEMENTS: dict[str, str] = {}
 
     """Default episode text format for this class"""
     EPISODE_TEXT_FORMAT = '{series_name} | S{season_number} E{episode_number}'
@@ -126,13 +126,13 @@ class TintedGlassTitleCard(BaseCardType):
     EPISODE_TEXT_FONT = SW_REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = False
+    USES_SEASON_TITLE: bool = False
 
     """Whether this CardType uses unique source images"""
-    USES_UNIQUE_SOURCES = True
+    USES_UNIQUE_SOURCES: bool = True
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Tinted Glass Style'
+    ARCHIVE_NAME: str = 'Tinted Glass Style'
 
     """Darkened area behind title/episode text is nearly black and 70% opaque"""
     DARKEN_COLOR = 'rgba(25, 25, 25, 0.7)'
@@ -326,6 +326,7 @@ class TintedGlassTitleCard(BaseCardType):
             return []
 
         # Determine text position
+        gravity, x, y = 'center', 0, 0
         if self.episode_text_position == 'center':
             gravity = 'south'
             x, y = 0, 150
@@ -353,6 +354,7 @@ class TintedGlassTitleCard(BaseCardType):
         )
 
         # Center positioning requires padding adjustment
+        x_start, x_end = 0, 0
         if self.episode_text_position == 'center':
             x_start, x_end = (self.WIDTH - width) / 2, (self.WIDTH + width) / 2
             x_start, x_end = x_start - 30, x_end + 20
@@ -476,8 +478,7 @@ class TintedGlassTitleCard(BaseCardType):
         # Get coordinates for bounding box
         title_box_coordinates = self.get_title_box_coordinates()
 
-        # Generate command to create card
-        command = ' '.join([
+        self.image_magick.run([
             f'convert "{self.source.resolve()}"',
             # Resize and apply any style modifiers
             *self.resize_and_style,
@@ -496,5 +497,3 @@ class TintedGlassTitleCard(BaseCardType):
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
-
-        self.image_magick.run(command)

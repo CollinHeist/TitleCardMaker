@@ -2,10 +2,10 @@ from math import asin, cos, tan, pi as PI
 from pathlib import Path
 from random import choice as random_choice
 from re import match as re_match
-from typing import TYPE_CHECKING, Literal, Optional, get_args as get_type_args
+from typing import TYPE_CHECKING, Literal, Optional, Union, get_args as get_type_args
 
 from modules.BaseCardType import (
-    BaseCardType, Coordinate, ImageMagickCommands, Extra, CardTypeDescription
+    BaseCardType, Coordinate, ImageMagickCommands, Extra, CardTypeDescription, TextCase
 )
 from modules.Debug import log # noqa: F401
 from modules.Title import SplitCharacteristics
@@ -40,7 +40,7 @@ class ShapeTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardTypeDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Shape',
         identifier='shape',
         example='/internal_assets/cards/shape.webp',
@@ -213,10 +213,10 @@ class ShapeTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'Golca Extra Bold.ttf').resolve())
-    TITLE_COLOR = 'white'
-    DEFAULT_FONT_CASE = 'source'
-    FONT_REPLACEMENTS = {}
+    TITLE_FONT: str = str((REF_DIRECTORY / 'Golca Extra Bold.ttf').resolve())
+    TITLE_COLOR: str = 'white'
+    DEFAULT_FONT_CASE: TextCase = 'source'
+    FONT_REPLACEMENTS: dict[str, str] = {}
 
     """Characteristics of the episode text"""
     EPISODE_TEXT_COLOR = 'skyblue' # gold1
@@ -225,10 +225,10 @@ class ShapeTitleCard(BaseCardType):
     EPISODE_TEXT_FORMAT = '{episode_number}.'
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE: bool = True
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Shape Style'
+    ARCHIVE_NAME: str = 'Shape Style'
 
     """Implementation details"""
     DEFAULT_SHAPE: Shape = 'diamond'
@@ -421,8 +421,8 @@ class ShapeTitleCard(BaseCardType):
 
 
     def _base_title_text_commands(self,
-            x: int = 300,
-            y: int = 200,
+            x: Union[int, float] = 300,
+            y: Union[int, float] = 200,
             gravity: str = 'west',
         ) -> ImageMagickCommands:
         """
@@ -460,7 +460,7 @@ class ShapeTitleCard(BaseCardType):
 
 
     @property
-    def _title_text_width(self) -> int:
+    def _title_text_width(self) -> Union[int, float]:
         """The width of the title text. Only calculated once."""
 
         # No title text, width of 0

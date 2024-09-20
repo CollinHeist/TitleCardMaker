@@ -4,8 +4,14 @@ from re import compile as re_compile, IGNORECASE
 from typing import Literal, Optional, TYPE_CHECKING
 
 from modules.BaseCardType import (
-    BaseCardType, CardTypeDescription, Coordinate, Extra, ImageMagickCommands,
-    Rectangle, Shadow,
+    BaseCardType,
+    CardTypeDescription,
+    Coordinate,
+    Extra,
+    ImageMagickCommands,
+    Rectangle,
+    Shadow,
+    TextCase,
 )
 from modules.Title import SplitCharacteristics
 
@@ -28,7 +34,7 @@ class TintedFrameTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardTypeDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Tinted Frame',
         identifier='tinted frame',
         example='/internal_assets/cards/tinted frame.jpg',
@@ -192,20 +198,20 @@ class TintedFrameTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'Galey Semi Bold.ttf').resolve())
-    TITLE_COLOR = 'white'
-    DEFAULT_FONT_CASE = 'upper'
-    FONT_REPLACEMENTS = {}
+    TITLE_FONT: str = str((REF_DIRECTORY / 'Galey Semi Bold.ttf').resolve())
+    TITLE_COLOR: str = 'white'
+    DEFAULT_FONT_CASE: TextCase = 'upper'
+    FONT_REPLACEMENTS: dict[str, str] = {}
 
     """Characteristics of the episode text"""
     EPISODE_TEXT_COLOR = TITLE_COLOR
     EPISODE_TEXT_FONT = REF_DIRECTORY / 'Galey Semi Bold.ttf'
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE: bool = True
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Tinted Frame Style'
+    ARCHIVE_NAME: str = 'Tinted Frame Style'
 
     """Implementation details"""
     BOX_OFFSET = 185
@@ -244,11 +250,11 @@ class TintedFrameTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             separator: str = '-',
-            episode_text_color: str = None,
+            episode_text_color: str = EPISODE_TEXT_COLOR,
             episode_text_font: Path = EPISODE_TEXT_FONT,
             episode_text_font_size: float = 1.0,
             episode_text_vertical_shift: int = 0,
-            frame_color: str = None,
+            frame_color: str = ...,
             frame_width: int = BOX_WIDTH,
             top_element: Element = 'title',
             middle_element: MiddleElement = 'omit',
@@ -763,7 +769,7 @@ class TintedFrameTitleCard(BaseCardType):
     def create(self) -> None:
         """Create this object's defined Title Card."""
 
-        command = ' '.join([
+        self.image_magick.run([
             f'convert "{self.source_file.resolve()}"',
             # Resize and apply styles to source image
             *self.resize_and_style,
@@ -780,5 +786,3 @@ class TintedFrameTitleCard(BaseCardType):
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
-
-        self.image_magick.run(command)

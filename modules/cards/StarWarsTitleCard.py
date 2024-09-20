@@ -19,7 +19,7 @@ class StarWarsTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardTypeDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Star Wars',
         identifier='star wars',
         example='/internal_assets/cards/star wars.webp',
@@ -55,9 +55,9 @@ class StarWarsTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'Monstice-Base.ttf').resolve())
-    TITLE_COLOR = '#DAC960'
-    FONT_REPLACEMENTS = {'Ō': 'O', 'ō': 'o'}
+    TITLE_FONT: str = str((REF_DIRECTORY / 'Monstice-Base.ttf').resolve())
+    TITLE_COLOR: str = '#DAC960'
+    FONT_REPLACEMENTS: dict[str, str] = {'Ō': 'O', 'ō': 'o'}
 
     """Characteristics of the episode text"""
     EPISODE_TEXT_FORMAT = 'EPISODE {to_cardinal(episode_number)}'
@@ -66,10 +66,10 @@ class StarWarsTitleCard(BaseCardType):
     EPISODE_NUMBER_FONT = REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
 
     """Whether this class uses season titles for the purpose of archives"""
-    USES_SEASON_TITLE = False
+    USES_SEASON_TITLE: bool = False
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Star Wars Style'
+    ARCHIVE_NAME: str = 'Star Wars Style'
 
     """Path to the reference star image to overlay on all source images"""
     __STAR_GRADIENT_IMAGE = REF_DIRECTORY / 'star_gradient.png'
@@ -259,15 +259,14 @@ class StarWarsTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
-        standard_etf = StarWarsTitleCard.EPISODE_TEXT_FORMAT.upper()
-
-        return episode_text_format.upper() != standard_etf
+        return episode_text_format.upper() != \
+            StarWarsTitleCard.EPISODE_TEXT_FORMAT.upper()
 
 
     def create(self) -> None:
         """Create the title card as defined by this object."""
 
-        command = ' '.join([
+        self.image_magick.run([
             f'convert "{self.source_file.resolve()}"',
             # Resize and apply styles
             *self.resize_and_style,
@@ -284,5 +283,3 @@ class StarWarsTitleCard(BaseCardType):
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
-
-        self.image_magick.run(command)

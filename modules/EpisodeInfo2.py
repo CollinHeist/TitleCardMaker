@@ -162,7 +162,7 @@ class EpisodeInfo(DatabaseInfoContainer):
         # Verify the comparison is another EpisodeInfo object
         if not isinstance(other, EpisodeInfo):
             raise TypeError(
-                f'Can only compare equality between EpisodeInfo objects'
+                'Can only compare equality between EpisodeInfo objects'
             )
 
         # ID matches are immediate equality

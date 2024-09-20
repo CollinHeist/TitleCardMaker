@@ -1,11 +1,10 @@
 from abc import ABC, abstractmethod
-from logging import Logger
 from typing import Optional, TypeVar, Union
 from pathlib import Path
 
 from PIL import Image
 
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.SeriesInfo2 import SeriesInfo
 

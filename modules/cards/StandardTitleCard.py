@@ -21,7 +21,7 @@ class StandardTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardTypeDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Standard',
         identifier='standard',
         example='/internal_assets/cards/standard.jpg',
@@ -96,17 +96,17 @@ class StandardTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'Sequel-Neue.otf').resolve())
-    TITLE_COLOR = '#EBEBEB'
-    FONT_REPLACEMENTS = {
+    TITLE_FONT: str = str((REF_DIRECTORY / 'Sequel-Neue.otf').resolve())
+    TITLE_COLOR: str = '#EBEBEB'
+    FONT_REPLACEMENTS: dict[str, str] = {
         '[': '(', ']': ')', '(': '[', ')': ']', '―': '-', '…': '...', '“': '"'
     }
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE: bool = True
 
     """Standard class has standard archive name"""
-    ARCHIVE_NAME = 'standard'
+    ARCHIVE_NAME: str = 'standard'
 
     """Default fonts and color for series count text"""
     SEASON_COUNT_FONT = REF_DIRECTORY / 'Proxima Nova Semibold.otf'
@@ -125,7 +125,7 @@ class StandardTitleCard(BaseCardType):
         'episode_text_font_size', 'episode_text_vertical_shift',
     )
 
-    def __init__(self,
+    def __init__(self, *,
             source_file: Path,
             card_file: Path,
             title_text: str,
@@ -395,7 +395,7 @@ class StandardTitleCard(BaseCardType):
                 f'-composite',
             ]
 
-        command = ' '.join([
+        self.image_magick.run([
             f'convert "{self.source_file.resolve()}"',
             # Resize and optionally blur source image
             *self.resize_and_style,
@@ -421,5 +421,3 @@ class StandardTitleCard(BaseCardType):
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
-
-        self.image_magick.run(command)

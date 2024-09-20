@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, ImageMagickCommands, Extra, CardTypeDescription
+    BaseCardType, ImageMagickCommands, Extra, CardTypeDescription, TextCase
 )
 from modules.Title import SplitCharacteristics
 
@@ -19,7 +19,7 @@ class WhiteBorderTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardTypeDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='White Border',
         identifier='white border',
         example='/internal_assets/cards/white border.webp',
@@ -77,23 +77,23 @@ class WhiteBorderTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'Arial_Bold.ttf').resolve())
-    TITLE_COLOR = 'white'
-    DEFAULT_FONT_CASE = 'upper'
-    FONT_REPLACEMENTS = {}
+    TITLE_FONT: str = str((REF_DIRECTORY / 'Arial_Bold.ttf').resolve())
+    TITLE_COLOR: str = 'white'
+    DEFAULT_FONT_CASE: TextCase = 'upper'
+    FONT_REPLACEMENTS: dict[str, str] = {}
 
     """Characteristics of the episode text"""
     EPISODE_TEXT_COLOR = TITLE_COLOR
     EPISODE_TEXT_FONT = REF_DIRECTORY / 'Arial.ttf'
 
     """Default stroke color"""
-    STROKE_COLOR = 'black'
+    STROKE_COLOR: str = 'black'
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE: bool = True
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'White Border Style'
+    ARCHIVE_NAME: str = 'White Border Style'
 
     """White border frame image to overlay"""
     FRAME_IMAGE = REF_DIRECTORY / 'border.png'
@@ -332,10 +332,9 @@ class WhiteBorderTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
-        standard_etf = WhiteBorderTitleCard.EPISODE_TEXT_FORMAT.upper()
-
         return (custom_episode_map
-                or episode_text_format.upper() != standard_etf)
+                or episode_text_format.upper() != \
+                    WhiteBorderTitleCard.EPISODE_TEXT_FORMAT.upper())
 
 
     def create(self) -> None:
@@ -361,7 +360,7 @@ class WhiteBorderTitleCard(BaseCardType):
                 f'-composite',
             ]
 
-        command = ' '.join([
+        self.image_magick.run([
             f'convert "{self.source_file.resolve()}"',
             *processing,
             # Overlay gradient
@@ -380,5 +379,3 @@ class WhiteBorderTitleCard(BaseCardType):
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
-
-        self.image_magick.run(command)
