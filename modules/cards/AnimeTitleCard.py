@@ -518,7 +518,7 @@ class AnimeTitleCard(BaseCardType):
                     AnimeTitleCard.EPISODE_STROKE_COLOR)
             or ('episode_text_color' in extras
                 and extras['episode_text_color'] != \
-                    AnimeTitleCard.SERIES_COUNT_TEXT_COLOR)
+                    AnimeTitleCard.EPISODE_TEXT_COLOR)
             or ('episode_text_size' in extras
                 and extras['episode_text_size'] != 1.0)
             or ('kanji_color' in extras
