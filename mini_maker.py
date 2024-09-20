@@ -6,6 +6,8 @@ from typing import Any, Literal, Optional
 
 try:
     import click
+    from dotenv import load_dotenv
+    load_dotenv()
 
     from modules.AspectRatioFixer import AspectRatioFixer
     from modules.CleanPath import CleanPath
