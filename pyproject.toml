@@ -78,6 +78,10 @@ exclude = [
     "**.venv"
 ]
 
+reportGeneralTypeIssues = false
+reportInvalidStringEscapeSequence = false
+reportIncompatibleMethodOverride = false
+
 [tool.ruff]
 exclude = [
     ".git",
