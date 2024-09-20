@@ -15,7 +15,6 @@ from app.models.episode import Episode
 from app.models.series import Library, Series
 from app.schemas.card import SourceImage
 from app.schemas.preferences import Style
-from modules.Debug import log
 from modules.Debug import Logger, log
 from modules.TieredSettings import TieredSettings
 from modules.WebInterface import WebInterface
