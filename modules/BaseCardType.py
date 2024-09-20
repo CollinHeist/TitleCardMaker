@@ -389,7 +389,13 @@ class BaseCardType(ImageMaker):
                 f'object'
             )
 
-        SplitCharacteristics(**cls.TITLE_CHARACTERISTICS)
+        try:
+            SplitCharacteristics(**cls.TITLE_CHARACTERISTICS) # type: ignore
+        except Exception:
+            raise TypeError(
+                f'{cls.__name__}.TITLE_CHARACTERISTICS must be a '
+                f'SplitCharacteristics dictionary.'
+            )
 
         if not isinstance(cls.ARCHIVE_NAME, str):
             raise TypeError(f'{cls.__name__}.ARCHIVE_NAME must be a string')
