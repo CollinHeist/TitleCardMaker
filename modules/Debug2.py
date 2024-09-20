@@ -57,7 +57,7 @@ def reduced_serializer(record: 'Record') -> str:
         # than using the better- exceptions formatter, so that extended
         # traceback stacks are properly displayed; handler[2]
         # corresponds to the file handler
-        tb = logger._core.handlers[2]._exception_formatter.format_exception( # pylance: disable=reportAttributeAccessIssue
+        tb = logger._core.handlers[2]._exception_formatter.format_exception( # type: ignore
             *record['exception']
         )
         exc = {
@@ -162,32 +162,32 @@ levels = [
 ]
 
 try:
-    logger.configure(handlers=handlers, levels=levels)
+    logger.configure(handlers=handlers, levels=levels) # type: ignore
 except ValueError:
     # Remove the async handler if executing without an event loop
     handlers.pop(-1)
-    logger.configure(handlers=handlers, levels=levels)
+    logger.configure(handlers=handlers, levels=levels) # type: ignore
 
 # Automatically redact all messages
 logger = logger.patch(
     lambda record: record.update(message=redact_secrets(record['message']))
 )
 
-import http.client
-def httpclient_logging_patch():
-    """Enable HTTPConnection debug logging to the logging framework"""
+# import http.client
+# def httpclient_logging_patch():
+#     """Enable HTTPConnection debug logging to the logging framework"""
 
-    def httpclient_log(*args):
-        if len(args) == 0 or args[0] == 'header:':
-            return
-        if args[0] == 'send:':
-            logger.debug(f'SEND : ' + ' '.join(args[1:]))
-        else:
-            logger.info(f'{args[0].upper()} : ' + ' '.join(args[1:]))
+#     def httpclient_log(*args):
+#         if len(args) == 0 or args[0] == 'header:':
+#             return
+#         if args[0] == 'send:':
+#             logger.debug(f'SEND : ' + ' '.join(args[1:]))
+#         else:
+#             logger.info(f'{args[0].upper()} : ' + ' '.join(args[1:]))
 
-    # mask the print() built-in in the http.client module to use
-    # logging instead
-    http.client.print = httpclient_log
-    # enable debugging
-    http.client.HTTPConnection.debuglevel = 1
+#     # mask the print() built-in in the http.client module to use
+#     # logging instead
+#     http.client.print = httpclient_log
+#     # enable debugging
+#     http.client.HTTPConnection.debuglevel = 1
 # httpclient_logging_patch()

@@ -76,7 +76,7 @@ class TitleCard:
     DEFAULT_CARD_TYPE = 'standard'
 
     """Mapping of card type identifiers to CardType classes"""
-    CARD_TYPES: dict[str, BaseCardType] = {
+    CARD_TYPES: dict[str, type[BaseCardType]] = {
         '4x3': FadeTitleCard,
         'anime': AnimeTitleCard,
         'banner': BannerTitleCard,

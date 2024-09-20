@@ -1,4 +1,3 @@
-from logging import Logger
 from os import environ, name as os_name
 from pathlib import Path
 from random import choices as random_choices
@@ -10,12 +9,12 @@ from typing import Iterable, Literal, NamedTuple, Optional, Union, overload
 
 from imagesize import get as im_get
 
-from modules.Debug import log
+from modules.Debug import Logger, log
 
 
 class Dimensions(NamedTuple): # pylint: disable=missing-class-docstring
-    width: float
-    height: float
+    width: Union[int, float]
+    height: Union[int, float]
 
 
 class ImageMagickInterface:
@@ -135,7 +134,7 @@ class ImageMagickInterface:
         return string
 
 
-    def run(self, command: str) -> tuple[bytes, bytes]:
+    def run(self, command: Union[str, Iterable[str]]) -> tuple[bytes, bytes]:
         """
         Wrapper for running a given command. This uses either the host
         machine (i.e. direct calls); or through the provided docker
@@ -143,11 +142,16 @@ class ImageMagickInterface:
         "docker exec -t {id} {command}").
 
         Args:
-            command: The command (as string) to execute.
+            command: The command as a string (or list of subcommand
+                strings) to execute.
 
         Returns:
             Tuple of the STDOUT and STDERR of the executed command.
         """
+
+        # If a list of commands were provided, join into one command string
+        if isinstance(command, (list, tuple)):
+            command = ' '.join(command)
 
         # Un-escape \( and \) into ( and )
         if os_name == 'nt':
@@ -245,7 +249,7 @@ class ImageMagickInterface:
         if not image.exists():
             return Dimensions(0, 0)
 
-        return Dimensions(*im_get(image))
+        return Dimensions(*map(float, im_get(image)))
 
 
     def get_text_dimensions(self,
@@ -286,7 +290,7 @@ class ImageMagickInterface:
         if not text_command:
             return Dimensions(0, 0)
 
-        text_command = ' '.join([
+        command = ' '.join([
             f'convert',
             f'-debug annotate',
             f'-density {density}' if density else '',
@@ -296,7 +300,7 @@ class ImageMagickInterface:
         ])
 
         # Execute dimension command, parse output
-        metrics = self.run_get_output(text_command)
+        metrics = self.run_get_output(command)
         widths = list(map(int, findall(r'Metrics:.*width:\s+(\d+)', metrics)))
         heights = list(map(int, findall(r'Metrics:.*height:\s+(\d+)', metrics)))
         ascents = list(map(int, findall(r'Metrics:.*ascent:\s+(\d+)', metrics)))
@@ -304,8 +308,8 @@ class ImageMagickInterface:
 
         try:
             # Label text produces duplicate Metrics
-            def sum_(dims: Iterable[float]) -> int:
-                return sum(dims) / (2 if ' label:"' in text_command else 1)
+            def sum_(dims: Iterable[float]) -> float:
+                return sum(dims) / (2 if ' label:"' in command else 1)
 
             # Process according to given methods
             height_adjustment = interline_spacing * (line_count - 1)

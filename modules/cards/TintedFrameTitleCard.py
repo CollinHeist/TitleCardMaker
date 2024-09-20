@@ -4,7 +4,7 @@ from re import compile as re_compile, IGNORECASE
 from typing import Literal, Optional, TYPE_CHECKING
 
 from modules.BaseCardType import (
-    BaseCardType, CardDescription, Coordinate, Extra, ImageMagickCommands,
+    BaseCardType, CardTypeDescription, Coordinate, Extra, ImageMagickCommands,
     Rectangle, Shadow,
 )
 from modules.Title import SplitCharacteristics
@@ -28,7 +28,7 @@ class TintedFrameTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS = CardTypeDescription(
         name='Tinted Frame',
         identifier='tinted frame',
         example='/internal_assets/cards/tinted frame.jpg',

@@ -1,11 +1,12 @@
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Union
 
 from modules.BaseCardType import (
     BaseCardType,
-    CardDescription,
+    CardTypeDescription,
     Extra,
     ImageMagickCommands,
+    TextCase,
 )
 from modules.Debug import log # noqa: F401
 from modules.Title import SplitCharacteristics
@@ -23,7 +24,7 @@ class BannerTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Banner',
         identifier='banner',
         example='/internal_assets/cards/banner.webp',
@@ -99,9 +100,9 @@ class BannerTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'Gill Sans Nova ExtraBold.ttf').resolve())
-    TITLE_COLOR = 'white'
-    DEFAULT_FONT_CASE = 'upper'
+    TITLE_FONT: str = str((REF_DIRECTORY / 'Gill Sans Nova ExtraBold.ttf').resolve())
+    TITLE_COLOR: str = 'white'
+    DEFAULT_FONT_CASE: TextCase = 'upper'
     FONT_REPLACEMENTS = {'(': '', ')': ''}
 
     """Characteristics of the episode text"""
@@ -109,10 +110,10 @@ class BannerTitleCard(BaseCardType):
     EPISODE_TEXT_FONT = REF_DIRECTORY / 'Gill Sans Nova ExtraBold.ttf'
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE: bool = True
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Banner Style'
+    ARCHIVE_NAME: str = 'Banner Style'
 
     """Implementation details"""
     BANNER_HEIGHT = 185
@@ -241,7 +242,7 @@ class BannerTitleCard(BaseCardType):
 
 
     @property
-    def index_text_width(self) -> int:
+    def index_text_width(self) -> Union[int, float]:
         """Width of the index text."""
 
         # All text hidden, return 0

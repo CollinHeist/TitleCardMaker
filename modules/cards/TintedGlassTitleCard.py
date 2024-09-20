@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import (
     BaseCardType,
-    CardDescription,
+    CardTypeDescription,
     Extra,
     ImageMagickCommands,
 )
@@ -28,7 +28,7 @@ class TintedGlassTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS = CardTypeDescription(
         name='Tinted Glass',
         identifier='tinted glass',
         example='/internal_assets/cards/tinted glass.jpg',

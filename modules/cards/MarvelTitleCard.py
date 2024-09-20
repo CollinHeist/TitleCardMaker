@@ -2,8 +2,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, CardDescription, Coordinate, Extra, ImageMagickCommands,
+    BaseCardType,
+    CardTypeDescription,
+    Coordinate,
+    Extra,
+    ImageMagickCommands,
     Rectangle,
+    TextCase,
 )
 from modules.ImageMagickInterface import Dimensions
 from modules.Title import SplitCharacteristics
@@ -23,7 +28,7 @@ class MarvelTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Marvel',
         identifier='marvel',
         example='/internal_assets/cards/marvel.jpg',
@@ -124,20 +129,20 @@ class MarvelTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'Qualion ExtraBold.ttf').resolve())
-    TITLE_COLOR = 'white'
-    DEFAULT_FONT_CASE = 'upper'
-    FONT_REPLACEMENTS = {}
+    TITLE_FONT: str = str((REF_DIRECTORY / 'Qualion ExtraBold.ttf').resolve())
+    TITLE_COLOR: str = 'white'
+    DEFAULT_FONT_CASE: TextCase = 'upper'
+    FONT_REPLACEMENTS: dict[str, str] = {}
 
     """Characteristics of the episode text"""
     EPISODE_TEXT_COLOR = '#C9C9C9'
     EPISODE_TEXT_FONT = REF_DIRECTORY / 'Qualion ExtraBold.ttf'
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE: bool = True
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Marvel Style'
+    ARCHIVE_NAME: str = 'Marvel Style'
 
     """How thick the border is (in pixels)"""
     DEFAULT_BORDER_SIZE = 55
@@ -491,11 +496,14 @@ class MarvelTitleCard(BaseCardType):
 
         custom_extras = (
             ('border_color' in extras
-                and extras['border_color'] != MarvelTitleCard.DEFAULT_BORDER_COLOR)
+                and extras['border_color'] != \
+                    MarvelTitleCard.DEFAULT_BORDER_COLOR)
             or ('episode_text_color' in extras
-                and extras['episode_text_color'] != MarvelTitleCard.EPISODE_TEXT_COLOR)
+                and extras['episode_text_color'] != \
+                    MarvelTitleCard.EPISODE_TEXT_COLOR)
             or ('text_box_color' in extras
-                and extras['text_box_color'] != MarvelTitleCard.DEFAULT_TEXT_BOX_COLOR)
+                and extras['text_box_color'] != \
+                    MarvelTitleCard.DEFAULT_TEXT_BOX_COLOR)
         )
 
         return (custom_extras
@@ -526,10 +534,9 @@ class MarvelTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
-        standard_etf = MarvelTitleCard.EPISODE_TEXT_FORMAT.upper()
-
         return (custom_episode_map
-                or episode_text_format.upper() != standard_etf)
+                or episode_text_format.upper() != \
+                    MarvelTitleCard.EPISODE_TEXT_FORMAT.upper())
 
 
     def create(self) -> None:
@@ -555,7 +562,7 @@ class MarvelTitleCard(BaseCardType):
         # Apply any font scaling to fit text
         title_text_dimensions = self.scale_text(title_text_dimensions)
 
-        command = ' '.join([
+        self.image_magick.run([
             f'convert "{self.source_file.resolve()}"',
             *processing,
             # Add borders
@@ -571,5 +578,3 @@ class MarvelTitleCard(BaseCardType):
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
-
-        self.image_magick.run(command)

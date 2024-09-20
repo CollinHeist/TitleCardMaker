@@ -3,7 +3,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, Coordinate, ImageMagickCommands, Extra, CardDescription, Line,
+    BaseCardType,
+    CardTypeDescription,
+    Coordinate,
+    Extra,
+    ImageMagickCommands,
+    Line,
+    TextCase,
 )
 from modules.Debug import log # noqa: F401
 from modules.Title import SplitCharacteristics
@@ -106,7 +112,7 @@ class GraphTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Graph',
         identifier='graph',
         example='/internal_assets/cards/graph.webp',
@@ -219,20 +225,20 @@ class GraphTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'HelveticaNeue-BoldItalic.ttf').resolve())
-    TITLE_COLOR = 'rgb(247, 247, 247)'
-    DEFAULT_FONT_CASE = 'source'
-    FONT_REPLACEMENTS = {}
+    TITLE_FONT: str = str((REF_DIRECTORY / 'HelveticaNeue-BoldItalic.ttf').resolve())
+    TITLE_COLOR: str = 'rgb(247, 247, 247)'
+    DEFAULT_FONT_CASE: TextCase = 'source'
+    FONT_REPLACEMENTS: dict[str, str] = {}
 
     """Characteristics of the episode text"""
     EPISODE_TEXT_FONT = REF_DIRECTORY / 'HelveticaNeue-BoldItalic.ttf'
     EPISODE_TEXT_FORMAT = '{episode_number} / {season_episode_max}'
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = False
+    USES_SEASON_TITLE: bool = False
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Graph Style'
+    ARCHIVE_NAME: str = 'Graph Style'
 
     """Implementation details"""
     BACKGROUND_GRAPH_COLOR = 'rgba(140,140,140,0.5)'

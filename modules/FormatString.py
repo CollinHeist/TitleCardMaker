@@ -1,6 +1,5 @@
 from datetime import datetime
 from json import dumps, JSONEncoder
-from logging import Logger
 from pathlib import Path
 from typing import Any, Callable
 
@@ -8,7 +7,7 @@ from num2words import num2words
 from titlecase import titlecase
 
 from modules.CleanPath import CleanPath
-from modules.Debug import InvalidFormatString, log
+from modules.Debug import InvalidFormatString, Logger, log
 
 
 # Patch JSON dumps to work with CleanPath objects

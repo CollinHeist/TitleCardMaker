@@ -2,8 +2,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, CardDescription, Coordinate, Extra, ImageMagickCommands,
-    Rectangle,
+    BaseCardType, CardTypeDescription, Coordinate, Extra, ImageMagickCommands,
+    Rectangle, TextCase,
 )
 from modules.ImageMagickInterface import Dimensions
 from modules.Title import SplitCharacteristics
@@ -21,7 +21,7 @@ class OverlineTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Overline',
         identifier='overline',
         example='/internal_assets/cards/overline.jpg',
@@ -116,10 +116,10 @@ class OverlineTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'HelveticaNeueMedium.ttf').resolve())
-    TITLE_COLOR = 'white'
-    DEFAULT_FONT_CASE = 'upper'
-    FONT_REPLACEMENTS = {}
+    TITLE_FONT: str = str((REF_DIRECTORY / 'HelveticaNeueMedium.ttf').resolve())
+    TITLE_COLOR: str = 'white'
+    DEFAULT_FONT_CASE: TextCase = 'upper'
+    FONT_REPLACEMENTS: dict[str, str] = {}
 
     """Characteristics of the episode text"""
     EPISODE_TEXT_COLOR = TITLE_COLOR
@@ -128,10 +128,10 @@ class OverlineTitleCard(BaseCardType):
     )
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE: bool = True
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Overline Style'
+    ARCHIVE_NAME: str = 'Overline Style'
 
     """How thick the line is (in pixels)"""
     LINE_THICKNESS = 9
@@ -481,7 +481,7 @@ class OverlineTitleCard(BaseCardType):
             self.index_text_commands, width='max', height='sum',
         )
 
-        command = ' '.join([
+        self.image_magick.run([
             f'convert "{self.source_file.resolve()}"',
             # Resize and apply styles to source image
             *self.resize_and_style,
@@ -498,5 +498,3 @@ class OverlineTitleCard(BaseCardType):
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
-
-        self.image_magick.run(command)

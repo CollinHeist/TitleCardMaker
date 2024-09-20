@@ -1,6 +1,14 @@
 from abc import abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Iterable,
+    Literal,
+    Optional,
+    Union
+)
 
 from titlecase import titlecase
 
@@ -15,10 +23,17 @@ if TYPE_CHECKING:
 
 CardDescription = CardTypeDescription
 
-
 __all__ = [
-    'BaseCardType', 'CardDescription', 'Coordinate', 'Dimensions', 'Extra',
-    'ImageMagickCommands', 'ImageMaker', 'Rectangle',
+    'BaseCardType',
+    'CardDescription',
+    'CardTypeDescription',
+    'Coordinate',
+    'Dimensions',
+    'Extra',
+    'ImageMagickCommands',
+    'ImageMaker',
+    'Rectangle',
+    'TextCase',
 ]
 
 
@@ -235,6 +250,7 @@ class Shadow:
 
         return str(self)
 
+TextCase = Literal['blank', 'lower', 'source', 'title', 'upper']
 
 class BaseCardType(ImageMaker):
     """
@@ -248,13 +264,13 @@ class BaseCardType(ImageMaker):
     """
 
     """Default case string for all title text"""
-    DEFAULT_FONT_CASE = 'upper'
+    DEFAULT_FONT_CASE: TextCase = 'upper'
 
     """Default font replacements"""
-    FONT_REPLACEMENTS = {}
+    FONT_REPLACEMENTS: dict[str, str] = {}
 
     """Mapping of 'case' strings to format functions"""
-    CASE_FUNCTIONS: dict[str, Callable[[Any], str]] = {
+    CASE_FUNCTIONS: dict[TextCase, Callable[[Any], str]] = {
         'blank': lambda _: '',
         'lower': str.lower,
         'source': str,
@@ -263,25 +279,25 @@ class BaseCardType(ImageMaker):
     }
 
     """Default episode text format string, can be overwritten by each class"""
-    EPISODE_TEXT_FORMAT = 'Episode {episode_number}'
+    EPISODE_TEXT_FORMAT: str = 'Episode {episode_number}'
 
     """Whether this class uses unique source images for card creation"""
-    USES_UNIQUE_SOURCES = True
+    USES_UNIQUE_SOURCES: bool = True
 
     """Whether this class uses Source Images at all"""
-    USES_SOURCE_IMAGES = True
+    USES_SOURCE_IMAGES: bool = True
 
     """Standard size for all title cards"""
-    WIDTH = 3200
-    HEIGHT = 1800
-    TITLE_CARD_SIZE = f'{WIDTH}x{HEIGHT}'
+    WIDTH: int = 3200
+    HEIGHT: int = 1800
+    TITLE_CARD_SIZE: str = f'{WIDTH}x{HEIGHT}'
 
     """Standard blur effect to apply to spoiler-free images"""
-    BLUR_PROFILE = '0x60'
+    BLUR_PROFILE: str = '0x60'
 
     @property
     @abstractmethod
-    def API_DETAILS(self) -> CardDescription: # pylint: disable=missing-function-docstring
+    def API_DETAILS(self) -> CardTypeDescription: # pylint: disable=missing-function-docstring
         raise NotImplementedError
 
 
@@ -368,35 +384,43 @@ class BaseCardType(ImageMaker):
         super().__init_subclass__(**kwargs)
 
         if not isinstance(cls.API_DETAILS, CardTypeDescription):
-            raise TypeError(f'{cls.__name__}.API_DETAILS must be a '
-                            f'CardTypeDescription object')
+            raise TypeError(
+                f'{cls.__name__}.API_DETAILS must be a CardTypeDescription '
+                f'object'
+            )
 
         SplitCharacteristics(**cls.TITLE_CHARACTERISTICS)
 
         if not isinstance(cls.ARCHIVE_NAME, str):
             raise TypeError(f'{cls.__name__}.ARCHIVE_NAME must be a string')
         if len(cls.ARCHIVE_NAME) == 0:
-            raise ValueError(f'{cls.__name__}.ARCHIVE_NAME must be at least 1 '
-                             f'characters long')
+            raise ValueError(
+                f'{cls.__name__}.ARCHIVE_NAME must be at least 1 character long'
+            )
 
         if not isinstance(cls.DEFAULT_FONT_CASE, str):
             raise TypeError(f'{cls.__name__}.DEFAULT_FONT_CASE must be a string')
         if cls.DEFAULT_FONT_CASE not in ('blank', 'lower', 'source', 'title',
                                          'upper'):
-            raise TypeError(f'{cls.__name__}.DEFAULT_FONT_CASE must be "blank",'
-                            f' "lower", "source", "title", or "upper"')
+            raise TypeError(
+                f'{cls.__name__}.DEFAULT_FONT_CASE must be "blank", "lower", '
+                f'"source", "title", or "upper"'
+            )
 
         if not isinstance(cls.TITLE_COLOR, str):
             raise TypeError(f'{cls.__name__}.TITLE_COLOR must be a string')
 
         if not isinstance(cls.FONT_REPLACEMENTS, dict):
-            raise TypeError(f'{cls.__name__}.FONT_REPLACEMENTS must be a '
-                            f'dictionary')
+            raise TypeError(
+                f'{cls.__name__}.FONT_REPLACEMENTS must be a dictionary'
+            )
 
         if not all(isinstance(k, str) and isinstance(v, str)
                    for k, v in cls.FONT_REPLACEMENTS.items()):
-            raise TypeError(f'All keys and values of '
-                            f'{cls.__name__}.FONT_REPLACEMENTS must strings')
+            raise TypeError(
+                f'All keys and values of {cls.__name__}.FONT_REPLACEMENTS must '
+                f'strings'
+            )
 
 
     def __repr__(self) -> str:
@@ -682,8 +706,8 @@ class BaseCardType(ImageMaker):
     def add_drop_shadow(self,
             commands: ImageMagickCommands,
             shadow: Union[str, Shadow],
-            x: int = 0,
-            y: int = 0,
+            x: Union[int, float] = 0,
+            y: Union[int, float] = 0,
             *,
             shadow_color: str = 'black',
         ) -> ImageMagickCommands:

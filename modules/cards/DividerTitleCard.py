@@ -1,11 +1,12 @@
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional, Union
 
 from modules.BaseCardType import (
     BaseCardType,
-    CardDescription,
+    CardTypeDescription,
     Extra,
     ImageMagickCommands,
+    TextCase,
 )
 from modules.Title import SplitCharacteristics
 
@@ -32,7 +33,7 @@ class DividerTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Divider',
         identifier='divider',
         example='/internal_assets/cards/divider.jpg',
@@ -109,19 +110,19 @@ class DividerTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'Flanker Griffo.otf').resolve())
-    TITLE_COLOR = 'white'
-    DEFAULT_FONT_CASE = 'source'
-    FONT_REPLACEMENTS = {'♡': '', '☆': '', '✕': 'x'}
+    TITLE_FONT: str = str((REF_DIRECTORY / 'Flanker Griffo.otf').resolve())
+    TITLE_COLOR: str = 'white'
+    DEFAULT_FONT_CASE: TextCase = 'source'
+    FONT_REPLACEMENTS: dict[str, str] = {'♡': '', '☆': '', '✕': 'x'}
 
     """Characteristics of the episode text"""
-    EPISODE_TEXT_FORMAT = 'Episode {episode_number}'
+    EPISODE_TEXT_FORMAT: str = 'Episode {episode_number}'
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE: bool = True
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Divider Style'
+    ARCHIVE_NAME: str = 'Divider Style'
 
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
@@ -239,7 +240,7 @@ class DividerTitleCard(BaseCardType):
 
 
     @property
-    def divider_height(self) -> int:
+    def divider_height(self) -> Union[int, float]:
         """
         The height of the divider between the index and title text. This
         is calculated based on the maximum of the height of the index
@@ -282,7 +283,7 @@ class DividerTitleCard(BaseCardType):
 
 
     def divider_command(self,
-            divider_height: int,
+            divider_height: Union[int, float],
             color: str,
         ) -> ImageMagickCommands:
         """
@@ -311,7 +312,7 @@ class DividerTitleCard(BaseCardType):
 
 
     def text_command(self,
-            divider_height: int,
+            divider_height: Union[int, float],
             is_stroke_text: bool,
         ) -> ImageMagickCommands:
         """
@@ -446,7 +447,7 @@ class DividerTitleCard(BaseCardType):
         # Get the height for the divider character based on the max text height
         divider_height = self.divider_height
 
-        command = ' '.join([
+        self.image_magick.run([
             f'convert "{self.source_file.resolve()}"',
             # Resize and apply styles to source image
             *self.resize_and_style,
@@ -484,5 +485,3 @@ class DividerTitleCard(BaseCardType):
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
-
-        self.image_magick.run(command)

@@ -1,4 +1,3 @@
-from logging import Logger
 from pathlib import Path
 from re import sub as regex_replace, IGNORECASE
 from typing import (
@@ -24,7 +23,7 @@ from app.dependencies import get_preferences
 from app.models.template import SeriesTemplates, Template
 from app.schemas.connection import ServerName
 from modules.CleanPath import CleanPath
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.SeriesInfo2 import SeriesInfo
 
 if TYPE_CHECKING:

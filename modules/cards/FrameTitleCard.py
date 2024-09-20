@@ -2,7 +2,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, CardDescription, Extra, ImageMagickCommands
+    BaseCardType,
+    CardTypeDescription,
+    Extra,
+    ImageMagickCommands,
+    TextCase
 )
 from modules.Title import SplitCharacteristics
 
@@ -22,7 +26,7 @@ class FrameTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Frame',
         identifier='frame',
         example='/internal_assets/cards/frame.jpg',
@@ -69,16 +73,16 @@ class FrameTitleCard(BaseCardType):
     }
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Frame Style'
+    ARCHIVE_NAME: str = 'Frame Style'
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'guess-sans-medium.otf').resolve())
-    DEFAULT_FONT_CASE = 'upper'
-    TITLE_COLOR = 'rgb(80, 80, 80)'
-    FONT_REPLACEMENTS = {}
+    TITLE_FONT: str = str((REF_DIRECTORY / 'guess-sans-medium.otf').resolve())
+    DEFAULT_FONT_CASE: TextCase = 'upper'
+    TITLE_COLOR: str = 'rgb(80, 80, 80)'
+    FONT_REPLACEMENTS: dict[str, str] = {}
 
     """Whether this class uses season titles for the purpose of archives"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE: bool = True
 
     """Default colors for space outside the frame, and index text"""
     BACKGROUND_COLOR = 'black'
@@ -348,7 +352,7 @@ class FrameTitleCard(BaseCardType):
             f'-modulate 100,125',
         ]
 
-        command = ' '.join([
+        self.image_magick.run([
             f'convert "{self.source_file.resolve()}"',
             *processing,
             # Fill in background
@@ -367,5 +371,3 @@ class FrameTitleCard(BaseCardType):
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
-
-        self.image_magick.run(command)

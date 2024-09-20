@@ -5,7 +5,7 @@ from re import match as re_match
 from typing import TYPE_CHECKING, Literal, Optional, get_args as get_type_args
 
 from modules.BaseCardType import (
-    BaseCardType, Coordinate, ImageMagickCommands, Extra, CardDescription
+    BaseCardType, Coordinate, ImageMagickCommands, Extra, CardTypeDescription
 )
 from modules.Debug import log # noqa: F401
 from modules.Title import SplitCharacteristics
@@ -40,7 +40,7 @@ class ShapeTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS = CardTypeDescription(
         name='Shape',
         identifier='shape',
         example='/internal_assets/cards/shape.webp',

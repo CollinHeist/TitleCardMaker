@@ -3,8 +3,15 @@ from random import random
 from typing import TYPE_CHECKING, Literal, NamedTuple, Optional, Union
 
 from modules.BaseCardType import (
-    BaseCardType, CardDescription, Coordinate, Dimensions, ImageMagickCommands,
-    Extra, Rectangle, Shadow,
+    BaseCardType,
+    CardTypeDescription,
+    Coordinate,
+    Dimensions,
+    ImageMagickCommands,
+    Extra,
+    Rectangle,
+    Shadow,
+    TextCase,
 )
 from modules.Debug import log # noqa: F401
 from modules.EpisodeInfo2 import EpisodeInfo
@@ -34,7 +41,7 @@ class MusicTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Music',
         identifier='music',
         example='/internal_assets/cards/music.webp',
@@ -256,10 +263,10 @@ class MusicTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'Gotham-Bold.otf').resolve())
-    TITLE_COLOR = 'white'
-    DEFAULT_FONT_CASE = 'source'
-    FONT_REPLACEMENTS = {}
+    TITLE_FONT: str = str((REF_DIRECTORY / 'Gotham-Bold.otf').resolve())
+    TITLE_COLOR: str = 'white'
+    DEFAULT_FONT_CASE: TextCase = 'source'
+    FONT_REPLACEMENTS: dict[str, str] = {}
 
     """Characteristics of the episode text"""
     EPISODE_TEXT_FORMAT = 'E{episode_number}'
@@ -267,10 +274,10 @@ class MusicTitleCard(BaseCardType):
     INDEX_TEXT_FONT = REF_DIRECTORY / 'Gotham-Medium.ttf'
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE: bool = True
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Music Style'
+    ARCHIVE_NAME: str = 'Music Style'
 
     """Implementation details"""
     SUBTITLE_FONT = REF_DIRECTORY / 'Gotham-Light.otf'
@@ -468,10 +475,11 @@ class MusicTitleCard(BaseCardType):
         """Subcommands required to add the title text."""
 
         # If no title text, return empty commands
-        if len(self.title_text) == 0:
+        if not self.title_text:
             return []
 
         # Determine x position of text based on player position
+        x = 0
         MARGIN = 50 # - | + orientation
         if self.player_position == 'left':
             x = self.player_inset + MARGIN
@@ -510,7 +518,7 @@ class MusicTitleCard(BaseCardType):
             return self.__title_dimensions
 
         # No title text, return 0
-        if len(self.title_text) == 0:
+        if not self.title_text:
             return Dimensions(0, 0)
 
         self.__title_dimensions = self.image_magick.get_text_dimensions(
@@ -532,6 +540,7 @@ class MusicTitleCard(BaseCardType):
             return []
 
         # Determine x position of text based on player position
+        x = 0
         MARGIN = 53 # - | + orientation
         if self.player_position == 'left':
             x = self.player_inset + MARGIN
@@ -613,7 +622,7 @@ class MusicTitleCard(BaseCardType):
             + (-108 if self.add_controls else 0)
 
         # Determine position of season text
-        season_commands = []
+        x, season_commands = 0, []
         if not self.hide_season_text:
             # Determine how far in from the right side to place text
             season_commands = self.season_text_commands
@@ -771,6 +780,7 @@ class MusicTitleCard(BaseCardType):
         """
 
         # Start in the top left corner; determine x coordinate
+        start_x = 0
         if self.player_position == 'left':
             start_x = self.player_inset
         elif self.player_position == 'middle':
@@ -1107,7 +1117,7 @@ class MusicTitleCard(BaseCardType):
     def create(self) -> None:
         """Create this object's defined Title Card."""
 
-        command = ' '.join([
+        self.image_magick.run([
             f'convert "{self.source_file.resolve()}"',
             f'-density 100',
             # Resize and apply styles to source image
@@ -1132,5 +1142,4 @@ class MusicTitleCard(BaseCardType):
             f'"{self.output_file.resolve()}"',
         ])
 
-        self.image_magick.run(command)
         self.image_magick.delete_intermediate_images(*self.__cleanup)

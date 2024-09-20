@@ -2,8 +2,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, CardDescription, Coordinate, Extra, ImageMagickCommands,
-    Rectangle,
+    BaseCardType, CardTypeDescription, Coordinate, Extra, ImageMagickCommands,
+    Rectangle, TextCase,
 )
 from modules.Debug import log # noqa: F401
 from modules.Title import SplitCharacteristics
@@ -24,7 +24,7 @@ class NotificationTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Notification',
         identifier='notification',
         example='/internal_assets/cards/notification.webp',
@@ -127,20 +127,20 @@ class NotificationTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'Gotham-Bold.otf').resolve())
-    TITLE_COLOR = 'white'
-    DEFAULT_FONT_CASE = 'source'
-    FONT_REPLACEMENTS = {}
+    TITLE_FONT: str = str((REF_DIRECTORY / 'Gotham-Bold.otf').resolve())
+    TITLE_COLOR: str = 'white'
+    DEFAULT_FONT_CASE: TextCase = 'source'
+    FONT_REPLACEMENTS: dict[str ,str] = {}
 
     """Characteristics of the episode text"""
     EPISODE_TEXT_FORMAT = 'Episode {episode_number}'
     EPISODE_TEXT_COLOR = TITLE_COLOR
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE: bool = True
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Notification Style'
+    ARCHIVE_NAME: str = 'Notification Style'
 
     """Implementation details"""
     EDGE_COLOR = TITLE_COLOR
@@ -471,7 +471,7 @@ class NotificationTitleCard(BaseCardType):
     def create(self) -> None:
         """Create this object's defined Title Card."""
 
-        command = ' '.join([
+        self.image_magick.run([
             f'convert "{self.source_file.resolve()}"',
             f'-density 100',
             # Resize and apply styles to source image
@@ -501,5 +501,3 @@ class NotificationTitleCard(BaseCardType):
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
-
-        self.image_magick.run(command)

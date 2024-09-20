@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import (
     BaseCardType,
-    CardDescription,
+    CardTypeDescription,
     Extra,
     ImageMagickCommands,
 )
@@ -23,7 +23,7 @@ class CutoutTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Cutout',
         identifier='cutout',
         example='/internal_assets/cards/cutout.jpg',
@@ -95,15 +95,15 @@ class CutoutTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((OLIVIER_REF_DIRECTORY / 'Montserrat-Bold.ttf').resolve())
-    TITLE_COLOR = 'white'
-    FONT_REPLACEMENTS = {}
+    TITLE_FONT: str = str((OLIVIER_REF_DIRECTORY / 'Montserrat-Bold.ttf').resolve())
+    TITLE_COLOR: str = 'white'
+    FONT_REPLACEMENTS: dict[str, str] = {}
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = False
+    USES_SEASON_TITLE: bool = False
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Cutout Style'
+    ARCHIVE_NAME: str = 'Cutout Style'
 
     """Default fonts and color for series count text"""
     EPISODE_TEXT_FORMAT = '{to_cardinal(episode_number)}'

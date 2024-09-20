@@ -4,11 +4,12 @@ from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import (
     BaseCardType,
-    CardDescription,
+    CardTypeDescription,
     Dimensions,
     Extra,
     ImageMagickCommands,
     Shadow,
+    TextCase,
 )
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Title import SplitCharacteristics
@@ -26,7 +27,7 @@ class CalligraphyTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Calligraphy',
         identifier='calligraphy',
         example='/internal_assets/cards/calligraphy.jpg',
@@ -131,25 +132,25 @@ class CalligraphyTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'SlashSignature.ttf').resolve())
-    TITLE_COLOR = 'white'
-    DEFAULT_FONT_CASE = 'source'
-    FONT_REPLACEMENTS = {}
+    TITLE_FONT: str = str((REF_DIRECTORY / 'SlashSignature.ttf').resolve())
+    TITLE_COLOR: str = 'white'
+    DEFAULT_FONT_CASE: TextCase = 'source'
+    FONT_REPLACEMENTS: dict[str, str] = {}
 
     """How to format episode text"""
-    EPISODE_TEXT_FORMAT = 'Episode {titlecase(to_cardinal(episode_number))}'
+    EPISODE_TEXT_FORMAT: str = 'Episode {titlecase(to_cardinal(episode_number))}'
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE: bool = True
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Calligraphy Style'
+    ARCHIVE_NAME: str = 'Calligraphy Style'
 
     """Texture image to compose with"""
     TEXTURE_IMAGE = REF_DIRECTORY / 'texture.jpg'
 
     """Custom blur profile"""
-    BLUR_PROFILE = '0x10'
+    BLUR_PROFILE: str = '0x10'
 
     """Blur profile to use if deep blurring is enabled"""
     DEEP_BLUR_PROFILE = BaseCardType.BLUR_PROFILE
@@ -298,6 +299,9 @@ class CalligraphyTitleCard(BaseCardType):
         Returns:
             Effective dimensions of the logo after having been scaled.
         """
+
+        if self.logo_file is None:
+            return Dimensions(0, 0)
 
         # Get base dimensions of the logo (before resizing)
         width, height = self.image_magick.get_image_dimensions(self.logo_file)

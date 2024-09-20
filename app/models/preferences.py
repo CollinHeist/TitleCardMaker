@@ -1,5 +1,4 @@
 from datetime import datetime
-from logging import Logger
 from os import environ
 from pathlib import Path
 from pickle import dump, load
@@ -7,7 +6,7 @@ from typing import Any, Optional, TYPE_CHECKING
 
 from app.schemas.base import UNSPECIFIED
 from modules.BaseCardType import BaseCardType
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.FormatString import FormatString
 from modules.ImageMagickInterface import ImageMagickInterface
@@ -207,7 +206,7 @@ class Preferences:
         self.simplified_data_table = True
         self.interactive_card_previews = True
         self.remote_card_types = {}
-        self.local_card_types: dict[str, BaseCardType] = {}
+        self.local_card_types: dict[str, type[BaseCardType]] = {}
         self.default_card_type = 'standard'
         self.excluded_card_types = []
         self.default_watched_style = 'unique'
@@ -451,7 +450,7 @@ class Preferences:
     @staticmethod
     def get_filesize(
             value: Optional[int],
-            unit: Optional[int]
+            unit: Optional[str]
         ) -> Optional[int]:
         """
         Get the filesize for the given value and unit.

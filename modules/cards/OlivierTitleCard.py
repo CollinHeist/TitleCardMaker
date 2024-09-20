@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, ImageMagickCommands, Extra, CardDescription
+    BaseCardType, ImageMagickCommands, Extra, CardTypeDescription
 )
 from modules.Title import SplitCharacteristics
 
@@ -18,7 +18,7 @@ class OlivierTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Olivier',
         identifier='olivier',
         example='/internal_assets/cards/olivier.jpg',
@@ -86,9 +86,9 @@ class OlivierTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'Montserrat-Bold.ttf').resolve())
-    TITLE_COLOR = 'white'
-    FONT_REPLACEMENTS = {}
+    TITLE_FONT: str = str((REF_DIRECTORY / 'Montserrat-Bold.ttf').resolve())
+    TITLE_COLOR: str = 'white'
+    FONT_REPLACEMENTS: dict[str, str] = {}
 
     """Characteristics of the episode text"""
     EPISODE_TEXT_FORMAT = 'EPISODE {to_cardinal(episode_number)}'
@@ -98,10 +98,10 @@ class OlivierTitleCard(BaseCardType):
     STROKE_COLOR = 'black'
 
     """Whether this class uses season titles for the purpose of archives"""
-    USES_SEASON_TITLE = False
+    USES_SEASON_TITLE: bool = False
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Olivier Style'
+    ARCHIVE_NAME: str = 'Olivier Style'
 
     """Gradient image"""
     GRADIENT = REF_DIRECTORY.parent / 'overline' / 'small_gradient.png'
@@ -115,7 +115,7 @@ class OlivierTitleCard(BaseCardType):
         'episode_text_vertical_shift',
     )
 
-    def __init__(self,
+    def __init__(self, *,
             source_file: Path,
             card_file: Path,
             title_text: str,
@@ -139,9 +139,7 @@ class OlivierTitleCard(BaseCardType):
             preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this card.
-        """
+        """Construct a new instance of this card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -381,7 +379,7 @@ class OlivierTitleCard(BaseCardType):
     def create(self) -> None:
         """Create the title card as defined by this object."""
 
-        command = ' '.join([
+        self.image_magick.run([
             f'convert "{self.source_file.resolve()}"',
             *self.resize_and_style,
             # Overlay gradient
@@ -396,5 +394,3 @@ class OlivierTitleCard(BaseCardType):
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
-
-        self.image_magick.run(command)

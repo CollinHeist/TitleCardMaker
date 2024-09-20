@@ -1,13 +1,14 @@
 from math import cos, sin, pi as PI
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional, Union
 
 from modules.BaseCardType import (
     BaseCardType,
-    CardDescription,
+    CardTypeDescription,
     Coordinate,
     ImageMagickCommands,
     Extra,
+    TextCase,
 )
 from modules.Title import SplitCharacteristics
 
@@ -19,7 +20,7 @@ if TYPE_CHECKING:
 class SvgRectangle:
     """Class that defines a movable SVG rectangle."""
 
-    def __init__(self, width: int, height: int) -> None:
+    def __init__(self, width: Union[int, float], height: Union[int, float]) -> None:
         """
         Initialize this Rectangle object for a rectangle of the given
         dimensions.
@@ -103,7 +104,7 @@ class ComicBookTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Comic Book',
         identifier='comic book',
         example='/internal_assets/cards/comic book.jpg',
@@ -239,20 +240,20 @@ class ComicBookTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY /'cc-wild-words-bold-italic.ttf').resolve())
-    TITLE_COLOR = 'black'
-    DEFAULT_FONT_CASE = 'upper'
-    FONT_REPLACEMENTS = {'é': 'e', 'É': 'E'}
+    TITLE_FONT: str = str((REF_DIRECTORY /'cc-wild-words-bold-italic.ttf').resolve())
+    TITLE_COLOR: str = 'black'
+    DEFAULT_FONT_CASE: TextCase = 'upper'
+    FONT_REPLACEMENTS: dict[str, str] = {'é': 'e', 'É': 'E'}
 
     """Characteristics of the episode text"""
     EPISODE_TEXT_COLOR = TITLE_COLOR
     EPISODE_TEXT_FONT = REF_DIRECTORY / 'cc-wild-words-bold-italic.ttf'
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE: bool = True
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Comic Book Style'
+    ARCHIVE_NAME: str = 'Comic Book Style'
 
     """Implementation details"""
     BANNER_FILL_COLOR = 'rgba(235,73,69,0.6)'

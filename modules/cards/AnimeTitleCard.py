@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import (
     BaseCardType,
-    CardDescription,
+    CardTypeDescription,
     Extra,
     ImageMagickCommands,
 )
@@ -23,7 +23,7 @@ class AnimeTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Anime',
         identifier='anime',
         example='/internal_assets/cards/anime.webp',
@@ -162,16 +162,16 @@ class AnimeTitleCard(BaseCardType):
     }
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Anime Style'
+    ARCHIVE_NAME: str = 'Anime Style'
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'Flanker Griffo.otf').resolve())
+    TITLE_FONT: str = str((REF_DIRECTORY / 'Flanker Griffo.otf').resolve())
     DEFAULT_FONT_CASE = 'source'
-    TITLE_COLOR = 'white'
+    TITLE_COLOR: str = 'white'
     FONT_REPLACEMENTS = {'♡': '', '☆': '', '＊': '', '✕': 'x', '♥': ''}
 
     """Whether this class uses season titles for the purpose of archives"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE: bool = True
 
     """Source path for the gradient image overlayed over all title cards"""
     __GRADIENT_IMAGE: Path = REF_DIRECTORY / 'GRADIENT.png'

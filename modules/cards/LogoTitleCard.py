@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, ImageMagickCommands, Extra, CardDescription
+    BaseCardType, ImageMagickCommands, Extra, CardTypeDescription
 )
 from modules.Title import SplitCharacteristics
 
@@ -18,7 +18,7 @@ class LogoTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Logo',
         identifier='logo',
         example='/internal_assets/cards/logo.jpg',
@@ -136,23 +136,23 @@ class LogoTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'Sequel-Neue.otf').resolve())
-    TITLE_COLOR = '#EBEBEB'
-    FONT_REPLACEMENTS = {
+    TITLE_FONT: str = str((REF_DIRECTORY / 'Sequel-Neue.otf').resolve())
+    TITLE_COLOR: str = '#EBEBEB'
+    FONT_REPLACEMENTS: dict[str, str] = {
         '[': '(', ']': ')', '(': '[', ')': ']', '―': '-', '…': '...'
     }
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE: bool = True
 
     """Whether this CardType uses unique source images"""
-    USES_UNIQUE_SOURCES = False
+    USES_UNIQUE_SOURCES: bool = False
 
     """Whether this class uses Source Images at all"""
-    USES_SOURCE_IMAGES = False # Set as False; if required then caught by model
+    USES_SOURCE_IMAGES: bool = False # Set as False; if required then caught by model
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Logo Style'
+    ARCHIVE_NAME: str = 'Logo Style'
 
     """Default fonts and color for series count text"""
     SEASON_COUNT_FONT = REF_DIRECTORY / 'Proxima Nova Semibold.otf'
@@ -173,12 +173,12 @@ class LogoTitleCard(BaseCardType):
         'episode_text_vertical_shift'
     )
 
-    def __init__(self,
+    def __init__(self, *,
             card_file: Path,
             title_text: str,
             season_text: str,
             episode_text: str,
-            source_file: Optional[Path] = None,
+            source_file: Path = ...,
             hide_season_text: bool = False,
             hide_episode_text: bool = False,
             font_color: str = TITLE_COLOR,
@@ -195,7 +195,7 @@ class LogoTitleCard(BaseCardType):
             blur_only_image: bool = False,
             episode_text_color: str = SERIES_COUNT_TEXT_COLOR,
             episode_text_vertical_shift: int = 0,
-            logo_file: Optional[Path] = None,
+            logo_file: Path = ...,
             logo_size: float = 1.0,
             logo_vertical_shift: int = 0,
             omit_gradient: bool = True,
@@ -205,9 +205,7 @@ class LogoTitleCard(BaseCardType):
             preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this card.
-        """
+        """Construct a new instance of this card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -514,7 +512,7 @@ class LogoTitleCard(BaseCardType):
         elif not self.blur_only_image:
             style_command = self.style
 
-        command = ' '.join([
+        self.image_magick.run([
             f'convert',
             # Add background image or color
             *background_command,
@@ -534,5 +532,3 @@ class LogoTitleCard(BaseCardType):
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
-
-        self.image_magick.run(command)

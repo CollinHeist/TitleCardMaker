@@ -29,9 +29,9 @@ from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 
 if TYPE_CHECKING:
-    from modules.BaseCardType import CardDescription
+    from modules.BaseCardType import CardTypeDescription
 
-LocalCards: list['CardDescription'] = [
+LocalCards: list['CardTypeDescription'] = [
     AnimeTitleCard.API_DETAILS,
     BannerTitleCard.API_DETAILS,
     CalligraphyTitleCard.API_DETAILS,

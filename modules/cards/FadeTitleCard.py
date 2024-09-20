@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import (
     BaseCardType,
-    CardDescription,
+    CardTypeDescription,
     Extra,
     ImageMagickCommands,
 )
@@ -22,7 +22,7 @@ class FadeTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Fade',
         identifier='fade',
         example='/internal_assets/cards/fade.jpg',
@@ -58,9 +58,9 @@ class FadeTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((FONT_REF_DIRECTORY / 'Sequel-Neue.otf').resolve())
-    TITLE_COLOR = 'white'
-    FONT_REPLACEMENTS = {
+    TITLE_FONT: str = str((FONT_REF_DIRECTORY / 'Sequel-Neue.otf').resolve())
+    TITLE_COLOR: str = 'white'
+    FONT_REPLACEMENTS: dict[str, str] = {
         '[': '(', ']': ')', '(': '[', ')': ']', '―': '-', '…': '...', '“': '"'
     }
 
@@ -70,10 +70,10 @@ class FadeTitleCard(BaseCardType):
     EPISODE_TEXT_FONT = FONT_REF_DIRECTORY / 'Proxima Nova Semibold.otf'
 
     """Whether this class uses season titles for the purpose of archives"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE: bool = True
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = '4x3 Fade Style'
+    ARCHIVE_NAME: str = '4x3 Fade Style'
 
     __OVERLAY = REF_DIRECTORY / 'gradient_fade.png'
 
@@ -84,7 +84,7 @@ class FadeTitleCard(BaseCardType):
         'episode_text_color',
     )
 
-    def __init__(self,
+    def __init__(self, *,
             source_file: Path,
             card_file: Path,
             title_text: str,
@@ -220,7 +220,8 @@ class FadeTitleCard(BaseCardType):
 
         custom_extras = (
             ('episode_text_color' in extras
-                and extras['episode_text_color'] != FadeTitleCard.EPISODE_TEXT_COLOR)
+                and extras['episode_text_color'] != \
+                    FadeTitleCard.EPISODE_TEXT_COLOR)
         )
 
         return (custom_extras
@@ -260,7 +261,7 @@ class FadeTitleCard(BaseCardType):
     def create(self) -> None:
         """Create the title card as defined by this object."""
 
-        command = ' '.join([
+        self.image_magick.run([
             f'convert',
             # Create blank transparent image for composite sequencing
             f'-size "{self.TITLE_CARD_SIZE}"',
@@ -286,5 +287,3 @@ class FadeTitleCard(BaseCardType):
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
-
-        self.image_magick.run(command)

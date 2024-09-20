@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, ImageMagickCommands, Extra, CardDescription
+    BaseCardType, ImageMagickCommands, Extra, CardTypeDescription
 )
 from modules.Title import SplitCharacteristics
 
@@ -19,7 +19,7 @@ class WhiteBorderTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS = CardTypeDescription(
         name='White Border',
         identifier='white border',
         example='/internal_assets/cards/white border.webp',

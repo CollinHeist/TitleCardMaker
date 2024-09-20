@@ -6,7 +6,7 @@ from re import IGNORECASE, compile as re_compile
 from typing import TYPE_CHECKING, Iterable, Literal, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, CardDescription, Coordinate, ImageMagickCommands, Extra,
+    BaseCardType, CardTypeDescription, Coordinate, ImageMagickCommands, Extra,
 )
 from modules.Debug import log # noqa: F401
 from modules.Title import SplitCharacteristics
@@ -263,7 +263,7 @@ class StripedTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS = CardTypeDescription(
         name='Striped',
         identifier='striped',
         example='/internal_assets/cards/striped.webp',

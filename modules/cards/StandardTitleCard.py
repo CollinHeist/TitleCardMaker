@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, ImageMagickCommands, Extra, CardDescription
+    BaseCardType, ImageMagickCommands, Extra, CardTypeDescription
 )
 from modules.Debug import log # noqa: F401
 from modules.Title import SplitCharacteristics
@@ -21,7 +21,7 @@ class StandardTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS = CardTypeDescription(
         name='Standard',
         identifier='standard',
         example='/internal_assets/cards/standard.jpg',

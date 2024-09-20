@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional
 
-from modules.BaseCardType import BaseCardType, CardDescription
+from modules.BaseCardType import BaseCardType, CardTypeDescription
 from modules.Debug import log # noqa: F401
 from modules.Title import SplitCharacteristics
 
@@ -18,7 +18,7 @@ class TextlessTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS = CardTypeDescription(
         name='Textless',
         identifier='textless',
         example='/internal_assets/cards/textless.jpg',

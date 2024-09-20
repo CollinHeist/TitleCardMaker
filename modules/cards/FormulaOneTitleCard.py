@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, CardDescription, Extra, ImageMagickCommands,
+    BaseCardType, CardTypeDescription, Extra, ImageMagickCommands, TextCase,
 )
 from modules.Debug import log # noqa: F401
 from modules.Title import SplitCharacteristics
@@ -27,7 +27,7 @@ class FormulaOneTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Formula 1',
         identifier='formula 1',
         example='/internal_assets/cards/formula.webp',
@@ -113,10 +113,10 @@ class FormulaOneTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'Formula1-Bold.otf').resolve())
-    TITLE_COLOR = 'white'
-    DEFAULT_FONT_CASE = 'upper'
-    FONT_REPLACEMENTS = {}
+    TITLE_FONT: str = str((REF_DIRECTORY / 'Formula1-Bold.otf').resolve())
+    TITLE_COLOR: str = 'white'
+    DEFAULT_FONT_CASE: TextCase = 'upper'
+    FONT_REPLACEMENTS: dict[str, str] = {}
 
     """Characteristics of the episode text"""
     EPISODE_TEXT_FONT = REF_DIRECTORY / 'Formula1-Bold.otf'
@@ -124,10 +124,10 @@ class FormulaOneTitleCard(BaseCardType):
     EPISODE_TEXT_COLOR = 'white'
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE: bool = True
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Formula 1 Style'
+    ARCHIVE_NAME: str = 'Formula 1 Style'
 
     """Implementation details"""
     DARKEN_COLOR = 'rgba(0,0,0,0.5)'
@@ -439,7 +439,7 @@ class FormulaOneTitleCard(BaseCardType):
     def create(self) -> None:
         """Create this object's defined Title Card."""
 
-        command = ' '.join([
+        self.image_magick.run([
             f'convert "{self.source_file.resolve()}"',
             # Resize and apply styles to source image
             *self.resize_and_style,
@@ -456,5 +456,3 @@ class FormulaOneTitleCard(BaseCardType):
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
-
-        self.image_magick.run(command)

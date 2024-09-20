@@ -1,5 +1,4 @@
 from datetime import datetime
-from logging import Logger
 from pathlib import Path
 from typing import Any, Optional, TYPE_CHECKING, TypedDict
 
@@ -14,7 +13,7 @@ from app.models.template import EpisodeTemplates, Template
 from app.schemas.connection import ServerName
 from app.schemas.preferences import Style
 
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.EpisodeDataSource2 import WatchedStatus
 from modules.EpisodeInfo2 import EpisodeInfo
 

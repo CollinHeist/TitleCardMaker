@@ -1,10 +1,9 @@
 from collections import namedtuple
-from logging import Logger
 
 from re import IGNORECASE, compile as re_compile
 from typing import Callable, Optional, Union
 
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.FormatString import FormatString
 

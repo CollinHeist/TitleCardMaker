@@ -38,6 +38,8 @@ from app.internal.series import add_series
 from app import models
 from app.models.blueprint import Blueprint, BlueprintSeries
 from app.models.card import Card
+from app.models.episode import Episode as EpisodeModel
+from app.models.series import Series as SeriesModel
 from app.schemas.blueprint import (
     DownloadableFile,
     ExportBlueprint,
@@ -178,9 +180,9 @@ async def export_series_blueprint_as_zip(
 
     # Get all non-Specials Cards for this Series
     cards = db.query(Card)\
-        .join(models.Episode)\
-        .filter(Card.series_id==series_id, models.Episode.season_number>0)\
-        .order_by(models.Episode.season_number, models.Episode.episode_number)\
+        .join(EpisodeModel)\
+        .filter(Card.series_id==series_id, EpisodeModel.season_number>0)\
+        .order_by(EpisodeModel.season_number, EpisodeModel.episode_number)\
         .all()
 
     # Filter out Cards which are stylized or DNE
@@ -324,8 +326,8 @@ def query_all_blueprints_(
         if not include_missing_series:
             # Determine if this Series already exists
             series_info = blueprint.series.as_series_info
-            series = db.query(models.Series)\
-                .filter(series_info.filter_conditions(models.Series))\
+            series = db.query(SeriesModel)\
+                .filter(series_info.filter_conditions(SeriesModel))\
                 .first()
 
             # Series not present, do not include

@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
-from modules.BaseCardType import BaseCardType, Extra, CardDescription
+from modules.BaseCardType import BaseCardType, Extra, CardTypeDescription
 from modules.Title import SplitCharacteristics
 
 if TYPE_CHECKING:
@@ -17,7 +17,7 @@ class PosterTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Poster',
         identifier='poster',
         example='/internal_assets/cards/poster.jpg',
@@ -52,9 +52,9 @@ class PosterTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'Amuro.otf').resolve())
-    TITLE_COLOR = '#FFFFFF'
-    FONT_REPLACEMENTS = {}
+    TITLE_FONT: str = str((REF_DIRECTORY / 'Amuro.otf').resolve())
+    TITLE_COLOR: str = '#FFFFFF'
+    FONT_REPLACEMENTS: dict[str, str] = {}
 
     """Characteristics of the episode text"""
     EPISODE_TEXT_FORMAT = 'Ep. {episode_number}'
@@ -62,13 +62,13 @@ class PosterTitleCard(BaseCardType):
     EPISODE_TEXT_FONT = REF_DIRECTORY / 'Amuro.otf'
 
     """Whether this class uses season titles for the purpose of archives"""
-    USES_SEASON_TITLE = False
+    USES_SEASON_TITLE: bool = False
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Poster Style'
+    ARCHIVE_NAME: str = 'Poster Style'
 
     """Custom blur profile for the poster"""
-    BLUR_PROFILE = '0x30'
+    BLUR_PROFILE: str = '0x30'
 
     """Path to the reference star image to overlay on all source images"""
     __GRADIENT_OVERLAY = REF_DIRECTORY / 'stars-overlay.png'
@@ -80,7 +80,7 @@ class PosterTitleCard(BaseCardType):
     )
 
 
-    def __init__(self,
+    def __init__(self, *,
             source_file: Path,
             card_file: Path,
             title_text: str,
@@ -93,13 +93,11 @@ class PosterTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             logo_file: Optional[Path] = None,
-            episode_text_color: str = None,
+            episode_text_color: str = EPISODE_TEXT_COLOR,
             preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this card.
-        """
+        """Construct a new instance of this card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -164,7 +162,8 @@ class PosterTitleCard(BaseCardType):
 
         custom_extras = (
             ('episode_text_color' in extras
-                and extras['episode_text_color'] != PosterTitleCard.EPISODE_TEXT_COLOR)
+                and extras['episode_text_color'] != \
+                    PosterTitleCard.EPISODE_TEXT_COLOR)
         )
 
         return (custom_extras

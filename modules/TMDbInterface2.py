@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
-from logging import Logger, LoggerAdapter
+from logging import LoggerAdapter
 from typing import Any, Callable, Literal, Optional, Union
 
 from fastapi import HTTPException
-from tinydb import Query, where
+from tinydb import where
+from tinydb.queries import QueryInstance
 from tmdbapis import (
     Poster,
     TMDbAPIs,
@@ -15,7 +16,7 @@ from tmdbapis import (
 from tmdbapis.objs.reload import Episode as TMDbEpisode, Movie as TMDbMovie
 from tmdbapis.objs.image import Still as TMDbStill
 
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.EpisodeDataSource2 import (
     EpisodeDataSource,
     SearchResult,
@@ -88,7 +89,7 @@ class DecoratedAPI:
         self.api = api
 
 
-    def __getattr__(self, function: Callable) -> Callable:
+    def __getattr__(self, function: str) -> Callable:
         """
         Get an arbitrary function for this object. This returns a
         wrapped version of the given function that catches any uncaught
@@ -130,7 +131,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
     is to communicate with TMDb.
     """
 
-    INTERFACE_TYPE = 'TMDb'
+    INTERFACE_TYPE: str = 'TMDb'
 
     """Default for how many failed requests lead to a blacklisted entry"""
     BLACKLIST_THRESHOLD = 5
@@ -316,7 +317,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         self.activate()
 
 
-    def __sort_asset(self, asset: TMDbImage) -> int:
+    def __sort_asset(self, asset: TMDbImage) -> float:
         """
         Get the sort "score" for the given asset. This can be used in a
         `sorted()` call.
@@ -331,7 +332,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         """
 
         # Score dimensionally 0 -> 2.0 @ 4K resolution
-        dimension_score = (asset.width / 3840) + (asset.height / 2160)
+        dimension_score: float = (asset.width / 3840) + (asset.height / 2160)
 
         # Textless posters get scored as neutral priority
         if asset.iso_639_1 is None:
@@ -351,7 +352,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             query_type: Literal['backdrop', 'image', 'logo', 'title'],
             series_info: SeriesInfo,
             episode_info: Optional[EpisodeInfo] = None,
-        ) -> Query:
+        ) -> QueryInstance:
         """
         Get the tinydb query condition for the given query.
 
@@ -366,7 +367,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         """
 
         # Logo and backdrop queries don't use episode index
-        if query_type in ('logo', 'backdrop'):
+        if query_type in ('logo', 'backdrop') or episode_info is None:
             return (
                 (where('query') == query_type) &
                 (where('series') == series_info.full_name)
@@ -383,8 +384,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
     def __update_blacklist(self,
             series_info: SeriesInfo,
-            episode_info: EpisodeInfo,
-            query_type: str
+            episode_info: Optional[EpisodeInfo],
+            query_type: Literal['backdrop', 'image', 'logo', 'title'],
         ) -> None:
         """
         Adds the given request to the blacklist; indicating that this
@@ -432,8 +433,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
     def __is_blacklisted(self,
             series_info: SeriesInfo,
-            episode_info: EpisodeInfo,
-            query_type: str,
+            episode_info: Optional[EpisodeInfo],
+            query_type: Literal['backdrop', 'image', 'logo', 'title'],
         ) -> bool:
         """
         Determines if the specified entry is in the blacklist (e.g.
@@ -599,6 +600,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
         try:
             results = self.api.tv_search(query).results
+            if not results:
+                raise NotFound
         except NotFound:
             log.debug(f'No results found for {query}')
             return []
@@ -646,6 +649,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         # Get all seasons on TMDb
         try:
             seasons = self.api.tv_show(series_info.tmdb_id).seasons
+            if not seasons:
+                raise NotFound
         except NotFound:
             log.error(f'Cannot source episodes from TMDb for {series_info}')
             return []

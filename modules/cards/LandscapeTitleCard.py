@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional, Union
 
 from modules.BaseCardType import (
-    BaseCardType, ImageMagickCommands, Extra, CardDescription, Shadow
+    BaseCardType, ImageMagickCommands, Extra, CardTypeDescription, Shadow
 )
 from modules.Debug import log # noqa: F401
 from modules.Title import SplitCharacteristics
@@ -29,7 +29,7 @@ class LandscapeTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Landscape',
         identifier='landscape',
         example='/internal_assets/cards/landscape.jpg',
@@ -114,23 +114,23 @@ class LandscapeTitleCard(BaseCardType):
     }
 
     """Default font and text color for episode title text"""
-    TITLE_FONT = str((REF_DIRECTORY / 'Geometos.ttf').resolve())
-    TITLE_COLOR = 'white'
+    TITLE_FONT: str = str((REF_DIRECTORY / 'Geometos.ttf').resolve())
+    TITLE_COLOR: str = 'white'
 
     """Default characters to replace in the generic font"""
-    FONT_REPLACEMENTS = {}
+    FONT_REPLACEMENTS: dict[str, str] = {}
 
     """Default episode text format for this class"""
     EPISODE_TEXT_FORMAT = ''
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = False
+    USES_SEASON_TITLE: bool = False
 
     """Whether this CardType uses unique source images"""
-    USES_UNIQUE_SOURCES = True
+    USES_UNIQUE_SOURCES: bool = True
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Landscape Style'
+    ARCHIVE_NAME: str = 'Landscape Style'
 
     """Additional spacing (in pixels) between bounding box and title text"""
     BOUNDING_BOX_SPACING = 150
@@ -148,7 +148,7 @@ class LandscapeTitleCard(BaseCardType):
         'box_adjustments', 'box_color', 'box_width', 'darken', 'shadow_color',
     )
 
-    def __init__(self,
+    def __init__(self, *,
             source_file: Path,
             card_file: Path,
             title_text: str,
@@ -232,19 +232,6 @@ class LandscapeTitleCard(BaseCardType):
             f'-gravity center',
             f'-composite',
         ]
-
-
-    def __add_no_title(self) -> None:
-        """Only resize and apply style to this source image."""
-
-        command = ' '.join([
-            f'convert "{self.source_file.resolve()}"',
-            *self.resize_and_style,
-            *self.darken_commands((0, 0, 0, 0)),
-            f'"{self.output_file.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
 
 
     @property
@@ -439,14 +426,18 @@ class LandscapeTitleCard(BaseCardType):
 
         # If title is 0-length, just stylize
         if len(self.title_text) == 0:
-            self.__add_no_title()
+            self.image_magick.run([
+                f'convert "{self.source_file.resolve()}"',
+                *self.resize_and_style,
+                *self.darken_commands((0, 0, 0, 0)),
+                f'"{self.output_file.resolve()}"',
+            ])
             return None
 
         # Get coordinates for bounding box
         bounding_box = self.bounding_box_coordinates
 
-        # Generate command to create card
-        command = ' '.join([
+        self.image_magick.run([
             f'convert "{self.source_file.resolve()}"',
             # Resize and apply any style modifiers
             *self.resize_and_style,
@@ -462,6 +453,4 @@ class LandscapeTitleCard(BaseCardType):
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
-
-        self.image_magick.run(command)
         return None

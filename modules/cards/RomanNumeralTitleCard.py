@@ -1,10 +1,10 @@
 from pathlib import Path
 from random import choice
 from re import compile as re_compile
-from typing import TYPE_CHECKING, NamedTuple, Optional
+from typing import TYPE_CHECKING, NamedTuple, Optional, Union
 
 from modules.BaseCardType import (
-    BaseCardType, ImageMagickCommands, Extra, CardDescription
+    BaseCardType, ImageMagickCommands, Extra, CardTypeDescription
 )
 from modules.Debug import log
 from modules.Title import SplitCharacteristics
@@ -201,7 +201,7 @@ class RomanNumeralTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = CardDescription(
+    API_DETAILS: CardTypeDescription = CardTypeDescription(
         name='Roman Numeral',
         identifier='roman numeral',
         example='/internal_assets/cards/roman.jpg',
@@ -251,30 +251,28 @@ class RomanNumeralTitleCard(BaseCardType):
     }
 
     """Default font and text color for episode title text"""
-    TITLE_FONT = str((REF_DIRECTORY / 'flanker-griffo.otf').resolve())
-    TITLE_COLOR = 'white'
+    TITLE_FONT: str = str((REF_DIRECTORY / 'flanker-griffo.otf').resolve())
+    TITLE_COLOR: str = 'white'
 
     """Default characters to replace in the generic font"""
-    FONT_REPLACEMENTS = {}
+    FONT_REPLACEMENTS: dict[str, str] = {}
 
     """Default episode text format for this class"""
     EPISODE_TEXT_FORMAT = '{episode_number}'
-    GENERIC_EPISODE_TEXT_FORMATS = (
-        EPISODE_TEXT_FORMAT, '{abs_number}',
-    )
+    GENERIC_EPISODE_TEXT_FORMATS = (EPISODE_TEXT_FORMAT, '{abs_number}')
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE: bool = True
 
     """Whether this CardType uses unique source images"""
-    USES_UNIQUE_SOURCES = False
-    USES_SOURCE_IMAGES = False
+    USES_UNIQUE_SOURCES: bool = False
+    USES_SOURCE_IMAGES: bool = False
 
     """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Roman Numeral Style'
+    ARCHIVE_NAME: str = 'Roman Numeral Style'
 
     """Blur profile for this card is 1/3 the radius of the standard blur"""
-    BLUR_PROFILE = '0x30'
+    BLUR_PROFILE: str = '0x30'
 
     """Default fonts and color for series count text"""
     BACKGROUND_COLOR = 'black'
@@ -297,7 +295,7 @@ class RomanNumeralTitleCard(BaseCardType):
         'season_text_color',
     )
 
-    def __init__(self,
+    def __init__(self, *,
             card_file: Path,
             title_text: str,
             season_text: str,
@@ -450,7 +448,7 @@ class RomanNumeralTitleCard(BaseCardType):
 
     def create_season_text_command(self,
             rotation: str,
-            offset: str
+            offset: Union[str, Offset],
         ) -> ImageMagickCommands:
         """
         Generate the ImageMagick commands necessary to create season
@@ -777,7 +775,7 @@ class RomanNumeralTitleCard(BaseCardType):
         # Determine placement of season text
         self.place_season_text()
 
-        command = ' '.join([
+        self.image_magick.run([
             f'convert',
             # Create fixed color background
             f'-size "{self.TITLE_CARD_SIZE}"',
@@ -795,5 +793,3 @@ class RomanNumeralTitleCard(BaseCardType):
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
-
-        self.image_magick.run(command)
