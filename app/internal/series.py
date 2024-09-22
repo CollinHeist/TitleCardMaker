@@ -14,7 +14,13 @@ from app.database.query import (
     get_interface,
     get_sync,
 )
-from app.dependencies import get_database, get_preferences, get_sonarr_interfaces, get_tmdb_interfaces, get_tvdb_interfaces
+from app.dependencies import (
+    get_database,
+    get_preferences,
+    get_sonarr_interfaces,
+    get_tmdb_interfaces,
+    get_tvdb_interfaces
+)
 from app.internal.cards import (
     create_episode_cards,
     get_watched_statuses,
