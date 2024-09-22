@@ -473,8 +473,9 @@ def resolve_card_settings(
         global_font_dict = global_template.font.card_properties
     elif preferences.default_fonts.get(card_type) is not None:
         global_font_dict = get_font(
-            object_session(episode),
+            object_session(episode), # type: ignore
             preferences.default_fonts[card_type],
+            raise_exc=True,
         ).card_properties
 
     # Resolve all settings from global -> Episode
