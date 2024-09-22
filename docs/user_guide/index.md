@@ -171,6 +171,14 @@ described below:
     established username and password will be deleted. For more details, see
     [here](./connections.md#forgotten-login). This is unspecified by default.
 
+### Plex Variables
+
+TCM uses the [plexapi](https://github.com/pkkid/python-plexapi) module to
+communicate with Plex, and as such can be configured by configuring their
+assigned environment variables - these are all detailed
+[here](https://python-plexapi.readthedocs.io/en/stable/configuration.html).
+
+The most popular one is the API timeout - `PLEXAPI_PLEXAPI_TIMEOUT`.
 
 [^1]:
     Unless you've encountered a bug which you personally _require_ and is only
