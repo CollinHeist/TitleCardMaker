@@ -118,8 +118,8 @@ Table for the Template SQL objects themselves.
 """
 # pylint: disable=missing-class-docstring
 class Filter(TypedDict):
-    argument: Literal[ARGUMENT_KEYS]
-    operation: Literal[tuple(OPERATIONS.keys())]
+    argument: Literal[ARGUMENT_KEYS] # type: ignore
+    operation: Literal[tuple(OPERATIONS.keys())] # type: ignore
     reference: Optional[str]
 
 class Library(TypedDict):
@@ -204,7 +204,7 @@ class Template(Base):
 
 
     @hybrid_property
-    def sort_name(self) -> str:
+    def sort_name(self) -> str: # type: ignore
         """
         The sort-friendly name of this Template.
 
@@ -280,7 +280,7 @@ class Template(Base):
 
 
     @property
-    def image_source_properties(self) -> dict[str, bool]:
+    def image_source_properties(self) -> dict[str, Optional[bool]]:
         """
         Properties to use in image source setting evaluations.
 
@@ -294,7 +294,6 @@ class Template(Base):
 
 
     def meets_filter_criteria(self,
-            preferences: 'Preferences',
             series: 'Series',
             episode: Optional['Episode'] = None,
             library: Optional[Library] = None,
@@ -355,8 +354,9 @@ class Template(Base):
                 # Attempt to treat reference as FormatString
                 if (reference := condition['reference']) is not None:
                     try:
-                        data = series.card_properties \
-                            | episode.get_card_properties(library)
+                        data = series.card_properties
+                        if episode is not None:
+                            data |= episode.get_card_properties(library)
                         reference = FormatString(reference, data=data).result
                     except Exception:
                         pass

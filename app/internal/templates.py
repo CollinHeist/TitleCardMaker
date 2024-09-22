@@ -18,7 +18,7 @@ def get_effective_template(
         episode: Optional[Episode] = None,
         library: Optional[Library] = None,
         *,
-        as_dict: Literal[True] = False,
+        as_dict: Literal[True],
     ) -> dict:
     ...
 
@@ -61,16 +61,15 @@ def get_effective_template(
 
     # Object is global Preferences, query for each Template as evaluated
     if isinstance(obj, Preferences) and obj.default_templates:
-        db = object_session(series)
+        db: Session = object_session(series)
         for template_id in obj.default_templates:
             if ((template := get_template(db, template_id, raise_exc=False))
-                and template.meets_filter_criteria(obj, series, episode, library)):
+                and template.meets_filter_criteria(series, episode, library)):
                 return template.__dict__ if as_dict else template
     # Object is Series or Episode, iterate and evaluate
     elif isinstance(obj, (Series, Episode)):
-        preferences = get_preferences()
         for template in obj.templates:
-            if template.meets_filter_criteria(preferences, series, episode, library):
+            if template.meets_filter_criteria(series, episode, library):
                 return template.__dict__ if as_dict else template
 
     return {} if as_dict else None
@@ -88,7 +87,7 @@ def get_effective_templates(
 @overload
 def get_effective_templates(
         series: Series,
-        episode: Episode = None,
+        episode: Episode,
         library: Optional[Library] = None,
     ) -> Union[tuple[Optional[Template], None, None],
                tuple[None, Optional[Template], None],
