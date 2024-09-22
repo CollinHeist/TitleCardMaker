@@ -59,8 +59,7 @@ class MediaServer(ABC):
             be compressed (or image DNE).
         """
 
-        image = Path(image)
-        if not (image := Path(image)).exists():
+        if not image or not (image := Path(image)).exists():
             return None
 
         # No compression necessary
