@@ -676,7 +676,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         # Get Episode from within Plex
         try:
-            plex_episode = series.episode(
+            plex_episode: PlexEpisode = series.episode(
                 season=episode_info.season_number,
                 episode=episode_info.episode_number
             )
@@ -814,7 +814,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         log.trace(f'Added EXIF data {self.EXIF_TAG} to {image}')
 
 
-    @catch_and_log('Error uploading title cards')
+    @catch_and_log('Error uploading title cards', default=[])
     def load_title_cards(self,
             library_name: str,
             series_info: SeriesInfo,
@@ -867,6 +867,10 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             # Episode never matched
             else:
                 skipped.append(plex_episode.seasonEpisode)
+
+        if not matched_episodes:
+            log.trace(f'Not loading any Cards for {series_info}')
+            return []
 
         # Prepare batch edits on all these episodes
         library.batchMultiEdits([ep[0] for ep in matched_episodes])
