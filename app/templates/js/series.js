@@ -2524,9 +2524,10 @@ function getEpisodeOverviews() {
     return a.episode_number - b.episode_number;
   }
 
+  const size = series_full_name === 'One Piece (1999)' || series_full_name === 'Pokémon (1997)' ? 1500 : 200;
   $.ajax({
     type: 'GET',
-    url: '/api/episodes/series/{{series.id}}/overview?size=500',
+    url: `/api/episodes/series/{{series.id}}/overview?size=${size}`,
     success: overviews => {
       if (overviews.items.length === 0) {
         disableDropdown();
