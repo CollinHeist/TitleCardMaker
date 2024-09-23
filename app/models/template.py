@@ -158,14 +158,18 @@ class Template(Base):
         back_populates='template',
         cascade='all, delete-orphan',
     )
-    series: AssociationProxy[list['Series']] = association_proxy('_series', 'series')
+    series: AssociationProxy[list['Series']] = association_proxy(
+        '_series', 'series'
+    )
 
     _episodes: Mapped[list[EpisodeTemplates]] = relationship(
         EpisodeTemplates,
         back_populates='template',
         cascade='all, delete-orphan',
     )
-    episodes: AssociationProxy[list['Episode']] = association_proxy('_episodes', 'episode')
+    episodes: AssociationProxy[list['Episode']] = association_proxy(
+        '_episodes', 'episode'
+    )
 
     name: Mapped[str]
     filters: Mapped[list[Filter]] = mapped_column(
@@ -178,6 +182,10 @@ class Template(Base):
     skip_localized_images: Mapped[Optional[bool]]
     translations: Mapped[list[dict]] = mapped_column(
         MutableList.as_mutable(JSON),
+        default=[],
+    )
+    image_source_priority: Mapped[list[int]] = mapped_column(
+        MutableDict.as_mutable(JSON),
         default=[],
     )
 

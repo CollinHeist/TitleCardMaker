@@ -1,3 +1,4 @@
+# pyright: reportRedeclaration=false
 from pathlib import Path
 from re import sub as regex_replace, IGNORECASE
 from typing import (
@@ -118,6 +119,11 @@ class Series(Base):
     )
     match_titles: Mapped[bool] = mapped_column(default=True)
     auto_split_title: Mapped[bool] = mapped_column(default=True)
+    use_per_season_assets: Mapped[bool] = mapped_column(default=False)
+    image_source_priority: Mapped[Optional[list[int]]] = mapped_column(
+        MutableList.as_mutable(JSON),
+        default=None,
+    )
 
     # Database arguments
     emby_id: Mapped[Optional[str]]
@@ -186,12 +192,19 @@ class Series(Base):
                 association table objects so that order is preserved
                 within the relationship.
             log: Logger for all log messages.
+
+        Raises:
+            ValueError: There is no active database connection to query
+                from any of the provided Template objects.
         """
 
         # Reset existing assocations
         self.templates = []
         for index, template in enumerate(templates):
-            existing = object_session(template).query(SeriesTemplates)\
+            if (db := object_session(template)) is None:
+                raise ValueError('No available Session to query')
+
+            existing = db.query(SeriesTemplates)\
                 .filter_by(series_id=self.id,
                            template_id=template.id,
                            order=index)\
@@ -242,7 +255,7 @@ class Series(Base):
     def full_name(cls: 'Series') -> ColumnElement[str]:
         """Class-expression of `full_name` property."""
 
-        return cls.name + ' (' + cls.year + ')'
+        return cls.name + ' (' + cls.year + ')' # type: ignore
 
 
     @hybrid_property
@@ -328,13 +341,13 @@ class Series(Base):
             alphabetically. False otherwise
         """
 
-        return self.sort_name < name
+        return self.sort_name < name # type: ignore
 
     @comes_before.expression
     def comes_before(cls, name: str) -> ColumnElement[bool]:
         """Class expression of the `comes_before()` method."""
 
-        return cls.sort_name < name
+        return cls.sort_name < name # type: ignore
 
 
     @hybrid_method
@@ -350,13 +363,13 @@ class Series(Base):
             alphabetically. False otherwise.
         """
 
-        return self.sort_name > name
+        return self.sort_name > name # type: ignore
 
-    @comes_after.expression # pylint: disable=no-self-argument
+    @comes_after.expression
     def comes_after(cls, name: str) -> ColumnElement[bool]:
         """Class expression of the `comes_after()` method."""
 
-        return cls.sort_name > name
+        return cls.sort_name > name # type: ignore
 
 
     @property
@@ -398,7 +411,7 @@ class Series(Base):
     def path_safe_name(self) -> str:
         """Name of this Series to be utilized in Path operations"""
 
-        return str(CleanPath.sanitize_name(self.full_name))[:254]
+        return str(CleanPath.sanitize_name(self.full_name))[:254] # type: ignore
 
 
     @property
@@ -410,15 +423,20 @@ class Series(Base):
         else:
             directory = self.directory
 
-        return CleanPath(get_preferences().card_directory) / directory
+        return (
+            CleanPath(get_preferences().card_directory) # type: ignore
+            / directory
+        )
 
 
     @property
     def source_directory(self) -> Path:
         """Path-safe source subdirectory for this Series."""
 
-        return CleanPath(get_preferences().source_directory) \
+        return (
+            CleanPath(get_preferences().source_directory) # type: ignore
             / self.path_safe_name
+        )
 
 
     @property

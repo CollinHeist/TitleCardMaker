@@ -35,6 +35,7 @@ Schema Version History (oldest to newest):
 - 0a5f4764cd10 | Remove the Episode.image_source_attempts column
 - 84971838f3fc | Encrypt Connection URLs and API keys
 - db6a1eda7d21 | Add Sync.add_as_monitored column
+- a1520b6160c4 | Add Series per-season asset toggle and Series/Template ISP settings
 """
 
 # this is the Alembic Config object, which provides
