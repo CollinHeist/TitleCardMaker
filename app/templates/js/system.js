@@ -67,9 +67,7 @@ function restoreBackup(folderName) {
   $.ajax({
     type: 'POST',
     url: `/api/backups/restore/${folderName}`,
-    /**
-     * Backup restored. Display toast message for the user to restart TCM.
-     */
+    /** Backup restored. Display toast message for the user to restart TCM. */
     success: () => showInfoToast('Restored from Backup - please restart TitleCardMaker'),
     error: (response) => showErrorToast({title: 'Error Restoring from Backup', response}),
   });
@@ -102,7 +100,7 @@ function querySystemBackups() {
         row.querySelector('[data-value="version"]').innerText = backup.version;
         if (backup.database.schema_version != '{{ preferences.current_db_schema }}') {
           row.querySelector('[data-action="restore"]').classList.add('left', 'orange', 'marked');
-          row.querySelector('[data-value="schema"]').dataset.tooltip = 'Different Database Schema may not be backwards compatible'
+          row.querySelector('[data-value="schema"]').dataset.tooltip = 'Schema may not be backwards compatible';
         }
         row.querySelector('[data-value="schema"]').innerText = backup.database.schema_version;
         row.querySelector('[data-value="database-filesize"]').innerText = formatBytes(backup.database.filesize, 1);
@@ -124,6 +122,22 @@ function querySystemBackups() {
       document.querySelector('#system-backups [data-row-label="settings-filesize"] span')
         .dataset.tooltip = `Total Size: ${formatBytes(backups.reduce((n, {settings}) => n + settings.filesize, 0), 1)}`;
     },
+  });
+}
+
+/**
+ * Submit an API request to take a backup of the system.
+ */
+function performBackup() {
+  $.ajax({
+    type: 'POST',
+    url: '/api/backups/backup',
+    /** Backup successful, refresh backup table. */
+    success: () => {
+      showInfoToast('System Backup Completed');
+      querySystemBackups();
+    },
+    error: response => showErrorToast({title: 'Error Performing Backup', response}),
   });
 }
 
