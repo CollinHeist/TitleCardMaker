@@ -49,10 +49,118 @@
           "v2.0-alpha.10.1",
           "v2.0-alpha.11.0",
           "v2.0-alpha.12.0",
+          "v2.0-alpha.12.1",
         ] %}
         {% for version in versions[::-1] %}
           <a class="ui label" href="#{{version}}">{{version}}</a>
         {% endfor %}
+      </div>
+
+      <h2 id="v2.0-alpha.12.1" class="ui top attached header">
+        v2.0-alpha.12.1
+        <div class="sub header">Released September 22, 2024</div>
+      </h2>
+      <div data-version="v2.0-alpha.12.1" class="ui bottom attached segment">
+        <h3>Major Changes</h3>
+        <div class="ui ordered list">
+          <div class="item">Display whether a Card has been loaded into at least one media server within the UI - loaded cards will have a small green check mark in the top-left corner</div>
+          <div class="item">Add the ability to globally change the default Font settings used by each card type</div>
+          <div class="item">Add in-UI support for restoring from or deleting system backups</div>
+          <div class="item">Only process <i>new</i> Episodes when new content triggers TCM via the Plex Webhook</div>
+          <div class="item">Download imported Cards as Cards <i>and</i> Source Images when importing as "textless" in the Kometa / MediUX import</div>
+          <div class="item">Add a list of Series which are missing logos to the Missing page</div>
+          <div class="item">Add ability to transfer all references from an existing Font to another existing Font</div>
+          <div class="item">Make slight changes to the Plex Webhook integration
+            <div class="list">
+              <div class="item">Add the <b>require_owner</b> query parameter to the Plex Webhook endpoint</div>
+              <div class="item">Change the <b>trigger_on</b> query parameter of the Plex Webhook endpoint to default to <b>library.new,media.scrobble</b> with no builtin defaults</div>
+            </div>
+          </div>
+          <div class="item">Rotate log files every 10 MB (from 25 MB) to reflect Discord's new non-Nitro file size limit</div>
+          <div class="item">Add new global UI settings for the page size/dimension settings of Title Cards and Source Images displayed on the Series page</div>
+          <div class="item">Perform batch API operations when loading Cards into Plex - this should be a significant speed / stability improvement (especially when loading lots of Cards)</div>
+        </div>
+        <h3>Major Fixes</h3>
+        <div class="ui ordered list">
+          <div class="item">Properly load remote card types if set as the global card type when not assigned to an existing Template/Series/Episode</div>
+          <div class="item">Properly delete <i>all</i> Font files in the Font asset directory when deleting files via the API</div>
+          <div class="item">Delete and replace any existing Font files when uploading a new Font via the API</div>
+          <div class="item">Do not process Kometa / MediUX Card imports in the main event loop (effectively freezing the UI)</div>
+          <div class="item">Do not limit the overflow pool of database connections</div>
+          <div class="item">Pin <b>fastapi</b> package version to <b>0.112.2</b> to fix the <b>fastapi-pagination</b> bug for new parameter names</div>
+        </div>
+        <h3>Minor Changes</h3>
+        <div class="ui ordered list">
+          <div class="item">Also redact host-only URLs in logs - e.g. for <b>http://192.168.0.1:8989</b>, redact <b>http://192.168.0.1</b> <i>and</i> the full URL</div>
+          <div class="item">Add easy copy-paste functionality to some elements of the System page</div>
+          <div class="item">Remove the current version label from the bottom of the Settings page - this is now only on the System page</div>
+          <div class="item">Properly commit translation changes when creating Cards in a background task</div>
+          <div class="item">Remove deleted Template element from the page without re-querying all Templates when deleting via the UI</div>
+        </div>
+        <h3>Minor Fixes</h3>
+        <div class="ui ordered list">
+          <div class="item">Properly handle database backups with no alembic version table in parsing</div>
+          <div class="item">Catch Plex API exceptions raised while adding labels to Plex uploads</div>
+          <div class="item">Remove sort interaction for restore and delete columns on the backups table</div>
+          <div class="item">Skip internal server errors with invalid log timestamps</div>
+          <div class="item">Pin the Starlette package version to <b>0.38.4</b> to avoid race conditions caused by multiple middlewares</div>
+          <div class="item">Fix "false" default values in some alembic SQL schema migrations which were erroneously set to "true"</div>
+          <div class="item">Handle floating point imprecision for some font percentages (size/kerning/stroke width) when displayed in the UI</div>
+          <div class="item">Do not stack <b>onclick</b> events when launching the same edit Sync modal repeatedly</div>
+          <div class="item">Correctly handle a non-existent User when editing credentials via the API</div>
+          <div class="item">Fix interface-specific library availability API endpoints</div>
+          <div class="item"><div class="ui mini circular green label">v1</div> Properly load any local <b>.env</b> file when launching the mini maker</div>
+          <div class="item">Properly parse pre-initialization log messages which do not use the default timezone</div>
+          <div class="item">Improve handling of invalid <b>SplitCharacteristics</b> properties in custom card type classes</div>
+        </div>
+        <h3>Title Card Changes</h3>
+        <div class="ui ordered list">
+          <div class="item">Anime
+            <div class="list">
+              <div class="item"><div class="ui mini circular green label">v1</div> Fix custom archive determination for configs using a custom <b>episode_text_color</b></div>
+            </div>
+          </div>
+          <div class="item">Tinted Frame
+            <div class="list">
+              <div class="item">Allow the Episode Text Font Size extra to go to <b>0.0</b></div>
+              <div class="item">Allow the Frame Width extra to go to <b>0</b></div>
+              <div class="item">Limit the Frame Width extra to a maximum of <b>1600</b> pixels</div>
+            </div>
+          </div>
+        </div>
+        <h3>Documentation Changes</h3>
+        <div class="ui ordered list">
+          <div class="item">Update Plex webhook documentation to reflect changes to the new <b>trigger_on</b> parameter</div>
+        </div>
+        <h3>API Changes</h3>
+        <div class="ui ordered list">
+          <div class="item">Create new <b>/missing</b> API router
+            <div class="list">
+              <div class="item">Create <b>GET</b> <b>/api/missing/cards</b> endpoint to get details of all Episodes without Cards</div>
+              <div class="item">Create <b>GET</b> <b>/api/missing/logos</b> endpoint to get details of all Series without logo files</div>
+              <div class="item">Deprecate <b>GET</b> <b>/api/cards/missing</b> endpoint</div>
+            </div>
+          </div>
+          <div class="item">Add the <b>require_owner</b> query parameter to the Plex Webhook endpoint</div>
+          <div class="item">Change the <b>trigger_on</b> query parameter of the Plex Webhook endpoint to default to <b>library.new,media.scrobble</b> (with no builtin defaults)</div>
+          <div class="item">Create <b>/backups</b> API router
+            <div class="list">
+              <div class="item">Move all backup related API endpoints to this subrouter</div>
+              <div class="item">Deprecate <b>GET</b> <b>/api/settings/backups</b> - new endpoint is <b>GET</b> <b>/api/backups/all</b></div>
+            </div>
+          </div>
+          <div class="item">Raise <b>409</b> HTTP code if there is no globally assigned Episode Data Source when refreshing data for a Series</div>
+          <div class="item">Do not return any content from the <b>POST</b> <b>/api/backups/backup</b> endpoint</div>
+          <div class="item">Remove previously deprecated endpoints:
+            <div class="list">
+              <div class="item"><b>POST</b> <b>/api/scheduler/type/{mode}</b></div>
+              <div class="item"><b>POST</b> <b>/api/series/sonarr/delete</b></div>
+              <div class="item"><b>POST</b> <b>/api/cards/key</b></div>
+              <div class="item"><b>POST</b> <b>/api/cards/sonarr</b></div>
+              <div class="item"><b>GET</b> <b>/api/statistics/</b></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <h2 id="v2.0-alpha.12.0" class="ui top attached header">
@@ -74,7 +182,7 @@
             <div class="list">
               <div class="item">Here is a real-time example of Plex triggering TCM to create a new Card on item <i>rating</i> :
             <div class="list">
-              <img width="50%" src="https://github.com/user-attachments/assets/4ef65968-cef5-43f7-8aa5-cb209f61ecb0" width="60%">
+              <img loading="lazy" width="50%" src="https://github.com/user-attachments/assets/4ef65968-cef5-43f7-8aa5-cb209f61ecb0" width="60%">
             </div>
           </div>
               <div class="item">Documentation to implement these is available <a href="https://titlecardmaker.com/user_guide/integrations/#plex" target="_blank">here</a></div>
@@ -99,12 +207,12 @@
             <div class="list">
               <div class="item">The <b>Supremicus/Dawn</b> card, created by Supremicus
             <div class="list">
-              <img width="50%" src="https://raw.githubusercontent.com/Supremicus/tcm-images/main/Preview%20Cards/DawnTitleCard.preview.jpg" width="60%">
+              <img loading="lazy" width="50%" src="https://raw.githubusercontent.com/Supremicus/tcm-images/main/Preview%20Cards/DawnTitleCard.preview.jpg" width="60%">
             </div>
           </div>
               <div class="item">The <b>Supremicus/Horizon</b> card, also created by Supremicus
             <div class="list">
-              <img width="50%" src="https://raw.githubusercontent.com/Supremicus/tcm-images/main/Preview%20Cards/HorizonTitleCard.preview.jpg" width="60%">
+              <img loading="lazy" width="50%" src="https://raw.githubusercontent.com/Supremicus/tcm-images/main/Preview%20Cards/HorizonTitleCard.preview.jpg" width="60%">
             </div>
           </div>
               <div class="item">Both of these cards are very thorough and can be fine-tuned quite a bit. I recommend reading their extras and perhaps the <a href="https://github.com/CollinHeist/TitleCardMaker-CardTypes/tree/web-ui/Supremicus" target="_blank">README</a> if you are interested</div>
@@ -112,7 +220,7 @@
           </div>
           <div class="item">Significantly improve Docker build times - <i>_huge_</i> thanks to mchangrh for developing these</div>
         </div>
-        <h3>Major Fixes </h3>
+        <h3>Major Fixes</h3>
         <div class="ui ordered list">
           <div class="item">Fix series ID replacement in Emby and Jellyfin</div>
           <div class="item">Fix downloading Source Images from Plex via the UI</div>
@@ -160,6 +268,7 @@
           <div class="item">Reorganize the Connections forms to use two columns of inputs, rather than one</div>
           <div class="item">Only make up to five attempts when loading single-Episode Cards (via API) to <i>Plex</i> , not Emby or Jellyfin</div>
           <div class="item">Create new Sonarr integration/webhook to add Series to TCM as they're added to Sonarr; this has marginal benefit over Syncing, but is available regardless - see <a href="https://titlecardmaker.com/user_guide/integrations/#__tabbed_1_1" target="_blank">here</a> for details</div>
+          <div class="item">Add new "file does not exist" Template filter condition</div>
         </div>
         <h3>Minor Fixes</h3>
         <div class="ui ordered list">
@@ -549,7 +658,7 @@
               <div class="item">New page dedicates much less visual space to the poster and action buttons</div>
               <div class="item">All the prior functionality is still present (if a bit shifted around)
             <div class="list">
-              <img width="50%" src="https://titlecardmaker.com/assets/series_light.webp">
+              <img loading="lazy" width="50%" src="https://titlecardmaker.com/assets/series_light.webp">
             </div>
           </div>
               <div class="item">Includes a live Card preview which can be used to display present Series <i>and</i> Episode-level changes without saving and remaking a Card</div>
@@ -570,7 +679,7 @@
             <div class="list">
               <div class="item">I spent <i>way</i> too long creating a very customizable way to adjust the stripe pattern - see <a href="https://titlecardmaker.com/card_types/striped/" target="_blank">the docs</a> for details
             <div class="list">
-              <img width="50%" src="https://titlecardmaker.com/card_types/assets/striped.webp">
+              <img loading="lazy" width="50%" src="https://titlecardmaker.com/card_types/assets/striped.webp">
             </div>
           </div>
             </div>
@@ -581,7 +690,7 @@
               <div class="item">Old title text was positioned at halfway up the triangle <i>by height</i> - new text is halfway up <i>by area</i> (e.g. one third by height)</div>
               <div class="item">For example, old vs. new:
             <div class="list">
-              <img width="25%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/88ae682b-6556-420a-b726-02d6e17bf742"> <img width="25%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/3357565c-dcfd-4be7-aa42-7fbfa96190d7">
+              <img loading="lazy" width="25%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/88ae682b-6556-420a-b726-02d6e17bf742"> <img loading="lazy" width="25%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/3357565c-dcfd-4be7-aa42-7fbfa96190d7">
             </div>
           </div>
               <div class="item">This was not done originally because the math to determine the placement of the title and season text is significantly more complicated </div>
@@ -743,7 +852,7 @@
               <div class="item">For example, I created a Set of all my Scooby-Doo Blueprints as they all use the same design, Template, and Font</div>
               <div class="item">If a Blueprint has any associated Sets, it will be displayed on the Blueprint itself
             <div class="list">
-              <img width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/324874a2-5508-43f3-9d40-57748125b7dc">
+              <img loading="lazy" width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/324874a2-5508-43f3-9d40-57748125b7dc">
             </div>
           </div>
               <div class="item">Sets of <i>existing</i> Blueprints can be created directly on the Blueprints GitHub via this <a href="https://github.com/TitleCardMaker/Blueprints/issues/new/choose" target="_blank">issue form</a>.</div>
@@ -860,17 +969,17 @@
         <div class="ui ordered list">
           <div class="item">Create new Music card type
             <div class="list">
-              <img width="50%" src="https://titlecardmaker.com/card_types/assets/music.webp">
+              <img loading="lazy" width="50%" src="https://titlecardmaker.com/card_types/assets/music.webp">
             </div>
           </div>
           <div class="item">Create new Notification card type
             <div class="list">
-              <img width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/8959d3ad-7ae5-4d5f-80fb-194dfbcd09a2">
+              <img loading="lazy" width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/8959d3ad-7ae5-4d5f-80fb-194dfbcd09a2">
             </div>
           </div>
           <div class="item">Create new Formula 1 card type
             <div class="list">
-              <img width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/27b833c8-bd7d-4235-8c54-aa5b1aa30bd5">
+              <img loading="lazy" width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/27b833c8-bd7d-4235-8c54-aa5b1aa30bd5">
             </div>
           </div>
           <div class="item">Display Source Images from Emby and Jellyfin within the UI when browsing images per-Episode</div>
@@ -1217,19 +1326,19 @@
           </div>
           <div class="item">Create new Banner, Graph, Inset, and Shape card types
             <div class="list">
-              <img width="50%" src="/internal_assets/cards/banner.webp">
+              <img loading="lazy" width="50%" src="/internal_assets/cards/banner.webp">
             </div>
           
             <div class="list">
-              <img width="50%" src="/internal_assets/cards/graph.webp">
+              <img loading="lazy" width="50%" src="/internal_assets/cards/graph.webp">
             </div>
           
             <div class="list">
-              <img width="50%" src="/internal_assets/cards/inset.webp">
+              <img loading="lazy" width="50%" src="/internal_assets/cards/inset.webp">
             </div>
           
             <div class="list">
-              <img width="50%" src="/internal_assets/cards/shape.webp">
+              <img loading="lazy" width="50%" src="/internal_assets/cards/shape.webp">
             </div>
           </div>
           <div class="item">Combine "Refresh Episode Data," "Download Source Images," and "Add Translation" tasks / functionality into the "Create Title Cards" task / interactions - this replaces the "Process Series" buttons/terminology
@@ -1250,7 +1359,7 @@
               <div class="item">This snapshot notes how many Episodes, Series, Fonts, Title Cards you have; as well as total number of Title Cards created, etc.</div>
               <div class="item">These snapshots can be visualized into a fully interactive graph by clicking <b>View Graphs</b> at the bottom of the home page, like so:
             <div class="list">
-              <img width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/f61c7949-b81c-4bda-8501-ca16f3899e46">
+              <img loading="lazy" width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/f61c7949-b81c-4bda-8501-ca16f3899e46">
             </div>
           </div>
             </div>
@@ -1267,7 +1376,7 @@
               <div class="item">Can access any Card variables, as well as <b>NEWLINE</b> for <b>\n</b>, and <b>to_roman_numeral</b> to convert a number to a roman numeral</div>
               <div class="item">For example, a title text format of <b>{NEWLINE.join([' '.join(['.'.join(word) for word in line.split(' ')]) for line in title_text.splitlines()])}</b> will automatically insert a period between all non-line splitting letters of each word in the title text - I used this to create Title Cards for Friends like so:
             <div class="list">
-              <img width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/2ad83847-857f-4c26-b5f9-3cace17e6a73">
+              <img loading="lazy" width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/2ad83847-857f-4c26-b5f9-3cace17e6a73">
             </div>
           </div>
             </div>
@@ -1382,7 +1491,7 @@
         <div class="ui ordered list">
           <div class="item">Generalize mask overlays, now "mask" images can be added to (almost) every single type of Card - for example:
             <div class="list">
-              <img width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/10beb3ab-378c-45c2-860b-636ba3041a37">
+              <img loading="lazy" width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/10beb3ab-378c-45c2-860b-636ba3041a37">
             </div>
           </div>
           <div class="item">Calligraphy
@@ -1483,14 +1592,14 @@
         <div class="ui ordered list">
           <div class="item">Use new logo
             <div class="list">
-              <img style="background: rgb(28, 28, 28); border-radius: 0.4em;" width="50%" src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker/web-ui/app/assets/logo.png">
+              <img loading="lazy" style="background: rgb(28, 28, 28); border-radius: 0.4em;" width="50%" src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker/web-ui/app/assets/logo.png">
             </div>
           </div>
           <div class="item">Major documentation revisions
             <div class="list">
               <div class="item">Relocate all v2 documentation to <a href="https://titlecardmaker.com" target="_blank">titlecardmaker.com</a></div>
               <div class="item">Create dynamic auto-generated "social cards" for richer link previews in Discord (and other site) - for example:</div>
-              <div class="item"><img width="50%" src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker/gh-pages/assets/images/social/blueprints.png"></div>
+              <div class="item"><img loading="lazy" width="50%" src="https://raw.githubusercontent.com/CollinHeist/TitleCardMaker/gh-pages/assets/images/social/blueprints.png"></div>
               <div class="item">Use site-wide banner for navigation, move table of contents to sidebar (more room for content)</div>
               <div class="item">Add various pages (including starter Docker and Docker compose pages)</div>
             </div>
@@ -1629,12 +1738,12 @@
           <div class="item">Add API endpoint to trigger Card creation via Sonarr webhook - this is practically identical to the Tautulli trigger (but not for watched-status changes) but works for all Media Servers - setup docs are <a href="https://titlecardmaker.readthedocs.io/en/latest/getting_started/connections/sonarr/#webhook-integration" target="_blank">here</a></div>
           <div class="item">Create new Calligraphy card type
             <div class="list">
-              <img class="ui large image" src="/internal_assets/cards/calligraphy.jpg">
+              <img loading="lazy" class="ui large image" src="/internal_assets/cards/calligraphy.jpg">
             </div> 
           </div>
           <div class="item">Create new Marvel card type
             <div class="list">
-              <img class="ui large image" src="/internal_assets/cards/marvel.jpg">
+              <img loading="lazy" class="ui large image" src="/internal_assets/cards/marvel.jpg">
             </div>
           </div>
           <div class="item">Simplify default directory structure
@@ -1726,7 +1835,7 @@
           <div class="item">Add display to start adding a new Series for given query if no results are found in search bar</div>
           <div class="item">Create Overline card type
             <div class="list">
-              <img class="ui large image" src="https://user-images.githubusercontent.com/17693271/271863029-e82e411c-8d43-4de8-89f0-470fe007c626.jpg"/>
+              <img loading="lazy" class="ui large image" src="https://user-images.githubusercontent.com/17693271/271863029-e82e411c-8d43-4de8-89f0-470fe007c626.jpg"/>
             </div>
           </div>
           <div class="item">Automatically search for "mask" images to overlay on top of the frame and frame edges in the Tinted Frame card
@@ -1734,7 +1843,7 @@
               <div class="item">TCM will search for files named like <code>{filename}-mask.png</code> - e.g. <code>s1e1-mask.png</code> in the source folder</div>
               <div class="item">If provided, this mask image is overlayed after the text and frame is drawn</div>
               <div class="item">This can be used to give the appearance of part of the image extending beyond the boundaries of the frame - for example:</div>
-                <img class="ui large image" src="https://user-images.githubusercontent.com/17693271/271863036-3e55a94c-b9a6-4e7b-8735-ee8b8fc0c33c.jpg"/>
+                <img loading="lazy" class="ui large image" src="https://user-images.githubusercontent.com/17693271/271863036-3e55a94c-b9a6-4e7b-8735-ee8b8fc0c33c.jpg"/>
             </div>
           </div>
           <div class="item">Merge new user card type <code>azuravian/SciFiTitleCard</code></div>
@@ -1884,7 +1993,7 @@
             <div class="list">
               <div class="item">Now the <b>+ New Series</b> button takes you to a separate page where you can interactively search any enabled interface (Emby/Jellyfin/Plex/Sonarr/TMDb) for the Series - a slightly outdated example:
             <div class="list">
-              <img width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/63f18412-0ef5-4f4c-9a71-9764802f2b81">
+              <img loading="lazy" width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/63f18412-0ef5-4f4c-9a71-9764802f2b81">
             </div>
           </div>
               <div class="item">When a Series is selected, you can easily browse any available Blueprints to add the Series and Blueprint immediately</div>
@@ -1895,7 +2004,7 @@
             <div class="list">
               <div class="item">Below the aforementioned new series adding, any defined Blueprints can be browsed - for example:
                 <div class="list">
-                  <img width="50%" src="https://titlecardmaker.com/assets/blueprint_series_light.jpg">
+                  <img loading="lazy" width="50%" src="https://titlecardmaker.com/assets/blueprint_series_light.jpg">
                 </div>
               </div>
               <div class="item">These Blueprints can then be imported directly, without explicitly searching for the Series - this will import the Series if it does not exist, as well as the Blueprint</div>
@@ -1907,7 +2016,7 @@
           <div class="item">Create White Border title card</div>
           <div class="item">Implement optional authorization to require a valid username/password to access TCM (and the API) - example of the login screen:
             <div class="list">
-              <img width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/a10f610a-73b3-4905-9c6d-a55ca91a96f4">
+              <img loading="lazy" width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/a10f610a-73b3-4905-9c6d-a55ca91a96f4">
             </div>
           </div>
         </div>
@@ -2040,7 +2149,7 @@
               <div class="item">Blueprints can be imported into a Series via the new <b>Blueprints</b> tab on the Series page</div>
               <div class="item">If there are Blueprints available, an example of each will be displayed in the UI, along with the creator, a brief description, and a list of what is included in the Blueprint
                 <div class="list">
-                  <img width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/1a42589e-bf54-48d2-bddf-823cf55097bd">
+                  <img loading="lazy" width="50%" src="https://github.com/CollinHeist/TitleCardMaker/assets/17693271/1a42589e-bf54-48d2-bddf-823cf55097bd">
                 </div>
               </div>
               <div class="item">A Blueprint can be easily exported by clicking the <i>Export Blueprint</i> Button, which will download a .zip file of the Blueprint (as JSON) that you can edit, any associated Font files, and a preview image for the Series.</div>

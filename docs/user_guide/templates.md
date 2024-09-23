@@ -210,6 +210,7 @@ reference value.
         | Operation | Description | Reference Value |
         | --------: | :---------- | :-------------: |
         | file exists | Only apply to Series whose logo exists | :fontawesome-regular-circle-xmark:{.red} |
+        | file does not exist | Only apply to Series whose logo does not exist | :fontawesome-regular-circle-xmark:{.red} |
 
     === "Reference File"
 
@@ -219,7 +220,8 @@ reference value.
 
         | Operation | Description | Reference Value |
         | --------: | :---------- | :-------------: |
-        | file exists | Only apply to Series where the indicated File exists | :fontawesome-regular-circle-check:{.green} |
+        | file exists | Only apply to Series where the indicated file exists | :fontawesome-regular-circle-check:{.green} |
+        | file does not exist | Only apply to Series where the indicated file does not exist | :fontawesome-regular-circle-check:{.green} |
 
     === "Episode Watched Status"
 
@@ -346,7 +348,7 @@ Whether to hide season titles as part of this Template.
 
 ### Season Titles
 
-
+...
 
 
 [^1]: Argument and operation pairs which are meaningless (but technically

@@ -59,6 +59,7 @@ OPERATIONS: dict[str, Callable[[Any, Any], bool]] = {
     'is before': lambda v, r: v < datetime.strptime(r, DATETIME_FORMAT),
     'is after': lambda v, r: v > datetime.strptime(r, DATETIME_FORMAT),
     'file exists': lambda v, r: Path(r).exists() if r is not None else Path(v).exists(),
+    'file does not exist': lambda v, r: not (Path(r).exists() if r is not None else Path(v).exists())
 }
 
 """Supported Argument keywords."""
