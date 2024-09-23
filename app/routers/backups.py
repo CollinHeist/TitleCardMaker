@@ -9,6 +9,7 @@ from app.internal.backup import (
     delete_backup,
     delete_old_backups,
     list_available_backups,
+    restore_backup,
 )
 from app.schemas.preferences import SystemBackup
 from modules.BackgroundTasks import task_queue
@@ -50,21 +51,23 @@ async def restore_from_backup(
     running or pending tasks.
     """
 
+    # Get contextual logger
     log: Logger = request.state.log
 
-    if task_queue or engine.pool.checkedout() > 0:
+    if task_queue or engine.pool.checkedout() > 0: # type: ignore
         if bypass:
             log.warning('Restoring from backup while there are pending '
                         'operations - performing backup to prevent data loss')
+            log.trace(f'TaskQueue: {task_queue}\nPool: {engine.pool}')
             backup_data(get_preferences().current_version, log=log)
         else:
             raise HTTPException(
                 status_code=400,
-                detail='There are pending Background Tasks or active DB Sessions',
+                detail='There are pending Background Tasks/Database Connections'
             )
 
     # Restore from backup
-    ...
+    restore_backup(folder, log=log)
 
     # Kill any active websockets
     for connection in list(ACTIVE_WEBSOCKETS):

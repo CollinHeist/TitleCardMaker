@@ -5,6 +5,8 @@ from shutil import copy as file_copy
 from sqlite3 import connect, OperationalError
 from typing import NamedTuple, Optional, Union
 
+from fastapi import HTTPException
+
 from app.schemas.preferences import DatabaseBackup, SettingsBackup, SystemBackup
 from modules.Debug import Logger, log
 from modules.Version import Version
@@ -134,35 +136,50 @@ def backup_data(
     return DataBackup(config=config_backup, database=database_backup)
 
 
-def restore_backup(backup: DataBackup, /, *, log: Logger = log):
+def restore_backup(backup: Union[DataBackup, str], /, *, log: Logger = log):
     """
     Restore the config and database from the given data backup.
 
     Args:
         backup: Tuple of backup data (as returned by `backup_data()`)
-            to restore from.
+            to restore from; or the name of the folder containing data.
         log: Logger for all log messages.
     """
 
-    # Restore config
-    if backup.config.exists():
-        if IS_DOCKER:
-            file_copy(backup.config, Path('/config/config.pickle'))
-        else:
-            file_copy(backup.config, Path('./config/config.pickle'))
-        log.debug(f'Restored backup from "{backup.config}"')
+    # If a folder name was provided, search for the config/db files
+    if isinstance(backup, str):
+        folder = BACKUP_DIRECTORY / backup
+        try:
+            config = next(folder.glob('config.pickle*'))
+            database = next(folder.glob('db.sqlite*'))
+        except StopIteration as exc:
+            log.exception(f'Unable to identify backup data from folder')
+            raise HTTPException(
+                status_code=400,
+                detail='Invalid backup folder'
+            ) from exc
     else:
-        log.warning(f'Cannot restore backup from "{backup.config}"')
+        config, database = backup
+
+    # Restore config
+    if config and config.exists():
+        if IS_DOCKER:
+            file_copy(config, Path('/config/config.pickle'))
+        else:
+            file_copy(config, Path('./config/config.pickle'))
+        log.debug(f'Restored backup from "{config}"')
+    else:
+        log.warning(f'Cannot restore backup from "{config}"')
 
     # Restore database
-    if backup.database.exists():
+    if database.exists():
         if IS_DOCKER:
-            file_copy(backup.database, Path('/config/db.sqlite'))
+            file_copy(database, Path('/config/db.sqlite'))
         else:
-            file_copy(backup.database, Path('./config/db.sqlite'))
-        log.debug(f'Restored backup from "{backup.database}"')
+            file_copy(database, Path('./config/db.sqlite'))
+        log.debug(f'Restored backup from "{database}"')
     else:
-        log.warning(f'Cannot restore backup from "{backup.database}"')
+        log.warning(f'Cannot restore backup from "{database}"')
 
 
 def list_available_backups(*, log: Logger = log) -> list[SystemBackup]:
