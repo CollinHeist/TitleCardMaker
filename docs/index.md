@@ -244,7 +244,13 @@ TCM, then you need to do the following:
         docker container rm TitleCardMaker
         ```
 
-    3. Recreate the container by running your original `docker run` command
+    3. Pull the latest image (change `latest` to `develop` if desired).
+
+        ```bash
+        docker pull "ghcr.io/titlecardmaker/titlecardmaker-webui:latest"
+        ```
+
+    4. Recreate the container by running your original `docker run` command
     (see [here](./getting_started/index.md#__tabbed_1_2)).
 
 === ":material-language-python: Non-Docker"

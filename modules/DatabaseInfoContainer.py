@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-from logging import Logger
 from typing import Any, Callable, Literal, Optional, TypeVar, Union, overload
 
-from modules.Debug import log
+from modules.Debug import Logger, log
 
 
 ConnectionID = Union[int, tuple[int, str]]
