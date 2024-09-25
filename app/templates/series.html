@@ -574,6 +574,16 @@
               </div>
             </div>
 
+            <div class="ui left aligned checkbox field">
+              <label>Use Per-Season Assets</label>
+              {% if series.use_per_season_assets %}
+              <input name="use_per_season_assets" type="checkbox" checked="">
+              {% else %}
+              <input name="use_per_season_assets" type="checkbox">
+              {% endif %}
+              <p class="help">Whether to utilize manually added backdrops and logos unique to each season.</p>
+            </div>
+
             <div class="ui two fields">
               <div class="ui field">
                 <label>Enable Specials</label>
