@@ -1,7 +1,7 @@
 from os import environ
 from pathlib import Path
 from re import IGNORECASE, sub as re_sub, match as _regex_match
-from typing import Any, Generator
+from typing import Any, Generator, Literal
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -110,7 +110,7 @@ BlueprintBase = declarative_base()
 # Create a default __rich_repr__ which all tables subclassing this base
 # class can utilize for rich output in Tracebacks
 # See https://rich.readthedocs.io/en/stable/pretty.html#rich-repr-protocol
-def default_rich_repr(self) -> Generator[tuple[str, Any], None, None]:
+def default_rich_repr(self) -> Generator[tuple[str, Any, None], None, None]:
     """
     Print key/value pairs of all non-private, non-None items in this
     class.
@@ -144,7 +144,7 @@ PreferencesLocal = Preferences(preferences_file)
 Page = CustomizedPage[
     Page,
     UseName('Page'),
-    UseParamsFields(size=100),
+    UseParamsFields(size=50),
 ]
 
 
