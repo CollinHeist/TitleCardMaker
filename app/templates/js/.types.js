@@ -486,6 +486,7 @@
  * @property {boolean} auto_split_title
  * @property {?boolean} sync_specials
  * @property {?boolean} skip_localized_images
+ * @property {boolean} use_per_season_assets
  * @property {?boolean} card_filename_format
  * @property {?number} data_source_id
  * @property {?string} card_type

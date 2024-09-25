@@ -3,7 +3,7 @@ from typing import Literal
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 
 from app.database.query import get_connection
-from app.dependencies import * # pylint: disable=W0401,W0614,W0621
+from app.dependencies import *
 from app.internal.auth import get_current_user
 from app.internal.cards import delete_cards
 from app.internal.connection import add_connection, update_connection
@@ -558,7 +558,7 @@ def delete_connection(
         log.info(f'Deleting {sync}')
         db.delete(sync)
 
-    # Remove from any linked Series libraries or data sources
+    # Remove from any linked Series libraries, data sources, or image sources
     for series in db.query(Series).all():
         if any(library['interface_id'] == interface_id
                for library in series.libraries):
@@ -572,15 +572,30 @@ def delete_connection(
             log.warning(f'Removing Episode Data Source from {series}')
             series.data_source_id = None
 
-    # Remove linked data source from Templates
+        if series.image_source_priority:
+            if any(interface_id == id_ for id_ in series.image_source_priority):
+                log.warning(f'Removing Image Source from {series}')
+                series.image_source_priority = [
+                    id_ for id_ in series.image_source_priority
+                    if id_ != interface_id
+                ]
+
+    # Remove linked data and image source from Templates
     for template in db.query(Template).filter_by(data_source_id=interface_id).all():
         log.warning(f'Removing Episode Data Source from {template}')
         template.data_source_id = None
+    for template in db.query(Template).all():
+        if any(interface_id == id_ for id_ in template.image_source_priority):
+            log.warning(f'Removing Image Source from {template}')
+            template.image_source_priority = [
+                id_ for id_ in template.image_source_priority
+                if id_ != interface_id
+            ]
 
-    # Delete from ISP if present
+    # Delete from global ISP if present
     preferences.image_source_priority = [
-        source for source in preferences.image_source_priority
-        if source != interface_id
+        id_ for id_ in preferences.image_source_priority
+        if id_ != interface_id
     ]
 
     # Reset EDS if set

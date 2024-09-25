@@ -1,6 +1,6 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
-# pyright: reportInvalidTypeForm=false
-from typing import Any, Literal, Optional
+# pyright: reportInvalidTypeForm=false, reportAssignmentType=false, reportIncompatibleVariableOverride=false
+from typing import Any, Literal, Optional, Union
 
 from pydantic import conint, constr, Field, root_validator, validator
 
@@ -81,8 +81,10 @@ class BaseSeries(BaseConfig):
     template_ids: Optional[list[int]] = None
     match_titles: bool = True
     auto_split_title: bool = True
+    use_per_season_assets: bool = False
     translations: Optional[list[Translation]] = None
     libraries: list[MediaServerLibrary] = []
+    image_source_priority: Optional[list[int]] = None
 
     font_color: Optional[str] = None
     font_title_case: Optional[TitleCase] = None
@@ -110,6 +112,7 @@ class BaseUpdate(UpdateBase):
     skip_localized_images: Optional[bool] = UNSPECIFIED
     card_filename_format: Optional[str] = UNSPECIFIED
     data_source_id: Optional[int] = UNSPECIFIED
+    image_source_priority: Optional[list[int]] = UNSPECIFIED
     translations: Optional[list[Translation]] = UNSPECIFIED
     card_type: Optional[str] = UNSPECIFIED
     hide_season_text: Optional[bool] = UNSPECIFIED
@@ -135,6 +138,14 @@ class BaseUpdate(UpdateBase):
             return None
 
         return [val for val in ([v] if isinstance(v, str) else v) if val != '']
+
+    @validator('image_source_priority', pre=False)
+    def validate_unique_isp_ids(cls, val: Optional[list[int]]) -> Optional[list[int]]:
+        if val is None:
+            return val
+        if len(val) != len(set(val)):
+            raise ValueError('IDs must be unique')
+        return val
 
     @root_validator
     def validate_paired_lists(cls, values: dict) -> dict[str, str]:
@@ -232,6 +243,7 @@ class UpdateSeries(BaseUpdate):
     font_id: Optional[int] = UNSPECIFIED
     sync_specials: Optional[bool] = UNSPECIFIED
     skip_localized_images: Optional[bool] = UNSPECIFIED
+    use_per_season_assets: bool = UNSPECIFIED
     card_filename_format: Optional[str] = UNSPECIFIED
     match_titles: bool = UNSPECIFIED
     auto_split_title: bool = UNSPECIFIED

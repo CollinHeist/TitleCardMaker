@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.database.query import (
     get_all_templates,
+    get_connection,
     get_font,
     get_interface,
     get_sync,
@@ -344,10 +345,14 @@ def update_series_config(
     """
 
     # Get object as dictionary
-    update_series_dict = update_series.dict()
+    update_series_dict: dict = update_series.dict()
 
     # If a Font is indicated, verify it exists
     get_font(db, update_series_dict.get('font_id', None), raise_exc=True)
+
+    # Verify Image Source Priorty if indicated
+    if (isp := update_series_dict.get('image_source_priority')) is not None:
+        [get_connection(db, id_, raise_exc=True) for id_ in isp]
 
     # Assign Templates if indicated
     changed = False
@@ -787,4 +792,4 @@ def lookup_series(
         # Result has been added if there is an existing Series
         result.added = existing is not None
 
-    return results
+    return results # type: ignore

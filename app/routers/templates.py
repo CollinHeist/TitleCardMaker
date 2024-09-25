@@ -4,7 +4,7 @@ from fastapi import APIRouter, Body, Depends, Request
 from fastapi_pagination import paginate
 from sqlalchemy.orm import Session
 
-from app.database.query import get_font, get_template
+from app.database.query import get_connection, get_font, get_template
 from app.database.session import Page
 from app.dependencies import get_database, get_preferences
 from app.internal.auth import get_current_user
@@ -104,6 +104,10 @@ def update_template_(
 
     # If a Font ID was specified, verify it exists
     get_font(db, getattr(update_template, 'font_id', None), raise_exc=True)
+
+    # Verify Image Source Priority if it was provided
+    if (isp := getattr(update_template, 'image_source_priority', None)):
+        [get_connection(db, id_, raise_exc=True) for id_ in isp]
 
     # Update each attribute of the object
     changed = False
