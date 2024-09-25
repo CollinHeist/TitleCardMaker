@@ -83,8 +83,20 @@ def _get_obj(
 
 @overload
 def get_blueprint(
-        db: Session, blueprint_id: int, *, raise_exc: Literal[True] = True
+        db: Session, blueprint_id: Literal[None], *, raise_exc: bool
+    ) -> Literal[None]:
+    ...
+
+@overload
+def get_blueprint(
+        db: Session, blueprint_id: int, *, raise_exc: Literal[True]
     ) -> Blueprint:
+    ...
+
+@overload
+def get_blueprint(
+        db: Session, blueprint_id: int, *, raise_exc: Literal[False]
+    ) -> Optional[Blueprint]:
     ...
 
 def get_blueprint(
@@ -213,13 +225,19 @@ def get_episode(
 
 @overload
 def get_font(
-        db: Session, font_id: int, *, raise_exc: Literal[True] = True,
+        db: Session, font_id: Literal[None], *, raise_exc: bool,
+    ) -> Literal[None]:
+    ...
+
+@overload
+def get_font(
+        db: Session, font_id: int, *, raise_exc: Literal[True],
     ) -> Font:
     ...
 
 @overload
 def get_font(
-        db: Session, font_id: int, *, raise_exc: Literal[False] = False,
+        db: Session, font_id: int, *, raise_exc: Literal[False],
     ) -> Optional[Font]:
     ...
 
@@ -267,6 +285,12 @@ def get_series(
 
 @overload
 def get_sync(
+        db: Session, sync_id: Literal[None], *, raise_exc: bool = True,
+    ) -> Literal[None]:
+    ...
+
+@overload
+def get_sync(
         db: Session, sync_id: int, *, raise_exc: Literal[True] = True,
     ) -> Sync:
     ...
@@ -274,7 +298,7 @@ def get_sync(
 @overload
 def get_sync(
         db: Session, sync_id: int, *,
-        raise_exc: Union[bool, Literal[False]] = False,
+        raise_exc: Union[bool, Literal[False]] = True,
     ) -> Optional[Sync]:
     ...
 
@@ -376,13 +400,13 @@ AnyInterface = Union[
 
 @overload
 def get_interface(
-        interface_id: int, *, raise_exc: Literal[True]
+        interface_id: int, *, raise_exc: Literal[True] = True
     ) -> AnyInterface:
     ...
 
 @overload
 def get_interface(
-        interface_id: int, *, raise_exc: Union[bool, Literal[False]],
+        interface_id: int, *, raise_exc: Union[bool, Literal[False]] = True,
     ) -> Optional[AnyInterface]:
     ...
 

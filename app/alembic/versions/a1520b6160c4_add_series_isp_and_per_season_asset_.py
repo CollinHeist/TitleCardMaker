@@ -1,4 +1,9 @@
-"""Add Series ISP and per season asset support
+"""
+Series:
+- Add image_source_priority column
+- Add use_per_season_assets column
+Template:
+- Add image_source_priority column
 
 Revision ID: a1520b6160c4
 Revises: db6a1eda7d21
