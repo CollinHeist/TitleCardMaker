@@ -1,12 +1,11 @@
 from base64 import b64encode
 from datetime import datetime
-from logging import Logger
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterator, Literal, Optional, Union, overload
 
 from fastapi import HTTPException
 
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.EpisodeDataSource2 import (
     EpisodeDataSource,
     SearchResult,
@@ -133,13 +132,13 @@ class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         """
 
         # Query for list of all users on this server
-        response = self.session.get(
+        response: dict = self.session.get(
             f'{self.url}/Users/Query',
             params=self.__params,
         )
 
         # Go through returned list of users, returning when username matches
-        for user in response.get('Items'):
+        for user in response.get('Items', []):
             if user.get('Name') == username:
                 return user.get('Id')
 

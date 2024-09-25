@@ -1,7 +1,7 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
-# pyright: reportInvalidTypeForm=false
+# pyright: reportInvalidTypeForm=false, reportAssignmentType=false
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
 
 from pydantic import ( # pylint: disable=no-name-in-module
     NonNegativeFloat,
@@ -55,11 +55,11 @@ class NewNamedFont(BaseNamedFont):
         return None if v == '' else v
 
     @validator('replacements_in', 'replacements_out', pre=True)
-    def validate_list(cls, v):
+    def validate_list(cls, v: Union[str, list[str]]) -> list[str]:
         return [v] if isinstance(v, str) else v
 
     @root_validator
-    def validate_paired_lists(cls, values):
+    def validate_paired_lists(cls, values: dict) -> dict:
         if len(values['replacements_in']) != len(values['replacements_out']):
             raise ValueError('Must provide same number of in/out replacements')
         return values
@@ -95,7 +95,7 @@ class UpdateNamedFont(UpdateBase):
         return None if v == '' else v
 
     @validator('replacements_in', 'replacements_out', pre=True)
-    def validate_list(cls, v):
+    def validate_list(cls, v: Union[str, list[str]]) -> list[str]:
         return [v] if isinstance(v, str) else v
 
     @root_validator

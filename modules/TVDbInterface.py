@@ -1,11 +1,10 @@
 from datetime import datetime, timedelta
-from logging import Logger
 from typing import Any, Literal, Optional, TypedDict
 from urllib.parse import quote as url_quote, urlencode
 
 from fastapi import HTTPException
 
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.EpisodeDataSource2 import (
     EpisodeDataSource,
     SearchResult,
@@ -128,7 +127,7 @@ class TVDbInterface(EpisodeDataSource, WebInterface, Interface):
     is to communicate with TVDb.
     """
 
-    INTERFACE_TYPE = 'TVDb'
+    INTERFACE_TYPE: str = 'TVDb'
 
     """TVDb ID mappings for each type of artwork"""
     ARTWORK_TYPES: dict[ArtType, int] = {
@@ -140,7 +139,7 @@ class TVDbInterface(EpisodeDataSource, WebInterface, Interface):
     EPISODE_AIRDATE_FORMAT = '%Y-%m-%d'
 
     """Series ID's that can be set by TMDb"""
-    SERIES_IDS = ('imdb_id', 'tmdb_id', 'tvdb_id')
+    SERIES_IDS: set[str] = ('imdb_id', 'tmdb_id', 'tvdb_id')
 
     """Root URL of all API requests"""
     __ROOT_API_URL = 'https://api4.thetvdb.com/v4'

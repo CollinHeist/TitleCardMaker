@@ -1,8 +1,8 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
-# pyright: reportInvalidTypeForm=false
+# pyright: reportInvalidTypeForm=false, reportAssignmentType=false, reportIncompatibleVariableOverride=false
 from typing import Literal, Optional, Union
 
-from pydantic import AnyUrl, constr, validator
+from pydantic import AnyUrl, SecretStr, constr, validator
 
 from app.schemas.base import Base, InterfaceType, UpdateBase, UNSPECIFIED
 from modules.EmbyInterface2 import EmbyInterface
@@ -105,8 +105,8 @@ class NewSonarrConnection(BaseNewServer):
     libraries: list[SonarrLibrary] = []
 
 class NewTautulliConnection(BaseNewServer):
-    api_key: str
-    tcm_url: Optional[str] = None
+    api_key: SecretStr
+    tcm_url: str
     agent_name: str = 'TitleCardMaker'
     trigger_watched: bool = True
     username: Optional[str] = None
@@ -248,6 +248,10 @@ class TVDbConnection(Base):
     include_movies: bool
     minimum_dimensions: str
     language_priority: list[str]
+
+class TautulliIntegrationStatus(Base):
+    recently_added: bool
+    watched: bool
 
 AnyConnection = Union[
     EmbyConnection,

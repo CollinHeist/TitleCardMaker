@@ -1,12 +1,10 @@
 from datetime import datetime
-from logging import Logger
 from typing import TYPE_CHECKING, Optional, TypedDict, Union
 
 from plexapi.video import Episode as PlexEpisode
-from sqlalchemy import and_, func, or_
-from sqlalchemy.orm import Query
+from sqlalchemy import ColumnElement, and_, func, or_
 
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.DatabaseInfoContainer import DatabaseInfoContainer, InterfaceID
 from modules.Title import Title
 
@@ -33,12 +31,12 @@ class EmbyEpisodeDict(TypedDict):
     UserData: UserData
 
 class EpisodeDatabaseIDs(TypedDict):
-    emby_id: int
-    imdb_id: str
+    emby_id: str
+    imdb_id: Optional[str]
     jellyfin_id: str
-    tmdb_id: int
-    tvdb_id: int
-    tvrage_id: int
+    tmdb_id: Optional[int]
+    tvdb_id: Optional[int]
+    tvrage_id: Optional[int]
 
 class EpisodeCharacteristics(TypedDict, total=False):
     season_number: int
@@ -74,7 +72,7 @@ class EpisodeInfo(DatabaseInfoContainer):
             episode_number: int,
             absolute_number: Optional[int] = None,
             *,
-            emby_id: Optional[int] = None,
+            emby_id: Optional[str] = None,
             imdb_id: Optional[str] = None,
             jellyfin_id: Optional[str] = None,
             tmdb_id: Optional[int] = None,
@@ -96,7 +94,7 @@ class EpisodeInfo(DatabaseInfoContainer):
         self.emby_id = InterfaceID(emby_id, type_=int, libraries=True)
         self.imdb_id: Optional[str] = None
         self.jellyfin_id = InterfaceID(jellyfin_id, type_=str, libraries=True)
-        self.tmdb_id: Optional[str] = None
+        self.tmdb_id: Optional[int] = None
         self.tvdb_id: Optional[int] = None
         self.tvrage_id: Optional[int] = None
 
@@ -222,7 +220,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
         # TMDb movies might have an ID formatted as {id}-{name}
         if (tmdb_id := info['ProviderIds'].get('Tmdb')) is not None:
-            tmdb_id = str(tmdb_id).split('-')[0]
+            tmdb_id = int(str(tmdb_id).split('-')[0])
 
         return cls(
             info['Name'],
@@ -388,7 +386,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     def set_emby_id(self,
-            emby_id: int,
+            emby_id: Optional[int],
             interface_id: int,
             library_name: str,
         ) -> None:
@@ -400,14 +398,14 @@ class EpisodeInfo(DatabaseInfoContainer):
         )
 
 
-    def set_imdb_id(self, imdb_id: str) -> None:
+    def set_imdb_id(self, imdb_id: Optional[str]) -> None:
         """Set the IMDb ID of this object. See `_update_attribute()`."""
 
         self._update_attribute('imdb_id', imdb_id, str)
 
 
     def set_jellyfin_id(self,
-            jellyfin_id: str,
+            jellyfin_id: Optional[str],
             interface_id: int,
             library_name: str,
         ) -> None:
@@ -419,19 +417,19 @@ class EpisodeInfo(DatabaseInfoContainer):
         )
 
 
-    def set_tmdb_id(self, tmdb_id: int) -> None:
+    def set_tmdb_id(self, tmdb_id: Optional[int]) -> None:
         """Set the TMDb ID of this object. See `_update_attribute()`."""
 
         self._update_attribute('tmdb_id', tmdb_id, int)
 
 
-    def set_tvdb_id(self, tvdb_id: int) -> None:
+    def set_tvdb_id(self, tvdb_id: Optional[int]) -> None:
         """Set the TVDb ID of this object. See `_update_attribute()`."""
 
         self._update_attribute('tvdb_id', tvdb_id, int)
 
 
-    def set_tvrage_id(self, tvrage_id: int) -> None:
+    def set_tvrage_id(self, tvrage_id: Optional[int]) -> None:
         """Set the TVRage ID of this object. See `_update_attribute()`."""
 
         self._update_attribute('tvrage_id', tvrage_id, int)
@@ -443,7 +441,7 @@ class EpisodeInfo(DatabaseInfoContainer):
         self._update_attribute('airdate', airdate)
 
 
-    def filter_conditions(self, EpisodeModel: 'Episode') -> Query:
+    def filter_conditions(self, EpisodeModel: 'Episode') -> ColumnElement[bool]:
         """
         Get the SQLAlchemy Query condition for this object.
 

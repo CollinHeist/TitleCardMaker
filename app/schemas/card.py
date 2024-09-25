@@ -1,5 +1,5 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
-# pyright: reportInvalidTypeForm=false
+# pyright: reportInvalidTypeForm=false, reportIncompatibleVariableOverride=false
 from pathlib import Path
 from typing import Annotated, Any, Literal, Optional, Union
 

@@ -1,5 +1,5 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
-# pyright: reportInvalidTypeForm=false
+# pyright: reportInvalidTypeForm=false, reportAssignmentType=false
 from datetime import datetime
 from typing import Any, Optional
 
