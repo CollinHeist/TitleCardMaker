@@ -108,6 +108,7 @@ async def process_plex_webhook(
             detail='Webhook format is invalid'
         ) from exc
 
+    # Skip if not in the trigger list or if not the owner
     if (webhook.event not in trigger_on
         and (not require_owner or (require_owner and webhook.owner))):
         log.trace(f'Skipping Webhook of trigger "{webhook.event}"')
@@ -180,7 +181,7 @@ def create_cards_for_sonarr_webhook(
 
             # Sleep and re-query Episode data
             log.debug(f'Cannot find Episode, waiting..')
-            sleep(30)
+            sleep(15)
             refresh_episode_data(db, series, log=log)
 
         return None

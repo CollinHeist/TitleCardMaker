@@ -1,4 +1,5 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring
+# pyright: reportInvalidTypeForm=false
 from pydantic import constr
 
 from app.schemas.base import Base
