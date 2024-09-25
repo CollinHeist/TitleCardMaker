@@ -35,7 +35,7 @@ def get_global_settings(
     ) -> Preferences:
     """Get the global settings"""
 
-    return preferences
+    return preferences # type: ignore
 
 
 @settings_router.get('/version')
@@ -74,7 +74,7 @@ def update_global_settings(
     refresh_remote_card_types(db, log=request.state.log)
     preferences.determine_imagemagick_prefix(log=request.state.log)
 
-    return preferences
+    return preferences # type: ignore
 
 
 @settings_router.get('/episode-data-source')

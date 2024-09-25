@@ -13,6 +13,7 @@ from app.models.preferences import Preferences
 from app.models.template import Template as TemplateModel
 from app.schemas.base import UNSPECIFIED
 from app.schemas.series import NewTemplate, Template, UpdateTemplate
+from modules.Debug import Logger, log
 
 
 # Create sub router for all /templates API requests
@@ -23,7 +24,7 @@ template_router = APIRouter(
 )
 
 
-@template_router.post('/new', status_code=201)
+@template_router.post('/new')
 def create_template(
         request: Request,
         new_template: NewTemplate = Body(...),
@@ -35,7 +36,7 @@ def create_template(
     - new_template: Template definition to create.
     """
 
-    # Validate font ID if provided
+    # Validate Font ID if provided
     get_font(db, new_template.font_id, raise_exc=True)
 
     template = TemplateModel(**new_template.dict())
@@ -48,7 +49,7 @@ def create_template(
     return template
 
 
-@template_router.get('/all', status_code=200)
+@template_router.get('/all')
 def get_all_templates(
         order: Literal['id', 'name'] = 'name',
         db: Session = Depends(get_database),
@@ -66,7 +67,7 @@ def get_all_templates(
     return paginate(query.order_by(TemplateModel.sort_name).all())
 
 
-@template_router.get('/{template_id}', status_code=200)
+@template_router.get('/{template_id}')
 def get_template_by_id(
         template_id: int,
         db: Session = Depends(get_database),
@@ -80,7 +81,7 @@ def get_template_by_id(
     return get_template(db, template_id, raise_exc=True)
 
 
-@template_router.patch('/{template_id}', status_code=200)
+@template_router.patch('/{template_id}')
 def update_template_(
         request: Request,
         template_id: int,
@@ -96,7 +97,7 @@ def update_template_(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     # Query for Template, raise 404 if DNE
     template = get_template(db, template_id, raise_exc=True)
@@ -122,7 +123,7 @@ def update_template_(
     return template
 
 
-@template_router.delete('/{template_id}', status_code=204)
+@template_router.delete('/{template_id}')
 def delete_template(
         template_id: int,
         db: Session = Depends(get_database),
