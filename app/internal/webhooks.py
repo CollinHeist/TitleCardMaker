@@ -1,5 +1,3 @@
-from logging import Logger
-
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
@@ -13,7 +11,7 @@ from app.internal.sources import download_episode_source_images
 from app.internal.translate import translate_episode
 from app.models.episode import Episode
 from app.models.series import Series
-from modules.Debug import log
+from modules.Debug import Logger, log
 
 
 def process_rating_key(

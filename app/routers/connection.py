@@ -1,4 +1,3 @@
-from logging import Logger
 from typing import Literal
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
@@ -31,6 +30,7 @@ from app.schemas.connection import (
     SonarrConnection,
     TMDbConnection,
     TVDbConnection,
+    TautulliIntegrationStatus,
     UpdateEmby,
     UpdateJellyfin,
     UpdatePlex,
@@ -38,6 +38,7 @@ from app.schemas.connection import (
     UpdateTMDb,
     UpdateTVDb,
 )
+from modules.Debug import Logger
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TautulliInterface2 import TautulliInterface
 
@@ -217,7 +218,7 @@ def get_all_connection_details(
     ) -> list[AnyConnection]:
     """Get details for all defined Connections (of all types)."""
 
-    return db.query(Connection).all()
+    return db.query(Connection).all() # type: ignore
 
 
 @connection_router.get('/emby/all')
@@ -228,7 +229,7 @@ def get_all_emby_connection_details(
 
     return db.query(Connection)\
         .filter_by(interface_type='Emby')\
-        .all()
+        .all() # type: ignore
 
 
 @connection_router.get('/emby/{interface_id}')
@@ -253,7 +254,7 @@ def get_all_jellyfin_connection_details(
 
     return db.query(Connection)\
         .filter_by(interface_type='Jellyfin')\
-        .all()
+        .all() # type: ignore
 
 
 @connection_router.get('/jellyfin/{interface_id}')
@@ -278,7 +279,7 @@ def get_all_plex_connection_details(
 
     return db.query(Connection)\
         .filter_by(interface_type='Plex')\
-        .all()
+        .all() # type: ignore
 
 
 @connection_router.get('/plex/{interface_id}')
@@ -303,7 +304,7 @@ def get_all_sonarr_connection_details(
 
     return db.query(Connection)\
         .filter_by(interface_type='Sonarr')\
-        .all()
+        .all() # type: ignore
 
 
 @connection_router.get('/sonarr/{interface_id}')
@@ -328,7 +329,7 @@ def get_all_tmdb_connection_details(
 
     return db.query(Connection)\
         .filter_by(interface_type='TMDb')\
-        .all()
+        .all() # type: ignore
 
 
 @connection_router.get('/tmdb/{interface_id}')
@@ -355,7 +356,7 @@ def get_all_tvdb_connection_details(
 
     return db.query(Connection)\
         .filter_by(interface_type='TVDb')\
-        .all()
+        .all() # type: ignore
 
 
 @connection_router.get('/tvdb/{interface_id}')
@@ -389,7 +390,7 @@ def update_emby_connection(
 
     return update_connection(
         db, interface_id, emby_interfaces, update_object, log=request.state.log
-    )
+    ) # type: ignore
 
 
 @connection_router.patch('/jellyfin/{interface_id}')
@@ -410,7 +411,7 @@ def update_jellyfin_connection(
     return update_connection(
         db, interface_id, jellyfin_interfaces, update_object,
         log=request.state.log
-    )
+    ) # type: ignore
 
 
 @connection_router.patch('/plex/{interface_id}')
@@ -430,7 +431,7 @@ def update_plex_connection(
 
     return update_connection(
         db, interface_id, plex_interfaces, update_object, log=request.state.log
-    )
+    ) # type: ignore
 
 
 @connection_router.patch('/sonarr/{interface_id}')
@@ -451,7 +452,7 @@ def update_sonarr_connection(
     return update_connection(
         db, interface_id, sonarr_interfaces, update_object,
         log=request.state.log
-    )
+    ) # type: ignore
 
 
 @connection_router.patch('/tmdb/{interface_id}')
@@ -472,7 +473,7 @@ def update_tmdb_connection(
     return update_connection(
         db, interface_id, tmdb_interfaces, update_object,
         log=request.state.log
-    )
+    ) # type: ignore
 
 
 @connection_router.patch('/tvdb/{interface_id}')
@@ -493,7 +494,7 @@ def update_tvdb_connection(
     return update_connection(
         db, interface_id, tvdb_interfaces, update_object,
         log=request.state.log
-    )
+    ) # type: ignore
 
 
 @connection_router.delete('/{interface_id}')
@@ -589,9 +590,9 @@ def delete_connection(
             .first()
         if new_eds:
             preferences.episode_data_source = new_eds.id
-            log.warning(f'Reset global Episode Data Source')
+            log.warning('Reset global Episode Data Source')
         else:
-            log.critical(f'Cannot reassign global Episode Data Source')
+            log.critical('Cannot reassign global Episode Data Source')
 
     # Remove from Series and Episode database IDs
     for series in db.query(Series).all():
@@ -644,7 +645,7 @@ def get_potential_sonarr_libraries(
             'path': str(folder)
         }
         for folder in sonarr_interface.get_root_folders()
-    ]
+    ] # type: ignore
 
 
 @connection_router.post('/tautulli/check', tags=['Tautulli'])
@@ -652,7 +653,7 @@ def check_tautulli_integration(
         request: Request,
         tautulli_connection: NewTautulliConnection = Body(...),
         plex_interface_id: int = Query(...),
-    ) -> bool:
+    ) -> TautulliIntegrationStatus:
     """
     Check whether Tautulli is integrated with TCM.
 
@@ -670,7 +671,11 @@ def check_tautulli_integration(
         log=request.state.log,
     )
 
-    return interface.is_integrated()
+    status = interface.is_integrated()
+    return TautulliIntegrationStatus(
+        recently_added=status.recently_added,
+        watched=status.watched,
+    )
 
 
 @connection_router.post('/tautulli/integrate', tags=['Tautulli'])
