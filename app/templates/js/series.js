@@ -4,7 +4,8 @@
 {% if False %}
 import {
   AvailableFont, AvailableTemplate, Blueprint, Episode, EpisodePage,
-  ExternalSourceImage, LogEntryPage, MediaServerLibrary, RemoteBlueprint, Series,
+  ExternalSourceImage, LogEntryPage, MediaServerLibrary, RemoteBlueprint,
+  RemoteBlueprintSet, Series,
   Statistic, StyleOption, SourceImagePage, TitleCardPage, UpdateEpisode,
 } from './.types.js';
 {% endif %}
@@ -1567,7 +1568,8 @@ function viewBlueprintSets(blueprintId) {
       setSection.replaceChildren();
       setSection.style.display = 'block';
 
-      for (let set of blueprintSets) {
+      // for (let set of blueprintSets) {
+      blueprintSets.forEach(set => {
         const header = document.createElement('h3');
         header.innerText = set.name; header.className = 'ui header';
         setSection.appendChild(header);
@@ -1576,19 +1578,20 @@ function viewBlueprintSets(blueprintId) {
         bpCards.className = 'ui two stackable raised cards';
         setSection.appendChild(bpCards);
 
-        for (let blueprint of set.blueprints) {
+        set.blueprints.forEach(blueprint => {
           const elementId = `blueprint-set-id${blueprint.id}`;
           blueprint.set_ids = [];
           const card = populateBlueprintCard(
             blueprintTemplate.content.cloneNode(true), blueprint, elementId
           );
+          card.querySelector('[data-value="creator"]').innerText = blueprint.series.name;
 
           // Assign function to import button
           card.querySelector('[data-action="import"]').onclick = () => importBlueprint(elementId, blueprint, true);
 
           bpCards.appendChild(card);
-        }
-      }
+        });
+      });
 
       refreshTheme();
       setSection.scrollIntoView({behavior: 'smooth', block: 'start'});
