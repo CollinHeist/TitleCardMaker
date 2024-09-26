@@ -1142,29 +1142,35 @@
 
           <!-- Logo -->
           <h2 class="ui dividing header">Logo</h2>
-          {% if preferences.use_tmdb %}
-          <div class="ui blue tertiary button" onclick="browseLogos();">
-            Browse
+
+          <div class="ui tertiary buttons">
+            <div class="ui blue tertiary button" onclick="browseLogos(null);">
+              <i data-action="browse" class="border all icon"></i>
+              Browse
+            </div>
+  
+            <input type="file" id="logo-upload" class="ui invisible file input" onchange="uploadLogo(null);">
+            <label for="logo-upload" class="ui green tertiary button">
+              <i class="upload icon"></i>
+              Upload
+            </label>
+  
+            <div class="ui purple tertiary button" onclick="analyzePalette('#logo', '#logo-palette');">
+              <i class="magic icon"></i>
+              Analyze Palette
+            </div>
           </div>
-          {% endif %}
-          <input type="file" id="logo-upload" class="ui invisible file input" onchange="uploadLogo();">
-          <label for="logo-upload" class="ui green tertiary button">
-            Upload
-          </label>
-          <img id="logo" class="ui rounded image" src="{{series.logo_uri}}" loading="lazy" >
-          
-          <div class="ui yellow tertiary button" onclick="analyzePalette('#logo', '#logo-palette');">
-            Analyze Palette
+
+          <div class="image-analysis-group">
+            <img id="logo" class="ui rounded image" src="{{ series.get_logo_uri()[1] }}" loading="lazy" >
+            <div class="color palette" id="logo-palette"></div>
           </div>
-          <div class="color palette" id="logo-palette"></div>
 
           <!-- Backdrop -->
           <h2 class="ui dividing header">Backdrop</h2>
-          {% if preferences.use_tmdb %}
           <div class="ui blue tertiary button" onclick="browseBackdrops();">
             Browse
           </div>
-          {% endif %}
           <input type="file" id="backdrop-upload" class="ui invisible file input" onchange="uploadBackdrop();">
           <label for="backdrop-upload" class="ui green tertiary button">
             Upload
