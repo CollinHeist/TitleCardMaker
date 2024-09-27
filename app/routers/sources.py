@@ -182,7 +182,7 @@ def download_episode_source_images_(
         episode_id: int,
         request: Request,
         db: Session = Depends(get_database),
-    ) -> list[str]:
+    ) -> list[Optional[str]]:
     """
     Download the Source Images for the given Episode. This uses the most
     relevant image source indicated by the global image source priority.
