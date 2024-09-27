@@ -1,5 +1,4 @@
 from base64 import b64encode, b64decode
-from logging import Logger
 from typing import Optional
 
 from fastapi import (
@@ -14,7 +13,6 @@ from fastapi import (
 )
 from fastapi_pagination.ext.sqlalchemy import paginate
 from PIL import Image, ImageOps
-from requests import get
 from sqlalchemy.orm import Session
 
 from app.database.query import get_connection, get_episode, get_series
@@ -30,9 +28,12 @@ from app.internal.sources import (
     resolve_all_source_settings,
     resolve_source_settings,
 )
-from app import models
+from app.models.card import Card as CardModel
+from app.models.episode import Episode as EpisodeModel
+from app.models.loaded import Loaded as LoadedModel
 from app.models.preferences import Preferences
 from app.schemas.card import SourceImage, ExternalSourceImage
+from modules.Debug import Logger
 from modules.InterfaceGroup import InterfaceGroup
 from modules.WebInterface import WebInterface
 
@@ -143,9 +144,7 @@ def download_series_backdrop_from_tvdb(
     # Download new backdrop
     if tvdb_interfaces:
         for _, interface in tvdb_interfaces:
-            backdrop = interface.get_series_backdrop(
-                series.as_series_info, raise_exc=True,
-            )
+            backdrop = interface.get_series_backdrop(series.as_series_info)
             if (backdrop
                 and WebInterface.download_image(backdrop,backdrop_file,log=log)):
                 log.debug(f'{series} Downloaded backdrop from TVDb')
@@ -354,10 +353,10 @@ def get_existing_series_source_images(
     """
 
     return paginate(
-        db.query(models.episode.Episode)\
+        db.query(EpisodeModel)\
             .filter_by(series_id=series_id)\
-            .order_by(models.episode.Episode.season_number,
-                      models.episode.Episode.episode_number),
+            .order_by(EpisodeModel.season_number,
+                      EpisodeModel.episode_number),
         transformer=lambda episodes: [
             get_source_image(episode) for episode in episodes
         ]
@@ -523,8 +522,8 @@ async def set_episode_source_image(
     # Delete associated Card and Loaded entry to initiate future reload
     delete_cards(
         db,
-        db.query(models.card.Card).filter_by(episode_id=episode_id),
-        db.query(models.loaded.Loaded).filter_by(episode_id=episode_id),
+        db.query(CardModel).filter_by(episode_id=episode_id),
+        db.query(LoadedModel).filter_by(episode_id=episode_id),
         log=log,
     )
 
@@ -563,8 +562,8 @@ def mirror_episode_source_image(
     # Delete existing Card and Loaded entries for this Episode
     delete_cards(
         db,
-        db.query(models.card.Card).filter_by(episode_id=episode_id),
-        db.query(models.loaded.Loaded).filter_by(episode_id=episode_id),
+        db.query(CardModel).filter_by(episode_id=episode_id),
+        db.query(LoadedModel).filter_by(episode_id=episode_id),
         log=request.state.log,
     )
 
@@ -577,6 +576,7 @@ async def set_series_logo(
         series_id: int,
         url: Optional[str] = Form(default=None),
         file: Optional[UploadFile] = None,
+        season_number: Optional[int] = Query(default=None),
         db: Session = Depends(get_database),
     ) -> None:
     """
@@ -586,6 +586,8 @@ async def set_series_logo(
     - series_id: ID of the Series to set the logo of.
     - url: URL to the logo to download and utilize.
     - file: Logo file content to utilize.
+    - season_number: Season number to associate the given logo with. If
+    omitted the file is assumed to be for the entire series.
     """
 
     # Get contextual logger
@@ -614,11 +616,11 @@ async def set_series_logo(
         )
 
     # Get Series logo file
-    logo_file = series.get_logo_file()
+    logo_file = series.get_logo_file(season_number)
 
     # If file already exists, warn about overwriting
     if logo_file.exists():
-        log.info(f'{series} logo file exists - replacing')
+        log.info(f'{series} logo file ({logo_file.name}) exists - replacing')
 
     # If only URL was required, attempt to download, error if unable
     if url is not None:
@@ -627,15 +629,11 @@ async def set_series_logo(
             process_svg_logo(url, series, logo_file, log=log)
             return None
 
-        try:
-            content = get(url, timeout=30).content
-            log.debug(f'Downloaded {len(content)} bytes from {url}')
-        except Exception as exc:
-            log.exception('Download failed')
+        if (content := WebInterface.download_image_raw(url, log=log)) is None:
             raise HTTPException(
                 status_code=400,
-                detail=f'Unable to download image - {exc}'
-            ) from exc
+                detail='Unable to download image'
+            )
     # Use uploaded file if provided
     else:
         content = uploaded_file
@@ -651,6 +649,7 @@ async def set_series_backdrop(
         series_id: int,
         url: Optional[str] = Form(default=None),
         file: Optional[UploadFile] = None,
+        season_number: Optional[int] = Query(default=None),
         db: Session = Depends(get_database),
     ) -> None:
     """
@@ -660,6 +659,8 @@ async def set_series_backdrop(
     - series_id: ID of the Series to set the backdrop of.
     - url: URL to the backdrop to download and utilize.
     - file: Backdrop to utilize.
+    - season_number: Season number to associate the given logo with. If
+    omitted the file is assumed to be for the entire series.
     """
 
     # Get contextual logger
@@ -688,7 +689,7 @@ async def set_series_backdrop(
         )
 
     # Get Series backdrop file
-    backdrop_file = series.get_series_backdrop()
+    backdrop_file = series.get_series_backdrop(season_number)
 
     # If file already exists, warn about overwriting
     if backdrop_file.exists():
