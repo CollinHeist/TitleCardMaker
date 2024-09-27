@@ -314,7 +314,7 @@ def get_all_series_logos_on_tmdb(
         series.as_series_info,
         bypass_blacklist=True,
         log=request.state.log,
-    ) or []
+    ) or [] # type: ignore
 
 
 @source_router.get('/series/{series_id}/backdrop/browse')
@@ -339,7 +339,7 @@ def get_all_series_backdrops_on_tmdb(
         series.as_series_info,
         bypass_blacklist=True,
         log=request.state.log,
-    ) or []
+    ) or []# type: ignore
 
 
 @source_router.get('/series/{series_id}')

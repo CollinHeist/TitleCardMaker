@@ -176,7 +176,7 @@ def get_connection(
 
 @overload
 def get_connection(
-        db: Session, connection_id: int, /,*, raise_exc: Literal[False] = False,
+        db: Session, connection_id: int, /,*, raise_exc: bool,
     ) -> Optional[Connection]:
     ...
 

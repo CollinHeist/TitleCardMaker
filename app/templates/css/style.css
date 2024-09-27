@@ -125,6 +125,10 @@ span.color.circle {
   /* Show pointer on hover to indicate selectability */
   cursor: pointer;
 }
+.small.color.palette > span.color {
+  width: 30px;
+  height: 50px;
+}
 
 /* Header element alignment */
 #page-header {

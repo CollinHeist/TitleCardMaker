@@ -16,6 +16,8 @@ from app.models.series import Library, Series
 from app.schemas.card import SourceImage
 from app.schemas.preferences import Style
 from modules.Debug import Logger, log
+from modules.TMDbInterface2 import TMDbInterface
+from modules.TVDbInterface import TVDbInterface
 from modules.TieredSettings import TieredSettings
 from modules.WebInterface import WebInterface
 
@@ -165,17 +167,16 @@ def process_svg_logo(
         if converted_logo is None:
             raise HTTPException(
                 status_code=400,
-                detail=f'SVG logo conversion failed'
+                detail='SVG logo conversion failed'
             )
 
         log.debug(f'{series} Converted SVG logo to PNG')
-        log.info(f'{series} Downloaded logo')
         return f'/source/{series.path_safe_name}/{logo_file.name}'
 
     # Download failed, raise 400
     raise HTTPException(
         status_code=400,
-        detail=f'Unable to download logo'
+        detail='Unable to download logo'
     )
 
 
@@ -346,6 +347,7 @@ def download_episode_source_image(
                     log=log,
                 )
         elif interface.INTERFACE_TYPE == 'TVDb':
+            interface: TVDbInterface
             # Get art backdrop
             if 'art' in style:
                 source_image = interface.get_series_backdrop(
@@ -377,7 +379,7 @@ def download_episode_source_image(
         if raise_exc:
             raise HTTPException(
                 status_code=400,
-                detail=f'Unable to download Source Image'
+                detail='Unable to download Source Image'
             )
 
     # No image source returned a valid image, return None
@@ -458,4 +460,4 @@ def get_source_image(episode: Episode) -> SourceImage:
             'height': height,
         }
 
-    return source
+    return source # type: ignore

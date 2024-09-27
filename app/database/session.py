@@ -1,7 +1,7 @@
 from os import environ
 from pathlib import Path
 from re import IGNORECASE, sub as re_sub, match as _regex_match
-from typing import Any, Generator, Literal
+from typing import Any, Generator
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -12,7 +12,6 @@ from fastapi_pagination.customization import (
     UseName,
     UseParamsFields
 )
-from pydantic import Field
 from sqlalchemy import create_engine
 from sqlalchemy.event import listens_for
 from sqlalchemy.orm import declarative_base, sessionmaker

@@ -8,7 +8,8 @@ from typing import (
     Optional,
     TypedDict,
     Union,
-    TYPE_CHECKING
+    TYPE_CHECKING,
+    overload
 )
 
 from sqlalchemy import ColumnElement, ForeignKey, JSON, func
@@ -387,6 +388,13 @@ class Series(Base):
 
 
     @property
+    def season_numbers(self) -> set[int]:
+        """Set of unique season numbers in this Series' linked Episodes."""
+
+        return set(episode.season_number for episode in self.episodes)
+
+
+    @property
     def episode_count(self) -> int:
         """Number of Episodes linked to this Series."""
 
@@ -644,50 +652,84 @@ class Series(Base):
         return changed
 
 
-    def get_logo_file(self) -> Path:
+    def get_logo_file(self, season_number: Optional[int] = None) -> Path:
         """
         Get the logo file for this Series.
+
+        Args:
+            season_number: Season number associated with the file. If
+                omitted then the series-wide file is used.
 
         Returns:
             Path to the logo file that corresponds to this series' under
             the global source directory.
         """
 
+        # Look for season asset if indicated
+        filename = 'logo.png'
+        if season_number is not None:
+            filename = f'logo_season{season_number}.png'
+
         return Path(get_preferences().source_directory) \
             / self.path_safe_name \
-            / 'logo.png'
+            / filename
     
-    
-    @property
-    def logo_uri(self) -> str:
+
+    def get_logo_uri(self,
+            season_number: Optional[int] = None,
+        ) -> tuple[bool, str]:
         """
-        Get the logo file URI for this Series. This is relative to the
-        browser `/source/` directory, and embeds the file size in the
-        URL if the logo exists.
+        Get the existence status and file URI for the indicated logo.
+
+        Args:
+            season_number: Optional season number if the per-season
+                logo is requested.
+
+        Returns:
+            Tuple of whether the logo file exists and the URI to the
+            indicated logo.
         """
 
+        # Look for season asset if indicated
+        filename = 'logo.png'
+        if season_number is not None:
+            filename = f'logo_season{season_number}.png'
+
+        # Path to the logo in the source directory
         logo =  get_preferences().source_directory \
             / self.path_safe_name \
-            / 'logo.png'
+            / filename
 
         if logo.exists():
-            return f'/source/{logo.parent.name}/logo.png?{logo.stat().st_size}'
+            return (
+                True,
+                f'/source/{logo.parent.name}/{filename}?size={logo.stat().st_size}'
+            )
 
-        return f'/source/{logo.parent.name}/logo.png'
+        return False, f'/source/{logo.parent.name}/{filename}'
 
 
-    def get_series_backdrop(self) -> Path:
+    def get_series_backdrop(self, season_number: Optional[int] = None) -> Path:
         """
         Get the backdrop file for this series.
+
+        Args:
+            season_number: Season number associated with the file. If
+                omitted then the series-wide file is used.
 
         Returns:
             Path to the backdrop file that corresponds to this series'
             under the global source directory.
         """
 
+        # Look for season asset if indicated
+        filename = 'logo.png'
+        if season_number is not None:
+            filename = f'logo_season{season_number}.png'
+
         return Path(get_preferences().source_directory) \
             / self.path_safe_name \
-            / 'backdrop.jpg'
+            / filename
 
 
     def get_series_poster(self) -> Path:

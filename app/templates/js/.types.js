@@ -481,6 +481,7 @@
  * @property {?number} sync_id
  * @property {?number} font_id
  * @property {number[]} template_ids
+ * @property {?number[]} image_source_priority
  * @property {boolean} monitored
  * @property {boolean} match_titles
  * @property {boolean} auto_split_title
