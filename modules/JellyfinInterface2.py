@@ -1,11 +1,10 @@
 from base64 import b64encode
-from logging import Logger
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional, Union, overload
 
 from fastapi import HTTPException
 
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.EpisodeDataSource2 import (
     EpisodeDataSource,
     SearchResult,

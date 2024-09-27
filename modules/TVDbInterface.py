@@ -786,15 +786,17 @@ class TVDbInterface(EpisodeDataSource, WebInterface, Interface):
         return self.__get_best_artwork(tvdb_id, 'logo')
 
 
-    def get_series_backdrop(self, series_info: SeriesInfo) -> Optional[str]:
+    def get_series_backdrop(self,
+            series_info: SeriesInfo,
+            *,
+            log: Logger = log,
+        ) -> Optional[str]:
         """
         Get the best backdrop for the given series.
 
         Args:
             series_info: Series to get the logo of.
-            skip_localized_images: Whether to skip images with a non-
-                null language code.
-            raise_exc: Whether to raise any HTTPExceptions that arise.
+            log: Logger for all log messages.
 
         Returns:
             URL to the 'best' backdrop for the given series, and None if
