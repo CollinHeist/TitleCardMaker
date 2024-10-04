@@ -707,7 +707,7 @@ def create_episode_card(
         *,
         raise_exc: bool = True,
         log: Logger = log,
-    ) -> None:
+    ) -> bool:
     """
     Create the singular Title Card for the given Episode in the given
     library.
@@ -717,6 +717,9 @@ def create_episode_card(
         episode: Episode whose Cards are being created.
         raise_exc: Whether to raise any HTTPExceptions.
         log: Logger for all log messages.
+
+    Returns:
+        True if a new Card was created, False otherwise.
 
     Raises:
         HTTPException: If the card settings are invalid and `raise_exc`
@@ -732,7 +735,7 @@ def create_episode_card(
     except (HTTPException, InvalidCardSettings) as exc:
         if raise_exc:
             raise exc
-        return None
+        return False
 
     # Get a validated card class, and card type Pydantic model
     CardClass, CardTypeModel = validate_card_type_model(card_settings, log=log)
@@ -766,7 +769,7 @@ def create_episode_card(
     # No existing Card, begin creation
     if not existing_card:
         create_card(db, card, CardClass, CardTypeModel, library, log=log)
-        return None
+        return True
 
     # Function to get the existing val
     def _get_existing(attribute: str):
@@ -781,7 +784,7 @@ def create_episode_card(
         db.delete(existing_card)
         db.commit()
         create_card(db, card, CardClass, CardTypeModel, library, log=log)
-        return None
+        return True
 
     # Determine if this Card is different than existing Card
     new_model_json = _card_type_model_to_json(CardTypeModel)
@@ -809,14 +812,15 @@ def create_episode_card(
                     break
 
     # If different, delete existing file, remove from database, create Card
-    if different:
-        log.debug(f'{episode} Card config changed - recreating')
-        Path(existing_card.card_file).unlink(missing_ok=True)
-        db.delete(existing_card)
-        db.commit()
-        create_card(db, card, CardClass, CardTypeModel, library, log=log)
+    if not different:
+        return False
 
-    return None
+    log.debug(f'{episode} Card config changed - recreating')
+    Path(existing_card.card_file).unlink(missing_ok=True)
+    db.delete(existing_card)
+    db.commit()
+    create_card(db, card, CardClass, CardTypeModel, library, log=log)
+    return True
 
 
 def create_episode_cards(
@@ -825,7 +829,7 @@ def create_episode_cards(
         *,
         raise_exc: bool = True,
         log: Logger = log,
-    ) -> None:
+    ) -> bool:
     """
     Create all the Title Card for the given Episode.
 
@@ -834,6 +838,9 @@ def create_episode_cards(
         episode: Episode whose Cards are being created.
         raise_exc: Whether to raise any HTTPExceptions.
         log: Logger for all log messages.
+
+    Returns:
+        True if any new Cards were created, False otherwise.
 
     Raises:
         HTTPException: The card settings are invalid and `raise_exc` is
@@ -844,18 +851,22 @@ def create_episode_cards(
     if episode.series.libraries:
         # In library unique mode, create Card for each library
         if get_preferences().library_unique_cards:
+            changed = False
             for library in episode.series.libraries:
-                create_episode_card(
+                changed |= create_episode_card(
                     db, episode, library, raise_exc=raise_exc, log=log
                 )
+            return changed
+
         # Only create Card for primary library
-        else:
-            create_episode_card(
-                db, episode, episode.series.libraries[0],
-                raise_exc=raise_exc, log=log,
-            )
-    else:
-        create_episode_card(db, episode, None, raise_exc=raise_exc, log=log)
+        return create_episode_card(
+            db, episode, episode.series.libraries[0],
+            raise_exc=raise_exc, log=log,
+        )
+
+    return create_episode_card(
+        db, episode, None, raise_exc=raise_exc, log=log
+    )
 
 
 def get_watched_statuses(

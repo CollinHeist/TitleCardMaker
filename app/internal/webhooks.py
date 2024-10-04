@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.database.query import get_interface
+from app.database.query import get_connection, get_interface
 from app.dependencies import PlexInterface
 from app.internal.cards import create_episode_cards
 from app.internal.episodes import refresh_episode_data
@@ -102,10 +102,22 @@ def process_rating_key(
         if not any(images):
             log.info(f'{episode} has no source image - skipping')
             continue
-        create_episode_cards(db, episode, log=log)
+        new_cards = create_episode_cards(db, episode, log=log)
 
-        # Add this Series to list of Series to load
-        if episode not in episodes_to_load:
+        # Determine whether the Episode has any Kometa integration
+        # associated with it
+        integrate_with_kometa = any(
+            lib['interface'] == 'Plex'
+            and get_connection(db, lib['interface_id']).integrate_with_kometa
+            for lib in episode.series.libraries
+        )
+
+        # Add this Episode to list of Episodes to load if Kometa
+        # integration is not enabled (if Episode is not already queued);
+        # or if there is a new Card and Kometa is enabled (to avoid
+        # resetting overlays unnecessarily)
+        if ((new_cards or not integrate_with_kometa)
+            and episode not in episodes_to_load):
             episodes_to_load.append(episode)
 
     # Load all Episodes that require reloading
