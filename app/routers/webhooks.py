@@ -107,6 +107,11 @@ async def process_plex_webhook(
             status_code=422,
             detail='Webhook format is invalid'
         ) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=422,
+            detail='Error occurred while parsing Webhook'
+        ) from exc
 
     # Skip if not in the trigger list or if not the owner
     if (webhook.event not in trigger_on
