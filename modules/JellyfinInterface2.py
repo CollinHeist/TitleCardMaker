@@ -168,7 +168,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
             library_name: str,
             series_info: SeriesInfo,
             *,
-            raw_obj: Literal[True] = False,
+            raw_obj: Literal[True],
             log: Logger = log,
         ) -> Optional[SeriesInfo]:
         ...
@@ -234,7 +234,7 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
         def _query_series(year: int) -> Optional[str]:
             """Look up the series in the specified year"""
 
-            response = self.session.get(
+            response: dict = self.session.get(
                 f'{self.url}/Items',
                 params=params | ({'years': str(year)} if year else {}),
             )
@@ -244,11 +244,12 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
                 return None
 
             # Parse all results into SeriesInfo objects
-            results = [
+            results: list[tuple[dict, SeriesInfo]] = [
                 (result, SeriesInfo.from_jellyfin_info(
                     result, self._interface_id, library_name
                 ))
                 for result in response['Items']
+                if 'PremiereDate' in result
             ]
 
             # Attempt to "smart" match by ID first

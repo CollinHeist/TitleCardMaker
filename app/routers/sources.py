@@ -144,7 +144,9 @@ def download_series_backdrop_from_tvdb(
     # Download new backdrop
     if tvdb_interfaces:
         for _, interface in tvdb_interfaces:
-            backdrop = interface.get_series_backdrop(series.as_series_info)
+            backdrop = interface.get_series_backdrop(
+                series.as_series_info, log=log
+            )
             if (backdrop
                 and WebInterface.download_image(backdrop,backdrop_file,log=log)):
                 log.debug(f'{series} Downloaded backdrop from TVDb')
@@ -152,7 +154,7 @@ def download_series_backdrop_from_tvdb(
 
     raise HTTPException(
         status_code=400,
-        detail=f'Unable to download backdrop'
+        detail='Unable to download backdrop'
     )
 
 
