@@ -101,7 +101,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
     INTERFACE_TYPE: str = 'Plex'
 
     """Series ID's that can be set by TMDb"""
-    SERIES_IDS: tuple[str] = ('imdb_id', 'tmdb_id', 'tvdb_id')
+    SERIES_IDS = ('imdb_id', 'tmdb_id', 'tvdb_id') # type: ignore
 
     """EXIF data to write to images if Kometa integration is enabled"""
     EXIF_TAG = {'key': 0x4242, 'data': 'titlecard'}
@@ -386,7 +386,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         # Create list of all episodes in Plex
         all_episodes = []
-        for plex_episode in series.episodes(container_size=500):
+        for plex_episode in series.episodes(container_size=500): # type: ignore
             # Skip if episode has no season or episode number
             plex_episode: PlexEpisode
             if (plex_episode.parentIndex is None
@@ -556,7 +556,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         }
 
         # Go through all of this Series' Episodes
-        for plex_episode in series.episodes(container_size=500):
+        for plex_episode in series.episodes(container_size=500): # type: ignore
             # Skip Plex episodes without indices
             plex_episode: PlexEpisode
             if (plex_episode.seasonNumber is None
@@ -631,7 +631,8 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         # Return results, use proxy endpoint for poster URL
         return [
             SearchResult(
-                name=result.title, year=result.year,
+                name=result.title,
+                year=result.year, # type: ignore
                 poster=f'/api/proxy/plex?url={result.thumb}&interface_id={self._interface_id}',
                 overview=result.summary,
                 **parse_ids(result),
@@ -676,7 +677,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         # Get Episode from within Plex
         try:
-            plex_episode: PlexEpisode = series.episode(
+            plex_episode: PlexEpisode = series.episode( # type: ignore
                 season=episode_info.season_number,
                 episode=episode_info.episode_number
             )
@@ -856,7 +857,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         # Find episodes which have a matching Card to load
         skipped: list[str] = []
         matched_episodes: list[tuple[PlexEpisode, 'Episode', EpisodeInfo, 'Card']] = []
-        for plex_episode in series.episodes(container_size=100):
+        for plex_episode in series.episodes(container_size=100): # type: ignore
             plex_episode: PlexEpisode
             for episode, episode_info, card in infos:
                 if episode_info == plex_episode:
@@ -1094,7 +1095,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
         try:
             # Get the entry for this key
-            entry = self.__server.fetchItem(rating_key)
+            entry = self.__server.fetchItem(rating_key) # type: ignore
 
             # Show, return all episodes in series
             if entry.type == 'show':
@@ -1116,7 +1117,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             # Season, return all episodes in season
             if entry.type == 'season':
                 entry: PlexSeason
-                series: PlexShow = self.__server.fetchItem(entry.parentRatingKey)
+                series: PlexShow = self.__server.fetchItem(entry.parentRatingKey) # type: ignore
                 series_info = SeriesInfo.from_plex_show(series)
                 return [
                     EpisodeDetails(
@@ -1133,7 +1134,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             # Episode, return just that
             if entry.type == 'episode':
                 entry: PlexEpisode
-                series: PlexShow = self.__server.fetchItem(
+                series: PlexShow = self.__server.fetchItem( # type: ignore
                     entry.grandparentRatingKey
                 )
                 series_info = SeriesInfo.from_plex_show(series)
@@ -1189,7 +1190,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
             return None
 
         # Get all Episodes for batch edits
-        episodes: list[PlexEpisode] = series.episodes(container_size=500)
+        episodes: list[PlexEpisode] = series.episodes(container_size=500) # type: ignore
         library.batchMultiEdits(episodes)
 
         # Remove all indicated labels
