@@ -156,6 +156,11 @@ described below:
 :   _As of `v2.0-alpha.10.0`, this setting is no longer requires as the "old"
     Series view has been removed._
 
+`TCM_PLEX_LOGGING`
+
+:   Set to `TRUE` to reroute all Plex API log messages to TCM's internal logging
+    mechanism. Plex can be fine-tuned, see [below](#plex-variables).
+
 `TZ`
 
 :   The timezone which is used for all local time reporting (most notably

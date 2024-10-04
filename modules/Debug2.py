@@ -1,6 +1,7 @@
 from datetime import timedelta
 from functools import partial
-from os import environ
+import logging
+from os import environ, getenv
 from json import dumps
 from pathlib import Path
 import sys
@@ -79,6 +80,35 @@ def reduced_serializer(record: 'Record') -> str:
     })
     return '{extra[serialized]}\n'
 
+
+def intercept_plex_logs():
+    """Intercept all PlexAPI logs and reroute them to Loguru."""
+
+    # Custom handler to redirect logging messages to Loguru
+    class InterceptHandler(logging.Handler):
+        def emit(self, record):
+            try:
+                level = logger.level(record.levelname).name
+            except ValueError:
+                level = record.levelno
+
+            frame, depth = logging.currentframe(), 2
+            while frame.f_code.co_filename == logging.__file__:
+                frame = frame.f_back
+                depth += 1
+
+            logger.opt(depth=depth, exception=record.exc_info)\
+                .bind(context_id='plexapi')\
+                .log(level, record.getMessage())
+
+    # Modify PlexAPI logger with the custom handler
+    plex_logger = logging.getLogger('plexapi')
+    plex_logger.setLevel(logging.DEBUG)
+    plex_logger.handlers = []
+    plex_logger.addHandler(InterceptHandler())
+
+if getenv('TCM_PLEX_LOGGING') == 'TRUE':
+    intercept_plex_logs()
 
 """
 Define a custom rotation function to combine a rotation of timing (12h)
