@@ -89,7 +89,7 @@ def process_rating_key(
                 break
 
         # If no match, exit
-        if not found:
+        if not found or not episode:
             log.info(f'Cannot find Episode for {series_info} {episode_info}')
             continue
 

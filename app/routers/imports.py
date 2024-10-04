@@ -1,4 +1,3 @@
-from logging import Logger
 from pathlib import Path
 from shutil import copyfile, move as move_file
 from typing import Literal, Optional
@@ -55,6 +54,7 @@ from app.schemas.imports import (
 from app.schemas.preferences import Preferences
 from app.schemas.series import Series, Template
 from app.schemas.sync import Sync
+from modules.Debug import Logger
 from modules.WebInterface import WebInterface
 
 
@@ -471,7 +471,7 @@ def import_mediux_yaml_for_series(
     for season_number, season_yaml in yaml.seasons.items():
         # Parse season posters if a library was provided and specified
         if library_names and import_season_posters:
-            season_posters[season_number] = season_yaml.url_poster
+            season_posters[season_number] = str(season_yaml.url_poster)
 
         # Parse all episodes of this season
         for episode_number, episode_yaml in season_yaml.episodes.items():
@@ -492,7 +492,7 @@ def import_mediux_yaml_for_series(
                 continue
 
             # Episode exists, download image
-            if not (card := _download_image(episode_yaml.url_poster)):
+            if not (card := _download_image(str(episode_yaml.url_poster))):
                 continue
 
             # If textless import, then download as Source Image

@@ -48,6 +48,7 @@ from app.schemas.series import (
     SeriesOrder,
     UpdateSeries
 )
+from modules.PlexInterface2 import PlexInterface
 from modules.WebInterface import WebInterface
 
 
@@ -173,7 +174,7 @@ def get_next_series(
         .first()
 
 
-@series_router.post('/new', status_code=201)
+@series_router.post('/new')
 def add_new_series(
         background_tasks: BackgroundTasks,
         request: Request,
@@ -433,6 +434,12 @@ def remove_series_labels(
     series = get_series(db, series_id, raise_exc=True)
     interface = get_interface(interface_id, raise_exc=True)
 
+    if not isinstance(interface, PlexInterface):
+        raise HTTPException(
+            status_code=422,
+            detail='Provided interface ID must be a Plex Connection'
+        )
+
     # Remove labels from specified library
     interface.remove_series_labels(
         library_name, series.as_series_info, labels,
@@ -475,7 +482,7 @@ def query_series_poster(
     )
 
 
-@series_router.put('/series/{series_id}/poster', status_code=201)
+@series_router.put('/series/{series_id}/poster')
 async def set_series_poster(
         request: Request,
         series_id: int,

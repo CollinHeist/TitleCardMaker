@@ -406,7 +406,7 @@ def get_interface(
 
 @overload
 def get_interface(
-        interface_id: int, *, raise_exc: Union[bool, Literal[False]] = True,
+        interface_id: int, *, raise_exc: bool = True,
     ) -> Optional[AnyInterface]:
     ...
 
