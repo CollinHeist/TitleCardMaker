@@ -710,3 +710,37 @@ async def set_series_backdrop(
 
     # Write new file to the disk
     backdrop_file.write_bytes(content)
+
+
+@source_router.delete('/series/{series_id}/logo')
+def delete_series_logo(
+        request: Request,
+        series_id: int,
+        season_number: Optional[int] = Query(default=None),
+        db: Session = Depends(get_database),
+    ) -> None:
+    """
+    Set the logo for the given Series. If there is an existing logo
+    associated with this Series, it is deleted.
+
+    - series_id: ID of the Series to set the logo of.
+    - url: URL to the logo to download and utilize.
+    - file: Logo file content to utilize.
+    - season_number: Season number to associate the given logo with. If
+    omitted the file is assumed to be for the entire series.
+    """
+
+    # Get Series with this ID, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Get Series logo file
+    logo_file = series.get_logo_file(season_number, fallback=False)
+
+    if not logo_file.exists():
+        raise HTTPException(
+            status_code=404,
+            detail='Indicated logo file does not exist',
+        )
+
+    logo_file.unlink(missing_ok=True)
+    request.state.log.debug(f'Deleted logo file ({logo_file.resolve()})')
