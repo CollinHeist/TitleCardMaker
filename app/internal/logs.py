@@ -66,10 +66,16 @@ def parse_line(line: str, file: Path) -> Optional[RawLogData]:
         pass
 
     try:
-        line_data['time'] = datetime.strptime(
-            line_data['time'],
-            DATETIME_FORMAT_NO_TZ
-        )
+        # If there are two spaces then there is likely a TZ which cannot
+        # be parsed - remove from string and try again
+        if len(line_data['time'].split()) == 3:
+            new_time = ' '.join(line_data['time'].split()[:-1])
+            line_data['time'] = datetime.strptime(new_time,DATETIME_FORMAT_NO_TZ)
+        else:
+            line_data['time'] = datetime.strptime(
+                line_data['time'],
+                DATETIME_FORMAT_NO_TZ
+            )
         return line_data
     except ValueError:
         return None
