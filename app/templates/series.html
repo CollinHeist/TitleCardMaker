@@ -439,7 +439,24 @@
       <div class="ui raised segment">
         <div class="ui stackable grid">
           <div class="eight wide column" style="max-height: 350px; display: flex;">
-            <img src="{{series.poster_url}}" id="poster">
+            <img src="{{ series.poster_url }}" id="poster">
+            <div id="poster-dialog" class="ui uninvertible popup right center">
+              <div class="content">
+                <div class="ui left icon uninvertible right action input" data-value="url">
+                  <i class="circular search link icon" onclick="queryTMDbPoster();" title="Search TMDb"></i>
+                  <input name="url" placeholder="URL..">
+                  <button class="ui green icon uninvertible button" onclick="editSeriesPoster();" data-tooltip="Load URL">
+                    <i class="arrow alternate circle right outline icon"></i>
+                  </button>
+                </div>
+      
+                <div class="ui horizontal uninvertible divider">Or</div>
+      
+                <div class="ui file uninvertible input" data-value="file">
+                  <input type="file" name="file" accept="image/*" onchange="editSeriesPoster();">
+                </div>
+              </div>
+            </div>
             <div class="ui invisible segment">
               <h2 class="ui header">
                 {{series.name}}
@@ -1294,28 +1311,35 @@
       <i class="close icon"></i>
       <div class="header">Edit Poster</div>
       <div class="content">
-        <form id="edit-poster-form" class="ui form">
-          <!-- URL -->
+        <!-- <form id="edit-poster-form" class="ui form"> -->
           <div class="input field">
             <label>URL</label>
             <div class="ui action input">
-              <input name="poster_url"></input>
+              <input name="url"></input>
               <button onclick="queryTMDbPoster();" class="ui blue button">Query TMDb</button>
             </div>
           </div>
 
-          <!-- OR divider between URL/upload -->
           <div class="ui horizontal divider">Or</div>
 
-          <!-- File upload -->
-          <div class="file clearable input field">
-            <label>Upload File</label>
-            <input name="poster_file" type="file" accept="image/*">
+          <div class="ui file input">
+            <input type="file" name="file" accept="image/*">
           </div>
-        </form>
+          <!-- <input type="file" id="uploadPoster" class="ui invisible file input">
+          <label for="uploadPoster" class="ui placeholder segment">
+            <div class="ui icon header">
+              <i class="upload icon"></i>
+              Upload
+            </div>
+          </label> -->
+          <!-- <div class="file clearable input field">
+            <label>Upload File</label>
+            <input name="file" type="file" accept="image/*">
+          </div> -->
+        <!-- </form> -->
       </div>
       <div class="actions">
-        <button id="submit-poster-button" class="ui positive button" type="submit" form="edit-poster-form">Update</button>
+        <button class="ui positive button" onclick="editSeriesPoster();">Update</button>
       </div>
     </div>
 

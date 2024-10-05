@@ -479,6 +479,7 @@ async function initializeSeriesConfig() {
  * the URL field of the edit poster modal is populated.
  */
 function queryTMDbPoster() {
+  $('#poster-dialog .input[data-value="url"]').toggleClass('loading', true);
   $.ajax({
     type: 'GET',
     url: '/api/series/series/{{series.id}}/poster/query',
@@ -491,10 +492,11 @@ function queryTMDbPoster() {
       if (posterUrl === null) {
         $.toast({class: 'error', title: 'TMDb returned no images'});
       } else {
-        $('#edit-poster-modal input[name="poster_url"]').val(posterUrl);
+        $('#poster-dialog input[name="url"]').val(posterUrl);
       }
     },
     error: () => $.ajax({class: 'error', title: 'TMDb returned no images'}),
+    complete: () => $('#poster-dialog .input[data-value="url"]').toggleClass('loading', false),
   });
 }
 
@@ -1233,11 +1235,6 @@ async function initAll() {
   $('.ui.accordion').accordion();
   $('.ui.checkbox').checkbox();
 
-  // Enable IOS hover on the series poster
-  $('.ui.special.card .image').dimmer({
-    on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'
-  });
-
   // Make clearable dropdowns clearable
   $('.ui.clearable.dropdown').dropdown({
     'clearable': true,
@@ -1248,38 +1245,6 @@ async function initAll() {
   $('.field[data-value="season-titles"] label i').popup({
     popup : $('#season-title-popup'),
     position: 'right center',
-  });
-
-  // Enable edit poster modal, attach to the edit poster button
-  $('#edit-poster-modal')
-    .modal('attach events', '#poster', 'show')  // Show modal on add button press
-    .modal('setting', 'transition', 'fade up')  // Fade up modal on reveal
-    .modal('setting', 'closable', false)        // Don't allow closing by clicking outside modal
-    .modal({
-      blurring: true,                           // Blur background when shown
-      onHidden: ($element) => {                 // Reset input on close
-        $('#edit-poster-form')[0].reset();
-      }}
-    );
-  // On edit poster modal submission, submit API request
-  $('#edit-poster-form').on('submit', event => {
-    event.preventDefault();
-    $('#submit-poster-button').toggleClass('loading', true);
-    $.ajax({
-      type: 'PUT',
-      url: '/api/series/series/{{series.id}}/poster',
-      data: new FormData(event.target),
-      cache: false,
-      contentType: false,
-      processData: false,
-      success: response => {
-        showInfoToast('Updated poster');
-        // Reload image
-        $('#poster-image')[0].src = `${response}?${new Date().getTime()}`;
-      },
-      error: response => showErrorToast({title: 'Error updating poster', response}),
-      complete: () =>  setTimeout(() => $('#submit-poster-button').toggleClass('loading', false), 750),
-    });
   });
 
   // Delete series modal
@@ -1377,6 +1342,91 @@ async function initAll() {
       const episodeId = $(e.target).closest('tr').data('episode-id')*1;
       if (!editedEpisodeIds.includes(episodeId*1)) { editedEpisodeIds.push(episodeId*1); }
     });
+
+  $('#poster').popup({on: 'click', inline: true, position: 'right center'});
+}
+
+/**
+ * Edit the poster for this Series. This reads the currently input URL or
+ * uploaded file and submits an API request if either is provided.
+ */
+function editSeriesPoster() {
+  // Generate form data of the provided URL or file
+  const form = new FormData();
+  if (document.querySelector('#poster-dialog input[name="file"]').files[0]) {
+    form.append('file', document.querySelector('#poster-dialog input[name="file"]').files[0]);
+  }
+  else if (document.querySelector('#poster-dialog input[name="url"]').value) {
+    form.append('url', document.querySelector('#poster-dialog input[name="url"]').value);
+  }
+  else {
+    showErrorToast({title: 'Must provide URL or file'});
+    return;
+  }
+
+  // Submit API request
+  $('#poster-dialog').toggleClass('loading', true)
+  $.ajax({
+    type: 'PUT',
+    url: '/api/series/series/{{ series.id }}/poster',
+    data: form,
+    cache: false,
+    contentType: false,
+    processData: false,
+    /**
+     * Poster replaced, update image.
+     * @param {string} url URI to the new poster.
+     */
+    success: url => {
+      showInfoToast('Updated poster');
+      document.getElementById('poster').src = `${url}?${new Date().getTime()}`;
+    },
+    error: response => showErrorToast({title: 'Error updating poster', response}),
+    complete: () => $('#poster-dialog').toggleClass('loading', false),
+  });
+}
+
+
+function backgroundRemovaltest() {
+  // Attach an event listener to your button (assuming it has an ID of 'uploadButton')
+  $('#uploadButton').click(function() {
+    // Get the file from the file input (assuming it has an ID of 'fileInput')
+    const fileInput = $('#fileInput')[0];
+    const file = fileInput.files[0];
+
+    if (!file) {
+      alert('Please select a file first!');
+      return;
+    }
+
+    // Create a FormData object to hold the file
+    const formData = new FormData();
+    formData.append('file', file);
+    const params = new URLSearchParams({url: 'http://localhost:8002/api/remove'});
+
+    // Perform the AJAX request using jQuery
+    $.ajax({
+      url: `/api/webhooks/background-removal?${params.toString()}`,
+      type: 'POST',
+      data: formData,
+      processData: false, // Important! Prevent jQuery from automatically transforming the data
+      contentType: false, // Important! Ensures the correct content type
+      xhrFields: {
+        responseType: 'blob' // To handle the binary data as a blob
+      },
+      success: function(response) {
+        // Create a URL for the returned image
+        const imageUrl = URL.createObjectURL(response);
+
+        // Set the image source (assuming the img tag has an ID of 'resultImage')
+        $('#resultImage').attr('src', imageUrl);
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        console.error('Error during image processing:', textStatus, errorThrown);
+        showErrorToast({title: 'Error', jqXHR});
+      }
+    });
+  });
 }
 
 /**

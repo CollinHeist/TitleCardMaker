@@ -486,8 +486,8 @@ def query_series_poster(
 async def set_series_poster(
         request: Request,
         series_id: int,
-        poster_url: Optional[str] = Form(default=None),
-        poster_file: Optional[UploadFile] = None,
+        url: Optional[str] = Form(default=None),
+        file: Optional[UploadFile] = None,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
     ) -> str:
@@ -504,18 +504,18 @@ async def set_series_poster(
 
     # Get poster contents
     uploaded_file = b''
-    if poster_file is not None:
-        uploaded_file = await poster_file.read()
+    if file is not None:
+        uploaded_file = await file.read()
 
     # Send error if both a URL and file were provided
-    if poster_url is not None and len(uploaded_file) > 0:
+    if url is not None and len(uploaded_file) > 0:
         raise HTTPException(
             status_code=422,
             detail='Cannot provide multiple posters'
         )
 
     # Send error if neither were provided
-    if poster_url is None and len(uploaded_file) == 0:
+    if url is None and len(uploaded_file) == 0:
         raise HTTPException(
             status_code=422,
             detail='URL or file are required'
@@ -526,9 +526,9 @@ async def set_series_poster(
         poster_content = uploaded_file
 
     # If only URL was required, attempt to download, error if unable
-    if poster_url is not None:
+    if url is not None:
         poster_content = WebInterface.download_image_raw(
-            poster_url, log=request.state.log,
+            url, log=request.state.log,
         )
         if poster_content is None:
             raise HTTPException(
@@ -540,7 +540,7 @@ async def set_series_poster(
     poster_path = preferences.asset_directory / str(series.id) / 'poster.jpg'  
     series.poster_file = str(poster_path)
     poster_path.parent.mkdir(exist_ok=True, parents=True)
-    poster_path.write_bytes(poster_content)
+    poster_path.write_bytes(poster_content) # type: ignore
 
     # Create resized poster for preview
     img = Image.open(poster_path)
