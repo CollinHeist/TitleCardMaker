@@ -652,27 +652,39 @@ class Series(Base):
         return changed
 
 
-    def get_logo_file(self, season_number: Optional[int] = None) -> Path:
+    def get_logo_file(self,
+            season_number: Optional[int] = None,
+            *,
+            fallback: bool = False,
+        ) -> Path:
         """
         Get the logo file for this Series.
 
         Args:
             season_number: Season number associated with the file. If
                 omitted then the series-wide file is used.
+            fallback: Whether to fallback to the series-wide file if the
+                season-specific file does not exist.
 
         Returns:
             Path to the logo file that corresponds to this series' under
             the global source directory.
         """
 
-        # Look for season asset if indicated
-        filename = 'logo.png'
-        if season_number is not None:
-            filename = f'logo_season{season_number}.png'
+        # Root Source Directory for this Series
+        source_dir = Path(get_preferences().source_directory) \
+            / self.path_safe_name
 
-        return Path(get_preferences().source_directory) \
-            / self.path_safe_name \
-            / filename
+        # If no season number was provided, use series-wide logo
+        if season_number is None:
+            return source_dir / 'logo.png'
+
+        # Look for the season-specific logo
+        if ((logo := source_dir / f'logo_season{season_number}.png').exists()
+            or not fallback):
+            return logo
+
+        return source_dir / 'logo.png'
     
 
     def get_logo_uri(self,
@@ -709,27 +721,38 @@ class Series(Base):
         return False, f'/source/{logo.parent.name}/{filename}'
 
 
-    def get_series_backdrop(self, season_number: Optional[int] = None) -> Path:
+    def get_series_backdrop(self,
+            season_number: Optional[int] = None,
+            *,
+            fallback: bool = False,
+        ) -> Path:
         """
         Get the backdrop file for this series.
 
         Args:
             season_number: Season number associated with the file. If
                 omitted then the series-wide file is used.
+            fallback: Whether to fallback to the series-wide file if the
+                season-specific file does not exist.
 
         Returns:
             Path to the backdrop file that corresponds to this series'
             under the global source directory.
         """
 
-        # Look for season asset if indicated
-        filename = 'logo.png'
-        if season_number is not None:
-            filename = f'logo_season{season_number}.png'
+        source_dir = Path(get_preferences().source_directory) \
+            / self.path_safe_name
 
-        return Path(get_preferences().source_directory) \
-            / self.path_safe_name \
-            / filename
+        # If no season number was provided, use series-wide poster
+        if season_number is None:
+            return source_dir / 'poster.jpg'
+
+        # Look for the season-specific poster
+        if ((logo := source_dir / f'poster_season{season_number}.jpg').exists()
+            or not fallback):
+            return logo
+
+        return source_dir / 'poster.jpg'
 
 
     def get_series_poster(self) -> Path:

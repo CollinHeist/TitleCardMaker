@@ -484,8 +484,18 @@ def resolve_card_settings(
         DefaultFont,
         preferences.card_properties,
         {
-            'logo_file': series.get_logo_file(),
-            'backdrop_file': series.get_series_backdrop(),
+            'logo_file': series.get_logo_file(
+                episode.season_number
+                if episode.series.use_per_season_assets
+                else None,
+                fallback=True,
+            ),
+            'backdrop_file': series.get_series_backdrop(
+                episode.season_number
+                if episode.series.use_per_season_assets
+                else None,
+                fallback=True,
+            ),
             'poster_file': series.get_series_poster()
         },
         global_template_dict,
@@ -503,9 +513,9 @@ def resolve_card_settings(
         preferences.global_extras.get(card_settings['card_type'], {}),
         global_template_dict.get('extras', {}),
         series_template_dict.get('extras', {}),
-        series.extras,
+        series.extras, # type: ignore
         episode_template_dict.get('extras', {}),
-        episode.extras,
+        episode.extras, # type: ignore
     )
 
     # Override settings with extras, and merge translations into extras
