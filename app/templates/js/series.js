@@ -1780,10 +1780,11 @@ function selectTmdbImage(episodeId, url) {
 }
 
 /**
- * Submit an API request to download the Series logo at the specified URL.
- * @param {string} url - URL of the logo file to download.
+ * Submit an API request to download the logo at the specified URL.
+ * @param {string} url URL of the logo file to download.
+ * @param {?number} seasonNumber Season number associated with this URL.
  */
-function downloadSeriesLogo(url) {
+function downloadLogo(url, seasonNumber=null) {
   // Create pseudo form for this URL
   const form = new FormData();
   form.set('url', url);
@@ -1791,17 +1792,20 @@ function downloadSeriesLogo(url) {
   // Submit API request to upload this URL
   $.ajax({
     type: 'PUT',
-    url: '/api/sources/series/{{series.id}}/logo/upload',
+    url: '/api/sources/series/{{series.id}}/logo/upload' + (seasonNumber === null ? '' : `?season_number=${seasonNumber}`),
     data: form,
     cache: false,
     contentType: false,
     processData: false,
     success: () => {
       showInfoToast('Downloaded Logo');
-      // Update logo source to force refresh
-      logo = document.getElementById('logo');
-      logo.src = `/source/{{series.path_safe_name}}/logo.png?${new Date().getTime()}`;
-      logo.style.display = 'block';
+      if (seasonNumber === null) {
+        logo = document.getElementById('logo');
+        logo.src = `/source/{{series.path_safe_name}}/logo.png?${new Date().getTime()}`;
+        logo.style.display = 'block';
+      } else {
+        document.querySelector(`[data-season="${seasonNumber}"] img`).src = `/source/{{ series.path_safe_name }}/logo_season${seasonNumber}.png?${new Date().getTime()}`;
+      }
     },
     error: response => showErrorToast({title: 'Error Downloading Logo', response}),
   });
@@ -1907,8 +1911,10 @@ function browseSourceImages(episodeId, cardElementId, episodeIds) {
 /**
  * Submit an API request to browse the available logos for this Series. If
  * successful, the relevant modal is shown.
+ * @param {?number} seasonNumber - Season number being browsed. If null, then it
+ * is assumed to be the series itself.
  */
-function browseLogos() {
+function browseLogos(seasonNumber) {
   $.ajax({
     type: 'GET',
     url: '/api/sources/series/{{series.id}}/logo/browse',
@@ -1922,7 +1928,7 @@ function browseLogos() {
         showErrorToast({title: 'TMDb has no logos'});
       } else {
         const imageElements = images.map(({url}) => {
-          return `<a class="ui image" onclick="downloadSeriesLogo('${url}')"><img src="${url}"/></a>`;
+          return `<a class="ui image" onclick="downloadLogo('${url}', ${seasonNumber})"><img src="${url}"/></a>`;
         });
         $('#browse-tmdb-logo-modal .content .images')[0].innerHTML = imageElements.join('');
         $('#browse-tmdb-modal .header span').text('Logos');
@@ -1936,8 +1942,10 @@ function browseLogos() {
 /**
  * Submit an API request to browse the available backdrops for this Series. If
  * successful, the relevant modal is shown.
+ * @param {?number} seasonNumber - Season number being browsed. If null, then it
+ * is assumed to be the series itself.
  */
-function browseBackdrops() {
+function browseBackdrops(seasonNumber) {
   $.ajax({
     type: 'GET',
     url: `/api/sources/series/{{series.id}}/backdrop/browse`,
@@ -1968,8 +1976,10 @@ function browseBackdrops() {
  * Get the uploaded logo file and upload it to this Series. If the logo is an
  * image, then the API request to upload the logo is submitted. If successful,
  * then the logo `img` element is updated.
+ * @param {?number} seasonNumber - Season number being uploaded. If null, then
+ * it is assumed to be the series itself.
  */
-function uploadLogo() {
+function uploadLogo(seasonNumber) {
   // Get uploaded file
   const file = $('#logo-upload')[0].files[0];
   if (!file) { return; }
@@ -2006,8 +2016,10 @@ function uploadLogo() {
  * Get the uploaded backdrop file and upload it to this Series. If the backdrop
  * is an image, then the API request to upload the file is submitted. If
  * successful, then the backdrop `img` element is updated.
+ * @param {?number} seasonNumber - Season number being uploaded. If null, then
+ * it is assumed to be the series itself.
  */
-function uploadBackdrop() {
+function uploadBackdrop(seasonNumber) {
   // Get uploaded file
   const file = $('#backdrop-upload')[0].files[0];
   if (!file) { return; }

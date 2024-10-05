@@ -1183,6 +1183,47 @@
             <div class="color palette" id="logo-palette"></div>
           </div>
 
+          {% if series.use_per_season_assets %}
+          <div class="ui large list">
+            {% for season_number in series.season_numbers %}
+            {% set exists, logo = series.get_logo_uri(season_number) %}
+            <div class="item">
+              <div class="content">
+                <div class="header">
+                  Season {{ season_number }}
+                  <span data-tooltip="Browse">
+                    <i data-action="browse" class="small blue border all icon" onclick="browseLogos({{ season_number }});"></i>
+                  </span>
+                  <span data-tooltip="Upload">
+                    <label for="logo-upload-season{{ season_number }}">
+                      <i data-action="upload" class="small green upload icon"></i>
+                    </label>
+                  </span>
+                  {% if exists %}
+                  <span data-tooltip="Analyze">
+                    <i data-action="analyze" class="small purple magic icon" onclick="analyzePalette(`[data-season='{{ season_number }}'] img`, `[data-season='{{ season_number }}'] .palette`);"></i></i>
+                  </span>
+                  {% else %}
+                  <i data-action="analyze" class="disabled small purple magic icon"></i>
+                  {% endif %}
+                </div>
+                <div class="description">
+                  <input type="file" id="logo-upload-season{{ season_number }}" class="ui invisible file input" onchange="uploadLogo(null);">
+                  <div class="image-analysis-group" data-season="{{ season_number }}">
+                    {% if exists %}
+                    <img class="ui rounded image" loading="lazy" src="{{ logo }}">
+                    {% else %}
+                    <img class="ui rounded image" loading="lazy">
+                    {% endif %}
+                    <div class="small color palette"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
           <!-- Backdrop -->
           <h2 class="ui dividing header">Backdrop</h2>
           <div class="ui blue tertiary button" onclick="browseBackdrops();">
