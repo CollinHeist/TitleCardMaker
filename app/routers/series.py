@@ -615,23 +615,6 @@ def batch_monitor_series(
     return all_series
 
 
-@series_router.delete('/batch/delete')
-def batch_delete_series(
-        request: Request,
-        series_ids: list[int] = Body(...),
-        db: Session = Depends(get_database),
-    ) -> None:
-    """
-    Batch operation to delete all the given Series.
-
-    - series_ids: List of IDs of Series to delete.
-    """
-
-    for series_id in series_ids:
-        series = get_series(db, series_id, raise_exc=True)
-        delete_series(db, series, log=request.state.log)
-
-
 @series_router.put('/batch/unmonitor')
 def batch_unmonitor_series(
         request: Request,
@@ -657,6 +640,23 @@ def batch_unmonitor_series(
     db.commit()
 
     return all_series
+
+
+@series_router.delete('/batch/delete')
+def batch_delete_series(
+        request: Request,
+        series_ids: list[int] = Body(...),
+        db: Session = Depends(get_database),
+    ) -> None:
+    """
+    Batch operation to delete all the given Series.
+
+    - series_ids: List of IDs of Series to delete.
+    """
+
+    for series_id in series_ids:
+        series = get_series(db, series_id, raise_exc=True)
+        delete_series(db, series, log=request.state.log)
 
 
 @series_router.post('/batch/process')
