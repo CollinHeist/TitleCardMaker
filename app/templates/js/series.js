@@ -1804,7 +1804,7 @@ function downloadLogo(url, seasonNumber=null) {
         logo.src = `/source/{{series.path_safe_name}}/logo.png?${new Date().getTime()}`;
         logo.style.display = 'block';
       } else {
-        document.querySelector(`[data-season="${seasonNumber}"] img`).src = `/source/{{ series.path_safe_name }}/logo_season${seasonNumber}.png?${new Date().getTime()}`;
+        document.querySelector(`[data-type="logo"][data-season="${seasonNumber}"] img`).src = `/source/{{ series.path_safe_name }}/logo_season${seasonNumber}.png?${new Date().getTime()}`;
       }
     },
     error: response => showErrorToast({title: 'Error Downloading Logo', response}),
@@ -2647,5 +2647,21 @@ function refreshPreview() {
     success: preview_uri => document.getElementById('live-preview').src = `${preview_uri}?${new Date().getTime()}`,
     error: response => showErrorToast({title: 'Error Updating Preview', response}),
     complete: () => $('#preview-episode-dropdown .dropdown').toggleClass('loading', false),
+  });
+}
+
+/**
+ * Submit an API request to delete the logo of the given season number.
+ * @param {number} seasonNumber Season number of the logo to delete.
+ */
+function deleteLogo(seasonNumber) {
+  $.ajax({
+    type: 'DELETE',
+    url: `/api/sources/series/{{ series.id }}/logo?season_number=${seasonNumber}`,
+    success: () => {
+      showInfoToast('File Deleted');
+      document.querySelector(`[data-season="${seasonNumber}"][data-type="logo"] img`).src = '';
+    },
+    error: response => showErrorToast({title: 'Error Deleting File', response}),
   });
 }

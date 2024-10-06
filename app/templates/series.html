@@ -1206,10 +1206,13 @@
                   {% else %}
                   <i data-action="analyze" class="disabled small purple magic icon"></i>
                   {% endif %}
+                  <span data-tooltip="Delete">
+                    <i data-action="delete" class="small red trash alternate outline icon" onclick="deleteLogo({{ season_number }})"></i>
+                  </span>
                 </div>
                 <div class="description">
                   <input type="file" id="logo-upload-season{{ season_number }}" class="ui invisible file input" onchange="uploadLogo(null);">
-                  <div class="image-analysis-group" data-season="{{ season_number }}">
+                  <div class="image-analysis-group" data-season="{{ season_number }}" data-type="logo">
                     {% if exists %}
                     <img class="ui rounded image" loading="lazy" src="{{ logo }}">
                     {% else %}
