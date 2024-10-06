@@ -720,27 +720,51 @@ def delete_series_logo(
         db: Session = Depends(get_database),
     ) -> None:
     """
-    Set the logo for the given Series. If there is an existing logo
-    associated with this Series, it is deleted.
+    Delete the logo for the given Series.
 
-    - series_id: ID of the Series to set the logo of.
-    - url: URL to the logo to download and utilize.
-    - file: Logo file content to utilize.
-    - season_number: Season number to associate the given logo with. If
-    omitted the file is assumed to be for the entire series.
+    - series_id: ID of the Series to delete the logo of.
+    - season_number: Season number of the logo. If omitted the file is
+    assumed to be for the entire series.
     """
 
     # Get Series with this ID, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    # Get Series logo file
-    logo_file = series.get_logo_file(season_number, fallback=False)
-
-    if not logo_file.exists():
+    if not (file := series.get_logo_file(season_number, fallback=False)).exists():
         raise HTTPException(
             status_code=404,
-            detail='Indicated logo file does not exist',
+            detail='Indicated file does not exist',
         )
 
-    logo_file.unlink(missing_ok=True)
-    request.state.log.debug(f'Deleted logo file ({logo_file.resolve()})')
+    file.unlink(missing_ok=True)
+    request.state.log.debug(f'Deleted file ({file.resolve()})')
+
+
+@source_router.delete('/series/{series_id}/backdrop')
+def delete_series_backdrop(
+        request: Request,
+        series_id: int,
+        season_number: Optional[int] = Query(default=None),
+        db: Session = Depends(get_database),
+    ) -> None:
+    """
+    Delete the backdrop for the given Series.
+
+    - series_id: ID of the Series to delete the backdrop of.
+    - season_number: Season number of the backdrop. If omitted the file
+    is assumed to be for the entire series.
+    """
+
+    # Get Series with this ID, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Get Series backdrop file
+    file = series.get_backdrop_file(season_number, fallback=False)
+    if not file.exists():
+        raise HTTPException(
+            status_code=404,
+            detail='Indicated file does not exist',
+        )
+
+    file.unlink(missing_ok=True)
+    request.state.log.debug(f'Deleted file ({file.resolve()})')
