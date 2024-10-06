@@ -8,11 +8,11 @@ from alembic import context
 
 """
 Auto-detect db changes:
->>> alembic revision --autogenerate -m "..."
+>>> alembic -c ./app/alembic/alembic.ini revision --autogenerate -m "..."
 Manually perform DB migrations (to latest revision)
 >>> alembic upgrade head
 Manually downgrade DB to specific version
->>> alembic downgrade <target-revision>
+>>> alembic -c ./app/alembic/alembic.ini downgrade <target-revision>
 
 Schema Version History (oldest to newest):
 - 693dd5aa47cd | Initialize tables

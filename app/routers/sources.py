@@ -96,7 +96,7 @@ def download_series_backdrop_from_tmdb(
     series = get_series(db, series_id, raise_exc=True)
 
     # Get backdrop, return if exists
-    if (backdrop_file := series.get_series_backdrop()).exists():
+    if (backdrop_file := series.get_backdrop_file()).exists():
         log.debug(f'{series} Backdrop file exists')
         return f'/source/{series.path_safe_name}/backdrop.jpg'
 
@@ -137,7 +137,7 @@ def download_series_backdrop_from_tvdb(
     series = get_series(db, series_id, raise_exc=True)
 
     # Get backdrop, return if exists
-    if (backdrop_file := series.get_series_backdrop()).exists():
+    if (backdrop_file := series.get_backdrop_file()).exists():
         log.debug(f'{series} Backdrop file exists')
         return f'/source/{series.path_safe_name}/backdrop.jpg'
 
@@ -691,7 +691,7 @@ async def set_series_backdrop(
         )
 
     # Get Series backdrop file
-    backdrop_file = series.get_series_backdrop(season_number)
+    backdrop_file = series.get_backdrop_file(season_number)
 
     # If file already exists, warn about overwriting
     if backdrop_file.exists():

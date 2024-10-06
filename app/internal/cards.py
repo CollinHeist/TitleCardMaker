@@ -490,7 +490,7 @@ def resolve_card_settings(
                 else None,
                 fallback=True,
             ),
-            'backdrop_file': series.get_series_backdrop(
+            'backdrop_file': series.get_backdrop_file(
                 episode.season_number
                 if episode.series.use_per_season_assets
                 else None,

@@ -721,29 +721,29 @@ class Series(Base):
         return False, f'/source/{logo.parent.name}/{filename}'
 
 
-    def get_series_backdrop(self,
+    def get_backdrop_file(self,
             season_number: Optional[int] = None,
             *,
             fallback: bool = False,
         ) -> Path:
         """
-        Get the backdrop file for this series.
+        Get the backdrop file for this Series.
 
         Args:
             season_number: Season number associated with the file. If
-                omitted then the series-wide file is used.
-            fallback: Whether to fallback to the series-wide file if the
+                omitted then the Series-wide file is used.
+            fallback: Whether to fallback to the Series-wide file if the
                 season-specific file does not exist.
 
         Returns:
-            Path to the backdrop file that corresponds to this series'
+            Path to the backdrop file that corresponds to this Series'
             under the global source directory.
         """
 
         source_dir = Path(get_preferences().source_directory) \
             / self.path_safe_name
 
-        # If no season number was provided, use series-wide poster
+        # If no season number was provided, use Series-wide poster
         if season_number is None:
             return source_dir / 'poster.jpg'
 
