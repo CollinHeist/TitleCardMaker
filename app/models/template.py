@@ -185,7 +185,7 @@ class Template(Base):
         default=[],
     )
     image_source_priority: Mapped[list[int]] = mapped_column(
-        MutableDict.as_mutable(JSON),
+        MutableList.as_mutable(JSON),
         default=[],
     )
 
