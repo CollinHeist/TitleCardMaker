@@ -236,7 +236,6 @@ def get_all_episode_source_images(
             episode.series.as_series_info,
             episode.as_episode_info,
             match_title=match_title,
-            bypass_blacklist=True,
             log=log,
         )
     except HTTPException:
@@ -313,7 +312,6 @@ def get_all_series_logos_on_tmdb(
 
     return tmdb_interface.get_all_logos(
         series.as_series_info,
-        bypass_blacklist=True,
         log=request.state.log,
     ) or [] # type: ignore
 
@@ -338,7 +336,6 @@ def get_all_series_backdrops_on_tmdb(
     # Get all backdrops
     return tmdb_interface.get_all_backdrops(
         series.as_series_info,
-        bypass_blacklist=True,
         log=request.state.log,
     ) or []# type: ignore
 

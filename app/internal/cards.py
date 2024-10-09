@@ -85,8 +85,7 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                     if series.monitored:
                         for episode in series.episodes:
                             download_episode_source_images(
-                                db, episode,
-                                commit=False, raise_exc=False, log=log
+                                db, episode, raise_exc=False, log=log
                             )
                         db.commit()
                     else:

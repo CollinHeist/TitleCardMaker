@@ -16,6 +16,10 @@ from app.models.series import Library, Series
 from app.schemas.card import SourceImage
 from app.schemas.preferences import Style
 from modules.Debug import Logger, log
+from modules.EmbyInterface2 import EmbyInterface
+from modules.JellyfinInterface2 import JellyfinInterface
+from modules.PlexInterface2 import PlexInterface
+from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 from modules.TVDbInterface import TVDbInterface
 from modules.TieredSettings import TieredSettings
@@ -97,7 +101,7 @@ def resolve_source_settings(
 
     # Episode is watched, use watched style
     if (library and
-        episode.get_watched_status(library['interface_id'],library['name'])):
+        episode.get_watched_status(library['interface_id'], library['name'])):
         return watched_style, episode.get_source_file(watched_style)
 
     # Watch status is unset or Episode is unwatched, use unwatched style
@@ -213,11 +217,11 @@ def download_series_logo(
             continue
 
         # Skip interfaces which cannot provide logos
-        if interface.INTERFACE_TYPE in ('Plex', 'Sonarr'):
+        if isinstance(interface, (PlexInterface, SonarrInterface)):
             continue
 
         # Handle TMDb and TVDb separately
-        if interface.INTERFACE_TYPE in ('TMDb', 'TVDb'):
+        if isinstance(interface, (TMDbInterface, TVDbInterface)):
             logo = interface.get_series_logo(series.as_series_info)
 
         # Go through each library of this interface
@@ -227,7 +231,7 @@ def download_series_logo(
                 break
 
             logo = interface.get_series_logo(
-                library, series.as_series_info, log=log
+                library, series.as_series_info, log=log # type: ignore
             )
 
         # If no logo was returned, move on to next image source
@@ -247,7 +251,7 @@ def download_series_logo(
         # Download failed, raise 400
         raise HTTPException(
             status_code=400,
-            detail=f'Unable to download logo'
+            detail='Unable to download logo'
         )
 
     # No logo returned
@@ -259,7 +263,6 @@ def download_episode_source_image(
         episode: Episode,
         library: Optional[Library] = None,
         *,
-        commit: bool = True,
         raise_exc: bool = False,
         log: Logger = log,
     ) -> Optional[str]:
@@ -271,7 +274,6 @@ def download_episode_source_image(
         episode: Episode whose source image is being downloaded.
         library: Library associated with this Episode - used for source
             setting and Template evaluation(s).
-        commit: Whether to commit any database changes.
         raise_exc: Whether to raise any HTTPExceptions.
         log: Logger for all log messages.
 
@@ -297,11 +299,13 @@ def download_episode_source_image(
     )
 
     # Go through all image sources
-    for interface_id in get_preferences().image_source_priority:
+    for interface_id in image_source_priority:
         # Skip if this interface cannot be communicated with
         if not (interface := get_interface(interface_id, raise_exc=raise_exc)):
             continue
         connection = get_connection(db, interface_id, raise_exc=raise_exc)
+        if connection is None:
+            continue
 
         # Art can only be sourced from TMDb and TVDb; skip servers
         if ('art' in style and interface.INTERFACE_TYPE not in ('TMDb', 'TVDb')):
@@ -311,17 +315,17 @@ def download_episode_source_image(
 
         # Try each library of each media servers
         source_image = None
-        if interface.INTERFACE_TYPE in ('Emby', 'Jellyfin', 'Plex'):
-            for _, library in series.get_libraries(interface_id):
+        if isinstance(interface, (EmbyInterface, JellyfinInterface, PlexInterface)):
+            for _, library_name in series.get_libraries(interface_id):
                 source_image = interface.get_source_image(
-                    library,
+                    library_name,
                     series.as_series_info,
                     episode.as_episode_info,
                     log=log,
                 )
                 if source_image:
                     break
-        elif interface.INTERFACE_TYPE == 'TMDb':
+        elif isinstance(interface, TMDbInterface):
             skip_localized_images = TieredSettings.resolve_singular_setting(
                 connection.skip_localized,
                 getattr(global_template, 'skip_localized_images', None),
@@ -346,8 +350,7 @@ def download_episode_source_image(
                     raise_exc=raise_exc,
                     log=log,
                 )
-        elif interface.INTERFACE_TYPE == 'TVDb':
-            interface: TVDbInterface
+        elif isinstance(interface, TVDbInterface):
             # Get art backdrop
             if 'art' in style:
                 source_image = interface.get_series_backdrop(
@@ -366,8 +369,6 @@ def download_episode_source_image(
         if source_image is None:
             log.trace(f'{episode} cannot download Source Image from '
                       f'Connection[{interface_id}] {interface.INTERFACE_TYPE}')
-            if commit:
-                db.commit()
             continue
 
         # Source image is valid, download - error if download fails
@@ -391,7 +392,6 @@ def download_episode_source_images(
         db: Session,
         episode: Episode,
         *,
-        commit: bool = True,
         raise_exc: bool = False,
         log: Logger = log,
     ) -> list[Optional[str]]:
@@ -401,7 +401,6 @@ def download_episode_source_images(
     Args:
         db: Database to update.
         episode: Episode whose Source Images are being downloaded.
-        commit: Whether to commit any changes to the database.
         raise_exc: Whether to raise any HTTPExceptions.
         log: Logger for all log messages.
 
@@ -415,19 +414,18 @@ def download_episode_source_images(
     if episode.series.libraries:
         return [
             download_episode_source_image(
-                db, episode, library,
-                commit=commit, raise_exc=raise_exc, log=log,
+                db, episode, library, raise_exc=raise_exc, log=log,
             ) for library in episode.series.libraries
         ]
 
     return [download_episode_source_image(
-        db, episode, None, commit=commit, raise_exc=raise_exc, log=log,
+        db, episode, None, raise_exc=raise_exc, log=log,
     )]
 
 
 def get_source_image(episode: Episode) -> SourceImage:
     """
-    Get the SourceImage details for the given Episode. This only evalutes
+    Get the SourceImage details for the given Episode.
 
     Args:
         episode: Episode of the Source Image.
