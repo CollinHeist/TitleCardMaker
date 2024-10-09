@@ -110,6 +110,10 @@ span.color.circle {
   /* Add space between color bubble and name */
   margin-left: 4px;
 }
+
+img ~ .color.palette {
+  margin-top: 0.3em;
+}
 /* Palette colors are styled separately */
 .color.palette > span.color {
   /* --color: transparent; */
