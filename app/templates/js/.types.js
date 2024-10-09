@@ -316,6 +316,22 @@
  * @property {number} pages
  */
 
+/**
+ * @typedef {Object} EpisodeOverview
+ * @property {number} id
+ * @property {number} season_number
+ * @property {number} episode_number
+ */
+
+/**
+ * @typedef {Object} EpisodeOverviewPage
+ * @property {EpisodeOverview[]} items
+ * @property {number} total
+ * @property {number} size
+ * @property {number} page
+ * @property {number} pages
+ */
+
 // Fonts -----------------------------------------------------------------------
 
 /**

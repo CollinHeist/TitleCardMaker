@@ -3,10 +3,10 @@
 
 {% if False %}
 import {
-  AvailableFont, AvailableTemplate, Blueprint, Episode, EpisodePage,
-  ExternalSourceImage, LogEntryPage, MediaServerLibrary, RemoteBlueprint,
-  RemoteBlueprintSet, Series,
-  Statistic, StyleOption, SourceImagePage, TitleCardPage, UpdateEpisode,
+  AvailableFont, AvailableTemplate, Blueprint, Episode, EpisodeOverviewPage,
+  EpisodePage, ExternalSourceImage, LogEntryPage, MediaServerLibrary,
+  RemoteBlueprint, RemoteBlueprintSet, Series, Statistic, StyleOption,
+  SourceImagePage, TitleCardPage, UpdateEpisode,
 } from './.types.js';
 {% endif %}
 
@@ -1814,8 +1814,9 @@ function downloadLogo(url, seasonNumber=null) {
 /**
  * Submit an API request to download the Series backdrop at the specified URL.
  * @param {string} url - URL of the backdrop file to download.
+ * @param {?number} seasonNumber Season number associated with this URL.
  */
-function downloadSeriesBackdrop(url) {
+function downloadSeriesBackdrop(url, seasonNumber=null) {
   // Create pseudo form for this URL
   const form = new FormData();
   form.set('url', url);
@@ -1823,16 +1824,20 @@ function downloadSeriesBackdrop(url) {
   // Submit API request to upload this URL
   $.ajax({
     type: 'PUT',
-    url: '/api/sources/series/{{series.id}}/backdrop/upload',
+    url: '/api/sources/series/{{series.id}}/backdrop/upload' + (seasonNumber === null ? '' : `?season_number=${seasonNumber}`),
     data: form,
     cache: false,
     contentType: false,
     processData: false,
     success: () => {
       showInfoToast('Downloaded Backdrop');
-      const backdrop = document.getElementById('backdrop');
-      backdrop.src = `/source/{{series.path_safe_name}}/backdrop.jpg?${new Date().getTime()}`;
-      backdrop.style.display = 'block';
+      if (seasonNumber === null) {
+        const backdrop = document.getElementById('backdrop');
+        backdrop.src = `/source/{{series.path_safe_name}}/backdrop.jpg?${new Date().getTime()}`;
+        backdrop.style.display = 'block';
+      } else {
+        document.querySelector(`[data-type="backdrop"][data-season="${seasonNumber}"] img`).src = `/source/{{ series.path_safe_name }}/backdrop_season${seasonNumber}.jpg?${new Date().getTime()}`;
+      }
     },
     error: response => showErrorToast({title: 'Error Downloading Backdrop', response}),
   });
@@ -1961,7 +1966,7 @@ function browseBackdrops(seasonNumber) {
         // Images returned, add to browse modal
         const imageElements = images.map(({url, width, height}, index) => {
           const location = index % 2 ? 'right' : 'left';
-          return `<a class="ui image" onclick="downloadSeriesBackdrop('${url}')"><div class="ui blue ${location} ribbon label">${width}x${height}</div><img src="${url}"/></a>`;
+          return `<a class="ui image" onclick="downloadSeriesBackdrop('${url}', ${seasonNumber})"><div class="ui blue ${location} ribbon label">${width}x${height}</div><img src="${url}"/></a>`;
         });
         $('#browse-tmdb-modal .content .images')[0].innerHTML = imageElements.join('');
         $('#browse-tmdb-modal .header span').text('Backdrops');
@@ -2559,11 +2564,17 @@ function uploadCards(setTextless=false) {
   });
 }
 
+/** @type {EpisodeOverviewPage} */
+const overviewItems = [];
+
 /**
  * Submit an API request to get the overview data for all episodes of this
  * Series. These overviews are then populated into the preview episode dropdown.
+ * If the indicated page number is >1, then the contents of the overview
+ * dropdown are added to, not replaced.
+ * @param {number} [pageNumber=1] Page number of overviews to load.
  */
-function getEpisodeOverviews() {
+function getEpisodeOverviews(pageNumber=1) {
   const disableDropdown = () => {
     $('.dropdown[data-value="episode_id"]').dropdown({
       values: [],
@@ -2590,25 +2601,54 @@ function getEpisodeOverviews() {
     return a.episode_number - b.episode_number;
   }
 
-  const size = series_full_name === 'One Piece (1999)' || series_full_name === 'Pokémon (1997)' ? 1500 : 200;
+  // Submit API request
   $.ajax({
     type: 'GET',
-    url: `/api/episodes/series/{{series.id}}/overview?size=${size}`,
+    url: `/api/episodes/series/{{series.id}}/overview?size=200&page=${pageNumber}`,
+    /**
+     * Overviews queried, populate dropdown.
+     * @param {EpisodeOverviewPage} overviews Page of episode overviews.
+     */
     success: overviews => {
       if (overviews.items.length === 0) {
         disableDropdown();
       } else {
+        // Get the first episode ID for selection
         const firstEpisodeId = overviews.items.sort(compareEpisodes)[0].id;
+
+        // Remove old "page load" item if current page is not 1
+        if (pageNumber !== 1 && overviews.pages > 1) {
+          overviewItems.pop();
+        }
+
+        // Add to list of overview items
+        overviewItems.push(...overviews.items.map(({id, season_number, episode_number}) => {
+          return {
+            name: `Season ${season_number} Episode ${episode_number}`,
+            value: id,
+            selected: id === firstEpisodeId && pageNumber === 1,
+          };
+        }));
+
+        // Add item to load next page if there are more pages to display
+        if (overviews.pages > pageNumber) {
+          overviewItems.push({
+            name: 'Load more..',
+            value: `loadNextPage(${overviews.page + 1})`,
+            selected: false,
+          });
+        }
+
+        // Initialize dropdown
         $('.dropdown[data-value="episode_id"]').dropdown({
           onChange: refreshPreview,
-          values: overviews.items.map(({id, season_number, episode_number}) => {
-            return {
-              name: `Season ${season_number} Episode ${episode_number}`,
-              value: id,
-              selected: id === firstEpisodeId,
-            };
-          }),
+          values: overviewItems,
         });
+
+        // If initiated by a page load, toggle so dropdown is "active"
+        if (pageNumber > 1) {
+          $('.dropdown[data-value="episode_id"]').dropdown('toggle');
+        }
       }
     },
     error: response => {
@@ -2620,12 +2660,21 @@ function getEpisodeOverviews() {
 
 /**
  * Submit an API request to generate a preview card and update the preview card.
+ * If the currently selected preview ID is actually an item to load the next
+ * page of episode overviews, then the preview is not actually refreshed.
  */
 function refreshPreview() {
   // Get Episode ID to generate preview of
   const episodeId = $('#preview-episode-dropdown input[name="episode_id"]').val();
+  // If value is the "load next page" one, run that and exit
+  if (episodeId.match(/loadNextPage\((\d+)\)/)) {
+    const pageNumber = parseInt(episodeId.match(/loadNextPage\((\d+)\)/)[1], 10);
+    getEpisodeOverviews(pageNumber);
+    return;
+  }
+
   if (episodeId === undefined) {
-    showErrorToast({title: 'No Episode to display Preview of'});
+    showErrorToast({title: 'No Episode to display preview of'});
     return;
   }
 
@@ -2660,7 +2709,29 @@ function deleteLogo(seasonNumber) {
     url: `/api/sources/series/{{ series.id }}/logo?season_number=${seasonNumber}`,
     success: () => {
       showInfoToast('File Deleted');
-      document.querySelector(`[data-season="${seasonNumber}"][data-type="logo"] img`).src = '';
+      // Remove image src
+      document.querySelector(`[data-season="${seasonNumber}"][data-type="logo"] img`).removeAttribute('src');
+      // Remove any color palettes
+      $(`[data-season="${seasonNumber}"][data-type="logo"] .palette .color`).remove();
+    },
+    error: response => showErrorToast({title: 'Error Deleting File', response}),
+  });
+}
+
+/**
+ * Submit an API request to delete the backdrop of the given season number.
+ * @param {number} seasonNumber Season number of the backdrop to delete.
+ */
+function deleteBackdrop(seasonNumber) {
+  $.ajax({
+    type: 'DELETE',
+    url: `/api/sources/series/{{ series.id }}/backdrop?season_number=${seasonNumber}`,
+    success: () => {
+      showInfoToast('File Deleted');
+      // Remove image src
+      document.querySelector(`[data-season="${seasonNumber}"][data-type="backdrop"] img`).removeAttribute('src');
+      // Remove any color palettes
+      $(`[data-season="${seasonNumber}"][data-type="backdrop"] .palette .color`).remove();
     },
     error: response => showErrorToast({title: 'Error Deleting File', response}),
   });
