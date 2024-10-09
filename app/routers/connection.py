@@ -572,20 +572,21 @@ def delete_connection(
             log.warning(f'Removing Episode Data Source from {series}')
             series.data_source_id = None
 
-        if series.image_source_priority:
-            if any(interface_id == id_ for id_ in series.image_source_priority):
-                log.warning(f'Removing Image Source from {series}')
-                series.image_source_priority = [
-                    id_ for id_ in series.image_source_priority
-                    if id_ != interface_id
-                ]
+        if (series.image_source_priority and
+            any(interface_id == id_ for id_ in series.image_source_priority)):
+            log.warning(f'Removing Image Source from {series}')
+            series.image_source_priority = [
+                id_ for id_ in series.image_source_priority
+                if id_ != interface_id
+            ]
 
     # Remove linked data and image source from Templates
     for template in db.query(Template).filter_by(data_source_id=interface_id).all():
         log.warning(f'Removing Episode Data Source from {template}')
         template.data_source_id = None
     for template in db.query(Template).all():
-        if any(interface_id == id_ for id_ in template.image_source_priority):
+        if (template.image_source_priority and
+            any(interface_id == id_ for id_ in template.image_source_priority)):
             log.warning(f'Removing Image Source from {template}')
             template.image_source_priority = [
                 id_ for id_ in template.image_source_priority
