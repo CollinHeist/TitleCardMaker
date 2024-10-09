@@ -269,7 +269,7 @@ class ComicBookCardType(BaseCardTypeCustomFontAllText):
         # If angle is a random range string, replace with random value in range
         if isinstance(val, str):
             # Get bounds from the random range string
-            lower, upper = map(float, re_match(RandomAngleRegex, val).groups())
+            lower, upper = map(float, re_match(RandomAngleRegex, val).groups()) # type: ignore
 
             # Lower bound cannot be above upper bound
             if lower >= upper:
@@ -452,7 +452,7 @@ class LandscapeCardType(BaseCardModel):
 
     @validator('box_adjustments')
     def parse_box_adjustments(cls, val: str) -> tuple[int, int, int, int]:
-        return tuple(map(int, re_match(BoxAdjustmentRegex, val).groups()))
+        return tuple(map(int, re_match(BoxAdjustmentRegex, val).groups())) # type: ignore
 
     @root_validator(skip_on_failure=True)
     def assign_unassigned_color(cls, values: dict) -> dict:
@@ -527,7 +527,7 @@ class MusicCardType(BaseCardTypeCustomFontAllText):
 
     @validator('control_colors')
     def parse_control_colors(cls, val: str) -> tuple[str, str, str, str]:
-        return tuple(re_match(ControlColorRegex, val).groups())
+        return tuple(re_match(ControlColorRegex, val).groups()) # type: ignore
 
     @root_validator(skip_on_failure=True)
     def assign_unassigned_player_action(cls, values: dict) -> dict:
@@ -612,7 +612,7 @@ class NotificationCardType(BaseCardTypeCustomFontAllText):
 
     @validator('box_adjustments')
     def parse_box_adjustments(cls, val: str) -> tuple[int, int, int, int]:
-        return tuple(map(int, re_match(BoxAdjustmentRegex, val).groups()))
+        return tuple(map(int, re_match(BoxAdjustmentRegex, val).groups())) # type: ignore
 
     @root_validator(skip_on_failure=True)
     def assign_unassigned_color(cls, values: dict) -> dict:
@@ -922,7 +922,7 @@ class TintedGlassCardType(BaseCardTypeCustomFontNoText):
 
     @validator('box_adjustments')
     def parse_box_adjustments(cls, val: str) -> tuple[int, int, int, int]:
-        return tuple(map(int, re_match(BoxAdjustmentRegex, val).groups()))
+        return tuple(map(int, re_match(BoxAdjustmentRegex, val).groups())) # type: ignore
 
     @root_validator(skip_on_failure=True)
     def toggle_text_hiding(cls, values: dict) -> dict:
