@@ -1,4 +1,4 @@
-from typing import Any, Literal, Optional, Union, TYPE_CHECKING
+from typing import Any, Optional, TypedDict, TYPE_CHECKING
 
 from sqlalchemy import String, JSON
 from sqlalchemy.ext.mutable import MutableList
@@ -16,7 +16,10 @@ if TYPE_CHECKING:
     from app.models.template import Template
 
 
-SonarrLibraries = dict[Literal['interface_id', 'name', 'path'], Union[int, str]]
+class SonarrLibraries(TypedDict):
+    interface_id: int
+    name: str
+    path: str
 
 
 class Connection(Base):
@@ -261,7 +264,7 @@ class Connection(Base):
             secret: Set of secrets to add to.
         """
 
-        if self.url:
+        if self.url and self.decrypted_url:
             secrets.add(self.url)
             secrets.add(self.decrypted_url)
             # Add host URL if URL has a port number
@@ -270,6 +273,6 @@ class Connection(Base):
                 or ('://' not in url and ':' in url)):
                 secrets.add(self.decrypted_url.rsplit(':', maxsplit=1)[0])
 
-        if self.api_key:
+        if self.api_key and self.decrypted_api_key:
             secrets.add(self.api_key)
             secrets.add(self.decrypted_api_key)
