@@ -695,12 +695,12 @@ async def set_series_backdrop(
         log.info(f'{series} backdrop file exists - replacing')
 
     # If only URL was required, attempt to download, error if unable
-    if (url is not None
-        and not (content := WebInterface.download_image_raw(url, log=log))):
-        raise HTTPException(
-            status_code=400,
-            detail='Unable to download image'
-        )
+    if url is not None:
+        if (content := WebInterface.download_image_raw(url, log=log)) is None:
+            raise HTTPException(
+                status_code=400,
+                detail='Unable to download image'
+            )
     # Use uploaded file if provided
     else:
         content = uploaded_file
