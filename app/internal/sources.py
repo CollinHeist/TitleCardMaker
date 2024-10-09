@@ -298,6 +298,15 @@ def download_episode_source_image(
         series, episode, library,
     )
 
+    # Resolve ISP setting
+    image_source_priority = TieredSettings.resolve_singular_setting(
+        get_preferences().image_source_priority,
+        getattr(global_template, 'image_source_priority', None),
+        getattr(series_template, 'image_source_priority', None),
+        series.image_source_priority,
+        getattr(episode_template, 'image_source_priority', None),
+    )
+
     # Go through all image sources
     for interface_id in image_source_priority:
         # Skip if this interface cannot be communicated with
