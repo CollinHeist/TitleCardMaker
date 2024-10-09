@@ -1,10 +1,8 @@
 from datetime import datetime, timedelta
 from logging import LoggerAdapter
-from typing import Any, Callable, Literal, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 from fastapi import HTTPException
-from tinydb import where
-from tinydb.queries import QueryInstance
 from tmdbapis import (
     Poster,
     TMDbAPIs,
@@ -24,7 +22,6 @@ from modules.EpisodeDataSource2 import (
 )
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
-from modules.PersistentDatabase import PersistentDatabase
 from modules.SeriesInfo2 import SeriesInfo
 from modules.WebInterface import WebInterface
 
@@ -267,7 +264,6 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             api_key: str,
             minimum_source_width: int = 0,
             minimum_source_height: int = 0,
-            blacklist_threshold: int = BLACKLIST_THRESHOLD,
             language_priority: list[str] = ['en'],
             *,
             interface_id: int = 0,
@@ -282,8 +278,6 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 source images.
             minimum_source_height: Minimum height (in pixels) required
                 for source images.
-            blacklist_threshold: Threshold for permanently blacklisting
-                a request.
             language_priority: Priority which localized should be
                 evaluated at.
             log: Logger for all log messages.
@@ -297,7 +291,6 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         # Store attributes
         self.minimum_source_width = minimum_source_width
         self.minimum_source_height = minimum_source_height
-        self.blacklist_threshold = blacklist_threshold
         self.language_priority = language_priority
         self._interface_id = interface_id
 
@@ -308,11 +301,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             log.critical('TMDb API key is invalid')
             raise HTTPException(
                 status_code=401,
-                detail=f'Invalid API Key'
+                detail='Invalid API Key'
             ) from exc
-
-        # Create/read blacklist database
-        self.__blacklist = PersistentDatabase(self.__BLACKLIST_DB)
 
         self.activate()
 
@@ -346,153 +336,6 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         # Languages not in the priority list use a negative modifier
         except ValueError:
             return -10 + dimension_score
-
-
-    def __get_condition(self,
-            query_type: Literal['backdrop', 'image', 'logo', 'title'],
-            series_info: SeriesInfo,
-            episode_info: Optional[EpisodeInfo] = None,
-        ) -> QueryInstance:
-        """
-        Get the tinydb query condition for the given query.
-
-        Args:
-            query_type: The type of request being updated.
-            series_info: SeriesInfo for the request.
-            episode_info: EpisodeInfo for the request.
-
-        Returns:
-            The condition that matches the given query type, series, and
-            Episode season+episode number and episode.
-        """
-
-        # Logo and backdrop queries don't use episode index
-        if query_type in ('logo', 'backdrop') or episode_info is None:
-            return (
-                (where('query') == query_type) &
-                (where('series') == series_info.full_name)
-            )
-
-        # Query by series name and episode index
-        return (
-            (where('query') == query_type) &
-            (where('series') == series_info.full_name) &
-            (where('season') == episode_info.season_number) &
-            (where('episode') == episode_info.episode_number)
-        )
-
-
-    def __update_blacklist(self,
-            series_info: SeriesInfo,
-            episode_info: Optional[EpisodeInfo],
-            query_type: Literal['backdrop', 'image', 'logo', 'title'],
-        ) -> None:
-        """
-        Adds the given request to the blacklist; indicating that this
-        exact request shouldn't be queried to TMDb for another day.
-        Write the updated blacklist to file
-
-        Args:
-            series_info: SeriesInfo for the request.
-            episode_info: EpisodeInfo for the request.
-            query_type: The type of request being updated.
-        """
-
-        # Get the entry for this request
-        condition = self.__get_condition(query_type, series_info, episode_info)
-        entry = self.__blacklist.get(condition)
-
-        # If previously indexed and next has passed, increase count and set next
-        later = (datetime.now() + timedelta(hours=12)).timestamp()
-
-        # If this entry exists, check that next has passed
-        if entry is not None:
-            if datetime.now().timestamp() >= entry['next']:
-                self.__blacklist.upsert(
-                    {'failures': entry['failures']+1, 'next': later},
-                    condition
-                )
-        else:
-            if query_type in ('logo', 'backdrop'):
-                self.__blacklist.upsert({
-                    'query': query_type,
-                    'series': series_info.full_name,
-                    'failures': 1,
-                    'next': later,
-                }, condition)
-            else:
-                self.__blacklist.upsert({
-                    'query': query_type,
-                    'series': series_info.full_name,
-                    'season': episode_info.season_number,
-                    'episode': episode_info.episode_number,
-                    'failures': 1,
-                    'next': later,
-                }, condition)
-
-
-    def __is_blacklisted(self,
-            series_info: SeriesInfo,
-            episode_info: Optional[EpisodeInfo],
-            query_type: Literal['backdrop', 'image', 'logo', 'title'],
-        ) -> bool:
-        """
-        Determines if the specified entry is in the blacklist (e.g.
-        should not bother querying TMDb.
-
-        Args:
-            series_info: SeriesInfo for the entry.
-            episode_info: EpisodeInfo for the entry.
-            query_type: The type of request being checked.
-
-        Returns:
-            True if the entry is blacklisted, False otherwise.
-        """
-
-        # Get the blacklist entry for this request
-        entry = self.__blacklist.get(
-            self.__get_condition(query_type, series_info, episode_info)
-        )
-
-        # If request DNE, not blacklisted
-        if entry is None:
-            return False
-
-        # If too many failures, blacklisted
-        if entry['failures'] > self.blacklist_threshold:
-            return True
-
-        # If next hasn't passed, treat as temporary blacklist
-        return datetime.now().timestamp() < entry['next']
-
-
-    def is_permanently_blacklisted(self,
-            series_info: SeriesInfo,
-            episode_info: EpisodeInfo,
-            query_type: Literal['backdrop', 'image', 'logo', 'title'] = 'image',
-        ) -> bool:
-        """
-        Determines if permanently blacklisted.
-
-        Args:
-            series_info: The series information
-            episode_info: The episode information
-
-        Returns:
-            True if permanently blacklisted, False otherwise.
-        """
-
-        # Get the blacklist entry for this request
-        entry = self.__blacklist.get(
-            self.__get_condition(query_type, series_info, episode_info)
-        )
-
-        # If request hasn't been blacklisted, not blacklisted
-        if entry is None:
-            return False
-
-        # If too many failures, blacklisted
-        return entry['failures'] > self.blacklist_threshold
 
 
     @catch_and_log('Error setting series ID')
@@ -729,7 +572,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         exception_group = (AttributeError, NotFound, IndexError, TMDbException)
 
         # Query with TVDb ID first
-        if episode_info.has_id('tvdb_id'):
+        if episode_info.tvdb_id is not None:
             try:
                 results = self.api.find_by_id(tvdb_id=episode_info.tvdb_id)
                 (episode := results.tv_episode_results[0]).reload()
@@ -738,7 +581,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 pass
 
         # Query with IMDb ID
-        if episode_info.has_id('imdb_id'):
+        if episode_info.imdb_id is not None:
             try:
                 results = self.api.find_by_id(imdb_id=episode_info.imdb_id)
                 # Check for an episode, then check for a movie
@@ -753,7 +596,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 pass
 
         # Query with TVRage ID
-        if episode_info.has_id('tvrage_id'):
+        if episode_info.tvrage_id is not None:
             try:
                 results = self.api.find_by_id(tvrage_id=episode_info.tvrage_id)
                 # Check for an episode, then check for a movie
@@ -807,7 +650,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 return None
 
         # If series TMDb ID is not present, try as movie, no other attempts
-        if not series_info.has_id('tmdb_id'):
+        if not series_info.tmdb_id is not None:
             return _find_episode_as_movie(episode_info)
 
         # Verify series ID is valid
@@ -916,7 +759,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             *,
             is_source_image: bool = True,
             skip_localized: bool = False,
-        ) -> Optional[dict[str, Any]]:
+        ) -> Optional[TMDbStill]:
         """
         Determine the best image and return it's contents from within
         the database return JSON.
@@ -970,7 +813,6 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             episode_info: EpisodeInfo,
             *,
             match_title: bool = True,
-            bypass_blacklist: bool = False,
             log: Logger = log,
         ) -> list[TMDbStill]:
         """
@@ -981,30 +823,22 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             episode_info: EpisodeInfo for this entry.
             match_title:  Whether to require the episode title
                 to match when querying TMDb.
-            bypass_blacklist: Whether to bypass the blacklist.
             log: Logger for all log messages.
 
         Returns:
             List of tmdbapis.objs.image.Still objects. If the episode is
-            blacklisted or not found on TMDb, then an empty list is
-            returned.
+            not found on TMDb, then an empty list is returned.
 
         Raises:
-            HTTPException (404) if the given Series+Episode is not found
+            HTTPException (404): The given Series+Episode is not found
                 on TMDb.
         """
-
-        # Don't query the database if this episode is in the blacklist
-        if (not bypass_blacklist
-            and self.__is_blacklisted(series_info, episode_info, 'image')):
-            return []
 
         # Get Episode object for this episode
         episode = self.__find_episode(
             series_info, episode_info, match_title, log=log,
         )
         if episode is None:
-            self.__update_blacklist(series_info, episode_info, 'image')
             raise HTTPException(
                 status_code=404,
                 detail=f'"{series_info}" {episode_info} not found on TMDb'
@@ -1023,7 +857,6 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
     def get_all_logos(self,
             series_info: SeriesInfo,
             *,
-            bypass_blacklist: bool = False,
             log: Logger = log,
         ) -> Optional[list[TMDbStill]]:
         """
@@ -1031,34 +864,27 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
         Args:
             series_info: SeriesInfo for this entry.
-            bypass_blacklist: Whether to bypass the blacklist.
             log: Logger for all log messages.
 
         Returns:
             List of `tmdbapis.objs.image.Still` objects. If the series
-            is blacklisted or not found on TMDb, then None is returned.
+            is not found on TMDb, then None is returned.
 
         Raises:
             HTTPException (404) if the given Series is not found on TMDb
         """
 
-        # Don't query the database if this episode is in the blacklist
-        if (not bypass_blacklist
-            and self.__is_blacklisted(series_info, None, 'logo')):
-            log.debug(f'Series {series_info} logo is blacklisted')
-            return None
-
         # Get the series for this logo, exit if series or logos DNE
         try:
+            if not series_info.tmdb_id:
+                raise NotFound
             series = self.api.tv_show(series_info.tmdb_id)
         except NotFound:
-            self.__update_blacklist(series_info, None, 'logo')
             log.debug(f'Series {series_info} not found on TMDb')
             return None
 
         # Blacklist if there are no logos
         if len(series.logos) == 0:
-            self.__update_blacklist(series_info, None, 'logo')
             log.info(f'Series {series_info} has no logos')
             return None
 
@@ -1070,7 +896,6 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
     def get_all_backdrops(self,
             series_info: SeriesInfo,
             *,
-            bypass_blacklist: bool = False,
             log: Logger = log,
         ) -> Optional[list[TMDbStill]]:
         """
@@ -1078,28 +903,22 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
         Args:
             series_info: SeriesInfo for this entry.
-            bypass_blacklist: Whether to bypass the blacklist.
             log: Logger for all log messages.
 
         Returns:
             List of `tmdbapis.objs.image.Still` objects. If the series
-            is blacklisted, then None is returned.
+            is not found on TMDb, then None is returned.
 
         Raises:
             HTTPException (404) if the given Series is not found on TMDb
         """
 
-        # Don't query the database if this episode is in the blacklist
-        if (not bypass_blacklist
-            and self.__is_blacklisted(series_info, None, 'backdrop')):
-            log.debug(f'Series {series_info} logo is blacklisted')
-            return None
-
         # Get the series, exit if series or backdrops DNE
         try:
+            if not series_info.tmdb_id:
+                raise NotFound
             series = self.api.tv_show(series_info.tmdb_id)
         except NotFound as exc:
-            self.__update_blacklist(series_info, None, 'backdrop')
             raise HTTPException(
                 status_code=404,
                 detail=f'Series {series_info} not found on TMDb',
@@ -1107,7 +926,6 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
         # Blacklist if there are no backdrops
         if len(series.backdrops) == 0:
-            self.__update_blacklist(series_info, None, 'backdrop')
             log.info(f'Series {series_info} has no backdrops')
             return []
 
@@ -1150,9 +968,9 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 series_info, episode_info, match_title=match_title, log=log,
             )
         # Some error occurred, raise if indicated, otherwise return None
-        except HTTPException as e:
+        except HTTPException as exc:
             if raise_exc:
-                raise e
+                raise exc
             return None
 
         # If None, either blacklisted or Episode was not found
@@ -1162,7 +980,6 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         # Exit if no images for this Episode
         if not all_images:
             log.debug(f'TMDb has no images for "{series_info}" {episode_info}')
-            self.__update_blacklist(series_info, episode_info, 'image')
             return None
 
         # Get the best image for this Episode
@@ -1175,7 +992,6 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
         log.debug(f'TMDb images for "{series_info}" {episode_info} do not meet '
                   f'dimensional requirements')
-        self.__update_blacklist(series_info, episode_info, 'image')
         return None
 
 
@@ -1218,7 +1034,6 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
             language_code: str = 'en-US',
-            bypass_blacklist: bool = False,
             *,
             log: Logger = log,
         ) -> Optional[str]:
@@ -1229,23 +1044,15 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             series_info: SeriesInfo for the entry.
             episode_info: EpisodeInfo for the entry.
             language_code: The language code for the desired title.
-            bypass_blacklist: Whether to bypass the blacklist check.
             log: Logger for all log messages.
 
         Args:
             The episode title, None if it cannot be found.
         """
 
-        # Don't query the database if this episode is in the blacklist
-        if (not bypass_blacklist
-            and self.__is_blacklisted(series_info, episode_info, 'title')):
-            log.debug(f'{series_info} {episode_info} is blacklisted - skipping')
-            return None
-
         # Get episode
         episode = self.__find_episode(series_info, episode_info, log=log)
         if episode is None:
-            self.__update_blacklist(series_info, episode_info, 'title')
             log.debug(f'{series_info} {episode_info} not found - skipping')
             return None
 
@@ -1272,7 +1079,6 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 if self.__is_generic_title(title, language_code, episode_info):
                     log.debug(f'Generic title "{title}" detected for '
                               f'{episode_info}')
-                    self.__update_blacklist(series_info, episode_info, 'title')
                     return None
 
                 return title
@@ -1293,20 +1099,16 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             images  are available.
         """
 
-        # Don't query the database if this series' logo is blacklisted
-        if self.__is_blacklisted(series_info, None, 'logo'):
-            return None
-
         # Get the series for this logo, exit if series or logos DNE
         try:
+            if not series_info.tmdb_id:
+                raise NotFound
             series = self.api.tv_show(series_info.tmdb_id)
         except NotFound:
-            self.__update_blacklist(series_info, None, 'logo')
             return None
 
-        # Blacklist if tthere are no logos
+        # Blacklist if there are no logos
         if len(series.logos) == 0:
-            self.__update_blacklist(series_info, None, 'logo')
             return None
 
         # Get the best logo
@@ -1340,7 +1142,6 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
         # No valid image found, blacklist and exit
         if best is None:
-            self.__update_blacklist(series_info, None, 'logo')
             return None
 
         return best.url
@@ -1370,25 +1171,21 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             HTTPException (404): The Series is not found on TMDb.
         """
 
-        # Don't query the database if this episode is in the blacklist
-        if self.__is_blacklisted(series_info, None, 'backdrop'):
-            return None
-
         # Get the series for this backdrop, exit if series or backdrop DNE
         try:
+            if not series_info.tmdb_id:
+                raise NotFound
             series = self.api.tv_show(series_info.tmdb_id)
-        except NotFound as e:
-            self.__update_blacklist(series_info, None, 'backdrop')
+        except NotFound as exc:
             if raise_exc:
                 raise HTTPException(
                     status_code=404,
                     detail=f'"{series_info}" not found on TMDb'
-                ) from e
+                ) from exc
             return None
 
         # Blacklist if there are no backdrops
         if len(series.backdrops) == 0:
-            self.__update_blacklist(series_info, None, 'backdrop')
             return None
 
         # Find and return best image
@@ -1401,7 +1198,6 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         if best_image:
             return best_image.url
 
-        self.__update_blacklist(series_info, None, 'backdrop')
         return None
 
 
@@ -1425,6 +1221,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
         # Get the series for this logo, exit if series or posters DNE
         try:
+            if not series_info.tmdb_id:
+                raise NotFound
             series = self.api.tv_show(series_info.tmdb_id)
         except NotFound:
             log.debug(f'Cannot find {series_info} on TMDb')
