@@ -745,14 +745,50 @@ class Series(Base):
 
         # If no season number was provided, use Series-wide poster
         if season_number is None:
-            return source_dir / 'poster.jpg'
+            return source_dir / 'backdrop.jpg'
 
         # Look for the season-specific poster
-        if ((logo := source_dir / f'poster_season{season_number}.jpg').exists()
+        if ((logo := source_dir / f'backdrop_season{season_number}.jpg').exists()
             or not fallback):
             return logo
 
-        return source_dir / 'poster.jpg'
+        return source_dir / 'backdrop.jpg'
+
+
+    def get_backdrop_uri(self,
+            season_number: Optional[int] = None,
+        ) -> tuple[bool, str]:
+        """
+        Get the existence status and file URI for the indicated
+        backdrop.
+
+        Args:
+            season_number: Optional season number if the per-season
+                backdrop is requested.
+
+        Returns:
+            Tuple of whether the backdrop file exists and the URI to the
+            indicated backdrop.
+        """
+
+        # Look for season asset if indicated
+        filename = 'backdrop.jpg'
+        if season_number is not None:
+            filename = f'backdrop_season{season_number}.jpg'
+
+        # Path to the backdrop in the source directory
+        backdrop =  get_preferences().source_directory \
+            / self.path_safe_name \
+            / filename
+
+        if backdrop.exists():
+            size = backdrop.stat().st_size
+            return (
+                True,
+                f'/source/{backdrop.parent.name}/{filename}?size={size}'
+            )
+
+        return False, f'/source/{backdrop.parent.name}/{filename}'
 
 
     def get_series_poster(self) -> Path:
