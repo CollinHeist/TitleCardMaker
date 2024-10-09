@@ -18,7 +18,7 @@ class CutoutTitleCard(BaseCardType):
     """
     This class describes a type of CardType that is very loosely based
     off of /u/Phendrena's Willow title card set. These cards feature a
-    solid color overlay with the episode text cutout to reveal the
+    solid color overlay with the episode text cut out to reveal the
     source image.
     """
 
@@ -74,6 +74,16 @@ class CutoutTitleCard(BaseCardType):
                 ),
                 default='0x30',
             ),
+            Extra(
+                name='Cutout Vertical Shift',
+                identifier='cutout_vertical_shift',
+                description='Additional vertical shift to apply to the cutout',
+                tooltip=(
+                    'How much to offset the cutout text by. Default is '
+                    '<v>0</v>. Unit is pixels.'
+                ),
+                default=0,
+            ),
         ],
         description=[
             'Title card featuring a solid color overlaying the source image.',
@@ -118,7 +128,7 @@ class CutoutTitleCard(BaseCardType):
         'font_color', 'font_file', 'font_interline_spacing',
         'font_interword_spacing', 'font_kerning', 'font_size',
         'font_vertical_shift', 'overlay_color', 'blur_edges',
-        'number_blur_profile', 'overlay_transparency',
+        'number_blur_profile', 'overlay_transparency', 'cutout_vertical_shift',
     )
 
     def __init__(self,
@@ -137,14 +147,13 @@ class CutoutTitleCard(BaseCardType):
             grayscale: bool = False,
             blur_edges: bool = False,
             blur_profile: str = NUMBER_BLUR_PROFILE,
+            cutout_vertical_shift: int = 0,
             overlay_color: str = 'black',
             overlay_transparency: float = 0.0,
             preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
-        """
-        Construct a new instance of this Card.
-        """
+        """Construct a new instance of this Card."""
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -170,6 +179,7 @@ class CutoutTitleCard(BaseCardType):
 
         # Optional extras
         self.blur_edges = blur_edges
+        self.cutout_vertical_shift = cutout_vertical_shift
         self.number_blur_profile = blur_profile
         self.overlay_color = overlay_color
         self.overlay_transparency = overlay_transparency
@@ -288,9 +298,8 @@ class CutoutTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
-        standard_etf = CutoutTitleCard.EPISODE_TEXT_FORMAT.upper()
-
-        return episode_text_format.upper() != standard_etf
+        return episode_text_format.upper() != \
+            CutoutTitleCard.EPISODE_TEXT_FORMAT.upper()
 
 
     def create(self) -> None:
@@ -315,6 +324,7 @@ class CutoutTitleCard(BaseCardType):
             f'-density 200',
             f'-pointsize 500',
             f'-gravity center',
+            f'-geometry +0{self.cutout_vertical_shift:+}',
             f'-interline-spacing -300',
             f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
             f'-fill white',

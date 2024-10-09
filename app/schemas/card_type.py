@@ -298,6 +298,7 @@ class CutoutCardType(BaseCardModel):
     font_vertical_shift: int = 0
     blur_edges: bool = False
     blur_profile: constr(regex=r'^\d+x\d+$') = CutoutTitleCard.BLUR_PROFILE
+    cutout_vertical_shift: int = 0
     overlay_color: str = 'black'
     overlay_transparency: confloat(ge=0.0, le=1.0) = 0.0
 
