@@ -1,5 +1,4 @@
 from json import dump
-from logging import Logger
 from pathlib import Path
 from random import choice as random_choice
 from typing import Literal, Optional
@@ -35,7 +34,6 @@ from app.internal.blueprint import (
 )
 from app.internal.episodes import get_all_episode_data
 from app.internal.series import add_series
-from app import models
 from app.models.blueprint import Blueprint, BlueprintSeries
 from app.models.card import Card
 from app.models.episode import Episode as EpisodeModel
@@ -47,6 +45,7 @@ from app.schemas.blueprint import (
     RemoteBlueprintSet,
 )
 from app.schemas.series import Series
+from modules.Debug import Logger
 from modules.TemporaryZip import TemporaryZip
 
 
@@ -366,7 +365,7 @@ def query_series_blueprints_(
     return query_series_blueprints(
         blueprint_db,
         get_series(db, series_id, raise_exc=True).as_series_info
-    )
+    ) # type: ignore
 
 
 @blueprint_router.get('/query/series')
@@ -404,7 +403,7 @@ def query_blueprints_by_info(
 
     return blueprint_db.query(Blueprint)\
         .filter(Blueprint.series_id.in_([bp.id for bp in blueprint_series]))\
-        .all()
+        .all() # type: ignore
 
 
 @blueprint_router.post('/import/blueprint/{blueprint_id}', status_code=201)
@@ -430,8 +429,8 @@ def import_blueprint_and_series(
 
     # Query for this Blueprint's Series
     series_info = blueprint.series.as_series_info
-    series = db.query(models.Series)\
-        .filter(series_info.filter_conditions(models.Series))\
+    series = db.query(SeriesModel)\
+        .filter(series_info.filter_conditions(SeriesModel))\
         .first()
 
     # Series does not exist, create and add to database
@@ -523,7 +522,7 @@ def get_blueprint_set_by_blueprint_id(
     - blueprint_id: ID of the Blueprint to get the details of.
     """
 
-    return get_blueprint(blueprint_db, blueprint_id, raise_exc=True).sets
+    return get_blueprint(blueprint_db, blueprint_id, raise_exc=True).sets # type: ignore
 
 
 @blueprint_router.get('/sets/series/{series_id}')

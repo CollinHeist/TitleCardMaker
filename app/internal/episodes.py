@@ -20,6 +20,9 @@ from app.schemas.episode import UpdateEpisode
 from modules.Debug import Logger, log
 from modules.EpisodeDataSource2 import WatchedStatus
 from modules.EpisodeInfo2 import EpisodeInfo
+from modules.SonarrInterface2 import SonarrInterface
+from modules.TMDbInterface2 import TMDbInterface
+from modules.TVDbInterface import TVDbInterface
 from modules.TieredSettings import TieredSettings
 
 
@@ -132,7 +135,7 @@ def get_all_episode_data(
         return []
 
     # Query Connections which do not have libraries
-    if interface.INTERFACE_TYPE in ('Sonarr', 'TMDb', 'TVDb'):
+    if isinstance(interface, (SonarrInterface, TMDbInterface, TVDbInterface)):
         return interface.get_all_episodes('', series.as_series_info, log=log)
 
     # Verify Series has an associated Library if EDS is a media server
