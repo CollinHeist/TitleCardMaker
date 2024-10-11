@@ -485,7 +485,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
         # Cannot query TMDb if no series TMDb ID
         if series_info.tmdb_id is None:
-            log.error(f'Cannot source episodes from TMDb for {series_info}')
+            log.debug(f'Cannot source episodes from TMDb for {series_info}')
             return []
 
         # Get all seasons on TMDb
@@ -494,7 +494,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             if not seasons:
                 raise NotFound
         except NotFound:
-            log.error(f'Cannot source episodes from TMDb for {series_info}')
+            log.debug(f'Cannot source episodes from TMDb for {series_info}')
             return []
 
         # Go through each season, getting episodes from each
