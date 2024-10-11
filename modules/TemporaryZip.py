@@ -1,4 +1,3 @@
-from logging import Logger
 from pathlib import Path
 from shutil import copy as copy_file, make_archive as zip_directory
 from time import sleep
@@ -6,7 +5,7 @@ from typing import Optional
 
 from fastapi import BackgroundTasks
 
-from modules.Debug import generate_context_id, log
+from modules.Debug import Logger, generate_context_id, log
 
 
 class TemporaryZip:
@@ -107,7 +106,7 @@ class TemporaryZip:
             Path to the created zip file.
         """
 
-        zip_file = Path(zip_directory(self.dir, 'zip', self.dir))
+        zip_file = Path(zip_directory(str(self.dir), 'zip', self.dir))
         self.tasks.add_task(
             self.__delete_zip,
             directory=self.dir, file=zip_file, log=log,

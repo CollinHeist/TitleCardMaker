@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from logging import LoggerAdapter
 from typing import Any, Callable, Optional, Union
 
 from fastapi import HTTPException
@@ -107,8 +106,7 @@ class DecoratedAPI:
                 raise exc
             except Exception as exc:
                 # Get contextual logger if provided as argument to function
-                if ('log' in kwargs
-                    and isinstance(kwargs['log'], (Logger, LoggerAdapter))):
+                if 'log' in kwargs and hasattr(kwargs['log'], 'debug'):
                     clog = kwargs['log']
                 else:
                     clog = log
@@ -360,7 +358,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
         # Try and find by TMDb ID first
         found = False
-        if not found and series_info.has_id('tmdb_id'):
+        if not found and series_info.tmdb_id:
             try:
                 results = [self.api.tv_show(series_info.tmdb_id)]
                 found = True
@@ -368,7 +366,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 pass
 
         # Find by TVDb ID
-        if not found and series_info.has_id('tvdb_id'):
+        if not found and series_info.tvdb_id:
             try:
                 results = self.api.find_by_id(
                     tvdb_id=series_info.tvdb_id
@@ -378,7 +376,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 pass
 
         # Find by IMDb ID
-        if not found and series_info.has_id('imdb_id'):
+        if not found and series_info.imdb_id:
             try:
                 results = self.api.find_by_id(
                     imdb_id=series_info.imdb_id
@@ -388,7 +386,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 pass
 
         # Find by TVRage ID
-        if not found and series_info.has_id('tvrage_id'):
+        if not found and series_info.tvrage_id:
             try:
                 results = self.api.find_by_id(
                     tvrage_id=series_info.tvrage_id
@@ -459,7 +457,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 imdb_id=result.imdb_id,
                 tmdb_id=result.id,
                 tvdb_id=result.tvdb_id,
-            ) for result in results if result.first_air_date
+            )
+            for result in results if result.first_air_date
         ]
 
 
@@ -708,8 +707,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         for season in series.seasons:
             season.reload()
             for episode in season.episodes:
-                if ((episode_info.has_id('tmdb_id') and
-                    episode_info.tmdb_id == episode.id)
+                if ((episode_info.tmdb_id and episode_info.tmdb_id == episode.id)
                     or episode_info.full_title.matches(episode.name)):
                     episode.reload()
                     return episode
@@ -746,11 +744,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         for old_episode_info in episode_infos:
             for new_episode_info, _ in new_episode_infos:
                 if old_episode_info == new_episode_info:
-                    # For each ID of this new EpisodeInfo, update old if upgrade
-                    for id_type, id_ in new_episode_info.ids.items():
-                        if (getattr(old_episode_info, id_type) is None
-                            and id_ is not None):
-                            setattr(old_episode_info, id_type, id_)
+                    old_episode_info.copy_ids(new_episode_info, log=log)
                     break
 
 
@@ -850,7 +844,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         else:
             images = episode.backdrops
 
-        return images
+        return images # type: ignore
 
 
     @catch_and_log('Error getting all logos', default=None)
@@ -973,16 +967,14 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 raise exc
             return None
 
-        # If None, either blacklisted or Episode was not found
-        if not all_images:
-            return None
-
         # Exit if no images for this Episode
         if not all_images:
             log.debug(f'TMDb has no images for "{series_info}" {episode_info}')
             return None
 
         # Get the best image for this Episode
+        log.trace(f'TMDb has {len(all_images)} images for "{series_info}" '
+                  f'{episode_info}')
         kwargs = {
             'is_source_image': True,
             'skip_localized':skip_localized_images
