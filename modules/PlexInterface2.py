@@ -8,7 +8,8 @@ from typing import (
     Literal,
     NamedTuple,
     Optional,
-    Union
+    Union,
+    cast
 )
 
 from fastapi import HTTPException
@@ -1096,10 +1097,12 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
         try:
             # Get the entry for this key
             entry = self.__server.fetchItem(rating_key) # type: ignore
+            if entry is None:
+                raise NotFound
 
             # Show, return all episodes in series
             if entry.type == 'show':
-                entry: PlexShow
+                entry = cast(PlexShow, entry) # type: ignore
                 series_info = SeriesInfo.from_plex_show(entry)
                 return [
                     EpisodeDetails(
@@ -1116,7 +1119,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
             # Season, return all episodes in season
             if entry.type == 'season':
-                entry: PlexSeason
+                entry = cast(PlexSeason, entry) # type: ignore
                 series: PlexShow = self.__server.fetchItem(entry.parentRatingKey) # type: ignore
                 series_info = SeriesInfo.from_plex_show(series)
                 return [
@@ -1125,7 +1128,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                         EpisodeInfo.from_plex_episode(ep),
                         WatchedStatus(
                             self._interface_id,
-                            ep.librarySectionTitle, # TODO double check
+                            ep.librarySectionTitle,
                             ep.isWatched,
                         ),
                     ) for ep in entry.episodes()
@@ -1133,7 +1136,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
 
             # Episode, return just that
             if entry.type == 'episode':
-                entry: PlexEpisode
+                entry = cast(PlexEpisode, entry)
                 series: PlexShow = self.__server.fetchItem( # type: ignore
                     entry.grandparentRatingKey
                 )
@@ -1144,7 +1147,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                         EpisodeInfo.from_plex_episode(entry),
                         WatchedStatus(
                             self._interface_id,
-                            entry.librarySectionTitle, # TODO double check
+                            entry.librarySectionTitle,
                             entry.isWatched,
                         ),
                     )
