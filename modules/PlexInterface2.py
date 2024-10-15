@@ -967,7 +967,7 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 log.debug(f'{series_info} loaded poster into season '
                           f'{season.index}')
             except Exception:
-                log.exception(f'Failed to upload {poster.resolve()} to season '
+                log.exception(f'Failed to upload {poster} to season '
                               f'{season.index}')
                 continue
 
