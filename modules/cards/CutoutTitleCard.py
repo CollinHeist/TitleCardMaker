@@ -79,7 +79,7 @@ class CutoutTitleCard(BaseCardType):
                 identifier='cutout_vertical_shift',
                 description='Additional vertical shift to apply to the cutout',
                 tooltip=(
-                    'How much to offset the cutout text by. Default is '
+                    'Number between <v>-1800</v> and <v>1800</v>. Default is '
                     '<v>0</v>. Unit is pixels.'
                 ),
                 default=0,
@@ -129,9 +129,10 @@ class CutoutTitleCard(BaseCardType):
         'font_interword_spacing', 'font_kerning', 'font_size',
         'font_vertical_shift', 'overlay_color', 'blur_edges',
         'number_blur_profile', 'overlay_transparency', 'cutout_vertical_shift',
+        '__text_mask',
     )
 
-    def __init__(self,
+    def __init__(self, *,
             source_file: Path,
             card_file: Path,
             title_text: str,
@@ -184,6 +185,9 @@ class CutoutTitleCard(BaseCardType):
         self.overlay_color = overlay_color
         self.overlay_transparency = overlay_transparency
 
+        # Implementation details
+        self.__text_mask: Optional[Path] = None
+
 
     def _format_episode_text(self, episode_text: str) -> str:
         """
@@ -231,6 +235,67 @@ class CutoutTitleCard(BaseCardType):
             f'-interword-spacing {font_interword_spacing}',
             f'-kerning {font_kerning}',
             f'-annotate +0+{font_vertical_shift} "{self.title_text}"',
+        ]
+
+
+    @property
+    def episode_text_mask(self) -> ImageMagickCommands:
+        """
+        Subcommands for adding the episode text mask used in the cutout.
+        """
+
+        # Base commands for all text generation
+        blur = f'-blur "{self.number_blur_profile}"' if self.blur_edges else ''
+        text_commands = [
+            f'-set colorspace sRGB',
+            f'-background transparent',
+            f'-density 200',
+            f'-pointsize 500',
+            f'-gravity center',
+            f'-interline-spacing -300',
+            f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
+            f'-fill white',
+            f'+size',
+            f'label:"{self.episode_text}"',
+            # Resize with 100px margin on all sides
+            f'-resize 3100x1700',
+            f'-extent "{self.TITLE_CARD_SIZE}"',
+        ]
+
+        # A non-zero cutout shift requires an intermediate image
+        if self.cutout_vertical_shift != 0:
+            # Determine which direction to add padding to in order to
+            # generate indicated shift
+            gravity = 'north' if self.cutout_vertical_shift > 0 else 'south'
+
+            # Create temporary image
+            self.__text_mask = self.image_magick.get_random_filename(
+                self.source_file
+            )
+            self.image_magick.run([
+                f'convert',
+                *text_commands,
+                # Adjust bounds to effectively shift image up/down
+                # this is required since -page and -geometry offsets
+                # do not affect mask images used in image mask
+                # composition
+                f'-gravity {gravity}',
+                f'-extent 3200x{1800 + abs(self.cutout_vertical_shift)}',
+                # Re-center to final mask dimensions
+                f'-gravity center -extent 3200x1800',
+                blur,
+                f'"{self.__text_mask.resolve()}"',
+            ])
+
+            # Add to primary image as a file composition
+            return [f'"{self.__text_mask.resolve()}"']
+
+        # No cutout shift, can generate mask on-the-fly
+        return [
+            f'\(',
+            *text_commands,
+            blur,
+            f'\)'
         ]
 
 
@@ -308,7 +373,7 @@ class CutoutTitleCard(BaseCardType):
         # Masked Alpha Composition layers must be ordered as:
         # [Replace Black Parts of Mask] | [Replace White Parts of Mask] | [Mask]
 
-        command = ' '.join([
+        self.image_magick.run([
             f'convert',
             f'-set colorspace sRGB',
             # Create solid-color overlay
@@ -318,27 +383,14 @@ class CutoutTitleCard(BaseCardType):
             f'\( "{self.source_file.resolve()}"',
             *self.resize_and_style,
             f'\)',
-            # Create cutout of episode text
-            f'\( -set colorspace sRGB',
-            f'-background transparent',
-            f'-density 200',
-            f'-pointsize 500',
-            f'-gravity center',
-            f'-geometry +0{self.cutout_vertical_shift:+}',
-            f'-interline-spacing -300',
-            f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
-            f'-fill white',
-            f'+size',
-            f'label:"{self.episode_text}"',
-            # Resize with 100px margin on all sides
-            f'-resize 3100x1700',
-            f'-extent "{self.TITLE_CARD_SIZE}"',
-            f'-blur "{self.number_blur_profile}" \)' if self.blur_edges else '\)',
+            # Create/add cutout of episode text
+            *self.episode_text_mask,
             # Use masked alpha composition to combine images
             f'-gravity center',
             f'-composite',
             *self.transparency_overlay_commands,
             # Add title text
+            f'-density 200',
             *self.title_text_commands,
             # Attempt to overlay mask
             *self.add_overlay_mask(self.source_file),
@@ -347,4 +399,4 @@ class CutoutTitleCard(BaseCardType):
             f'"{self.output_file.resolve()}"',
         ])
 
-        self.image_magick.run(command)
+        self.image_magick.delete_intermediate_images(self.__text_mask)
