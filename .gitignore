@@ -30,3 +30,4 @@ missing.yml
 preferences.yml
 temp*.jpg
 uv.lock
+.vscode/settings.json
