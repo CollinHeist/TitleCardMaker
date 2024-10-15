@@ -134,7 +134,7 @@ class ImageMagickInterface:
         return string
 
 
-    def run(self, command: Union[str, Iterable[str]]) -> tuple[bytes, bytes]:
+    def run(self, command: Union[str, list[str]]) -> tuple[bytes, bytes]:
         """
         Wrapper for running a given command. This uses either the host
         machine (i.e. direct calls); or through the provided docker
@@ -150,8 +150,7 @@ class ImageMagickInterface:
         """
 
         # If a list of commands were provided, join into one command string
-        if isinstance(command, (list, tuple)):
-            command = ' '.join(command)
+        command = ' '.join(command) if isinstance(command, list) else command
 
         # Un-escape \( and \) into ( and )
         if os_name == 'nt':
@@ -212,7 +211,7 @@ class ImageMagickInterface:
             return b''.join(output).decode('iso8859')
 
 
-    def delete_intermediate_images(self, *paths: Path) -> None:
+    def delete_intermediate_images(self, *paths: Optional[Path]) -> None:
         """
         Delete all the provided intermediate files.
 
@@ -222,7 +221,8 @@ class ImageMagickInterface:
 
         # Delete (unlink) each image, don't raise FileNotFoundError if DNE
         for image in paths:
-            image.unlink(missing_ok=True)
+            if image is not None:
+                image.unlink(missing_ok=True)
 
 
     def print_command_history(self, *, log: Logger = log) -> None:
