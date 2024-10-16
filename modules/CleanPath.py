@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 
 class CleanPath(type(Path())):
@@ -101,3 +102,6 @@ class CleanPath(type(Path())):
             finalized_path =self._sanitize_parts(CleanPath.cwd()/self).resolve()
 
         return self._sanitize_parts(finalized_path)
+
+if TYPE_CHECKING:
+    CleanPath = Path # type: ignore
