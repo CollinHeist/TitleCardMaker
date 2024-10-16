@@ -21,15 +21,71 @@ class NegativeSpaceTitleCard(BaseCardType):
 
     """API Parameters"""
     API_DETAILS: CardTypeDescription = CardTypeDescription(
-        name='',
-        identifier='',
+        name='Negative Space',
+        identifier='negative space',
         example='/internal_assets/cards/...',
         creators=['CollinHeist'],
         source='builtin',
         supports_custom_fonts=True,
-        supports_custom_seasons=True,
-        supported_extras=[],
-        description=[]
+        supports_custom_seasons=False,
+        supported_extras=[
+            Extra(
+                name='Episode Text Color',
+                identifier='episode_text_color',
+                description='Color of the season and episode text',
+                tooltip='Default is to match the Font color.',
+            ),
+            Extra(
+                name='Episode Text Font Size',
+                identifier='episode_text_font_size',
+                description='Size adjustment for the season and episode text',
+                tooltip='Number ≥<v>0.0</v>. Default is <v>1.0</v>.',
+                default=1.0,
+            ),
+            Extra(
+                name='Number Text Horizontal Shift',
+                identifier='number_horizontal_offset',
+                description=(
+                    'Additional horizontal shift to apply to the number text.'
+                ),
+                tooltip='Default is <v>0</v>. Unit is pixels.',
+                default=0,
+            ),
+            Extra(
+                name='Number Text Vertical Shift',
+                identifier='number_vertical_offset',
+                description=(
+                    'Additional vertical shift to apply to the number text.'
+                ),
+                tooltip='Default is <v>0</v>. Unit is pixels.',
+                default=0,
+            ),
+            Extra(
+                name='Text Side',
+                identifier='text_side',
+                description='Which side to add all text to',
+                tooltip=(
+                    'Either <v>left</v> or <v>right</v>. Default is <v>left</v>.'
+                ),
+                default='left',
+            ),
+            Extra(
+                name='Title Text Horizontal Shift',
+                identifier='title_text_horizontal_offset',
+                description=(
+                    'Additional horizontal shift to apply to the title text.'
+                ),
+                tooltip='Default is <v>0</v>. Unit is pixels.',
+                default=0,
+            ),
+        ],
+        description=[
+            'Card type featuring a large, prominent numeral on the side of the '
+            'image with overlapping title text. The color of the numeral is '
+            'inverted where the two texts overlap, showing the title in the '
+            'negative space. All text, can be recolored or adjusted '
+            'independently via extras.'
+        ]
     )
 
     """Directory where all reference files used by this card are stored"""
@@ -46,9 +102,10 @@ class NegativeSpaceTitleCard(BaseCardType):
     TITLE_FONT: str = str((REF_DIRECTORY / 'Futura.ttc').resolve())
     TITLE_COLOR: str = 'white'
     DEFAULT_FONT_CASE = 'upper'
-    FONT_REPLACEMENTS = {}
+    FONT_REPLACEMENTS: dict[str, str] = {}
 
     """Characteristics of the episode text"""
+    EPISODE_TEXT_FORMAT = '{episode_number}'
     EPISODE_TEXT_COLOR = TITLE_COLOR
     EPISODE_TEXT_FONT = TITLE_FONT
 
@@ -67,6 +124,7 @@ class NegativeSpaceTitleCard(BaseCardType):
         'font_interline_spacing', 'font_interword_spacing', 'font_kerning',
         'font_vertical_shift', 'episode_text_color', 'episode_text_font_size',
         'number_horizontal_offset', 'number_vertical_offset', 'text_side',
+        'title_text_horizontal_offset',
     )
 
 
@@ -85,13 +143,12 @@ class NegativeSpaceTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-
             episode_text_color: str = EPISODE_TEXT_COLOR,
             episode_text_font_size: float = 1.0,
             number_horizontal_offset: int = 0,
             number_vertical_offset: int = 0,
             text_side: TextSide = DEFAULT_TEXT_SIDE,
-
+            title_text_horizontal_offset: int = 0,
             preferences: Optional['Preferences'] = None,
             **unused,
         ) -> None:
@@ -105,17 +162,14 @@ class NegativeSpaceTitleCard(BaseCardType):
 
         # Ensure characters that need to be escaped are
         self.title_text = self.image_magick.escape_chars(title_text)
-        if episode_text == 'random':
-            from random import randint
-            episode_text = str(randint(0, int('9' * randint(1, 3))))
         self.episode_text = self.image_magick.escape_chars(episode_text)
         self.hide_episode_text = hide_episode_text
 
         # Font/card customizations
         self.font_color = font_color
         self.font_file = font_file
-        self.font_interline_spacing = 0 + font_interline_spacing
-        self.font_interword_spacing = -55 + font_interword_spacing
+        self.font_interline_spacing = -55 + font_interline_spacing
+        self.font_interword_spacing = 0 + font_interword_spacing
         self.font_kerning = 1.0 * font_kerning
         self.font_size = font_size
         self.font_vertical_shift = 0 + font_vertical_shift
@@ -126,12 +180,22 @@ class NegativeSpaceTitleCard(BaseCardType):
         self.number_horizontal_offset = number_horizontal_offset
         self.number_vertical_offset = number_vertical_offset
         self.text_side: TextSide = text_side
+        self.title_text_horizontal_offset = title_text_horizontal_offset
 
 
     def title_text_commands(self,
             color: Optional[str] = None,
         ) -> ImageMagickCommands:
-        """Subcommand for adding title text to the source image."""
+        """
+        Get the subcommand for adding the title text to the source
+        image.
+
+        Args:
+            color: Override color for the title text.
+
+        Returns:
+            List of ImageMagick commands.
+        """
 
         # No title text
         if not self.title_text:
@@ -141,7 +205,7 @@ class NegativeSpaceTitleCard(BaseCardType):
         gravity = 'west' if self.text_side == 'left' else 'east'
 
         # Determine x offset
-        offset = 350
+        offset = 350 + self.title_text_horizontal_offset
         # if self.episode_text and self.episode_text[0] == '0':
         #     offset = 120
 
@@ -151,8 +215,10 @@ class NegativeSpaceTitleCard(BaseCardType):
             f'-fill "{color}"',
             f'-pointsize {150 * self.font_size}',
             f'-kerning {self.font_kerning}',
-            f'-interline-spacing {self.font_interword_spacing}',
-            f'-annotate {offset:+}+0 "{self.title_text}"',
+            f'-interline-spacing {self.font_interline_spacing}',
+            f'-interword-spacing {self.font_interword_spacing}',
+            f'-annotate {offset:+}{self.font_vertical_shift:+}',
+            f'"{self.title_text}"',
         ]
 
 
@@ -178,10 +244,12 @@ class NegativeSpaceTitleCard(BaseCardType):
         gravity = 'west' if self.text_side == 'left' else 'east'
 
         # Determine horizontal offset
-        x = 0
-        if self.episode_text[0] == '1':
-            x = -50
-        x += self.number_horizontal_offset
+        x = self.number_horizontal_offset + {
+            '1': -50,
+            '4': 50,
+            '5': 50,
+            '8': -50,
+        }.get(self.episode_text[0], 0)
 
         return [
             f'-font "{self.EPISODE_TEXT_FONT}"',
@@ -295,7 +363,10 @@ class NegativeSpaceTitleCard(BaseCardType):
         """
 
         custom_extras = (
-            # TODO
+            ('episode_text_color' in extras
+                and extras['episode_text_color'] != \
+                    NegativeSpaceTitleCard.EPISODE_TEXT_COLOR)
+            or (extras.get('episode_text_font_size', 1.0) != 1.0)
         )
 
         return (custom_extras

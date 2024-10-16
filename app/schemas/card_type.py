@@ -45,6 +45,10 @@ from modules.cards.MusicTitleCard import (
     PlayerPosition,
     PlayerStyle,
 )
+from modules.cards.NegativeSpaceTitleCard import (
+    NegativeSpaceTitleCard,
+    TextSide as NegativeSpaceTextSide
+)
 from modules.cards.NotificationTitleCard import NotificationTitleCard
 from modules.cards.OlivierTitleCard import OlivierTitleCard
 from modules.cards.OverlineTitleCard import OverlineTitleCard
@@ -87,6 +91,8 @@ LocalCardIdentifiers = Literal[
     'marvel',
     'music',
     'musikmann',
+    'negative',
+    'negative space',
     'notification',
     'olivier',
     'phendrena',
@@ -596,6 +602,36 @@ class MusicCardType(BaseCardTypeCustomFontAllText):
 
         return values
 
+class NegativeSpaceCardType(BaseCardModel):
+    title_text: str
+    episode_text: constr(to_upper=True)
+    hide_episode_text: bool = False
+    font_color: str = NegativeSpaceTitleCard.TITLE_COLOR
+    font_file: FilePath = NegativeSpaceTitleCard.TITLE_FONT
+    font_interline_spacing: int = 0
+    font_interword_spacing: int = 0
+    font_size: PositiveFloat = 1.0
+    font_vertical_shift: int = 0
+    episode_text_color: Optional[str] = None
+    episode_text_font_size: PositiveFloat = 1.0
+    number_horizontal_offset: int = 0
+    number_vertical_offset: int = 0
+    text_side: NegativeSpaceTextSide = NegativeSpaceTitleCard.DEFAULT_TEXT_SIDE
+    title_text_horizontal_offset: int = 0
+
+    @root_validator(skip_on_failure=True)
+    def toggle_text_hiding(cls, values: dict) -> dict:
+        values['hide_episode_text'] |= (len(values['episode_text']) == 0)
+
+        return values
+
+    @root_validator(skip_on_failure=True)
+    def assign_unassigned_color(cls, values: dict) -> dict:
+        if values['episode_text_color'] is None:
+            values['episode_text_color'] = values['font_color']
+
+        return values
+
 class NotificationCardType(BaseCardTypeCustomFontAllText):
     season_text: str
     episode_text: str
@@ -963,6 +999,8 @@ LocalCardTypeModels: dict[str, type[Base]] = {
     'marvel': MarvelCardType,
     'music': MusicCardType,
     'musikmann': WhiteBorderCardType,
+    'negative': NegativeSpaceCardType,
+    'negative space': NegativeSpaceCardType,
     'notification': NotificationCardType,
     'olivier': OlivierCardType,
     'overline': OverlineCardType,

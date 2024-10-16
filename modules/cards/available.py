@@ -14,6 +14,7 @@ from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
 from modules.cards.MarvelTitleCard import MarvelTitleCard
 from modules.cards.MusicTitleCard import MusicTitleCard
+from modules.cards.NegativeSpaceTitleCard import NegativeSpaceTitleCard
 from modules.cards.NotificationTitleCard import NotificationTitleCard
 from modules.cards.OlivierTitleCard import OlivierTitleCard
 from modules.cards.OverlineTitleCard import OverlineTitleCard
@@ -47,6 +48,7 @@ LocalCards: list['CardTypeDescription'] = [
     LogoTitleCard.API_DETAILS,
     MarvelTitleCard.API_DETAILS,
     MusicTitleCard.API_DETAILS,
+    NegativeSpaceTitleCard.API_DETAILS,
     NotificationTitleCard.API_DETAILS,
     OlivierTitleCard.API_DETAILS,
     OverlineTitleCard.API_DETAILS,
