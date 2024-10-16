@@ -40,7 +40,9 @@ PageSizeDimensions = constr(
     regex=r'^\d+x\d+$',
 )
 
-CardExtension = Literal['.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp']
+CardExtension = Literal[
+    '.jpg', '.jpeg', '.jxl', '.png', '.tiff', '.gif', '.webp'
+]
 
 Style = Literal[
     'art', 'art blur', 'art grayscale', 'art blur grayscale', 'unique',

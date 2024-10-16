@@ -67,7 +67,7 @@ class NotificationTitleCard(BaseCardType):
                     'Additional vertical shift to apply to the season and '
                     'episode text.'
                 ),
-                tooltip='Default is <v>0</v>.',
+                tooltip='Default is <v>0</v>. Unit is pixels.',
                 default=0,
             ),
             Extra(
