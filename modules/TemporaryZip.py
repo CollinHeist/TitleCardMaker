@@ -10,8 +10,8 @@ from modules.Debug import Logger, generate_context_id, log
 
 class TemporaryZip:
     """
-    This class defines a temporarily-existing zip directory. Files can
-    be aded to and zipped from the directory.
+    A temporarily-existing zip directory. Files can be aded to and
+    zipped from the directory.
     """
 
     def __init__(self,

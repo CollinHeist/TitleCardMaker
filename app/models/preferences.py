@@ -205,7 +205,7 @@ class Preferences:
         self.delete_unsynced_series = False
         self.simplified_data_table = True
         self.interactive_card_previews = True
-        self.remote_card_types = {}
+        self.remote_card_types: dict[str, type[BaseCardType]] = {}
         self.local_card_types: dict[str, type[BaseCardType]] = {}
         self.default_card_type = 'standard'
         self.excluded_card_types = []

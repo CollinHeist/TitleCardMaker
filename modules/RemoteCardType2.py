@@ -1,6 +1,5 @@
 from hashlib import md5
 from importlib.util import spec_from_file_location, module_from_spec
-from logging import Logger
 import sys
 from typing import Literal, Optional, Union
 
@@ -10,7 +9,7 @@ from requests import get
 from app.schemas.base import Base
 from modules.BaseCardType import BaseCardType
 from modules.CleanPath import CleanPath
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.RemoteFile import RemoteFile
 
 
@@ -108,13 +107,15 @@ class RemoteCardType:
         # Import new file as module
         try:
             # Create module for newly loaded file
-            spec = spec_from_file_location(class_name, file_name)
+            if ((spec := spec_from_file_location(class_name, file_name)) is None
+                or spec.loader is None):
+                raise KeyError
             module = module_from_spec(spec)
             sys.modules[class_name] = module
             spec.loader.exec_module(module)
 
             # Get class from module namespace
-            self.card_class: type[BaseCardType] = module.__dict__[class_name]
+            self.card_class = module.__dict__[class_name]
 
             # Validate that each RemoteFile of this class loaded correctly
             for attribute_name in dir(self.card_class):
@@ -142,13 +143,17 @@ class RemoteCardType:
         return None
 
 
-    def __validate_ui_requirements(self, identifier: str, /) -> None:
+    def __validate_ui_requirements(self,
+            identifier: Union[str, Path],
+            /,
+        ) -> None:
         """
         Validate this object's Card class UI requirements and update the
         object's validity.
 
         Args:
-            identifier: Identifier of the Card class being validated.
+            identifier: Identifier of the (or path to the) Card class
+                being validated.
         """
 
         # Validate the API implementation details are there
