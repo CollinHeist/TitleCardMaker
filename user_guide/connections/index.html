@@ -1,0 +1,2412 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Add connections to external services like Plex, Sonarr, Tautulli, or TMDb.
+">
+      
+      
+        <meta name="author" content="Collin Heist">
+      
+      
+        <link rel="canonical" href="https://titlecardmaker.com/user_guide/connections/">
+      
+      
+        <link rel="prev" href="../settings/">
+      
+      
+        <link rel="next" href="../scheduler/">
+      
+      
+      <link rel="icon" href="../../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.16">
+    
+    
+      
+        <title>Connections - TitleCardMaker</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.bcfcd587.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+      
+        <meta  property="og:type"  content="website" >
+      
+        <meta  property="og:title"  content="Connections - TitleCardMaker" >
+      
+        <meta  property="og:description"  content="Add connections to external services like Plex, Sonarr, Tautulli, or TMDb.
+" >
+      
+        <meta  property="og:image"  content="https://titlecardmaker.com/assets/images/social/user_guide/connections.png" >
+      
+        <meta  property="og:image:type"  content="image/png" >
+      
+        <meta  property="og:image:width"  content="1200" >
+      
+        <meta  property="og:image:height"  content="630" >
+      
+        <meta  property="og:url"  content="https://titlecardmaker.com/user_guide/connections/" >
+      
+        <meta  name="twitter:card"  content="summary_large_image" >
+      
+        <meta  name="twitter:title"  content="Connections - TitleCardMaker" >
+      
+        <meta  name="twitter:description"  content="Add connections to external services like Plex, Sonarr, Tautulli, or TMDb.
+" >
+      
+        <meta  name="twitter:image"  content="https://titlecardmaker.com/assets/images/social/user_guide/connections.png" >
+      
+    
+    
+   <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+        html.glightbox-open { overflow: initial; height: 100%; }
+        .gslide-title { margin-top: 0px; user-select: text; }
+        .gslide-desc { color: #666; user-select: text; }
+        .gslide-image img { background: white; }
+        
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}
+            </style> <script src="../../assets/javascripts/glightbox.min.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="red">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#connections" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="TitleCardMaker" class="md-header__button md-logo" aria-label="TitleCardMaker" data-md-component="logo">
+      
+  <img src="../../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            TitleCardMaker
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Connections
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="red"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="red"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CollinHeist/TitleCardMaker" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CollinHeist/TitleCardMaker
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting_started/" class="md-tabs__link">
+          
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../blueprints/" class="md-tabs__link">
+        
+  
+    
+  
+  Blueprints
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+    
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../card_types/" class="md-tabs__link">
+          
+  
+    
+  
+  Card Types
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../development/contributing/" class="md-tabs__link">
+          
+  
+    
+  
+  Development
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../help_and_support/" class="md-tabs__link">
+        
+  
+    
+  
+  Help & Support
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../v1/" class="md-tabs__link">
+          
+  
+    
+  
+  Version 1
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="TitleCardMaker" class="md-nav__button md-logo" aria-label="TitleCardMaker" data-md-component="logo">
+      
+  <img src="../../assets/logo.svg" alt="logo">
+
+    </a>
+    TitleCardMaker
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CollinHeist/TitleCardMaker" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CollinHeist/TitleCardMaker
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../getting_started/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Getting Started
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../blueprints/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Blueprints
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+        
+        
+      
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    User Guide
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            User Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Pages
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Pages
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../series/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Series
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../new_series/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Adding Series
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../missing.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Missing Summary
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../templates/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Templates
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fonts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Fonts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../syncs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sync
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Settings
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Connections
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Connections
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Authentication">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#first-time-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      First Time Setup
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changing-credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      Changing Credentials
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disabling-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Disabling Authentication
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#forgotten-login" class="md-nav__link">
+    <span class="md-ellipsis">
+      Forgotten Login
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-a-connection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adding a Connection
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#emby" class="md-nav__link">
+    <span class="md-ellipsis">
+      Emby
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Emby">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#connection-name" class="md-nav__link">
+    <span class="md-ellipsis">
+      Connection Name
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#url" class="md-nav__link">
+    <span class="md-ellipsis">
+      URL
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      API Key
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filesize-limit" class="md-nav__link">
+    <span class="md-ellipsis">
+      Filesize Limit
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#username" class="md-nav__link">
+    <span class="md-ellipsis">
+      Username
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ssl" class="md-nav__link">
+    <span class="md-ellipsis">
+      SSL
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jellyfin" class="md-nav__link">
+    <span class="md-ellipsis">
+      Jellyfin
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Jellyfin">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#connection-name_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Connection Name
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#url_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      URL
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-key_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      API Key
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filesize-limit_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Filesize Limit
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#username_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Username
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ssl_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      SSL
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plex" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plex
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Plex">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#connection-name_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Connection Name
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#url_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      URL
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#token" class="md-nav__link">
+    <span class="md-ellipsis">
+      Token
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filesize-limit_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Filesize Limit
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ssl_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      SSL
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kometa-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Kometa Integration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tautulli" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tautulli
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sonarr" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sonarr
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Sonarr">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#connection-name_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Connection Name
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#url_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      URL
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-key_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      API Key
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ssl_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      SSL
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#downloaded-episode-toggle" class="md-nav__link">
+    <span class="md-ellipsis">
+      Downloaded Episode Toggle
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#library-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      Library Paths
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tautulli_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tautulli
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#themoviedatabase" class="md-nav__link">
+    <span class="md-ellipsis">
+      TheMovieDatabase
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TheMovieDatabase">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#connection-name_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Connection Name
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-key_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      API Key
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minimum-image-resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      Minimum Image Resolution
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#language-priority" class="md-nav__link">
+    <span class="md-ellipsis">
+      Language Priority
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ignore-localized-images" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ignore Localized Images
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#thetvdatabase" class="md-nav__link">
+    <span class="md-ellipsis">
+      TheTVDatabase
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TheTVDatabase">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#connection-name_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Connection Name
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-key_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      API Key
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minimum-image-resolution_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Minimum Image Resolution
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#language-priority_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Language Priority
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#episode-ordering" class="md-nav__link">
+    <span class="md-ellipsis">
+      Episode Ordering
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#include-movies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Include Movies
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scheduler/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Scheduler
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../importer.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Importer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../system/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    System Summary
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../logs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Logs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graphs.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Graphs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Changelog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integrations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Integrations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mask_images/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Mask Images
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../setting_priority/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Setting Priority
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../variables/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Variables
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../card_types/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Card Types
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../development/contributing/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Development
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../help_and_support/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Help & Support
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../v1/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Version 1
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="connections">Connections</h1>
+<p>The Connections page is where all <em>external</em> connections are defined. Currently
+this is the following:</p>
+<ul>
+<li><a href="#authentication">Authentication</a></li>
+<li><a href="#emby">Emby</a></li>
+<li><a href="#jellyfin">Jellyfin</a></li>
+<li><a href="#plex">Plex</a></li>
+<li><a href="#sonarr">Sonarr</a></li>
+<li><a href="#tautulli_1">Tautulli</a></li>
+<li><a href="#themoviedatabase">TheMovieDatabase</a></li>
+<li><a href="#thetvdatabase">TheTVDatabase</a></li>
+</ul>
+<p>Each Connection is described in greater detail below.</p>
+<p><img alt="Connections Page" class="no-lightbox" src="../assets/connections-light.webp#only-light" />
+<img alt="Connections Page" class="no-lightbox" src="../assets/connections-dark.webp#only-dark" /></p>
+<div class="admonition tip">
+<p class="admonition-title">Private Information</p>
+<p>Any input field marked with an <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17a2 2 0 0 0 2-2 2 2 0 0 0-2-2 2 2 0 0 0-2 2 2 2 0 0 0 2 2m6-9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2h1V6a5 5 0 0 1 5-5 5 5 0 0 1 5 5v2h1m-6-5a3 3 0 0 0-3 3v2h6V6a3 3 0 0 0-3-3Z"/></svg></span> icon is encrypted within the
+TitleCardMaker database, and is automatically redacted from all logs.</p>
+</div>
+<h2 id="authentication">Authentication</h2>
+<p>If you expose your instance of <abbr title="TitleCardMaker">TCM</abbr> <em>outside</em> your LAN (through a reverse proxy
+or some other means), it is recommended to enable Authentication so that a
+username and password are required to access <abbr title="TitleCardMaker">TCM</abbr>.</p>
+<p>Once authorized, the OAuth2 access token for your login is stored in your
+browser's local storage, so accessing the interface from another browser will
+require re-authentication. Tokens expire after two weeks.</p>
+<div class="admonition tip">
+<p class="admonition-title">API Request</p>
+<p>All<sup id="fnref4:1"><a class="footnote-ref" href="#fn:1">1</a></sup> API requests <em>also</em> require authorization (if enabled). If accessing
+the API <a href="../../development/api/">from the <abbr title="User Interface">UI</abbr></a>, then the locally stored
+OAuth2 session tokens <em>should</em> be applied, but if not you can click
+<code>Authorize</code> in the top right of the API page and enter your credentials.</p>
+</div>
+<h3 id="first-time-setup">First Time Setup</h3>
+<p>When first enabling Authentication by clicking the <code>Require Authentication</code>
+checkbox, a temporary username and password will be created. These are
+printed in the logs, but default to <code>admin</code> and <code>password</code>.</p>
+<h3 id="changing-credentials">Changing Credentials</h3>
+<p>After authentication is enabled, returning to the Connections page will show
+your current username and an empty password field. Simply type in your desired
+username and password, then hit <code>Save Changes</code> and <abbr title="TitleCardMaker">TCM</abbr> will modify your
+credentials - prompting a new login.</p>
+<h3 id="disabling-authentication">Disabling Authentication</h3>
+<p>Authentication can be disabled at any point by unchecking the <code>Require
+Authentication</code> checkbox.</p>
+<h3 id="forgotten-login">Forgotten Login</h3>
+<p>If you've forgotten your login credentials, follow the following steps to
+disable authentication.</p>
+<ol>
+<li>
+<p>Define the <code>TCM_DISABLE_AUTH</code> environment variable as <code>TRUE</code>.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:4"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><input id="__tabbed_1_4" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.62 8.35c-.42.28-1.75 1.04-1.95 1.19-.39.31-.75.29-1.14-.01-.2-.16-1.53-.92-1.95-1.19-.48-.31-.45-.7.08-.92 1.64-.69 3.28-.64 4.91.03.49.21.51.6.05.9m7.22 7.28c-.93-2.09-2.2-3.99-3.84-5.66a4.31 4.31 0 0 1-1.06-1.88c-.1-.33-.17-.67-.24-1.01-.2-.88-.29-1.78-.7-2.61-.73-1.58-2-2.4-3.84-2.47-1.81.05-3.16.81-3.95 2.4-.21.43-.36.88-.46 1.34-.17.76-.32 1.55-.5 2.32-.15.65-.45 1.21-.96 1.71-1.61 1.57-2.9 3.37-3.88 5.35-.14.29-.28.58-.37.88-.19.66.29 1.12.99.96.44-.09.88-.18 1.3-.31.41-.15.57-.05.67.35.65 2.15 2.07 3.66 4.24 4.5 4.12 1.56 8.93-.66 9.97-4.58.07-.27.17-.37.47-.27.46.14.93.24 1.4.35.49.09.85-.16.92-.64.03-.26-.06-.49-.16-.73"/></svg></span> Linux</label><label for="__tabbed_1_2"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11Z"/></svg></span> MacOS</label><label for="__tabbed_1_3"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21.83 4c.49 0 .8.4.67.89l-3.16 14.22c-.11.49-.59.89-1.08.89H2.17c-.49 0-.8-.4-.67-.89L4.66 4.89C4.77 4.4 5.25 4 5.74 4h16.09m-6 12h-4c-.46 0-.83.38-.83.84 0 .47.37.85.83.85h4c.47 0 .85-.38.85-.85 0-.46-.38-.84-.85-.84m-10.05.28a.87.87 0 0 0-.21 1.22c.28.42.84.5 1.24.23 7.35-5.17 7.4-5.23 7.45-5.26.18-.16.27-.38.28-.6.01-.2-.04-.37-.16-.56L9.46 6.03A.867.867 0 0 0 8.21 6c-.36.32-.38.88-.05 1.24l4.15 4.44-6.53 4.6Z"/></svg></span> Windows (Powershell)</label><label for="__tabbed_1_4"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 12V6.75l6-1.32v6.48L3 12m17-9v8.75l-10 .15V5.21L20 3M3 13l6 .09v6.81l-6-1.15V13m17 .25V22l-10-1.91V13.1l10 .15Z"/></svg></span> Windows (Non-Powershell)</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TCM_DISABLE_AUTH</span><span class="o">=</span>TRUE
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">TCM_DISABLE_AUTH</span><span class="o">=</span>TRUE
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">$env</span>:TCM_DISABLE_AUTH<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;TRUE&quot;</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">set</span><span class="w"> </span><span class="nv">TCM_DISABLE_AUTH</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>
+</span></code></pre></div>
+</div>
+</div>
+</div>
+</li>
+<li>
+<p>If you're using Docker, pass this environment variable into the container
+with <code>-e</code> (or in your Docker Compose file); if you're not using Docker then
+nothing else is necessary. Relaunch <abbr title="TitleCardMaker">TCM</abbr>.</p>
+</li>
+<li>
+<p>Navigate to the Connections page (<code>/connections</code>), re-enable
+Authentication - <abbr title="TitleCardMaker">TCM</abbr> will then create a new User with the default
+username and password as <code>admin</code> and <code>password</code>.</p>
+</li>
+<li>
+<p>Login, then change your credentials as desired.</p>
+</li>
+<li>
+<p>Close <abbr title="TitleCardMaker">TCM</abbr> and either define <code>TCM_DISABLE_AUTH</code> as something other than
+<code>TRUE</code>, or remove the specification altogether. Re-build/launch <abbr title="TitleCardMaker">TCM</abbr>.</p>
+</li>
+<li>
+<p>Get a password manager!</p>
+</li>
+</ol>
+<h2 id="adding-a-connection">Adding a Connection</h2>
+<p>For each Connection type, clicking the
+<span class="example md-button">Add Connection</span> button will create a blank
+form which you can enter all details into. After you have finished entering the
+info, click <span class="example md-button">Create</span> and <abbr title="TitleCardMaker">TCM</abbr> will refresh
+the page.</p>
+<p>Additional settings can be entered <em>after</em> creation. Open the newly created
+Connection, enter those details, and click
+<span class="example md-button">Save Changes</span></p>
+<hr />
+<h2 id="emby"><span class="twemoji emby"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 2 6 7l1 1-5 5 5 5 1-1 5 5 5-5-1-1 5-5-5-5-1 1-5-5m-1 6.5 6 3.5-6 3.5v-7Z"/></svg></span> Emby</h2>
+<p>As a <abbr title="Plex, Emby, or Jellyfin">Media Server</abbr>, Emby can serve as an
+<a href="../settings/#episode-data-source">Episode Data Source</a>,
+<a href="../settings/#image-source-priority">Image Source</a>, and as a location where
+Title Cards are uploaded to.</p>
+<p><abbr title="TitleCardMaker">TCM</abbr> can communicate with any number of Emby <abbr title="Plex, Emby, or Jellyfin">Media Servers</abbr>, although if you plan
+to use
+<a href="../settings/#watched-and-unwatched-episode-styles">watch-status styling</a>, make
+sure you read and enable the global
+<a href="../settings/#multi-library-filename-support">multi library filename support</a>
+setting first.</p>
+<h3 id="connection-name">Connection Name</h3>
+<p>The name of the Connection as it appears within the <abbr title="User Interface">UI</abbr>. This is purely
+cosmetic.</p>
+<h3 id="url">URL</h3>
+<p>The <em>root</em> URL to your Emby server, including the port.</p>
+<h3 id="api-key">API Key</h3>
+<p>API key to authenticate communication. The process of creating one within
+Emby is covered
+<a href="../../getting_started/connections/emby/">Getting Started</a>.</p>
+<h3 id="filesize-limit">Filesize Limit</h3>
+<p>The maximum file size of Title Cards to upload to Emby. Title Cards larger than
+this will be compressed<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>.</p>
+<p>Changing this setting <strong>does not</strong> retroactively affect created or uploaded
+Title Cards.</p>
+<p>This can be entered as <code>{digit} {unit}</code> - e.g. <code>4 Megabytes</code> - where the
+acceptable units are <code>Bytes</code>, <code>Kilobytes</code>, and <code>Megabytes</code>.</p>
+<h3 id="username">Username</h3>
+<p>Username of the user to query Episode watched statuses from.</p>
+<h3 id="ssl">SSL</h3>
+<p>Whether to connect with HTTPS instead of HTTP.</p>
+<hr />
+<h2 id="jellyfin"><span class="twemoji jellyfin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 .002C8.826.002-1.398 18.537.16 21.666c1.56 3.129 22.14 3.094 23.682 0C25.384 18.573 15.177 0 12 0zm7.76 18.949c-1.008 2.028-14.493 2.05-15.514 0C3.224 16.9 9.92 4.755 12.003 4.755c2.081 0 8.77 12.166 7.759 14.196zM12 9.198c-1.054 0-4.446 6.15-3.93 7.189.518 1.04 7.348 1.027 7.86 0 .511-1.027-2.874-7.19-3.93-7.19z"/></svg></span> Jellyfin</h2>
+<p>As a <abbr title="Plex, Emby, or Jellyfin">Media Server</abbr>, Jellyfin can serve as an
+<a href="../settings/#episode-data-source">Episode Data Source</a>,
+<a href="../settings/#image-source-priority">Image Source</a>, and as a location where
+Title Cards are uploaded to.</p>
+<p><abbr title="TitleCardMaker">TCM</abbr> can communicate with any number of Jellyfin <abbr title="Plex, Emby, or Jellyfin">Media Servers</abbr>, although if you
+plan to use
+<a href="../settings/#watched-and-unwatched-episode-styles">watch-status styling</a>, make
+sure you read and enable the global
+<a href="../settings/#multi-library-filename-support">multi library filename
+support</a> setting first.</p>
+<h3 id="connection-name_1">Connection Name</h3>
+<p>The name of the Connection as it appears within the <abbr title="User Interface">UI</abbr>. This is purely
+cosmetic.</p>
+<h3 id="url_1">URL</h3>
+<p>The <em>root</em> URL to your Jellyfin server, including the port.</p>
+<h3 id="api-key_1">API Key</h3>
+<p>API key to authenticate communication. The process of creating one within
+Jellyfin is covered in
+<a href="../../getting_started/connections/jellyfin/">Getting Started</a>.</p>
+<h3 id="filesize-limit_1">Filesize Limit</h3>
+<p>The maximum file size of Title Cards to upload to Jellyfin. Title Cards larger
+than this will be compressed<sup id="fnref2:1"><a class="footnote-ref" href="#fn:1">1</a></sup>.</p>
+<p>Changing this setting <strong>does not</strong> retroactively affect created or uploaded
+Title Cards.</p>
+<p>This can be entered as <code>{digit} {unit}</code> - e.g. <code>4 Megabytes</code> - where the
+acceptable units are <code>Bytes</code>, <code>Kilobytes</code>, and <code>Megabytes</code>.</p>
+<h3 id="username_1">Username</h3>
+<p>Username of the user to query Episode watched statuses from.</p>
+<h3 id="ssl_1">SSL</h3>
+<p>Whether to connect with HTTPS instead of HTTP.</p>
+<hr />
+<h2 id="plex"><span class="twemoji plex"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 2c-1.11 0-2 .89-2 2v16c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V4c0-1.11-.89-2-2-2H4m4.56 4h3.5l3.44 6-3.44 6h-3.5L12 12 8.56 6Z"/></svg></span> Plex</h2>
+<p>As a <abbr title="Plex, Emby, or Jellyfin">Media Server</abbr>, Plex can serve as an
+<a href="../settings/#episode-data-source">Episode Data Source</a>,
+<a href="../settings/#image-source-priority">Image Source</a>, and as a location where
+Title Cards are uploaded to.</p>
+<p><abbr title="TitleCardMaker">TCM</abbr> can communicate with any number of Plex <abbr title="Plex, Emby, or Jellyfin">Media Servers</abbr>, although if you plan
+to use
+<a href="../settings/#watched-and-unwatched-episode-styles">watch-status styling</a>, make
+sure you read and enable the global
+<a href="../settings/#multi-library-filename-support">multi library filename
+support</a> setting first.</p>
+<h3 id="connection-name_2">Connection Name</h3>
+<p>The name of the Connection as it appears within the <abbr title="User Interface">UI</abbr>. This is purely
+cosmetic.</p>
+<h3 id="url_2">URL</h3>
+<p>The <em>root</em> URL to your Plex server, including the port.</p>
+<h3 id="token">Token</h3>
+<p>Token to authenticate communication. The process of obtaining your Plex Token
+is covered in
+<a href="../../getting_started/connections/plex/">Getting Started</a>.</p>
+<h3 id="filesize-limit_2">Filesize Limit</h3>
+<p>The maximum file size of Title Cards to upload to Jellyfin. Title Cards larger
+than this will be compressed<sup id="fnref3:1"><a class="footnote-ref" href="#fn:1">1</a></sup>.</p>
+<p>Changing this setting <strong>does not</strong> retroactively affect created or uploaded
+Title Cards.</p>
+<p>This can be entered as <code>{digit} {unit}</code> - e.g. <code>4 Megabytes</code> - where the
+acceptable units are <code>Bytes</code>, <code>Kilobytes</code>, and <code>Megabytes</code>.</p>
+<h3 id="ssl_2">SSL</h3>
+<p>Whether to connect with HTTPS instead of HTTP.</p>
+<h3 id="kometa-integration">Kometa Integration</h3>
+<p>Whether to remove the <code>Overlay</code> label after uploading Title Cards. This also
+prevents <abbr title="TitleCardMaker">TCM</abbr> from grabbing Source Images with overlays applied.</p>
+<p>Only check this box if you use (or have used)
+<a href="https://github.com/Kometa-Team/Kometa">Kometa</a> Episode overlays.</p>
+<h3 id="tautulli">Tautulli</h3>
+<p>The Tautulli agent is covered <a href="#tautulli_1">here</a>.</p>
+<hr />
+<h2 id="sonarr"><img alt="Sonarr Logo" class="no-lightbox" src="../../assets/sonarr.png" /> Sonarr</h2>
+<p>Although Sonarr can only serve as an
+<a href="../settings/#episode-data-source">Episode Data Source</a>, it is typically much
+faster than the other alternatives (Emby, Jellyfin, Plex) and is generally the
+recommended option for most users.</p>
+<p>In addition to this, Sonarr can act as a <a href="#tautulli_1">Tautulli</a> alternative
+which works for non-Plex <abbr title="Plex, Emby, or Jellyfin">Media Servers</abbr> and triggers immediate Title Card
+creation when new Episodes are added - settings this up is detailed
+<a href="../../getting_started/connections/sonarr/#webhook-integration">here</a>.</p>
+<h3 id="connection-name_3">Connection Name</h3>
+<p>The name of the Connection as it appears within the <abbr title="User Interface">UI</abbr>. This is purely
+cosmetic.</p>
+<h3 id="url_3">URL</h3>
+<p>The <em>root</em> URL to your Sonarr server, including the port.</p>
+<h3 id="api-key_2">API Key</h3>
+<p>API key to authenticate communication. The process of getting one from Sonarr is
+covered in <a href="../../getting_started/connections/sonarr/">Getting Started</a>.</p>
+<h3 id="ssl_3">SSL</h3>
+<p>Whether to connect with HTTPS instead of HTTP.</p>
+<h3 id="downloaded-episode-toggle">Downloaded Episode Toggle</h3>
+<p>Whether to only get Episode data for Episodes which are downloaded. This is only
+applicable if Sonarr is the
+<a href="../settings/#episode-data-source">Episode Data Source</a>.</p>
+<p>If <em>unchecked</em>, and Sonarr is the specified Episode Data Source, then <abbr title="TitleCardMaker">TCM</abbr> will
+grab Episode data for <strong>all</strong> Episodes within Sonarr, typically resulting in
+Title Cards for Episodes which you do not personally have.</p>
+<h3 id="library-paths">Library Paths</h3>
+<p>If <a href="../syncs/">Syncing</a> from Sonarr, then this setting is critical to ensure
+that <abbr title="TitleCardMaker">TCM</abbr> is able to correctly auto-assign libraries to Series. If you are not
+Syncing from Sonarr, then you can leave this blank.</p>
+<p>Each set of inputs corresponds to a single Library which <abbr title="TitleCardMaker">TCM</abbr> can assign to. This
+means you should generally have one entry for each library across all your
+servers. This setting <strong>requires</strong> that your libraries are in separate
+directories (at least within the same <abbr title="Plex, Emby, or Jellyfin">Media Server</abbr>).</p>
+<div class="admonition tip">
+<p class="admonition-title">Paths</p>
+<p>All paths should be the path <strong>within Sonarr</strong> - so users with their Sonarr
+server inside a Docker container need to specify the paths that appear
+within the container, not your <abbr title="Plex, Emby, or Jellyfin">Media Server</abbr>.</p>
+</div>
+<p>See the examples for details.</p>
+<details class="example">
+<summary>Example Library Paths</summary>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:3"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Example 1</label><label for="__tabbed_2_2">Example 2</label><label for="__tabbed_2_3">Example 3</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>Within Plex, I have two libraries called <code>Anime</code> and <code>TV</code> located at
+<code>/data/media/Anime</code> and <code>/data/media/TV</code> respectively. My Library Paths
+setting should look like:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"><abbr title="Plex, Emby, or Jellyfin">Media Server</abbr></th>
+<th style="text-align: left;">Library Name</th>
+<th style="text-align: left;">Path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Plex</td>
+<td style="text-align: left;">Anime</td>
+<td style="text-align: left;">/data/media/Anime/</td>
+</tr>
+<tr>
+<td style="text-align: left;">Plex</td>
+<td style="text-align: left;">TV</td>
+<td style="text-align: left;">/data/media/TV/</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="tabbed-block">
+<p>Within Jellyfin, I have four libraries called <code>Anime</code>, <code>Anime 4K</code>,
+<code>TV Shows</code>, and <code>TV Shows 4K</code> - they are located at <code>/data/media/anime</code>,
+<code>/data/media/anime 4k/</code>, <code>/data/media/tv/</code>, and <code>/data/media/tv 4k</code>
+respectively. The Library Paths setting should look like:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"><abbr title="Plex, Emby, or Jellyfin">Media Server</abbr></th>
+<th style="text-align: left;">Library Name</th>
+<th style="text-align: left;">Path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Jellyfin</td>
+<td style="text-align: left;">Anime</td>
+<td style="text-align: left;">/data/media/anime/</td>
+</tr>
+<tr>
+<td style="text-align: left;">Jellyfin</td>
+<td style="text-align: left;">Anime 4K</td>
+<td style="text-align: left;">/data/media/anime 4k/</td>
+</tr>
+<tr>
+<td style="text-align: left;">Jellyfin</td>
+<td style="text-align: left;">TV</td>
+<td style="text-align: left;">/data/media/TV/</td>
+</tr>
+<tr>
+<td style="text-align: left;">Jellyfin</td>
+<td style="text-align: left;">TV 4K</td>
+<td style="text-align: left;">/data/media/TV 4k/</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="tabbed-block">
+<p>Within Emby I have two libraries: <code>TV</code>, and <code>Reality TV</code> located at
+<code>C:\TV</code> and <code>K:\Reality TV</code>; within Plex there are two libraries:
+<code>Anime</code> and <code>Reality TV</code> located at <code>C:\Anime</code> and <code>K:\Reality TV</code> (the
+same directory as within Emby). The Library Paths setting should look
+like:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"><abbr title="Plex, Emby, or Jellyfin">Media Server</abbr></th>
+<th style="text-align: left;">Library Name</th>
+<th style="text-align: left;">Path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Emby</td>
+<td style="text-align: left;">TV</td>
+<td style="text-align: left;">C:\TV</td>
+</tr>
+<tr>
+<td style="text-align: left;">Emby</td>
+<td style="text-align: left;">Reality TV</td>
+<td style="text-align: left;">K:\Reality TV</td>
+</tr>
+<tr>
+<td style="text-align: left;">Plex</td>
+<td style="text-align: left;">Anime</td>
+<td style="text-align: left;">C:\Anime</td>
+</tr>
+<tr>
+<td style="text-align: left;">Plex</td>
+<td style="text-align: left;">Reality TV</td>
+<td style="text-align: left;">K:\Reality TV</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</details>
+<p>When Syncing, <abbr title="TitleCardMaker">TCM</abbr> will <em>add</em> the library assignments defined in the Connection
+to the Series.</p>
+<hr />
+<h2 id="tautulli_1"><img alt="Tautulli Logo" class="no-lightbox" src="../../assets/tautulli.png" /> Tautulli</h2>
+<p>Typically, TitleCardMaker creates and loads Title Cards on an <a href="../scheduler/">adjustable
+schedule</a>. However, <abbr title="TitleCardMaker">TCM</abbr> is able to set up a Notification Agent
+on Tautulli so that it can notify <abbr title="TitleCardMaker">TCM</abbr> <strong>immediately</strong> after new Episodes are
+available, or an existing Episode has been watched.</p>
+<p>This integration can only be created <em>after</em> creating a Plex connection, and it
+is server-specific, as Tautulli only works on one Plex server at a time.</p>
+<p>The instructions for enabling this integration are detailed
+<a href="../integrations/#tautulli">here</a>.</p>
+<hr />
+<h2 id="themoviedatabase"><span class="twemoji tmdb"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6.62 12a2.291 2.291 0 0 1 2.292-2.295h-.013A2.291 2.291 0 0 1 11.189 12a2.291 2.291 0 0 1-2.29 2.291h.013A2.291 2.291 0 0 1 6.62 12zm10.72-4.062h4.266a2.291 2.291 0 0 0 2.29-2.291 2.291 2.291 0 0 0-2.29-2.296H17.34a2.291 2.291 0 0 0-2.291 2.296 2.291 2.291 0 0 0 2.29 2.29zM2.688 20.645h8.285a2.291 2.291 0 0 0 2.291-2.292 2.291 2.291 0 0 0-2.29-2.295H2.687a2.291 2.291 0 0 0-2.291 2.295 2.291 2.291 0 0 0 2.29 2.292zm10.881-6.354h.81l1.894-4.586H15.19l-1.154 3.008h-.013l-1.135-3.008h-1.154zm4.208 0h1.011V9.705h-1.011zm2.878 0h3.235v-.93h-2.223v-.933h1.99v-.934h-1.99v-.855h2.107v-.934h-3.112zM1.31 7.941h1.01V4.247h1.31v-.895H0v.895h1.31zm3.747 0h1.011V5.959h1.958v1.984h1.011v-4.59h-1.01v1.711H6.061V3.351H5.057zm5.348 0h3.242v-.933H11.41v-.934h1.99v-.933h-1.99v-.856h2.107v-.934h-3.112zM.162 14.296h1.005v-3.52h.013l1.167 3.52h.765l1.206-3.52h.013v3.52h1.011v-4.59H3.82L2.755 12.7h-.013L1.686 9.705H.156zm14.534 6.353h1.641a3.188 3.188 0 0 0 .98-.149 2.531 2.531 0 0 0 .824-.437 2.123 2.123 0 0 0 .567-.713 2.193 2.193 0 0 0 .223-.983 2.399 2.399 0 0 0-.218-1.07 1.958 1.958 0 0 0-.586-.716 2.405 2.405 0 0 0-.873-.392 4.349 4.349 0 0 0-1.046-.13h-1.519zm1.013-3.656h.596a2.26 2.26 0 0 1 .606.08 1.514 1.514 0 0 1 .503.244 1.167 1.167 0 0 1 .34.412 1.28 1.28 0 0 1 .13.587 1.546 1.546 0 0 1-.13.658 1.127 1.127 0 0 1-.347.433 1.41 1.41 0 0 1-.518.238 2.797 2.797 0 0 1-.649.07h-.538zm4.686 3.656h1.88a2.997 2.997 0 0 0 .613-.064 1.735 1.735 0 0 0 .554-.214 1.221 1.221 0 0 0 .402-.39 1.105 1.105 0 0 0 .155-.606 1.188 1.188 0 0 0-.071-.415 1.01 1.01 0 0 0-.204-.34 1.087 1.087 0 0 0-.317-.24 1.297 1.297 0 0 0-.413-.13v-.012a1.203 1.203 0 0 0 .575-.366.962.962 0 0 0 .216-.648 1.081 1.081 0 0 0-.149-.603 1.022 1.022 0 0 0-.389-.354 1.673 1.673 0 0 0-.54-.169 4.463 4.463 0 0 0-.6-.041h-1.712zm1.011-3.734h.687a1.4 1.4 0 0 1 .24.022.748.748 0 0 1 .22.075.432.432 0 0 1 .16.147.418.418 0 0 1 .061.236.47.47 0 0 1-.055.233.433.433 0 0 1-.146.156.62.62 0 0 1-.204.084 1.058 1.058 0 0 1-.23.026h-.745zm0 1.835h.765a1.96 1.96 0 0 1 .266.02 1.015 1.015 0 0 1 .26.07.519.519 0 0 1 .204.152.406.406 0 0 1 .08.26.481.481 0 0 1-.06.253.519.519 0 0 1-.16.168.62.62 0 0 1-.217.09 1.155 1.155 0 0 1-.237.027H21.4z"/></svg></span> TheMovieDatabase</h2>
+<p><abbr title="TheMovieDatabase">TMDb</abbr> is a free database service which can serve as an
+<a href="../settings/#episode-data-source">Episode Data Source</a>, and is the recommended
+<a href="../settings/#image-source-priority">Image Source</a> due to the much higher
+quality (and wider selection) of images compared to the <abbr title="Plex, Emby, or Jellyfin">Media Servers</abbr>. It is
+also the only Connection which can provide Episode translations.</p>
+<details class="question">
+<summary>Why enable multiple <abbr title="TheMovieDatabase">TMDb</abbr> Connections?</summary>
+<p>Because <abbr title="TheMovieDatabase">TMDb</abbr> is a <em>service</em>, and not a local server, in a vast majority of
+use cases, users <strong>should not</strong> enable multiple <abbr title="TheMovieDatabase">TMDb</abbr> Connections (as each
+Connection will have the same data available).</p>
+<p>However, <em>some</em> users might find value in the flexibility to selectively
+adjust some options (such as image resolution or language priority), so the
+ability is present (and it was also just easier to program that way
+<img alt="🤷‍♂️" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.0.3/assets/svg/1f937-200d-2642-fe0f.svg" title=":man_shrugging:" />).</p>
+</details>
+<h3 id="connection-name_4">Connection Name</h3>
+<p>The name of the Connection as it appears within the <abbr title="User Interface">UI</abbr>. This is purely
+cosmetic.</p>
+<h3 id="api-key_3">API Key</h3>
+<p>API key to submit request to <abbr title="TheMovieDatabase">TMDb</abbr>. These are free, and details on obtaining one
+are covered in <a href="../../getting_started/connections/tmdb/">Getting Started</a>.</p>
+<h3 id="minimum-image-resolution">Minimum Image Resolution</h3>
+<p>The minimum resolution of <em>Source Images</em> to gather from <abbr title="TheMovieDatabase">TMDb</abbr>. This must be
+entered as <code>{width}x{height}</code> - e.g. <code>800x400</code> - and can be as low as <code>0x0</code> (to
+not apply any minimum resolution).</p>
+<h3 id="language-priority">Language Priority</h3>
+<p>The relative priority of languages to search for posters and logos under.
+This is ordered highest to lowest priority.</p>
+<p>For non-English users whose library might contain non-English content, it is
+recommended to set this to (your language) <em>then</em> English; as this will prompt
+<abbr title="TitleCardMaker">TCM</abbr> to search for logos in your native language and then English if none are
+available.</p>
+<h3 id="ignore-localized-images">Ignore Localized Images</h3>
+<p><span class="mdx-badge"><span class="mdx-badge__icon"><a href="" title="Overwritable"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14 3-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7v2l4-3-4-3v2H4V3h10m7 7v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-2h2v2h11v-9h-5V7H8v6H6V7a2 2 0 0 1 2-2h8l5 5Z"/></svg></span></a></span><span class="mdx-badge__text">Series, Template</span></span></p>
+<p>When users upload images to <abbr title="TheMovieDatabase">TMDb</abbr> they can assign a language to that image - this
+is not common, but some Episodes feature in-Episode title cards which might
+typically want to be avoided by <abbr title="TitleCardMaker">TCM</abbr>. Enabling this will direct <abbr title="TitleCardMaker">TCM</abbr> to ignore all
+images with assigned language codes.</p>
+<h2 id="thetvdatabase"><img alt="TVDb Logo" class="no-lightbox twemoji" src="../assets/tvdb-light.png#only-light" /> <img alt="TVDb Logo" class="no-lightbox twemoji" src="../assets/tvdb-dark.png#only-dark" /> TheTVDatabase</h2>
+<p><abbr title="TheTVDatabase">TVDb</abbr> is a free database service which can serve as an
+<a href="../settings/#episode-data-source">Episode Data Source</a>, and
+<a href="../settings/#image-source-priority">Image Source</a>. It is also the only Episode
+Data Source which allows customizing the episode order - i.e. absolute,
+official, etc.</p>
+<details class="question">
+<summary>Why enable multiple <abbr title="TheTVDatabase">TVDb</abbr> Connections?</summary>
+<p>For the most part the only reason to enable multiple <abbr title="TheTVDatabase">TVDb</abbr> Connections would
+be to utilize different Episode orderings. You can have one Connection
+which uses the <em>Default</em> ordering, and another that uses <em>DVD</em>.</p>
+</details>
+<h3 id="connection-name_5">Connection Name</h3>
+<p>The name of the Connection as it appears within the <abbr title="User Interface">UI</abbr>. This is purely
+cosmetic.</p>
+<h3 id="api-key_4">API Key</h3>
+<p>API key to submit request to <abbr title="TheTVDatabase">TVDb</abbr>. These are free, and details on obtaining one
+are covered in <a href="../../getting_started/connections/tvdb/">Getting Started</a>.</p>
+<h3 id="minimum-image-resolution_1">Minimum Image Resolution</h3>
+<p>The minimum resolution of <em>Source Images</em> to gather from <abbr title="TheTVDatabase">TVDb</abbr>. This must be
+entered as <code>{width}x{height}</code> - e.g. <code>800x400</code> - and can be as low as <code>0x0</code> (to
+not apply any minimum resolution).</p>
+<h3 id="language-priority_1">Language Priority</h3>
+<p>The relative priority of languages to search for posters and logos under.
+This is ordered highest to lowest priority.</p>
+<p>For non-English users whose library might contain non-English content, it is
+recommended to set this to (your language) <em>then</em> English; as this will prompt
+<abbr title="TitleCardMaker">TCM</abbr> to search for logos in your native language and then English if none are
+available.</p>
+<h3 id="episode-ordering">Episode Ordering</h3>
+<p>Which order of Episode data to request when querying Episodes from <abbr title="TheTVDatabase">TVDb</abbr>. Not all
+Series have all orders, and if a selected Series does <em>not</em> have the selected
+order, then <abbr title="TheTVDatabase">TVDb</abbr> will return no Episodes.</p>
+<p>These orders line up with what can be seen on the <abbr title="TheTVDatabase">TVDb</abbr> website, so it might be
+easiest to find the desired order on the website and then select that within
+<abbr title="TitleCardMaker">TCM</abbr>.</p>
+<h3 id="include-movies">Include Movies</h3>
+<p>Whether to include or exclude "Episodes" which are marked as movies.</p>
+<p>This is most often applicable to Anime, in which OVA movies may be listed under
+Specials (season 0).</p>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:1">
+<p>If you are using an uncompressed
+<a href="../settings/#card-extension">file extension</a>, like <code>.png</code> or <code>.tiff</code>, 
+alongside a low filesize limit, then the compression algorithm <abbr title="TitleCardMaker">TCM</abbr> uses might
+fail to compress and upload some Title Cards.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:2">
+<p><em>Technically</em>, Emby and Jellyfin can provide logos as well, however their
+logos are not browsable.&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../settings/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Settings">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Settings
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../scheduler/" class="md-footer__link md-footer__link--next" aria-label="Next: Scheduler">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Scheduler
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/CollinHeist/TitleCardMaker" target="_blank" rel="noopener" title="TitleCardMaker GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://discord.gg/bJ3bHtw8wH" target="_blank" rel="noopener" title="TitleCardMaker Discord" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M524.531 69.836a1.5 1.5 0 0 0-.764-.7A485.065 485.065 0 0 0 404.081 32.03a1.816 1.816 0 0 0-1.923.91 337.461 337.461 0 0 0-14.9 30.6 447.848 447.848 0 0 0-134.426 0 309.541 309.541 0 0 0-15.135-30.6 1.89 1.89 0 0 0-1.924-.91 483.689 483.689 0 0 0-119.688 37.107 1.712 1.712 0 0 0-.788.676C39.068 183.651 18.186 294.69 28.43 404.354a2.016 2.016 0 0 0 .765 1.375 487.666 487.666 0 0 0 146.825 74.189 1.9 1.9 0 0 0 2.063-.676A348.2 348.2 0 0 0 208.12 430.4a1.86 1.86 0 0 0-1.019-2.588 321.173 321.173 0 0 1-45.868-21.853 1.885 1.885 0 0 1-.185-3.126 251.047 251.047 0 0 0 9.109-7.137 1.819 1.819 0 0 1 1.9-.256c96.229 43.917 200.41 43.917 295.5 0a1.812 1.812 0 0 1 1.924.233 234.533 234.533 0 0 0 9.132 7.16 1.884 1.884 0 0 1-.162 3.126 301.407 301.407 0 0 1-45.89 21.83 1.875 1.875 0 0 0-1 2.611 391.055 391.055 0 0 0 30.014 48.815 1.864 1.864 0 0 0 2.063.7A486.048 486.048 0 0 0 610.7 405.729a1.882 1.882 0 0 0 .765-1.352c12.264-126.783-20.532-236.912-86.934-334.541ZM222.491 337.58c-28.972 0-52.844-26.587-52.844-59.239s23.409-59.241 52.844-59.241c29.665 0 53.306 26.82 52.843 59.239 0 32.654-23.41 59.241-52.843 59.241Zm195.38 0c-28.971 0-52.843-26.587-52.843-59.239s23.409-59.241 52.843-59.241c29.667 0 53.307 26.82 52.844 59.239 0 32.654-23.177 59.241-52.844 59.241Z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://github.com/sponsors/CollinHeist" target="_blank" rel="noopener" title="Become a Sponsor" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="m47.6 300.4 180.7 168.7c7.5 7 17.4 10.9 27.7 10.9s20.2-3.9 27.7-10.9l180.7-168.7c30.4-28.3 47.6-68 47.6-109.5v-5.8c0-69.9-50.5-129.5-119.4-141-45.6-7.6-92 7.3-124.6 39.9l-12 12-12-12c-32.6-32.6-79-47.5-124.6-39.9C50.5 55.6 0 115.2 0 185.1v5.8c0 41.5 17.2 81.2 47.6 109.5z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.instant.progress", "content.tabs.link", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "toc.integrate", "navigation.top", "navigation.footer", "navigation.indexes", "content.code.copy", "content.code.annotate", "navigation.prune"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.bd41221c.min.js"></script>
+      
+    
+  <script>document$.subscribe(() => {const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});})</script></body>
+</html>
