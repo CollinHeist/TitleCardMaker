@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import HTTPException
-from requests import get as req_get
+from requests import JSONDecodeError, get as req_get
 
 from app.models.preferences import Preferences
 from app.schemas.card import LocalCardType, RemoteCardType
@@ -90,6 +90,9 @@ def get_remote_cards(*, log: Logger = log) -> list[RemoteCardType]:
 
     Returns:
         List of RemoteCardTypes.
+
+    Raises:
+        JSONDecodeError: The remote card content cannot be loaded.
     """
 
     # If the cached content has expired, request and update cache
@@ -105,7 +108,11 @@ def get_remote_cards(*, log: Logger = log) -> list[RemoteCardType]:
     return [RemoteCardType(**card) for card in response]
 
 
-def get_remote_card_hash(identifier: str, *, log: Logger = log) ->Optional[str]:
+def get_remote_card_hash(
+        identifier: str,
+        *,
+        log: Logger = log,
+    ) -> Optional[str]:    
     """
     Get the MD5 hash of the Card with the given identifier.
 
@@ -118,8 +125,11 @@ def get_remote_card_hash(identifier: str, *, log: Logger = log) ->Optional[str]:
         not available (e.g. unknown `identifier`).
     """
 
-    for card_type in get_remote_cards(log=log):
-        if card_type.identifier == identifier:
-            return card_type.hash
+    try:
+        for card_type in get_remote_cards(log=log):
+            if card_type.identifier == identifier:
+                return card_type.hash
+    except JSONDecodeError:
+        return None
 
     return None
