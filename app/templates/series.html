@@ -420,19 +420,25 @@
         </div>
         {% endfor %}
         <div class="right menu">
-          <a class="item" onclick="deleteTitleCards();">
-            <i class="images outline icon"></i>
-            Delete Title Cards
+          <div class="ui dropdown red item">
+            <!-- <i class="trash alternate outline icon"></i> -->
+            Delete
+            <i class="dropdown icon"></i>
+            <div class="menu">
+              <a class="item" onclick="deleteSourceImages();">
+                Source Images
+              </a>
+              <a class="item" onclick="deleteTitleCards();">
+                Title Cards
+              </a>
+              <a class="item" id="delete-series">
+                Series
+              </a>
+            </div>
+          </div>
+          <a class="item" onclick="navigateSeries('next');">
+            <i data-action="next-series" class="ui arrow alternate circle right outline link icon"></i>
           </a>
-          <a class="item" id="delete-series">
-            <i class="trash alternate outline icon"></i>
-            Delete Series
-          </a>
-          <span data-tooltip="Go to the next Series" data-position="left center">
-            <a class="item" onclick="navigateSeries('next');">
-              <i data-action="next-series" class="ui arrow alternate circle right outline link icon"></i>
-            </a>
-          </span>
         </div>
       </div>
 
