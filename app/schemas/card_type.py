@@ -614,9 +614,9 @@ class NegativeSpaceCardType(BaseCardModel):
     font_vertical_shift: int = 0
     episode_text_color: Optional[str] = None
     episode_text_font_size: PositiveFloat = 1.0
-    number_horizontal_offset: int = 0
-    number_vertical_offset: int = 0
-    text_side: NegativeSpaceTextSide = NegativeSpaceTitleCard.DEFAULT_TEXT_SIDE
+    episode_text_horizontal_offset: int = 0
+    episode_text_vertical_offset: int = 0
+    text_side: Union[NegativeSpaceTextSide, Literal['random']] = NegativeSpaceTitleCard.DEFAULT_TEXT_SIDE
     title_text_horizontal_offset: int = 0
 
     @root_validator(skip_on_failure=True)
