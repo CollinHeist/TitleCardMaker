@@ -243,6 +243,7 @@ nav:
       - Olivier: card_types/olivier.md
       - Marvel: card_types/marvel.md
       - Music: card_types/music.md
+      - Negative Space: card_types/negative_space.md
       - Notification: card_types/notification.md
       - Poster: card_types/poster.md
       - Roman Numeral: card_types/roman_numeral.md
