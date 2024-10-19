@@ -1131,7 +1131,6 @@
             Click <i class="eye link icon" onclick="toggleMonitorStatus();"></i>to monitor this Series.
           </div>
           {% endif %}
-          {% if preferences.sources_as_table %}
           <div class="ui scrolling long fluid container">
             <table class="ui compact striped head stuck sortable unstackable scrolling long table">
               <thead>
@@ -1152,9 +1151,6 @@
               <tbody id="source-images"><!-- Added asynchronously --></tbody>
             </table>
           </div>
-          {% else %}
-          <div id="source-images" class="ui stackable cards"><!-- Added asynchronously --></div>
-          {% endif %}
           <div id="file-pagination" class="ui attached pagination menu"><!-- Added asynchronously --></div>
 
           <div class="ui styled fluid accordion">

@@ -481,12 +481,6 @@ below.
     ![](../assets/home_poster_light.webp#only-light){.no-lightbox}
     ![](../assets/home_poster_dark.webp#only-dark){.no-lightbox}
 
-### Source Image Data Display
-
-On the _Files_ tab of the [Series](./series.md) page, source image data can be
-presented as "card" elements or inside a table. The same information and actions
-are available in either view.
-
 ### Simplified Episode Data Tables
 
 Whether to hide Advanced (uncommonly edited) columns from Episode data tables.

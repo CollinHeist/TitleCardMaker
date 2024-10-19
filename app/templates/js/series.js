@@ -24,8 +24,6 @@ const reduced_animations = {{ preferences.reduced_animations|tojson }};
 const interactive_card_previews = {{ preferences.interactive_card_previews|tojson }};
 /** @type {boolean} */
 const simplified_data_table = {{ preferences.simplified_data_table|tojson }};
-/** @type {boolean} */
-const sources_as_table = {{ preferences.sources_as_table|tojson }};
 /** @type {StyleOption[]} List of available styles */
 const allStyles = [
   { name: 'Art',                      value: 'art',                   style_type: 'art'    },
@@ -763,83 +761,49 @@ async function getSourceFileData(page=currentFilePage) {
         const elementId = getSourceImageElementId(source.episode_id);
 
         // Create row for this Source
-        if (sources_as_table) {
-          const row = rowTemplate.content.cloneNode(true);
-          row.querySelector('tr').id = elementId;
-          // Season
-          const season = row.querySelector('td[data-column="season_number"]');
-          season.innerText = source.season_number;
-          season.dataset.sortValue = source.season_number;
-          // Episode
-          const episode = row.querySelector('td[data-column="episode_number"]');
-          episode.innerText = source.episode_number;
-          episode.dataset.sortValue = source.episode_number;
-          // Width
-          const width = row.querySelector('td[data-column="width"]');
-          width.innerText = source.width || 'Missing';
-          width.dataset.sortValue = source.width;
-          // Height
-          const height = row.querySelector('td[data-column="height"]');
-          height.innerHTML = source.height || 'Missing';
-          height.dataset.sortValue = source.height;
-          // Filesize
-          const filesize = row.querySelector('td[data-column="filesize"]');
-          if (source.exists) {
-            filesize.innerText = formatBytes(source.filesize, 1);
-            filesize.dataset.sortValue = source.filesize;
-            // Disable search cell
-            row.querySelector('[data-column="search"]').classList.add('disabled');
-            row.querySelector('[data-column="search"] i').classList.add('disabled');
-            // Add mirror API request to mirror icon
-            row.querySelector('a[data-action="mirror"]').onclick = () => mirrorSourceImage(source.episode_id);
-          } else {
-            filesize.innerText = 'Missing'; filesize.dataset.sortValue = 0;
-            width.classList.add('error');
-            height.classList.add('error');
-            filesize.classList.add('error');
-            row.querySelector('a[data-action="search"]').onclick = () => searchEpisodeSourceImage(source.episode_id, elementId);
-            row.querySelector('[data-column="mirror"]').classList.add('disabled');
-            row.querySelector('[data-column="mirror"] i').classList.add('disabled');
-          }
-          // Launch browse modal when clicked
-          row.querySelector('a[data-action="browse"]').onclick = () => browseSourceImages(source.episode_id, elementId, episodeIds);
-          // Launch upload source modal when upload icon is clicked
-          row.querySelector('a[data-action="upload"]').onclick = () => uploadEpisodeSource(source.episode_id);
-      
-          return row;
-        // Create "Card" for this Source
+        const row = rowTemplate.content.cloneNode(true);
+        row.querySelector('tr').id = elementId;
+        // Season
+        const season = row.querySelector('td[data-column="season_number"]');
+        season.innerText = source.season_number;
+        season.dataset.sortValue = source.season_number;
+        // Episode
+        const episode = row.querySelector('td[data-column="episode_number"]');
+        episode.innerText = source.episode_number;
+        episode.dataset.sortValue = source.episode_number;
+        // Width
+        const width = row.querySelector('td[data-column="width"]');
+        width.innerText = source.width || 'Missing';
+        width.dataset.sortValue = source.width;
+        // Height
+        const height = row.querySelector('td[data-column="height"]');
+        height.innerHTML = source.height || 'Missing';
+        height.dataset.sortValue = source.height;
+        // Filesize
+        const filesize = row.querySelector('td[data-column="filesize"]');
+        if (source.exists) {
+          filesize.innerText = formatBytes(source.filesize, 1);
+          filesize.dataset.sortValue = source.filesize;
+          // Disable search cell
+          row.querySelector('[data-column="search"]').classList.add('disabled');
+          row.querySelector('[data-column="search"] i').classList.add('disabled');
+          // Add mirror API request to mirror icon
+          row.querySelector('a[data-action="mirror"]').onclick = () => mirrorSourceImage(source.episode_id);
         } else {
-          const file = fileTemplate.content.cloneNode(true);
-          // Fill in the card values present on all files
-          file.querySelector('.card').id = elementId;
-          file.querySelector('[data-value="index"]').innerHTML = `Season ${source.season_number} Episode ${source.episode_number}`;
-          file.querySelector('[data-value="path"]').innerHTML = source.source_file_name;
-          // Launch TMDb browse modal when TMDb logo is clicked
-          file.querySelector('[data-action="browse"]').onclick = () => browseSourceImages(source.episode_id, elementId, episodeIds);
-          // Launch upload source modal when upload icon is clicked
-          file.querySelector('i[data-action="upload"]').onclick = () => uploadEpisodeSource(source.episode_id);
-          if (source.exists) {
-            // Remove search icon
-            file.querySelector('i[data-action="search"]').remove();
-            // Add mirror API request to mirror icon
-            file.querySelector('i[data-action="mirror"]').onclick = () => mirrorSourceImage(source.episode_id);
-            // Remove missing label, fill in dimensions and filesize
-            file.querySelector('[data-value="missing"]').remove();
-            file.querySelector('[data-value="dimension"]').innerHTML = `${source.width}x${source.height}`;
-            file.querySelector('[data-value="filesize"]').innerHTML = formatBytes(source.filesize, 1);
-          } else {
-            // Add download image function to icon click
-            file.querySelector('i[data-action="search"]').onclick = () => searchEpisodeSourceImage(source.episode_id, elementId);
-            // Remove mirror icon
-            file.querySelector('i[data-action="mirror"]').remove();
-            // Make the card red, remove unnecessary elements
-            file.querySelector('.card').classList.add('red');
-            file.querySelector('[data-value="dimension"]').remove();
-            file.querySelector('[data-value="filesize"]').remove();
-          }
-      
-          return file;
+          filesize.innerText = 'Missing'; filesize.dataset.sortValue = 0;
+          width.classList.add('error');
+          height.classList.add('error');
+          filesize.classList.add('error');
+          row.querySelector('a[data-action="search"]').onclick = () => searchEpisodeSourceImage(source.episode_id, elementId);
+          row.querySelector('[data-column="mirror"]').classList.add('disabled');
+          row.querySelector('[data-column="mirror"] i').classList.add('disabled');
         }
+        // Launch browse modal when clicked
+        row.querySelector('a[data-action="browse"]').onclick = () => browseSourceImages(source.episode_id, elementId, episodeIds);
+        // Launch upload source modal when upload icon is clicked
+        row.querySelector('a[data-action="upload"]').onclick = () => uploadEpisodeSource(source.episode_id);
+    
+        return row;
       });
       document.getElementById('source-images').replaceChildren(...sources);
     
@@ -1256,9 +1220,10 @@ async function initAll() {
     .modal('setting', 'transition', 'fade up')      // Fade up modal on reveal
     .modal('setting', 'closable', false)            // Don't allow closing by clicking outside modal
     .modal({
+      blurring: true,                               // Blur background when shown
       onApprove: () => {                            // Don't close if form is invalid
         return $('#new-episode-form').form('is valid');
-      }, blurring: true,                            // Blur background when shown
+      },
     });
 
   // Add card config form validation

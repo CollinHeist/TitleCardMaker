@@ -268,7 +268,6 @@ function updateGlobalSettings() {
     source_preview_page_dimensions: $('input[name="source_preview_page_dimensions"]').val(),
     title_card_preview_page_dimensions: $('input[name="title_card_preview_page_dimensions"]').val(),
     home_page_table_view: $('input[name="home_page_table_view"]').is(':checked'),
-    sources_as_table: $('input[name="sources_as_table"]').is(':checked'),
     simplified_data_table: $('input[name="simplified_data_table"]').is(':checked'),
     stylize_unmonitored_posters: $('input[name="stylize_unmonitored_posters"]').is(':checked'),
     colorblind_mode: $('input[name="colorblind_mode"]').is(':checked'),

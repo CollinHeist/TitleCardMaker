@@ -11,7 +11,7 @@ description: >
 
 This card design was created by [CollinHeist](https://github.com/CollinHeist),
 and is a relatively simple card which borrows a lot of the design elements of
-the [Tinted Glass](...) card, but was directly inspired by the UI notifications
+the [Tinted Glass](./tinted_glass.md) card, but was directly inspired by the UI notifications
 from Palworld.
 
 These cards feature two compact rectangular frames which contain the title,

@@ -414,7 +414,6 @@
  * @property {number} home_page_size - The size of the home page.
  * @property {number} episode_data_page_size - The size of the episode data page.
  * @property {boolean} stylize_unmonitored_posters - Whether to stylize unmonitored posters or not.
- * @property {boolean} sources_as_table - Whether sources are in a table or not.
  * @property {boolean} home_page_table_view - Whether the home page is in table view or not.
  * @property {boolean} colorblind_mode - Whether colorblind mode is enabled or not.
  * @property {boolean} reduced_animations - Whether reduced animations are enabled or not.

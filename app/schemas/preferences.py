@@ -117,7 +117,6 @@ class UpdatePreferences(UpdateBase):
     source_preview_page_dimensions: PageSizeDimensions = UNSPECIFIED
     title_card_preview_page_dimensions: PageSizeDimensions = UNSPECIFIED
     stylize_unmonitored_posters: bool = UNSPECIFIED
-    sources_as_table: bool = UNSPECIFIED
     home_page_table_view: bool = UNSPECIFIED
     colorblind_mode: bool = UNSPECIFIED
     reduced_animations: bool = UNSPECIFIED
@@ -208,7 +207,6 @@ class Preferences(Base):
     source_preview_page_dimensions: PageSizeDimensions
     title_card_preview_page_dimensions: PageSizeDimensions
     stylize_unmonitored_posters: bool
-    sources_as_table: bool
     home_page_table_view: bool
     colorblind_mode: bool
     reduced_animations: bool

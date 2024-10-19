@@ -507,19 +507,7 @@
                   {% endif %}
                   <p class="help">Whether to display Series on the home page in a table.</p>
                 </div>
-                
-                <div class="ui checkbox field">
-                  <label>Display Source Image Data as a Table</label>
-                  {% if preferences.sources_as_table %}
-                  <input name="sources_as_table" type="checkbox" checked="checked">
-                  {% else %}
-                  <input name="sources_as_table" type="checkbox">
-                  {% endif %}
-                  <p class="help">Whether to display source image data in a table.</p>
-                </div>
-              </div>
-              
-              <div class="ui two fields">
+
                 <div class="ui checkbox field" data-value="simplified_data_table">
                   <label>Simplified Episode Data Tables</label>
                   {% if preferences.simplified_data_table %}
@@ -529,7 +517,9 @@
                   {% endif %}
                   <p class="help">Whether to hide "advanced" (uncommonly edited) columns from Episode data tables.</p>
                 </div>
-    
+              </div>
+
+              <div class="ui two fields">
                 <div class="ui checkbox field">
                   <label>Stylize Unmonitored Posters</label>
                   {% if preferences.stylize_unmonitored_posters %}
@@ -539,9 +529,6 @@
                   {% endif %}
                   <p class="help">Whether to stylize the posters of Unmonitored Series on the home page.</p>
                 </div>
-              </div>
-  
-              <div class="ui two fields">
                 <div class="ui checkbox field">
                   <label>Color-Impaired Mode</label>
                   {% if preferences.colorblind_mode %}
@@ -551,8 +538,9 @@
                   {% endif %}
                   <p class="help">Utilize alternate styling with more distinguished colors.</p>
                 </div>
-                <br>
+              </div>
     
+              <div class="ui two fields">
                 <div class="ui checkbox field">
                   <label>Reduced Animations</label>
                   {% if preferences.reduced_animations %}
@@ -562,9 +550,7 @@
                   {% endif %}
                   <p class="help">Reduce website animations.</p>
                 </div>
-              </div>
 
-              <div class="ui two fields">
                 <div class="ui checkbox field">
                   <label>Interactive Title Cards</label>
                   {% if preferences.interactive_card_previews %}
@@ -574,7 +560,9 @@
                   {% endif %}
                   <p class="help">Whether to add click and right-click functionality to the Title Card previews on the Series pages.</p>
                 </div>
+              </div>
 
+              <div class="ui two fields">
                 <div class="ui checkbox field">
                   <label>Display Live Log Messages</label>
                   {% if preferences.display_live_messages %}
