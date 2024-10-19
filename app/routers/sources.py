@@ -245,6 +245,7 @@ def get_all_episode_source_images(
         tvdb_image = tvdb_interface.get_source_image(
             episode.series.as_series_info,
             episode.as_episode_info,
+            check_dimensions=False,
             log=log,
         )
         if tvdb_image:
@@ -344,7 +345,7 @@ def get_all_series_backdrops_on_tmdb(
 def get_existing_series_source_images(
         series_id: int,
         db: Session = Depends(get_database),
-    ) -> Page[SourceImage]:
+    ) -> Page[SourceImage]: # type: ignore
     """
     Get the SourceImage details for the given Series.
 

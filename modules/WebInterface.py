@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
+from io import BytesIO
 from pathlib import Path
 from random import choices as random_choices
 from string import hexdigits
 from typing import Any, Optional, TypedDict, Union
 
+from PIL import Image
 from re import IGNORECASE, compile as re_compile
 from requests import get, Session
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
@@ -136,6 +138,30 @@ class WebInterface:
             self.__cache.get(url, {}).pop(params, None)
 
         return None
+
+
+    @staticmethod
+    def get_image_size(url: str, *, log: Logger = log) -> tuple[int, int]:
+        """
+        Get the size of the image at the given URL.
+
+        Args:
+            url: URL of the image to get the dimensions of.
+            log: Logger for all log messages.
+
+        Returns:
+            Tuple of the image dimensions (width, height) in pixels.
+            Values of (0, 0) are returned if the dimensions cannot be
+            determined.
+        """
+
+        try:
+            if (response := get(url, timeout=30)).ok:
+                return Image.open(BytesIO(response.content)).size
+            raise ValueError
+        except Exception:
+            log.exception('Unable to determine image dimensions')
+            return 0, 0
 
 
     def get(self,

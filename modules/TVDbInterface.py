@@ -139,7 +139,7 @@ class TVDbInterface(EpisodeDataSource, WebInterface, Interface):
     EPISODE_AIRDATE_FORMAT = '%Y-%m-%d'
 
     """Series ID's that can be set by TMDb"""
-    SERIES_IDS: set[str] = ('imdb_id', 'tmdb_id', 'tvdb_id')
+    SERIES_IDS: tuple[str] = ('imdb_id', 'tmdb_id', 'tvdb_id')
 
     """Root URL of all API requests"""
     __ROOT_API_URL = 'https://api4.thetvdb.com/v4'
@@ -473,7 +473,9 @@ class TVDbInterface(EpisodeDataSource, WebInterface, Interface):
         # Find best (valid) poster by pixel count, starting with the first one
         best = artwork[0]
         for art in artwork:
-            if art['width'] * art['height'] > best['width'] * best['height']:
+            if (art['width'] >= self.minimum_source_width
+                and art['height'] >= self.minimum_source_height
+                and art['width']*art['height'] > best['width']*best['height']):
                 best = art
 
         return best['image']
@@ -709,6 +711,7 @@ class TVDbInterface(EpisodeDataSource, WebInterface, Interface):
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
             *,
+            check_dimensions: bool = True,
             log: Logger = log,
         ) -> Optional[str]:
         """
@@ -717,6 +720,8 @@ class TVDbInterface(EpisodeDataSource, WebInterface, Interface):
         Args:
             series_info: SeriesInfo for this episode.
             episode_info: EpisodeInfo for this episode.
+            check_dimensions: Whether to check the dimensions of the
+                image against the requirements of this Interface.
             log: Logger for all log messages.
 
         Returns:
@@ -724,14 +729,38 @@ class TVDbInterface(EpisodeDataSource, WebInterface, Interface):
             no image is available.
         """
 
+        # Find Episode
         tvdb_id = self.__get_episode_id(series_info, episode_info, log=log)
         if tvdb_id is None:
             log.warning(f'Cannot find {series_info} {episode_info} on TVDb')
             return None
 
+        # Get associated image for this Episode
         url = f'{self.__ROOT_API_URL}/episodes/{tvdb_id}/extended'
+        if not (image_url := self.get(url).get('data', {}).get('image')):
+            log.debug(f'TVDb has no images for "{series_info}" {episode_info}')
+            return None
 
-        return self.get(url).get('data', {}).get('image')
+        # Bypass dimensional check
+        if not check_dimensions:
+            return image_url
+
+        # Skip dimension check if requirements are >640p since TVDb
+        # never has images of that quality
+        if self.minimum_source_width > 640 or self.minimum_source_height > 360:
+            log.debug(f'TVDb images for "{series_info}" {episode_info} do not '
+                      'meet dimensional requirements')
+            return None
+
+        # Verify image meets dimensional requirements
+        width, height = self.get_image_size(image_url, log=log)
+        if (width >= self.minimum_source_width
+            and height > self.minimum_source_height):
+            return image_url
+
+        log.debug(f'TMDb images for "{series_info}" {episode_info} do not meet '
+                  f'dimensional requirements')
+        return None
 
 
     def get_episode_title(self,
