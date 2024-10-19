@@ -366,13 +366,13 @@ class ShapeTitleCard(BaseCardType):
             return random_choice(get_type_args(Shape))
 
         # If shape is randomized, replace with random shape
-        if re_match(RandomShapeRegex, shape_str):
+        if (shape_match := re_match(RandomShapeRegex, shape_str)):
             return random_choice(tuple(map(
                 str.strip,
-                re_match(RandomShapeRegex, shape_str).group(1).split(',')
-            )))
+                shape_match.group(1).split(',')
+            ))) # type: ignore
 
-        return shape_str
+        return shape_str # type: ignore
 
 
     @property
