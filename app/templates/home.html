@@ -186,17 +186,19 @@
           </div>
         </div>
         {% endif %}
-        {% if preferences.home_page_table_view %}
-          <a class="item" data-action="change-display" onclick="toggleGlobalDisplayStyle('poster');">
-            <i class="file image outline icon"></i>
-            Poster View
-          </a>
-        {% else %}
-          <a class="item" data-action="change-display" onclick="toggleGlobalDisplayStyle('table');">
-            <i class="table icon"></i>
-            Table View
-          </a>
-        {% endif %}
+        <div class="right menu">
+          {% if preferences.home_page_table_view %}
+            <a class="item" data-action="change-display" onclick="toggleGlobalDisplayStyle('poster');">
+              <i class="file image outline icon"></i>
+              Poster View
+            </a>
+          {% else %}
+            <a class="item" data-action="change-display" onclick="toggleGlobalDisplayStyle('table');">
+              <i class="table icon"></i>
+              Table View
+            </a>
+          {% endif %}
+        </div>
       </div>
 
       <!-- Loader -->
