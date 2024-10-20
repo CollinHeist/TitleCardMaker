@@ -50,7 +50,7 @@ extra. If unspecified, it defaults to matching the font color.
 ??? example "Examples"
 
     <div class="image-compare example-card"
-        data-starting-point="10.0"
+        data-starting-point="11.9"
         data-left-label="white" data-right-label="MediumGoldenRod">
         <img src="../assets/negative_space.webp"/>
         <img src="../assets/negative_space-etc.webp"/>
@@ -65,7 +65,7 @@ decrease it.
 ??? example "Examples"
 
     <div class="image-compare example-card"
-        data-starting-point="88.91"
+        data-starting-point="11.9"
         data-left-label="1.0" data-right-label="0.8">
         <img src="../assets/negative_space.webp"/>
         <img src="../assets/negative_space-etfs.webp"/>
@@ -86,7 +86,7 @@ will be positioned slightly differently than `61` (starting with `6`).
 ??? example "Examples"
 
     <div class="image-compare example-card"
-        data-starting-point="50"
+        data-starting-point="11.9"
         data-left-label="0" data-right-label="200">
         <img src="../assets/negative_space.webp"/>
         <img src="../assets/negative_space-eths.webp"/>
@@ -101,7 +101,7 @@ down, and negative values shift it up.
 ??? example "Examples"
 
     <div class="image-compare example-card"
-        data-starting-point="50"
+        data-starting-point="11.9"
         data-left-label="0" data-right-label="300">
         <img src="../assets/negative_space.webp"/>
         <img src="../assets/negative_space-etvs.webp"/>
@@ -115,7 +115,7 @@ _Title Text Horizontal Shift_ extra. The
 ??? example "Examples"
 
     <div class="image-compare example-card"
-        data-starting-point="50"
+        data-starting-point="11.9"
         data-left-label="0" data-right-label="250">
         <img src="../assets/negative_space.webp"/>
         <img src="../assets/negative_space-tths.webp"/>
@@ -131,7 +131,7 @@ effects.
 !!! example "Example"
 
     <div class="image-compare example-card"
-        data-starting-point="83"
+        data-starting-point="14.25"
         data-left-label="Mask Image" data-right-label="Resulting Title Card">
         <img src="../assets/negative_space-mask-raw.webp"/>
         <img src="../assets/negative_space-mask.webp"/>
