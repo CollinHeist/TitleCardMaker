@@ -41,6 +41,13 @@ def redirect_plex_url(
     # Get Connection with this ID, raise 404 if DNE
     connection = get_connection(db, interface_id, raise_exc=True)
 
+    # Raise 422 if the Connection doesn't have a defined URL
+    if not connection.decrypted_url:
+        raise HTTPException(
+            status_code=422,
+            detail=f'Connection[{interface_id}] does not have a defined URL'
+        )
+
     return Response(content=get(
         f'{connection.decrypted_url.removesuffix("/")}/'
         f'{url.removeprefix("/")}?X-Plex-Token={connection.decrypted_api_key}',
@@ -73,6 +80,13 @@ def redirect_sonarr_url(
 
     # Get Connection with this ID, raise 404 if DNE
     connection = get_connection(db, interface_id, raise_exc=True)
+
+    # Raise 422 if the Connection doesn't have a defined URL
+    if not connection.decrypted_url:
+        raise HTTPException(
+            status_code=422,
+            detail=f'Connection[{interface_id}] does not have a defined URL'
+        )
 
     # Remove /api/ endpoint from URL if present; do not end in /
     if '/api' in connection.decrypted_url:
