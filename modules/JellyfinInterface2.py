@@ -211,8 +211,8 @@ class JellyfinInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface
                 return id_
 
             # No item found, ID must be invalid - reset and re-query
-            log.warning(f'Jellyfin ID ({id_}) has been dynamically re-assigned.'
-                        f' Querying for new one..')
+            log.trace(f'Jellyfin ID ({id_}) has been dynamically re-assigned.'
+                      f' Querying for new one..')
             del series_info.jellyfin_id[self._interface_id, library_name]
 
         # Get ID of this library
