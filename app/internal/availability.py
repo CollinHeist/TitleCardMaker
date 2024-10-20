@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import HTTPException
-from requests import JSONDecodeError, get as req_get
+from niquests import JSONDecodeError, get as req_get
 
 from app.models.preferences import Preferences
 from app.schemas.card import LocalCardType, RemoteCardType

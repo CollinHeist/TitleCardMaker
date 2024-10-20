@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Response
-from requests import get
-from requests.exceptions import Timeout
+from niquests import get
+from niquests.exceptions import Timeout
 from sqlalchemy.orm import Session
 
 from app.database.query import get_connection

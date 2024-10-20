@@ -2,7 +2,7 @@ from pathlib import Path
 from re import compile as re_compile, IGNORECASE
 
 from fastapi import HTTPException
-from requests import get
+from niquests import get
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_preferences
@@ -248,7 +248,7 @@ def import_blueprint(
             if not response.ok:
                 log.error(f'Error downloading Font file from "{file_url}"')
                 raise HTTPException(
-                    status_code=response.status_code,
+                    status_code=response.status_code or 400,
                     detail=f'Font returned error - {response.reason}',
                 )
             log.debug(f'Downloaded Font file from "{file_url}"')
@@ -373,7 +373,7 @@ def import_blueprint(
         if not response.ok:
             log.error(f'Error downloading Source Image from "{file_url}"')
             raise HTTPException(
-                status_code=response.status_code,
+                status_code=response.status_code or 400,
                 detail=f'Font returned error - {response.reason}',
             )
         log.debug(f'Downloaded Source image from "{file_url}"')

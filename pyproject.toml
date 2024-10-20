@@ -45,6 +45,7 @@ dependencies = [
     "charset-normalizer>=3.3.2",
     "win32-setctime>=1.1.0",
     "starlette==0.38.4",
+    "niquests==3.9.1",
 ]
 
 [build-system]

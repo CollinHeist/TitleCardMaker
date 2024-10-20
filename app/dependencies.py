@@ -1,10 +1,9 @@
 from datetime import datetime, timedelta
-from logging import Logger
 from typing import Iterator, Optional, TypeVar, Union
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import HTTPException, Query, Request
-from requests import get
+from niquests import get
 from sqlalchemy.orm import Session
 
 from app.database.session import (
@@ -22,7 +21,7 @@ from app.database.session import (
 )
 from app.models.preferences import Preferences
 
-from modules.Debug import log
+from modules.Debug import Logger, log
 from modules.EmbyInterface2 import EmbyInterface
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.Interface import Interface
@@ -210,7 +209,7 @@ def _require_interface(
             detail=f'Error connecting to {name}[{interface_id}]'
         )
 
-    return interface_group[interface_id]
+    return interface_group[interface_id] # type: ignore
 
 
 # pylint: disable=global-statement

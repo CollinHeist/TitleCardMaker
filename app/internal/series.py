@@ -4,7 +4,7 @@ from typing import Optional, Union
 
 from fastapi import BackgroundTasks, HTTPException
 from PIL import Image, UnidentifiedImageError
-from requests import get
+from niquests import get
 from sqlalchemy.exc import InvalidRequestError, OperationalError
 from sqlalchemy.orm import Session
 
@@ -231,7 +231,7 @@ def download_series_poster(
         pb = poster if isinstance(poster, bytes) else get(poster, timeout=30).content
 
         # Assume corruption if poster is smaller than 1kB
-        if len(pb) < 1024:
+        if not pb or len(pb) < 1024:
             raise ValueError
 
         # Write content

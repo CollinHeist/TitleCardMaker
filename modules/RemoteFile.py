@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from requests import Response, get
+from niquests import Response, get
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 from tinydb import where
 
@@ -142,7 +142,7 @@ class RemoteFile:
         content = self.__get_remote_content()
 
         # Verify content is valid
-        if not content.ok:
+        if not content.ok or not content.content:
             raise ValueError('File does not exist')
 
         # Write content to file

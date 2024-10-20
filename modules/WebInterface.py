@@ -7,7 +7,7 @@ from typing import Any, Optional, TypedDict, Union
 
 from PIL import Image
 from re import IGNORECASE, compile as re_compile
-from requests import get, Session
+from niquests import get, Session
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 import urllib3
 
@@ -156,7 +156,7 @@ class WebInterface:
         """
 
         try:
-            if (response := get(url, timeout=30)).ok:
+            if (response := get(url, timeout=30)).ok and response.content:
                 return Image.open(BytesIO(response.content)).size
             raise ValueError
         except Exception:
@@ -265,8 +265,7 @@ class WebInterface:
         url = image
         try:
             # Download from URL
-            content = get(url, timeout=30).content
-            if len(content) == 0:
+            if not (content := get(url, timeout=30).content):
                 raise ValueError(f'URL {url} returned no content')
             if any(bc in content for bc in WebInterface.BAD_CONTENT):
                 raise ValueError(f'URL {url} returned malformed content')
@@ -300,11 +299,8 @@ class WebInterface:
 
         url = image
         try:
-            # Download from URL
-            content = get(url, timeout=30).content
-
-            # Verify content is valid
-            if len(content) == 0:
+            # Download and verify content is valid
+            if not (content := get(url, timeout=30).content):
                 raise ValueError(f'URL {url} returned no content')
             if any(bc in content for bc in WebInterface.BAD_CONTENT):
                 raise ValueError(f'URL {url} returned malformed content')

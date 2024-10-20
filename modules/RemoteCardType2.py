@@ -4,7 +4,7 @@ import sys
 from typing import Literal, Optional, Union
 
 from pathlib import Path
-from requests import get
+from niquests import get
 
 from app.schemas.base import Base
 from modules.BaseCardType import BaseCardType
