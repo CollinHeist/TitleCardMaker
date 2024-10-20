@@ -119,6 +119,11 @@ TitleCardMaker:
         <img class="no-lightbox" src="./card_types/assets/music.webp" loading="lazy">
       </a>
     </figure>
+    <figure data-label="Negative Space">
+      <a data-label="Negative Space" href="./card_types/negative_space">
+        <img class="no-lightbox" src="./card_types/assets/negative_space.webp" loading="lazy">
+      </a>
+    </figure>
     <figure data-label="Notification">
       <a data-label="Notification" href="./card_types/notification">
         <img class="no-lightbox" src="./card_types/assets/notification.webp" loading="lazy">
