@@ -23,7 +23,7 @@ DATETIME_FORMAT_NO_TZ = '%Y-%m-%d %H:%M:%S.%f'
 
 """Base log file"""
 LOG_FILE = Path(__file__).parent.parent / 'config' / 'logs' / 'log.jsonl'
-if environ.get('TCM_IS_DOCKER', 'false').lower() == 'true':
+if getenv('TCM_IS_DOCKER', 'false').lower() == 'true':
     LOG_FILE = Path('/config/logs/log.jsonl')
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
@@ -111,7 +111,7 @@ handlers = [
     # WARNING: The sys.stdout print WILL NOT have secrets redacted
     dict(
         sink=sys.stdout,
-        level=environ.get('TCM_LOG_STDOUT', environ.get('TCM_LOG', 'INFO')),
+        level=getenv('TCM_LOG_STDOUT', getenv('TCM_LOG', 'INFO')),
         format='<level>[<bold>{level}</bold>] {message}</level>',
         colorize=True,
         backtrace=True,
@@ -146,7 +146,7 @@ handlers = [
     # environment w/o an event loop
     dict(
         sink=websocket_logger,
-        level='INFO',
+        level=getenv('TCM_LOG_WEBSOCKET', 'INFO'),
         format='{message}',
         colorize=False,
         backtrace=False,

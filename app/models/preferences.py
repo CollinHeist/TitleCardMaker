@@ -54,6 +54,7 @@ class Preferences:
         'TCM_LOG_STDOUT',
         'TCM_LOG_FILE',
         'TCM_LOG_RETENTION',
+        'TCM_LOG_WEBSOCKET',
         'TZ',
     )
 
