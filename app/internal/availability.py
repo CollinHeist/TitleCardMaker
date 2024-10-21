@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta
+from json import loads
 from typing import Optional
 
 from fastapi import HTTPException
-from niquests import JSONDecodeError, get as req_get
+from niquests import JSONDecodeError, get as get
 
 from app.models.preferences import Preferences
 from app.schemas.card import LocalCardType, RemoteCardType
@@ -43,7 +44,7 @@ def get_latest_version(
     return Version(f'v2.0-alpha.11.0')
 
     try:
-        response = req_get(
+        response = get(
             'https://api.github.com/repos/CollinHeist/'
             'TitleCardMaker/releases/latest',
             timeout=10,
@@ -97,8 +98,10 @@ def get_remote_cards(*, log: Logger = log) -> list[RemoteCardType]:
 
     # If the cached content has expired, request and update cache
     if _cache['expires'] <= datetime.now():
-        log.debug(f'Refreshing cached RemoteCardTypes..')
-        response = req_get(USER_CARD_TYPE_URL, timeout=30).json()
+        log.debug('Refreshing cached RemoteCardTypes..')
+        if not (text := get(USER_CARD_TYPE_URL, timeout=30).text):
+            raise JSONDecodeError
+        response = loads(text)
         _cache['content'] = response
         _cache['expires'] = datetime.now() + timedelta(hours=12)
     # Cache has not expired, use cached content
