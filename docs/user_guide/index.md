@@ -146,6 +146,14 @@ described below:
     `TRACE` and it is __not recommended__ to change this, as it can make it much
     more difficult to diagnose or debug issues.
 
+`TCM_LOG_WEBSOCKET`
+
+:   The minimum log level for live messages which appear in the UI (toggled
+    [here](./settings.md#display-live-log-messages)). Log messages at a level
+    _lower_ than this will not be displayed in the UI. This can be either
+    `TRACE`, `DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL`. The default is
+    `INFO`.
+
 `TCM_LOG_RETENTION`
 
 :   How long to keep log files before they are deleted. This can be any human-
