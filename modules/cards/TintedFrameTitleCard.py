@@ -760,10 +760,8 @@ class TintedFrameTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
-        standard_etf = TintedFrameTitleCard.EPISODE_TEXT_FORMAT.upper()
-
         return (custom_episode_map
-                or episode_text_format.upper() != standard_etf)
+                or episode_text_format != TintedFrameTitleCard.EPISODE_TEXT_FORMAT)
 
 
     def create(self) -> None:
