@@ -617,7 +617,8 @@ async function editEpisodeExtras(episode, allEpisodes) {
               if ($(this).val() !== '') { 
                 return $(this).attr('name'); 
               }
-            }).get()
+            }).get(),
+            [],
           ),
         extra_values: parseList(
             $('#episode-extras-modal section[aria-label="extras"] input').map(function() {
@@ -625,6 +626,7 @@ async function editEpisodeExtras(episode, allEpisodes) {
                 return $(this).val(); 
               }
             }).get(),
+            [],
           ),
       };
 
