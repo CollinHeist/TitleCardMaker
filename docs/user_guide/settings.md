@@ -522,3 +522,22 @@ home-page Series loading.
 [^3]: Feel free to reduce this to some ratio of 16:9 (e.g. 1600:900) if you want
 to save storage space (at the minor cost of image fidelity). Increasing this is
 not recommended.
+
+### Interactive Title Cards
+
+Whether to enable the click/right-click functionality of Title Cards in the UI.
+This only applies to the Card images displayed on the _Files_ tab of the
+[Series](./series.md) page.
+
+If enabled, clicking the image will instruct TCM to re-create the Title Card if
+the card configuration has changed; while right-clicking will instruct TCM to
+delete and re-create the Title Card (even if no changes occurred).
+
+### Display Live Log Messages
+
+Whether to display real-time log messages within the UI. If enabled, TCM will
+open a Websocket which displays real-time log messages in the lower right corner
+of the UI.
+
+The minimum "level" of messages which are displayed can be adjusted with the
+appropriate [environment variable](./index.md#environment-variables).
